@@ -1,0 +1,23 @@
+.coverage
+.venv
+.testrepository
+subunit.log
+.tox
+*,cover
+cover
+*.pyc
+.idea
+*.sw?
+*~
+build
+dist
+AUTHORS
+ChangeLog
+novaclient/versioninfo
+*.egg
+*.eggs
+*egg-info
+.vagrant
+
+# Files created by releasenotes build
+releasenotes/build
