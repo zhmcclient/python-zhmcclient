@@ -16,6 +16,9 @@ class LparManager(object):
                 lpar_list.append(Lpar(self, lpar))
         return lpar_list
 
+    def find(self, name):
+        pass
+
 class Lpar(object):
     def __init__(self, manager, info):
        self.manager = manager
@@ -25,4 +28,13 @@ class Lpar(object):
     def _add_details(self, info):
        for (k, v) in info.items():
            setattr(self, k, v)
+
+    def activate(self):
+        pass
+
+    def deactivate(self):
+        pass
+
+    def load(self, oad_address):
+        pass
 
