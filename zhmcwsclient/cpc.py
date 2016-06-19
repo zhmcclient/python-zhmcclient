@@ -1,5 +1,6 @@
 
 import session
+from zhmcwsclient.lpar import LparManager
 
 class CpcManager(object):
     def __init__(self, session):
@@ -16,11 +17,15 @@ class CpcManager(object):
 
 class Cpc(object):
     def __init__(self, manager, info):
-       self.manager = manager
-       self._info = info
-       self._add_details(info)
+        self.manager = manager
+        self._info = info
+        self._add_details(info)
+        self.lpars = LparManager(self, manager.session)
 
     def _add_details(self, info):
        for (k, v) in info.items():
            setattr(self, k, v)
+
+    def lpars(self):
+        return self.lpars
 
