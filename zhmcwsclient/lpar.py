@@ -1,7 +1,8 @@
 
 import session
+from zhmcwsclient.manager import BaseManager
 
-class LparManager(object):
+class LparManager(BaseManager):
     def __init__(self, cpc, session):
         self.session = session
         self.cpc = cpc
@@ -16,8 +17,6 @@ class LparManager(object):
                 lpar_list.append(Lpar(self, lpar))
         return lpar_list
 
-    def find(self, name):
-        pass
 
 class Lpar(object):
     def __init__(self, manager, info):
