@@ -47,5 +47,11 @@ class Lpar(object):
             return False
 
     def load(self, load_address):
-        pass
+        if getattr(self, "status") in ["not-operating"]:
+            lpar_object_uri = getattr(self, "object-uri")
+            body = { 'load-address' : load_address }
+            status, meta = self.manager.session.post(lpar_object_uri + '/operations/load', body)
+            return status
+        else:
+            return False
 

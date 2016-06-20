@@ -43,6 +43,7 @@ class Session(object):
                 if result.status_code in [200, 204]:
                     if result.json()['status'] == 'complete':
                         meta = {"status": result.status_code, 'response': result.json()}
+			print "Complete !!!"
                         return  True, meta
                 else:
                     meta = {"status": result.status_code, 'response': result.json()}
