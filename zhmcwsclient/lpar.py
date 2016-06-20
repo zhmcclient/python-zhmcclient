@@ -29,11 +29,23 @@ class Lpar(object):
            setattr(self, k, v)
 
     def activate(self):
-        pass
+        if getattr(self, "status") == "not-activated":
+            lpar_object_uri = getattr(self, "object-uri")
+            body = {}
+            status, meta = self.manager.session.post(lpar_object_uri + '/operations/activate', body)
+            return status
+        else:
+            return False
 
     def deactivate(self):
-        pass
+        if getattr(self, "status") in ["operating", "not-operating", "exceptions"]:
+            lpar_object_uri = getattr(self, "object-uri")
+            body = { 'force' : True }
+            status, meta = self.manager.session.post(lpar_object_uri + '/operations/deactivate', body)
+            return status
+        else:
+            return False
 
-    def load(self, oad_address):
+    def load(self, load_address):
         pass
 

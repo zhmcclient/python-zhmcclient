@@ -28,3 +28,26 @@ class Session(object):
         else:
            return None
 
+    def post(self, command_url, body):
+        url = "{}{}" . format(self.auth_url, command_url)
+#	print url
+        result = requests.post(url, data=json.dumps(body), headers=self.headers, verify=False)
+        if result.status_code in [200, 204]:
+            meta = {"status": result.status_code, 'response': result.json()}
+            return True, meta
+        elif result.status_code == 202:
+            job_uri = result.json()['job-uri'] 
+            url = "{}{}" . format(self.auth_url, job_uri)
+            while 1:
+                result = requests.get(url, headers=self.headers, verify=False)
+                if result.status_code in [200, 204]:
+                    if result.json()['status'] == 'complete':
+                        meta = {"status": result.status_code, 'response': result.json()}
+                        return  True, meta
+                else:
+                    meta = {"status": result.status_code, 'response': result.json()}
+                    return False, meta
+        else:
+            meta = {"status": result.status_code, 'response': result.json()}
+	    return False, meta
+
