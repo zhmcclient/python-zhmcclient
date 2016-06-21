@@ -18,7 +18,7 @@ class BaseManager(object):
 
     def findall(self, **kwargs):
         searches = kwargs.items()
-        print searches
+#        print searches
 	found = list()
         listing = self.list()
         for obj in listing:
