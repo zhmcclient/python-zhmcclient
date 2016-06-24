@@ -1,7 +1,7 @@
 Python bindings to the z Systems Hardware Management Console Web Services API
 =============================================================================
 
-This is a Python API (the ``zhmcwsclient`` module) to
+This is a Python API (the ``zhmcclient`` module) to
 the z Systems Hardware Management Console Web Services API. 
 The Python API does not implement 100% of the Web Services API.
 
@@ -10,7 +10,7 @@ on how to use the Web Services API.
 
 .. _Hardware Management Console Web Services API: http://www-01.ibm.com/support/docview.wss?uid=isg29b97f40675618ba085257a6a00777bea&aid=1
 
-python-zhmcwsclient is licensed under the Apache License.
+python-zhmcclient is licensed under the Apache License.
 
 * License: Apache License, Version 2.0
 * `PyPi`_ - package installation
@@ -19,7 +19,7 @@ python-zhmcwsclient is licensed under the Apache License.
 * `Source`_
 * `How to Contribute`_
 
-.. _PyPi: https://pypi.python.org/pypi/python-zhmcwsclient
+.. _PyPi: https://pypi.python.org/pypi/zhmcclient
 .. _Online Documentation: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcwsclient
 .. _Bugs: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcwsclient
 .. _Source: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcwsclient
@@ -35,8 +35,8 @@ Python API
 
 Example code::
 
-    >>> from zhmcwsclient import client
-    >>> cl = client.Client(VERSION, USER, PASSWORD, URL)
+    >>> import zhmcclient
+    >>> cl = zhmcclient.Client(VERSION, USER, PASSWORD, URL)
     >>> cl.cpcs.list()
     [...]
     >>> cpc = cl.cpcs.find(name='P0000P30')
