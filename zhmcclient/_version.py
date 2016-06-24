@@ -6,7 +6,7 @@ import pbr.version
 __all__ = ['__version__']
 
 _version_info = pbr.version.VersionInfo('zhmcclient')
-__version__ = _version_info.version_string()
+__version__ = _version_info.release_string()
 
 # Check supported Python versions
 _python_m = sys.version_info[0]
