@@ -138,9 +138,8 @@ class HTTPError(Error):
     This exception indicates that the HMC returned an HTTP response with a bad
     HTTP status code.
 
-    The `args` attribute is a `tuple(http_status, http_reason, reason,
-    message)`, where the tuple items are the same-named properties of the
-    exception object.
+    The `args` attribute is a `tuple(http_status, reason, message)`, where
+    the tuple items are the same-named properties of the exception object.
 
     The exception object has a number of properties that are named like the
     JSON object properties in the body of the HTTP error response, where
@@ -153,19 +152,11 @@ class HTTPError(Error):
         """
         Parameters:
 
-          body (:term:`string`):
-            JSON body of an HTTP error response.
+          body (:term:`json object`):
+            Body of the HTTP error response.
         """
-        try:
-            self._body = json.loads(body)
-        except ValueError as exc:
-            self._body = None
-            self.args = (None, None, None,
-                         "%s: Error parsing JSON response body: %s" % \
-                         (exc.__class__.__name__, exc))
-        else:
-            self.args = (self.http_status, self.http_reason, self.reason,
-                         self.message)
+        self._body = body
+        self.args = (self.http_status, self.reason, self.message)
 
     @property
     def http_status(self):
@@ -174,16 +165,7 @@ class HTTPError(Error):
 
         See :term:`RFC2616` for a list of HTTP status codes and reason phrases.
         """
-        return self._body['http-status']
-
-    @property
-    def http_reason(self):
-        """
-        :term:`string`: HTTP reason phrase (e.g. 'Internal Server Error').
-
-        See :term:`RFC2616` for a list of HTTP status codes and reason phrases.
-        """
-        return self._body['http-reason']
+        return self._body.get('http-status', None)
 
     @property
     def reason(self):
@@ -200,7 +182,7 @@ class HTTPError(Error):
         Additional operation-specific reason codes may also be documented in the
         description of the specific API operations.
         """
-        return self._body['reason']
+        return self._body.get('reason', None)
 
     @property
     def message(self):
@@ -209,7 +191,7 @@ class HTTPError(Error):
 
         This message is not currently localized.
         """
-        return self._body['message']
+        return self._body.get('message', None)
 
     @property
     def request_method(self):
@@ -217,14 +199,14 @@ class HTTPError(Error):
         :term:`string`: The HTTP method (DELETE, GET, POST, PUT) that caused
         this error response.
         """
-        return self._body['request-method']
+        return self._body.get('request-method', None)
 
     @property
     def request_uri(self):
         """
         :term:`string`: The URI that caused this error response.
         """
-        return self._body['request-uri']
+        return self._body.get('request-uri', None)
 
     @property
     def request_query_parms(self):
@@ -237,7 +219,7 @@ class HTTPError(Error):
 
         An empty list, if the request did not specify any query parameters.
         """
-        return self._body['request-query-parms']
+        return self._body.get('request-query-parms', None)
 
     @property
     def request_headers(self):
@@ -246,7 +228,7 @@ class HTTPError(Error):
 
         An empty list, if the request did not specify any HTTP headers.
         """
-        return self._body['request-headers']
+        return self._body.get('request-headers', None)
 
     @property
     def request_authenticated_as(self):
@@ -257,7 +239,7 @@ class HTTPError(Error):
         `None`, if the request was issued without an established session or
         there is no HMC user bound to the session.
         """
-        return self._body['request-authenticated-as']
+        return self._body.get('request-authenticated-as', None)
 
     @property
     def request_body(self):
@@ -269,32 +251,34 @@ class HTTPError(Error):
         If the request body could not be parsed or some other error prevented
         the creation of a JSON document from the request body, this property
         is `None` and the request body is instead available in the
-        :attr:`request_body_as_string` property.
+        :attr:`~zhmcclient.HTTPError.request_body_as_string` property.
         """
-        return self._body['request-body']
+        return self._body.get('request-body', None)
 
     @property
     def request_body_as_string(self):
         """
         :term:`string`: The complete request body, or some portion of the
         request body, exactly as it was submitted by the API client program, if
-        the :attr:`request_body_as_string` property is `None`.
+        the :attr:`~zhmcclient.HTTPError.request_body` property is `None`.
         Otherwise, `None`.
 
-        The :attr:`request_body_as_string_partial` property indicates whether
-        the complete request body is provided in this property.
+        The :attr:`~zhmcclient.HTTPError.request_body_as_string_partial`
+        property indicates whether the complete request body is provided in
+        this property.
         """
-        return self._body['request-body-as-string']
+        return self._body.get('request-body-as-string', None)
 
     @property
     def request_body_as_string_partial(self):
         """
-        :class:`py:bool`: Indicates whether the :attr:`request_body_as_string`
-        property contains only part of the request body (`True`) or the entire
-        request body (`False`). `None`, if the :attr:`request_body_as_string`
-        property is `None`.
+        :class:`py:bool`: Indicates whether the
+        :attr:`~zhmcclient.HTTPError.request_body_as_string` property contains
+        only part of the request body (`True`) or the entire request body
+        (`False`). `None`, if the
+        :attr:`~zhmcclient.HTTPError.request_body_as_string` property is `None`.
         """
-        return self._body['request-body-as-string-partial']
+        return self._body.get('request-body-as-string-partial', None)
 
     @property
     def stack(self):
@@ -304,7 +288,7 @@ class HTTPError(Error):
         This field is supplied only on selected 5xx HTTP status codes.
         `None`, if not supplied.
         """
-        return self._body['stack']
+        return self._body.get('stack', None)
 
     @property
     def error_details(self):
@@ -316,12 +300,7 @@ class HTTPError(Error):
         """
 
     def __str__(self):
-        ret_str = "%s (%s)" % (self.status, self.reason)
-        if self.reason is not None:
-            ret_str += ", reason code: %s" % self.reason
-        if self.message is not None:
-            ret_str += ", %s" % self.message
-        return ret_str
+        return "{},{}: {}".format(self.http_status, self.reason, self.message)
 
 
 class NoUniqueMatch(Error):
