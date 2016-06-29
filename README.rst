@@ -20,10 +20,10 @@ python-zhmcclient is licensed under the Apache License.
 * `How to Contribute`_
 
 .. _PyPi: https://pypi.python.org/pypi/zhmcclient
-.. _Online Documentation: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcwsclient
-.. _Bugs: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcwsclient
-.. _Source: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcwsclient
-.. _How to Contribute: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcwsclient
+.. _Online Documentation: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
+.. _Bugs: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
+.. _Source: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
+.. _How to Contribute: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
 
 
 .. contents:: Contents:
