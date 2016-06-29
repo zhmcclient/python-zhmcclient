@@ -1,19 +1,24 @@
-#!/usr/bin/python
-from zhmcwsclient import client
+#!/usr/bin/env python
 
-hmc = "192.168...."
+import zhmcclient
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
+
+hmc = "192.168....."
 user = "admin"
-password = "1234"
-cl = client.Client(hmc, user, password)
+password = "password"
+cpcname = "P0000P28"
+
+cl = zhmcclient.Client(hmc, user, password)
+
 cpcs = cl.cpcs.list()
-print len(cpcs)
+print("Found %d CPCs on HMC %s:" % (len(cpcs), hmc))
 for cpc in cpcs:
-    print cpc.name, cpc.status, getattr(cpc, "object-uri")
+    print(cpc.name, cpc.status, getattr(cpc, "object-uri"))
 
-lpar = cl.cpcs.find(name="P0000P30")
-print lpar
-
-lpars = cpcs[1].lpars.list()
-print len(lpars)
+cpc = cl.cpcs.find(name=cpcname)
+lpars = cpc.lpars.list()
+print("Found %d LPARs on CPC %s:" % (len(lpars), cpcname))
 for lpar in lpars:
-    print lpar.name, lpar.status, getattr(lpar, "object-uri")
+    print(lpar.name, lpar.status, getattr(lpar, "object-uri"))
+
