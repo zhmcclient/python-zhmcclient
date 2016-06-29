@@ -16,4 +16,6 @@ Its general web site is: http://zhmcclient.readthedocs.org.
 
    intro.rst
    tutorial.rst
+   operations.rst
+   
 
