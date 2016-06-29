@@ -151,16 +151,21 @@ class HTTPError(Error):
 
     def __init__(self, body):
         """
-        Initialize the exception from the JSON body of an HTTP error response.
-
         Parameters:
 
-          body (string):
+          body (:term:`string`):
             JSON body of an HTTP error response.
         """
-        self._body = json.loads(body)
-        self.args = (self.http_status, self.http_reason, self.reason,
-                     self.message)
+        try:
+            self._body = json.loads(body)
+        except ValueError as exc:
+            self._body = None
+            self.args = (None, None, None,
+                         "%s: Error parsing JSON response body: %s" % \
+                         (exc.__class__.__name__, exc))
+        else:
+            self.args = (self.http_status, self.http_reason, self.reason,
+                         self.message)
 
     @property
     def http_status(self):
