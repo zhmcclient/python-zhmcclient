@@ -1,6 +1,10 @@
+#!/usr/bin/env python
 
-import session
-from zhmcwsclient.manager import BaseManager
+from __future__ import absolute_import
+
+from ._manager import BaseManager
+
+__all__ = ['LparManager', 'Lpar']
 
 class LparManager(BaseManager):
     def __init__(self, cpc, session):

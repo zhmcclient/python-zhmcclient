@@ -1,9 +1,14 @@
+#!/usr/bin/env python                                                                                                        
 
-import session
-from zhmcwsclient.manager import BaseManager
-from zhmcwsclient.lpar import LparManager
+from __future__ import absolute_import
+
+from ._manager import BaseManager
+from ._lpar import LparManager
+
+__all__ = ['CpcManager', 'Cpc']
 
 class CpcManager(BaseManager):
+
     def __init__(self, session):
         self.session = session
 
@@ -18,6 +23,7 @@ class CpcManager(BaseManager):
 
 
 class Cpc(object):
+
     def __init__(self, manager, info):
         self.manager = manager
         self._info = info
