@@ -1,0 +1,19 @@
+# Config file for Python "coverage" package.
+#
+# For documentation, see:
+# http://coverage.readthedocs.org/en/latest/config.html
+
+[run]
+
+# Controls whether branch coverage is measured, vs. just statement coverage.
+# TODO: Once statement coverage gets better, enable branch coverage.
+branch = False
+
+# The following files are omitted in the coverage.
+omit =
+
+[report]
+
+# Controls whether lines without coverage are shown in the report.
+show_missing = True
+
