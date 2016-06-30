@@ -1,24 +1,52 @@
 #!/usr/bin/env python
+#
+# Example for listing CPCs and LPARs on a CPC.
+#
+
+import sys
+import yaml
+import requests.packages.urllib3
 
 import zhmcclient
-import requests.packages.urllib3
+
+HMC = "9.152.150.86"         # HMC to use
+CPCNAME = "P0000P28"         # CPC to list on that HMC
+
 requests.packages.urllib3.disable_warnings()
 
-hmc = "192.168....."
-user = "admin"
-password = "password"
-cpcname = "P0000P28"
+if len(sys.argv) != 2:
+    print("Usage: %s hmccreds.yaml")
+    sys.exit(2)
+hmccreds_file = sys.argv[1]
 
-cl = zhmcclient.Client(hmc, user, password)
+with open(hmccreds_file, 'r') as fp:
+    hmccreds = yaml.load(fp)
 
+cred = hmccreds.get(HMC, None)
+if cred is None:
+    print("Credentials for HMC %s not found in credentials file %s" % \
+          (HMC, hmccreds_file))
+    sys.exit(1)
+    
+userid = cred['userid']
+password = cred['password']
+
+print("Using HMC %s with userid %s ..." % (HMC, userid))
+cl = zhmcclient.Client(HMC, userid, password)
+
+print("Listing CPCs ...")
 cpcs = cl.cpcs.list()
-print("Found %d CPCs on HMC %s:" % (len(cpcs), hmc))
 for cpc in cpcs:
     print(cpc.name, cpc.status, getattr(cpc, "object-uri"))
 
-cpc = cl.cpcs.find(name=cpcname)
+print("Finding CPC by name=%s ..." % CPCNAME)
+try:
+    cpc = cl.cpcs.find(name=CPCNAME)
+except zhmcclient.NotFound:
+    print("Could not find CPC %s on HMC %s" % (CPCNAME, HMC))
+    sys.exit(1)
+
+print("Listing LPARs on CPC %s ..." % CPCNAME)
 lpars = cpc.lpars.list()
-print("Found %d LPARs on CPC %s:" % (len(lpars), cpcname))
 for lpar in lpars:
     print(lpar.name, lpar.status, getattr(lpar, "object-uri"))
-

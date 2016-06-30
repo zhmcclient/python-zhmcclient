@@ -36,9 +36,9 @@ class Lpar(object):
         if getattr(self, "status") == "not-activated":
             lpar_object_uri = getattr(self, "object-uri")
             body = {}
-            status, meta = self.manager.session.post(lpar_object_uri + '/operations/activate', body)
+            result = self.manager.session.post(lpar_object_uri + '/operations/activate', body)
             self._update_status()
-            return status
+            return True
         else:
             return False
 
@@ -46,9 +46,9 @@ class Lpar(object):
         if getattr(self, "status") in ["operating", "not-operating", "exceptions"]:
             lpar_object_uri = getattr(self, "object-uri")
             body = { 'force' : True }
-            status, meta = self.manager.session.post(lpar_object_uri + '/operations/deactivate', body)
+            result = self.manager.session.post(lpar_object_uri + '/operations/deactivate', body)
             self._update_status()
-            return status
+            return True
         else:
             return False
 
@@ -56,9 +56,9 @@ class Lpar(object):
         if getattr(self, "status") in ["not-operating"]:
             lpar_object_uri = getattr(self, "object-uri")
             body = { 'load-address' : load_address }
-            status, meta = self.manager.session.post(lpar_object_uri + '/operations/load', body)
+            result = self.manager.session.post(lpar_object_uri + '/operations/load', body)
             self._update_status()
-            return status
+            return True
         else:
             return False
 
