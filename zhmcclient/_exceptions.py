@@ -1,14 +1,335 @@
 #!/usr/bin/env python                                                                                                        
 
 """
-Exception definitions.
+Exceptions that can be raised by the client.
 """
 
-__all__ = ['NoUniqueMatch', 'NotFound']
+import json
 
-class NoUniqueMatch(Exception):
+__all__ = ['Error', 'ConnectionError', 'AuthError', 'ParseError',
+           'VersionError', 'HTTPError', 'NoUniqueMatch', 'NotFound']
+
+
+class Error(Exception):
+    """
+    Abstract base class for exceptions specific to this package.
+
+    Derived from :exc:`py:Exception`.
+    """
     pass
 
-class NotFound(Exception):
+
+class ConnectionError(Error):
+    """
+    This exception indicates a problem with the connection to the HMC, at the
+    transport level or below.
+
+    A retry may or may not succeed.
+
+    TODO: Do we need specific properties for some details, e.g. errno value?
+    
+    Derived from :exc:`~zhmcclient.Error`.
+
+    Attributes:
+
+      args:
+        Tuple with one item, which is a message supplied by the user.
+
+      message:
+        Not used.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+        """
+        self.args = (msg,)
+
+
+class AuthError(Error):
+    """
+    This exception indicates an authentication error with the HMC, either at
+    the TLS/SSL handshake level (e.g. with CA certificates), or at the HTTP
+    level.
+
+    Derived from :exc:`~zhmcclient.Error`.
+
+    Attributes:
+
+      args:
+        Tuple with one item, which is a message supplied by the user.
+
+      message:
+        Not used.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+        """
+        self.args = (msg,)
+
+
+class ParseError(Error):
+    """
+    This exception indicates a parsing error while processing a response from
+    the HMC.
+
+    Derived from :exc:`~zhmcclient.Error`.
+
+    TODO: Do we need specific properties, e.g. for line/column?
+    
+    Attributes:
+
+      args:
+        Tuple with one item, which is a message supplied by the user.
+
+      message:
+        Not used.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+        """
+        self.args = (msg,)
+
+
+class VersionError(Error):
+    """
+    This exception indicates that there is a version mismatch between the
+    client and the HMC.
+
+    TODO: Do we need specific properties, e.g. for client versions supported,
+    HMC versions supported?
+    
+    Derived from :exc:`~zhmcclient.Error`.
+
+    Attributes:
+
+      args:
+        Tuple with one item, which is a message supplied by the user.
+
+      message:
+        Not used.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+        """
+        self.args = (msg,)
+
+
+class HTTPError(Error):
+    """
+    This exception indicates that the HMC returned an HTTP response with a bad
+    HTTP status code.
+
+    The `args` attribute is a `tuple(http_status, http_reason, reason,
+    message)`, where the tuple items are the same-named properties of the
+    exception object.
+
+    The exception object has a number of properties that are named like the
+    JSON object properties in the body of the HTTP error response, where
+    hyphen '-' is replaced with underscore '_'.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, body):
+        """
+        Parameters:
+
+          body (:term:`string`):
+            JSON body of an HTTP error response.
+        """
+        try:
+            self._body = json.loads(body)
+        except ValueError as exc:
+            self._body = None
+            self.args = (None, None, None,
+                         "%s: Error parsing JSON response body: %s" % \
+                         (exc.__class__.__name__, exc))
+        else:
+            self.args = (self.http_status, self.http_reason, self.reason,
+                         self.message)
+
+    @property
+    def http_status(self):
+        """
+        :term:`integer`: Numeric HTTP status code (e.g. 500).
+
+        See :term:`RFC2616` for a list of HTTP status codes and reason phrases.
+        """
+        return self._body['http-status']
+
+    @property
+    def http_reason(self):
+        """
+        :term:`string`: HTTP reason phrase (e.g. 'Internal Server Error').
+
+        See :term:`RFC2616` for a list of HTTP status codes and reason phrases.
+        """
+        return self._body['http-reason']
+
+    @property
+    def reason(self):
+        """
+        :term:`integer`: Numeric HMC reason code.
+
+        HMC reason codes provide more details as to the nature of the error
+        than is provided by the HTTP status code. This HMC reason code is
+        treated as a sub-code of the HTTP status code and thus must be used in
+        conjunction with the HTTP status code to determine the error condition.
+
+        Standard HMC reason codes that apply across the entire API are described
+        in section "Common request validation reason codes" in the HMC API book.
+        Additional operation-specific reason codes may also be documented in the
+        description of the specific API operations.
+        """
+        return self._body['reason']
+
+    @property
+    def message(self):
+        """
+        :term:`string`: Message describing the error.
+
+        This message is not currently localized.
+        """
+        return self._body['message']
+
+    @property
+    def request_method(self):
+        """
+        :term:`string`: The HTTP method (DELETE, GET, POST, PUT) that caused
+        this error response.
+        """
+        return self._body['request-method']
+
+    @property
+    def request_uri(self):
+        """
+        :term:`string`: The URI that caused this error response.
+        """
+        return self._body['request-uri']
+
+    @property
+    def request_query_parms(self):
+        """
+        List of query-parm-info objects: URI query parameters specified on the
+        request.
+
+        Each query-parm-info object identifies a single query parameter by its
+        name and includes its value(s).
+
+        An empty list, if the request did not specify any query parameters.
+        """
+        return self._body['request-query-parms']
+
+    @property
+    def request_headers(self):
+        """
+        header-info object: HTTP headers specified on the request.
+
+        An empty list, if the request did not specify any HTTP headers.
+        """
+        return self._body['request-headers']
+
+    @property
+    def request_authenticated_as(self):
+        """
+        :term:`string`: Name of the HMC user associated with the API session
+        under which the request was issued.
+
+        `None`, if the request was issued without an established session or
+        there is no HMC user bound to the session.
+        """
+        return self._body['request-authenticated-as']
+
+    @property
+    def request_body(self):
+        """
+        The request body, in the form of a JSON document. Note that, since it is
+        in the form of a JSON document, this may not be exactly what was
+        submitted by the API client program, but it is semantically equivalent.
+
+        If the request body could not be parsed or some other error prevented
+        the creation of a JSON document from the request body, this property
+        is `None` and the request body is instead available in the
+        :attr:`request_body_as_string` property.
+        """
+        return self._body['request-body']
+
+    @property
+    def request_body_as_string(self):
+        """
+        :term:`string`: The complete request body, or some portion of the
+        request body, exactly as it was submitted by the API client program, if
+        the :attr:`request_body_as_string` property is `None`.
+        Otherwise, `None`.
+
+        The :attr:`request_body_as_string_partial` property indicates whether
+        the complete request body is provided in this property.
+        """
+        return self._body['request-body-as-string']
+
+    @property
+    def request_body_as_string_partial(self):
+        """
+        :class:`py:bool`: Indicates whether the :attr:`request_body_as_string`
+        property contains only part of the request body (`True`) or the entire
+        request body (`False`). `None`, if the :attr:`request_body_as_string`
+        property is `None`.
+        """
+        return self._body['request-body-as-string-partial']
+
+    @property
+    def stack(self):
+        """
+        :term:`string`: Internal HMC diagnostic information for the error.
+
+        This field is supplied only on selected 5xx HTTP status codes.
+        `None`, if not supplied.
+        """
+        return self._body['stack']
+
+    @property
+    def error_details(self):
+        """
+        :term:`string`: A nested object that provides additional
+        operation-specific error information. This field is provided by
+        selected operations, and the format of the nested object is as
+        described by that operation.
+        """
+
+    def __str__(self):
+        ret_str = "%s (%s)" % (self.status, self.reason)
+        if self.reason is not None:
+            ret_str += ", reason code: %s" % self.reason
+        if self.message is not None:
+            ret_str += ", %s" % self.message
+        return ret_str
+
+
+class NoUniqueMatch(Error):
+    """TBD: Is this needed?"""
+    pass
+
+
+class NotFound(Error):
+    """TBD: Is this needed?"""
     pass
 
