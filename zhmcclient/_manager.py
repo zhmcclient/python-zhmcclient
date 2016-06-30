@@ -15,6 +15,40 @@ class BaseManager(object):
     methods that have a common implementation for the derived manager classes.
     """
 
+    def __init__(self, parent=None):
+        """
+        Parameters:
+
+          parent (subclass of :class:`~zhmcclient.BaseResource`):
+            Parent resource defining the scope for this manager.
+
+            `None`, if the manager has no parent, i.e. when it manages top-level
+            resources.
+        """
+        self._parent = parent
+        self._session = parent.manager.session if parent else None
+        # Note: Managers of top-level resources must set session in their init.
+
+    @property
+    def session(self):
+        """
+        :class:`~zhmcclient.Session`:
+          Session with the HMC.
+        """
+        assert self._session is not None
+        return self._session
+
+    @property
+    def parent(self):
+        """
+        Subclass of :class:`~zhmcclient.BaseResource`:
+          Parent resource defining the scope for this manager.
+
+          `None`, if the manager has no parent, i.e. when it manages top-level
+          resources.
+        """
+        return self._parent
+
     def list(self):
         """
         Interface for the list function that is used by the :meth:`find` and
@@ -90,7 +124,6 @@ class BaseManager(object):
           Exceptions raised by :meth:`~zhmcclient.BaseManager.list`.
         """
         searches = kwargs.items()
-        # print searches
         found = list()
         listing = self.list()
         for obj in listing:

@@ -18,25 +18,27 @@ class Client(object):
         Parameters:
 
           session (:class:`~zhmcclient.Session`):
-            Session object for the HMC to be used.
+            Session with the HMC.
         """
         self._session = session
-        self._cpcs = CpcManager(session)
+        self._cpcs = CpcManager(self)
         self._api_major_version = None
         self._api_minor_version = None
 
     @property
     def session(self):
         """
-        :class:`~zhmcclient.Session`: Session object used for the HMC.
+        :class:`~zhmcclient.Session`:
+          Session with the HMC.
         """
         return self._session
 
     @property
     def cpcs(self):
         """
-        :class:`~zhmcclient.CpcManager`: Manager object for the CPCs in scope of
-        this client (i.e. in scope of its HMC).
+        :class:`~zhmcclient.CpcManager`:
+          Manager object for the CPCs in scope of this client (i.e. in scope
+          of its HMC).
         """
         return self._cpcs
 
@@ -62,9 +64,9 @@ class Client(object):
           :exc:`~zhmcclient.ConnectionError`
         """
         if self._api_major_version is None:
-            version_resp = self._session.get('/api/version',
-                                             logon_required=False)
-            self._api_major_version = version_resp['api-major-version']
-            self._api_minor_version = version_resp['api-minor-version']
+            version_res = self._session.get('/api/version',
+                                            logon_required=False)
+            self._api_major_version = version_res['api-major-version']
+            self._api_minor_version = version_res['api-minor-version']
         return self._api_major_version, self._api_minor_version
 

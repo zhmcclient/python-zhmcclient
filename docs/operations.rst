@@ -49,12 +49,18 @@ Exceptions
 
 .. _`CPCs`:
 
-BaseManager
------------
+BaseManager and BaseResource
+----------------------------
 
 .. automodule:: zhmcclient._manager
 
 .. autoclass:: zhmcclient.BaseManager
+   :members:
+   :special-members: __str__
+
+.. automodule:: zhmcclient._resource
+
+.. autoclass:: zhmcclient.BaseResource
    :members:
    :special-members: __str__
 

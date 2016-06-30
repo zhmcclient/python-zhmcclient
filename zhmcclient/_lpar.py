@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 from ._manager import BaseManager
+from ._resource import BaseResource
 
 __all__ = ['LparManager', 'Lpar']
 
@@ -13,34 +14,22 @@ class LparManager(BaseManager):
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods.
     """
 
-    def __init__(self, cpc, session=None):
+    def __init__(self, cpc):
         """
         Parameters:
 
           cpc (:class:`~zhmcclient.Cpc`):
-            CPC containing the LPARs managed by this object.
-
-          session (:class:`~zhmcclient.Session`):
-            Session object for the HMC to be used.
-            If `None`, the session of the `cpc` parameter is used.
+            CPC defining the scope for this manager object.
         """
-        self._cpc = cpc
-        self._session = session or cpc.session
+        super(LparManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: CPC containing the LPARs managed by this
-        object.
+        :class:`~zhmcclient.Cpc`: Parent object (CPC) defining the scope for
+        this manager object.
         """
-        return self._cpc
-
-    @property
-    def session(self):
-        """
-        :class:`~zhmcclient.Session`: Session object used for the HMC.
-        """
-        return self._session
+        return self._parent
 
     def list(self):
         """
@@ -50,19 +39,22 @@ class LparManager(BaseManager):
 
           : A list of :class:`~zhmcclient.Lpar` objects.
         """
-        cpc_object_uri = getattr(self.cpc, "object-uri")
-        lpars = self.session.get(cpc_object_uri + '/logical-partitions')
+        cpc_uri = getattr(self.cpc, "object-uri")
+        lpars_res = self.session.get(cpc_uri + '/logical-partitions')
         lpar_list = []
-        if lpars:
-            lpar_items = lpars['logical-partitions']
+        if lpars_res:
+            lpar_items = lpars_res['logical-partitions']
             for lpar in lpar_items:
                 lpar_list.append(Lpar(self, lpar))
         return lpar_list
 
 
-class Lpar(object):
+class Lpar(BaseResource):
     """
-    An LPAR within a CPC.
+    The representation of an LPAR resource in a CPC.
+
+    Derived from :class:`~zhmcclient.BaseResource`; see there for common
+    methods.
     """
 
     def __init__(self, manager, attrs):
@@ -70,22 +62,13 @@ class Lpar(object):
         Parameters:
 
           manager (:class:`~zhmcclient.LparManager`):
-            Manager object for this LPAR.
+            Manager object for this resource.
 
           attrs (dict):
             Attributes to be attached to this object.
         """
         assert isinstance(manager, LparManager)
-        self._manager = manager
-        for k, v in attrs.items():
-            setattr(self, k, v)
-
-    @property
-    def manager(self):
-        """
-        :class:`~zhmcclient.LparManager`: Manager object for this LPAR.
-        """
-        return self._manager
+        super(Lpar, self).__init__(manager, attrs)
 
     def activate(self):
         """

@@ -127,7 +127,7 @@ class Session(object):
         Make sure the session is logged off from the HMC.
         """
         if self.is_logon():
-            session_uri = '/api/session/' + self._session_id
+            session_uri = '/api/sessions/this-session'
             self.delete(session_uri, logon_required=False)
             self._session_id = None
             self._headers.pop('X-API-Session', None)
@@ -152,8 +152,8 @@ class Session(object):
             'password': self._password
         }
         self._headers.pop('X-API-Session', None) # Just in case
-        logon_resp = self.post(logon_uri, logon_req, logon_required=False)
-        self._session_id = logon_resp['api-session']
+        logon_res = self.post(logon_uri, logon_req, logon_required=False)
+        self._session_id = logon_res['api-session']
         self._headers['X-API-Session'] = self._session_id
 
     def get(self, uri, logon_required=True):
