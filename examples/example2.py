@@ -17,7 +17,7 @@ LOAD_DEVNO = "5172"          # device to boot that LPAR from
 requests.packages.urllib3.disable_warnings()
 
 if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml")
+    print("Usage: %s hmccreds.yaml" % sys.argv[0])
     sys.exit(2)
 hmccreds_file = sys.argv[1]
 
@@ -35,7 +35,8 @@ password = cred['password']
 
 try:
     print("Using HMC %s with userid %s ..." % (HMC, userid))
-    cl = zhmcclient.Client(HMC, userid, password)
+    session = zhmcclient.Session(HMC, userid, password)
+    cl = zhmcclient.Client(session)
 
     cpc = cl.cpcs.find(name=CPCNAME, status="service-required")
     print("Status of CPC %s: %s" % (cpc.name, cpc.status))

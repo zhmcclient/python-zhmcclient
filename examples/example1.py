@@ -15,7 +15,7 @@ CPCNAME = "P0000P28"         # CPC to list on that HMC
 requests.packages.urllib3.disable_warnings()
 
 if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml")
+    print("Usage: %s hmccreds.yaml" % sys.argv[0])
     sys.exit(2)
 hmccreds_file = sys.argv[1]
 
@@ -32,7 +32,8 @@ userid = cred['userid']
 password = cred['password']
 
 print("Using HMC %s with userid %s ..." % (HMC, userid))
-cl = zhmcclient.Client(HMC, userid, password)
+session = zhmcclient.Session(HMC, userid, password)
+cl = zhmcclient.Client(session)
 
 print("Listing CPCs ...")
 cpcs = cl.cpcs.list()

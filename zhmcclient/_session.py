@@ -19,7 +19,10 @@ _STD_HEADERS = {
 
 class Session(object):
     """
-    A session to the HMC in context of an HMC user.
+    A session to the HMC, optionally in context of an HMC user.
+
+    The session supports operations that require to be authenticated, as well
+    as operations that don't (e.g. obtaining the API version).
     """
 
     def __init__(self, host, userid=None, password=None):
@@ -52,9 +55,7 @@ class Session(object):
             host=self._host,
             port=_HMC_PORT)
         self._headers = _STD_HEADERS
-        self._api_session = None
-        self._api_major_version = None
-        self._api_minor_version = None
+        self._session_id = None
 
     @property
     def host(self):
@@ -96,7 +97,7 @@ class Session(object):
     @property
     def headers(self):
         """
-        :term:`header dict`: Standard HTTP headers to be used in each request.
+        :term:`header dict`: HTTP headers to be used in each request.
 
         Initially, this is the following set of headers:
 
@@ -114,81 +115,48 @@ class Session(object):
         """
         return self._headers
 
-    def version_info(self):
+    def logon(self):
         """
-        Returns API version information for the HMC on this session.
-
-        This operation does not require authentication.
-
-        Returns:
-
-          : A tuple of (api_major_version, api_minor_version), where:
-
-            * `api_major_version` (:term:`integer`): The numeric major version
-              of the API supported by the HMC.
-
-            * `api_minor_version` (:term:`integer`): The numeric minor version
-              of the API supported by the HMC.
-
-        Raises:
-
-          :exc:`~zhmcclient.HTTPError`
-          :exc:`~zhmcclient.ConnectionError`
+        Make sure the session is logged on to the HMC.
         """
-        if self._api_major_version is None:
-            version_url = self.base_url + '/api/version'
-            try:
-                result = requests.get(
-                    version_url, headers=self.headers, verify=False)
-            except requests.exceptions.RequestException as exc:
-                raise ConnectionError(str(exc))
-            if result.status_code in (200, 204):
-                version_resp = result.json()
-                self._api_major_version = version_resp['api-major-version']
-                self._api_minor_version = version_resp['api-minor-version']
-            else:
-                raise HTTPError(result.json())
-        return self._api_major_version, self._api_minor_version
-
-    def _logon(self):
-        """
-        Make sure we are logged on.
-        """
-        if self._api_session is None:
+        if not self.is_logon():
             self._do_logon()
+
+    def logoff(self):
+        """
+        Make sure the session is logged off from the HMC.
+        """
+        if self.is_logon():
+            session_uri = '/api/session/' + self._session_id
+            self.delete(session_uri, logon_required=False)
+            self._session_id = None
+            self._headers.pop('X-API-Session', None)
+
+    def is_logon(self):
+        """
+        Return a boolean indicating whether the session is currently logged on
+        to the HMC.
+        """
+        return self._session_id is not None
 
     def _do_logon(self):
         """
         Log on, unconditionally. This can be used to re-logon.
+        This requires credentials to be provided.
         """
         if self._userid is None or self._password is None:
             raise AuthError("Userid or password not provided.")
-        session_url = self.base_url + '/api/session'
+        logon_uri = '/api/sessions'
         logon_req = {
             'userid': self._userid,
             'password': self._password
         }
         self._headers.pop('X-API-Session', None) # Just in case
-        data = json.dumps(logon_req)
-        try:
-            result = requests.post(
-                session_url, data=data, headers=self.headers, verify=False)
-        except requests.exceptions.RequestException as exc:
-            raise ConnectionError(str(exc))
-        if result.status_code in (200, 204):
-            logon_resp = result.json()
-            self._api_session = logon_resp['api-session']
-            self._api_major_version = logon_resp['api-major-version']
-            self._api_minor_version = logon_resp['api-minor-version']
-            self._headers['X-API-Session'] = self._api_session
-        elif result.status_code == 403:
-            exc = HTTPError(result.json())
-            raise AuthError("HTTP authentication failed: {}".\
-                            format(str(exc)))
-        else:
-            raise HTTPError(result.json())
+        logon_resp = self.post(logon_uri, logon_req, logon_required=False)
+        self._session_id = logon_resp['api-session']
+        self._headers['X-API-Session'] = self._session_id
 
-    def get(self, uri):
+    def get(self, uri, logon_required=True):
         """
         Perform the HTTP GET method against the resource identified by a URI.
 
@@ -205,6 +173,11 @@ class Session(object):
             the :attr:`~zhmcclient.Session.base_url` property).
             Must not be `None`.
 
+          logon_required (bool):
+            Boolean indicating whether the operation requires that the session
+            is logged on to the HMC. For example, the API version retrieval
+            operation does not require that.
+
         Returns:
 
           :term:`json object` with the operation result.
@@ -215,7 +188,8 @@ class Session(object):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self._logon()
+        if logon_required:
+            self.logon()
         url = self.base_url + uri
         try:
             result = requests.get(url, headers=self.headers, verify=False)
@@ -227,8 +201,14 @@ class Session(object):
             reason = result.json().get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
-                self._do_logon()
-                return self.get(uri)
+                if logon_required:
+                    self._do_logon()
+                else:
+                    raise AuthError("API session token unexpectedly expired " \
+                                    "for GET on resource that does not " \
+                                    "require authentication: {}".\
+                                    format(uri))
+                return self.get(uri, logon_required)
             else:
                 exc = HTTPError(result.json())
                 raise AuthError("HTTP authentication failed: {}".\
@@ -236,7 +216,7 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
-    def post(self, uri, body):
+    def post(self, uri, body, logon_required=True):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -261,6 +241,11 @@ class Session(object):
             JSON request payload.
             Must not be `None`.
 
+          logon_required (bool):
+            Boolean indicating whether the operation requires that the session
+            is logged on to the HMC. For example, the logon operation does not
+            require that.
+
         Returns:
 
           :term:`json object` with the operation result.
@@ -271,7 +256,8 @@ class Session(object):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self._logon()
+        if logon_required:
+            self.logon()
         url = self.base_url + uri
         data = json.dumps(body)
         try:
@@ -298,8 +284,71 @@ class Session(object):
             reason = result.json().get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
-                self._do_logon()
-                return self.post(uri, body)
+                if logon_required:
+                    self._do_logon()
+                else:
+                    raise AuthError("API session token unexpectedly expired " \
+                                    "for POST on resource that does not " \
+                                    "require authentication: {}".\
+                                    format(uri))
+                return self.post(uri, body, logon_required)
+            else:
+                exc = HTTPError(result.json())
+                raise AuthError("HTTP authentication failed: {}".\
+                                format(str(exc)))
+        else:
+            raise HTTPError(result.json())
+
+    def delete(self, uri, logon_required=True):
+        """
+        Perform the HTTP DELETE method against the resource identified by a URI.
+
+        A set of standard HTTP headers is automatically part of the request.
+
+        If the HMC session token is expired, this method re-logs on and retries
+        the operation.
+
+        Parameters:
+
+          uri (:term:`string`):
+            Relative URI path of the resource, e.g. "/api/session/{session-id}".
+            This URI is relative to the base URL of the session (see
+            the :attr:`~zhmcclient.Session.base_url` property).
+            Must not be `None`.
+
+          logon_required (bool):
+            Boolean indicating whether the operation requires that the session
+            is logged on to the HMC. For example, for the logoff operation, it
+            does not make sense to first log on.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        if logon_required:
+            self.logon()
+        url = self.base_url + uri
+        try:
+            result = requests.delete(url, headers=self.headers, verify=False)
+        except requests.exceptions.RequestException as exc:
+            raise ConnectionError(str(exc))
+        if result.status_code == 200:
+            return
+        elif result.status_code == 403:
+            reason = result.json().get('reason', None)
+            if reason == 5:
+                # API session token expired: re-logon and retry
+                if logon_required:
+                    self._do_logon()
+                else:
+                    raise AuthError("API session token unexpectedly expired " \
+                                    "for DELETE on resource that does not " \
+                                    "require authentication: {}".\
+                                    format(uri))
+                self.delete(uri, logon_required)
+                return
             else:
                 exc = HTTPError(result.json())
                 raise AuthError("HTTP authentication failed: {}".\
