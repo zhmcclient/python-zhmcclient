@@ -1,57 +1,70 @@
 #!/usr/bin/env python
+#
+# Example for LPAR activation, deactivation and boot.
+#
 
 import sys
+import yaml
 import requests.packages.urllib3
 
 import zhmcclient
 
-hmc = "192.168...."
-user = "admin"
-password = "password"
-
-# LPAR top be used for this example.
-# Attention: This LPAR will be deactivated and rebooted!
-cpcname = "P0000P30"
-lparname = "PART8"
-load_devno = "5172"
+HMC = "9.152.150.65"         # HMC to use
+CPCNAME = "P0000P30"         # CPC to use on that HMC
+LPARNAME = "PART8"           # LPAR to be used on that CPC
+LOAD_DEVNO = "5172"          # device to boot that LPAR from
 
 requests.packages.urllib3.disable_warnings()
 
-try:
-    cl = zhmcclient.Client(hmc, user, password)
+if len(sys.argv) != 2:
+    print("Usage: %s hmccreds.yaml")
+    sys.exit(2)
+hmccreds_file = sys.argv[1]
 
-    cpc = cl.cpcs.find(name=cpcname, status="service-required")
+with open(hmccreds_file, 'r') as fp:
+    hmccreds = yaml.load(fp)
+
+cred = hmccreds.get(HMC, None)
+if cred is None:
+    print("Credentials for HMC %s not found in credentials file %s" % \
+          (HMC, hmccreds_file))
+    sys.exit(1)
+    
+userid = cred['userid']
+password = cred['password']
+
+try:
+    print("Using HMC %s with userid %s ..." % (HMC, userid))
+    cl = zhmcclient.Client(HMC, userid, password)
+
+    cpc = cl.cpcs.find(name=CPCNAME, status="service-required")
     print("Status of CPC %s: %s" % (cpc.name, cpc.status))
 
-    lpar = cpc.lpars.find(name=lparname)
+    lpar = cpc.lpars.find(name=LPARNAME)
     print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
 
-    print("De-Activating LPAR %s ..." % lparname)
+    print("De-Activating LPAR %s ..." % lpar.name)
     status = lpar.deactivate()
-    print("Return value: %s" % status)
 
-    lpar = cpc.lpars.find(name=lparname)
+    lpar = cpc.lpars.find(name=LPARNAME)
     print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
 
-    print("Activating LPAR %s ..." % lparname)
+    print("Activating LPAR %s ..." % lpar.name)
     status = lpar.activate()
-    print("Return value: %s" % status)
 
-    lpar = cpc.lpars.find(name=lparname)
+    lpar = cpc.lpars.find(name=LPARNAME)
     print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
 
-    print("Loading LPAR %s from device %s ..." % (lparname, load_devno))
-    status = lpar.load("5172")
-    print("Return value: %s" % status)
+    print("Loading LPAR %s from device %s ..." % (lpar.name, LOAD_DEVNO))
+    status = lpar.load(LOAD_DEVNO)
 
-    lpar = cpc.lpars.find(name=lparname)
+    lpar = cpc.lpars.find(name=LPARNAME)
     print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
 
-    print("De-Activating LPAR %s ..." % lparname)
+    print("De-Activating LPAR %s ..." % lpar.name)
     status = lpar.deactivate()
-    print("Return value: %s" % status)
 
-    lpar = cpc.lpars.find(name=lparname)
+    lpar = cpc.lpars.find(name=LPARNAME)
     print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
 
 except zhmcclient.Error as exc:
