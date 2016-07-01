@@ -8,6 +8,9 @@ from ._cpc import CpcManager
 __all__ = ['Client']
 
 class Client(object):
+    """
+    A client to an HMC in context of a HMC userid.
+    """
 
     def __init__(self, hmc_ip, userid, password):
         self.hmc_ip = hmc_ip

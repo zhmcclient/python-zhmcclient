@@ -4,6 +4,24 @@
 Using the API
 =============
 
+.. _`Making connections`:
+
+Making connections
+------------------
+
+.. automodule:: zhmcclient._session
+
+.. autoclass:: zhmcclient.Session
+   :members:
+   :special-members: __str__
+
+.. automodule:: zhmcclient._client
+
+.. autoclass:: zhmcclient.Client
+   :members:
+   :special-members: __str__
+
+
 .. _`Exceptions`:
 
 Exceptions

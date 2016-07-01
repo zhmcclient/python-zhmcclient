@@ -94,6 +94,17 @@ This documentation uses a few special terms to refer to Python types:
       one of the integer types :class:`py:int` or :class:`py2:long` (Python 2
       only).
 
+   json object
+      a :class:`py:dict` object that is a Python representation of a valid JSON
+      object. See :ref:`py:py-to-json-table` for details.
+
+   header dict
+      a :class:`py:dict` object that specifies HTTP header fields, as follows:
+
+        * `key` (:term:`string`): Name of the header field, in any lexical case.
+          Dictionary key lookup is case sensitive, however.
+        * `value` (:term:`string`): Value of the header field.
+
    callable
       a type for callable objects (e.g. a function, calling a class returns a
       new instance, instances are callable if they have a
