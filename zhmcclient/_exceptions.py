@@ -304,11 +304,11 @@ class HTTPError(Error):
 
 
 class NoUniqueMatch(Error):
-    """TBD: Is this needed?"""
+    """Indicates that a find function has found more than one item."""
     pass
 
 
 class NotFound(Error):
-    """TBD: Is this needed?"""
+    """Indicates that a find function did not find an item."""
     pass
 

@@ -3,36 +3,79 @@
 from __future__ import absolute_import
 
 from ._manager import BaseManager
+from ._resource import BaseResource
 
 __all__ = ['LparManager', 'Lpar']
 
 class LparManager(BaseManager):
-    def __init__(self, cpc, session):
-        self.session = session
-        self.cpc = cpc
+    """
+    Manager object for LPARs of a particular CPC.
+
+    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods.
+    """
+
+    def __init__(self, cpc):
+        """
+        Parameters:
+
+          cpc (:class:`~zhmcclient.Cpc`):
+            CPC defining the scope for this manager object.
+        """
+        super(LparManager, self).__init__(cpc)
+
+    @property
+    def cpc(self):
+        """
+        :class:`~zhmcclient.Cpc`: Parent object (CPC) defining the scope for
+        this manager object.
+        """
+        return self._parent
 
     def list(self):
-        cpc_object_uri = getattr(self.cpc, "object-uri")
-        lpars = self.session.get(cpc_object_uri + '/logical-partitions')
+        """
+        List the LPARs of the CPC.
+
+        Returns:
+
+          : A list of :class:`~zhmcclient.Lpar` objects.
+        """
+        cpc_uri = getattr(self.cpc, "object-uri")
+        lpars_res = self.session.get(cpc_uri + '/logical-partitions')
         lpar_list = []
-        if lpars:
-            lpar_items = lpars['logical-partitions']
+        if lpars_res:
+            lpar_items = lpars_res['logical-partitions']
             for lpar in lpar_items:
                 lpar_list.append(Lpar(self, lpar))
         return lpar_list
 
 
-class Lpar(object):
-    def __init__(self, manager, info):
-       self.manager = manager
-       self._info = info
-       self._add_details(info)
+class Lpar(BaseResource):
+    """
+    The representation of an LPAR resource in a CPC.
 
-    def _add_details(self, info):
-       for (k, v) in info.items():
-            setattr(self, k, v)
+    Derived from :class:`~zhmcclient.BaseResource`; see there for common
+    methods.
+    """
+
+    def __init__(self, manager, attrs):
+        """
+        Parameters:
+
+          manager (:class:`~zhmcclient.LparManager`):
+            Manager object for this resource.
+
+          attrs (dict):
+            Attributes to be attached to this object.
+        """
+        assert isinstance(manager, LparManager)
+        super(Lpar, self).__init__(manager, attrs)
 
     def activate(self):
+        """
+        Activate this LPAR.
+
+        TODO: Review return value, and idea of immediately retrieving status.
+        """
         if getattr(self, "status") == "not-activated":
             lpar_object_uri = getattr(self, "object-uri")
             body = {}
@@ -43,6 +86,11 @@ class Lpar(object):
             return False
 
     def deactivate(self):
+        """
+        De-activate this LPAR.
+
+        TODO: Review return value, and idea of immediately retrieving status.
+        """
         if getattr(self, "status") in ["operating", "not-operating", "exceptions"]:
             lpar_object_uri = getattr(self, "object-uri")
             body = { 'force' : True }
@@ -53,6 +101,15 @@ class Lpar(object):
             return False
 
     def load(self, load_address):
+        """
+        Load (boot) this LPAR from a boot device.
+
+        TODO: Review return value, and idea of immediately retrieving status.
+
+        Parameters:
+
+          load_address (:term:`string`): Device number of the boot device.
+        """
         if getattr(self, "status") in ["not-operating"]:
             lpar_object_uri = getattr(self, "object-uri")
             body = { 'load-address' : load_address }

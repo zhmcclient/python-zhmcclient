@@ -35,3 +35,5 @@ twine
 # Install manually, to where you want to run Jupyter.
 # jupyter
 
+# Examples:
+PyYAML
