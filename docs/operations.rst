@@ -1,7 +1,7 @@
 
-.. _`Using the API`:
+.. _`API Reference`:
 
-Using the API
+API Reference
 =============
 
 .. _`Sessions`:

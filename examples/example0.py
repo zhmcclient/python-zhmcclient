@@ -9,7 +9,7 @@ import requests.packages.urllib3
 
 import zhmcclient
 
-HMC = "9.152.150.86"         # HMC to use
+HMC = "9.152.150.65"         # HMC to use
 
 requests.packages.urllib3.disable_warnings()
 

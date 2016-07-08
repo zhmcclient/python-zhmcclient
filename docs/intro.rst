@@ -4,7 +4,33 @@
 Introduction
 ============
 
-TODO: Describe what this package provides
+.. _`What this package provides`:
+
+What this package provides
+--------------------------
+
+The **zhmcclient** Python package is a a Python client library that interacts
+with the Web Services API of the z Systems Hardware Management Console (HMC)
+(see :term:`HMC API`).
+This package is written in pure Python.
+
+The Web Services API of the HMC is the access point for any external tools to
+manage the z Systems platform; it supports management of the lifecycle and
+configuration of various platform resources, such as logical partitions, CPU,
+memory, or I/O adapters.
+
+The Web Services API of the HMC supports two protocols for its clients:
+
+* A REST API for request/response-style interactions driven by the client.
+  Most of them complete synchronously, but some long-running tasks
+  complete asynchronously.
+
+* JMS for notifications from the HMC to the client (e.g. about changes in the
+  system, or about completion of asynchronous tasks started using the REST API.
+
+This Python package currently supports only the REST API with a subset of the
+defined functionality. Support for JMS is intended to be added in the future,
+as well as completing the functionality of the REST API.
 
 .. _`Supported environments`:
 
@@ -17,11 +43,17 @@ This package is supported in these Operating System and Python environments:
 
 * on Linux, with Python 2.7, 3.4, 3.5, and higher 3.x
 
-* OS-X has not been tested and is therefore not listed, above. You are welcome to
-  try it out and report any issues (TODO: Add link to issue tracker).
+* OS-X has not been tested and is therefore not listed, above. You are welcome
+  to try it out and report any issues (TODO: Add link to issue tracker).
 
-TODO: Describe how this package supports different versions of the HMC API
+This package determines the API version supported by the HMC, and rejects
+operation if it finds an API version that is not supported. This package
+supports the following HMC API versions:
 
+* HMC API version 1.5 and above (i.e. IBM z13 machine, and above). The
+  :term:`HMC API` describes this version. Note that the *Version 2.13*
+  mentioned in the book title is not the HMC API version.
+   
 .. _`Deprecation policy`:
 
 Deprecation policy
@@ -137,3 +169,5 @@ References
    RFC6874
       `IETF RFC6874, Representing IPv6 Zone Identifiers in Address Literals and Uniform Resource Identifiers, February 2013 <https://tools.ietf.org/html/rfc6874>`_
 
+   HMC API
+       `IBM SC27-2627-00, z Systems Hardware Management Console Web Services API (Version 2.13.0) <http://www-01.ibm.com/support/docview.wss?uid=isg27fa57a5a8a5297b185257de7004e7144>`_
