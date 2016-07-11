@@ -39,34 +39,34 @@ try:
     cl = zhmcclient.Client(session)
 
     cpc = cl.cpcs.find(name=CPCNAME, status="service-required")
-    print("Status of CPC %s: %s" % (cpc.name, cpc.status))
+    print("Status of CPC %s: %s" % (cpc['name'], cpc['status']))
 
     lpar = cpc.lpars.find(name=LPARNAME)
-    print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
+    print("Status of LPAR %s: %s" % (lpar['name'], lpar['status']))
 
-    print("De-Activating LPAR %s ..." % lpar.name)
+    print("De-Activating LPAR %s ..." % lpar['name'])
     status = lpar.deactivate()
 
     lpar = cpc.lpars.find(name=LPARNAME)
-    print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
+    print("Status of LPAR %s: %s" % (lpar['name'], lpar['status']))
 
-    print("Activating LPAR %s ..." % lpar.name)
+    print("Activating LPAR %s ..." % lpar['name'])
     status = lpar.activate()
 
     lpar = cpc.lpars.find(name=LPARNAME)
-    print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
+    print("Status of LPAR %s: %s" % (lpar['name'], lpar['status']))
 
-    print("Loading LPAR %s from device %s ..." % (lpar.name, LOAD_DEVNO))
+    print("Loading LPAR %s from device %s ..." % (lpar['name'], LOAD_DEVNO))
     status = lpar.load(LOAD_DEVNO)
 
     lpar = cpc.lpars.find(name=LPARNAME)
-    print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
+    print("Status of LPAR %s: %s" % (lpar['name'], lpar['status']))
 
-    print("De-Activating LPAR %s ..." % lpar.name)
+    print("De-Activating LPAR %s ..." % lpar['name'])
     status = lpar.deactivate()
 
     lpar = cpc.lpars.find(name=LPARNAME)
-    print("Status of LPAR %s: %s" % (lpar.name, lpar.status))
+    print("Status of LPAR %s: %s" % (lpar['name'], lpar['status']))
 
 except zhmcclient.Error as exc:
     print("%s: %s" % (exc.__class__.__name__, exc))

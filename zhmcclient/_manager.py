@@ -25,6 +25,8 @@ class BaseManager(object):
             `None`, if the manager has no parent, i.e. when it manages top-level
             resources.
         """
+        # A check for parent being a BaseResource creates a cyclic import
+        # dependency and is therefore not performed.
         self._parent = parent
         self._session = parent.manager.session if parent else None
         # Note: Managers of top-level resources must set session in their init.
@@ -128,7 +130,8 @@ class BaseManager(object):
         listing = self.list()
         for obj in listing:
             try:
-                if all(getattr(obj, attr) == value
+#                if all(getattr(obj, attr) == value
+                if all(obj[attr] == value
                        for (attr, value) in searches):
                     found.append(obj)
             except AttributeError:
