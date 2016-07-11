@@ -6,7 +6,8 @@ __all__ = ['BaseResource']
 
 class BaseResource(object):
     """
-    Abstract base class for resource classes (e.g. :class:`~zhmcclient.Cpc`).
+    Abstract base class for resource classes (e.g. :class:`~zhmcclient.Cpc`)
+    representing manageable resources.
 
     It defines the interface for the derived resource classes, and implements
     methods that have a common implementation for the derived resource classes.

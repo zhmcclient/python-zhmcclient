@@ -27,7 +27,8 @@ class LparManager(BaseManager):
     Manager object for LPARs. This manager object is scoped to the LPARs of a
     particular CPC.
 
-    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods.
+    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, cpc):
@@ -69,8 +70,8 @@ class Lpar(BaseResource):
     """
     Representation of an LPAR.
 
-    Derived from :class:`~zhmcclient.BaseResource`; see there for common
-    methods.
+    Derived from :class:`~zhmcclient.BaseResource`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, manager, attrs):

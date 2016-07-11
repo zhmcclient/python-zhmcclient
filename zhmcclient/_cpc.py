@@ -27,7 +27,8 @@ class CpcManager(BaseManager):
     Services API capable CPCs managed by the HMC that is associated with a
     particular client.
 
-    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods.
+    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, client):
@@ -60,6 +61,9 @@ class CpcManager(BaseManager):
 class Cpc(BaseResource):
     """
     Representation of a CPC.
+
+    Derived from :class:`~zhmcclient.BaseResource`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, manager, attrs):
