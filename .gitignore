@@ -3,6 +3,7 @@
 /.settings/
 /.cache/
 /.tox/
+/htmlcov/
 /build/
 /build_doc/
 /dist/
