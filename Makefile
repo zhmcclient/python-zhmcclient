@@ -123,6 +123,7 @@ help:
 
 .PHONY: develop
 develop:
+	pip install --upgrade pip
 	pip install -r dev-requirements.txt
 	@echo '$@ done.'
 
@@ -200,7 +201,7 @@ test: $(test_log_file)
 .PHONY: clobber
 clobber: clean
 	rm -f pylint.log test_*.log
-	rm -Rf $(doc_build_dir) .tox
+	rm -Rf $(doc_build_dir) htmlcov .tox
 	@echo 'Done: Removed everything to get to a fresh state.'
 	@echo '$@ done.'
 
