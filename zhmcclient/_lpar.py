@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 
+"""
+A **Logical Partition (LPAR)** is a subset of a physical z Systems computer,
+certain aspects of which are virtualized.
+
+An LPAR is always contained in a CPC.
+
+LPARs can be created and deleted dynamically, and their resources such as
+CPU, memory or I/O devices can be configured.
+
+When the CPC is in DPM (Dynamic Partition Manager) mode, LPARs are referred to
+as *Partitions*. Otherwise (i.e. in classic mode), they are referred to as
+*LPARs*. This documentation always refers to them as LPARs, regardless of
+whether the CPC is in DPM mode or in classic mode.
+"""
+
 from __future__ import absolute_import
 
 from ._manager import BaseManager
@@ -9,9 +24,11 @@ __all__ = ['LparManager', 'Lpar']
 
 class LparManager(BaseManager):
     """
-    Manager object for LPARs of a particular CPC.
+    Manager object for LPARs. This manager object is scoped to the LPARs of a
+    particular CPC.
 
-    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods.
+    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, cpc):
@@ -33,7 +50,7 @@ class LparManager(BaseManager):
 
     def list(self):
         """
-        List the LPARs of the CPC.
+        List the LPARs in scope of this manager object.
 
         Returns:
 
@@ -51,10 +68,10 @@ class LparManager(BaseManager):
 
 class Lpar(BaseResource):
     """
-    The representation of an LPAR resource in a CPC.
+    Representation of an LPAR.
 
-    Derived from :class:`~zhmcclient.BaseResource`; see there for common
-    methods.
+    Derived from :class:`~zhmcclient.BaseResource`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, manager, attrs):

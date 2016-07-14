@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+"""
+A **Central Processor Complex (CPC)** is a physical z Systems computer.
+A particular HMC can manage multiple CPCs.
+
+The HMC can manage a range of old and new CPC generations. Some older CPC
+generations are not capable of supporting the HMC Web Services API; these older
+CPCs can be managed using the GUI of the HMC, but not through its Web Services
+API. Therefore, such older CPCs will not show up at the HMC Web Services API,
+and thus will not show up in the API of this Python package.
+
+TODO: List earliest CPC generation that supports the HMC Web Services API.
+"""
+
 from __future__ import absolute_import
 
 from ._manager import BaseManager
@@ -10,9 +23,12 @@ __all__ = ['CpcManager', 'Cpc']
 
 class CpcManager(BaseManager):
     """
-    Manager object for the CPCs in scope of a particular HMC.
+    Manager object for CPCs. This manager object is scoped to the HMC Web
+    Services API capable CPCs managed by the HMC that is associated with a
+    particular client.
 
-    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods.
+    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, client):
@@ -27,7 +43,7 @@ class CpcManager(BaseManager):
 
     def list(self):
         """
-        List the CPCs in scope of the HMC.
+        List the CPCs in scope of this manager object.
 
         Returns:
 
@@ -44,7 +60,10 @@ class CpcManager(BaseManager):
 
 class Cpc(BaseResource):
     """
-    The representation of a CPC resource in scope of an HMC.
+    Representation of a CPC.
+
+    Derived from :class:`~zhmcclient.BaseResource`; see there for common methods
+    and attributes.
     """
 
     def __init__(self, manager, attrs):
