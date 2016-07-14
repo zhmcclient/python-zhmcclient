@@ -25,15 +25,15 @@ class BaseResource(object):
             Manager object for this resource (and for all resources of the same
             type in the scope of that manager).
 
-          properties (mapping):
+          properties (dict):
             Properties to be set for this resource object.
 
             * Key: Name of the property.
             * Value: Value of the property.
 
-            The input mapping is copied (shallow), so that the input mapping
-            can be modified by the user without affecting the properties of
-            resource objects created from that input mapping.
+            The input dictionary is copied (shallow), so that the input
+            dictionary can be modified by the user without affecting the
+            properties of resource objects created from that input dictionary.
 
             Property qualifiers (read-only, etc.) are not represented on the
             resource object. The properties on the resource object are

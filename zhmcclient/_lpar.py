@@ -81,9 +81,9 @@ class Lpar(BaseResource):
           manager (:class:`~zhmcclient.LparManager`):
             Manager object for this resource.
 
-          properties (mapping):
+          properties (dict):
             Properties to be set for this resource object.
-            See :meth:`~zhmcclient.BaseResource.__init__` for details.
+            See initialization of :class:`~zhmcclient.BaseResource` for details.
         """
         assert isinstance(manager, LparManager)
         super(Lpar, self).__init__(manager, properties)

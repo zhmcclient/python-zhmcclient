@@ -73,9 +73,9 @@ class Cpc(BaseResource):
           manager (:class:`~zhmcclient.CpcManager`):
             Manager object for this CPC.
 
-          properties (mapping):
+          properties (dict):
             Properties to be set for this resource object.
-            See :meth:`~zhmcclient.BaseResource.__init__` for details.
+            See initialization of :class:`~zhmcclient.BaseResource` for details.
         """
         assert isinstance(manager, CpcManager)
         super(Cpc, self).__init__(manager, properties)
