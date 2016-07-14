@@ -46,101 +46,101 @@ class BaseTest(unittest.TestCase):
         """
 
         # Check properties dict size
-        self.assertEqual(len(resource), len(properties))
+        self.assertEqual(len(resource.properties), len(properties))
 
         # Various tests with valid keys and values
         for key, value in properties.items():
 
             # Check access by key
-            self.assertEqual(resource[key], value)
+            self.assertEqual(resource.properties[key], value)
 
             # Check 'get()' method without default
-            self.assertEqual(resource.get(key), value)
+            self.assertEqual(resource.properties.get(key), value)
 
             # Check 'get()' method with default
-            self.assertEqual(resource.get(key, 'xxx'), value)
+            self.assertEqual(resource.properties.get(key, 'xxx'), value)
 
             # Check 'in' operator
-            self.assertTrue(key in resource,
+            self.assertTrue(key in resource.properties,
                             "Key %r is not in resource %r, " \
                             "using 'in' operator" % (key, resource))
 
             # Check 'has_key()' method
-            self.assertTrue(resource.has_key(key),
+            self.assertTrue(resource.properties.has_key(key),
                             "Key %r is not in resource %r, " \
                             "using has_key() method" % (key, resource))
 
         # Check 'keys()' method
-        for key in resource.keys():
+        for key in resource.properties.keys():
             self.assertTrue(key in properties.keys(),
                             "Resource property key %r is not in input " \
                             "properties %r, using keys() method" % \
                             (key, properties))
         for key in properties.keys():
-            self.assertTrue(key in resource.keys(),
+            self.assertTrue(key in resource.properties.keys(),
                             "Input property key %r is not in resource " \
                             "properties %r, using keys() method" % \
                             (key, resource))
 
         # Check 'values()' method
-        for value in resource.values():
+        for value in resource.properties.values():
             self.assertTrue(value in properties.values(),
                             "Resource property value %r is not in input " \
                             "properties %r, using values() method" % \
                             (value, properties))
         for value in properties.values():
-            self.assertTrue(value in resource.values(),
+            self.assertTrue(value in resource.properties.values(),
                             "Input property value %r is not in resource " \
                             "properties %r, using values() method" % \
                             (value, resource))
 
         # Check 'items()' method
-        for key, value in resource.items():
+        for key, value in resource.properties.items():
             self.assertTrue((key, value) in properties.items(),
                             "Resource property key/value tuple (%r, %r) is " \
                             "not in input properties %r, " \
                             "using items() method" % \
                             (key, value, properties))
         for key, value in properties.items():
-            self.assertTrue((key, value) in resource.items(),
+            self.assertTrue((key, value) in resource.properties.items(),
                             "Input property key/value tuple (%r, %r) is " \
                             "not in resource properties %r, " \
                             "using items() method" % \
                             (key, value, resource))
 
         # Check 'iterkeys()' method
-        for key in six.iterkeys(resource):
+        for key in six.iterkeys(resource.properties):
             self.assertTrue(key in properties.keys(),
                             "Resource property key %r is not in input " \
                             "properties %r, using iterkeys() method" % \
                             (key, properties))
         for key in six.iterkeys(properties):
-            self.assertTrue(key in resource.keys(),
+            self.assertTrue(key in resource.properties.keys(),
                             "Input property key %r is not in resource " \
                             "properties %r, using iterkeys() method" % \
                             (key, resource))
 
         # Check 'itervalues()' method
-        for value in six.itervalues(resource):
+        for value in six.itervalues(resource.properties):
             self.assertTrue(value in properties.values(),
                             "Resource property value %r is not in input " \
                             "properties %r, using itervalues() method" % \
                             (value, properties))
         for value in six.itervalues(properties):
-            self.assertTrue(value in resource.values(),
+            self.assertTrue(value in resource.properties.values(),
                             "Input property value %r is not in resource " \
                             "properties %r, using itervalues() method" % \
                             (value, resource))
 
         # Check 'iteritems()' method
-        for key, value in six.iteritems(resource):
+        for key, value in six.iteritems(resource.properties):
             self.assertTrue((key, value) in properties.items(),
                             "Resource property key/value tuple (%r, %r) is " \
                             "not in input properties %r, " \
                             "using iteritems() method" % \
                             (key, value, properties))
         for key, value in six.iteritems(properties):
-            self.assertTrue((key, value) in resource.items(),
+            self.assertTrue((key, value) in resource.properties.items(),
                             "Input property key/value tuple (%r, %r) is " \
                             "not in resource properties %r, " \
                             "using iteritems() method" % \
@@ -155,29 +155,29 @@ class BaseTest(unittest.TestCase):
                 assert key not in properties
 
                 # Check 'get()' method without default
-                self.assertEqual(resource.get(key), None)
+                self.assertEqual(resource.properties.get(key), None)
 
                 # Check 'get()' method with default
-                self.assertEqual(resource.get(key, 'xxx'), 'xxx')
+                self.assertEqual(resource.properties.get(key, 'xxx'), 'xxx')
 
                 # Check 'in' operation
-                self.assertTrue(not key in resource,
+                self.assertTrue(not key in resource.properties,
                                 "Key %r is in resource %r, " \
                                 "using 'in' operator" % (key, resource))
 
                 # Check 'has_key()' method
-                self.assertTrue(not resource.has_key(key),
+                self.assertTrue(not resource.properties.has_key(key),
                                 "Key %r is in resource %r, " \
                                 "using has_key() method" % (key, resource))
 
                 # Check 'keys()' method
-                self.assertTrue(not key in resource.keys(),
+                self.assertTrue(not key in resource.properties.keys(),
                                 "Key %r is not in resource %r, " \
                                 "using keys() method" % (key, resource))
 
                 # Check that accessing invalid keys raise KeyError
                 try:
-                    x = resource[key]
+                    x = resource.properties[key]
                 except KeyError:
                     pass
                 else:
@@ -240,7 +240,7 @@ class TestSet(BaseTest):
         res_properties.update(set_properties)
         res = MyResource(self.mgr, init_properties)
         for key, value in set_properties.items():
-            res[key] = value
+            res.properties[key] = value
         self.assert_properties(res, res_properties)
 
     def test_replace_one_add_one(self):
@@ -255,7 +255,7 @@ class TestSet(BaseTest):
         res_properties.update(set_properties)
         res = MyResource(self.mgr, init_properties)
         for key, value in set_properties.items():
-            res[key] = value
+            res.properties[key] = value
         self.assert_properties(res, res_properties)
 
 
@@ -273,7 +273,7 @@ class TestDel(BaseTest):
         }
         res = MyResource(self.mgr, init_properties)
         for key in del_keys:
-            del res[key]
+            del res.properties[key]
         self.assert_properties(res, res_properties)
 
     def test_del_all(self):
@@ -285,7 +285,7 @@ class TestDel(BaseTest):
         res_properties = {}
         res = MyResource(self.mgr, init_properties)
         for key in del_keys:
-            del res[key]
+            del res.properties[key]
         self.assert_properties(res, res_properties)
 
     def test_del_invalid(self):
@@ -297,7 +297,7 @@ class TestDel(BaseTest):
         res = MyResource(self.mgr, init_properties)
         invalid_key = 'inv1'
         try:
-            del res[invalid_key]
+            del res.properties[invalid_key]
         except KeyError:
             pass
         else:

@@ -39,7 +39,8 @@ print("Listing CPCs ...")
 cpcs = cl.cpcs.list()
 for cpc in cpcs:
 #    print(cpc.name, cpc.status, getattr(cpc, "object-uri"))
-    print(cpc['name'], cpc['status'], cpc['object-uri'])
+    print(cpc.properties['name'], cpc.properties['status'],
+          cpc.properties['object-uri'])
 
 print("Finding CPC by name=%s ..." % CPCNAME)
 try:
@@ -51,4 +52,5 @@ except zhmcclient.NotFound:
 print("Listing LPARs on CPC %s ..." % CPCNAME)
 lpars = cpc.lpars.list()
 for lpar in lpars:
-    print(lpar['name'], lpar['status'], lpar['object-uri'])
+    print(lpar.properties['name'], lpar.properties['status'],
+          lpar.properties['object-uri'])
