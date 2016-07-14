@@ -53,8 +53,8 @@ class CpcManager(BaseManager):
         cpc_list = []
         if cpcs_res:
             cpc_items = cpcs_res['cpcs']
-            for cpc_attrs in cpc_items:
-                cpc_list.append(Cpc(self, cpc_attrs))
+            for cpc_props in cpc_items:
+                cpc_list.append(Cpc(self, cpc_props))
         return cpc_list
 
 
@@ -66,18 +66,19 @@ class Cpc(BaseResource):
     and attributes.
     """
 
-    def __init__(self, manager, attrs):
+    def __init__(self, manager, properties):
         """
         Parameters:
 
           manager (:class:`~zhmcclient.CpcManager`):
             Manager object for this CPC.
 
-          attrs (dict):
-            Attributes to be attached to this object.
+          properties (dict):
+            Properties to be set for this resource object.
+            See initialization of :class:`~zhmcclient.BaseResource` for details.
         """
         assert isinstance(manager, CpcManager)
-        super(Cpc, self).__init__(manager, attrs)
+        super(Cpc, self).__init__(manager, properties)
         self._lpars = LparManager(self)
 
     @property

@@ -102,17 +102,17 @@ class BaseManager(object):
     def findall(self, **kwargs):
         """
         Find zero or more resources that are managed by this manager, by the
-        value of zero or more resource attributes.
+        value of zero or more resource properties.
 
-        If more than one attribute is specified, all attributes need to match
+        If more than one property is specified, all properties need to match
         for the resources to be found.
 
         Keyword Arguments:
 
           : Each keyword argument is used to filter the resources managed by
             this manager, whereby the name of the keyword argument is used to
-            look up the same-named resource attribute, and the value of the
-            keyword argument is used to compare the resource's attribute value
+            look up the same-named resource property, and the value of the
+            keyword argument is used to compare the resource's property value
             against.
 
         Returns:
@@ -128,8 +128,8 @@ class BaseManager(object):
         listing = self.list()
         for obj in listing:
             try:
-                if all(getattr(obj, attr) == value
-                       for (attr, value) in searches):
+                if all(obj.properties[propname] == value
+                       for (propname, value) in searches):
                     found.append(obj)
             except AttributeError:
                 continue

@@ -56,13 +56,13 @@ class LparManager(BaseManager):
 
           : A list of :class:`~zhmcclient.Lpar` objects.
         """
-        cpc_uri = getattr(self.cpc, "object-uri")
+        cpc_uri = self.cpc.properties["object-uri"]
         lpars_res = self.session.get(cpc_uri + '/logical-partitions')
         lpar_list = []
         if lpars_res:
             lpar_items = lpars_res['logical-partitions']
-            for lpar in lpar_items:
-                lpar_list.append(Lpar(self, lpar))
+            for lpar_props in lpar_items:
+                lpar_list.append(Lpar(self, lpar_props))
         return lpar_list
 
 
@@ -74,18 +74,19 @@ class Lpar(BaseResource):
     and attributes.
     """
 
-    def __init__(self, manager, attrs):
+    def __init__(self, manager, properties):
         """
         Parameters:
 
           manager (:class:`~zhmcclient.LparManager`):
             Manager object for this resource.
 
-          attrs (dict):
-            Attributes to be attached to this object.
+          properties (dict):
+            Properties to be set for this resource object.
+            See initialization of :class:`~zhmcclient.BaseResource` for details.
         """
         assert isinstance(manager, LparManager)
-        super(Lpar, self).__init__(manager, attrs)
+        super(Lpar, self).__init__(manager, properties)
 
     def activate(self):
         """
@@ -93,8 +94,8 @@ class Lpar(BaseResource):
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if getattr(self, "status") == "not-activated":
-            lpar_object_uri = getattr(self, "object-uri")
+        if self.properties["status"] == "not-activated":
+            lpar_object_uri = self.properties["object-uri"]
             body = {}
             result = self.manager.session.post(lpar_object_uri + '/operations/activate', body)
             self._update_status()
@@ -108,8 +109,8 @@ class Lpar(BaseResource):
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if getattr(self, "status") in ["operating", "not-operating", "exceptions"]:
-            lpar_object_uri = getattr(self, "object-uri")
+        if self.properties["status"] in ["operating", "not-operating", "exceptions"]:
+            lpar_object_uri = self.properties["object-uri"]
             body = { 'force' : True }
             result = self.manager.session.post(lpar_object_uri + '/operations/deactivate', body)
             self._update_status()
@@ -127,8 +128,8 @@ class Lpar(BaseResource):
 
           load_address (:term:`string`): Device number of the boot device.
         """
-        if getattr(self, "status") in ["not-operating"]:
-            lpar_object_uri = getattr(self, "object-uri")
+        if self.properties["status"] in ["not-operating"]:
+            lpar_object_uri = self.properties["object-uri"]
             body = { 'load-address' : load_address }
             result = self.manager.session.post(lpar_object_uri + '/operations/load', body)
             self._update_status()
@@ -137,8 +138,8 @@ class Lpar(BaseResource):
             return False
 
     def _update_status(self):
-        lpar_object_uri = getattr(self, "object-uri")
-        lpar = self.manager.session.get(lpar_object_uri)
-        setattr(self, 'status', lpar.get("status"))
+        lpar_object_uri = self.properties["object-uri"]
+        lpar_res = self.manager.session.get(lpar_object_uri)
+        self.properties["status"] = lpar_res["status"]
         return
 
