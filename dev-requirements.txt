@@ -28,6 +28,9 @@ sphinx-git
 astroid ; python_version == '2.7'
 pylint ; python_version == '2.7'
 
+# Flake8:
+flake8>=3.0
+
 # Twine: Needed for uploading to Pypi
 twine
 
