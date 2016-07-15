@@ -54,7 +54,7 @@ class CpcManager(BaseManager):
         super(CpcManager, self).__init__()
         self._session = client.session
 
-    def list(self):
+    def list(self, full_properties=False):
         """
         List the CPCs in scope of this manager object.
 
@@ -67,7 +67,11 @@ class CpcManager(BaseManager):
         if cpcs_res:
             cpc_items = cpcs_res['cpcs']
             for cpc_props in cpc_items:
-                cpc_list.append(Cpc(self, cpc_props))
+                if full_properties:
+                    cpc_res = self.session.get(cpc_props['object-uri'])
+                    cpc_list.append(Cpc(self, cpc_res))
+	        else:
+                    cpc_list.append(Cpc(self, cpc_props))
         return cpc_list
 
 
