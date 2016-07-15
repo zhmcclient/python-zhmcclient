@@ -97,7 +97,8 @@ class Lpar(BaseResource):
         if self.properties["status"] == "not-activated":
             lpar_object_uri = self.properties["object-uri"]
             body = {}
-            result = self.manager.session.post(lpar_object_uri + '/operations/activate', body)
+            result = self.manager.session.post(
+                lpar_object_uri + '/operations/activate', body)
             self._update_status()
             return True
         else:
@@ -109,10 +110,12 @@ class Lpar(BaseResource):
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if self.properties["status"] in ["operating", "not-operating", "exceptions"]:
+        if self.properties["status"] in ["operating", "not-operating",
+                                         "exceptions"]:
             lpar_object_uri = self.properties["object-uri"]
-            body = { 'force' : True }
-            result = self.manager.session.post(lpar_object_uri + '/operations/deactivate', body)
+            body = {'force' : True}
+            result = self.manager.session.post(
+                lpar_object_uri + '/operations/deactivate', body)
             self._update_status()
             return True
         else:
@@ -130,8 +133,9 @@ class Lpar(BaseResource):
         """
         if self.properties["status"] in ["not-operating"]:
             lpar_object_uri = self.properties["object-uri"]
-            body = { 'load-address' : load_address }
-            result = self.manager.session.post(lpar_object_uri + '/operations/load', body)
+            body = {'load-address' : load_address}
+            result = self.manager.session.post(
+                lpar_object_uri + '/operations/load', body)
             self._update_status()
             return True
         else:
@@ -142,4 +146,3 @@ class Lpar(BaseResource):
         lpar_res = self.manager.session.get(lpar_object_uri)
         self.properties["status"] = lpar_res["status"]
         return
-

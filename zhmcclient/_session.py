@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
+"""
+Session class: A session to the HMC, optionally in context of an HMC user.
+"""
+
 from __future__ import absolute_import
 
-import requests
 import json
 import time
+import requests
 
 from ._exceptions import HTTPError, AuthError, ConnectionError
 
@@ -355,4 +359,3 @@ class Session(object):
                                 format(str(exc)))
         else:
             raise HTTPError(result.json())
-

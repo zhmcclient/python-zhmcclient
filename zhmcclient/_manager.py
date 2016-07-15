@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+"""
+Base definitions for resource manager classes.
+
+Resource manager classes exist for each resource type and are helper classes
+that provide functionality common for the resource type.
+
+Resource manager objects are not necessarily singleton objects, because they
+have a scope of a certain set of resource objects. For example, the resource
+manager object for LPARs exists once for each CPC managed by the HMC, and the
+resource object scope of each LPAR manager object is the set of LPARs in that
+CPC.
+"""
+
 from __future__ import absolute_import
 
 from ._exceptions import NotFound, NoUniqueMatch
@@ -134,4 +147,3 @@ class BaseManager(object):
             except AttributeError:
                 continue
         return found
-

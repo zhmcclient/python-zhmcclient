@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-#
-# Unit tests for _resource module.
-#
+
+"""
+Unit tests for _resource module.
+"""
 
 from __future__ import absolute_import
 
@@ -378,18 +379,18 @@ class xTestEqual(object):
         for test_dict, relation, comment in test_dicts:
             if relation == 'eq':
                 self.assertDictEqual(test_dict, base_dict,
-                                "Expected test_dict == base_dict:\n" \
-                                "  test case: %s\n" \
-                                "  test_dict: %r\n" \
-                                "  base_dict: %r" % \
-                                (comment, test_dict, base_dict))
+                                     "Expected test_dict == base_dict:\n" \
+                                     "  test case: %s\n" \
+                                     "  test_dict: %r\n" \
+                                     "  base_dict: %r" % \
+                                     (comment, test_dict, base_dict))
             elif relation == 'ne':
                 self.assertDictNotEqual(test_dict, base_dict,
-                                "Expected test_dict != base_dict:\n" \
-                                "  test case: %s\n" \
-                                "  test_dict: %r\n" \
-                                "  base_dict: %r" % \
-                                (comment, test_dict, base_dict))
+                                        "Expected test_dict != base_dict:\n" \
+                                        "  test case: %s\n" \
+                                        "  test_dict: %r\n" \
+                                        "  base_dict: %r" % \
+                                        (comment, test_dict, base_dict))
             else:
                 raise AssertionError("Internal Error: Invalid relation %s" \
                                      "specified in testcase: %s" % \

@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+Client class: A client to an HMC.
+"""
+
 from __future__ import absolute_import
 
 from ._cpc import CpcManager
@@ -69,4 +73,3 @@ class Client(object):
             self._api_major_version = version_res['api-major-version']
             self._api_minor_version = version_res['api-minor-version']
         return self._api_major_version, self._api_minor_version
-

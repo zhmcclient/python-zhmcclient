@@ -88,4 +88,3 @@ class Cpc(BaseResource):
         CPC.
         """
         return self._lpars
-

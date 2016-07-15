@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
+"""
+Access to the package version, and check for supported Python versions.
+
+Note: The package version is not defined here, but determined dynamically by
+the `pbr` package from Git information.
+"""
+
 import sys
 import pbr.version
 
 __all__ = ['__version__']
 
-_version_info = pbr.version.VersionInfo('zhmcclient')
-__version__ = _version_info.release_string()
+__version__ = pbr.version.VersionInfo('zhmcclient').release_string()
 
 # Check supported Python versions
-_python_m = sys.version_info[0]
-_python_n = sys.version_info[1]
-if _python_m == 2 and _python_n < 7:
+_PYTHON_M = sys.version_info[0]
+_PYTHON_N = sys.version_info[1]
+if _PYTHON_M == 2 and _PYTHON_N < 7:
     raise RuntimeError('On Python 2, zhcmclient requires Python 2.7')
-elif _python_m == 3 and _python_n < 4:
+elif _PYTHON_M == 3 and _PYTHON_N < 4:
     raise RuntimeError('On Python 3, zhmcclient requires Python 3.4 or higher')
-

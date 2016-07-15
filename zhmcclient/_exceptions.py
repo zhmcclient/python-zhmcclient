@@ -1,10 +1,8 @@
-#!/usr/bin/env python                                                                                                        
+#!/usr/bin/env python
 
 """
 Exceptions that can be raised by the client.
 """
-
-import json
 
 __all__ = ['Error', 'ConnectionError', 'AuthError', 'ParseError',
            'VersionError', 'HTTPError', 'NoUniqueMatch', 'NotFound']
@@ -27,7 +25,7 @@ class ConnectionError(Error):
     A retry may or may not succeed.
 
     TODO: Do we need specific properties for some details, e.g. errno value?
-    
+
     Derived from :exc:`~zhmcclient.Error`.
 
     Attributes:
@@ -84,7 +82,7 @@ class ParseError(Error):
     Derived from :exc:`~zhmcclient.Error`.
 
     TODO: Do we need specific properties, e.g. for line/column?
-    
+
     Attributes:
 
       args:
@@ -111,7 +109,7 @@ class VersionError(Error):
 
     TODO: Do we need specific properties, e.g. for client versions supported,
     HMC versions supported?
-    
+
     Derived from :exc:`~zhmcclient.Error`.
 
     Attributes:
@@ -311,4 +309,3 @@ class NoUniqueMatch(Error):
 class NotFound(Error):
     """Indicates that a find function did not find an item."""
     pass
-
