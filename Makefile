@@ -203,7 +203,7 @@ test: $(test_log_file)
 
 .PHONY: clobber
 clobber: clean
-	rm -f pylint.log test_*.log
+	rm -f pylint.log flake8.log test_*.log
 	rm -Rf $(doc_build_dir) htmlcov .tox
 	@echo 'Done: Removed everything to get to a fresh state.'
 	@echo '$@ done.'
