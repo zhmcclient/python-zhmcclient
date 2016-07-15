@@ -13,13 +13,9 @@
 # limitations under the License.
 
 """
-A **Logical Partition (LPAR)** is a subset of a physical z Systems computer,
-certain aspects of which are virtualized.
-
-An LPAR is always contained in a CPC.
-
-Objects of this class are not provided when the CPC is enabled for DPM
-(Dynamic Partition Manager).
+A **Partition** is central to partition management for IBM Dynamic Partition Manager (DPM)
+Partitions can be created and deleted dynamically, and their resources such as
+CPU, memory or I/O devices can be configured.
 """
 
 from __future__ import absolute_import
@@ -27,12 +23,12 @@ from __future__ import absolute_import
 from ._manager import BaseManager
 from ._resource import BaseResource
 
-__all__ = ['LparManager', 'Lpar']
+__all__ = ['PartitionManager', 'Partition']
 
 
-class LparManager(BaseManager):
+class PartitionManager(BaseManager):
     """
-    Manager object for LPARs. This manager object is scoped to the LPARs of a
+    Manager object for Partitions. This manager object is scoped to the Partitions of a
     particular CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
@@ -46,7 +42,7 @@ class LparManager(BaseManager):
           cpc (:class:`~zhmcclient.Cpc`):
             CPC defining the scope for this manager object.
         """
-        super(LparManager, self).__init__(cpc)
+        super(PartitionManager, self).__init__(cpc)
 
     @property
     def cpc(self):
@@ -58,28 +54,28 @@ class LparManager(BaseManager):
 
     def list(self, full_properties=False):
         """
-        List the LPARs in scope of this manager object.
+        List the Partitions in scope of this manager object.
 
         Returns:
 
           : A list of :class:`~zhmcclient.Lpar` objects.
         """
         cpc_uri = self.cpc.properties["object-uri"]
-        lpars_res = self.session.get(cpc_uri + '/logical-partitions')
-        lpar_list = []
-        if lpars_res:
-            lpar_items = lpars_res['logical-partitions']
-            for lpar_props in lpar_items:
-                lpar = Lpar(self, lpar_props)
+        partitions_res = self.session.get(cpc_uri + '/partitions')
+        partition_list = []
+        if partitions_res:
+            partition_items = partitions_res['partitions']
+            for partition_props in partition_items:
+                partition = Partition(self, partition_props)
                 if full_properties:
-                    lpar.pull_full_properties()
-                lpar_list.append(lpar)
-        return lpar_list
+                    partition.pull_full_properties()
+                partition_list.append(partition)
+        return partition_list
 
 
-class Lpar(BaseResource):
+class Partition(BaseResource):
     """
-    Representation of an LPAR.
+    Representation of a Partition.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
@@ -89,7 +85,7 @@ class Lpar(BaseResource):
         """
         Parameters:
 
-          manager (:class:`~zhmcclient.LparManager`):
+          manager (:class:`~zhmcclient.PartitionManager`):
             Manager object for this resource.
 
           properties (dict):
@@ -97,59 +93,51 @@ class Lpar(BaseResource):
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
-        assert isinstance(manager, LparManager)
-        super(Lpar, self).__init__(manager, properties)
+        assert isinstance(manager, PartitionManager)
+        super(Partition, self).__init__(manager, properties)
 
-    def activate(self):
+    def start(self):
         """
-        Activate this LPAR.
+        Start this Partition.
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if self.properties["status"] == "not-activated":
-            lpar_object_uri = self.properties["object-uri"]
+        if self.properties["status"] in ["stopped", "paused"]:
+            partition_object_uri = self.properties["object-uri"]
             body = {}
             result = self.manager.session.post(
-                lpar_object_uri + '/operations/activate', body)
+                partition_object_uri + '/operations/start', body)
             self.pull_full_properties()
             return True
         else:
             return False
 
-    def deactivate(self):
+    def stop(self):
         """
-        De-activate this LPAR.
+        Stop this Partition.
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if self.properties["status"] in ["operating", "not-operating",
-                                         "exceptions"]:
-            lpar_object_uri = self.properties["object-uri"]
-            body = {'force': True}
+        if self.properties["status"] in ["active", "paused"]:
+            partition_object_uri = self.properties["object-uri"]
+            body = {}
             result = self.manager.session.post(
-                lpar_object_uri + '/operations/deactivate', body)
+                partition_object_uri + '/operations/stop', body)
             self.pull_full_properties()
             return True
         else:
             return False
 
-    def load(self, load_address):
+    def create(self, partition_properties):
         """
-        Load (boot) this LPAR from a boot device.
+        The Create Partition operation creates a partition with
+        the given properties on the identified CPC.
 
         TODO: Review return value, and idea of immediately retrieving status.
 
         Parameters:
 
-          load_address (:term:`string`): Device number of the boot device.
+           partition_properties (:term:`dict`): Properties for partition.
         """
-        if self.properties["status"] in ["not-operating"]:
-            lpar_object_uri = self.properties["object-uri"]
-            body = {'load-address': load_address}
-            result = self.manager.session.post(
-                lpar_object_uri + '/operations/load', body)
-            self.pull_full_properties()
-            return True
-        else:
-            return False
+        pass
 
