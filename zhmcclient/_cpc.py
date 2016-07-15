@@ -61,8 +61,8 @@ class CpcManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Boolean indicating whether the full properties list 
-            should be retrieved. Otherwise, only the object_info 
+            Boolean indicating whether the full properties list
+            should be retrieved. Otherwise, only the object_info
             properties are returned dor each cpc object.
 
 
@@ -75,11 +75,10 @@ class CpcManager(BaseManager):
         if cpcs_res:
             cpc_items = cpcs_res['cpcs']
             for cpc_props in cpc_items:
+                cpc = Cpc(self, cpc_props)
                 if full_properties:
-                    cpc_res = self.session.get(cpc_props['object-uri'])
-                    cpc_list.append(Cpc(self, cpc_res))
-                else:
-                    cpc_list.append(Cpc(self, cpc_props))
+                    cpc.pull_full_properties()
+                cpc_list.append(cpc)
         return cpc_list
 
 

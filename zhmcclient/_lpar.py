@@ -61,7 +61,7 @@ class LparManager(BaseManager):
         """
         return self._parent
 
-    def list(self):
+    def list(self, full_properties=False):
         """
         List the LPARs in scope of this manager object.
 
@@ -75,7 +75,10 @@ class LparManager(BaseManager):
         if lpars_res:
             lpar_items = lpars_res['logical-partitions']
             for lpar_props in lpar_items:
-                lpar_list.append(Lpar(self, lpar_props))
+                lpar = Lpar(self, lpar_props)
+                if full_properties:
+                    lpar.pull_full_properties()
+                lpar_list.append(lpar)
         return lpar_list
 
 
