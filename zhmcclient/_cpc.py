@@ -58,6 +58,14 @@ class CpcManager(BaseManager):
         """
         List the CPCs in scope of this manager object.
 
+        Parameters:
+
+          full_properties (bool):
+            Boolean indicating whether the full properties list 
+            should be retrieved. Otherwise, only the object_info 
+            properties are returned dor each cpc object.
+
+
         Returns:
 
           : A list of :class:`~zhmcclient.Cpc` objects.
@@ -70,7 +78,7 @@ class CpcManager(BaseManager):
                 if full_properties:
                     cpc_res = self.session.get(cpc_props['object-uri'])
                     cpc_list.append(Cpc(self, cpc_res))
-	        else:
+                else:
                     cpc_list.append(Cpc(self, cpc_props))
         return cpc_list
 
