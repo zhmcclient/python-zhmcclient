@@ -19,6 +19,7 @@ from ._exceptions import NotFound, NoUniqueMatch
 
 __all__ = ['BaseManager']
 
+
 class BaseManager(object):
     """
     Abstract base class for manager classes (e.g.
@@ -35,8 +36,8 @@ class BaseManager(object):
           parent (subclass of :class:`~zhmcclient.BaseResource`):
             Parent resource defining the scope for this manager.
 
-            `None`, if the manager has no parent, i.e. when it manages top-level
-            resources.
+            `None`, if the manager has no parent, i.e. when it manages
+            top-level resources.
         """
         self._parent = parent
         self._session = parent.manager.session if parent else None

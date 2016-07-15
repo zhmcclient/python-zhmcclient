@@ -11,6 +11,7 @@ from __future__ import absolute_import
 
 __all__ = ['BaseResource']
 
+
 class BaseResource(object):
     """
     Abstract base class for resource classes (e.g. :class:`~zhmcclient.Cpc`)
@@ -75,4 +76,3 @@ class BaseResource(object):
           type in the scope of that manager).
         """
         return self._manager
-

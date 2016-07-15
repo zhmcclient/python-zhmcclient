@@ -21,6 +21,7 @@ from ._lpar import LparManager
 
 __all__ = ['CpcManager', 'Cpc']
 
+
 class CpcManager(BaseManager):
     """
     Manager object for CPCs. This manager object is scoped to the HMC Web
@@ -62,8 +63,8 @@ class Cpc(BaseResource):
     """
     Representation of a CPC.
 
-    Derived from :class:`~zhmcclient.BaseResource`; see there for common methods
-    and attributes.
+    Derived from :class:`~zhmcclient.BaseResource`; see there for common
+    methods and attributes.
     """
 
     def __init__(self, manager, properties):
@@ -75,7 +76,8 @@ class Cpc(BaseResource):
 
           properties (dict):
             Properties to be set for this resource object.
-            See initialization of :class:`~zhmcclient.BaseResource` for details.
+            See initialization of :class:`~zhmcclient.BaseResource` for
+            details.
         """
         assert isinstance(manager, CpcManager)
         super(Cpc, self).__init__(manager, properties)

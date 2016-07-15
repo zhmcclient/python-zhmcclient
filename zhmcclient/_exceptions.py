@@ -175,10 +175,10 @@ class HTTPError(Error):
         treated as a sub-code of the HTTP status code and thus must be used in
         conjunction with the HTTP status code to determine the error condition.
 
-        Standard HMC reason codes that apply across the entire API are described
-        in section "Common request validation reason codes" in the HMC API book.
-        Additional operation-specific reason codes may also be documented in the
-        description of the specific API operations.
+        Standard HMC reason codes that apply across the entire API are
+        described in section "Common request validation reason codes" in the
+        HMC API book. Additional operation-specific reason codes may also be
+        documented in the description of the specific API operations.
         """
         return self._body.get('reason', None)
 
@@ -242,8 +242,8 @@ class HTTPError(Error):
     @property
     def request_body(self):
         """
-        The request body, in the form of a JSON document. Note that, since it is
-        in the form of a JSON document, this may not be exactly what was
+        The request body, in the form of a JSON document. Note that, since it
+        is in the form of a JSON document, this may not be exactly what was
         submitted by the API client program, but it is semantically equivalent.
 
         If the request body could not be parsed or some other error prevented
@@ -274,7 +274,8 @@ class HTTPError(Error):
         :attr:`~zhmcclient.HTTPError.request_body_as_string` property contains
         only part of the request body (`True`) or the entire request body
         (`False`). `None`, if the
-        :attr:`~zhmcclient.HTTPError.request_body_as_string` property is `None`.
+        :attr:`~zhmcclient.HTTPError.request_body_as_string` property is
+        `None`.
         """
         return self._body.get('request-body-as-string-partial', None)
 

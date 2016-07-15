@@ -63,88 +63,88 @@ class BaseTest(unittest.TestCase):
 
             # Check 'in' operator
             self.assertTrue(key in resource.properties,
-                            "Key %r is not in resource %r, " \
+                            "Key %r is not in resource %r, "
                             "using 'in' operator" % (key, resource))
 
             # Check 'has_key()' method
             self.assertTrue(resource.properties.has_key(key),
-                            "Key %r is not in resource %r, " \
+                            "Key %r is not in resource %r, "
                             "using has_key() method" % (key, resource))
 
         # Check 'keys()' method
         for key in resource.properties.keys():
             self.assertTrue(key in properties.keys(),
-                            "Resource property key %r is not in input " \
-                            "properties %r, using keys() method" % \
+                            "Resource property key %r is not in input "
+                            "properties %r, using keys() method" %
                             (key, properties))
         for key in properties.keys():
             self.assertTrue(key in resource.properties.keys(),
-                            "Input property key %r is not in resource " \
-                            "properties %r, using keys() method" % \
+                            "Input property key %r is not in resource "
+                            "properties %r, using keys() method" %
                             (key, resource))
 
         # Check 'values()' method
         for value in resource.properties.values():
             self.assertTrue(value in properties.values(),
-                            "Resource property value %r is not in input " \
-                            "properties %r, using values() method" % \
+                            "Resource property value %r is not in input "
+                            "properties %r, using values() method" %
                             (value, properties))
         for value in properties.values():
             self.assertTrue(value in resource.properties.values(),
-                            "Input property value %r is not in resource " \
-                            "properties %r, using values() method" % \
+                            "Input property value %r is not in resource "
+                            "properties %r, using values() method" %
                             (value, resource))
 
         # Check 'items()' method
         for key, value in resource.properties.items():
             self.assertTrue((key, value) in properties.items(),
-                            "Resource property key/value tuple (%r, %r) is " \
-                            "not in input properties %r, " \
-                            "using items() method" % \
+                            "Resource property key/value tuple (%r, %r) is "
+                            "not in input properties %r, "
+                            "using items() method" %
                             (key, value, properties))
         for key, value in properties.items():
             self.assertTrue((key, value) in resource.properties.items(),
-                            "Input property key/value tuple (%r, %r) is " \
-                            "not in resource properties %r, " \
-                            "using items() method" % \
+                            "Input property key/value tuple (%r, %r) is "
+                            "not in resource properties %r, "
+                            "using items() method" %
                             (key, value, resource))
 
         # Check 'iterkeys()' method
         for key in six.iterkeys(resource.properties):
             self.assertTrue(key in properties.keys(),
-                            "Resource property key %r is not in input " \
-                            "properties %r, using iterkeys() method" % \
+                            "Resource property key %r is not in input "
+                            "properties %r, using iterkeys() method" %
                             (key, properties))
         for key in six.iterkeys(properties):
             self.assertTrue(key in resource.properties.keys(),
-                            "Input property key %r is not in resource " \
-                            "properties %r, using iterkeys() method" % \
+                            "Input property key %r is not in resource "
+                            "properties %r, using iterkeys() method" %
                             (key, resource))
 
         # Check 'itervalues()' method
         for value in six.itervalues(resource.properties):
             self.assertTrue(value in properties.values(),
-                            "Resource property value %r is not in input " \
-                            "properties %r, using itervalues() method" % \
+                            "Resource property value %r is not in input "
+                            "properties %r, using itervalues() method" %
                             (value, properties))
         for value in six.itervalues(properties):
             self.assertTrue(value in resource.properties.values(),
-                            "Input property value %r is not in resource " \
-                            "properties %r, using itervalues() method" % \
+                            "Input property value %r is not in resource "
+                            "properties %r, using itervalues() method" %
                             (value, resource))
 
         # Check 'iteritems()' method
         for key, value in six.iteritems(resource.properties):
             self.assertTrue((key, value) in properties.items(),
-                            "Resource property key/value tuple (%r, %r) is " \
-                            "not in input properties %r, " \
-                            "using iteritems() method" % \
+                            "Resource property key/value tuple (%r, %r) is "
+                            "not in input properties %r, "
+                            "using iteritems() method" %
                             (key, value, properties))
         for key, value in six.iteritems(properties):
             self.assertTrue((key, value) in resource.properties.items(),
-                            "Input property key/value tuple (%r, %r) is " \
-                            "not in resource properties %r, " \
-                            "using iteritems() method" % \
+                            "Input property key/value tuple (%r, %r) is "
+                            "not in resource properties %r, "
+                            "using iteritems() method" %
                             (key, value, resource))
 
         # Various checks with invalid keys
@@ -162,28 +162,28 @@ class BaseTest(unittest.TestCase):
                 self.assertEqual(resource.properties.get(key, 'xxx'), 'xxx')
 
                 # Check 'in' operation
-                self.assertTrue(not key in resource.properties,
-                                "Key %r is in resource %r, " \
+                self.assertTrue(key not in resource.properties,
+                                "Key %r is in resource %r, "
                                 "using 'in' operator" % (key, resource))
 
                 # Check 'has_key()' method
                 self.assertTrue(not resource.properties.has_key(key),
-                                "Key %r is in resource %r, " \
+                                "Key %r is in resource %r, "
                                 "using has_key() method" % (key, resource))
 
                 # Check 'keys()' method
-                self.assertTrue(not key in resource.properties.keys(),
-                                "Key %r is not in resource %r, " \
+                self.assertTrue(key not in resource.properties.keys(),
+                                "Key %r is not in resource %r, "
                                 "using keys() method" % (key, resource))
 
                 # Check that accessing invalid keys raise KeyError
                 try:
-                    x = resource.properties[key]
+                    resource.properties[key]
                 except KeyError:
                     pass
                 else:
-                    self.fail("KeyError was not raised when accessing " \
-                              "invalid key %r in resource %r" % \
+                    self.fail("KeyError was not raised when accessing "
+                              "invalid key %r in resource %r" %
                               (key, resource))
 
 
@@ -220,11 +220,11 @@ class TestInit(BaseTest):
     def test_invalid_type(self):
         init_props = 42
         try:
-            res = MyResource(self.mgr, init_props)
+            MyResource(self.mgr, init_props)
         except TypeError:
             pass
         else:
-            self.fail("TypeError was not raised when initializing resource " \
+            self.fail("TypeError was not raised when initializing resource "
                       "with invalid properties: %r" % init_props)
 
 
@@ -302,15 +302,17 @@ class TestDel(BaseTest):
         except KeyError:
             pass
         else:
-            self.fail("KeyError was not raised when deleting invalid key %r " \
-                      "in resource properties %r" % \
+            self.fail("KeyError was not raised when deleting invalid key %r "
+                      "in resource properties %r" %
                       (invalid_key, org_init_properties))
+
 
 class xTestClear(object):
 
     def test_all(self):
         self.dic.clear()
         self.assertTrue(len(self.dic) == 0)
+
 
 class xTestUpdate(object):
 
@@ -338,6 +340,7 @@ class xTestUpdate(object):
         self.assertTrue(self.dic['COW'] == 'Beef')
         self.assertTrue(self.dic['cow'] == 'Beef')
 
+
 class xTestCopy(object):
 
     def test_all(self):
@@ -348,6 +351,7 @@ class xTestCopy(object):
         self.assertTrue(self.dic['Dog'] == 'Cat')
         self.assertTrue(cp['Dog'] == 'Kitten')
 
+
 class xTestSetDefault(object):
 
     def test_all(self):
@@ -355,6 +359,7 @@ class xTestSetDefault(object):
         self.assertTrue(self.dic['Dog'] == 'Cat')
         self.dic.setdefault('Ningaui', 'Chicken')
         self.assertTrue(self.dic['Ningaui'] == 'Chicken')
+
 
 class xTestEqual(object):
 
@@ -379,21 +384,21 @@ class xTestEqual(object):
         for test_dict, relation, comment in test_dicts:
             if relation == 'eq':
                 self.assertDictEqual(test_dict, base_dict,
-                                     "Expected test_dict == base_dict:\n" \
-                                     "  test case: %s\n" \
-                                     "  test_dict: %r\n" \
-                                     "  base_dict: %r" % \
+                                     "Expected test_dict == base_dict:\n"
+                                     "  test case: %s\n"
+                                     "  test_dict: %r\n"
+                                     "  base_dict: %r" %
                                      (comment, test_dict, base_dict))
             elif relation == 'ne':
                 self.assertDictNotEqual(test_dict, base_dict,
-                                        "Expected test_dict != base_dict:\n" \
-                                        "  test case: %s\n" \
-                                        "  test_dict: %r\n" \
-                                        "  base_dict: %r" % \
+                                        "Expected test_dict != base_dict:\n"
+                                        "  test case: %s\n"
+                                        "  test_dict: %r\n"
+                                        "  base_dict: %r" %
                                         (comment, test_dict, base_dict))
             else:
-                raise AssertionError("Internal Error: Invalid relation %s" \
-                                     "specified in testcase: %s" % \
+                raise AssertionError("Internal Error: Invalid relation %s"
+                                     "specified in testcase: %s" %
                                      (relation, comment))
 
     def test_all(self):
@@ -448,11 +453,13 @@ class xTestEqual(object):
 
             (dict({'Budgie': 'Fish', 'Dog': 'Car'}),
              'ne',
-             'Same size, only matching keys. First non-matching value is less'),
+             'Same size, only matching keys. First non-matching value is '
+             'less'),
 
             (dict({'Budgie': 'Fish', 'Dog': 'Caz'}),
              'ne',
-             'Same size, only matching keys. First non-matching value is grt.'),
+             'Same size, only matching keys. First non-matching value is '
+             'grt.'),
         ]
 
         # First, run these tests against a standard dictionary to verify
@@ -473,6 +480,7 @@ class xTestEqual(object):
                 test_ncdict[nc_key] = test_dict[key]
             test_ncdicts.append((test_ncdict, relation, comment))
         self.run_test_dicts(base_ncdict, test_ncdicts)
+
 
 class xTestOrdering(object):
     """Verify that ordering comparisons between NocaseDict instances

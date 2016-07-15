@@ -10,6 +10,7 @@ from ._cpc import CpcManager
 
 __all__ = ['Client']
 
+
 class Client(object):
     """
     A client to an HMC.
