@@ -104,7 +104,9 @@ class Cpc(BaseResource):
         """
         assert isinstance(manager, CpcManager)
         super(Cpc, self).__init__(manager, properties)
-        self._lpars = LparManager(self)
+        # We do here some lazy loading.
+        self._lpars = None
+        self._partitions = None
 
     @property
     def lpars(self):
@@ -112,4 +114,35 @@ class Cpc(BaseResource):
         :class:`~zhmcclient.LparManager`: Manager object for the LPARs in this
         CPC.
         """
+        # We do here some lazy loading.
+        if not self._lpars:
+            if self.dpm_enabled:
+                self._lpars = None
+            else:
+                self._lpars = LparManager(self)
         return self._lpars
+
+    @property
+    def partitions(self):
+        """
+        :class:`~zhmcclient.PartitionManager`: Manager object for the LPARs in this
+        CPC.
+        """
+        # We do here some lazy loading.
+        if not self._partitions:
+            if self.dpm_enabled:
+                self._partitions = PartitionManager(self)
+            else:
+                self._partitions = None
+        return self._partitions
+
+    @property
+    def dpm_enabled(self):
+        if not self.full_properties:
+            self.pull_full_properties()
+        if 'dpm-enabled' in self.properties:
+            return self.properties['dpm-enabled']
+        elif self.properties['iml-mode'] == 'dpm':
+            return True
+        else:
+            return False
