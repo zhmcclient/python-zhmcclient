@@ -71,11 +71,14 @@ doc_dependent_files := \
     $(wildcard $(doc_conf_dir)/notebooks/*.ipynb) \
     $(wildcard $(package_name)/*.py) \
 
+# Flake8 config file
+flake8_rc_file := setup.cfg
+
 # PyLint config file
 pylint_rc_file := .pylintrc
 
-# PyLint source files to check
-pylint_py_files := \
+# Source files for check (with PyLint and Flake8)
+check_py_files := \
     setup.py \
     $(wildcard $(package_name)/*.py) \
     $(wildcard tests/test*.py) \
@@ -113,7 +116,7 @@ help:
 	@echo '  build      - Build the distribution files in: $(dist_dir) (requires Linux or OSX)'
 	@echo '  buildwin   - Build the Windows installable in: $(dist_dir) (requires Windows 64-bit)'
 	@echo '  builddoc   - Build documentation in: $(doc_build_dir)'
-	@echo '  check      - Run PyLint on sources and save results in: pylint.log'
+	@echo '  check      - Run PyLint and Flake8 on sources and save results in: pylint.log and flake8.log'
 	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_log_file)'
 	@echo '  all        - Do all of the above (except buildwin when not on Windows)'
 	@echo '  install    - Install package in active Python environment'
@@ -185,7 +188,7 @@ doccoverage:
 	@echo '$@ done.'
 
 .PHONY: check
-check: pylint.log
+check: pylint.log flake8.log
 	@echo '$@ done.'
 
 .PHONY: install
@@ -258,16 +261,23 @@ else
 	@false
 endif
 
-# TODO: Once pylint has no more errors, remove the dash "-"
-pylint.log: Makefile $(pylint_rc_file) $(pylint_py_files)
+# TODO: Once PyLint has no more errors, remove the dash "-"
+pylint.log: Makefile $(pylint_rc_file) $(check_py_files)
 ifeq ($(python_major_version), 2)
-	rm -f pylint.log
-	-bash -c "set -o pipefail; PYTHONPATH=. pylint --rcfile=$(pylint_rc_file) --output-format=text $(pylint_py_files) 2>&1 |tee pylint.tmp.log"
-	mv -f pylint.tmp.log pylint.log
-	@echo 'Done: Created Pylint log file: $@'
+	rm -f $@
+	-bash -c "set -o pipefail; PYTHONPATH=. pylint --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files) 2>&1 |tee $@.tmp"
+	mv -f $@.tmp $@
+	@echo 'Done: Created PyLint log file: $@'
 else
-	@echo 'Info: Pylint requires Python 2; skipping this step on Python $(python_major_version)'
+	@echo 'Info: PyLint requires Python 2; skipping this step on Python $(python_major_version)'
 endif
+
+# TODO: Once Flake8 has no more errors, remove the dash "-"
+flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
+	rm -f $@
+	-bash -c "set -o pipefail; PYTHONPATH=. flake8 $(check_py_files) 2>&1 |tee $@.tmp"
+	mv -f $@.tmp $@
+	@echo 'Done: Created Flake8 log file: $@'
 
 $(test_log_file): Makefile $(package_name)/*.py tests/*.py .coveragerc
 	rm -f $(test_log_file)

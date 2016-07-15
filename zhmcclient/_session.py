@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
+"""
+Session class: A session to the HMC, optionally in context of an HMC user.
+"""
+
 from __future__ import absolute_import
 
-import requests
 import json
 import time
+import requests
 
 from ._exceptions import HTTPError, AuthError, ConnectionError
 
@@ -16,6 +20,7 @@ _STD_HEADERS = {
     'Content-type': 'application/json',
     'Accept': '*/*'
 }
+
 
 class Session(object):
     """
@@ -151,7 +156,7 @@ class Session(object):
             'userid': self._userid,
             'password': self._password
         }
-        self._headers.pop('X-API-Session', None) # Just in case
+        self._headers.pop('X-API-Session', None)  # Just in case
         logon_res = self.post(logon_uri, logon_req, logon_required=False)
         self._session_id = logon_res['api-session']
         self._headers['X-API-Session'] = self._session_id
@@ -204,14 +209,14 @@ class Session(object):
                 if logon_required:
                     self._do_logon()
                 else:
-                    raise AuthError("API session token unexpectedly expired " \
-                                    "for GET on resource that does not " \
-                                    "require authentication: {}".\
+                    raise AuthError("API session token unexpectedly expired "
+                                    "for GET on resource that does not "
+                                    "require authentication: {}".
                                     format(uri))
                 return self.get(uri, logon_required)
             else:
                 exc = HTTPError(result.json())
-                raise AuthError("HTTP authentication failed: {}".\
+                raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
             raise HTTPError(result.json())
@@ -277,7 +282,7 @@ class Session(object):
                         return result.json()
                     else:
                         # TODO: Add support for timeout
-                        time.sleep(1) # Avoid hot spin loop
+                        time.sleep(1)  # Avoid hot spin loop
                 else:
                     raise HTTPError(result.json())
         elif result.status_code == 403:
@@ -287,21 +292,22 @@ class Session(object):
                 if logon_required:
                     self._do_logon()
                 else:
-                    raise AuthError("API session token unexpectedly expired " \
-                                    "for POST on resource that does not " \
-                                    "require authentication: {}".\
+                    raise AuthError("API session token unexpectedly expired "
+                                    "for POST on resource that does not "
+                                    "require authentication: {}".
                                     format(uri))
                 return self.post(uri, body, logon_required)
             else:
                 exc = HTTPError(result.json())
-                raise AuthError("HTTP authentication failed: {}".\
+                raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
             raise HTTPError(result.json())
 
     def delete(self, uri, logon_required=True):
         """
-        Perform the HTTP DELETE method against the resource identified by a URI.
+        Perform the HTTP DELETE method against the resource identified by a
+        URI.
 
         A set of standard HTTP headers is automatically part of the request.
 
@@ -311,7 +317,8 @@ class Session(object):
         Parameters:
 
           uri (:term:`string`):
-            Relative URI path of the resource, e.g. "/api/session/{session-id}".
+            Relative URI path of the resource, e.g.
+            "/api/session/{session-id}".
             This URI is relative to the base URL of the session (see
             the :attr:`~zhmcclient.Session.base_url` property).
             Must not be `None`.
@@ -343,16 +350,15 @@ class Session(object):
                 if logon_required:
                     self._do_logon()
                 else:
-                    raise AuthError("API session token unexpectedly expired " \
-                                    "for DELETE on resource that does not " \
-                                    "require authentication: {}".\
+                    raise AuthError("API session token unexpectedly expired "
+                                    "for DELETE on resource that does not "
+                                    "require authentication: {}".
                                     format(uri))
                 self.delete(uri, logon_required)
                 return
             else:
                 exc = HTTPError(result.json())
-                raise AuthError("HTTP authentication failed: {}".\
+                raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
             raise HTTPError(result.json())
-

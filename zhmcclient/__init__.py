@@ -1,13 +1,19 @@
-#!/usr/bin/env python                                                                                                        
+#!/usr/bin/env python
+
+"""
+zhmcclient - A pure Python client library for the z Systems HMC Web Services
+API.
+
+For documentation, see TODO: Add link to RTD once available.
+"""
 
 from __future__ import absolute_import
 
-from ._version import __version__
-from ._exceptions import *
-from ._manager import *
-from ._resource import *
-from ._session import *
-from ._client import *
-from ._cpc import *
-from ._lpar import *
-
+from ._version import *       # noqa: F401
+from ._exceptions import *    # noqa: F401
+from ._manager import *       # noqa: F401
+from ._resource import *      # noqa: F401
+from ._session import *       # noqa: F401
+from ._client import *        # noqa: F401
+from ._cpc import *           # noqa: F401
+from ._lpar import *          # noqa: F401

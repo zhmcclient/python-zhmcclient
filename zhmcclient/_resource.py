@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 
+"""
+Base definitions for resource classes.
+
+Resource objects represent the real manageable resources in the systems managed
+by the HMC.
+"""
+
 from __future__ import absolute_import
-import collections
 
 __all__ = ['BaseResource']
+
 
 class BaseResource(object):
     """
@@ -69,4 +76,3 @@ class BaseResource(object):
           type in the scope of that manager).
         """
         return self._manager
-
