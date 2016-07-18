@@ -13,60 +13,98 @@
 .. limitations under the License.
 ..
 
-Python bindings to the z Systems Hardware Management Console Web Services API
-=============================================================================
-
-This is a Python API (the ``zhmcclient`` module) to
-the z Systems Hardware Management Console Web Services API.
-The Python API does not implement 100% of the Web Services API.
-
-See the `Hardware Management Console Web Services API`_ for information
-on how to use the Web Services API.
-
-.. _Hardware Management Console Web Services API: http://www-01.ibm.com/support/docview.wss?uid=isg29b97f40675618ba085257a6a00777bea&aid=1
-
-python-zhmcclient is licensed under the Apache License.
-
-* License: Apache License, Version 2.0
-* `PyPi`_ - package installation
-* `Online Documentation`_
-* `Bugs`_ - issue tracking
-* `Source`_
-* `How to Contribute`_
-
-.. _PyPi: https://pypi.python.org/pypi/zhmcclient
-.. _Online Documentation: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
-.. _Bugs: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
-.. _Source: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
-.. _How to Contribute: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient
-
+zhmcclient - A pure Python client library for the z Systems HMC Web Services API
+================================================================================
 
 .. contents:: Contents:
    :local:
 
+Overview
+--------
 
-Python API
-----------
+This project provides the ``zhmcclient`` Python package, which is a client
+library for the z Systems Hardware Management Console (HMC) Web Services API.
 
-Example code::
+The goal of this project is to make the HMC Web Services API easily consumable
+for Python programmers. The various manageable resources in the z Systems or
+LinuxONE environment are provided as Python classes, and the operations against
+them are provided as Python methods.
 
-    >>> import zhmcclient
-    >>> cl = zhmcclient.Client(VERSION, USER, PASSWORD, URL)
-    >>> cl.cpcs.list()
-    [...]
-    >>> cpc = cl.cpcs.find(name='P0000P30')
-    [...]
-    >>> cpc.lpars.list()
-    [...]
-    >>> lpar = cpc.lpars.find(name='PART8')
-    [...]
-    >>> lpar.activate()
+At this point, a small subset of the HMC Web Services API has been implemented.
+The goal is to implement a reasonable subset of the API, with a focus on DPM
+(Dynamic Partition Manager).
 
-
-Testing
+Example
 -------
 
-There are multiple test targets that can be run to validate the code.
+For example code, see the Python scripts in the ``examples`` directory of the
+Git repository.
 
-* tox -e pep8 - style guidelines enforcement
-* tox -e py27 - traditional unit testing
+Documentation
+-------------
+
+At this point, the API documentation of the client library needs to be generated
+by the users, using these commands (in a virtual Python environment, and in the
+working directory of the cloned Git repository):
+
+::
+
+    $ make develop
+    $ make builddoc
+
+The top-level document of the so generated API documentation will be
+``build_doc/html/docs/index.html``.
+
+The documentation describes all manageable resources supported by the client
+library, but not their resource properties. See
+`Hardware Management Console Web Services API`_ for information about the
+resource properties.
+
+.. _Hardware Management Console Web Services API: http://www-01.ibm.com/support/docview.wss?uid=isg29b97f40675618ba085257a6a00777bea&aid=1
+
+Development and test
+--------------------
+
+It is recommended to establish a virtual Python environment, based upon one of
+the supported Python versions (2.7, 3.3, 3.4).
+
+The project uses ``make`` to do things in the currently active Python
+environment. The command ``make help`` (or just ``make``) displays a list of valid
+``make`` targets and a short description of what each target does.
+
+Here is a list of the most important ``make`` commands:
+
+* To establish the prerequisites in the currently active Python environment:
+
+  ::
+
+      $ make develop
+
+* To build the API documentation:
+
+  ::
+
+      $ make builddoc
+
+* To run the unit tests:
+
+  ::
+
+      $ make test
+
+The ``tox`` command is supported to invoke various ``make`` targets across all
+supported Python environments. It is mainly used to validate that the whole
+project is in a good state. It is not necessarily the fastest way to iterate
+on a particular unit test. In fact, ``tox`` arguments are not passed to the
+unit test runner, so the unit test suite can be run only completely:
+
+::
+
+    $ tox
+
+See ``tox.ini`` for details on what each ``tox`` run does.
+
+License
+-------
+
+python-zhmcclient is licensed under the Apache 2.0 License.
