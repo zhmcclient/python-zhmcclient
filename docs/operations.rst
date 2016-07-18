@@ -93,8 +93,8 @@ CPCs
 
 .. _`LPARs`:
 
-LPARs
------
+LPARs and Partitions
+--------------------
 
 .. automodule:: zhmcclient._lpar
 
@@ -103,6 +103,16 @@ LPARs
    :special-members: __str__
 
 .. autoclass:: zhmcclient.Lpar
+   :members:
+   :special-members: __str__
+
+.. automodule:: zhmcclient._partition
+
+.. autoclass:: zhmcclient.PartitionManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Partition
    :members:
    :special-members: __str__
 
