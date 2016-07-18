@@ -85,7 +85,6 @@ check_py_files := \
 
 # Test log
 test_log_file := test_$(python_version_fn).log
-test_tmp_file := test_$(python_version_fn).tmp.log
 
 # Files to be put into distribution archive.
 # Keep in sync with dist_dependent_files.
@@ -203,7 +202,7 @@ test: $(test_log_file)
 
 .PHONY: clobber
 clobber: clean
-	rm -f pylint.log test_*.log
+	rm -f pylint.log flake8.log test_*.log
 	rm -Rf $(doc_build_dir) htmlcov .tox
 	@echo 'Done: Removed everything to get to a fresh state.'
 	@echo '$@ done.'
@@ -214,7 +213,8 @@ clean:
 	find . -name "*.pyc" -delete
 	sh -c "find . -name \"__pycache__\" |xargs -r rm -Rf"
 	sh -c "ls -d tmp_* |xargs -r rm -Rf"
-	rm -f MANIFEST .coverage $(test_tmp_file)
+	find . -name "*.tmp" -delete
+	rm -f MANIFEST .coverage
 	rm -Rf build .cache $(package_name).egg-info .eggs
 	@echo 'Done: Cleaned out all temporary files.'
 	@echo '$@ done.'
@@ -280,8 +280,7 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	@echo 'Done: Created Flake8 log file: $@'
 
 $(test_log_file): Makefile $(package_name)/*.py tests/*.py .coveragerc
-	rm -f $(test_log_file)
-	bash -c "set -o pipefail; PYTHONWARNINGS=default PYTHONPATH=. py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html -s 2>&1 |tee $(test_tmp_file)"
-	mv -f $(test_tmp_file) $(test_log_file)
+	rm -f $@
+	bash -c "set -o pipefail; PYTHONWARNINGS=default PYTHONPATH=. py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html -s 2>&1 |tee $@.tmp"
+	mv -f $@.tmp $@
 	@echo 'Done: Created test log file: $@'
-
