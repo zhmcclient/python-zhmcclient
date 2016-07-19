@@ -51,7 +51,7 @@ print("Using HMC %s with userid %s ..." % (HMC, userid))
 session = zhmcclient.Session(HMC, userid, password)
 cl = zhmcclient.Client(session)
 
-for full_properties in [False, True]:
+for full_properties in (False, True):
     localtime = time.asctime(time.localtime(time.time()))
     print("Local current time :", localtime)
     print("Listing CPCs (full_properties=%r) ..." % full_properties)
@@ -72,7 +72,7 @@ except zhmcclient.NotFound:
     print("Could not find CPC %s on HMC %s" % (CPCNAME, HMC))
     sys.exit(1)
 
-for full_properties in [False, True]:
+for full_properties in (False, True):
     localtime = time.asctime(time.localtime(time.time()))
     print("Local current time :", localtime)
     print("Listing LPARs on CPC %s (full_properties=%r) ..." % (CPCNAME, full_properties))

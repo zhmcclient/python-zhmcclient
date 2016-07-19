@@ -65,7 +65,8 @@ class BaseResource(object):
             for their actual definitions of property qualifiers.
         """
         self._manager = manager
-        self.properties = dict(properties)
+        self._properties = dict(properties)
+        self._properties_timestamp = int(time.time())
         self._full_properties = False
 
     @property
@@ -81,11 +82,6 @@ class BaseResource(object):
           of the resources along with their properties.
         """
         return self._properties
-
-    @properties.setter
-    def properties(self, props):
-        self._properties = dict(props)
-        self._properties_timestamp = int(time.time())
 
     @property
     def manager(self):
@@ -107,5 +103,5 @@ class BaseResource(object):
     def pull_full_properties(self):
         full_properties = self.manager.session.get(self.properties['object-uri'])
         self._properties = dict(full_properties)
+        self._properties_timestamp = int(time.time())
         self._full_properties = True
-        return len(self._properties)

@@ -65,6 +65,13 @@ class LparManager(BaseManager):
         """
         List the LPARs in scope of this manager object.
 
+        Parameters:
+
+          full_properties (bool):
+            Boolean indicating whether the full properties list
+            should be retrieved. Otherwise, only the object_info
+            properties are returned for each lpar object.
+
         Returns:
 
           : A list of :class:`~zhmcclient.Lpar` objects.

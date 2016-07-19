@@ -63,7 +63,7 @@ class CpcManager(BaseManager):
           full_properties (bool):
             Boolean indicating whether the full properties list
             should be retrieved. Otherwise, only the object_info
-            properties are returned dor each cpc object.
+            properties are returned for each cpc object.
 
 
         Returns:
