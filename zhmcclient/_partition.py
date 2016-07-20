@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """
+<<<<<<< HEAD
 A **partitions** is a subset of a physical z Systems computer or
 LinuxONE system, certain aspects of which are virtualized and on which
 Dynamic Partition Manager (DPM) is enabled. Partitions can be created
@@ -20,6 +21,11 @@ and deleted dynamically, and their resources such as CPU, memory or
 I/O devices can be configured.
 You can create as many partition definitions as you want,
 but only a specific number of partitions can be active at any given time.
+=======
+A **Partition** is central to partition management for IBM Dynamic Partition Manager (DPM)
+Partitions can be created and deleted dynamically, and their resources such as
+CPU, memory or I/O devices can be configured.
+>>>>>>> 16a42a15a87448c509aca36ffbc20ae06d7a41f2
 """
 
 from __future__ import absolute_import
