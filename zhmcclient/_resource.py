@@ -105,3 +105,13 @@ class BaseResource(object):
         self._properties = dict(full_properties)
         self._properties_timestamp = int(time.time())
         self._full_properties = True
+
+    def get_property(self, name):
+        try:
+            return self._properties[name]
+        except KeyError:
+            if self.full_properties:
+                raise
+            self.pull_full_properties()
+            return self._properties[name]
+
