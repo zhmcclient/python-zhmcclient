@@ -20,6 +20,7 @@ by the HMC.
 """
 
 from __future__ import absolute_import
+import time
 
 __all__ = ['BaseResource']
 
@@ -65,6 +66,8 @@ class BaseResource(object):
         """
         self._manager = manager
         self._properties = dict(properties)
+        self._properties_timestamp = int(time.time())
+        self._full_properties = False
 
     @property
     def properties(self):
@@ -88,3 +91,17 @@ class BaseResource(object):
           type in the scope of that manager).
         """
         return self._manager
+
+    @property
+    def full_properties(self):
+        return self._full_properties
+
+    @property
+    def properties_timestamp(self):
+        return self._properties_timestamp
+
+    def pull_full_properties(self):
+        full_properties = self.manager.session.get(self.properties['object-uri'])
+        self._properties = dict(full_properties)
+        self._properties_timestamp = int(time.time())
+        self._full_properties = True

@@ -54,9 +54,17 @@ class CpcManager(BaseManager):
         super(CpcManager, self).__init__()
         self._session = client.session
 
-    def list(self):
+    def list(self, full_properties=False):
         """
         List the CPCs in scope of this manager object.
+
+        Parameters:
+
+          full_properties (bool):
+            Boolean indicating whether the full properties list
+            should be retrieved. Otherwise, only the object_info
+            properties are returned for each cpc object.
+
 
         Returns:
 
@@ -67,7 +75,10 @@ class CpcManager(BaseManager):
         if cpcs_res:
             cpc_items = cpcs_res['cpcs']
             for cpc_props in cpc_items:
-                cpc_list.append(Cpc(self, cpc_props))
+                cpc = Cpc(self, cpc_props)
+                if full_properties:
+                    cpc.pull_full_properties()
+                cpc_list.append(cpc)
         return cpc_list
 
 
