@@ -13,9 +13,13 @@
 # limitations under the License.
 
 """
-A **Partition** is central to partition management for IBM Dynamic Partition Manager (DPM)
-Partitions can be created and deleted dynamically, and their resources such as
-CPU, memory or I/O devices can be configured.
+A **partitions** is a subset of a physical z Systems computer or
+LinuxONE system, certain aspects of which are virtualized and on which
+Dynamic Partition Manager (DPM) is enabled. Partitions can be created
+and deleted dynamically, and their resources such as CPU, memory or
+I/O devices can be configured.
+You can create as many partition definitions as you want,
+but only a specific number of partitions can be active at any given time.
 """
 
 from __future__ import absolute_import
@@ -72,6 +76,19 @@ class PartitionManager(BaseManager):
                 partition_list.append(partition)
         return partition_list
 
+    def create(self, partition_properties):
+        """
+        The Create Partition operation creates a partition with
+        the given properties on the identified CPC.
+
+        TODO: Review return value, and idea of immediately retrieving status.
+
+        Parameters:
+
+           partition_properties (:term:`dict`): Properties for partition.
+        """
+        pass
+
 
 class Partition(BaseResource):
     """
@@ -107,7 +124,6 @@ class Partition(BaseResource):
             body = {}
             result = self.manager.session.post(
                 partition_object_uri + '/operations/start', body)
-            self.pull_full_properties()
             return True
         else:
             return False
@@ -123,21 +139,7 @@ class Partition(BaseResource):
             body = {}
             result = self.manager.session.post(
                 partition_object_uri + '/operations/stop', body)
-            self.pull_full_properties()
             return True
         else:
             return False
-
-    def create(self, partition_properties):
-        """
-        The Create Partition operation creates a partition with
-        the given properties on the identified CPC.
-
-        TODO: Review return value, and idea of immediately retrieving status.
-
-        Parameters:
-
-           partition_properties (:term:`dict`): Properties for partition.
-        """
-        pass
 
