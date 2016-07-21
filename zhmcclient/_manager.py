@@ -154,7 +154,7 @@ class BaseManager(object):
         listing = self.list()
         for obj in listing:
             try:
-                if all(obj.properties[propname] == value
+                if all(obj.get_property(propname) == value
                        for (propname, value) in searches):
                     found.append(obj)
             except AttributeError:

@@ -71,7 +71,7 @@ class LparManager(BaseManager):
 
           : A list of :class:`~zhmcclient.Lpar` objects.
         """
-        cpc_uri = self.cpc.properties["object-uri"]
+        cpc_uri = self.cpc.get_property('object-uri')
         lpars_res = self.session.get(cpc_uri + '/logical-partitions')
         lpar_list = []
         if lpars_res:
@@ -113,15 +113,10 @@ class Lpar(BaseResource):
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if self.properties["status"] == "not-activated":
-            lpar_object_uri = self.properties["object-uri"]
-            body = {}
-            result = self.manager.session.post(
-                lpar_object_uri + '/operations/activate', body)
-            self.pull_full_properties()
-            return True
-        else:
-            return False
+        lpar_object_uri = self.get_property('object-uri')
+        body = {}
+        result = self.manager.session.post(
+        lpar_object_uri + '/operations/activate', body)
 
     def deactivate(self):
         """
@@ -129,16 +124,10 @@ class Lpar(BaseResource):
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if self.properties["status"] in ["operating", "not-operating",
-                                         "exceptions"]:
-            lpar_object_uri = self.properties["object-uri"]
-            body = {'force': True}
-            result = self.manager.session.post(
-                lpar_object_uri + '/operations/deactivate', body)
-            self.pull_full_properties()
-            return True
-        else:
-            return False
+        lpar_object_uri = self.get_property('object-uri')
+        body = {'force': True}
+        result = self.manager.session.post(
+        lpar_object_uri + '/operations/deactivate', body)
 
     def load(self, load_address):
         """
@@ -150,13 +139,8 @@ class Lpar(BaseResource):
 
           load_address (:term:`string`): Device number of the boot device.
         """
-        if self.properties["status"] in ["not-operating"]:
-            lpar_object_uri = self.properties["object-uri"]
-            body = {'load-address': load_address}
-            result = self.manager.session.post(
-                lpar_object_uri + '/operations/load', body)
-            self.pull_full_properties()
-            return True
-        else:
-            return False
+        lpar_object_uri = self.get_property('object-uri')
+        body = {'load-address': load_address}
+        result = self.manager.session.post(
+            lpar_object_uri + '/operations/load', body)
 

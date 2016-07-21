@@ -138,11 +138,7 @@ class Cpc(BaseResource):
 
     @property
     def dpm_enabled(self):
-        if not self.full_properties:
-            self.pull_full_properties()
-        if 'dpm-enabled' in self.properties:
-            return self.properties['dpm-enabled']
-        elif self.properties['iml-mode'] == 'dpm':
-            return True
-        else:
+        try:
+	    return self.get_property('dpm-enabled')
+        except KeyError:
             return False

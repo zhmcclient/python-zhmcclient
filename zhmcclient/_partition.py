@@ -64,7 +64,7 @@ class PartitionManager(BaseManager):
 
           : A list of :class:`~zhmcclient.Lpar` objects.
         """
-        cpc_uri = self.cpc.properties["object-uri"]
+        cpc_uri = self.cpc.get_property('object-uri')
         partitions_res = self.session.get(cpc_uri + '/partitions')
         partition_list = []
         if partitions_res:
@@ -119,14 +119,10 @@ class Partition(BaseResource):
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if self.properties["status"] in ["stopped", "paused"]:
-            partition_object_uri = self.properties["object-uri"]
-            body = {}
-            result = self.manager.session.post(
-                partition_object_uri + '/operations/start', body)
-            return True
-        else:
-            return False
+        partition_object_uri = self.get_property('object-uri')
+        body = {}
+        result = self.manager.session.post(
+            partition_object_uri + '/operations/start', body)
 
     def stop(self):
         """
@@ -134,12 +130,8 @@ class Partition(BaseResource):
 
         TODO: Review return value, and idea of immediately retrieving status.
         """
-        if self.properties["status"] in ["active", "paused"]:
-            partition_object_uri = self.properties["object-uri"]
-            body = {}
-            result = self.manager.session.post(
-                partition_object_uri + '/operations/stop', body)
-            return True
-        else:
-            return False
+        partition_object_uri = self.get_property('object-uri')
+        body = {}
+        result = self.manager.session.post(
+            partition_object_uri + '/operations/stop', body)
 
