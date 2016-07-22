@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-A **Central Processor Complex (CPC)** is a physical z Systems computer.
-A particular HMC can manage multiple CPCs.
+A **Central Processor Complex (CPC)** is a physical z Systems or LinuxONE
+computer. A particular HMC can manage multiple CPCs.
 
 The HMC can manage a range of old and new CPC generations. Some older CPC
 generations are not capable of supporting the HMC Web Services API; these older
@@ -23,6 +23,19 @@ API. Therefore, such older CPCs will not show up at the HMC Web Services API,
 and thus will not show up in the API of this Python package.
 
 TODO: List earliest CPC generation that supports the HMC Web Services API.
+
+A CPC can be in any of the following three modes:
+
+- DPM mode: Dynamic Partition Manager is enabled for the CPC.
+- Ensemble mode: The CPC is member of an ensemble. This Python client
+  does not support the functionality that is specific to ensemble mode.
+- Classic mode: The CPC does not have Dynamic Partition Manager enabled,
+  and is not member of an ensemble.
+
+The functionality supported at the HMC API and thus also for users of this
+Python client, depends on the mode in which the CPC currently is. If a
+particular functionality is available only in a specific mode, that is
+indicated in the description of the functionality.
 """
 
 from __future__ import absolute_import
@@ -30,6 +43,7 @@ from __future__ import absolute_import
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._lpar import LparManager
+from ._partition import PartitionManager
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -61,10 +75,9 @@ class CpcManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Boolean indicating whether the full properties list
-            should be retrieved. Otherwise, only the object_info
-            properties are returned for each cpc object.
-
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
 
         Returns:
 
@@ -112,7 +125,7 @@ class Cpc(BaseResource):
     def lpars(self):
         """
         :class:`~zhmcclient.LparManager`: Manager object for the LPARs in this
-        CPC.
+        CPC. `None`, if the CPC is in DPM mode.
         """
         # We do here some lazy loading.
         if not self._lpars:
@@ -125,8 +138,8 @@ class Cpc(BaseResource):
     @property
     def partitions(self):
         """
-        :class:`~zhmcclient.PartitionManager`: Manager object for the LPARs in this
-        CPC.
+        :class:`~zhmcclient.PartitionManager`: Manager object for the
+        partitions in this CPC. `None`, if the CPC is not in DPM mode.
         """
         # We do here some lazy loading.
         if not self._partitions:
@@ -138,7 +151,14 @@ class Cpc(BaseResource):
 
     @property
     def dpm_enabled(self):
+        """
+        bool: Indicates whether this CPC is currently in DPM mode
+        (Dynamic Partition Manager mode).
+
+        If the CPC is not currently in DPM mode, or if the CPC does not
+        support DPM mode (i.e. before z13), `False` is returned.
+        """
         try:
-	    return self.get_property('dpm-enabled')
+            return self.get_property('dpm-enabled')
         except KeyError:
             return False

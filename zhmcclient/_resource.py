@@ -80,6 +80,10 @@ class BaseResource(object):
 
           See the respective sections in :term:`HMC API` for a description
           of the resources along with their properties.
+
+          The dictionary contains either the full set of resource properties,
+          or the short set of resource properties as obtained by list
+          operations.
         """
         return self._properties
 
@@ -94,19 +98,49 @@ class BaseResource(object):
 
     @property
     def full_properties(self):
+        """
+        A boolean indicating whether the resource properties in this object
+        are the full set of resource properties, vs. just the short set of
+        resource properties as obtained by list functions.
+        """
         return self._full_properties
 
     @property
     def properties_timestamp(self):
+        """
+        The point in time of the last update of the resource properties
+        in this object, as Unix time (an integer that is the number of seconds
+        since the Unix epoch).
+        """
         return self._properties_timestamp
 
     def pull_full_properties(self):
-        full_properties = self.manager.session.get(self.get_property('object-uri'))
+        """
+        Retrieve the full set of properties for this resource (and store them
+        in :attr:`properties`).
+        """
+        uri = self.get_property('object-uri')
+        full_properties = self.manager.session.get(uri)
         self._properties = dict(full_properties)
         self._properties_timestamp = int(time.time())
         self._full_properties = True
 
     def get_property(self, name):
+        """
+        Return the value of a resource property. If the resource property
+        is not in the currently known set of properties, the full set of
+        resource properties is retrieved and the resource property is
+        again attempted to be returned.
+
+        Returns:
+
+          The value of the resource property.
+
+        Raises:
+
+          KeyError: The resource property could not be found (also not in the
+            full set of resource properties).
+        """
         try:
             return self._properties[name]
         except KeyError:
@@ -114,4 +148,3 @@ class BaseResource(object):
                 raise
             self.pull_full_properties()
             return self._properties[name]
-

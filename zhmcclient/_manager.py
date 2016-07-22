@@ -75,10 +75,17 @@ class BaseManager(object):
         """
         return self._parent
 
-    def list(self):
+    def list(self, full_properties=False):
         """
         Interface for the list function that is used by the :meth:`find` and
         :meth:`findall` methods.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
 
         Returns:
 
