@@ -13,13 +13,18 @@
 # limitations under the License.
 
 """
-A **partitions** is a subset of a physical z Systems computer or
-LinuxONE system, certain aspects of which are virtualized and on which
-Dynamic Partition Manager (DPM) is enabled. Partitions can be created
-and deleted dynamically, and their resources such as CPU, memory or
-I/O devices can be configured.
-You can create as many partition definitions as you want,
-but only a specific number of partitions can be active at any given time.
+A **partition** is a subset of a physical z Systems or LinuxONE computer
+that is in DPM mode (Dynamic Partition Manager mode).
+Objects of this class are not provided when the CPC is not in DPM mode.
+
+A partition is always contained in a CPC.
+
+Partitions can be created and deleted dynamically, and their resources such
+as CPU, memory or I/O devices can be configured dynamically.
+You can create as many partition definitions as you want, but only a specific
+number of partitions can be active at any given time.
+
+TODO: How can a user find out what the maximum is, before it is reached?
 """
 
 from __future__ import absolute_import
@@ -32,8 +37,8 @@ __all__ = ['PartitionManager', 'Partition']
 
 class PartitionManager(BaseManager):
     """
-    Manager object for Partitions. This manager object is scoped to the Partitions of a
-    particular CPC.
+    Manager object for Partitions. This manager object is scoped to the
+    partitions of a particular CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -58,11 +63,18 @@ class PartitionManager(BaseManager):
 
     def list(self, full_properties=False):
         """
-        List the Partitions in scope of this manager object.
+        List the partitions in scope of this manager object.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
 
         Returns:
 
-          : A list of :class:`~zhmcclient.Lpar` objects.
+          : A list of :class:`~zhmcclient.Partition` objects.
         """
         cpc_uri = self.cpc.get_property('object-uri')
         partitions_res = self.session.get(cpc_uri + '/partitions')
@@ -76,16 +88,22 @@ class PartitionManager(BaseManager):
                 partition_list.append(partition)
         return partition_list
 
-    def create(self, partition_properties):
+    def create(self, properties):
         """
-        The Create Partition operation creates a partition with
-        the given properties on the identified CPC.
+        Create a partition with the specified resource properties.
 
-        TODO: Review return value, and idea of immediately retrieving status.
+        TODO: Implement.
 
         Parameters:
 
-           partition_properties (:term:`dict`): Properties for partition.
+          properties (dict): Properties for the new partition.
+
+        Returns:
+
+          string: The resource URI of the new partition.
+
+        Raises:
+          TBD: TODO Describe exceptions that can be raised.
         """
         pass
 
@@ -115,23 +133,19 @@ class Partition(BaseResource):
 
     def start(self):
         """
-        Start this Partition.
+        Start (activate) this partition.
 
-        TODO: Review return value, and idea of immediately retrieving status.
+        TODO: Describe what happens if the maximum number of active partitions
+        is exceeded.
         """
-        partition_object_uri = self.get_property('object-uri')
+        partition_uri = self.get_property('object-uri')
         body = {}
-        result = self.manager.session.post(
-            partition_object_uri + '/operations/start', body)
+        self.manager.session.post(partition_uri + '/operations/start', body)
 
     def stop(self):
         """
-        Stop this Partition.
-
-        TODO: Review return value, and idea of immediately retrieving status.
+        Stop (deactivate) this partition.
         """
-        partition_object_uri = self.get_property('object-uri')
+        partition_uri = self.get_property('object-uri')
         body = {}
-        result = self.manager.session.post(
-            partition_object_uri + '/operations/stop', body)
-
+        self.manager.session.post(partition_uri + '/operations/stop', body)

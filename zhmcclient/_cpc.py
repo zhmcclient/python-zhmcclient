@@ -30,6 +30,7 @@ from __future__ import absolute_import
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._lpar import LparManager
+from ._partition import PartitionManager
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -61,10 +62,9 @@ class CpcManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Boolean indicating whether the full properties list
-            should be retrieved. Otherwise, only the object_info
-            properties are returned for each cpc object.
-
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
 
         Returns:
 
@@ -125,8 +125,8 @@ class Cpc(BaseResource):
     @property
     def partitions(self):
         """
-        :class:`~zhmcclient.PartitionManager`: Manager object for the LPARs in this
-        CPC.
+        :class:`~zhmcclient.PartitionManager`: Manager object for the LPARs in
+        this CPC.
         """
         # We do here some lazy loading.
         if not self._partitions:
@@ -138,7 +138,14 @@ class Cpc(BaseResource):
 
     @property
     def dpm_enabled(self):
+        """
+        bool: Indicates whether this CPC is currently in DPM mode
+        (Dynamic Partition Manager mode).
+
+        If the CPC is not currently in DPM mode, or if the CPC does not
+        support DPM mode (i.e. before z13), `False` is returned.
+        """
         try:
-	    return self.get_property('dpm-enabled')
+            return self.get_property('dpm-enabled')
         except KeyError:
             return False

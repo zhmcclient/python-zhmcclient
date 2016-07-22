@@ -13,13 +13,13 @@
 # limitations under the License.
 
 """
-A **Logical Partition (LPAR)** is a subset of a physical z Systems computer,
-certain aspects of which are virtualized.
+A **Logical Partition (LPAR)** is a subset of a physical z Systems or LinuxONE
+computer that is not in DPM mode (Dynamic Partition Manager mode).
+Objects of this class are not provided when the CPC is in DPM mode.
 
 An LPAR is always contained in a CPC.
 
-Objects of this class are not provided when the CPC is enabled for DPM
-(Dynamic Partition Manager).
+LPARs cannot be created or deleted by the user; they can only be listed.
 """
 
 from __future__ import absolute_import
@@ -63,9 +63,9 @@ class LparManager(BaseManager):
         Parameters:
 
           full_properties (bool):
-            Boolean indicating whether the full properties list
-            should be retrieved. Otherwise, only the object_info
-            properties are returned for each lpar object.
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
 
         Returns:
 
@@ -109,38 +109,28 @@ class Lpar(BaseResource):
 
     def activate(self):
         """
-        Activate this LPAR.
-
-        TODO: Review return value, and idea of immediately retrieving status.
+        Activate (start) this LPAR.
         """
-        lpar_object_uri = self.get_property('object-uri')
+        lpar_uri = self.get_property('object-uri')
         body = {}
-        result = self.manager.session.post(
-        lpar_object_uri + '/operations/activate', body)
+        self.manager.session.post(lpar_uri + '/operations/activate', body)
 
     def deactivate(self):
         """
-        De-activate this LPAR.
-
-        TODO: Review return value, and idea of immediately retrieving status.
+        De-activate (stop) this LPAR.
         """
-        lpar_object_uri = self.get_property('object-uri')
+        lpar_uri = self.get_property('object-uri')
         body = {'force': True}
-        result = self.manager.session.post(
-        lpar_object_uri + '/operations/deactivate', body)
+        self.manager.session.post(lpar_uri + '/operations/deactivate', body)
 
     def load(self, load_address):
         """
-        Load (boot) this LPAR from a boot device.
-
-        TODO: Review return value, and idea of immediately retrieving status.
+        Load (boot) this LPAR from a load address (boot device).
 
         Parameters:
 
           load_address (:term:`string`): Device number of the boot device.
         """
-        lpar_object_uri = self.get_property('object-uri')
+        lpar_uri = self.get_property('object-uri')
         body = {'load-address': load_address}
-        result = self.manager.session.post(
-            lpar_object_uri + '/operations/load', body)
-
+        self.manager.session.post(lpar_uri + '/operations/load', body)
