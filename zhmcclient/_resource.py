@@ -101,7 +101,17 @@ class BaseResource(object):
         return self._properties_timestamp
 
     def pull_full_properties(self):
-        full_properties = self.manager.session.get(self.properties['object-uri'])
+        full_properties = self.manager.session.get(self.get_property('object-uri'))
         self._properties = dict(full_properties)
         self._properties_timestamp = int(time.time())
         self._full_properties = True
+
+    def get_property(self, name):
+        try:
+            return self._properties[name]
+        except KeyError:
+            if self.full_properties:
+                raise
+            self.pull_full_properties()
+            return self._properties[name]
+
