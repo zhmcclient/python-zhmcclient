@@ -78,6 +78,7 @@ class Client(object):
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.ConnectionError`
         """
         if self._api_major_version is None:

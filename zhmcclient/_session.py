@@ -135,6 +135,13 @@ class Session(object):
     def logon(self):
         """
         Make sure the session is logged on to the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         if not self.is_logon():
             self._do_logon()
@@ -142,6 +149,13 @@ class Session(object):
     def logoff(self):
         """
         Make sure the session is logged off from the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         if self.is_logon():
             session_uri = '/api/sessions/this-session'
@@ -160,6 +174,13 @@ class Session(object):
         """
         Log on, unconditionally. This can be used to re-logon.
         This requires credentials to be provided.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         if self._userid is None or self._password is None:
             raise AuthError("Userid or password not provided.")
@@ -202,6 +223,7 @@ class Session(object):
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
@@ -271,6 +293,7 @@ class Session(object):
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
@@ -346,6 +369,7 @@ class Session(object):
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """

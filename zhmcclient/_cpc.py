@@ -82,6 +82,13 @@ class CpcManager(BaseManager):
         Returns:
 
           : A list of :class:`~zhmcclient.Cpc` objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         cpcs_res = self.session.get('/api/cpcs')
         cpc_list = []
@@ -157,6 +164,13 @@ class Cpc(BaseResource):
 
         If the CPC is not currently in DPM mode, or if the CPC does not
         support DPM mode (i.e. before z13), `False` is returned.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         try:
             return self.get_property('dpm-enabled')
