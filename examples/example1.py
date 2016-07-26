@@ -23,8 +23,10 @@ import requests.packages.urllib3
 
 import zhmcclient
 
-HMC = "9.152.150.86"         # HMC to use
-CPCNAME = "P0000P28"         # CPC to list on that HMC
+# HMC = "9.152.150.86"         # HMC to use
+HMC = "9.152.133.140"         # HMC with CPC in DPM mode to use
+# CPCNAME = "P0000P28"         # CPC to list on that HMC
+CPCNAME = "DPMSE12"         # CPC in DPM Mode to list on that HMC
 
 requests.packages.urllib3.disable_warnings()
 
@@ -63,8 +65,12 @@ except zhmcclient.NotFound:
     print("Could not find CPC %s on HMC %s" % (CPCNAME, HMC))
     sys.exit(1)
 
-print("Listing LPARs on CPC %s ..." % CPCNAME)
-lpars = cpc.lpars.list()
-for lpar in lpars:
-    print(lpar.properties['name'], lpar.properties['status'],
-          lpar.properties['object-uri'])
+if cpc.dpm_enabled:
+    print("Listing Partitions on CPC %s ..." % CPCNAME)
+    partitions = cpc.partitions.list()
+else:
+    print("Listing LPARs on CPC %s ..." % CPCNAME)
+    partitions = cpc.lpars.list()
+for partition in partitions:
+    print(partition.properties['name'], partition.properties['status'],
+          partition.properties['object-uri'])
