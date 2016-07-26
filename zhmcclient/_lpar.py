@@ -70,6 +70,13 @@ class LparManager(BaseManager):
         Returns:
 
           : A list of :class:`~zhmcclient.Lpar` objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         cpc_uri = self.cpc.get_property('object-uri')
         lpars_res = self.session.get(cpc_uri + '/logical-partitions')
@@ -110,6 +117,13 @@ class Lpar(BaseResource):
     def activate(self):
         """
         Activate (start) this LPAR.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         lpar_uri = self.get_property('object-uri')
         body = {}
@@ -118,6 +132,13 @@ class Lpar(BaseResource):
     def deactivate(self):
         """
         De-activate (stop) this LPAR.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         lpar_uri = self.get_property('object-uri')
         body = {'force': True}
@@ -130,6 +151,13 @@ class Lpar(BaseResource):
         Parameters:
 
           load_address (:term:`string`): Device number of the boot device.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         lpar_uri = self.get_property('object-uri')
         body = {'load-address': load_address}

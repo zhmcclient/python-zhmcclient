@@ -118,6 +118,13 @@ class BaseResource(object):
         """
         Retrieve the full set of properties for this resource (and store them
         in :attr:`properties`).
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         uri = self.get_property('object-uri')
         full_properties = self.manager.session.get(uri)
@@ -140,6 +147,10 @@ class BaseResource(object):
 
           KeyError: The resource property could not be found (also not in the
             full set of resource properties).
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         try:
             return self._properties[name]

@@ -75,6 +75,13 @@ class PartitionManager(BaseManager):
         Returns:
 
           : A list of :class:`~zhmcclient.Partition` objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         cpc_uri = self.cpc.get_property('object-uri')
         partitions_res = self.session.get(cpc_uri + '/partitions')
@@ -103,7 +110,11 @@ class PartitionManager(BaseManager):
           string: The resource URI of the new partition.
 
         Raises:
-          TBD: TODO Describe exceptions that can be raised.
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         pass
 
@@ -137,6 +148,13 @@ class Partition(BaseResource):
 
         TODO: Describe what happens if the maximum number of active partitions
         is exceeded.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         partition_uri = self.get_property('object-uri')
         body = {}
@@ -145,6 +163,13 @@ class Partition(BaseResource):
     def stop(self):
         """
         Stop (deactivate) this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         partition_uri = self.get_property('object-uri')
         body = {}
