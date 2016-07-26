@@ -112,8 +112,7 @@ class Lpar(BaseResource):
         Activate (start) this LPAR.
         """
         lpar_uri = self.get_property('object-uri')
-        body = {}
-        self.manager.session.post(lpar_uri + '/operations/activate', body)
+        self.manager.session.post(lpar_uri + '/operations/activate')
 
     def deactivate(self):
         """
