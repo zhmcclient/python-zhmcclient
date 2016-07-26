@@ -92,8 +92,6 @@ class PartitionManager(BaseManager):
         """
         Create a partition with the specified resource properties.
 
-        TODO: Implement.
-
         Parameters:
 
           properties (dict): Properties for the new partition.
@@ -105,7 +103,9 @@ class PartitionManager(BaseManager):
         Raises:
           TBD: TODO Describe exceptions that can be raised.
         """
-        pass
+        cpc_uri = self.cpc.get_property('object-uri')
+        result = self.session.post(cpc_uri + '/partitions', body=properties)
+        return result['object-uri']
 
 
 class Partition(BaseResource):
