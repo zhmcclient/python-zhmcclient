@@ -139,13 +139,11 @@ class Partition(BaseResource):
         is exceeded.
         """
         partition_uri = self.get_property('object-uri')
-        body = {}
-        self.manager.session.post(partition_uri + '/operations/start', body)
+        self.manager.session.post(partition_uri + '/operations/start')
 
     def stop(self):
         """
         Stop (deactivate) this partition.
         """
         partition_uri = self.get_property('object-uri')
-        body = {}
-        self.manager.session.post(partition_uri + '/operations/stop', body)
+        self.manager.session.post(partition_uri + '/operations/stop')

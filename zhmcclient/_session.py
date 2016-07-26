@@ -164,12 +164,12 @@ class Session(object):
         if self._userid is None or self._password is None:
             raise AuthError("Userid or password not provided.")
         logon_uri = '/api/sessions'
-        logon_req = {
+        logon_body = {
             'userid': self._userid,
             'password': self._password
         }
         self._headers.pop('X-API-Session', None)  # Just in case
-        logon_res = self.post(logon_uri, logon_req, logon_required=False)
+        logon_res = self.post(logon_uri, logon_body, logon_required=False)
         self._session_id = logon_res['api-session']
         self._headers['X-API-Session'] = self._session_id
 
@@ -233,7 +233,7 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
-    def post(self, uri, body, logon_required=True):
+    def post(self, uri, body=None, logon_required=True):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -255,8 +255,9 @@ class Session(object):
             Must not be `None`.
 
           body (:term:`json object`):
-            JSON request payload.
-            Must not be `None`.
+            JSON object to be used as the HTTP request body (payload).
+            `None` means the same as an empty dictionary, namely that no HTTP
+            body is included in the request.
 
           logon_required (bool):
             Boolean indicating whether the operation requires that the session
@@ -276,6 +277,8 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+        if body is None:
+            body = {}
         data = json.dumps(body)
         try:
             result = requests.post(
