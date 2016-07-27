@@ -301,7 +301,7 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
-    def post(self, uri, body=None, logon_required=True):
+    def post(self, uri, body=None, logon_required=True, wait_for_completion=True):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -331,6 +331,12 @@ class Session(object):
             Boolean indicating whether the operation requires that the session
             is logged on to the HMC. For example, the logon operation does not
             require that.
+
+          wait_for_completion (bool):
+            Boolean indicating whether the method should wait until
+            the operation/job has completed.
+            If wait_for_completion is 'False' the status of the operation/job
+            has to be retrieved via the method 'query_job_status' method.
 
         Returns:
 
@@ -365,6 +371,8 @@ class Session(object):
         elif result.status_code == 202:
             job_uri = result.json()['job-uri']
             job_url = self.base_url + job_uri
+            if not wait_for_completion:
+                return result.json()
             while 1:
                 stats = self.time_stats_keeper.get_stats('get ' + job_uri)
                 stats.begin()
@@ -467,3 +475,32 @@ class Session(object):
                                 format(str(exc)))
         else:
             raise HTTPError(result.json())
+
+    def query_job_status(self, job_uri):
+        """
+        The Query Job Status operation returns the status associated
+        with an asynchronous job.
+
+        A set of standard HTTP headers is automatically part of the request.
+
+        If the HMC session token is expired, this method re-logs on and retries
+        the operation.
+
+        Parameters:
+
+          job_uri (:term:`string`):
+            Relative Job URI path of the operation, e.g.
+            "/api/jobs/{job-id}".
+            This URI is relative to the base URL of the session (see
+            the :attr:`~zhmcclient.Session.base_url` property).
+            Must not be `None`.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        result = self.get(job_uri)
+        return result
