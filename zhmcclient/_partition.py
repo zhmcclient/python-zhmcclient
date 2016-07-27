@@ -142,13 +142,25 @@ class Partition(BaseResource):
         assert isinstance(manager, PartitionManager)
         super(Partition, self).__init__(manager, properties)
 
-    def start(self):
+    def start(self, wait_for_completion=True):
         """
         Start (activate) this partition.
 
         TODO: Describe what happens if the maximum number of active partitions
         is exceeded.
 
+        Parameters:
+
+          wait_for_completion (bool):
+            Boolean indicating whether the method should wait until
+            the operation/job has completed.
+            If wait_for_completion is 'False' the status of the operation/job
+            has to be retrieved via the method 'query_job_status' method.
+
+        Returns:
+
+          :term:`json object` with the operation result.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -157,12 +169,26 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         partition_uri = self.get_property('object-uri')
-        self.manager.session.post(partition_uri + '/operations/start')
+        result = self.manager.session.post(partition_uri + '/operations/start',
+            wait_for_completion=wait_for_completion)
+        return result
 
-    def stop(self):
+    def stop(self, wait_for_completion=True):
         """
         Stop (deactivate) this partition.
 
+        Parameters:
+
+          wait_for_completion (bool):
+            Boolean indicating whether the method should wait until
+            the operation/job has completed.
+            If wait_for_completion is 'False' the status of the operation/job
+            has to be retrieved via the method 'query_job_status' method.
+
+        Returns:
+
+          :term:`json object` with the operation result.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -171,4 +197,6 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         partition_uri = self.get_property('object-uri')
-        self.manager.session.post(partition_uri + '/operations/stop')
+        resullt = self.manager.session.post(partition_uri + '/operations/stop',
+            wait_for_completion=wait_for_completion)
+        return result
