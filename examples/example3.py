@@ -25,9 +25,6 @@ import time
 
 import zhmcclient
 
-HMC = "9.152.150.86"         # HMC to use
-CPCNAME = "P0000P28"         # CPC to list on that HMC
-
 requests.packages.urllib3.disable_warnings()
 
 if len(sys.argv) != 2:
@@ -38,17 +35,32 @@ hmccreds_file = sys.argv[1]
 with open(hmccreds_file, 'r') as fp:
     hmccreds = yaml.load(fp)
 
-cred = hmccreds.get(HMC, None)
+examples = hmccreds.get("examples", None)
+if examples is None:
+    print("examples not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+example3 = examples.get("example3", None)
+if example3 is None:
+    print("example3 not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+hmc = example3["hmc"]
+cpcname = example3["cpcname"]
+
+cred = hmccreds.get(hmc, None)
 if cred is None:
     print("Credentials for HMC %s not found in credentials file %s" % \
-          (HMC, hmccreds_file))
+          (hmc, hmccreds_file))
     sys.exit(1)
 
 userid = cred['userid']
 password = cred['password']
 
-print("Using HMC %s with userid %s ..." % (HMC, userid))
-session = zhmcclient.Session(HMC, userid, password)
+print("Using HMC %s with userid %s ..." % (hmc, userid))
+session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
 for full_properties in (False, True):
@@ -65,17 +77,17 @@ for full_properties in (False, True):
         print(cpc.properties['name'], cpc.properties['status'],
         cpc.properties['object-uri'])
 
-print("Finding CPC by name=%s ..." % CPCNAME)
+print("Finding CPC by name=%s ..." % cpcname)
 try:
-    cpc = cl.cpcs.find(name=CPCNAME)
+    cpc = cl.cpcs.find(name=cpcname)
 except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (CPCNAME, HMC))
+    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
 
 for full_properties in (False, True):
     localtime = time.asctime(time.localtime(time.time()))
     print("Local current time :", localtime)
-    print("Listing LPARs on CPC %s (full_properties=%r) ..." % (CPCNAME, full_properties))
+    print("Listing LPARs on CPC %s (full_properties=%r) ..." % (cpcname, full_properties))
     lpars = cpc.lpars.list(full_properties)
     localtime = time.asctime(time.localtime(time.time()))
     print("Local current time :", localtime)

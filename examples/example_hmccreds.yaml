@@ -1,3 +1,20 @@
+examples:
+   example0:
+      hmc: "9.152.150.65"
+   example1:
+      hmc: "9.152.150.65"
+      cpcname: P0000P30
+   example2:
+      hmc: "9.152.150.65"
+      cpcname: P0000P30
+      cpcstatus: service-required
+      lparname: PART8
+      loaddev: "5172"
+      deactivate: yes
+   example3:
+      hmc: "9.152.150.65"
+      cpcname: P0000P30
+
 "9.152.150.65":
    userid: ensadmin
    password: 1234

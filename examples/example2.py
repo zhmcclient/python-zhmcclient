@@ -23,11 +23,6 @@ import requests.packages.urllib3
 
 import zhmcclient
 
-HMC = "9.152.150.65"         # HMC to use
-CPCNAME = "P0000P30"         # CPC to use on that HMC
-LPARNAME = "PART8"           # LPAR to be used on that CPC
-LOAD_DEVNO = "5172"          # device to boot that LPAR from
-
 requests.packages.urllib3.disable_warnings()
 
 if len(sys.argv) != 2:
@@ -38,56 +33,76 @@ hmccreds_file = sys.argv[1]
 with open(hmccreds_file, 'r') as fp:
     hmccreds = yaml.load(fp)
 
-cred = hmccreds.get(HMC, None)
+examples = hmccreds.get("examples", None)
+if examples is None:
+    print("examples not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+example2 = examples.get("example2", None)
+if example2 is None:
+    print("example2 not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+hmc = example2["hmc"]
+cpcname = example2["cpcname"]
+cpcstatus = example2["cpcstatus"]
+lparname = example2["lparname"]
+loaddev = example2["loaddev"]
+deactivate = example2["deactivate"]
+
+cred = hmccreds.get(hmc, None)
 if cred is None:
     print("Credentials for HMC %s not found in credentials file %s" % \
-          (HMC, hmccreds_file))
+          (hmc, hmccreds_file))
     sys.exit(1)
     
 userid = cred['userid']
 password = cred['password']
 
 try:
-    print("Using HMC %s with userid %s ..." % (HMC, userid))
-    session = zhmcclient.Session(HMC, userid, password)
+    print("Using HMC %s with userid %s ..." % (hmc, userid))
+    session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
 
-    cpc = cl.cpcs.find(name=CPCNAME, status="service-required")
+    cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
           (cpc.properties['name'], cpc.properties['status']))
 
-    lpar = cpc.lpars.find(name=LPARNAME)
+    lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
     print("De-Activating LPAR %s ..." % lpar.properties['name'])
     status = lpar.deactivate()
 
-    lpar = cpc.lpars.find(name=LPARNAME)
+    lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
     print("Activating LPAR %s ..." % lpar.properties['name'])
     status = lpar.activate()
 
-    lpar = cpc.lpars.find(name=LPARNAME)
+    lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
     print("Loading LPAR %s from device %s ..." % \
-          (lpar.properties['name'], LOAD_DEVNO))
-    status = lpar.load(LOAD_DEVNO)
+          (lpar.properties['name'], loaddev))
+    status = lpar.load(loaddev)
 
-    lpar = cpc.lpars.find(name=LPARNAME)
+    lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
-    print("De-Activating LPAR %s ..." % lpar.properties['name'])
-    status = lpar.deactivate()
-
-    lpar = cpc.lpars.find(name=LPARNAME)
-    print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
+    if deactivate == "yes":
+        print("De-Activating LPAR %s ..." % lpar.properties['name'])
+        status = lpar.deactivate()
+        
+        lpar = cpc.lpars.find(name=lparname)
+        print("Status of LPAR %s: %s" % \
+              (lpar.properties['name'], lpar.properties['status']))
 
 except zhmcclient.Error as exc:
     print("%s: %s" % (exc.__class__.__name__, exc))

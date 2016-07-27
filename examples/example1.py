@@ -23,11 +23,6 @@ import requests.packages.urllib3
 
 import zhmcclient
 
-# HMC = "9.152.150.86"         # HMC to use
-HMC = "9.152.133.140"         # HMC with CPC in DPM mode to use
-# CPCNAME = "P0000P28"         # CPC to list on that HMC
-CPCNAME = "DPMSE12"         # CPC in DPM Mode to list on that HMC
-
 requests.packages.urllib3.disable_warnings()
 
 if len(sys.argv) != 2:
@@ -38,17 +33,32 @@ hmccreds_file = sys.argv[1]
 with open(hmccreds_file, 'r') as fp:
     hmccreds = yaml.load(fp)
 
-cred = hmccreds.get(HMC, None)
+examples = hmccreds.get("examples", None)
+if examples is None:
+    print("examples not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+example1 = examples.get("example1", None)
+if example1 is None:
+    print("example1 not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+hmc = example1["hmc"]
+cpcname = example1["cpcname"]
+
+cred = hmccreds.get(hmc, None)
 if cred is None:
     print("Credentials for HMC %s not found in credentials file %s" % \
-          (HMC, hmccreds_file))
+          (hmc, hmccreds_file))
     sys.exit(1)
     
 userid = cred['userid']
 password = cred['password']
 
-print("Using HMC %s with userid %s ..." % (HMC, userid))
-session = zhmcclient.Session(HMC, userid, password)
+print("Using HMC %s with userid %s ..." % (hmc, userid))
+session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
 print("Listing CPCs ...")
@@ -58,18 +68,18 @@ for cpc in cpcs:
     print(cpc.properties['name'], cpc.properties['status'],
           cpc.properties['object-uri'])
 
-print("Finding CPC by name=%s ..." % CPCNAME)
+print("Finding CPC by name=%s ..." % cpcname)
 try:
-    cpc = cl.cpcs.find(name=CPCNAME)
+    cpc = cl.cpcs.find(name=cpcname)
 except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (CPCNAME, HMC))
+    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
 
 if cpc.dpm_enabled:
-    print("Listing Partitions on CPC %s ..." % CPCNAME)
+    print("Listing Partitions on CPC %s ..." % cpcname)
     partitions = cpc.partitions.list()
 else:
-    print("Listing LPARs on CPC %s ..." % CPCNAME)
+    print("Listing LPARs on CPC %s ..." % cpcname)
     partitions = cpc.lpars.list()
 for partition in partitions:
     print(partition.properties['name'], partition.properties['status'],
