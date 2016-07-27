@@ -86,7 +86,6 @@ try:
 
     print('Deactivate complete !')
 
-
 except zhmcclient.Error as exc:
     print("%s: %s" % (exc.__class__.__name__, exc))
     sys.exit(1)
