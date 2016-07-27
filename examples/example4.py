@@ -14,19 +14,15 @@
 # limitations under the License.
 
 #
-# Example for LPAR activation, deactivation and boot.
+# Example for asynchronous interface.
 #
 
 import sys
 import yaml
 import requests.packages.urllib3
 import time
-import zhmcclient
 
-HMC = "9.152.150.65"         # HMC to use
-CPCNAME = "P0000P30"         # CPC to use on that HMC
-LPARNAME = "PART8"           # LPAR to be used on that CPC
-LOAD_DEVNO = "5172"          # device to boot that LPAR from
+import zhmcclient
 
 requests.packages.urllib3.disable_warnings()
 
@@ -38,25 +34,42 @@ hmccreds_file = sys.argv[1]
 with open(hmccreds_file, 'r') as fp:
     hmccreds = yaml.load(fp)
 
-cred = hmccreds.get(HMC, None)
+examples = hmccreds.get("examples", None)
+if examples is None:
+    print("examples not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+example4 = examples.get("example4", None)
+if example4 is None:
+    print("example4 not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+hmc = example4["hmc"]
+cpcname = example4["cpcname"]
+cpcstatus = example4["cpcstatus"]
+lparname = example4["lparname"]
+
+cred = hmccreds.get(hmc, None)
 if cred is None:
     print("Credentials for HMC %s not found in credentials file %s" % \
-          (HMC, hmccreds_file))
+          (hmc, hmccreds_file))
     sys.exit(1)
 
 userid = cred['userid']
 password = cred['password']
 
 try:
-    print("Using HMC %s with userid %s ..." % (HMC, userid))
-    session = zhmcclient.Session(HMC, userid, password)
+    print("Using HMC %s with userid %s ..." % (hmc, userid))
+    session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
 
-    cpc = cl.cpcs.find(name=CPCNAME, status="service-required")
+    cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
           (cpc.properties['name'], cpc.properties['status']))
 
-    lpar = cpc.lpars.find(name=LPARNAME)
+    lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
@@ -72,6 +85,7 @@ try:
         job = session.query_job_status(status['job-uri'])
 
     print('Deactivate complete !')
+
 
 except zhmcclient.Error as exc:
     print("%s: %s" % (exc.__class__.__name__, exc))
