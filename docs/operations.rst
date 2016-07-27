@@ -46,20 +46,32 @@ Exceptions
 .. autoclass:: zhmcclient.Error
 
 .. autoclass:: zhmcclient.ConnectionError
+   :members:
+   :special-members: __str__
 
 .. autoclass:: zhmcclient.AuthError
+   :members:
+   :special-members: __str__
 
 .. autoclass:: zhmcclient.ParseError
+   :members:
+   :special-members: __str__
 
 .. autoclass:: zhmcclient.VersionError
+   :members:
+   :special-members: __str__
 
 .. autoclass:: zhmcclient.HTTPError
    :members:
    :special-members: __str__
 
 .. autoclass:: zhmcclient.NotFound
+   :members:
+   :special-members: __str__
 
 .. autoclass:: zhmcclient.NoUniqueMatch
+   :members:
+   :special-members: __str__
 
 .. _`CPCs`:
 
