@@ -14,6 +14,11 @@ examples:
    example3:
       hmc: "9.152.150.65"
       cpcname: P0000P30
+   example4:
+      hmc: "9.152.150.65"
+      cpcname: P0000P30
+      cpcstatus: service-required
+      lparname: PART8
 
 "9.152.150.65":
    userid: ensadmin
