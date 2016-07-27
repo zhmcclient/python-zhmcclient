@@ -97,3 +97,6 @@ for full_properties in (False, True):
         lpar.properties_timestamp))
 #        print(lpar.properties['name'], lpar.properties['status'], \
 #              lpar.properties['object-uri'])
+print("Logoff Session ...")
+session.logoff()
+print("Done.")

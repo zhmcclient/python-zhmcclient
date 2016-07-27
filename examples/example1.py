@@ -53,7 +53,7 @@ if cred is None:
     print("Credentials for HMC %s not found in credentials file %s" % \
           (hmc, hmccreds_file))
     sys.exit(1)
-    
+
 userid = cred['userid']
 password = cred['password']
 
@@ -84,3 +84,7 @@ else:
 for partition in partitions:
     print(partition.properties['name'], partition.properties['status'],
           partition.properties['object-uri'])
+
+print("Logoff Session ...")
+session.logoff()
+print("Done.")

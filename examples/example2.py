@@ -57,7 +57,7 @@ if cred is None:
     print("Credentials for HMC %s not found in credentials file %s" % \
           (hmc, hmccreds_file))
     sys.exit(1)
-    
+
 userid = cred['userid']
 password = cred['password']
 
@@ -99,10 +99,14 @@ try:
     if deactivate == "yes":
         print("De-Activating LPAR %s ..." % lpar.properties['name'])
         status = lpar.deactivate()
-        
+
         lpar = cpc.lpars.find(name=lparname)
         print("Status of LPAR %s: %s" % \
               (lpar.properties['name'], lpar.properties['status']))
+
+    print("Logoff Session ...")
+    session.logoff()
+    print("Done.")
 
 except zhmcclient.Error as exc:
     print("%s: %s" % (exc.__class__.__name__, exc))

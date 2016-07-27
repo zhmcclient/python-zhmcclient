@@ -380,7 +380,7 @@ class Session(object):
             result = requests.delete(url, headers=self.headers, verify=False)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
-        if result.status_code == 200:
+        if result.status_code in [200, 204]:
             return
         elif result.status_code == 403:
             reason = result.json().get('reason', None)
