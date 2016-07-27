@@ -23,16 +23,32 @@ import requests.packages.urllib3
 
 import zhmcclient
 
-HMC = "9.152.150.65"         # HMC to use
-
 requests.packages.urllib3.disable_warnings()
 
-if len(sys.argv) != 1:
-    print("Usage: %s" % sys.argv[0])
+if len(sys.argv) != 2:
+    print("Usage: %s hmccreds.yaml" % sys.argv[0])
     sys.exit(2)
+hmccreds_file = sys.argv[1]
 
-print("Using HMC %s without any userid ..." % HMC)
-session = zhmcclient.Session(HMC)
+with open(hmccreds_file, 'r') as fp:
+    hmccreds = yaml.load(fp)
+
+examples = hmccreds.get("examples", None)
+if examples is None:
+    print("examples not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+example0 = examples.get("example0", None)
+if example0 is None:
+    print("example0 not found in credentials file %s" % \
+          (hmccreds_file))
+    sys.exit(1)
+
+hmc = example0["hmc"]
+
+print("Using HMC %s without any userid ..." % hmc)
+session = zhmcclient.Session(hmc)
 cl = zhmcclient.Client(session)
 
 vi = cl.version_info()
