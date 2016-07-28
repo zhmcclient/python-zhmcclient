@@ -86,6 +86,12 @@ check_py_files := \
 # Test log
 test_log_file := test_$(python_version_fn).log
 
+ifdef TESTCASES
+pytest_opts := -k $(TESTCASES)
+else
+pytest_opts :=
+endif
+
 # Files to be put into distribution archive.
 # Keep in sync with dist_dependent_files.
 # This is used for 'include' statements in MANIFEST.in. The wildcards are used
@@ -117,6 +123,7 @@ help:
 	@echo '  builddoc   - Build documentation in: $(doc_build_dir)'
 	@echo '  check      - Run PyLint and Flake8 on sources and save results in: pylint.log and flake8.log'
 	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_log_file)'
+	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
 	@echo '  all        - Do all of the above (except buildwin when not on Windows)'
 	@echo '  install    - Install package in active Python environment'
 	@echo '  upload     - build + upload the distribution files to PyPI'
@@ -281,6 +288,6 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 
 $(test_log_file): Makefile $(package_name)/*.py tests/*.py .coveragerc
 	rm -f $@
-	bash -c "set -o pipefail; PYTHONWARNINGS=default PYTHONPATH=. py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html -s 2>&1 |tee $@.tmp"
+	bash -c "set -o pipefail; PYTHONWARNINGS=default PYTHONPATH=. py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) -s 2>&1 |tee $@.tmp"
 	mv -f $@.tmp $@
 	@echo 'Done: Created test log file: $@'
