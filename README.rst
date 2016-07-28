@@ -37,8 +37,10 @@ The goal is to implement a reasonable subset of the API, with a focus on DPM
 Example
 -------
 
-For example code, see the Python scripts in the ``examples`` directory of the
-Git repository.
+For example code, see the Python scripts in the
+`examples directory of the Git repository`_.
+
+.. _examples directory of the Git repository: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient/tree/master/examples
 
 Documentation
 -------------
@@ -66,7 +68,7 @@ Development and test
 --------------------
 
 It is recommended to establish a virtual Python environment, based upon one of
-the supported Python versions (2.7, 3.3, 3.4).
+the supported Python versions (2.7, 3.4, 3.5).
 
 The project uses ``make`` to do things in the currently active Python
 environment. The command ``make help`` (or just ``make``) displays a list of valid
