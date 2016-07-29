@@ -8,7 +8,7 @@
 pytest>=2.4
 pytest-cov
 mock
-requests-mock
+requests-mock>=1.0
 
 # Sphinx:
 # Note: The ordereddict package is a backport of collections.OrderedDict
