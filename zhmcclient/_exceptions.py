@@ -24,9 +24,22 @@ class Error(Exception):
     """
     Abstract base class for exceptions specific to this package.
 
-    Derived from :exc:`py:Exception`.
+    Derived from :exc:`~py:exceptions.Exception`.
     """
-    pass
+
+    def __init__(self, *args):
+        """
+        Parameters:
+
+          *args:
+            A list of input arguments for the exception object.
+
+            The derived classes define more specific parameters.
+
+            These input arguments will be available as tuple items in the
+            ``args`` instance variable of the exception object.
+        """
+        super(Error, self).__init__(*args)
 
 
 class ConnectionError(Error):
@@ -39,14 +52,6 @@ class ConnectionError(Error):
     TODO: Do we need specific properties for some details, e.g. errno value?
 
     Derived from :exc:`~zhmcclient.Error`.
-
-    Attributes:
-
-      args:
-        Tuple with one item, which is a message supplied by the user.
-
-      message:
-        Not used.
     """
 
     def __init__(self, msg):
@@ -56,7 +61,7 @@ class ConnectionError(Error):
           msg (:term:`string`):
             A human readable message describing the problem.
         """
-        self.args = (msg,)
+        super(ConnectionError, self).__init__(msg)
 
 
 class AuthError(Error):
@@ -66,14 +71,6 @@ class AuthError(Error):
     level.
 
     Derived from :exc:`~zhmcclient.Error`.
-
-    Attributes:
-
-      args:
-        Tuple with one item, which is a message supplied by the user.
-
-      message:
-        Not used.
     """
 
     def __init__(self, msg):
@@ -83,7 +80,7 @@ class AuthError(Error):
           msg (:term:`string`):
             A human readable message describing the problem.
         """
-        self.args = (msg,)
+        super(AuthError, self).__init__(msg)
 
 
 class ParseError(Error):
@@ -94,14 +91,6 @@ class ParseError(Error):
     Derived from :exc:`~zhmcclient.Error`.
 
     TODO: Do we need specific properties, e.g. for line/column?
-
-    Attributes:
-
-      args:
-        Tuple with one item, which is a message supplied by the user.
-
-      message:
-        Not used.
     """
 
     def __init__(self, msg):
@@ -111,26 +100,18 @@ class ParseError(Error):
           msg (:term:`string`):
             A human readable message describing the problem.
         """
-        self.args = (msg,)
+        super(ParseError, self).__init__(msg)
 
 
 class VersionError(Error):
     """
     This exception indicates that there is a version mismatch between the
-    client and the HMC.
+    HMC API versions supported by the client and by the HMC.
 
     TODO: Do we need specific properties, e.g. for client versions supported,
     HMC versions supported?
 
     Derived from :exc:`~zhmcclient.Error`.
-
-    Attributes:
-
-      args:
-        Tuple with one item, which is a message supplied by the user.
-
-      message:
-        Not used.
     """
 
     def __init__(self, msg):
@@ -140,20 +121,13 @@ class VersionError(Error):
           msg (:term:`string`):
             A human readable message describing the problem.
         """
-        self.args = (msg,)
+        super(VersionError, self).__init__(msg)
 
 
 class HTTPError(Error):
     """
     This exception indicates that the HMC returned an HTTP response with a bad
     HTTP status code.
-
-    The `args` attribute is a `tuple(http_status, reason, message)`, where
-    the tuple items are the same-named properties of the exception object.
-
-    The exception object has a number of properties that are named like the
-    JSON object properties in the body of the HTTP error response, where
-    hyphen '-' is replaced with underscore '_'.
 
     Derived from :exc:`~zhmcclient.Error`.
     """
@@ -165,8 +139,8 @@ class HTTPError(Error):
           body (:term:`json object`):
             Body of the HTTP error response.
         """
+        super(HTTPError, self).__init__(body)
         self._body = body
-        self.args = (self.http_status, self.reason, self.message)
 
     @property
     def http_status(self):
@@ -309,16 +283,29 @@ class HTTPError(Error):
         selected operations, and the format of the nested object is as
         described by that operation.
         """
+        return self._body.get('error-details', None)
 
     def __str__(self):
         return "{},{}: {}".format(self.http_status, self.reason, self.message)
 
+    def __repr__(self):
+        return "HTTPError({}, {}, {}, ...)".\
+               format(self.http_status, self.reason, self.message)
+
 
 class NoUniqueMatch(Error):
-    """Indicates that a find function has found more than one item."""
+    """
+    This exception indicates that a find function has found more than one item.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
     pass
 
 
 class NotFound(Error):
-    """Indicates that a find function did not find an item."""
+    """
+    This exception indicates that a find function did not find an item.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
     pass
