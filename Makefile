@@ -154,7 +154,7 @@ html: $(doc_build_dir)/html/docs/index.html
 
 $(doc_build_dir)/html/docs/index.html: Makefile $(doc_dependent_files)
 	rm -f $@
-	PYTHONPATH=. $(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
+	$(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
 	@echo "Done: Created the HTML pages with top level file: $@"
 
 .PHONY: pdf
@@ -272,7 +272,7 @@ endif
 pylint.log: Makefile $(pylint_rc_file) $(check_py_files)
 ifeq ($(python_major_version), 2)
 	rm -f $@
-	-bash -c "set -o pipefail; PYTHONPATH=. pylint --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files) 2>&1 |tee $@.tmp"
+	-bash -c "set -o pipefail; pylint --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files) 2>&1 |tee $@.tmp"
 	mv -f $@.tmp $@
 	@echo 'Done: Created PyLint log file: $@'
 else
@@ -282,12 +282,12 @@ endif
 # TODO: Once Flake8 has no more errors, remove the dash "-"
 flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	rm -f $@
-	-bash -c "set -o pipefail; PYTHONPATH=. flake8 $(check_py_files) 2>&1 |tee $@.tmp"
+	-bash -c "set -o pipefail; flake8 $(check_py_files) 2>&1 |tee $@.tmp"
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
 $(test_log_file): Makefile $(package_name)/*.py tests/*.py .coveragerc
 	rm -f $@
-	bash -c "set -o pipefail; PYTHONWARNINGS=default PYTHONPATH=. py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) -s 2>&1 |tee $@.tmp"
+	bash -c "set -o pipefail; PYTHONWARNINGS=default py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) -s 2>&1 |tee $@.tmp"
 	mv -f $@.tmp $@
 	@echo 'Done: Created test log file: $@'
