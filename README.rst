@@ -92,17 +92,33 @@ Here is a list of the most important ``make`` commands:
 
       $ make test
 
+* To run only part of the unit tests:
+
+  ::
+
+      $ TESTCASES=TestInit make test
+
 The ``tox`` command is supported to invoke various ``make`` targets across all
-supported Python environments. It is mainly used to validate that the whole
-project is in a good state. It is not necessarily the fastest way to iterate
-on a particular unit test. In fact, ``tox`` arguments are not passed to the
-unit test runner, so the unit test suite can be run only completely:
+supported Python environments. It can be used to validate that the whole
+project is in a good state:
 
 ::
 
     $ tox
 
-See ``tox.ini`` for details on what each ``tox`` run does.
+Tox can also be used to run the unit tests or parts thereof in its own
+virtual environment, as shown in the following examples:
+
+::
+
+    $ tox -e py27                      # Run all tests on Python 2.7
+    $ tox -e py27 test_resource.py     # Run only this test source file on Python 2.7
+    $ tox -e py27 TestInit             # Run only this test class on Python 2.7
+    $ tox -e py27 TestInit or TestSet  # Simple expressions are possible
+
+The ``tox`` positional arguments are passed to ``py.test`` using its ``-k``
+option. Invoke ``py.test --help`` for details on the expression syntax of
+its ``-k`` option.
 
 License
 -------
