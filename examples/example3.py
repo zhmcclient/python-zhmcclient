@@ -17,6 +17,8 @@
 Example 3: Get partial and full properties for CPCs and for the LPARs of a CPC.
 """
 
+from __future__ import absolute_import, print_function
+
 import sys
 import logging
 import yaml
@@ -73,6 +75,9 @@ print(__doc__)
 print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
+timestats = example3.get("timestats", None)
+if timestats:
+    session.time_stats_keeper.enable()
 
 for full_properties in (False, True):
     localtime = time.asctime(time.localtime(time.time()))
@@ -111,5 +116,8 @@ for full_properties in (False, True):
 
 print("Logging off ...")
 session.logoff()
+
+if timestats:
+    session.time_stats_keeper.print()
 
 print("Done.")

@@ -36,6 +36,21 @@ Sessions and clients
    :members:
    :special-members: __str__
 
+.. _`Time Statistics`:
+
+Time Statistics
+---------------
+
+.. automodule:: zhmcclient._timestats
+
+.. autoclass:: zhmcclient.TimeStatsKeeper
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.TimeStats
+   :members:
+   :special-members: __str__
+
 .. _`Exceptions`:
 
 Exceptions

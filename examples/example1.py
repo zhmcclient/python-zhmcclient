@@ -17,6 +17,8 @@
 Example 1: List CPCs and LPARs/partitions on a CPC.
 """
 
+from __future__ import absolute_import, print_function
+
 import sys
 import logging
 import yaml
@@ -73,6 +75,10 @@ print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
+timestats = example1.get("timestats", False)
+if timestats:
+    session.time_stats_keeper.enable()
+
 print("Listing CPCs ...")
 cpcs = cl.cpcs.list()
 for cpc in cpcs:
@@ -101,5 +107,8 @@ for partition in partitions:
 
 print("Logging off ...")
 session.logoff()
+
+if timestats:
+    session.time_stats_keeper.print()
 
 print("Done.")

@@ -17,6 +17,8 @@
 Example 2: Find an LPAR in a CPC, and activate/deactivate/load the LPAR.
 """
 
+from __future__ import absolute_import, print_function
+
 import sys
 import logging
 import yaml
@@ -78,7 +80,14 @@ try:
     session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
 
+<<<<<<< HEAD
     print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
+=======
+    timestats = example2.get("timestats", None)
+    if timestats:
+        session.time_stats_keeper.enable()
+
+>>>>>>> 7c51bab... Added time statistics for measuring HMC response times.
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
           (cpc.properties['name'], cpc.properties['status']))
@@ -124,6 +133,9 @@ try:
 
     print("Logging off ...")
     session.logoff()
+
+    if timestats:
+        session.time_stats_keeper.print()
 
     print("Done.")
 
