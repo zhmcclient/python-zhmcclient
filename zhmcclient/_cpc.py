@@ -44,11 +44,6 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._lpar import LparManager
 from ._partition import PartitionManager
-from zhmcclient.zhmc_logging import get_logger
-from zhmcclient.zhmc_logging import log_call
-
-
-logger = get_logger(__name__)
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -73,7 +68,6 @@ class CpcManager(BaseManager):
         super(CpcManager, self).__init__()
         self._session = client.session
 
-    @log_call()
     def list(self, full_properties=False):
         """
         List the CPCs in scope of this manager object.
