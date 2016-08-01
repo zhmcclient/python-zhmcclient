@@ -13,65 +13,53 @@
 # limitations under the License.
 
 """
-These classes allow measuring the elapsed time of accordingly instrumented code
-and keeping a statistics of these times.
+The :class:`~zhmcclient.TimeStatsKeeper` class allows measuring the elapsed
+time of accordingly instrumented code and keeps a statistics of these times.
 
-The :class:`~zhmcclient.Session` class uses these classes for keeping
+The :class:`~zhmcclient.Session` class uses this class for keeping
 statistics about the time to issue HTTP requests against the HMC API (see its
 :attr:`~zhmcclient.Session.time_stats_keeper` property).
 
-Example for measuring the HMC API operations:
+The :class:`~zhmcclient.TimeStats` class is a helper class that contains the
+actual measurement data for all invocations of a particular HTTP request. Its
+objects are under control of the :class:`~zhmcclient.TimeStatsKeeper` class.
+
+Example:
 
 ::
 
     import zhmcclient
 
-    # keeper is created as an instance variable of Session
     session = zhmcclient.Session(hmc, userid, password)
-
-    # enable the keeper
     session.time_stats_keeper.enable()
 
-    # perform some operations
+    # Some operations that are being measured
     client = zhmcclient.Client(session)
     cpcs = client.cpcs.list()
 
-    # print the time statistics
-    session.time_stats_keeper.print()
-
-These classes can also be used independent of the ``zhmcclient`` package.
-
-Example for such independent use:
-
-::
-
-    import zhmcclient
-
-    # create and enable the keeper
-    keeper = zhmcclient.TimeStatsKeeper()
-    keeper.enable()
-
-    # measure an operation
-    stats = keeper.get_stats('my_operation')
-    stats.begin()
-    my_operation()
-    stats.end()
-
-    # print the time statistics
-    keeper.print()
-
+    print(session.time_stats_keeper)
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 
 import time
+import copy
 
 __all__ = ['TimeStatsKeeper', 'TimeStats']
 
 
 class TimeStats(object):
     """
-    Elapsed time statistics for one particular kind of operation.
+    Elapsed time statistics for all invocations of a particular named
+    operation.
+
+    All invocations of the operation will be accumulated into the statistics
+    data kept by an object of this class.
+
+    Objects of this class don't need to (and in fact, are not supposed to) be
+    created by the user. Instead, the
+    :meth:`zhmcclient.TimeStatsKeeper.get_stats` method should be used to
+    create objects of this class.
     """
 
     def __init__(self, keeper, name):
@@ -90,11 +78,13 @@ class TimeStats(object):
         self._sum = float(0)
         self._min = float('inf')
         self._max = float(0)
+        self._begin_time = None
 
     @property
     def name(self):
         """
-        string: Name of the operation this time statistics has data for.
+        :term:`string`: Name of the operation this time statistics has data
+        for.
 
         This name is used by the :class:`~zhmcclient.TimeStatsKeeper` object
         holding this time statistics as a key.
@@ -104,45 +94,45 @@ class TimeStats(object):
     @property
     def keeper(self):
         """
-        TimeStatsKeeper: The time statistics keeper holding this time
-        statistics.
+        :class:`~zhmcclient.TimeStatsKeeper`: The time statistics keeper
+        holding this time statistics.
         """
         return self._keeper
 
     @property
     def count(self):
         """
-        integer: The number of measurements.
+        :term:`integer`: The number of invocations of the operation.
         """
         return self._count
 
     @property
     def avg_time(self):
         """
-        float: The average elapsed time for issuing the operation, in seconds.
+        float: The average elapsed time for invoking the operation, in seconds.
         """
         try:
             return self._sum / self._count
         except ZeroDivisionError:
-            return None
+            return 0
 
     @property
     def min_time(self):
         """
-        float: The minimum elapsed time for issuing the operation, in seconds.
+        float: The minimum elapsed time for invoking the operation, in seconds.
         """
         return self._min
 
     @property
     def max_time(self):
         """
-        float: The maximum elapsed time for issuing the operation, in seconds.
+        float: The maximum elapsed time for invoking the operation, in seconds.
         """
         return self._max
 
     def reset(self):
         """
-        Reset the time statistics.
+        Reset the time statistics data for the operation.
         """
         self._count = 0
         self._sum = float(0)
@@ -151,19 +141,34 @@ class TimeStats(object):
 
     def begin(self):
         """
-        Must be called at the begin of the measurement.
+        This method must be called before invoking the operation.
+        Note that this method is not to be invoked by the user; it is invoked
+        by the implementation of the :class:`~zhmcclient.Session` class.
 
-        It just takes the current time.
+        If the statistics keeper holding this time statistics is enabled, this
+        method takes the current time, so that
+        :meth:`~zhmcclient.TimeStats.end` can calculate the elapsed time
+        between the two method calls.
+
+        If the statistics keeper holding this time statistics is disabled,
+        this method does nothing, in order to save resources.
         """
         if self.keeper.enabled:
             self._begin_time = time.time()
 
     def end(self):
         """
-        Must be called at the end of the measurement.
+        This method must be called after the operation returns.
+        Note that this method is not to be invoked by the user; it is invoked
+        by the implementation of the :class:`~zhmcclient.Session` class.
 
-        It takes the current time, calculates the duration since the begin
-        of the measurement, and updates the statistics with this new duration.
+        If the statistics keeper holding this time statistics is enabled, this
+        method takes the current time, calculates the duration of the operation
+        since the last call to :meth:`~zhmcclient.TimeStats.begin`, and updates
+        the time statistics to reflect the new operation.
+
+        If the statistics keeper holding this time statistics is disabled,
+        this method does nothing, in order to save resources.
         """
         if self.keeper.enabled:
             if self._begin_time is None:
@@ -177,6 +182,21 @@ class TimeStats(object):
             if dt < self._min:
                 self._min = dt
 
+    def __str__(self):
+        """
+        Return a human readable string with the time statistics for this
+        operation.
+
+        Example result:
+
+        ::
+
+            TimeStats: count=1 avg=1.000s min=1.000s max=1.000s get /api/cpcs
+        """
+        return "TimeStats: count={:d} avg={:.3f}s min={:.3f}s max={:.3f}s {}".\
+               format(self.count, self.avg_time, self.min_time, self.max_time,
+                      self.name)
+
 
 class TimeStatsKeeper(object):
     """
@@ -187,8 +207,9 @@ class TimeStatsKeeper(object):
 
     The statistics keeper can be in a state of enabled or disabled. If enabled,
     it accumulates the elapsed times between subsequent calls to the
-    :meth:`start` and :meth:`end` methods. If disabled, calls to these methods
-    do not accumulate any time.
+    :meth:`~zhmcclient.TimeStats.begin` and :meth:`~zhmcclient.TimeStats.end`
+    methods of class :class:`~zhmcclient.TimeStats`.
+    If disabled, calls to these methods do not accumulate any time.
 
     Initially, the statistics keeper is disabled.
     """
@@ -196,6 +217,7 @@ class TimeStatsKeeper(object):
     def __init__(self):
         self._enabled = False
         self._time_stats = {}  # TimeStats objects
+        self._disabled_stats = TimeStats(self, "disabled")
 
     @property
     def enabled(self):
@@ -228,33 +250,55 @@ class TimeStatsKeeper(object):
 
         Returns:
 
-          TimeStats: The new time statistics. If the statistics keeper is
-            disabled, a dummy time statistics, to avoid creating objects
-            needlessly.
+          TimeStats: The time statistics for the specified name. If the
+          statistics keeper is disabled, a dummy time statistics object is
+          returned, in order to save resources.
         """
         if not self.enabled:
-            return TimeStats(self, None)
+            return self._disabled_stats
         if name not in self._time_stats:
             self._time_stats[name] = TimeStats(self, name)
         return self._time_stats[name]
 
-    def stats_items(self):
+    def snapshot(self):
         """
-        Return an iterator through the time statistics of this keeper.
-        """
-        return self._time_stats.items()
+        Return a snapshot of the time statistics of this keeper.
 
-    def print(self):
+        The snapshot represents the statistics data at the time this method
+        is called, and remains unchanged even if the statistics of this keeper
+        continues to be updated.
+
+        Returns:
+
+          list of tuple of name,stats, with
+
+          - name (:term:`string`): Name of the operation
+          - stats (:class:`~zhmcclient.TimeStats`): Time statistics for the
+            operation
         """
-        Print the time statistics to stdout.
+        return copy.deepcopy(self._time_stats).items()
+
+    def __str__(self):
         """
-        print("Time statistics (times in seconds):")
+        Return a human readable string with the time statistics for this
+        keeper.
+
+        Example result, if keeper is enabled:
+
+        ::
+
+            Time statistics (times in seconds):
+            Count  Average  Minimum  Maximum  Operation name
+                1  1.000    1.000    1.000    get /api/cpcs
+                1  1.000    1.000    1.000    get /api/lpars
+        """
+        ret = "Time statistics (times in seconds):\n"
         if self.enabled:
-            print("  count  average  minimum  maximum  operation name")
-            for name in self._time_stats:
-                stats = self._time_stats[name]
-                print("  {:5d}  {:7.3f}  {:7.3f}  {:7.3f}  {}".format(
-                      stats.count, stats.avg_time, stats.min_time,
-                      stats.max_time, name))
+            ret += "Count  Average  Minimum  Maximum  Operation name\n"
+            for name, stats in self.snapshot():
+                ret += "{:5d}  {:7.3f}  {:7.3f}  {:7.3f}  {}\n".\
+                       format(stats.count, stats.avg_time, stats.min_time,
+                              stats.max_time, name)
         else:
-            print("Disabled.")
+            ret += "Disabled.\n"
+        return ret.strip()

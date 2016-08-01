@@ -12,40 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, print_function
+"""
+Tests for time statistics (`_timestats` module).
+"""
 
-import sys
 import time
 import unittest
-from contextlib import contextmanager
-from StringIO import StringIO
 
 from zhmcclient import TimeStatsKeeper
 
 
 PRINT_HEADER = \
     "Time statistics (times in seconds):\n" \
-    "  count  average  minimum  maximum  operation name"
+    "Count  Average  Minimum  Maximum  Operation name"
 
 PRINT_HEADER_DISABLED = \
     "Time statistics (times in seconds):\n" \
     "Disabled."
 
 
-@contextmanager
-def captured_output():
-    saved_out = sys.stdout
-    saved_err = sys.stderr
-    try:
-        sys.stdout = StringIO()
-        sys.stderr = StringIO()
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout = saved_out
-        sys.stderr = saved_err
-
-
 def time_equal(t1, t2, delta):
+    """
+    Return True if two float values are nearly equal (as defined by delta).
+    """
     return abs(t1 - t2) < delta
 
 
@@ -80,43 +69,47 @@ class TimeStatsTests(unittest.TestCase):
         """Test getting time statistics."""
 
         keeper = TimeStatsKeeper()
-        self.assertEqual(len(list(keeper.stats_items())), 0,
+        snapshot_length = len(keeper.snapshot())
+        self.assertEqual(snapshot_length, 0,
                          "Verify that initial state has no time statistics. "
-                         "Actual number = %d" % len(keeper._time_stats))
+                         "Actual number = %d" % snapshot_length)
 
         stats = keeper.get_stats('foo')
-        self.assertEqual(len(list(keeper.stats_items())), 0,
+        snapshot_length = len(keeper.snapshot())
+        self.assertEqual(snapshot_length, 0,
                          "Verify that getting a new stats with a disabled "
                          "keeper results in no time statistics. "
-                         "Actual number = %d" % len(keeper._time_stats))
+                         "Actual number = %d" % snapshot_length)
         self.assertEqual(stats.keeper, keeper)
-        self.assertEqual(stats.name, None)  # dummy stats for disabled keeper
+        self.assertEqual(stats.name, "disabled")  # stats for disabled keeper
         self.assertEqual(stats.count, 0)
-        self.assertEqual(stats.avg_time, None)
+        self.assertEqual(stats.avg_time, 0)
         self.assertEqual(stats.min_time, float('inf'))
         self.assertEqual(stats.max_time, 0)
 
         keeper.enable()
 
         stats = keeper.get_stats('foo')
-        self.assertEqual(len(list(keeper.stats_items())), 1,
+        snapshot_length = len(keeper.snapshot())
+        self.assertEqual(snapshot_length, 1,
                          "Verify that getting a new stats with an enabled "
                          "keeper results in one time statistics. "
-                         "Actual number = %d" % len(keeper._time_stats))
+                         "Actual number = %d" % snapshot_length)
 
         self.assertEqual(stats.keeper, keeper)
         self.assertEqual(stats.name, 'foo')
         self.assertEqual(stats.count, 0)
-        self.assertEqual(stats.avg_time, None)
+        self.assertEqual(stats.avg_time, 0)
         self.assertEqual(stats.min_time, float('inf'))
         self.assertEqual(stats.max_time, 0)
 
         keeper.get_stats('foo')
-        self.assertEqual(len(list(keeper.stats_items())), 1,
+        snapshot_length = len(keeper.snapshot())
+        self.assertEqual(snapshot_length, 1,
                          "Verify that getting an existing stats with an "
                          "enabled keeper results in the same number of time "
                          "statistics. "
-                         "Actual number = %d" % len(keeper._time_stats))
+                         "Actual number = %d" % snapshot_length)
 
     def test_measure_enabled(self):
         """Test measuring time with enabled keeper."""
@@ -132,7 +125,7 @@ class TimeStatsTests(unittest.TestCase):
         time.sleep(duration)
         stats.end()
 
-        for name, stats in keeper.stats_items():
+        for _, stats in keeper.snapshot():
             self.assertEqual(stats.count, 1)
             self.assertTrue(time_equal(stats.avg_time, duration, delta))
             self.assertTrue(time_equal(stats.min_time, duration, delta))
@@ -140,7 +133,7 @@ class TimeStatsTests(unittest.TestCase):
 
         stats.reset()
         self.assertEqual(stats.count, 0)
-        self.assertEqual(stats.avg_time, None)
+        self.assertEqual(stats.avg_time, 0)
         self.assertEqual(stats.min_time, float('inf'))
         self.assertEqual(stats.max_time, 0)
 
@@ -152,33 +145,58 @@ class TimeStatsTests(unittest.TestCase):
         duration = 0.2
 
         stats = keeper.get_stats('foo')
-        self.assertEqual(stats.name, None)
+        self.assertEqual(stats.name, 'disabled')
 
         stats.begin()
         time.sleep(duration)
         stats.end()
 
-        for name, stats in keeper.stats_items():
+        for _, stats in keeper.snapshot():
             self.assertEqual(stats.count, 0)
-            self.assertEqual(stats.avg_time, None)
+            self.assertEqual(stats.avg_time, 0)
             self.assertEqual(stats.min_time, float('inf'))
             self.assertEqual(stats.max_time, 0)
 
-    def test_print_empty(self):
-        """Test printing an empty enabled keeper."""
+    def test_snapshot(self):
+        """Test that snapshot() takes a stable snapshot."""
 
         keeper = TimeStatsKeeper()
         keeper.enable()
-        with captured_output() as (out, err):
-            keeper.print()
-        output = out.getvalue().strip()
-        self.assertEqual(output, PRINT_HEADER)
 
-    def test_print_disabled(self):
-        """Test printing a disabled keeper."""
+        duration = 0.2
+        delta = duration / 100
+
+        stats = keeper.get_stats('foo')
+        stats.begin()
+        time.sleep(duration)
+        stats.end()
+
+        # take the snapshot
+        snapshot = keeper.snapshot()
+
+        # keep producing statistics data
+        stats.begin()
+        time.sleep(duration * 2)
+        stats.end()
+
+        # verify that only the first set of data is in the snapshot
+        for _, stats in snapshot:
+            self.assertEqual(stats.count, 1)
+            self.assertTrue(time_equal(stats.avg_time, duration, delta))
+            self.assertTrue(time_equal(stats.min_time, duration, delta))
+            self.assertTrue(time_equal(stats.max_time, duration, delta))
+
+    def test_str_empty(self):
+        """Test str() for an empty enabled keeper."""
 
         keeper = TimeStatsKeeper()
-        with captured_output() as (out, err):
-            keeper.print()
-        output = out.getvalue().strip()
-        self.assertEqual(output, PRINT_HEADER_DISABLED)
+        keeper.enable()
+        s = str(keeper)
+        self.assertEqual(s, PRINT_HEADER)
+
+    def test_str_disabled(self):
+        """Test str() for a disabled keeper."""
+
+        keeper = TimeStatsKeeper()
+        s = str(keeper)
+        self.assertEqual(s, PRINT_HEADER_DISABLED)

@@ -17,8 +17,6 @@
 Example 3: Get partial and full properties for CPCs and for the LPARs of a CPC.
 """
 
-from __future__ import absolute_import, print_function
-
 import sys
 import logging
 import yaml
@@ -118,6 +116,6 @@ print("Logging off ...")
 session.logoff()
 
 if timestats:
-    session.time_stats_keeper.print()
+    print(session.time_stats_keeper)
 
 print("Done.")

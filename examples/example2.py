@@ -17,8 +17,6 @@
 Example 2: Find an LPAR in a CPC, and activate/deactivate/load the LPAR.
 """
 
-from __future__ import absolute_import, print_function
-
 import sys
 import logging
 import yaml
@@ -135,7 +133,7 @@ try:
     session.logoff()
 
     if timestats:
-        session.time_stats_keeper.print()
+        print(session.time_stats_keeper)
 
     print("Done.")
 

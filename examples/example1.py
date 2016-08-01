@@ -17,8 +17,6 @@
 Example 1: List CPCs and LPARs/partitions on a CPC.
 """
 
-from __future__ import absolute_import, print_function
-
 import sys
 import logging
 import yaml
@@ -109,6 +107,6 @@ print("Logging off ...")
 session.logoff()
 
 if timestats:
-    session.time_stats_keeper.print()
+    print(session.time_stats_keeper)
 
 print("Done.")

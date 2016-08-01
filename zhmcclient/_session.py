@@ -16,7 +16,7 @@
 Session class: A session to the HMC, optionally in context of an HMC user.
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 
 import json
 import time
@@ -246,7 +246,7 @@ class Session(object):
             self.logon()
         url = self.base_url + uri
 
-        stats = self._time_stats_keeper.get_stats('get ' + uri)
+        stats = self.time_stats_keeper.get_stats('get ' + uri)
         stats.begin()
         try:
             result = requests.get(url, headers=self.headers, verify=False)
@@ -325,7 +325,7 @@ class Session(object):
             body = {}
         data = json.dumps(body)
 
-        stats = self._time_stats_keeper.get_stats('post ' + uri)
+        stats = self.time_stats_keeper.get_stats('post ' + uri)
         stats.begin()
         try:
             result = requests.post(
@@ -338,10 +338,18 @@ class Session(object):
         if result.status_code in (200, 204):
             return result.json()
         elif result.status_code == 202:
-            job_url = self.base_url + result.json()['job-uri']
+            job_uri = result.json()['job-uri']
+            job_url = self.base_url + job_uri
             while 1:
-                result = requests.get(job_url, headers=self.headers,
-                                      verify=False)
+                stats = self.time_stats_keeper.get_stats('get ' + job_uri)
+                stats.begin()
+                try:
+                    result = requests.get(job_url, headers=self.headers,
+                                          verify=False)
+                except requests.exceptions.RequestException as exc:
+                    raise ConnectionError(str(exc))
+                finally:
+                    stats.end()
                 if result.status_code in (200, 204):
                     if result.json()['status'] == 'complete':
                         return result.json()
@@ -404,7 +412,7 @@ class Session(object):
             self.logon()
         url = self.base_url + uri
 
-        stats = self._time_stats_keeper.get_stats('delete ' + uri)
+        stats = self.time_stats_keeper.get_stats('delete ' + uri)
         stats.begin()
         try:
             result = requests.delete(url, headers=self.headers, verify=False)
