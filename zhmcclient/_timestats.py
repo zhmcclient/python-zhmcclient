@@ -87,9 +87,9 @@ class TimeStats(object):
         self._keeper = keeper
         self._name = name
         self._count = 0
-        self._sum = 0
-        self._min = 1E100
-        self._max = 0
+        self._sum = float(0)
+        self._min = float('inf')
+        self._max = float(0)
 
     @property
     def name(self):
@@ -121,7 +121,10 @@ class TimeStats(object):
         """
         float: The average elapsed time for issuing the operation, in seconds.
         """
-        return self._sum / self._count
+        try:
+            return self._sum / self._count
+        except ZeroDivisionError:
+            return None
 
     @property
     def min_time(self):
@@ -142,9 +145,9 @@ class TimeStats(object):
         Reset the time statistics.
         """
         self._count = 0
-        self._sum = 0
-        self._min = 1E100
-        self._max = 0
+        self._sum = float(0)
+        self._min = float('inf')
+        self._max = float(0)
 
     def begin(self):
         """
@@ -234,6 +237,12 @@ class TimeStatsKeeper(object):
         if name not in self._time_stats:
             self._time_stats[name] = TimeStats(self, name)
         return self._time_stats[name]
+
+    def stats_items(self):
+        """
+        Return an iterator through the time statistics of this keeper.
+        """
+        return self._time_stats.items()
 
     def print(self):
         """
