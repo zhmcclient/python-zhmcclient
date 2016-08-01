@@ -13,14 +13,9 @@
 .. limitations under the License.
 ..
 
-zhmcclient - A Pure python client library for the z Systems HMC Web Services API
-********************************************************************************
+.. _`Logging`:
 
-.. toctree::
-   :maxdepth: 2
-   :numbered:
+Logging
+=======
 
-   intro.rst
-   tutorial.rst
-   operations.rst
-   logging.rst
+.. automodule:: zhmcclient._logging

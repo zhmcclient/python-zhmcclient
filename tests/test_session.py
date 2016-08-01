@@ -41,8 +41,10 @@ class SessionTests(unittest.TestCase):
         logon and logoff.
         """
         m.register_uri('POST', '/api/sessions',
-                       json={'api-session': 'fake-session-id'})
+                       json={'api-session': 'fake-session-id'},
+                       headers={'X-Request-Id': 'fake-request-id'})
         m.register_uri('DELETE', '/api/sessions/this-session',
+                       headers={'X-Request-Id': 'fake-request-id'},
                        status_code=204)
 
     def test_init(self):

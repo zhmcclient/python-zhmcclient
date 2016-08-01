@@ -44,6 +44,8 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._lpar import LparManager
 from ._partition import PartitionManager
+from ._logging import _log_call
+
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -68,6 +70,7 @@ class CpcManager(BaseManager):
         super(CpcManager, self).__init__()
         self._session = client.session
 
+    @_log_call
     def list(self, full_properties=False):
         """
         List the CPCs in scope of this manager object.
