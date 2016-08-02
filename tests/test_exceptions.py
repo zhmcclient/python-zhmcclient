@@ -20,12 +20,12 @@ Unit tests for _exceptions module.
 from __future__ import absolute_import
 
 import unittest
-import warnings
-import six
 
 from zhmcclient._exceptions import Error, ConnectionError, AuthError,\
-                                   ParseError, VersionError, HTTPError,\
-                                   NoUniqueMatch, NotFound
+    ParseError, VersionError, HTTPError
+
+# TODO: Add tests for NoUniqueMatch
+# TODO: Add tests for NotFound
 
 
 class MyError(Error):
@@ -45,6 +45,7 @@ class TestError(unittest.TestCase):
     """
 
     def test_empty(self):
+        """Test Error exception with no argument."""
 
         exc = MyError()
 
@@ -53,6 +54,7 @@ class TestError(unittest.TestCase):
         self.assertEqual(len(exc.args), 0)
 
     def test_one(self):
+        """Test Error exception with one argument."""
 
         exc = MyError('zaphod')
 
@@ -60,6 +62,7 @@ class TestError(unittest.TestCase):
         self.assertEqual(exc.args[0], 'zaphod')
 
     def test_two(self):
+        """Test with two arguments."""
 
         exc = MyError('zaphod', 42)
 
@@ -68,6 +71,8 @@ class TestError(unittest.TestCase):
         self.assertEqual(exc.args[1], 42)
 
     def test_one_tuple(self):
+        """Test Error exception with one argument that is a tuple of two
+        items."""
 
         exc = MyError(('zaphod', 42))
 
@@ -83,40 +88,46 @@ class SimpleTestMixin(object):
     argument.
     """
 
-    CLASS = None  # Exception class to be tested
+    exc_class = Exception  # Exception class to be tested
 
     def test_empty(self):
+        """Test simple exception with no argument."""
 
         try:
-            exc = self.CLASS()
+            self.exc_class()
         except TypeError as e:
-            self.assertEqual(e.args[0],
-                             "__init__() takes exactly 2 arguments (1 given)")
-        except Exception as e:
-            self.fail("Exception was raised: %r" % e)
-        else:
-            self.fail("No exception was raised.")
-
-    def test_two(self):
-
-        try:
-            exc = self.CLASS('zaphod', 42)
-        except TypeError as e:
-            self.assertEqual(e.args[0],
-                             "__init__() takes exactly 2 arguments (3 given)")
-        except Exception as e:
+            self.assertRegexpMatches(
+                e.args[0],
+                r"__init__\(\) (takes.* 2 .*arguments .*1 .*given.*|"
+                r"missing 1 .*argument.*)")
+        except Exception as e:  # pylint: disable=broad-except
             self.fail("Exception was raised: %r" % e)
         else:
             self.fail("No exception was raised.")
 
     def test_one(self):
+        """Test simple exception with one argument."""
 
-        exc = self.CLASS('zaphod')
+        exc = self.exc_class('zaphod')
 
         self.assertTrue(isinstance(exc, Error))
         self.assertTrue(isinstance(exc.args, tuple))
         self.assertEqual(len(exc.args), 1)
         self.assertEqual(exc.args[0], 'zaphod')
+
+    def test_two(self):
+        """Test simple exception with two arguments."""
+
+        try:
+            self.exc_class('zaphod', 42)
+        except TypeError as e:
+            self.assertRegexpMatches(
+                e.args[0],
+                r"__init__\(\) takes.* 2 .*arguments .*3 .*given.*")
+        except Exception as e:  # pylint: disable=broad-except
+            self.fail("Exception was raised: %r" % e)
+        else:
+            self.fail("No exception was raised.")
 
 
 class TestConnectionError(unittest.TestCase, SimpleTestMixin):
@@ -125,7 +136,7 @@ class TestConnectionError(unittest.TestCase, SimpleTestMixin):
     """
 
     def setUp(self):
-        self.CLASS = ConnectionError
+        self.exc_class = ConnectionError
 
 
 class TestAuthError(unittest.TestCase, SimpleTestMixin):
@@ -134,7 +145,7 @@ class TestAuthError(unittest.TestCase, SimpleTestMixin):
     """
 
     def setUp(self):
-        self.CLASS = AuthError
+        self.exc_class = AuthError
 
 
 class TestParseError(unittest.TestCase, SimpleTestMixin):
@@ -143,7 +154,7 @@ class TestParseError(unittest.TestCase, SimpleTestMixin):
     """
 
     def setUp(self):
-        self.CLASS = ParseError
+        self.exc_class = ParseError
 
 
 class TestVersionError(unittest.TestCase, SimpleTestMixin):
@@ -152,7 +163,7 @@ class TestVersionError(unittest.TestCase, SimpleTestMixin):
     """
 
     def setUp(self):
-        self.CLASS = VersionError
+        self.exc_class = VersionError
 
 
 class TestHTTPError(unittest.TestCase, SimpleTestMixin):
@@ -161,30 +172,38 @@ class TestHTTPError(unittest.TestCase, SimpleTestMixin):
     """
 
     def test_empty(self):
+        """Test HTTPError with no arguments (expecting failure)."""
 
         try:
-            exc = HTTPError()
+            # pylint: disable=no-value-for-parameter
+            HTTPError()
         except TypeError as e:
-            self.assertEqual(e.args[0],
-                             "__init__() takes exactly 2 arguments (1 given)")
-        except Exception as e:
+            self.assertRegexpMatches(
+                e.args[0],
+                r"__init__\(\) (takes.* 2 .*arguments .*1 .*given.*|"
+                r"missing 1 .*argument.*)")
+        except Exception as e:  # pylint: disable=broad-except
             self.fail("Exception was raised: %r" % e)
         else:
             self.fail("No exception was raised.")
 
     def test_two(self):
+        """Test HTTPError with two arguments (expecting failure)."""
 
         try:
-            exc = HTTPError(dict(reason=42), 42)
+            # pylint: disable=too-many-function-args
+            HTTPError(dict(reason=42), 42)
         except TypeError as e:
-            self.assertEqual(e.args[0],
-                             "__init__() takes exactly 2 arguments (3 given)")
-        except Exception as e:
+            self.assertRegexpMatches(
+                e.args[0],
+                r"__init__\(\) takes.* 2 .*arguments .*3 .*given.*")
+        except Exception as e:  # pylint: disable=broad-except
             self.fail("Exception was raised: %r" % e)
         else:
             self.fail("No exception was raised.")
 
     def test_one(self):
+        """Test HTTPError with one argument."""
 
         resp_body = {
             'http-status': 404,
@@ -216,24 +235,27 @@ class TestHTTPError(unittest.TestCase, SimpleTestMixin):
         self.assertEqual(exc.message, resp_body['message'])
         self.assertEqual(exc.request_method, resp_body['request-method'])
         self.assertEqual(exc.request_uri, resp_body['request-uri'])
-        self.assertEqual(exc.request_query_parms, resp_body['request-query-parms'])
+        self.assertEqual(exc.request_query_parms,
+                         resp_body['request-query-parms'])
         self.assertEqual(exc.request_headers, resp_body['request-headers'])
-        self.assertEqual(exc.request_authenticated_as, resp_body['request-authenticated-as'])
+        self.assertEqual(exc.request_authenticated_as,
+                         resp_body['request-authenticated-as'])
         self.assertEqual(exc.request_body, resp_body['request-body'])
-        self.assertEqual(exc.request_body_as_string, resp_body['request-body-as-string'])
-        self.assertEqual(exc.request_body_as_string_partial, resp_body['request-body-as-string-partial'])
+        self.assertEqual(exc.request_body_as_string,
+                         resp_body['request-body-as-string'])
+        self.assertEqual(exc.request_body_as_string_partial,
+                         resp_body['request-body-as-string-partial'])
         self.assertEqual(exc.stack, resp_body['stack'])
         self.assertEqual(exc.error_details, resp_body['error-details'])
 
         # Check str()
         exp_str = str(resp_body['http-status']) + ',' + \
-                  str(resp_body['reason']) + ': ' + resp_body['message']
+            str(resp_body['reason']) + ': ' + resp_body['message']
         self.assertEqual(str(exc), exp_str)
 
         # Check repr()
         exp_repr = 'HTTPError(' + str(resp_body['http-status']) + ', ' + \
-                   str(resp_body['reason']) + ', ' + resp_body['message'] + \
-                   ', ...)'
+            str(resp_body['reason']) + ', ' + resp_body['message'] + ', ...)'
         self.assertEqual(repr(exc), exp_repr)
 
 
