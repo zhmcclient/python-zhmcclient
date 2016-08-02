@@ -71,8 +71,9 @@ class Session(object):
             scheme=_HMC_SCHEME,
             host=self._host,
             port=_HMC_PORT)
-        self._headers = _STD_HEADERS
-        self._session_id = None
+        self._headers = _STD_HEADERS  # dict with standard HTTP headers
+        self._session_id = None  # HMC session ID
+        self._session = None  # requests.Session() object
 
     @property
     def host(self):
@@ -132,9 +133,30 @@ class Session(object):
         """
         return self._headers
 
+    @property
+    def session_id(self):
+        """
+        :term:`string`: Session ID for this session, returned by the HMC.
+        """
+        return self._session_id
+
+    @property
+    def session(self):
+        """
+        :term:`string`: :class:`requests.Session` object for this session.
+        """
+        return self._session
+
     def logon(self):
         """
         Make sure the session is logged on to the HMC.
+
+        After successful logon to the HMC, the following is stored in this
+        session object for reuse in subsequent operations:
+
+        * the HMC session ID, in order to avoid extra userid authentications,
+        * a :class:`requests.Session` object, in order to enable connection
+          pooling. Connection pooling avoids repetitive SSL/TLS handshakes.
 
         Raises:
 
@@ -150,6 +172,9 @@ class Session(object):
         """
         Make sure the session is logged off from the HMC.
 
+        After successful logoff, the HMC session ID and
+        :class:`requests.Session` object stored in this object are reset.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -158,10 +183,7 @@ class Session(object):
           :exc:`~zhmcclient.ConnectionError`
         """
         if self.is_logon():
-            session_uri = '/api/sessions/this-session'
-            self.delete(session_uri, logon_required=False)
-            self._session_id = None
-            self._headers.pop('X-API-Session', None)
+            self._do_logoff()
 
     def is_logon(self):
         """
@@ -174,13 +196,6 @@ class Session(object):
         """
         Log on, unconditionally. This can be used to re-logon.
         This requires credentials to be provided.
-
-        Raises:
-
-          :exc:`~zhmcclient.HTTPError`
-          :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
-          :exc:`~zhmcclient.ConnectionError`
         """
         if self._userid is None or self._password is None:
             raise AuthError("Userid or password not provided.")
@@ -190,9 +205,20 @@ class Session(object):
             'password': self._password
         }
         self._headers.pop('X-API-Session', None)  # Just in case
+        self._session = requests.Session()
         logon_res = self.post(logon_uri, logon_body, logon_required=False)
         self._session_id = logon_res['api-session']
         self._headers['X-API-Session'] = self._session_id
+
+    def _do_logoff(self):
+        """
+        Log off, unconditionally.
+        """
+        session_uri = '/api/sessions/this-session'
+        self.delete(session_uri, logon_required=False)
+        self._session_id = None
+        self._session = None
+        self._headers.pop('X-API-Session', None)
 
     def get(self, uri, logon_required=True):
         """
@@ -230,8 +256,9 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+        req = self._session or requests
         try:
-            result = requests.get(url, headers=self.headers, verify=False)
+            result = req.get(url, headers=self.headers, verify=False)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
         if result.status_code == 200:
@@ -303,9 +330,10 @@ class Session(object):
         if body is None:
             body = {}
         data = json.dumps(body)
+        req = self._session or requests
         try:
-            result = requests.post(
-                url, data=data, headers=self.headers, verify=False)
+            result = req.post(url, data=data, headers=self.headers,
+                              verify=False)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
         if result.status_code in (200, 204):
@@ -313,8 +341,7 @@ class Session(object):
         elif result.status_code == 202:
             job_url = self.base_url + result.json()['job-uri']
             while 1:
-                result = requests.get(job_url, headers=self.headers,
-                                      verify=False)
+                result = req.get(job_url, headers=self.headers, verify=False)
                 if result.status_code in (200, 204):
                     if result.json()['status'] == 'complete':
                         return result.json()
@@ -376,8 +403,9 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+        req = self._session or requests
         try:
-            result = requests.delete(url, headers=self.headers, verify=False)
+            result = req.delete(url, headers=self.headers, verify=False)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
         if result.status_code in (200, 204):
