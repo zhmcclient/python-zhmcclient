@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
-# Example for partial properties (object-info) and
-# full properties for CPCs and LPARs on a CPC.
-#
+"""
+Example 3: Get partial and full properties for CPCs and for the LPARs of a CPC.
+"""
 
 import sys
+import logging
 import yaml
 import requests.packages.urllib3
 import time
@@ -47,6 +47,15 @@ if example3 is None:
           (hmccreds_file))
     sys.exit(1)
 
+loglevel = example3.get("loglevel", None)
+if loglevel is not None:
+    level = getattr(logging, loglevel.upper(), None)
+    if level is None:
+        print("Invalid value for loglevel in credentials file %s: %s" % \
+              (hmccreds_file, loglevel))
+        sys.exit(1)
+    logging.basicConfig(level=level)
+
 hmc = example3["hmc"]
 cpcname = example3["cpcname"]
 
@@ -58,6 +67,8 @@ if cred is None:
 
 userid = cred['userid']
 password = cred['password']
+
+print(__doc__)
 
 print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
@@ -97,6 +108,8 @@ for full_properties in (False, True):
         lpar.properties_timestamp))
 #        print(lpar.properties['name'], lpar.properties['status'], \
 #              lpar.properties['object-uri'])
-print("Logoff Session ...")
+
+print("Logging off ...")
 session.logoff()
+
 print("Done.")

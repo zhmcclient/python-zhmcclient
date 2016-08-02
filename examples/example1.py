@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
-# Example for listing CPCs and LPARs on a CPC.
-#
+"""
+Example 1: List CPCs and LPARs/partitions on a CPC.
+"""
 
 import sys
+import logging
 import yaml
 import requests.packages.urllib3
 
@@ -45,6 +46,15 @@ if example1 is None:
           (hmccreds_file))
     sys.exit(1)
 
+loglevel = example1.get("loglevel", None)
+if loglevel is not None:
+    level = getattr(logging, loglevel.upper(), None)
+    if level is None:
+        print("Invalid value for loglevel in credentials file %s: %s" % \
+              (hmccreds_file, loglevel))
+        sys.exit(1)
+    logging.basicConfig(level=level)
+
 hmc = example1["hmc"]
 cpcname = example1["cpcname"]
 
@@ -57,6 +67,8 @@ if cred is None:
 userid = cred['userid']
 password = cred['password']
 
+print(__doc__)
+
 print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
@@ -64,7 +76,6 @@ cl = zhmcclient.Client(session)
 print("Listing CPCs ...")
 cpcs = cl.cpcs.list()
 for cpc in cpcs:
-#    print(cpc.name, cpc.status, getattr(cpc, "object-uri"))
     print(cpc.properties['name'], cpc.properties['status'],
           cpc.properties['object-uri'])
 
@@ -74,17 +85,21 @@ try:
 except zhmcclient.NotFound:
     print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
+print(cpc.properties['name'], cpc.properties['status'],
+      cpc.properties['object-uri'])
 
+print("Checking if DPM is enabled on CPC %s..." % cpcname)
 if cpc.dpm_enabled:
-    print("Listing Partitions on CPC %s ..." % cpcname)
+    print("CPC %s is in DPM mode: Listing Partitions ..." % cpcname)
     partitions = cpc.partitions.list()
 else:
-    print("Listing LPARs on CPC %s ..." % cpcname)
+    print("CPC %s is in classic mode: Listing LPARs ..." % cpcname)
     partitions = cpc.lpars.list()
 for partition in partitions:
     print(partition.properties['name'], partition.properties['status'],
           partition.properties['object-uri'])
 
-print("Logoff Session ...")
+print("Logging off ...")
 session.logoff()
+
 print("Done.")

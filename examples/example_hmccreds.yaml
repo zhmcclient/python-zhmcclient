@@ -1,9 +1,11 @@
 examples:
    example0:
       hmc: "9.152.150.65"
+      #loglevel: debug
    example1:
       hmc: "9.152.150.65"
       cpcname: P0000P30
+      #loglevel: debug
    example2:
       hmc: "9.152.150.65"
       cpcname: P0000P30
@@ -11,13 +13,20 @@ examples:
       lparname: PART8
       loaddev: "5172"
       deactivate: yes
+      #loglevel: debug
    example3:
       hmc: "9.152.150.65"
       cpcname: P0000P30
+      #loglevel: debug
 
 "9.152.150.65":
    userid: ensadmin
    password: 1234
+
+"9.152.150.86":
+   userid: ensadmin
+   password: 1234
+
 "9.152.133.140":
    userid: ensadmin
    password: 1234

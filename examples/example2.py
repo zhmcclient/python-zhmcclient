@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
-# Example for LPAR activation, deactivation and boot.
-#
+"""
+Example 2: Find an LPAR in a CPC, and activate/deactivate/load the LPAR.
+"""
 
 import sys
+import logging
 import yaml
 import requests.packages.urllib3
 
@@ -45,6 +46,15 @@ if example2 is None:
           (hmccreds_file))
     sys.exit(1)
 
+loglevel = example2.get("loglevel", None)
+if loglevel is not None:
+    level = getattr(logging, loglevel.upper(), None)
+    if level is None:
+        print("Invalid value for loglevel in credentials file %s: %s" % \
+              (hmccreds_file, loglevel))
+        sys.exit(1)
+    logging.basicConfig(level=level)
+
 hmc = example2["hmc"]
 cpcname = example2["cpcname"]
 cpcstatus = example2["cpcstatus"]
@@ -62,21 +72,26 @@ userid = cred['userid']
 password = cred['password']
 
 try:
+    print(__doc__)
+
     print("Using HMC %s with userid %s ..." % (hmc, userid))
     session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
 
+    print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
           (cpc.properties['name'], cpc.properties['status']))
 
+    print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
-    print("De-Activating LPAR %s ..." % lpar.properties['name'])
+    print("Deactivating LPAR %s ..." % lpar.properties['name'])
     status = lpar.deactivate()
 
+    print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
@@ -84,6 +99,7 @@ try:
     print("Activating LPAR %s ..." % lpar.properties['name'])
     status = lpar.activate()
 
+    print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
@@ -92,20 +108,23 @@ try:
           (lpar.properties['name'], loaddev))
     status = lpar.load(loaddev)
 
+    print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
     if deactivate == "yes":
-        print("De-Activating LPAR %s ..." % lpar.properties['name'])
+        print("Deactivating LPAR %s ..." % lpar.properties['name'])
         status = lpar.deactivate()
 
+        print("Finding LPAR by name=%s ..." % lparname)
         lpar = cpc.lpars.find(name=lparname)
         print("Status of LPAR %s: %s" % \
               (lpar.properties['name'], lpar.properties['status']))
 
-    print("Logoff Session ...")
+    print("Logging off ...")
     session.logoff()
+
     print("Done.")
 
 except zhmcclient.Error as exc:

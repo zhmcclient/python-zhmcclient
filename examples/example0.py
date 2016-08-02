@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
-# Example for showing the API version of an HMC.
-#
+"""
+Example 0: Show the API version of an HMC.
+"""
 
 import sys
+import logging
 import yaml
 import requests.packages.urllib3
 
@@ -45,12 +46,22 @@ if example0 is None:
           (hmccreds_file))
     sys.exit(1)
 
+loglevel = example0.get("loglevel", None)
+if loglevel is not None:
+    level = getattr(logging, loglevel.upper(), None)
+    if level is None:
+        print("Invalid value for loglevel in credentials file %s: %s" % \
+              (hmccreds_file, loglevel))
+        sys.exit(1)
+    logging.basicConfig(level=level)
+
 hmc = example0["hmc"]
 
-print("Using HMC %s without any userid ..." % hmc)
+print(__doc__)
+
+print("Using HMC %s with an unauthenticated session ..." % hmc)
 session = zhmcclient.Session(hmc)
 cl = zhmcclient.Client(session)
 
 vi = cl.version_info()
 print("HMC API version: {}.{}".format(vi[0], vi[1]))
-
