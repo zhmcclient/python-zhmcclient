@@ -27,6 +27,7 @@ ChangeLog
 *egg-info
 .vagrant
 hmc*.yaml
+/try/
 
 # Files created by releasenotes build
 releasenotes/build
