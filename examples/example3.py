@@ -73,6 +73,9 @@ print(__doc__)
 print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
+timestats = example3.get("timestats", None)
+if timestats:
+    session.time_stats_keeper.enable()
 
 for full_properties in (False, True):
     localtime = time.asctime(time.localtime(time.time()))
@@ -111,5 +114,8 @@ for full_properties in (False, True):
 
 print("Logging off ...")
 session.logoff()
+
+if timestats:
+    print(session.time_stats_keeper)
 
 print("Done.")

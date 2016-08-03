@@ -78,6 +78,10 @@ try:
     session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
 
+    timestats = example2.get("timestats", None)
+    if timestats:
+        session.time_stats_keeper.enable()
+
     print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
@@ -124,6 +128,9 @@ try:
 
     print("Logging off ...")
     session.logoff()
+
+    if timestats:
+        print(session.time_stats_keeper)
 
     print("Done.")
 

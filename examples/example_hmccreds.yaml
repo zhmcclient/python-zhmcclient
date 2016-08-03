@@ -6,6 +6,7 @@ examples:
       hmc: "9.152.150.65"
       cpcname: P0000P30
       #loglevel: debug
+      #timestats: yes
    example2:
       hmc: "9.152.150.65"
       cpcname: P0000P30
@@ -14,10 +15,12 @@ examples:
       loaddev: "5172"
       deactivate: yes
       #loglevel: debug
+      #timestats: yes
    example3:
       hmc: "9.152.150.65"
       cpcname: P0000P30
       #loglevel: debug
+      #timestats: yes
 
 "9.152.150.65":
    userid: ensadmin

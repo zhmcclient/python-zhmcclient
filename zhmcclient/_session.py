@@ -23,6 +23,7 @@ import time
 import requests
 
 from ._exceptions import HTTPError, AuthError, ConnectionError
+from ._timestats import TimeStatsKeeper
 
 __all__ = ['Session']
 
@@ -40,6 +41,11 @@ class Session(object):
 
     The session supports operations that require to be authenticated, as well
     as operations that don't (e.g. obtaining the API version).
+
+    The session can keep statistics about the elapsed time for issuing HTTP
+    requests against the HMC API. Instance variable
+    :attr:`~zhmcclient.Session.time_stats_keeper` is used to enable/disable the
+    measurements, and to print the statistics.
     """
 
     def __init__(self, host, userid=None, password=None):
@@ -73,6 +79,7 @@ class Session(object):
             port=_HMC_PORT)
         self._headers = _STD_HEADERS
         self._session_id = None
+        self._time_stats_keeper = TimeStatsKeeper()
 
     @property
     def host(self):
@@ -131,6 +138,14 @@ class Session(object):
             X-API-Session: ...
         """
         return self._headers
+
+    @property
+    def time_stats_keeper(self):
+        """
+        The time statistics keeper (for a usage example, see section
+        :ref:`Time Statistics`).
+        """
+        return self._time_stats_keeper
 
     def logon(self):
         """
@@ -230,10 +245,16 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+
+        stats = self.time_stats_keeper.get_stats('get ' + uri)
+        stats.begin()
         try:
             result = requests.get(url, headers=self.headers, verify=False)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
+        finally:
+            stats.end()
+
         if result.status_code == 200:
             return result.json()
         elif result.status_code == 403:
@@ -303,18 +324,32 @@ class Session(object):
         if body is None:
             body = {}
         data = json.dumps(body)
+
+        stats = self.time_stats_keeper.get_stats('post ' + uri)
+        stats.begin()
         try:
             result = requests.post(
                 url, data=data, headers=self.headers, verify=False)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
+        finally:
+            stats.end()
+
         if result.status_code in (200, 204):
             return result.json()
         elif result.status_code == 202:
-            job_url = self.base_url + result.json()['job-uri']
+            job_uri = result.json()['job-uri']
+            job_url = self.base_url + job_uri
             while 1:
-                result = requests.get(job_url, headers=self.headers,
-                                      verify=False)
+                stats = self.time_stats_keeper.get_stats('get ' + job_uri)
+                stats.begin()
+                try:
+                    result = requests.get(job_url, headers=self.headers,
+                                          verify=False)
+                except requests.exceptions.RequestException as exc:
+                    raise ConnectionError(str(exc))
+                finally:
+                    stats.end()
                 if result.status_code in (200, 204):
                     if result.json()['status'] == 'complete':
                         return result.json()
@@ -376,10 +411,16 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+
+        stats = self.time_stats_keeper.get_stats('delete ' + uri)
+        stats.begin()
         try:
             result = requests.delete(url, headers=self.headers, verify=False)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
+        finally:
+            stats.end()
+
         if result.status_code in (200, 204):
             return
         elif result.status_code == 403:
