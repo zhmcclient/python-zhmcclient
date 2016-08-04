@@ -148,6 +148,7 @@ class Session(object):
         """
         return self._time_stats_keeper
 
+    @property
     def session_id(self):
         """
         :term:`string`: Session ID for this session, returned by the HMC.
