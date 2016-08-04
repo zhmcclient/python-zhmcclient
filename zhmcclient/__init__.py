@@ -25,6 +25,7 @@ from ._version import *       # noqa: F401
 from ._exceptions import *    # noqa: F401
 from ._manager import *       # noqa: F401
 from ._resource import *      # noqa: F401
+from ._logging import *       # noqa: F401
 from ._session import *       # noqa: F401
 from ._timestats import *     # noqa: F401
 from ._client import *        # noqa: F401

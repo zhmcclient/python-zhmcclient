@@ -24,6 +24,9 @@ import requests
 
 from ._exceptions import HTTPError, AuthError, ConnectionError
 from ._timestats import TimeStatsKeeper
+from ._logging import _get_logger
+
+LOG = _get_logger(__name__)
 
 __all__ = ['Session']
 
@@ -81,6 +84,10 @@ class Session(object):
         self._session_id = None  # HMC session ID
         self._session = None  # requests.Session() object
         self._time_stats_keeper = TimeStatsKeeper()
+        self._headers = _STD_HEADERS
+        self._session_id = None
+        LOG.debug("Created session object for '%(user)s' on '%(host)s'",
+                  {'user': self._userid, 'host': self._host})
 
     @property
     def host(self):
@@ -235,6 +242,13 @@ class Session(object):
         self._session = None
         self._headers.pop('X-API-Session', None)
 
+    def _log_hmc_request_id(self, response):
+        """
+        Log the identifier the HMC uses to distinguish requests.
+        """
+        LOG.info("HMC Request-Id: '%(req_id)s'",
+                 {'req_id': response.headers.get('X-Request-Id', '')})
+
     def get(self, uri, logon_required=True):
         """
         Perform the HTTP GET method against the resource identified by a URI.
@@ -276,6 +290,7 @@ class Session(object):
         req = self._session or requests
         try:
             result = req.get(url, headers=self.headers, verify=False)
+            self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
         finally:
@@ -372,6 +387,7 @@ class Session(object):
         try:
             result = req.post(url, data=data, headers=self.headers,
                               verify=False)
+            self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
         finally:
@@ -460,6 +476,7 @@ class Session(object):
         req = self._session or requests
         try:
             result = req.delete(url, headers=self.headers, verify=False)
+            self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
         finally:
