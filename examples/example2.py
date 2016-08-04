@@ -94,6 +94,7 @@ try:
 
     print("Deactivating LPAR %s ..." % lpar.properties['name'])
     status = lpar.deactivate()
+    print("status: %s" % status)
 
     print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)

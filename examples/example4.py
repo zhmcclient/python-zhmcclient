@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
-# Example for asynchronous interface.
-#
+"""
+Example 4: Using the asynchronous interface.
+"""
 
 import sys
 import yaml
@@ -46,6 +46,15 @@ if example4 is None:
           (hmccreds_file))
     sys.exit(1)
 
+loglevel = example4.get("loglevel", None)
+if loglevel is not None:
+    level = getattr(logging, loglevel.upper(), None)
+    if level is None:
+        print("Invalid value for loglevel in credentials file %s: %s" % \
+              (hmccreds_file, loglevel))
+        sys.exit(1)
+    logging.basicConfig(level=level)
+
 hmc = example4["hmc"]
 cpcname = example4["cpcname"]
 cpcstatus = example4["cpcstatus"]
@@ -60,10 +69,16 @@ if cred is None:
 userid = cred['userid']
 password = cred['password']
 
+print(__doc__)
+
 try:
     print("Using HMC %s with userid %s ..." % (hmc, userid))
     session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
+
+    timestats = example4.get("timestats", None)
+    if timestats:
+        session.time_stats_keeper.enable()
 
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
@@ -76,15 +91,25 @@ try:
     print("De-Activating LPAR %s ..." % lpar.properties['name'])
     status = lpar.deactivate(wait_for_completion=False)
 
-    print status['job-uri']
+    print("job-uri: %s" % (status['job-uri']))
     job = session.query_job_status(status['job-uri'])
+    print("job response: %s" % job)
 
     while job['status'] != 'complete':
-        print job['status']
+        print("Job Status: %s" % (job['status']))
         time.sleep(1)
         job = session.query_job_status(status['job-uri'])
 
-    print('Deactivate complete !')
+    print("job response: %s" % job)
+    print('De-Activate complete !')
+
+    print("Logging off ...")
+    session.logoff()
+
+    if timestats:
+        print(session.time_stats_keeper)
+
+    print("Done.")
 
 except zhmcclient.Error as exc:
     print("%s: %s" % (exc.__class__.__name__, exc))

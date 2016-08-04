@@ -342,6 +342,16 @@ class Session(object):
 
           :term:`json object` with the operation result.
 
+            In the default case of a synchronous operation
+            (wait_for_completion=True) the return value is a JSON object with
+            members like status, job-status-code and job-reason-code.
+            See the respective sections in :term:`HMC API` for a description
+            of the response body contents of the Query Job Status operation.
+
+            In case of an asynchronous operation (wait_for_completion=False),
+            the return value is a JSON object with a member job-id whose value
+            needs to be used for query_job_status().
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -494,6 +504,15 @@ class Session(object):
             This URI is relative to the base URL of the session (see
             the :attr:`~zhmcclient.Session.base_url` property).
             Must not be `None`.
+
+        Returns:
+
+          :term:`json object` with the operation result.
+
+            The return value is a JSON object with members like status,
+            job-status-code and job-reason-code.
+            See the respective sections in :term:`HMC API` for a description
+            of the response body contents of the Query Job Status operation.
 
         Raises:
 
