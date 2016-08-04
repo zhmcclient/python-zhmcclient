@@ -114,9 +114,31 @@ class Lpar(BaseResource):
         assert isinstance(manager, LparManager)
         super(Lpar, self).__init__(manager, properties)
 
-    def activate(self):
+    def activate(self, wait_for_completion=True):
         """
         Activate (start) this LPAR.
+
+        Parameters:
+
+          wait_for_completion (bool):
+            Boolean indicating whether the method should wait until
+            the operation/job has completed.
+            If wait_for_completion is 'False' the status of the operation/job
+            has to be retrieved via the method 'query_job_status' method.
+
+        Returns:
+
+          :term:`json object` with the operation result.
+
+            In the default case of a synchronous operation
+            (wait_for_completion=True) the return value is a JSON object with
+            members like status, job-status-code and job-reason-code.
+            See the respective sections in :term:`HMC API` for a description
+            of the response body contents of the Query Job Status operation.
+
+            In case of an asynchronous operation (wait_for_completion=False),
+            the return value is a JSON object with a member job-id whose value
+            needs to be used for query_job_status().
 
         Raises:
 
@@ -126,11 +148,35 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         lpar_uri = self.get_property('object-uri')
-        self.manager.session.post(lpar_uri + '/operations/activate')
+        result = self.manager.session.post(lpar_uri + '/operations/activate',
+            wait_for_completion=wait_for_completion)
+        return result
 
-    def deactivate(self):
+    def deactivate(self, wait_for_completion=True):
         """
         De-activate (stop) this LPAR.
+
+        Parameters:
+
+          wait_for_completion (bool):
+            Boolean indicating whether the method should wait until
+            the operation/job has completed.
+            If wait_for_completion is 'False' the status of the operation/job
+            has to be retrieved via the method 'query_job_status' method.
+
+        Returns:
+
+          :term:`json object` with the operation result.
+
+            In the default case of a synchronous operation
+            (wait_for_completion=True) the return value is a JSON object with
+            members like status, job-status-code and job-reason-code.
+            See the respective sections in :term:`HMC API` for a description
+            of the response body contents of the Query Job Status operation.
+
+            In case of an asynchronous operation (wait_for_completion=False),
+            the return value is a JSON object with a member job-id whose value
+            needs to be used for query_job_status().
 
         Raises:
 
@@ -141,15 +187,37 @@ class Lpar(BaseResource):
         """
         lpar_uri = self.get_property('object-uri')
         body = {'force': True}
-        self.manager.session.post(lpar_uri + '/operations/deactivate', body)
+        result = self.manager.session.post(lpar_uri + '/operations/deactivate',
+            body, wait_for_completion=wait_for_completion)
+        return result
 
-    def load(self, load_address):
+    def load(self, load_address, wait_for_completion=True):
         """
         Load (boot) this LPAR from a load address (boot device).
 
         Parameters:
 
           load_address (:term:`string`): Device number of the boot device.
+
+          wait_for_completion (bool):
+            Boolean indicating whether the method should wait until
+            the operation/job has completed.
+            If wait_for_completion is 'False' the status of the operation/job
+            has to be retrieved via the method 'query_job_status' method.
+
+        Returns:
+
+          :term:`json object` with the operation result.
+
+            In the default case of a synchronous operation
+            (wait_for_completion=True) the return value is a JSON object with
+            members like status, job-status-code and job-reason-code.
+            See the respective sections in :term:`HMC API` for a description
+            of the response body contents of the Query Job Status operation.
+
+            In case of an asynchronous operation (wait_for_completion=False),
+            the return value is a JSON object with a member job-id whose value
+            needs to be used for query_job_status().
 
         Raises:
 
@@ -160,4 +228,6 @@ class Lpar(BaseResource):
         """
         lpar_uri = self.get_property('object-uri')
         body = {'load-address': load_address}
-        self.manager.session.post(lpar_uri + '/operations/load', body)
+        result = self.manager.session.post(lpar_uri + '/operations/load',
+            body, wait_for_completion=wait_for_completion)
+        return result

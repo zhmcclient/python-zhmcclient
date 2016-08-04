@@ -14,13 +14,13 @@
 # limitations under the License.
 
 """
-Example 2: Find an LPAR in a CPC, and activate/deactivate/load the LPAR.
+Example 4: Using the asynchronous interface.
 """
 
 import sys
-import logging
 import yaml
 import requests.packages.urllib3
+import time
 
 import zhmcclient
 
@@ -40,13 +40,13 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example2 = examples.get("example2", None)
-if example2 is None:
-    print("example2 not found in credentials file %s" % \
+example4 = examples.get("example4", None)
+if example4 is None:
+    print("example4 not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example2.get("loglevel", None)
+loglevel = example4.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
@@ -55,12 +55,10 @@ if loglevel is not None:
         sys.exit(1)
     logging.basicConfig(level=level)
 
-hmc = example2["hmc"]
-cpcname = example2["cpcname"]
-cpcstatus = example2["cpcstatus"]
-lparname = example2["lparname"]
-loaddev = example2["loaddev"]
-deactivate = example2["deactivate"]
+hmc = example4["hmc"]
+cpcname = example4["cpcname"]
+cpcstatus = example4["cpcstatus"]
+lparname = example4["lparname"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
@@ -71,61 +69,39 @@ if cred is None:
 userid = cred['userid']
 password = cred['password']
 
-try:
-    print(__doc__)
+print(__doc__)
 
+try:
     print("Using HMC %s with userid %s ..." % (hmc, userid))
     session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
 
-    timestats = example2.get("timestats", None)
+    timestats = example4.get("timestats", None)
     if timestats:
         session.time_stats_keeper.enable()
 
-    print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
           (cpc.properties['name'], cpc.properties['status']))
 
-    print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
           (lpar.properties['name'], lpar.properties['status']))
 
-    print("Deactivating LPAR %s ..." % lpar.properties['name'])
-    status = lpar.deactivate()
-    print("status: %s" % status)
+    print("De-Activating LPAR %s ..." % lpar.properties['name'])
+    status = lpar.deactivate(wait_for_completion=False)
 
-    print("Finding LPAR by name=%s ..." % lparname)
-    lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
+    print("job-uri: %s" % (status['job-uri']))
+    job = session.query_job_status(status['job-uri'])
+    print("job response: %s" % job)
 
-    print("Activating LPAR %s ..." % lpar.properties['name'])
-    status = lpar.activate()
+    while job['status'] != 'complete':
+        print("Job Status: %s" % (job['status']))
+        time.sleep(1)
+        job = session.query_job_status(status['job-uri'])
 
-    print("Finding LPAR by name=%s ..." % lparname)
-    lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
-
-    print("Loading LPAR %s from device %s ..." % \
-          (lpar.properties['name'], loaddev))
-    status = lpar.load(loaddev)
-
-    print("Finding LPAR by name=%s ..." % lparname)
-    lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
-
-    if deactivate == "yes":
-        print("Deactivating LPAR %s ..." % lpar.properties['name'])
-        status = lpar.deactivate()
-
-        print("Finding LPAR by name=%s ..." % lparname)
-        lpar = cpc.lpars.find(name=lparname)
-        print("Status of LPAR %s: %s" % \
-              (lpar.properties['name'], lpar.properties['status']))
+    print("job response: %s" % job)
+    print('De-Activate complete !')
 
     print("Logging off ...")
     session.logoff()

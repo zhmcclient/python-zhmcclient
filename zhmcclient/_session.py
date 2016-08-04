@@ -301,7 +301,7 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
-    def post(self, uri, body=None, logon_required=True):
+    def post(self, uri, body=None, logon_required=True, wait_for_completion=True):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -332,9 +332,25 @@ class Session(object):
             is logged on to the HMC. For example, the logon operation does not
             require that.
 
+          wait_for_completion (bool):
+            Boolean indicating whether the method should wait until
+            the operation/job has completed.
+            If wait_for_completion is 'False' the status of the operation/job
+            has to be retrieved via the method 'query_job_status' method.
+
         Returns:
 
           :term:`json object` with the operation result.
+
+            In the default case of a synchronous operation
+            (wait_for_completion=True) the return value is a JSON object with
+            members like status, job-status-code and job-reason-code.
+            See the respective sections in :term:`HMC API` for a description
+            of the response body contents of the Query Job Status operation.
+
+            In case of an asynchronous operation (wait_for_completion=False),
+            the return value is a JSON object with a member job-id whose value
+            needs to be used for query_job_status().
 
         Raises:
 
@@ -365,6 +381,8 @@ class Session(object):
         elif result.status_code == 202:
             job_uri = result.json()['job-uri']
             job_url = self.base_url + job_uri
+            if not wait_for_completion:
+                return result.json()
             while 1:
                 stats = self.time_stats_keeper.get_stats('get ' + job_uri)
                 stats.begin()
@@ -467,3 +485,41 @@ class Session(object):
                                 format(str(exc)))
         else:
             raise HTTPError(result.json())
+
+    def query_job_status(self, job_uri):
+        """
+        The Query Job Status operation returns the status associated
+        with an asynchronous job.
+
+        A set of standard HTTP headers is automatically part of the request.
+
+        If the HMC session token is expired, this method re-logs on and retries
+        the operation.
+
+        Parameters:
+
+          job_uri (:term:`string`):
+            Relative Job URI path of the operation, e.g.
+            "/api/jobs/{job-id}".
+            This URI is relative to the base URL of the session (see
+            the :attr:`~zhmcclient.Session.base_url` property).
+            Must not be `None`.
+
+        Returns:
+
+          :term:`json object` with the operation result.
+
+            The return value is a JSON object with members like status,
+            job-status-code and job-reason-code.
+            See the respective sections in :term:`HMC API` for a description
+            of the response body contents of the Query Job Status operation.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        result = self.get(job_uri)
+        return result
