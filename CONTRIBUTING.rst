@@ -31,6 +31,13 @@ In order to contribute, create a `Git pull request`_, considering this:
   why the change is useful.
 * The commit message must follow the format explained below.
 
+What comprises a "logical" change is subject to sound judgement. Sometimes, it
+makes sense to produce a set of commits for a feature (even if not large).
+For example, a first commit may introduce a (presumably) compatible API change
+without exploitation of that feature. With only this commit applied, it should
+be demonstrable that everything is still working as before. The next commit may
+be the exploitation of the feature in other components.
+
 For further discussion of good and bad practices regarding commits, see:
 
 * `OpenStack Git Commit Good Practice`_
