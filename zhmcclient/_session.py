@@ -317,18 +317,36 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
-    def post(self, uri, body=None, logon_required=True, wait_for_completion=True):
+    def post(self, uri, body=None, logon_required=True,
+             wait_for_completion=True):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
 
         A set of standard HTTP headers is automatically part of the request.
 
-        If the HMC performs the operation asynchronously, this method polls
-        until the operation result is available.
+        HMC operations using HTTP POST are either synchronous or asynchronous.
+        Asynchronous operations return the URI of an asynchronously executing
+        job that can be queried for status and result.
 
-        If the HMC session token is expired, this method re-logs on and retries
-        the operation.
+        Examples for synchronous operations:
+
+        * With no response body: "Logon", "Update CPC Properties"
+        * With a response body: "Create Partition"
+
+        Examples for asynchronous operations:
+
+        * With no ``job-results`` field in the completed job status response:
+          "Start Partition"
+        * With a ``job-results`` field in the completed job status response
+          (under certain conditions): "Activate a Blade", or "Set CPC Power
+          Save"
+
+        The `wait_for_completion` parameter of this method can be used to deal
+        with asynchronous HMC operations in a synchronous way.
+
+        If executing the operation reveals that the HMC session token is
+        expired, this method re-logs on and retries the operation.
 
         Parameters:
 
@@ -345,28 +363,42 @@ class Session(object):
 
           logon_required (bool):
             Boolean indicating whether the operation requires that the session
-            is logged on to the HMC. For example, the logon operation does not
-            require that.
+            is logged on to the HMC. For example, the "Logon" operation does
+            not require that.
 
           wait_for_completion (bool):
-            Boolean indicating whether the method should wait until
-            the operation/job has completed.
-            If wait_for_completion is 'False' the status of the operation/job
-            has to be retrieved via the method 'query_job_status' method.
+            Boolean controlling whether this method should wait for completion
+            of the requested HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the requested
+              operation, regardless of whether the operation is synchronous or
+              asynchronous.
+
+            * If `False`, this method will immediately return the result of the
+              HTTP POST method, regardless of whether the operation is
+              synchronous or asynchronous.
 
         Returns:
 
-          :term:`json object` with the operation result.
+          :term:`json object`:
 
-            In the default case of a synchronous operation
-            (wait_for_completion=True) the return value is a JSON object with
-            members like status, job-status-code and job-reason-code.
-            See the respective sections in :term:`HMC API` for a description
-            of the response body contents of the Query Job Status operation.
+            If `wait_for_completion` is `True`, returns a JSON object
+            representing the response body of the synchronous operation, or the
+            response body of the completed job that performed the asynchronous
+            operation. If a synchronous operation has no response body, `None`
+            is returned.
 
-            In case of an asynchronous operation (wait_for_completion=False),
-            the return value is a JSON object with a member job-id whose value
-            needs to be used for query_job_status().
+            If `wait_for_completion` is `False`, returns a JSON object
+            representing the response body of the synchronous or asynchronous
+            operation. In case of an asynchronous operation, the JSON object
+            will have a member named ``job-uri``, whose value can be used with
+            the :meth:`~zhmcclient.Session.query_job_status` method to
+            determine the status of the job and the result of the original
+            operation, once the job has completed.
+
+            See the section in the :term:`HMC API` about the specific HMC
+            operation and about the "Query Job Status" operation, for a
+            description of the members of the returned JSON objects.
 
         Raises:
 
@@ -506,8 +538,10 @@ class Session(object):
 
     def query_job_status(self, job_uri):
         """
-        The Query Job Status operation returns the status associated
-        with an asynchronous job.
+        Perform the "Query Job Status" operation on a job identified by its
+        URI and return the status of the job. If the job is complete, the
+        return value also contains the result of the operation the job was
+        performing asynchronously.
 
         A set of standard HTTP headers is automatically part of the request.
 
@@ -517,20 +551,23 @@ class Session(object):
         Parameters:
 
           job_uri (:term:`string`):
-            Relative Job URI path of the operation, e.g.
-            "/api/jobs/{job-id}".
-            This URI is relative to the base URL of the session (see
-            the :attr:`~zhmcclient.Session.base_url` property).
+            Job URI; e.g. from the value of the ``job-uri`` field of the
+            result of the original operation that was performed asynchronously
+            by the job.
             Must not be `None`.
 
         Returns:
 
-          :term:`json object` with the operation result.
+          :term:`json object`:
 
-            The return value is a JSON object with members like status,
-            job-status-code and job-reason-code.
-            See the respective sections in :term:`HMC API` for a description
-            of the response body contents of the Query Job Status operation.
+            A JSON object indicating the status of the job in its ``status``
+            member, and if the job is complete (``status='complete'``), also
+            with members ``job-status-code``, ``job-reason-code``, and
+            optionally ``job-results``.
+
+            For details, see the sections in the :term:`HMC API` about the
+            "Query Job Status" operation and about the original operation that
+            was performed asynchronously.
 
         Raises:
 
