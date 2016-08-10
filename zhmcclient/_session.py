@@ -24,7 +24,7 @@ import requests
 
 from ._exceptions import HTTPError, AuthError, ConnectionError
 from ._timestats import TimeStatsKeeper
-from ._logging import _get_logger
+from ._logging import _get_logger, _log_call
 
 LOG = _get_logger(__name__)
 
@@ -169,6 +169,7 @@ class Session(object):
         """
         return self._session
 
+    @_log_call
     def logon(self):
         """
         Make sure the session is logged on to the HMC.
@@ -190,6 +191,7 @@ class Session(object):
         if not self.is_logon():
             self._do_logon()
 
+    @_log_call
     def logoff(self):
         """
         Make sure the session is logged off from the HMC.
@@ -207,6 +209,7 @@ class Session(object):
         if self.is_logon():
             self._do_logoff()
 
+    @_log_call
     def is_logon(self):
         """
         Return a boolean indicating whether the session is currently logged on
@@ -246,9 +249,16 @@ class Session(object):
         """
         Log the identifier the HMC uses to distinguish requests.
         """
-        LOG.info("HMC Request-Id: '%(req_id)s'",
-                 {'req_id': response.headers.get('X-Request-Id', '')})
+        LOG.info("Returned HMC request ID: %r",
+                 response.headers.get('X-Request-Id', ''))
 
+    def _log_http_method(self, http_method, uri):
+        """
+        Log HTTP method name and target URI.
+        """
+        LOG.info("HTTP request: %s %s", http_method, uri)
+
+    @_log_call
     def get(self, uri, logon_required=True):
         """
         Perform the HTTP GET method against the resource identified by a URI.
@@ -285,6 +295,7 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+        self._log_http_method('GET', uri)
         stats = self.time_stats_keeper.get_stats('get ' + uri)
         stats.begin()
         req = self._session or requests
@@ -317,6 +328,7 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
+    @_log_call
     def post(self, uri, body=None, logon_required=True,
              wait_for_completion=True):
         """
@@ -410,6 +422,7 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+        self._log_http_method('POST', uri)
         stats = self.time_stats_keeper.get_stats('post ' + uri)
         stats.begin()
         req = self._session or requests
@@ -438,11 +451,13 @@ class Session(object):
             if not wait_for_completion:
                 return result.json()
             while 1:
+                self._log_http_method('GET', job_uri)
                 stats = self.time_stats_keeper.get_stats('get ' + job_uri)
                 stats.begin()
                 try:
                     result = req.get(job_url, headers=self.headers,
                                      verify=False)
+                    self._log_hmc_request_id(result)
                 except requests.exceptions.RequestException as exc:
                     raise ConnectionError(str(exc))
                 finally:
@@ -474,6 +489,7 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
+    @_log_call
     def delete(self, uri, logon_required=True):
         """
         Perform the HTTP DELETE method against the resource identified by a
@@ -508,6 +524,7 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
+        self._log_http_method('DELETE', uri)
         stats = self.time_stats_keeper.get_stats('delete ' + uri)
         stats.begin()
         req = self._session or requests
@@ -541,6 +558,7 @@ class Session(object):
         else:
             raise HTTPError(result.json())
 
+    @_log_call
     def query_job_status(self, job_uri):
         """
         Perform the "Query Job Status" operation on a job identified by its

@@ -18,25 +18,30 @@ Unit tests for _logging module.
 """
 
 import logging
-from testfixtures import log_capture
 import unittest
+from testfixtures import log_capture
 
 from zhmcclient._logging import _log_call
 
 
 class TestLogging(unittest.TestCase):
+    """All test cases for the _log_call decorator."""
 
     @log_capture(level=logging.INFO)
     def test_logging_decorator(self, capture):
+        """Simple test for the _log_call decorator."""
 
         @_log_call
         def do_something():
+            """A decorated function that is called."""
             pass
 
         do_something()
         capture.check(('tests.test_logging',
                        'INFO',
-                       'tests.test_logging.do_something => entering...'),
+                       'Entering tests.test_logging.do_something()'),
                       ('tests.test_logging',
                        'INFO',
-                       'tests.test_logging.do_something <= exit.'))
+                       'Leaving tests.test_logging.do_something()'))
+
+# TODO: Add test cases for _get_logger(), specifically for null-handler
