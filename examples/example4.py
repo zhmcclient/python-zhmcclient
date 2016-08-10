@@ -18,6 +18,7 @@ Example 4: Using the asynchronous interface.
 """
 
 import sys
+import logging
 import yaml
 import requests.packages.urllib3
 import time
