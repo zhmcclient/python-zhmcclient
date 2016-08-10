@@ -148,8 +148,9 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         lpar_uri = self.get_property('object-uri')
+        body = {}
         result = self.manager.session.post(lpar_uri + '/operations/activate',
-            wait_for_completion=wait_for_completion)
+            body, wait_for_completion=wait_for_completion)
         return result
 
     def deactivate(self, wait_for_completion=True):

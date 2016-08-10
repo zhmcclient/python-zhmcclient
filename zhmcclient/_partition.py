@@ -217,6 +217,40 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         partition_uri = self.get_property('object-uri')
-        resullt = self.manager.session.post(partition_uri + '/operations/stop',
+        result = self.manager.session.post(partition_uri + '/operations/stop',
             wait_for_completion=wait_for_completion)
         return result
+
+    def delete(self):
+        """
+        Deletes this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        partition_uri = self.get_property('object-uri')
+        self.manager.session.delete(partition_uri)
+
+    def update_properties(self, properties):
+        """
+        Updates one or more of the writable properties of a partition
+        with the specified resource properties.
+
+        Parameters:
+
+          properties (dict): Updated properties for the partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        partition_uri = self.get_property('object-uri')
+        self.manager.session.post(partition_uri, body=properties)
+
