@@ -378,7 +378,6 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        data = json.dumps(body)
         stats = self.time_stats_keeper.get_stats('post ' + uri)
         stats.begin()
         req = self._session or requests
@@ -387,6 +386,7 @@ class Session(object):
                 result = req.post(url, headers=self.headers,
                                   verify=False)
             else:
+                data = json.dumps(body)
                 result = req.post(url, data=data, headers=self.headers,
                                   verify=False)
             self._log_hmc_request_id(result)
