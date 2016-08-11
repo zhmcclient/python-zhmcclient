@@ -410,23 +410,28 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        if body is None:
-            body = {}
-        data = json.dumps(body)
         stats = self.time_stats_keeper.get_stats('post ' + uri)
         stats.begin()
         req = self._session or requests
         try:
-            result = req.post(url, data=data, headers=self.headers,
-                              verify=False)
+            if body is None:
+                result = req.post(url, headers=self.headers,
+                                  verify=False)
+            else:
+                data = json.dumps(body)
+                result = req.post(url, data=data, headers=self.headers,
+                                  verify=False)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(str(exc))
         finally:
             stats.end()
 
-        if result.status_code in (200, 204):
+        if result.status_code in (200, 201):
             return result.json()
+        elif result.status_code == 204:
+            # No content
+            return None
         elif result.status_code == 202:
             job_uri = result.json()['job-uri']
             job_url = self.base_url + job_uri
