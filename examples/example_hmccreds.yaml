@@ -42,6 +42,12 @@ examples:
       lparname: PART8
       #loglevel: debug
       #timestats: yes
+   example7:
+      hmc: "9.152.133.209"
+      cpcname: DPMSE2
+      cpcstatus: Active
+      partitionname: sree_test
+      amq_port: 61612
    example8:
       hmc: "9.152.150.65"
       #loglevel: debug
@@ -56,5 +62,9 @@ examples:
    password: 1234
 
 "9.152.133.140":
+   userid: ensadmin
+   password: 1234
+
+"9.152.133.209":
    userid: ensadmin
    password: 1234

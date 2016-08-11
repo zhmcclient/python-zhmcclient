@@ -627,8 +627,6 @@ class Session(object):
             by the job.
             Must not be `None`.
 
-        Returns:
-
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -637,3 +635,21 @@ class Session(object):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.delete(job_uri)
+
+    @_log_call
+    def get_notfication_topics(self):
+        """
+        The Get Notification Topics operation returns a structure that
+        describes the JMS notification topics associated with the
+        API session
+
+        Returns:
+
+            The return value is a array of nested topic-info objects, which
+            contains the fields - topic-type, topic-name, object-uri and
+            include-refresh-messages
+        """
+        topics_uri = '/api/sessions/operations/get-notification-topics'
+        response = self.get(topics_uri)
+        return response['topics']
+
