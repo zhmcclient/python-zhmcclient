@@ -182,29 +182,32 @@ class Cpc(BaseResource):
 
     def start(self, wait_for_completion=True):
         """
-        Start this CPC.
+        Start this CPC, using the HMC operation "Start CPC".
 
         Parameters:
 
           wait_for_completion (bool):
-            Boolean indicating whether the method should wait until
-            the operation/job has completed.
-            If wait_for_completion is 'False' the status of the operation/job
-            has to be retrieved via the method 'query_job_status' method.
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
 
         Returns:
 
-          :term:`json object` with the operation result.
+          :term:`json object`:
 
-            In the default case of a synchronous operation
-            (wait_for_completion=True) the return value is a JSON object with
-            members like status, job-status-code and job-reason-code.
-            See the respective sections in :term:`HMC API` for a description
-            of the response body contents of the Query Job Status operation.
+            If `wait_for_completion` is `True`, returns None.
 
-            In case of an asynchronous operation (wait_for_completion=False),
-            the return value is a JSON object with a member job-id whose value
-            needs to be used for query_job_status().
+            If `wait_for_completion` is `False`, returns a JSON object with a
+            member named ``job-uri``. The value of ``job-uri`` identifies the
+            job that was started, and can be used with the
+            :meth:`~zhmcclient.Session.query_job_status` method to determine
+            the status of the job and the result of the asynchronous HMC
+            operation, once the job has completed.
 
         Raises:
 
@@ -220,29 +223,31 @@ class Cpc(BaseResource):
 
     def stop(self, wait_for_completion=True):
         """
-        Stop this CPC.
+        Stop this CPC, using the HMC operation "Stop CPC".
 
         Parameters:
 
           wait_for_completion (bool):
-            Boolean indicating whether the method should wait until
-            the operation/job has completed.
-            If wait_for_completion is 'False' the status of the operation/job
-            has to be retrieved via the method 'query_job_status' method.
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
 
         Returns:
+          :term:`json object`:
 
-          :term:`json object` with the operation result.
+            If `wait_for_completion` is `True`, returns None.
 
-            In the default case of a synchronous operation
-            (wait_for_completion=True) the return value is a JSON object with
-            members like status, job-status-code and job-reason-code.
-            See the respective sections in :term:`HMC API` for a description
-            of the response body contents of the Query Job Status operation.
-
-            In case of an asynchronous operation (wait_for_completion=False),
-            the return value is a JSON object with a member job-id whose value
-            needs to be used for query_job_status().
+            If `wait_for_completion` is `False`, returns a JSON object with a
+            member named ``job-uri``. The value of ``job-uri`` identifies the
+            job that was started, and can be used with the
+            :meth:`~zhmcclient.Session.query_job_status` method to determine
+            the status of the job and the result of the asynchronous HMC
+            operation, once the job has completed.
 
         Raises:
 
