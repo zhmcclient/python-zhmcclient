@@ -21,6 +21,10 @@ from __future__ import absolute_import
 import json
 import time
 import requests
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from ._exceptions import HTTPError, AuthError, ConnectionError
 from ._timestats import TimeStatsKeeper
@@ -297,7 +301,7 @@ class Session(object):
             stats.end()
 
         if result.status_code == 200:
-            return result.json()
+            return result.json(object_pairs_hook=OrderedDict)
         elif result.status_code == 403:
             reason = result.json().get('reason', None)
             if reason == 5:
@@ -311,11 +315,11 @@ class Session(object):
                                     format(uri))
                 return self.get(uri, logon_required)
             else:
-                exc = HTTPError(result.json())
+                exc = HTTPError(result.json(object_pairs_hook=OrderedDict))
                 raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
-            raise HTTPError(result.json())
+            raise HTTPError(result.json(object_pairs_hook=OrderedDict))
 
     def post(self, uri, body=None, logon_required=True,
              wait_for_completion=True):
@@ -428,7 +432,7 @@ class Session(object):
             stats.end()
 
         if result.status_code in (200, 201):
-            return result.json()
+            return result.json(object_pairs_hook=OrderedDict)
         elif result.status_code == 204:
             # No content
             return None
@@ -436,7 +440,7 @@ class Session(object):
             job_uri = result.json()['job-uri']
             job_url = self.base_url + job_uri
             if not wait_for_completion:
-                return result.json()
+                return result.json(object_pairs_hook=OrderedDict)
             while 1:
                 stats = self.time_stats_keeper.get_stats('get ' + job_uri)
                 stats.begin()
@@ -449,12 +453,12 @@ class Session(object):
                     stats.end()
                 if result.status_code in (200, 204):
                     if result.json()['status'] == 'complete':
-                        return result.json()
+                        return result.json(object_pairs_hook=OrderedDict)
                     else:
                         # TODO: Add support for timeout
                         time.sleep(1)  # Avoid hot spin loop
                 else:
-                    raise HTTPError(result.json())
+                    raise HTTPError(result.json(object_pairs_hook=OrderedDict))
         elif result.status_code == 403:
             reason = result.json().get('reason', None)
             if reason == 5:
@@ -468,11 +472,11 @@ class Session(object):
                                     format(uri))
                 return self.post(uri, body, logon_required)
             else:
-                exc = HTTPError(result.json())
+                exc = HTTPError(result.json(object_pairs_hook=OrderedDict))
                 raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
-            raise HTTPError(result.json())
+            raise HTTPError(result.json(object_pairs_hook=OrderedDict))
 
     def delete(self, uri, logon_required=True):
         """
@@ -535,11 +539,11 @@ class Session(object):
                 self.delete(uri, logon_required)
                 return
             else:
-                exc = HTTPError(result.json())
+                exc = HTTPError(result.json(object_pairs_hook=OrderedDict))
                 raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
-            raise HTTPError(result.json())
+            raise HTTPError(result.json(object_pairs_hook=OrderedDict))
 
     def query_job_status(self, job_uri):
         """
