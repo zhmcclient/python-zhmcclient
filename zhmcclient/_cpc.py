@@ -132,6 +132,7 @@ class Cpc(BaseResource):
         self._partitions = None
 
     @property
+    @_log_call
     def lpars(self):
         """
         :class:`~zhmcclient.LparManager`: Manager object for the LPARs in this
@@ -146,6 +147,7 @@ class Cpc(BaseResource):
         return self._lpars
 
     @property
+    @_log_call
     def partitions(self):
         """
         :class:`~zhmcclient.PartitionManager`: Manager object for the
@@ -160,6 +162,7 @@ class Cpc(BaseResource):
         return self._partitions
 
     @property
+    @_log_call
     def dpm_enabled(self):
         """
         bool: Indicates whether this CPC is currently in DPM mode

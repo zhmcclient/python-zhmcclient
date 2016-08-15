@@ -26,6 +26,7 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._logging import _log_call
 
 __all__ = ['LparManager', 'Lpar']
 
@@ -56,6 +57,7 @@ class LparManager(BaseManager):
         """
         return self._parent
 
+    @_log_call
     def list(self, full_properties=False):
         """
         List the LPARs in scope of this manager object.
@@ -114,6 +116,7 @@ class Lpar(BaseResource):
         assert isinstance(manager, LparManager)
         super(Lpar, self).__init__(manager, properties)
 
+    @_log_call
     def activate(self, wait_for_completion=True):
         """
         Activate (start) this LPAR, using the HMC operation "Activate Logical
@@ -157,6 +160,7 @@ class Lpar(BaseResource):
             body, wait_for_completion=wait_for_completion)
         return result
 
+    @_log_call
     def deactivate(self, wait_for_completion=True):
         """
         De-activate (stop) this LPAR, using the HMC operation "Deactivate
@@ -200,6 +204,7 @@ class Lpar(BaseResource):
             body, wait_for_completion=wait_for_completion)
         return result
 
+    @_log_call
     def load(self, load_address, wait_for_completion=True):
         """
         Load (boot) this LPAR from a load address (boot device), using the HMC

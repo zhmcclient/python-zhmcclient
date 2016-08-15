@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 1: List CPCs and LPARs/partitions on a CPC.
+Example 1: List CPCs and LPARs/partitions on a CPC; demonstrate logging.
 """
 
 import sys
@@ -53,7 +53,16 @@ if loglevel is not None:
         print("Invalid value for loglevel in credentials file %s: %s" % \
               (hmccreds_file, loglevel))
         sys.exit(1)
-    logging.basicConfig(level=level)
+    logmodule = example1.get("logmodule", None)
+    if logmodule is None:
+        logmodule = ''  # root logger
+    print("Logging for module %s with level %s" % (logmodule, loglevel))
+    handler = logging.StreamHandler()
+    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    handler.setFormatter(logging.Formatter(format_string))
+    logger = logging.getLogger(logmodule)
+    logger.addHandler(handler)
+    logger.setLevel(level)
 
 hmc = example1["hmc"]
 cpcname = example1["cpcname"]

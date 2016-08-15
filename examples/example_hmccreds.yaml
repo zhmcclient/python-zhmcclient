@@ -6,6 +6,7 @@ examples:
       hmc: "9.152.150.65"
       cpcname: P0000P30
       #loglevel: debug
+      #logmodule: zhmcclient._session
       #timestats: yes
    example2:
       hmc: "9.152.150.65"
