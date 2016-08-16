@@ -80,7 +80,7 @@ class Client(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if self._api__version is None:
+        if self._api_version is None:
             self.query_api_version()
         return self._api_version['api-major-version'],\
             self._api_version['api-minor-version']
