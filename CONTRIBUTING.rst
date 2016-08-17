@@ -60,8 +60,12 @@ Format of commit messages
 A commit message must start with a short summary line, followed by a blank
 line.
 
-It can include a more detailed description after that. This is where you
-explain why the change was done, and summarize what was done.
+Optionally, the summary line may start with an identifier that helps
+identifying the type of change or the component that is affected, followed by
+a colon.
+
+It can include a more detailed description after the summary line. This is
+where you explain why the change was done, and summarize what was done.
 
 It must end with the DCO (Developer Certificate of Origin) sign-off line in the
 format shown in the example below, using your name and a valid email address of
@@ -75,7 +79,7 @@ Example commit message:
 
 ::
 
-    Add support for delivering cookies
+    cookies: Add support for delivering cookies
 
     Cookies are important for many people. This change adds a pluggable API for
     delivering cookies to the user, and provides a default implementation.
