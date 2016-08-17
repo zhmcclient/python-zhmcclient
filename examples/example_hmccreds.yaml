@@ -35,6 +35,13 @@ examples:
       partname: TestPart1
       # loglevel: debug
       # timestats: yes
+   example6:
+      hmc: "9.152.150.65"
+      cpcname: P0000P30
+      cpcstatus: service-required
+      lparname: PART8
+      #loglevel: debug
+      #timestats: yes
 
 "9.152.150.65":
    userid: ensadmin
