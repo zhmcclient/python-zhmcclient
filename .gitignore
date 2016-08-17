@@ -20,8 +20,6 @@ cover
 .idea
 *.sw?
 *~
-AUTHORS
-ChangeLog
 *.egg
 *.eggs
 *egg-info
