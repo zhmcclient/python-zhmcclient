@@ -39,8 +39,7 @@ class Client(object):
         """
         self._session = session
         self._cpcs = CpcManager(self)
-        self._api_major_version = None
-        self._api_minor_version = None
+        self._api_version = None
 
     @property
     def session(self):
@@ -81,9 +80,36 @@ class Client(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if self._api_major_version is None:
-            version_res = self._session.get('/api/version',
-                                            logon_required=False)
-            self._api_major_version = version_res['api-major-version']
-            self._api_minor_version = version_res['api-minor-version']
-        return self._api_major_version, self._api_minor_version
+        if self._api_version is None:
+            self.query_api_version()
+        return self._api_version['api-major-version'],\
+            self._api_version['api-minor-version']
+
+    def query_api_version(self):
+        """
+        The Query API Version operation returns information about
+        the level of Web Services API supported by the HMC.
+
+        This operation does not require authentication.
+
+        Returns:
+
+          :term:`json object`:
+
+           A JSON object with members ``api-major-version``,
+           ``api-minor-version``, ``hmc-version`` and ``hmc-name``.
+
+            For details, see the sections in the :term:`HMC API` about the
+            "Query API Version" operation.
+
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        version_resp = self._session.get('/api/version',
+                                         logon_required=False)
+        self._api_version = version_resp
+        return self._api_version
