@@ -7,6 +7,8 @@
 /build/
 /build_doc/
 /dist/
+AUTHORS
+ChangeLog
 .ipynb_checkpoints/
 .coverage
 .venv
@@ -14,6 +16,7 @@
 *.log
 *.tmp
 tmp.*
+tmp_*
 *,cover
 cover
 *.pyc

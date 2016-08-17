@@ -1,0 +1,8 @@
+# git mailmap file for consolidating git commit names and email addresses
+# For details, see: https://git-scm.com/docs/git-check-mailmap
+#
+# Format for replacing name and email based upon commit email:
+#    Proper Name <proper@email.xx> <commit@email.xx>
+#
+Andreas Maier <maiera@de.ibm.com> <maiera@de.ibm.com>
+Andreas Maier <maiera@de.ibm.com> <MAIERA@de.ibm.com>
