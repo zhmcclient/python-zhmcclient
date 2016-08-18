@@ -157,3 +157,21 @@ class ActivationProfile(BaseResource):
         assert isinstance(manager, ActivationProfileManager)
         super(ActivationProfile, self).__init__(manager, uri, properties)
 
+    def update_properties(self, properties):
+        """
+        Updates one or more of the writable properties of
+        an activation profile with the specified resource properties.
+
+        Parameters:
+
+          properties (dict): Updated properties for the activation profile.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        profile_uri = self.get_property('element-uri')
+        self.manager.session.post(profile_uri, body=properties)
