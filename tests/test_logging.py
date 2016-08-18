@@ -27,7 +27,7 @@ from zhmcclient._logging import _log_call
 class TestLogging(unittest.TestCase):
     """All test cases for the _log_call decorator."""
 
-    @log_capture(level=logging.INFO)
+    @log_capture(level=logging.DEBUG)
     def test_logging_decorator(self, capture):
         """Simple test for the _log_call decorator."""
 
@@ -38,10 +38,10 @@ class TestLogging(unittest.TestCase):
 
         do_something()
         capture.check(('tests.test_logging',
-                       'INFO',
-                       'Entering tests.test_logging.do_something()'),
+                       'DEBUG',
+                       'Entering test_logging_decorator.do_something()'),
                       ('tests.test_logging',
-                       'INFO',
-                       'Leaving tests.test_logging.do_something()'))
+                       'DEBUG',
+                       'Leaving test_logging_decorator.do_something()'))
 
 # TODO: Add test cases for _get_logger(), specifically for null-handler
