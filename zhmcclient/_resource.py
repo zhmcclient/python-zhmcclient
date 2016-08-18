@@ -45,6 +45,9 @@ class BaseResource(object):
             Manager object for this resource (and for all resources of the same
             type in the scope of that manager).
 
+          uri (string):
+            Canonical URI path of the BaseResource object.
+
           properties (dict):
             Properties to be set for this resource object.
 

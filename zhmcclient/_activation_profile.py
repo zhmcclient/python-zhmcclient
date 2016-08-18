@@ -64,6 +64,14 @@ class ActivationProfileManager(BaseManager):
 
           cpc (:class:`~zhmcclient.Cpc`):
             CPC defining the scope for this manager object.
+
+          profile_type (string):
+            Controls which type of Activation Profiles
+            this manager returns.
+
+            * If `reset`, this manager returns Reset Activation Profiles.
+            * If `image`, this manager returns Image Activation Profiles.
+            * If `load`, this manager returns Load Activation Profiles.
         """
         super(ActivationProfileManager, self).__init__(cpc)
         self._profile_type = profile_type
@@ -79,13 +87,17 @@ class ActivationProfileManager(BaseManager):
     @property
     def profile_type(self):
         """
+        Returns type of Activation Profiles:
+          * If `reset`, this manager returns Reset Activation Profiles.
+          * If `image`, this manager returns Image Activation Profiles.
+          * If `load`, this manager returns Load Activation Profiles.
         """
         return self._profile_type
 
     @_log_call
     def list(self, full_properties=False):
         """
-        List the LPARs in scope of this manager object.
+        List the Activation Profiles in scope of this manager object.
 
         Parameters:
 
@@ -133,6 +145,9 @@ class ActivationProfile(BaseResource):
 
           manager (:class:`~zhmcclient.ActivationProfileManager`):
             Manager object for this resource.
+
+          uri (string):
+            Canonical URI path of the Activation Profile object.
 
           properties (dict):
             Properties to be set for this resource object.

@@ -121,6 +121,9 @@ class Cpc(BaseResource):
           manager (:class:`~zhmcclient.CpcManager`):
             Manager object for this CPC.
 
+          uri (string):
+            Canonical URI path of the CPC object.
+
           properties (dict):
             Properties to be set for this resource object.
             See initialization of :class:`~zhmcclient.BaseResource` for
@@ -326,13 +329,13 @@ class Cpc(BaseResource):
         from the SE hard drive into the CPC object using the HMC operation
         "Import Profiles".
 
-        This operation is not permitted when the CPC is enabled for DPM
+        This operation is not permitted when the CPC is enabled for DPM.
+
         Parameters:
 
           profile_area (int):
-             The numbered hard drive area from which the profiles are
-             imported. Use the profile-area value specified on the prior Export
-             Profiles operation.
+             The numbered hard drive area (1-4) from which the profiles are
+             imported.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -377,13 +380,13 @@ class Cpc(BaseResource):
         object designated to the SE hard drive using the HMC operation
         "Export Profiles".
 
-        This operation is not permitted when the CPC is enabled for DPM
+        This operation is not permitted when the CPC is enabled for DPM.
 
         Parameters:
 
           profile_area (int):
-             The numbered hard drive area to which the profiles are exported.
-             Any existing data is overwritten.
+             The numbered hard drive area (1-4) to which the profiles are
+             exported. Any existing data is overwritten.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion

@@ -135,6 +135,9 @@ class Partition(BaseResource):
           manager (:class:`~zhmcclient.PartitionManager`):
             Manager object for this resource.
 
+          uri (string):
+            Canonical URI path of the Partition object.
+
           properties (dict):
             Properties to be set for this resource object.
             See initialization of :class:`~zhmcclient.BaseResource` for

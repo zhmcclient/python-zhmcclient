@@ -108,6 +108,9 @@ class Lpar(BaseResource):
           manager (:class:`~zhmcclient.LparManager`):
             Manager object for this resource.
 
+          uri (string):
+            Canonical URI path of the LPAR object.
+
           properties (dict):
             Properties to be set for this resource object.
             See initialization of :class:`~zhmcclient.BaseResource` for
