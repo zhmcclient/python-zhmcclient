@@ -34,20 +34,43 @@ At this point, a small subset of the HMC Web Services API has been implemented.
 The goal is to implement a reasonable subset of the API, with a focus on DPM
 (Dynamic Partition Manager).
 
-Example
--------
+Using it & examples
+-------------------
+
+At this point, you need to clone the Git repository in order to use the
+client.
+
+::
+
+    $ git clone <zhmcclient-repo-url>
+
+It is beneficial to set up a `virtual Python environment`_,
+because that leaves your system Python installation unchanged.
+
+.. _virtual Python environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+
+In order to establish any prereqs, issue from within the work directory of
+your clone (with a virtual Python environment activated):
+
+::
+
+    $ make develop
 
 For example code, see the Python scripts in the
 `examples directory of the Git repository`_.
+In order to run the examples, most of them need a so called `HMC credentials
+file`, which you can copy from the example file
+``examples/example_hmxcreds.yaml``, and then you need to update it (it should be
+fairly self-explanatory).
 
 .. _examples directory of the Git repository: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient/tree/master/examples
 
 Documentation
 -------------
 
-At this point, the API documentation of the client library needs to be generated
-by the users, using these commands (in a virtual Python environment, and in the
-working directory of the cloned Git repository):
+At this point, the documentation of the package needs to be generated
+by the users, using these commands (in a `virtual Python environment`_,
+and in the working directory of the cloned Git repository):
 
 ::
 
@@ -121,6 +144,11 @@ virtual environment, as shown in the following examples:
 The ``tox`` positional arguments are passed to ``py.test`` using its ``-k``
 option. Invoke ``py.test --help`` for details on the expression syntax of
 its ``-k`` option.
+
+Contributing
+------------
+
+Contribution rules are described in `CONTRIBUTING.rst <CONTRIBUTING.rst>`_.
 
 License
 -------
