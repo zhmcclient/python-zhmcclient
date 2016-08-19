@@ -148,7 +148,9 @@ its ``-k`` option.
 Contributing
 ------------
 
-Contribution rules are described in `CONTRIBUTING.rst <CONTRIBUTING.rst>`_.
+Contribution rules are described in `CONTRIBUTING.rst`_.
+
+.. _CONTRIBUTING.rst: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient/tree/master/CONTRIBUTING.rst
 
 License
 -------
