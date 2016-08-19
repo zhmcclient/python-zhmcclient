@@ -104,6 +104,14 @@ try:
     print("job response: %s" % job)
     print('De-Activate complete !')
 
+    print('Deleting completed job status ...')
+    session.delete_completed_job_status(status['job-uri'])
+
+#    print('Deleting completed job status again ...')
+#    session.delete_completed_job_status(status['job-uri'])
+#    Returns exception:
+#    HTTPError: 404,1: No job or status for 'b571dbde-c9cb-11e1-8327-00215e676926_45fdd752-65f4-11e6-a6c3-00215e676926
+
     print("Logging off ...")
     session.logoff()
 
