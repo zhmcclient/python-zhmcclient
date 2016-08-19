@@ -468,6 +468,7 @@ class Session(object):
                     stats.end()
                 if result.status_code in (200, 204):
                     if result.json()['status'] == 'complete':
+                        self.delete_completed_job_status(job_uri)
                         return result.json(object_pairs_hook=OrderedDict)
                     else:
                         # TODO: Add support for timeout
@@ -605,3 +606,33 @@ class Session(object):
         """
         result = self.get(job_uri)
         return result
+
+    @_log_call
+    def delete_completed_job_status(self, job_uri):
+        """
+        Perform the "Delete completed Job Status" operation on a job identified
+        by its URI and return the status of the job.
+
+        A set of standard HTTP headers is automatically part of the request.
+
+        If the HMC session token is expired, this method re-logs on and retries
+        the operation.
+
+        Parameters:
+
+          job_uri (:term:`string`):
+            Job URI; e.g. from the value of the ``job-uri`` field of the
+            result of the original operation that was performed asynchronously
+            by the job.
+            Must not be `None`.
+
+        Returns:
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self.delete(job_uri)
