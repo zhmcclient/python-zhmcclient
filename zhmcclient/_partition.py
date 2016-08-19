@@ -89,7 +89,8 @@ class PartitionManager(BaseManager):
         if partitions_res:
             partition_items = partitions_res['partitions']
             for partition_props in partition_items:
-                partition = Partition(self, partition_props)
+                partition = Partition(self, partition_props['object-uri'],
+                                      partition_props)
                 if full_properties:
                     partition.pull_full_properties()
                 partition_list.append(partition)
@@ -127,12 +128,15 @@ class Partition(BaseResource):
     methods and attributes.
     """
 
-    def __init__(self, manager, properties):
+    def __init__(self, manager, uri, properties):
         """
         Parameters:
 
           manager (:class:`~zhmcclient.PartitionManager`):
             Manager object for this resource.
+
+          uri (string):
+            Canonical URI path of the Partition object.
 
           properties (dict):
             Properties to be set for this resource object.
@@ -140,7 +144,7 @@ class Partition(BaseResource):
             details.
         """
         assert isinstance(manager, PartitionManager)
-        super(Partition, self).__init__(manager, properties)
+        super(Partition, self).__init__(manager, uri, properties)
 
     def start(self, wait_for_completion=True):
         """

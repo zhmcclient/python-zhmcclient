@@ -32,3 +32,4 @@ from ._client import *        # noqa: F401
 from ._cpc import *           # noqa: F401
 from ._lpar import *          # noqa: F401
 from ._partition import *     # noqa: F401
+from ._activation_profile import *     # noqa: F401

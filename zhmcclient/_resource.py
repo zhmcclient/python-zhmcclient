@@ -37,13 +37,16 @@ class BaseResource(object):
     methods that have a common implementation for the derived resource classes.
     """
 
-    def __init__(self, manager, properties):
+    def __init__(self, manager, uri, properties):
         """
         Parameters:
 
           manager (subclass of :class:`~zhmcclient.BaseManager`):
             Manager object for this resource (and for all resources of the same
             type in the scope of that manager).
+
+          uri (string):
+            Canonical URI path of the BaseResource object.
 
           properties (dict):
             Properties to be set for this resource object.
@@ -65,6 +68,7 @@ class BaseResource(object):
             for their actual definitions of property qualifiers.
         """
         self._manager = manager
+        self._uri = uri
         self._properties = dict(properties)
         self._properties_timestamp = int(time.time())
         self._full_properties = False
@@ -126,8 +130,7 @@ class BaseResource(object):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        uri = self.get_property('object-uri')
-        full_properties = self.manager.session.get(uri)
+        full_properties = self.manager.session.get(self._uri)
         self._properties = dict(full_properties)
         self._properties_timestamp = int(time.time())
         self._full_properties = True

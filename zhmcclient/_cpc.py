@@ -44,6 +44,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._lpar import LparManager
 from ._partition import PartitionManager
+from ._activation_profile import ActivationProfileManager
 from ._logging import _log_call
 
 
@@ -98,7 +99,7 @@ class CpcManager(BaseManager):
         if cpcs_res:
             cpc_items = cpcs_res['cpcs']
             for cpc_props in cpc_items:
-                cpc = Cpc(self, cpc_props)
+                cpc = Cpc(self, cpc_props['object-uri'], cpc_props)
                 if full_properties:
                     cpc.pull_full_properties()
                 cpc_list.append(cpc)
@@ -113,12 +114,15 @@ class Cpc(BaseResource):
     methods and attributes.
     """
 
-    def __init__(self, manager, properties):
+    def __init__(self, manager, uri, properties):
         """
         Parameters:
 
           manager (:class:`~zhmcclient.CpcManager`):
             Manager object for this CPC.
+
+          uri (string):
+            Canonical URI path of the CPC object.
 
           properties (dict):
             Properties to be set for this resource object.
@@ -126,10 +130,13 @@ class Cpc(BaseResource):
             details.
         """
         assert isinstance(manager, CpcManager)
-        super(Cpc, self).__init__(manager, properties)
+        super(Cpc, self).__init__(manager, uri, properties)
         # We do here some lazy loading.
         self._lpars = None
         self._partitions = None
+        self._reset_activation_profiles = None
+        self._image_activation_profiles = None
+        self._load_activation_profiles = None
 
     @property
     @_log_call
@@ -160,6 +167,57 @@ class Cpc(BaseResource):
             else:
                 self._partitions = None
         return self._partitions
+
+    @property
+    @_log_call
+    def reset_activation_profiles(self):
+        """
+        :class:`~zhmcclient.ActivationManager`: Manager object for the
+        Reset Activation Profiles in this CPC.
+        `None`, if the CPC is in DPM mode.
+        """
+        # We do here some lazy loading.
+        if not self._reset_activation_profiles:
+            if self.dpm_enabled:
+                self._reset_activation_profiles = None
+            else:
+                self._reset_activation_profiles = ActivationProfileManager(self,
+                    profile_type='reset')
+        return self._reset_activation_profiles
+
+    @property
+    @_log_call
+    def image_activation_profiles(self):
+        """
+        :class:`~zhmcclient.ActivationManager`: Manager object for the
+        Image Activation Profiles in this CPC.
+        `None`, if the CPC is in DPM mode.
+        """
+        # We do here some lazy loading.
+        if not self._image_activation_profiles:
+            if self.dpm_enabled:
+                self._image_activation_profiles = None
+            else:
+                self._image_activation_profiles = ActivationProfileManager(self,
+                    profile_type='image')
+        return self._image_activation_profiles
+
+    @property
+    @_log_call
+    def load_activation_profiles(self):
+        """
+        :class:`~zhmcclient.ActivationManager`: Manager object for the
+        Load Activation Profiles in this CPC.
+        `None`, if the CPC is in DPM mode.
+        """
+        # We do here some lazy loading.
+        if not self._load_activation_profiles:
+            if self.dpm_enabled:
+                self._load_activation_profiles = None
+            else:
+                self._load_activation_profiles = ActivationProfileManager(self,
+                    profile_type='load')
+        return self._load_activation_profiles
 
     @property
     @_log_call
@@ -262,4 +320,106 @@ class Cpc(BaseResource):
         cpc_uri = self.get_property('object-uri')
         result = self.manager.session.post(cpc_uri + '/operations/stop',
             wait_for_completion=wait_for_completion)
+        return result
+
+    @_log_call
+    def import_profiles(self, profile_area, wait_for_completion=True):
+        """
+        Imports activation profiles and/or system activity profiles for the CPC
+        from the SE hard drive into the CPC object using the HMC operation
+        "Import Profiles".
+
+        This operation is not permitted when the CPC is enabled for DPM.
+
+        Parameters:
+
+          profile_area (int):
+             The numbered hard drive area (1-4) from which the profiles are
+             imported.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+        Returns:
+
+          :term:`json object`:
+
+            If `wait_for_completion` is `True`, returns None.
+
+            If `wait_for_completion` is `False`, returns a JSON object with a
+            member named ``job-uri``. The value of ``job-uri`` identifies the
+            job that was started, and can be used with the
+            :meth:`~zhmcclient.Session.query_job_status` method to determine
+            the status of the job and the result of the asynchronous HMC
+            operation, once the job has completed.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        cpc_uri = self.get_property('object-uri')
+        body = { 'profile-area' : profile_area}
+        result = self.manager.session.post(cpc_uri + '/operations/import-profiles',
+            body, wait_for_completion=wait_for_completion)
+        return result
+
+    @_log_call
+    def export_profiles(self, profile_area, wait_for_completion=True):
+        """
+        Exports activation profiles and/or system activity profiles from the CPC
+        object designated to the SE hard drive using the HMC operation
+        "Export Profiles".
+
+        This operation is not permitted when the CPC is enabled for DPM.
+
+        Parameters:
+
+          profile_area (int):
+             The numbered hard drive area (1-4) to which the profiles are
+             exported. Any existing data is overwritten.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+        Returns:
+
+          :term:`json object`:
+
+            If `wait_for_completion` is `True`, returns None.
+
+            If `wait_for_completion` is `False`, returns a JSON object with a
+            member named ``job-uri``. The value of ``job-uri`` identifies the
+            job that was started, and can be used with the
+            :meth:`~zhmcclient.Session.query_job_status` method to determine
+            the status of the job and the result of the asynchronous HMC
+            operation, once the job has completed.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        cpc_uri = self.get_property('object-uri')
+        body = { 'profile-area' : profile_area}
+        result = self.manager.session.post(cpc_uri + '/operations/export-profiles',
+            body, wait_for_completion=wait_for_completion)
         return result

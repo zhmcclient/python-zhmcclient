@@ -86,7 +86,7 @@ class LparManager(BaseManager):
         if lpars_res:
             lpar_items = lpars_res['logical-partitions']
             for lpar_props in lpar_items:
-                lpar = Lpar(self, lpar_props)
+                lpar = Lpar(self, lpar_props['object-uri'], lpar_props)
                 if full_properties:
                     lpar.pull_full_properties()
                 lpar_list.append(lpar)
@@ -101,12 +101,15 @@ class Lpar(BaseResource):
     methods and attributes.
     """
 
-    def __init__(self, manager, properties):
+    def __init__(self, manager, uri, properties):
         """
         Parameters:
 
           manager (:class:`~zhmcclient.LparManager`):
             Manager object for this resource.
+
+          uri (string):
+            Canonical URI path of the LPAR object.
 
           properties (dict):
             Properties to be set for this resource object.
@@ -114,7 +117,7 @@ class Lpar(BaseResource):
             details.
         """
         assert isinstance(manager, LparManager)
-        super(Lpar, self).__init__(manager, properties)
+        super(Lpar, self).__init__(manager, uri, properties)
 
     @_log_call
     def activate(self, wait_for_completion=True):
