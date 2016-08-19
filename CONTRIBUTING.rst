@@ -46,9 +46,6 @@ For further discussion of good and bad practices regarding commits, see:
 .. _OpenStack Git Commit Good Practice: https://wiki.openstack.org/wiki/GitCommitMessages
 .. _How to Get Your Change Into the Linux Kernel: https://www.kernel.org/doc/Documentation/SubmittingPatches
 
-The `AUTHORS <AUTHORS>`_ file will be automatically updated with your name and
-email once your pull request has been merged.
-
 Development and test
 --------------------
 
