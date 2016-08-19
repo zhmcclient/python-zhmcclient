@@ -102,11 +102,10 @@ def _log_call(func):
         # loaded, but class definitions of decorated methods are not complete
         # yet. Also, methods of the class are still functions at this point.
         if callername == '<module>':
-            where = '{mod}.{func}()'.format(
-                mod=modname, func=func.__name__)
-        else:  # it is a class name
-            where = '{mod}.{klass}.{meth}()'.format(
-                mod=modname, klass=callername, meth=func.__name__)
+            where = '{func}()'.format(func=func.__name__)
+        else:  # it is a class name or outer function name
+            where = '{caller}.{func}()'.format(caller=callername,
+                                               func=func.__name__)
     else:
         raise TypeError("The _log_call decorator must be used on a function")
 
