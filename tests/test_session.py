@@ -23,6 +23,7 @@ import requests
 import requests_mock
 
 from zhmcclient._session import Session
+from zhmcclient._client import Client
 
 
 class SessionTests(unittest.TestCase):
@@ -99,3 +100,49 @@ class SessionTests(unittest.TestCase):
         logged_on = session.is_logon()
 
         self.assertFalse(logged_on)
+
+    def test_delete_completed_job_status(self):
+        """
+        This tests the 'Delete Completed Job Status' operation.
+        """
+        session = Session('fake-host', 'fake-user', 'fake-id')
+        client = Client(session)  # contains CpcManager object
+        with requests_mock.mock() as m:
+            # Because logon is deferred until needed, we perform it
+            # explicitly in order to keep mocking in the actual test simple.
+            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
+            session.logon()
+        job_uri = "/api/jobs/d9a3788e-683a-11e6-817c-00215e676926"
+        with requests_mock.mock() as m:
+            result = {}
+            m.delete(job_uri, json=result)
+            session.delete_completed_job_status(job_uri)
+
+        with requests_mock.mock() as m:
+            m.delete('/api/sessions/this-session', status_code=204)
+            session.logoff()
+
+    def test_query_job_status(self):
+        """
+        This tests the 'Query Job Status' operation.
+        """
+        session = Session('fake-host', 'fake-user', 'fake-id')
+        client = Client(session)  # contains CpcManager object
+        with requests_mock.mock() as m:
+            # Because logon is deferred until needed, we perform it
+            # explicitly in order to keep mocking in the actual test simple.
+            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
+            session.logon()
+        job_uri = "/api/jobs/d9a3788e-683a-11e6-817c-00215e676926"
+        with requests_mock.mock() as m:
+            result = {
+                "job-reason-code": 0,
+                "job-status-code": 204,
+                "status": "complete"
+            }
+            m.get(job_uri, json=result)
+            session.query_job_status(job_uri)
+
+        with requests_mock.mock() as m:
+            m.delete('/api/sessions/this-session', status_code=204)
+            session.logoff()
