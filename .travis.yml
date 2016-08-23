@@ -1,0 +1,25 @@
+# Control file for Travis CI (http://travis-ci.org)
+# Must be located in the root directory of the Git repository.
+
+#sudo: required
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+
+# commands to install dependencies
+install:
+  - pip list
+  - pip install --upgrade pip
+  - make develop
+  - pip list
+
+# commands to run builds & tests
+script:
+  - make clean
+  - make check
+  - make build
+  - make builddoc
+  - make test
+
