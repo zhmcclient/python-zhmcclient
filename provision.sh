@@ -14,5 +14,5 @@ apt-get install -y python-dev
 echo "Install virtualenv ..."
 pip install virtualenv
 
-iecho "Install git ..."
+echo "Install git ..."
 apt-get install -y git
