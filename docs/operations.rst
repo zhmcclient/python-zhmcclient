@@ -148,3 +148,18 @@ Partitions
    :members:
    :special-members: __str__
 
+.. _`Activation profiles`:
+
+Activation profile
+------------------
+
+.. automodule:: zhmcclient._activation_profile
+
+.. autoclass:: zhmcclient.ActivationProfileManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.ActivationProfile
+   :members:
+   :special-members: __str__
+

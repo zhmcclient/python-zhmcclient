@@ -13,10 +13,10 @@
 # limitations under the License.
 
 """
-
-**Activation Profiles ** are required for CPC (processor)
+**Activation profiles** are required for CPC (processor)
 and CPC image (partition) activation. They are used to tailor the operation
 of a CPC and are stored in the Support Element associated with the CPC.
+
 There are types of activation profiles:
 
 1. Reset:
@@ -36,7 +36,6 @@ There are types of activation profiles:
    the operating system will be loaded from.
 
 Activation Profiles are not provided when the CPC is enabled for DPM.
-
 """
 
 from __future__ import absolute_import
