@@ -75,9 +75,18 @@ fairly self-explanatory).
 Documentation
 -------------
 
-At this point, the documentation of the package needs to be generated
-by the users, using these commands (in a `virtual Python environment`_,
-and in the working directory of the cloned Git repository):
+The `zhmcclient documentation`_ for the latest release is on RTD.
+
+.. _zhmcclient documentation: http://python-zhmcclient.readthedocs.io/
+
+The documentation describes all manageable resources supported by the client
+library, but not their resource properties. See
+`Hardware Management Console Web Services API`_ for information about the
+resource properties.
+
+If you want to build the documentation of some branch, use these commands
+(in a `virtual Python environment`_, and in the working directory of the
+cloned Git repository):
 
 ::
 
@@ -86,11 +95,6 @@ and in the working directory of the cloned Git repository):
 
 The top-level document of the so generated API documentation will be
 ``build_doc/html/docs/index.html``.
-
-The documentation describes all manageable resources supported by the client
-library, but not their resource properties. See
-`Hardware Management Console Web Services API`_ for information about the
-resource properties.
 
 .. _Hardware Management Console Web Services API: http://www-01.ibm.com/support/docview.wss?uid=isg29b97f40675618ba085257a6a00777bea&aid=1
 
@@ -157,7 +161,7 @@ Contributing
 
 Contribution rules are described in `CONTRIBUTING.rst`_.
 
-.. _CONTRIBUTING.rst: https://github.com/zhmcclient/python-zhmcclient/blob/master/CONTRIBUTING.rst
+.. _CONTRIBUTING.rst: https://github.com/zhmcclient/python-zhmcclient/tree/master/CONTRIBUTING.rst
 
 License
 -------
