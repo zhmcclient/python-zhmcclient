@@ -63,7 +63,7 @@ file`, which you can copy from the example file
 ``examples/example_hmxcreds.yaml``, and then you need to update it (it should be
 fairly self-explanatory).
 
-.. _examples directory of the Git repository: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient/tree/master/examples
+.. _examples directory of the Git repository: https://github.com/zhmcclient/python-zhmcclient/tree/master/examples
 
 Documentation
 -------------
@@ -150,7 +150,7 @@ Contributing
 
 Contribution rules are described in `CONTRIBUTING.rst`_.
 
-.. _CONTRIBUTING.rst: https://github.rtp.raleigh.ibm.com/openstack-zkvm/python-zhmcclient/tree/master/CONTRIBUTING.rst
+.. _CONTRIBUTING.rst: https://github.com/zhmcclient/python-zhmcclient/blob/master/CONTRIBUTING.rst
 
 License
 -------
