@@ -51,23 +51,28 @@ as well as completing the functionality of the REST API.
 Supported environments
 ----------------------
 
-This package is supported in these Operating System and Python environments:
+This package is supported in these environments:
 
-* on Windows, with Python 2.7, 3.4, 3.5, and higher 3.x
+* Operating systems: Linux, Windows, OS-X
 
-* on Linux, with Python 2.7, 3.4, 3.5, and higher 3.x
+* Python versions: 2.7, 3.4 and higher 3.x
 
-* OS-X has not been tested and is therefore not listed, above. You are welcome
-  to try it out and report any issues (TODO: Add link to issue tracker).
+* HMC versions: 2.11 and higher
 
-This package determines the API version supported by the HMC, and rejects
-operation if it finds an API version that is not supported. This package
-supports the following HMC API versions:
+The following table shows for each HMC version the supported HMC API version
+and the supported z System and LinuxOne machine generations:
 
-* HMC API version 1.5 and above (i.e. IBM z13 machine, and above). The
-  :term:`HMC API` describes this version. Note that the *Version 2.13*
-  mentioned in the book title is not the HMC API version.
-   
+===========  ===============  ======================  =================================
+HMC version  HMC API version  HMC API book            Machine generations
+===========  ===============  ======================  =================================
+2.11.0       1.1              :term:`HMC API 2.11.0`  up to z196/z114
+2.11.1       1.2              :term:`HMC API 2.11.1`  up to z196/z114
+2.12.0       1.3              :term:`HMC API 2.12.0`  up to zEC12/zBC12
+2.12.1       1.4/1.5          :term:`HMC API 2.12.1`  up to zEC12/zBC12
+2.13.0       1.6              :term:`HMC API 2.13.0`  up to z13/z13s/Emperor/Rockhopper
+2.13.1       1.7              :term:`HMC API 2.13.1`  up to z13/z13s/Emperor/Rockhopper
+===========  ===============  ======================  =================================
+
 .. _`Deprecation policy`:
 
 Deprecation policy
@@ -184,4 +189,20 @@ References
       `IETF RFC6874, Representing IPv6 Zone Identifiers in Address Literals and Uniform Resource Identifiers, February 2013 <https://tools.ietf.org/html/rfc6874>`_
 
    HMC API
-       `IBM SC27-2627-00, z Systems Hardware Management Console Web Services API (Version 2.13.0) <http://www-01.ibm.com/support/docview.wss?uid=isg27fa57a5a8a5297b185257de7004e7144>`_
+       One of the following HMC API books:
+
+   HMC API 2.11.1
+       `IBM SC27-2616-01, z Systems Hardware Management Console Web Services API (Version 2.11.1) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/38BA3E47697D87E385257967006AB34E/>`_
+
+   HMC API 2.12.0
+       `IBM SC27-2617-01, z Systems Hardware Management Console Web Services API (Version 2.12.0) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/9B97F40675618BA085257A6A00777BEA/>`_
+
+   HMC API 2.12.1
+       `IBM SC27-2626-00a, z Systems Hardware Management Console Web Services API (Version 2.12.1) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/3DDB93B38680A72F85257BA600515AA7/>`_
+
+   HMC API 2.13.0
+       `IBM SC27-2627-00a, z Systems Hardware Management Console Web Services API (Version 2.13.0) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/7FA57A5A8A5297B185257DE7004E7144/>`_
+
+   HMC API 2.13.1
+       `IBM SC27-2634-01, z Systems Hardware Management Console Web Services API (Version 2.13.1) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/CB468B15654CA89B85257F7200746C16/>`_
+
