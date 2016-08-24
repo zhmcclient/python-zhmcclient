@@ -70,7 +70,12 @@ yours. The DCO sign-off line certifies that you followed the rules stated in
 `DCO1.1.txt <DCO1.1.txt>`_. In short, you certify that you wrote the patch or
 otherwise have the right to pass it on as an open-source patch.
 
-We use GitCop to check whether the commit messages comply to this format.
+We use `GitCop`_ during creation of a pull request to check whether the commit
+messages in the pull request comply to this format.
+If the commit messages do not comply, GitCop will add a comment to the pull
+request with a description of what was wrong.
+
+.. _GitCop: http://gitcop.com/
 
 Example commit message:
 
@@ -84,3 +89,28 @@ Example commit message:
     Signed-off-by: Random J Developer <random@developer.org>
 
 Use ``git commit --amend`` to edit the commit message, if you need to.
+
+Use the ``--signoff`` (``-s``) option of ``git commit`` to append a sign-off
+line to the commit message with your name and email as known by Git.
+
+If you like filling out the commit message in an editor instead of using
+the ``-m`` option of ``git commit``, you can automate the presence of the
+sign-off line by using a commit template file:
+
+* Create a file outside of the repo (say, ``~/.git-signoff.template``)
+  that contains, for example:
+
+  ::
+
+      <one-line subject>
+
+      <detailed description>
+
+      Signed-off-by: Random J Developer <random@developer.org>
+
+* Configure Git to use that file as a commit template for your repo:
+
+  ::
+
+      git config commit.template ~/.git-signoff.template
+
