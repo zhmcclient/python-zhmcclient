@@ -181,8 +181,8 @@ class Cpc(BaseResource):
             if self.dpm_enabled:
                 self._reset_activation_profiles = None
             else:
-                self._reset_activation_profiles = ActivationProfileManager(self,
-                    profile_type='reset')
+                self._reset_activation_profiles = \
+                    ActivationProfileManager(self, profile_type='reset')
         return self._reset_activation_profiles
 
     @property
@@ -198,8 +198,8 @@ class Cpc(BaseResource):
             if self.dpm_enabled:
                 self._image_activation_profiles = None
             else:
-                self._image_activation_profiles = ActivationProfileManager(self,
-                    profile_type='image')
+                self._image_activation_profiles = \
+                    ActivationProfileManager(self, profile_type='image')
         return self._image_activation_profiles
 
     @property
@@ -215,8 +215,8 @@ class Cpc(BaseResource):
             if self.dpm_enabled:
                 self._load_activation_profiles = None
             else:
-                self._load_activation_profiles = ActivationProfileManager(self,
-                    profile_type='load')
+                self._load_activation_profiles = \
+                    ActivationProfileManager(self, profile_type='load')
         return self._load_activation_profiles
 
     @property
@@ -278,7 +278,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         cpc_uri = self.get_property('object-uri')
-        result = self.manager.session.post(cpc_uri + '/operations/start',
+        result = self.manager.session.post(
+            cpc_uri + '/operations/start',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -318,7 +319,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         cpc_uri = self.get_property('object-uri')
-        result = self.manager.session.post(cpc_uri + '/operations/stop',
+        result = self.manager.session.post(
+            cpc_uri + '/operations/stop',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -368,16 +370,17 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         cpc_uri = self.get_property('object-uri')
-        body = { 'profile-area' : profile_area}
-        result = self.manager.session.post(cpc_uri + '/operations/import-profiles',
-            body, wait_for_completion=wait_for_completion)
+        body = {'profile-area': profile_area}
+        result = self.manager.session.post(
+            cpc_uri + '/operations/import-profiles', body,
+            wait_for_completion=wait_for_completion)
         return result
 
     @_log_call
     def export_profiles(self, profile_area, wait_for_completion=True):
         """
-        Exports activation profiles and/or system activity profiles from the CPC
-        object designated to the SE hard drive using the HMC operation
+        Exports activation profiles and/or system activity profiles from the
+        CPC object designated to the SE hard drive using the HMC operation
         "Export Profiles".
 
         This operation is not permitted when the CPC is enabled for DPM.
@@ -419,7 +422,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         cpc_uri = self.get_property('object-uri')
-        body = { 'profile-area' : profile_area}
-        result = self.manager.session.post(cpc_uri + '/operations/export-profiles',
-            body, wait_for_completion=wait_for_completion)
+        body = {'profile-area': profile_area}
+        result = self.manager.session.post(
+            cpc_uri + '/operations/export-profiles', body,
+            wait_for_completion=wait_for_completion)
         return result

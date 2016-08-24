@@ -259,7 +259,7 @@ endif
 # TODO: Once Flake8 has no more errors, remove the dash "-"
 flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	rm -fv $@
-	-bash -c "set -o pipefail; flake8 $(check_py_files) 2>&1 |tee $@.tmp"
+	bash -c "set -o pipefail; flake8 $(check_py_files) 2>&1 |tee $@.tmp"
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
