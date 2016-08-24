@@ -20,11 +20,11 @@ from __future__ import absolute_import
 
 import json
 import time
-import requests
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+import requests
 
 from ._exceptions import HTTPError, AuthError, ConnectionError
 from ._timestats import TimeStatsKeeper
@@ -249,14 +249,16 @@ class Session(object):
         self._session = None
         self._headers.pop('X-API-Session', None)
 
-    def _log_hmc_request_id(self, response):
+    @staticmethod
+    def _log_hmc_request_id(response):
         """
         Log the identifier the HMC uses to distinguish requests.
         """
         LOG.info("Returned HMC request ID: %r",
                  response.headers.get('X-Request-Id', ''))
 
-    def _log_http_method(self, http_method, uri):
+    @staticmethod
+    def _log_http_method(http_method, uri):
         """
         Log HTTP method name and target URI.
         """

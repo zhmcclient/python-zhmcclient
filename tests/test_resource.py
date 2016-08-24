@@ -83,7 +83,7 @@ class InitTests(ResourceTestCase):
         res = MyResource(self.mgr, self.uri, init_props)
 
         self.assertTrue(res.manager is self.mgr)
-        self.assertEqual(res._uri, self.uri)
+        self.assertEqual(res.uri, self.uri)
         self.assert_properties(res, init_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
@@ -98,7 +98,7 @@ class InitTests(ResourceTestCase):
         res = MyResource(self.mgr, self.uri, init_props)
 
         self.assertTrue(res.manager is self.mgr)
-        self.assertEqual(res._uri, self.uri)
+        self.assertEqual(res.uri, self.uri)
         self.assert_properties(res, init_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
@@ -113,7 +113,7 @@ class InitTests(ResourceTestCase):
         res = MyResource(self.mgr, self.uri, init_props)
 
         self.assertTrue(res.manager is self.mgr)
-        self.assertEqual(res._uri, self.uri)
+        self.assertEqual(res.uri, self.uri)
         self.assert_properties(res, init_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)

@@ -92,6 +92,13 @@ class BaseResource(object):
         return self._properties
 
     @property
+    def uri(self):
+        """
+        string: The resource URI, in the format ``/api/cpcs/12345``.
+        """
+        return self._uri
+
+    @property
     def manager(self):
         """
         Subclass of :class:`~zhmcclient.BaseManager`:
