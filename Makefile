@@ -209,7 +209,7 @@ clobber: clean
 # Also remove any build products that are dependent on the Python version
 .PHONY: clean
 clean:
-	bash -c "find . -path ./.tox -prune -o -name \"*.pyc\" -print -o -name \"__pycache__\" -print -o -name \"*.tmp\" -print -o -name \"tmp_*\" -print |xargs -r rm -Rfv" 
+	bash -c "find . -path ./.tox -prune -o -name \"*.pyc\" -print -o -name \"__pycache__\" -print -o -name \"*.tmp\" -print -o -name \"tmp_*\" -print |xargs -r rm -Rfv"
 	rm -fv MANIFEST MANIFEST.in AUTHORS ChangeLog .coverage
 	rm -Rfv build .cache $(package_name).egg-info .eggs
 	@echo 'Done: Cleaned out all temporary files.'
