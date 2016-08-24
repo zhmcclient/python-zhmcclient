@@ -51,7 +51,8 @@ __all__ = ['ActivationProfileManager', 'ActivationProfile']
 class ActivationProfileManager(BaseManager):
     """
     Manager object for Activation Profiles.
-    This manager object is scoped to the Activation Profiles of a particular CPC.
+    This manager object is scoped to the Activation Profiles of a particular
+    CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -121,9 +122,11 @@ class ActivationProfileManager(BaseManager):
         profiles_res = self.session.get(cpc_uri + '/' + activation_profile)
         profile_list = []
         if profiles_res:
-            profile_items = profiles_res[self._profile_type + '-activation-profiles']
+            profile_items = profiles_res[self._profile_type +
+                                         '-activation-profiles']
             for profile_props in profile_items:
-                profile = ActivationProfile(self, profile_props['element-uri'], profile_props)
+                profile = ActivationProfile(self, profile_props['element-uri'],
+                                            profile_props)
                 if full_properties:
                     profile.pull_full_properties()
                 profile_list.append(profile)
