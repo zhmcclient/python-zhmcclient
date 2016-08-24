@@ -1,6 +1,10 @@
 # Control file for Travis CI (http://travis-ci.org)
 # Must be located in the root directory of the Git repository.
 
+# By default, notification emails are sent to the PR creator and commiter.
+notifications:
+  email: false
+
 #sudo: required
 language: python
 python:
