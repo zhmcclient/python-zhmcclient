@@ -143,14 +143,11 @@ class Cpc(BaseResource):
     def lpars(self):
         """
         :class:`~zhmcclient.LparManager`: Manager object for the LPARs in this
-        CPC. `None`, if the CPC is in DPM mode.
+        CPC.
         """
         # We do here some lazy loading.
         if not self._lpars:
-            if self.dpm_enabled:
-                self._lpars = None
-            else:
-                self._lpars = LparManager(self)
+            self._lpars = LparManager(self)
         return self._lpars
 
     @property
@@ -158,14 +155,11 @@ class Cpc(BaseResource):
     def partitions(self):
         """
         :class:`~zhmcclient.PartitionManager`: Manager object for the
-        partitions in this CPC. `None`, if the CPC is not in DPM mode.
+        partitions in this CPC.
         """
         # We do here some lazy loading.
         if not self._partitions:
-            if self.dpm_enabled:
-                self._partitions = PartitionManager(self)
-            else:
-                self._partitions = None
+            self._partitions = PartitionManager(self)
         return self._partitions
 
     @property
@@ -178,11 +172,8 @@ class Cpc(BaseResource):
         """
         # We do here some lazy loading.
         if not self._reset_activation_profiles:
-            if self.dpm_enabled:
-                self._reset_activation_profiles = None
-            else:
-                self._reset_activation_profiles = \
-                    ActivationProfileManager(self, profile_type='reset')
+            self._reset_activation_profiles = \
+                ActivationProfileManager(self, profile_type='reset')
         return self._reset_activation_profiles
 
     @property
@@ -191,15 +182,11 @@ class Cpc(BaseResource):
         """
         :class:`~zhmcclient.ActivationManager`: Manager object for the
         Image Activation Profiles in this CPC.
-        `None`, if the CPC is in DPM mode.
         """
         # We do here some lazy loading.
         if not self._image_activation_profiles:
-            if self.dpm_enabled:
-                self._image_activation_profiles = None
-            else:
-                self._image_activation_profiles = \
-                    ActivationProfileManager(self, profile_type='image')
+            self._image_activation_profiles = \
+                ActivationProfileManager(self, profile_type='image')
         return self._image_activation_profiles
 
     @property
@@ -208,15 +195,11 @@ class Cpc(BaseResource):
         """
         :class:`~zhmcclient.ActivationManager`: Manager object for the
         Load Activation Profiles in this CPC.
-        `None`, if the CPC is in DPM mode.
         """
         # We do here some lazy loading.
         if not self._load_activation_profiles:
-            if self.dpm_enabled:
-                self._load_activation_profiles = None
-            else:
-                self._load_activation_profiles = \
-                    ActivationProfileManager(self, profile_type='load')
+            self._load_activation_profiles = \
+                ActivationProfileManager(self, profile_type='load')
         return self._load_activation_profiles
 
     @property
