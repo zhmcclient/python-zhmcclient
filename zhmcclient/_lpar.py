@@ -159,8 +159,9 @@ class Lpar(BaseResource):
         """
         lpar_uri = self.get_property('object-uri')
         body = {}
-        result = self.manager.session.post(lpar_uri + '/operations/activate',
-            body, wait_for_completion=wait_for_completion)
+        result = self.manager.session.post(
+            lpar_uri + '/operations/activate', body,
+            wait_for_completion=wait_for_completion)
         return result
 
     @_log_call
@@ -203,8 +204,9 @@ class Lpar(BaseResource):
         """
         lpar_uri = self.get_property('object-uri')
         body = {'force': True}
-        result = self.manager.session.post(lpar_uri + '/operations/deactivate',
-            body, wait_for_completion=wait_for_completion)
+        result = self.manager.session.post(
+            lpar_uri + '/operations/deactivate', body,
+            wait_for_completion=wait_for_completion)
         return result
 
     @_log_call
@@ -249,6 +251,7 @@ class Lpar(BaseResource):
         """
         lpar_uri = self.get_property('object-uri')
         body = {'load-address': load_address}
-        result = self.manager.session.post(lpar_uri + '/operations/load',
-            body, wait_for_completion=wait_for_completion)
+        result = self.manager.session.post(
+            lpar_uri + '/operations/load', body,
+            wait_for_completion=wait_for_completion)
         return result

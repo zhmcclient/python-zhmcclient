@@ -23,7 +23,6 @@ import requests
 import requests_mock
 
 from zhmcclient._session import Session
-from zhmcclient._client import Client
 
 
 class SessionTests(unittest.TestCase):
@@ -106,7 +105,6 @@ class SessionTests(unittest.TestCase):
         This tests the 'Delete Completed Job Status' operation.
         """
         session = Session('fake-host', 'fake-user', 'fake-id')
-        client = Client(session)  # contains CpcManager object
         with requests_mock.mock() as m:
             # Because logon is deferred until needed, we perform it
             # explicitly in order to keep mocking in the actual test simple.
@@ -127,7 +125,6 @@ class SessionTests(unittest.TestCase):
         This tests the 'Query Job Status' operation.
         """
         session = Session('fake-host', 'fake-user', 'fake-id')
-        client = Client(session)  # contains CpcManager object
         with requests_mock.mock() as m:
             # Because logon is deferred until needed, we perform it
             # explicitly in order to keep mocking in the actual test simple.

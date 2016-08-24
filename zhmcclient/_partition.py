@@ -187,7 +187,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         partition_uri = self.get_property('object-uri')
-        result = self.manager.session.post(partition_uri + '/operations/start',
+        result = self.manager.session.post(
+            partition_uri + '/operations/start',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -229,7 +230,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         partition_uri = self.get_property('object-uri')
-        result = self.manager.session.post(partition_uri + '/operations/stop',
+        result = self.manager.session.post(
+            partition_uri + '/operations/stop',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -265,4 +267,3 @@ class Partition(BaseResource):
         """
         partition_uri = self.get_property('object-uri')
         self.manager.session.post(partition_uri, body=properties)
-
