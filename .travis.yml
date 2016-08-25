@@ -18,6 +18,7 @@ install:
   - pip install --upgrade pip
   - make develop
   - pip list
+  - pip install python-coveralls
 
 # commands to run builds & tests
 script:
@@ -27,3 +28,5 @@ script:
   - make builddoc
   - make test
 
+after_success:
+  - coveralls
