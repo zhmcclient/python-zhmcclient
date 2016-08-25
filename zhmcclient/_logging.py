@@ -13,49 +13,56 @@
 # limitations under the License.
 
 """
-This library logs calls to its public API and to some internal functions, but
-doesn't output the log records by default.
+This package logs calls to most of its public API and to some internal
+functions using the standard Python :mod:`py:logging` module, but doesn't
+output the log records by default.
 
 It uses one :class:`~py:logging.Logger` object for each module. The name of
-each such logger is the dotted module name (e.g. ``'zhmcclient._cpc'``). You
-can also use the logger for the package name (``'zhmcclient'``) in order to
-set up package-wide logging.
+each such logger is the dotted module name (e.g. ``'zhmcclient._cpc'``).
+Because the module names of this package are internal, it is recommended to
+use the logger for the package (``'zhmcclient'``) in order to set up logging.
 
 These loggers have a null-handler (see :class:`~py:logging.NullHandler`)
 and have no log formatter (see :class:`~py:logging.Formatter`).
 
-If you want to get the log output, add a log handler and set the log level
-(see the :meth:`~py:logging.Logger.addHandler` and
-:meth:`~py:logging.Logger.setLevel` methods of the
-:class:`~py:logging.Logger` class).
+If you want to turn on logging, add a log handler (see
+:meth:`~py:logging.Logger.addHandler`, and :mod:`py:logging.handlers` for the
+handlers included with Python) and set the log level (see
+:meth:`~py:logging.Logger.setLevel`, and :ref:`py:levels` for the defined
+levels).
 
-For example, to output all warning level (and higher level) log records issued
-by this library and by others to ``stdout`` in a particular format, do this:
+If you want to change the default log message format, use
+:meth:`~py:logging.Handler.setFormatter`. Its ``form`` parameter is a format
+string with %-style placeholders for the log record attributes (see Python
+section :ref:`py:logrecord-attributes`).
 
-::
+Examples:
 
-    import logging
+* To output all log records of warning level or higher that are issued by this
+  package to ``stdout`` in a particular format, do this:
 
-    handler = logging.StreamHandler()
-    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    handler.setFormatter(logging.Formatter(format_string))
-    logger = getLogger('')  # root logger
-    logger.addHandler(handler)
-    logger.setLevel(logging.WARNING)
+  ::
 
-If you want to see only the info level (and higher level) log records issued by
-the ``_session`` module of this library, use the logger for just that module:
+      import logging
 
-::
+      handler = logging.StreamHandler()
+      format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+      handler.setFormatter(logging.Formatter(format_string))
+      logger = getLogger('zhmcclient')
+      logger.addHandler(handler)
+      logger.setLevel(logging.WARNING)
 
-    import logging
+* This example uses the :func:`~py:logging.basicConfig` convenience function
+  that sets the same format and level as in the previous example, but for the
+  root logger. Therefore, it will output all log records, not just from this
+  package:
 
-    handler = logging.StreamHandler()
-    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    handler.setFormatter(logging.Formatter(format_string))
-    logger = getLogger('zhmcclient._session')
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+  ::
+
+      import logging
+
+      format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+      logging.basicConfig(format=format_string, level=logging.WARNING)
 """
 
 import functools
