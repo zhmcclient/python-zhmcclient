@@ -48,7 +48,8 @@ sdist_file := $(dist_dir)/$(package_name)-$(package_version).tar.gz
 # Windows installable (as built by setup.py)
 win64_dist_file := $(dist_dir)/$(package_name)-$(package_version).win-amd64.exe
 
-dist_files := $(bdist_file) $(sdist_file) $(win64_dist_file)
+# dist_files := $(bdist_file) $(sdist_file) $(win64_dist_file)
+dist_files := $(bdist_file) $(sdist_file)
 
 # Directory for generated API documentation
 doc_build_dir := build_doc
@@ -208,7 +209,7 @@ clobber: clean
 # Also remove any build products that are dependent on the Python version
 .PHONY: clean
 clean:
-	bash -c "find . -path ./.tox -prune -o -name \"*.pyc\" -print -o -name \"__pycache__\" -print -o -name \"*.tmp\" -print -o -name \"tmp_*\" -print |xargs -r rm -Rfv" 
+	bash -c "find . -path ./.tox -prune -o -name \"*.pyc\" -print -o -name \"__pycache__\" -print -o -name \"*.tmp\" -print -o -name \"tmp_*\" -print |xargs -r rm -Rfv"
 	rm -fv MANIFEST MANIFEST.in AUTHORS ChangeLog .coverage
 	rm -Rfv build .cache $(package_name).egg-info .eggs
 	@echo 'Done: Cleaned out all temporary files.'
@@ -220,7 +221,7 @@ all: develop check build builddoc test
 
 .PHONY: upload
 upload:  $(dist_files)
-	echo twine upload $(dist_files)
+	twine upload $(dist_files)
 	@echo 'Done: Uploaded $(package_name) version to PyPI: $(package_version)'
 	@echo '$@ done.'
 
