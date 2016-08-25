@@ -147,11 +147,9 @@ class CpcTests(unittest.TestCase):
                 self.assertEqual(cpc.properties, result['cpcs'][idx])
                 self.assertEqual(cpc.dpm_enabled, dpm_enabled_result[idx])
                 if dpm_enabled_result[idx]:
-                    self.assertEqual(cpc.lpars, None)
                     self.assertTrue(
                         isinstance(cpc.partitions, PartitionManager))
                 else:
-                    self.assertEqual(cpc.partitions, None)
                     self.assertTrue(isinstance(cpc.lpars, LparManager))
 
 
