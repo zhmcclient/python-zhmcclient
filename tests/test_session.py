@@ -100,7 +100,8 @@ class SessionTests(unittest.TestCase):
 
         self.assertFalse(logged_on)
 
-    def test_delete_completed_job_status(self):
+    @staticmethod
+    def test_delete_completed_job_status():
         """
         This tests the 'Delete Completed Job Status' operation.
         """
@@ -120,7 +121,8 @@ class SessionTests(unittest.TestCase):
             m.delete('/api/sessions/this-session', status_code=204)
             session.logoff()
 
-    def test_query_job_status(self):
+    @staticmethod
+    def test_query_job_status():
         """
         This tests the 'Query Job Status' operation.
         """
