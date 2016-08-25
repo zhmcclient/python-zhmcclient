@@ -149,6 +149,11 @@ class BaseResource(object):
         resource properties is retrieved and the resource property is
         again attempted to be returned.
 
+        Parameters:
+          name (:term:`string`):
+            Name of the resource property, using the names defined in the
+            respective section of :term:`HMC API`.
+
         Returns:
 
           The value of the resource property.
