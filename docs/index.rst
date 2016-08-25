@@ -16,11 +16,18 @@
 zhmcclient - A Pure python client library for the z Systems HMC Web Services API
 ********************************************************************************
 
+This documentation is for *users* of the zhmcclient package. *Developers*
+should start on its `GitHub project page`_.
+
+.. _GitHub project page: https://github.com/zhmcclient/python-zhmcclient
+
 .. toctree::
    :maxdepth: 2
    :numbered:
 
    intro.rst
    tutorial.rst
-   operations.rst
-   logging.rst
+   concepts.rst
+   general.rst
+   resources.rst
+   appendix.rst

@@ -13,16 +13,16 @@
 .. limitations under the License.
 ..
 
-.. _`API Reference`:
+.. _`General features`:
 
-API Reference
-=============
+Reference: General features
+===========================
 
-.. _`Sessions`:
-.. _`Clients`:
 
-Sessions and clients
---------------------
+.. _`Session`:
+
+Session
+-------
 
 .. automodule:: zhmcclient._session
 
@@ -30,11 +30,18 @@ Sessions and clients
    :members:
    :special-members: __str__
 
+
+.. _`Client`:
+
+Client
+------
+
 .. automodule:: zhmcclient._client
 
 .. autoclass:: zhmcclient.Client
    :members:
    :special-members: __str__
+
 
 .. _`Time Statistics`:
 
@@ -50,6 +57,15 @@ Time Statistics
 .. autoclass:: zhmcclient.TimeStats
    :members:
    :special-members: __str__
+
+
+.. _`Logging`:
+
+Logging
+-------
+
+.. automodule:: zhmcclient._logging
+
 
 .. _`Exceptions`:
 
@@ -87,79 +103,3 @@ Exceptions
 .. autoclass:: zhmcclient.NoUniqueMatch
    :members:
    :special-members: __str__
-
-.. _`CPCs`:
-
-BaseManager and BaseResource
-----------------------------
-
-.. automodule:: zhmcclient._manager
-
-.. autoclass:: zhmcclient.BaseManager
-   :members:
-   :special-members: __str__
-
-.. automodule:: zhmcclient._resource
-
-.. autoclass:: zhmcclient.BaseResource
-   :members:
-   :special-members: __str__
-
-CPCs
-----
-
-.. automodule:: zhmcclient._cpc
-
-.. autoclass:: zhmcclient.CpcManager
-   :members:
-   :special-members: __str__
-
-.. autoclass:: zhmcclient.Cpc
-   :members:
-   :special-members: __str__
-
-.. _`LPARs`:
-
-LPARs
------
-
-.. automodule:: zhmcclient._lpar
-
-.. autoclass:: zhmcclient.LparManager
-   :members:
-   :special-members: __str__
-
-.. autoclass:: zhmcclient.Lpar
-   :members:
-   :special-members: __str__
-
-.. _`Partitions`:
-
-Partitions
-----------
-
-.. automodule:: zhmcclient._partition
-
-.. autoclass:: zhmcclient.PartitionManager
-   :members:
-   :special-members: __str__
-
-.. autoclass:: zhmcclient.Partition
-   :members:
-   :special-members: __str__
-
-.. _`Activation profiles`:
-
-Activation profile
-------------------
-
-.. automodule:: zhmcclient._activation_profile
-
-.. autoclass:: zhmcclient.ActivationProfileManager
-   :members:
-   :special-members: __str__
-
-.. autoclass:: zhmcclient.ActivationProfile
-   :members:
-   :special-members: __str__
-

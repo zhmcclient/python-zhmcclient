@@ -13,9 +13,22 @@
 .. limitations under the License.
 ..
 
-.. _`Logging`:
+.. _`Concepts`:
 
-Logging
-=======
+Concepts
+========
 
-.. automodule:: zhmcclient._logging
+TODO: Write up some concepts:
+
+- Topology with client, HMC and managed CPCs
+- CPCs that are visible vs. not visible
+- Visibility dependent on access rights of the userid
+- Connecting to the HMC, and session vs. client
+- Failure handling
+- Dependency on CPC mode (classic, DPM, ensemble)
+- Basics about resource model
+
+  - How managers and resources play together
+  - Description of resource properties in HMC API book
+  - Mapping between data types used in the HMC API book and Python data types
+    used to represent them.
