@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client, LparManager
+from zhmcclient import Session, Client
 
 
 class LparTests(unittest.TestCase):
@@ -89,8 +89,12 @@ class LparTests(unittest.TestCase):
 
             self.assertEqual(len(lpars), len(result['logical-partitions']))
             for idx, lpar in enumerate(lpars):
-                self.assertEqual(lpar.properties, result['logical-partitions'][idx])
-                self.assertEqual(lpar.uri, result['logical-partitions'][idx]['object-uri'])
+                self.assertEqual(
+                    lpar.properties,
+                    result['logical-partitions'][idx])
+                self.assertEqual(
+                    lpar.uri,
+                    result['logical-partitions'][idx]['object-uri'])
                 self.assertFalse(lpar.full_properties)
                 self.assertEqual(lpar.manager, lpar_mgr)
 
@@ -125,7 +129,8 @@ class LparTests(unittest.TestCase):
                 'description': 'LPAR Image',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/logical-partitions/fake-lpar-id-1', json=mock_result_lpar1)
+            m.get('/api/logical-partitions/fake-lpar-id-1',
+                  json=mock_result_lpar1)
             mock_result_lpar2 = {
                 'status': 'not-activated',
                 'object-uri': '/api/logical-partitions/fake-lpar-id-2',
@@ -133,14 +138,18 @@ class LparTests(unittest.TestCase):
                 'description': 'LPAR Image',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/logical-partitions/fake-lpar-id-2', json=mock_result_lpar2)
+            m.get('/api/logical-partitions/fake-lpar-id-2',
+                  json=mock_result_lpar2)
 
             lpars = lpar_mgr.list(full_properties=True)
 
             self.assertEqual(len(lpars), len(result['logical-partitions']))
             for idx, lpar in enumerate(lpars):
-                self.assertEqual(lpar.properties['name'], result['logical-partitions'][idx]['name'])
-                self.assertEqual(lpar.uri, result['logical-partitions'][idx]['object-uri'])
+                self.assertEqual(lpar.properties['name'],
+                                 result['logical-partitions'][idx]['name'])
+                self.assertEqual(
+                    lpar.uri,
+                    result['logical-partitions'][idx]['object-uri'])
                 self.assertTrue(lpar.full_properties)
                 self.assertEqual(lpar.manager, lpar_mgr)
 
@@ -173,7 +182,9 @@ class LparTests(unittest.TestCase):
                 "job-status-code": 204,
                 "status": "complete"
             }
-            m.post("/api/logical-partitions/fake-lpar-id-1/operations/activate", json=result)
+            m.post(
+                "/api/logical-partitions/fake-lpar-id-1/operations/activate",
+                json=result)
             status = lpar.activate(wait_for_completion=False)
             self.assertEqual(status, result)
 
@@ -206,7 +217,9 @@ class LparTests(unittest.TestCase):
                 "job-status-code": 204,
                 "status": "complete"
             }
-            m.post("/api/logical-partitions/fake-lpar-id-1/operations/deactivate", json=result)
+            m.post(
+                "/api/logical-partitions/fake-lpar-id-1/operations/deactivate",
+                json=result)
             status = lpar.deactivate(wait_for_completion=False)
             self.assertEqual(status, result)
 
@@ -240,7 +253,8 @@ class LparTests(unittest.TestCase):
                 "status": "complete"
             }
 
-            m.post("/api/logical-partitions/fake-lpar-id-1/operations/load", json=result)
+            m.post("/api/logical-partitions/fake-lpar-id-1/operations/load",
+                   json=result)
             status = lpar.load(load_address='5162', wait_for_completion=False)
             self.assertEqual(status, result)
 
