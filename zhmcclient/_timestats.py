@@ -193,9 +193,10 @@ class TimeStats(object):
 
             TimeStats: count=1 avg=1.000s min=1.000s max=1.000s get /api/cpcs
         """
-        return "TimeStats: count={:d} avg={:.3f}s min={:.3f}s max={:.3f}s {}".\
-               format(self.count, self.avg_time, self.min_time, self.max_time,
-                      self.name)
+        return "TimeStats: count={:d} avg={:.3f}s min={:.3f}s "\
+               "max={:.3f}s {}".format(
+                   self.count, self.avg_time, self.min_time, self.max_time,
+                   self.name)
 
 
 class TimeStatsKeeper(object):
@@ -270,7 +271,7 @@ class TimeStatsKeeper(object):
 
         Returns:
 
-          list of tuple of name,stats, with
+          list of tuple(name,stats) with
 
           - name (:term:`string`): Name of the operation
           - stats (:class:`~zhmcclient.TimeStats`): Time statistics for the
@@ -281,7 +282,7 @@ class TimeStatsKeeper(object):
     def __str__(self):
         """
         Return a human readable string with the time statistics for this
-        keeper.
+        keeper. The operations are sorted by decreasing average time.
 
         Example result, if keeper is enabled:
 
@@ -289,16 +290,19 @@ class TimeStatsKeeper(object):
 
             Time statistics (times in seconds):
             Count  Average  Minimum  Maximum  Operation name
-                1  1.000    1.000    1.000    get /api/cpcs
-                1  1.000    1.000    1.000    get /api/lpars
+                1  0.024    0.024    0.024    get /api/cpcs
+                1  0.009    0.009    0.009    get /api/version
         """
         ret = "Time statistics (times in seconds):\n"
         if self.enabled:
             ret += "Count  Average  Minimum  Maximum  Operation name\n"
-            for name, stats in self.snapshot():
-                ret += "{:5d}  {:7.3f}  {:7.3f}  {:7.3f}  {}\n".\
-                       format(stats.count, stats.avg_time, stats.min_time,
-                              stats.max_time, name)
+            snapshot_by_avg = sorted(self.snapshot(),
+                                     key=lambda item: item[1].avg_time,
+                                     reverse=True)
+            for name, stats in snapshot_by_avg:
+                ret += "{:5d}  {:7.3f}  {:7.3f}  {:7.3f}  {}\n".format(
+                    stats.count, stats.avg_time, stats.min_time,
+                    stats.max_time, name)
         else:
             ret += "Disabled.\n"
         return ret.strip()
