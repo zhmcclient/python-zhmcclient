@@ -174,3 +174,25 @@ class BaseResource(object):
                 raise
             self.pull_full_properties()
             return self._properties[name]
+
+    def __str__(self):
+        """
+        Convert a BaseResource object to a string.
+
+        example:
+        Cpc(name=P0000S12,
+        object-uri=/api/cpcs/f1bc49af-f71a-3467-8def-3c186b5d9352,
+        status=service-required)
+        """
+        properties_keys = self._properties.keys()
+        search_keys = ['status', 'object-uri', 'element-uri', 'name']
+        sorted_keys = sorted([k for k in properties_keys if k in search_keys])
+        info = ", ".join("%s=%s" % (k, self._properties[k])
+                         for k in sorted_keys)
+        return "%s(%s)" % (self.__class__.__name__, info)
+
+    def __repr__(self):
+        """
+        Convert a BaseResource object to a string.
+        """
+        return self.__str__()
