@@ -246,6 +246,21 @@ It is even possible to raise an exception instead of issuing a warning message
 upon the use of deprecated functionality, by setting the action to ``'error'``
 instead of ``'default'``.
 
+
+.. _`Reporting issues`:
+
+Reporting issues
+----------------
+
+If you encounter any problem with this package, or if you have questions of any
+kind related to this package (even when they are not about a problem), please
+open an issue in the `zhmcclient issue tracker`_.
+
+.. _zhmcclient issue tracker: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
+.. _`License`:
+
 License
 -------
 
