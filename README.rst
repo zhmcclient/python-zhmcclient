@@ -38,143 +38,93 @@ zhmcclient - A pure Python client library for the z Systems HMC Web Services API
    :local:
 
 Overview
---------
+========
 
-This project provides the ``zhmcclient`` Python package, which is a client
-library for the z Systems Hardware Management Console (HMC) Web Services API.
+The zhmcclient package (also known as python-zhmcclient) is a client library
+written in pure Python that interacts with the Web Services API of the Hardware
+Management Console (HMC) of `z Systems`_ or `LinuxONE`_ machines. The goal of
+this package is to make the HMC Web Services API easily consumable for Python
+programmers.
 
-The goal of this project is to make the HMC Web Services API easily consumable
-for Python programmers. The various manageable resources in the z Systems or
-LinuxONE environment are provided as Python classes, and the operations against
-them are provided as Python methods.
+.. _z Systems: http://www.ibm.com/systems/z/
+.. _LinuxONE: http://www.ibm.com/systems/linuxone/
 
-At this point, a small subset of the HMC Web Services API has been implemented.
-The goal is to implement a reasonable subset of the API, with a focus on DPM
-(Dynamic Partition Manager).
+The HMC Web Services API is the access point for any external tools to
+manage the z Systems or LinuxONE platform. It supports management of the
+lifecycle and configuration of various platform resources, such as partitions,
+CPU, memory, virtual switches, I/O adapters, and more.
 
-Using it & examples
--------------------
+The zhmcclient package encapsulates both protocols supported by the HMC Web
+Services API:
 
-At this point, you need to clone the Git repository in order to use the
-client.
+* REST over HTTPS for request/response-style operations driven by the client.
+  Most of these operations complete synchronously, but some long-running tasks
+  complete asynchronously.
 
-::
+* JMS (Java Messaging Services) for notifications from the HMC to the client.
+  This is used for notification about changes in the system, or about
+  completion of asynchronous tasks started using REST.
 
-    $ git clone <zhmcclient-repo-url>
+Installation
+============
 
-It is beneficial to set up a `virtual Python environment`_,
-because that leaves your system Python installation unchanged.
+The quick way:
 
-.. _virtual Python environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+.. code-block:: bash
 
-In order to establish any prereqs, issue from within the work directory of
-your clone (with a virtual Python environment activated):
+    $ pip install zhmcclient
 
-::
+For more details see the `install section`_ in the documentation.
 
-    $ make develop
+.. _install section: http://python-zhmcclient.readthedocs.io/en/latest/intro.html#installation
 
-For example code, see the Python scripts in the
-`examples directory of the Git repository`_.
-In order to run the examples, most of them need a so called `HMC credentials
-file`, which you can copy from the example file
-``examples/example_hmxcreds.yaml``, and then you need to update it (it should be
-fairly self-explanatory).
+Quickstart
+===========
 
-.. _examples directory of the Git repository: https://github.com/zhmcclient/python-zhmcclient/tree/master/examples
+.. code-block:: python
+
+    #!/usr/bin/env python
+
+    import zhmcclient
+    import requests.packages.urllib3
+
+    # Set these variables for your environment:
+    zhmc = "<IP address or hostname of the HMC>"
+    userid = "<userid on that HMC>"
+    password = "<password of that HMC userid>"
+
+    requests.packages.urllib3.disable_warnings()
+
+    session = zhmcclient.Session(zhmc, userid, password)
+    client = zhmcclient.Client(session)
+
+    vi = client.version_info()
+    print("HMC API version: {}.{}".format(vi[0], vi[1]))
+
+    print("Listing CPCs ...")
+    cpcs = client.cpcs.list()
+    for cpc in cpcs:
+        print(cpc.properties['name'],
+              cpc.properties['status'],
+              cpc.properties['object-uri'])
 
 Documentation
--------------
+=============
 
 The `zhmcclient documentation`_ for the latest release is on RTD.
 
 .. _zhmcclient documentation: http://python-zhmcclient.readthedocs.io/
 
-The documentation describes all manageable resources supported by the client
-library, but not their resource properties. See
-`Hardware Management Console Web Services API`_ for information about the
-resource properties.
-
-If you want to build the documentation of some branch, use these commands
-(in a `virtual Python environment`_, and in the working directory of the
-cloned Git repository):
-
-::
-
-    $ make develop
-    $ make builddoc
-
-The top-level document of the so generated API documentation will be
-``build_doc/html/docs/index.html``.
-
-.. _Hardware Management Console Web Services API: http://www-01.ibm.com/support/docview.wss?uid=isg29b97f40675618ba085257a6a00777bea&aid=1
-
-Development and test
---------------------
-
-It is recommended to establish a virtual Python environment, based upon one of
-the supported Python versions (2.7, 3.4, 3.5).
-
-The project uses ``make`` to do things in the currently active Python
-environment. The command ``make help`` (or just ``make``) displays a list of valid
-``make`` targets and a short description of what each target does.
-
-Here is a list of the most important ``make`` commands:
-
-* To establish the prerequisites in the currently active Python environment:
-
-  ::
-
-      $ make develop
-
-* To build the API documentation:
-
-  ::
-
-      $ make builddoc
-
-* To run the unit tests:
-
-  ::
-
-      $ make test
-
-* To run only part of the unit tests:
-
-  ::
-
-      $ TESTCASES=TestInit make test
-
-The ``tox`` command is supported to invoke various ``make`` targets across all
-supported Python environments. It can be used to validate that the whole
-project is in a good state:
-
-::
-
-    $ tox
-
-Tox can also be used to run the unit tests or parts thereof in its own
-virtual environment, as shown in the following examples:
-
-::
-
-    $ tox -e py27                      # Run all tests on Python 2.7
-    $ tox -e py27 test_resource.py     # Run only this test source file on Python 2.7
-    $ tox -e py27 TestInit             # Run only this test class on Python 2.7
-    $ tox -e py27 TestInit or TestSet  # Simple expressions are possible
-
-The ``tox`` positional arguments are passed to ``py.test`` using its ``-k``
-option. Invoke ``py.test --help`` for details on the expression syntax of
-its ``-k`` option.
-
 Contributing
-------------
+============
 
 Contribution rules are described in `CONTRIBUTING.rst`_.
 
 .. _CONTRIBUTING.rst: https://github.com/zhmcclient/python-zhmcclient/tree/master/CONTRIBUTING.rst
 
 License
--------
+=======
 
-python-zhmcclient is licensed under the Apache 2.0 License.
+python-zhmcclient is licensed under the `Apache 2.0 License`_.
+
+.. _Apache 2.0 License: https://github.com/zhmcclient/python-zhmcclient/tree/master/LICENSE
