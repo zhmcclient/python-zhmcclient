@@ -65,9 +65,10 @@ Examples:
       logging.basicConfig(format=format_string, level=logging.WARNING)
 """
 
-import functools
 import logging
 import inspect
+
+from decorator import decorate
 
 
 def _get_logger(name):
@@ -116,8 +117,7 @@ def _log_call(func):
     else:
         raise TypeError("The _log_call decorator must be used on a function")
 
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(func, *args, **kwargs):
         """
         Log entry to and exit from the decorated function, at the debug level.
 
@@ -133,4 +133,4 @@ def _log_call(func):
         logger.debug("Leaving %s", where)
         return result
 
-    return wrapper
+    return decorate(func, wrapper)
