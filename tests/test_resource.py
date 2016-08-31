@@ -87,6 +87,7 @@ class InitTests(ResourceTestCase):
         self.assert_properties(res, init_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
+        self.assertTrue(repr(res).startswith(res.__class__.__name__ + '('))
 
     def test_simple(self):
         """Test with a simple set of input properties."""
