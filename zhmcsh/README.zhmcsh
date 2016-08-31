@@ -20,10 +20,11 @@ The source directory contains sample symlinks.
 Invoking with -h will give a short overview of the
 required and optional parameters.
 
-Initially upported objects are
+Initially supported objects are
 hmc
 cpc
 lpar
+partition
 
 Initially supported operations are
 hmc: (no extra object)
@@ -37,6 +38,15 @@ cpc:
 lpar:
  list
  show
+ activate
+ deactivate
+ load
+
+partition:
+  list
+  show
+  start
+  stop
 
 Notes:
 1. zhmcsh tries to use the system keyring to store credentials
