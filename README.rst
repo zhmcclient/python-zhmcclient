@@ -121,8 +121,8 @@ The zhmcclient documentation is on RTD:
 .. _Documentation for version on Pypi: http://python-zhmcclient.readthedocs.io/en/stable/
 .. _Documentation for master branch in Git repo: http://python-zhmcclient.readthedocs.io/en/latest/
 
-Development, test, and contributing
-===================================
+Development, testing, and contributing
+======================================
 
 For more details, see the `Development section`_ in the documentation.
 
