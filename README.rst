@@ -16,23 +16,25 @@
 zhmcclient - A pure Python client library for the z Systems HMC Web Services API
 ================================================================================
 
-.. image:: https://img.shields.io/coveralls/zhmcclient/python-zhmcclient.svg
-    :target: https://coveralls.io/r/zhmcclient/python-zhmcclient
-
 .. image:: https://img.shields.io/pypi/v/zhmcclient.svg?maxAge=2592000
     :target: https://pypi.python.org/pypi/zhmcclient/
-    :alt: Latest Version
-
-.. image:: https://travis-ci.org/zhmcclient/python-zhmcclient.svg?branch=master
-    :target: https://travis-ci.org/zhmcclient/python-zhmcclient
-
-.. image:: https://readthedocs.org/projects/python-zhmcclient/badge/?version=latest
-    :target: http://python-zhmcclient.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+    :alt: Version on Pypi
 
 .. image:: https://img.shields.io/pypi/dm/zhmcclient.svg?maxAge=2592000
     :target: https://pypi.python.org/pypi/zhmcclient/
-    :alt: Downloads
+    :alt: Pypi downloads
+
+.. image:: https://travis-ci.org/zhmcclient/python-zhmcclient.svg?branch=master
+    :target: https://travis-ci.org/zhmcclient/python-zhmcclient
+    :alt: Test status (master)
+
+.. image:: https://readthedocs.org/projects/python-zhmcclient/badge/?version=latest
+    :target: http://python-zhmcclient.readthedocs.io/en/latest/
+    :alt: Docs build status (latest)
+
+.. image:: https://img.shields.io/coveralls/zhmcclient/python-zhmcclient.svg
+    :target: https://coveralls.io/r/zhmcclient/python-zhmcclient
+    :alt: Test coverage (master)
 
 .. contents:: Contents:
    :local:
@@ -74,9 +76,9 @@ The quick way:
 
     $ pip install zhmcclient
 
-For more details see the `install section`_ in the documentation.
+For more details see the `Installation section`_ in the documentation.
 
-.. _install section: http://python-zhmcclient.readthedocs.io/en/latest/intro.html#installation
+.. _Installation section: http://python-zhmcclient.readthedocs.io/en/latest/intro.html#installation
 
 Quickstart
 ===========
@@ -111,9 +113,13 @@ Quickstart
 Documentation
 =============
 
-The `zhmcclient documentation`_ for the latest release is on RTD.
+The zhmcclient documentation is on RTD:
 
-.. _zhmcclient documentation: http://python-zhmcclient.readthedocs.io/
+* `Documentation for version on Pypi`_
+* `Documentation for master branch in Git repo`_
+
+.. _Documentation for version on Pypi: http://python-zhmcclient.readthedocs.io/en/stable/
+.. _Documentation for master branch in Git repo: http://python-zhmcclient.readthedocs.io/en/latest/
 
 Contributing
 ============
