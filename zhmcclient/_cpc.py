@@ -45,6 +45,7 @@ from ._resource import BaseResource
 from ._lpar import LparManager
 from ._partition import PartitionManager
 from ._activation_profile import ActivationProfileManager
+from ._adapter import AdapterManager
 from ._logging import _log_call
 
 
@@ -134,6 +135,7 @@ class Cpc(BaseResource):
         # We do here some lazy loading.
         self._lpars = None
         self._partitions = None
+        self._adapters = None
         self._reset_activation_profiles = None
         self._image_activation_profiles = None
         self._load_activation_profiles = None
@@ -161,6 +163,18 @@ class Cpc(BaseResource):
         if not self._partitions:
             self._partitions = PartitionManager(self)
         return self._partitions
+
+    @property
+    @_log_call
+    def adapters(self):
+        """
+        :class:`~zhmcclient.AdapterManager`: Manager object for the
+        adapters in this CPC.
+        """
+        # We do here some lazy loading.
+        if not self._adapters:
+            self._adapters = AdapterManager(self)
+        return self._adapters
 
     @property
     @_log_call
