@@ -78,7 +78,7 @@ The quick way:
 
 For more details see the `Installation section`_ in the documentation.
 
-.. _Installation section: http://python-zhmcclient.readthedocs.io/en/latest/intro.html#installation
+.. _Installation section: http://python-zhmcclient.readthedocs.io/en/stable/intro.html#installation
 
 Quickstart
 ===========
