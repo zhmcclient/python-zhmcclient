@@ -121,12 +121,12 @@ The zhmcclient documentation is on RTD:
 .. _Documentation for version on Pypi: http://python-zhmcclient.readthedocs.io/en/stable/
 .. _Documentation for master branch in Git repo: http://python-zhmcclient.readthedocs.io/en/latest/
 
-Contributing
-============
+Development, test, and contributing
+===================================
 
-Contribution rules are described in `CONTRIBUTING.rst`_.
+For more details, see the `Development section`_ in the documentation.
 
-.. _CONTRIBUTING.rst: https://github.com/zhmcclient/python-zhmcclient/tree/master/CONTRIBUTING.rst
+.. _Development section: http://python-zhmcclient.readthedocs.io/en/stable/development.html
 
 License
 =======
