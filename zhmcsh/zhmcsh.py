@@ -25,8 +25,10 @@ import string
 import sys
 import zhmcclient
 
-# workaround https noise
+# workaround https verification noise
 import requests
+requests.packages.urllib3.disable_warnings()
+
 
 ## Command line parsing
 # The name by which the script is invoked
@@ -258,11 +260,11 @@ def getcreds(args):
     if args.user:
         userid = args.user
     else:
-        userid = raw_input('Userid:')
+        userid = raw_input('Userid: ')
     if kr_mod:
         password = kr_getpass(kr_token, userid)
     if password == None or args.password:
-        password = getpass.getpass('Password:')
+        password = getpass.getpass('Password: ')
     if kr_mod:
         kr_setpass(kr_token, userid, password)
     return {'userid': userid, 'password': password}
@@ -522,16 +524,13 @@ def zhmcshell():
                 if isinstance(se.code, basestring):
                     print se.code
 
-# workaround for HTTP chattiness
-requests.packages.urllib3.disable_warnings()
-
 # main
 try:
     if len(sys.argv) == 1 and script_filename not in obj_alias:
         zhmcshell()
     else:
         argparser = mkobjargs(script_filename)
-        args=argparser.parse_args()
+        args = argparser.parse_args()
         dispatch(args)
 except UserExit:
     pass
