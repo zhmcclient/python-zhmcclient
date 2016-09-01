@@ -106,9 +106,7 @@ Quickstart
     print("Listing CPCs ...")
     cpcs = client.cpcs.list()
     for cpc in cpcs:
-        print(cpc.properties['name'],
-              cpc.properties['status'],
-              cpc.properties['object-uri'])
+        print(cpc)
 
 Documentation
 =============
