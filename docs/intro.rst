@@ -153,9 +153,7 @@ by a particular HMC:
     print("Listing CPCs ...")
     cpcs = client.cpcs.list()
     for cpc in cpcs:
-        print(cpc.properties['name'],
-              cpc.properties['status'],
-              cpc.properties['object-uri'])
+        print(cpc)
 
 For more example code, see the Python scripts in the `examples directory`_ of
 the Git repository, or the :ref:`Tutorial` section of this documentation.
