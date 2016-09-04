@@ -117,3 +117,19 @@ Adapters
 .. autoclass:: zhmcclient.Adapter
    :members:
    :special-members: __str__
+
+
+.. _`NICs`:
+
+NICs
+----
+
+.. automodule:: zhmcclient._nic
+
+.. autoclass:: zhmcclient.NicManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Nic
+   :members:
+   :special-members: __str__

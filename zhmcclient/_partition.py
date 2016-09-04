@@ -31,6 +31,8 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._nic import NicManager
+from ._logging import _log_call
 
 __all__ = ['PartitionManager', 'Partition']
 
@@ -145,6 +147,19 @@ class Partition(BaseResource):
         """
         assert isinstance(manager, PartitionManager)
         super(Partition, self).__init__(manager, uri, properties)
+        self._nics = None
+
+    @property
+    @_log_call
+    def nics(self):
+        """
+        :class:`~zhmcclient.NicManager`: Manager object for the
+        NICs in this Partition.
+        """
+        # We do here some lazy loading.
+        if not self._nics:
+            self._nics = NicManager(self)
+        return self._nics
 
     def start(self, wait_for_completion=True):
         """
