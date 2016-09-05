@@ -133,3 +133,19 @@ NICs
 .. autoclass:: zhmcclient.Nic
    :members:
    :special-members: __str__
+
+
+.. _`NICs`:
+
+HBAs
+----
+
+.. automodule:: zhmcclient._hba
+
+.. autoclass:: zhmcclient.HbaManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Hba
+   :members:
+   :special-members: __str__
