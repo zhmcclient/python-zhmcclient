@@ -55,6 +55,22 @@ CPCs
    :special-members: __str__
 
 
+.. _`Activation profiles`:
+
+Activation profiles
+-------------------
+
+.. automodule:: zhmcclient._activation_profile
+
+.. autoclass:: zhmcclient.ActivationProfileManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.ActivationProfile
+   :members:
+   :special-members: __str__
+
+
 .. _`LPARs`:
 
 LPARs
@@ -87,17 +103,17 @@ Partitions
    :special-members: __str__
 
 
-.. _`Activation profiles`:
+.. _`Adapters`:
 
-Activation profiles
--------------------
+Adapters
+--------
 
-.. automodule:: zhmcclient._activation_profile
+.. automodule:: zhmcclient._adapter
 
-.. autoclass:: zhmcclient.ActivationProfileManager
+.. autoclass:: zhmcclient.AdapterManager
    :members:
    :special-members: __str__
 
-.. autoclass:: zhmcclient.ActivationProfile
+.. autoclass:: zhmcclient.Adapter
    :members:
    :special-members: __str__
