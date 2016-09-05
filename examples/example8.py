@@ -14,14 +14,13 @@
 # limitations under the License.
 
 """
-Example 7: Using the Adapter interface.
+Example 8: Using the Adapter and NIC interface.
 """
 
 import sys
 import yaml
 import requests.packages.urllib3
 import time
-import pprint
 
 import zhmcclient
 
@@ -41,13 +40,13 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example7 = examples.get("example7", None)
-if example7 is None:
-    print("example7 not found in credentials file %s" % \
+example8 = examples.get("example8", None)
+if example8 is None:
+    print("example8 not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example7.get("loglevel", None)
+loglevel = example8.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
@@ -56,7 +55,7 @@ if loglevel is not None:
         sys.exit(1)
     logging.basicConfig(level=level)
 
-hmc = example7["hmc"]
+hmc = example8["hmc"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
@@ -74,7 +73,7 @@ try:
     session = zhmcclient.Session(hmc, userid, password)
     cl = zhmcclient.Client(session)
 
-    timestats = example7.get("timestats", None)
+    timestats = example8.get("timestats", None)
     if timestats:
         session.time_stats_keeper.enable()
 
@@ -86,6 +85,15 @@ try:
         adapters = cpc.adapters.list()
         for i, adapter in enumerate(adapters):
             print('\t' + str(adapter))
+        print("\tListing Partitions for %s ..." % cpc.properties['name'])
+        partitions = cpc.partitions.list()
+        for i, partition in enumerate(partitions):
+            print('\t' + str(partition))
+            nics = partition.nics.list(full_properties=False)
+            for j, nic in enumerate(nics):
+                if j == 0:
+                    print("\t\tListing NICs for %s ..." % partition.properties['name'])
+                print('\t\t' + str(nic))
 
     print("Logging off ...")
     session.logoff()
