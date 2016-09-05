@@ -35,3 +35,4 @@ from ._partition import *     # noqa: F401
 from ._activation_profile import *     # noqa: F401
 from ._adapter import *       # noqa: F401
 from ._nic import *           # noqa: F401
+from ._hba import *           # noqa: F401

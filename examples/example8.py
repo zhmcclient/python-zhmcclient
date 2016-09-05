@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 8: Using the Adapter and NIC interface.
+Example 8: Using the Adapter, NIC and HBA interface.
 """
 
 import sys
@@ -94,6 +94,14 @@ try:
                 if j == 0:
                     print("\t\tListing NICs for %s ..." % partition.properties['name'])
                 print('\t\t' + str(nic))
+
+            hbas = partition.hbas.list(full_properties=False)
+            for j, hba in enumerate(hbas):
+                if j == 0:
+                    print("\t\tListing HBAs for %s ..." % partition.properties['name'])
+                print('\t\t' + str(hba))
+#                hba.pull_full_properties()
+#                print('\t\t' + str(hba.properties))
 
     print("Logging off ...")
     session.logoff()
