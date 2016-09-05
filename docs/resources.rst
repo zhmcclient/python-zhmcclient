@@ -135,7 +135,7 @@ NICs
    :special-members: __str__
 
 
-.. _`NICs`:
+.. _`HBAs`:
 
 HBAs
 ----
@@ -147,5 +147,21 @@ HBAs
    :special-members: __str__
 
 .. autoclass:: zhmcclient.Hba
+   :members:
+   :special-members: __str__
+
+
+.. _`Virtual Functions`:
+
+Virtual Functions
+-----------------
+
+.. automodule:: zhmcclient._virtual_function
+
+.. autoclass:: zhmcclient.VirtualFunctionManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.VirtualFunction
    :members:
    :special-members: __str__

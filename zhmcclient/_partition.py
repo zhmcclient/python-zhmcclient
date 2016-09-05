@@ -33,6 +33,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._nic import NicManager
 from ._hba import HbaManager
+from ._virtual_function import VirtualFunctionManager
 from ._logging import _log_call
 
 __all__ = ['PartitionManager', 'Partition']
@@ -150,6 +151,7 @@ class Partition(BaseResource):
         super(Partition, self).__init__(manager, uri, properties)
         self._nics = None
         self._hbas = None
+        self._virtual_functions = None
 
     @property
     @_log_call
@@ -174,6 +176,18 @@ class Partition(BaseResource):
         if not self._hbas:
             self._hbas = HbaManager(self)
         return self._hbas
+
+    @property
+    @_log_call
+    def virtual_functions(self):
+        """
+        :class:`~zhmcclient.VirtualFunctionManager`:
+        Manager object for the Virtual Functions in this Partition.
+        """
+        # We do here some lazy loading.
+        if not self._virtual_functions:
+            self._virtual_functions = VirtualFunctionManager(self)
+        return self._virtual_functions
 
     def start(self, wait_for_completion=True):
         """
