@@ -13,6 +13,7 @@
 .. limitations under the License.
 ..
 
+
 .. _`Appendix`:
 
 Appendix
@@ -20,6 +21,7 @@ Appendix
 
 This section contains information that is referenced from other sections,
 and that does not really need to be read in sequence.
+
 
 .. _'Special type names`:
 
@@ -70,6 +72,222 @@ This documentation uses a few special terms to refer to Python types:
       a standard Python warning that indicates the use of deprecated
       functionality. See section :ref:`Deprecations` for details.
 
+
+.. _'Resource model`:
+
+Resource model
+--------------
+
+This section lists the resources that are available at the :term:`HMC API`,
+in alphabetical order.
+
+The *Scope* specifies whether the resource is available within a CPC and in
+what mode of the CPC, vs. being available across CPCs.
+
+Some of the items in this section are qualified as *short terms*. They are not
+separate types of resources, but specific usages of resources. For example,
+"storage adapter" is a short term for the resource "adapter" when used for
+attaching storage.
+
+.. glossary::
+
+  accelerator adapter
+     Short term for an :term:`adapter` providing accelerator functions (e.g.
+     for data compression).
+
+  adapter
+     A physical adapter card (e.g. OSA-Express network adapter, FCP storage
+     adapter, accelerator adapter, crypto adapter) or a non-physical adapter
+     (e.g. HiperSockets switch) of a :term:`CPC` in DPM mode.
+
+     For details, see section :ref:`Adapters`.
+
+     Scope: CPC in DPM mode
+
+  adapter port
+     The physical connector port of an :term:`adapter`.
+
+     For details, see section :ref:`Adapter ports`.
+
+     Scope: CPC in DPM mode
+
+  capacity group
+     TBD
+
+     Scope: CPC in DPM mode
+
+  capacity record
+     TBD
+
+     Scope: CPC in any mode
+
+  console
+     TBD
+
+     Scope: HMC
+
+  CPC
+     A physical z Systems or LinuxONE computer.
+
+     For details, see section :ref:`CPCs`.
+
+     Scope: CPC
+
+  crypto adapter
+     Short term for an :term:`adapter` providing cryptographic functions.
+
+  FCP adapter
+     Short term for a :term:`storage adapter` supporting FCP.
+
+  group
+     TBD
+
+     Scope: HMC
+
+  group profile
+     TBD
+
+     Scope: CPC in classic (or ensemble) mode
+
+  hardware message
+     TBD
+
+     Scope: HMC, and CPC in any mode
+
+  HBA
+  vHBA
+     Host Bus Adapter, a virtualized FCP :term:`adapter` that is available to
+     a :term:`partition`.
+
+     For details, see section :ref:`HBAs`.
+
+     Scope: CPC in DPM mode
+
+  image activation profile
+     TBD
+
+     Scope: CPC in classic (or ensemble) mode
+
+  job
+     TBD
+
+     Scope: HMC
+
+  LDAP server definition
+     TBD
+
+     Scope: HMC
+
+  load activation profile
+     TBD
+
+     Scope: CPC in classic (or ensemble) mode
+
+  logical partition
+  LPAR
+     A subset of the hardware resources of a :term:`CPC` in classic mode (or
+     ensemble mode), virtualized as a separate computer.
+
+     For details, see section :ref:`LPARs`.
+
+     Scope: CPC in classic (or ensemble) mode
+
+  metrics context
+     TBD
+
+     Scope: HMC
+
+  network adapter
+     Short term for an :term:`adapter` for attaching networks (e.g. OSA-Express
+     adapter).
+
+  network port
+     Short term for an :term:`adapter port` of a :term:`network adapter`.
+
+  NIC
+  vNIC
+     Network Interface Card, a virtualized :term:`network adapter` that is
+     available to a :term:`partition`.
+
+     For details, see section :ref:`NICs`.
+
+     Scope: CPC in DPM mode
+
+  partition
+     A subset of the hardware resources of a :term:`CPC` in DPM mode,
+     virtualized as a separate computer.
+
+     For details, see section :ref:`Partitions`.
+
+     Scope: CPC in DPM mode
+
+  password rule
+     TBD
+
+     Scope: HMC
+
+  reset activation profile
+     TBD
+
+     Scope: CPC in classic (or ensemble) mode
+
+  session
+     TBD
+
+     Scope: HMC
+
+  storage adapter
+     Short term for an :term:`adapter` for attaching storage (e.g. FCP
+     adapter).
+
+  storage port
+     Short term for an :term:`adapter port` of a :term:`storage adapter`.
+
+  task
+     TBD
+
+     Scope: HMC
+
+  user
+     TBD
+
+     Scope: HMC
+
+  user pattern
+     TBD
+
+     Scope: HMC
+
+  user role
+     TBD
+
+     Scope: HMC
+
+  virtual function
+     A virtualized function of an :term:`accelerator adapter` (e.g. zEDC
+     compression adapter) or :term:`crypto adapter` that is available to a
+     :term:`partition`.
+
+     For details, see section :ref:`Virtual functions`.
+
+     Scope: CPC in DPM mode
+
+  virtual machine
+     TBD
+
+     Scope: CPC in classic (or ensemble) mode
+
+  virtual switch
+     A virtualized switch that connects a :term:`network port` with the
+     :term:`NIC <NICs>` assigned to the :term:`partition <partitions>`. Virtual
+     switches are generated automatically every time a new network
+     :term:`adapter` is detected and configured.
+
+     For details, see section :ref:`NICs`.
+
+     Scope: CPC in DPM mode
+
+  
 .. _`Bibliography`:
 
 Bibliography
