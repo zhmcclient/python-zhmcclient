@@ -298,5 +298,138 @@ class PartitionTests(unittest.TestCase):
             status = partition.update_properties(properties={})
             self.assertEqual(status, None)
 
+    def test_dump_partition(self):
+        """
+        This tests the 'Dump Partition' operation.
+        """
+        partition_mgr = self.cpc.partitions
+        with requests_mock.mock() as m:
+            result = {
+                'partitions': [
+                    {
+                        'status': 'active',
+                        'object-uri': '/api/partitions/fake-part-id-1',
+                        'name': 'PART1'
+                    },
+                    {
+                        'status': 'stopped',
+                        'object-uri': '/api/partitions/fake-part-id-2',
+                        'name': 'PART2'
+                    }
+                ]
+            }
+            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+
+            partitions = partition_mgr.list(full_properties=False)
+            partition = partitions[0]
+            result = {
+                'job-uri': '/api/jobs/fake-job-id-1'
+            }
+            m.post(
+                "/api/partitions/fake-part-id-1/operations/scsi-dump",
+                json=result)
+            status = partition.dump_partition(
+                wait_for_completion=False, properties={})
+            self.assertEqual(status, result)
+
+    def test_psw_restart(self):
+        """
+        This tests the 'Perform PSW Restart' operation.
+        """
+        partition_mgr = self.cpc.partitions
+        with requests_mock.mock() as m:
+            result = {
+                'partitions': [
+                    {
+                        'status': 'active',
+                        'object-uri': '/api/partitions/fake-part-id-1',
+                        'name': 'PART1'
+                    },
+                    {
+                        'status': 'stopped',
+                        'object-uri': '/api/partitions/fake-part-id-2',
+                        'name': 'PART2'
+                    }
+                ]
+            }
+            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+
+            partitions = partition_mgr.list(full_properties=False)
+            partition = partitions[0]
+            result = {
+                'job-uri': '/api/jobs/fake-job-id-1'
+            }
+            m.post(
+                "/api/partitions/fake-part-id-1/operations/psw-restart",
+                json=result)
+            status = partition.psw_restart(wait_for_completion=False)
+            self.assertEqual(status, result)
+
+    def test_mount_iso_image(self):
+        """
+        This tests the 'Mount ISO image' operation.
+        """
+        partition_mgr = self.cpc.partitions
+        with requests_mock.mock() as m:
+            result = {
+                'partitions': [
+                    {
+                        'status': 'active',
+                        'object-uri': '/api/partitions/fake-part-id-1',
+                        'name': 'PART1'
+                    },
+                    {
+                        'status': 'stopped',
+                        'object-uri': '/api/partitions/fake-part-id-2',
+                        'name': 'PART2'
+                    }
+                ]
+            }
+            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+
+            partitions = partition_mgr.list(full_properties=False)
+            partition = partitions[0]
+            result = {
+                'job-uri': '/api/jobs/fake-job-id-1'
+            }
+            m.post(
+                "/api/partitions/fake-part-id-1/operations/mount-iso-image",
+                json=result)
+            status = partition.mount_iso_image(properties={})
+            self.assertEqual(status, None)
+
+    def test_unmount_iso_image(self):
+        """
+        This tests the 'Unmount ISO image' operation.
+        """
+        partition_mgr = self.cpc.partitions
+        with requests_mock.mock() as m:
+            result = {
+                'partitions': [
+                    {
+                        'status': 'active',
+                        'object-uri': '/api/partitions/fake-part-id-1',
+                        'name': 'PART1'
+                    },
+                    {
+                        'status': 'stopped',
+                        'object-uri': '/api/partitions/fake-part-id-2',
+                        'name': 'PART2'
+                    }
+                ]
+            }
+            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+
+            partitions = partition_mgr.list(full_properties=False)
+            partition = partitions[0]
+            result = {
+                'job-uri': '/api/jobs/fake-job-id-1'
+            }
+            m.post(
+                "/api/partitions/fake-part-id-1/operations/unmount-iso-image",
+                json=result)
+            status = partition.unmount_iso_image()
+            self.assertEqual(status, None)
+
 if __name__ == '__main__':
     unittest.main()

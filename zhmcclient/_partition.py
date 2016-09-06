@@ -296,3 +296,136 @@ class Partition(BaseResource):
         """
         partition_uri = self.get_property('object-uri')
         self.manager.session.post(partition_uri, body=properties)
+
+    def dump_partition(self, properties, wait_for_completion=True):
+        """
+        Loads a standalone dump program from a designated SCSI device,
+        using the HMC operation 'Dump Partition'.
+
+        Parameters:
+
+          properties (dict): Properties for the dump operation.
+            See the section in the :term:`HMC API` about the specific HMC
+            operation and about the 'Dump Partition' description of the
+            members of the passed properties dict.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+        Returns:
+
+          :term:`json object`:
+
+            If `wait_for_completion` is `True`, returns None.
+
+            If `wait_for_completion` is `False`, returns a JSON object with a
+            member named ``job-uri``. The value of ``job-uri`` identifies the
+            job that was started, and can be used with the
+            :meth:`~zhmcclient.Session.query_job_status` method to determine
+            the status of the job and the result of the asynchronous HMC
+            operation, once the job has completed.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        partition_uri = self.get_property('object-uri')
+        result = self.manager.session.post(
+            partition_uri + '/operations/scsi-dump',
+            wait_for_completion=True, body=properties)
+        return result
+
+    def psw_restart(self, wait_for_completion=True):
+        """
+        Initiates a PSW restart, using the HMC operation
+        'Perform PSW Restart'.
+
+        Parameters:
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+        Returns:
+
+          :term:`json object`:
+
+            If `wait_for_completion` is `True`, returns None.
+
+            If `wait_for_completion` is `False`, returns a JSON object with a
+            member named ``job-uri``. The value of ``job-uri`` identifies the
+            job that was started, and can be used with the
+            :meth:`~zhmcclient.Session.query_job_status` method to determine
+            the status of the job and the result of the asynchronous HMC
+            operation, once the job has completed.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        partition_uri = self.get_property('object-uri')
+        result = self.manager.session.post(
+            partition_uri + '/operations/psw-restart',
+            wait_for_completion=wait_for_completion)
+        return result
+
+    def mount_iso_image(self, properties):
+        """
+        Uploads an ISO image and associates it to the partition
+        using the HMC operation 'Mount ISO Image'.
+        When the partition already has an ISO image associated,
+        the newly uploaded image replaces the current one
+
+        Parameters:
+
+          properties (dict): Properties for the dump operation.
+            See the section in the :term:`HMC API` about the specific HMC
+            operation and about the 'Mount ISO Image' description of the
+            members of the passed properties dict.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        partition_uri = self.get_property('object-uri')
+        self.manager.session.post(
+            partition_uri + '/operations/mount-iso-image',
+            wait_for_completion=True, body=properties)
+
+    def unmount_iso_image(self):
+        """
+        Unmounts the currently mounted ISO from the partition
+        using the HMC operation 'Unmount ISO Image'.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        partition_uri = self.get_property('object-uri')
+        self.manager.session.post(
+            partition_uri + '/operations/unmount-iso-image')
