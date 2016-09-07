@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 8: Using the Adapter, NIC and HBA interface.
+Example 8: Using the Adapter, NIC, HBA and Virtual Function interface.
 """
 
 import sys
@@ -102,6 +102,13 @@ try:
                 print('\t\t' + str(hba))
 #                hba.pull_full_properties()
 #                print('\t\t' + str(hba.properties))
+            vfs = partition.virtual_functions.list(full_properties=False)
+            for k, vf in enumerate(vfs):
+                if k == 0:
+                    print("\t\tListing Virtual Functions for %s ..." % partition.properties['name'])
+                print('\t\t' + str(vf))
+#                vf.pull_full_properties()
+#                print('\t\t' + str(vf.properties))
 
     print("Logging off ...")
     session.logoff()
