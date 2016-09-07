@@ -165,3 +165,19 @@ Virtual Functions
 .. autoclass:: zhmcclient.VirtualFunction
    :members:
    :special-members: __str__
+
+
+.. _`Virtual Switches`:
+
+Virtual Switches
+----------------
+
+.. automodule:: zhmcclient._virtual_switch
+
+.. autoclass:: zhmcclient.VirtualSwitchManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.VirtualSwitch
+   :members:
+   :special-members: __str__

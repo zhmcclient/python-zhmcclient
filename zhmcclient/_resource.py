@@ -185,7 +185,7 @@ class BaseResource(object):
         status=service-required)
         """
         properties_keys = self._properties.keys()
-        search_keys = ['status', 'object-uri', 'element-uri', 'name']
+        search_keys = ['status', 'object-uri', 'element-uri', 'name', 'type']
         sorted_keys = sorted([k for k in properties_keys if k in search_keys])
         info = ", ".join("%s=%s" % (k, self._properties[k])
                          for k in sorted_keys)

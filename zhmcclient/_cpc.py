@@ -46,6 +46,7 @@ from ._lpar import LparManager
 from ._partition import PartitionManager
 from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
+from ._virtual_switch import VirtualSwitchManager
 from ._logging import _log_call
 
 
@@ -136,6 +137,7 @@ class Cpc(BaseResource):
         self._lpars = None
         self._partitions = None
         self._adapters = None
+        self._vswitches = None
         self._reset_activation_profiles = None
         self._image_activation_profiles = None
         self._load_activation_profiles = None
@@ -175,6 +177,18 @@ class Cpc(BaseResource):
         if not self._adapters:
             self._adapters = AdapterManager(self)
         return self._adapters
+
+    @property
+    @_log_call
+    def vswitches(self):
+        """
+        :class:`~zhmcclient.VirtualSwitchManager`: Manager object for the
+        Virtual Switches in this CPC.
+        """
+        # We do here some lazy loading.
+        if not self._vswitches:
+            self._vswitches = VirtualSwitchManager(self)
+        return self._vswitches
 
     @property
     @_log_call

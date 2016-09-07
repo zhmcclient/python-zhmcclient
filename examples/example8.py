@@ -14,7 +14,8 @@
 # limitations under the License.
 
 """
-Example 8: Using the Adapter, NIC, HBA and Virtual Function interface.
+Example 8: Using the Adapter, Virtual Switch, NIC, HBA
+           and Virtual Function interface.
 """
 
 import sys
@@ -85,6 +86,10 @@ try:
         adapters = cpc.adapters.list()
         for i, adapter in enumerate(adapters):
             print('\t' + str(adapter))
+        print("\tListing Virtual Switches for %s ..." % cpc.properties['name'])
+        vswitches = cpc.vswitches.list()
+        for i, vswitch in enumerate(vswitches):
+            print('\t' + str(vswitch))
         print("\tListing Partitions for %s ..." % cpc.properties['name'])
         partitions = cpc.partitions.list()
         for i, partition in enumerate(partitions):
