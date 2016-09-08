@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client
+from zhmcclient import Session, Client, VirtualFunction
 
 
 class VirtualFunctionTests(unittest.TestCase):
@@ -206,8 +206,11 @@ class VirtualFunctionTests(unittest.TestCase):
             m.post('/api/partitions/fake-part-id-1/virtual-functions',
                    json=result)
 
-            status = vf_mgr.create(properties={})
-            self.assertEqual(status, result['element-uri'])
+            vf = vf_mgr.create(properties={})
+
+            self.assertTrue(isinstance(vf, VirtualFunction))
+            self.assertEqual(vf.properties, result)
+            self.assertEqual(vf.uri, result['element-uri'])
 
     def test_delete(self):
         """

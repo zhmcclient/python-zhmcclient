@@ -145,7 +145,9 @@ class AdapterManager(BaseManager):
 
         Returns:
 
-          string: The resource URI of the new adapter.
+          Adapter: The resource object for the new HiperSockets adapter.
+            The object will have its 'object-uri' property set as returned by
+            the HMC, and will also have the input properties set.
 
         Raises:
 
@@ -156,7 +158,11 @@ class AdapterManager(BaseManager):
         """
         cpc_uri = self.cpc.get_property('object-uri')
         result = self.session.post(cpc_uri + '/adapters', body=properties)
-        return result['object-uri']
+        # There should not be overlaps, but just in case there are, the
+        # returned props should overwrite the input props:
+        props = properties.copy()
+        props.update(result)
+        return Adapter(self, props['object-uri'], props)
 
 
 class Adapter(BaseResource):

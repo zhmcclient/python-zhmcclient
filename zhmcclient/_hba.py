@@ -79,9 +79,6 @@ class HbaManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if not self.partition.full_properties:
-            self.partition.pull_full_properties()
-
         hbas_res = self.partition.get_property('hba-uris')
         hba_list = []
         if hbas_res:
@@ -105,7 +102,9 @@ class HbaManager(BaseManager):
 
         Returns:
 
-          string: The resource URI of the new HBA.
+          Hba: The resource object for the new HBA.
+            The object will have its 'element-uri' property set as returned by
+            the HMC, and will also have the input properties set.
 
         Raises:
 
@@ -116,7 +115,11 @@ class HbaManager(BaseManager):
         """
         partition_uri = self.partition.get_property('object-uri')
         result = self.session.post(partition_uri + '/hbas', body=properties)
-        return result['element-uri']
+        # There should not be overlaps, but just in case there are, the
+        # returned props should overwrite the input props:
+        props = properties.copy()
+        props.update(result)
+        return Hba(self, props['element-uri'], props)
 
 
 class Hba(BaseResource):

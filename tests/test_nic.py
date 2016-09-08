@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client
+from zhmcclient import Session, Client, Nic
 
 
 class NicTests(unittest.TestCase):
@@ -194,8 +194,11 @@ class NicTests(unittest.TestCase):
             }
             m.post('/api/partitions/fake-part-id-1/nics', json=result)
 
-            status = nic_mgr.create(properties={})
-            self.assertEqual(status, result['element-uri'])
+            nic = nic_mgr.create(properties={})
+
+            self.assertTrue(isinstance(nic, Nic))
+            self.assertEqual(nic.properties, result)
+            self.assertEqual(nic.uri, result['element-uri'])
 
     def test_delete(self):
         """

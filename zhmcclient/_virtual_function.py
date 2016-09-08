@@ -78,9 +78,6 @@ class VirtualFunctionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if not self.partition.full_properties:
-            self.partition.pull_full_properties()
-
         vfs_res = self.partition.get_property('virtual-function-uris')
         vf_list = []
         if vfs_res:
@@ -105,7 +102,9 @@ class VirtualFunctionManager(BaseManager):
 
         Returns:
 
-          string: The resource URI of the new Virtual Function.
+          VirtualFunction: The resource object for the new virtual function.
+            The object will have its 'element-uri' property set as returned by
+            the HMC, and will also have the input properties set.
 
         Raises:
 
@@ -117,7 +116,11 @@ class VirtualFunctionManager(BaseManager):
         partition_uri = self.partition.get_property('object-uri')
         result = self.session.post(partition_uri + '/virtual-functions',
                                    body=properties)
-        return result['element-uri']
+        # There should not be overlaps, but just in case there are, the
+        # returned props should overwrite the input props:
+        props = properties.copy()
+        props.update(result)
+        return VirtualFunction(self, props['element-uri'], props)
 
 
 class VirtualFunction(BaseResource):

@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client
+from zhmcclient import Session, Client, Adapter
 
 
 class AdapterTests(unittest.TestCase):
@@ -184,8 +184,11 @@ class AdapterTests(unittest.TestCase):
             }
             m.post('/api/cpcs/adapter-cpc-id-1/adapters', json=result)
 
-            status = adapter_mgr.create_hipersocket(properties={})
-            self.assertEqual(status, result['object-uri'])
+            adapter = adapter_mgr.create_hipersocket(properties={})
+
+            self.assertTrue(isinstance(adapter, Adapter))
+            self.assertEqual(adapter.properties, result)
+            self.assertEqual(adapter.uri, result['object-uri'])
 
     def test_delete(self):
         """
