@@ -79,9 +79,6 @@ class NicManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if not self.partition.full_properties:
-            self.partition.pull_full_properties()
-
         nics_res = self.partition.get_property('nic-uris')
         nic_list = []
         if nics_res:
@@ -105,7 +102,9 @@ class NicManager(BaseManager):
 
         Returns:
 
-          string: The resource URI of the new NIC.
+          Nic: The resource object for the new NIC.
+            The object will have its 'element-uri' property set as returned by
+            the HMC, and will also have the input properties set.
 
         Raises:
 
@@ -116,7 +115,11 @@ class NicManager(BaseManager):
         """
         partition_uri = self.partition.get_property('object-uri')
         result = self.session.post(partition_uri + '/nics', body=properties)
-        return result['element-uri']
+        # There should not be overlaps, but just in case there are, the
+        # returned props should overwrite the input props:
+        props = properties.copy()
+        props.update(result)
+        return Nic(self, props['element-uri'], props)
 
 
 class Nic(BaseResource):

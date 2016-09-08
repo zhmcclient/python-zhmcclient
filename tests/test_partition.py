@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client
+from zhmcclient import Session, Client, Partition
 
 
 class PartitionTests(unittest.TestCase):
@@ -165,8 +165,11 @@ class PartitionTests(unittest.TestCase):
             }
             m.post('/api/cpcs/fake-cpc-id-1/partitions', json=result)
 
-            status = partition_mgr.create(properties={})
-            self.assertEqual(status, result['object-uri'])
+            partition = partition_mgr.create(properties={})
+
+            self.assertTrue(isinstance(partition, Partition))
+            self.assertEqual(partition.properties, result)
+            self.assertEqual(partition.uri, result['object-uri'])
 
     def test_start(self):
         """

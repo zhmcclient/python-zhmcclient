@@ -110,9 +110,11 @@ class BaseResource(object):
     @property
     def full_properties(self):
         """
-        A boolean indicating whether the resource properties in this object
-        are the full set of resource properties, vs. just the short set of
-        resource properties as obtained by list functions.
+        A boolean indicating whether or not the resource properties in this
+        object are the full set of resource properties.
+
+        Note that listing resources and creating new resources produces objects
+        that have less than the full set of properties.
         """
         return self._full_properties
 
@@ -170,7 +172,7 @@ class BaseResource(object):
         try:
             return self._properties[name]
         except KeyError:
-            if self.full_properties:
+            if self._full_properties:
                 raise
             self.pull_full_properties()
             return self._properties[name]

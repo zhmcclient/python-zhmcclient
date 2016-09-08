@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client
+from zhmcclient import Session, Client, Hba
 
 
 class HbaTests(unittest.TestCase):
@@ -194,8 +194,11 @@ class HbaTests(unittest.TestCase):
             }
             m.post('/api/partitions/fake-part-id-1/hbas', json=result)
 
-            status = hba_mgr.create(properties={})
-            self.assertEqual(status, result['element-uri'])
+            hba = hba_mgr.create(properties={})
+
+            self.assertTrue(isinstance(hba, Hba))
+            self.assertEqual(hba.properties, result)
+            self.assertEqual(hba.uri, result['element-uri'])
 
     def test_delete(self):
         """
