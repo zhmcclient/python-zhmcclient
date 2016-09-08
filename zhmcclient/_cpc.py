@@ -14,7 +14,9 @@
 
 """
 A **Central Processor Complex (CPC)** is a physical z Systems or LinuxONE
-computer. A particular HMC can manage multiple CPCs.
+computer.
+
+A particular HMC can manage multiple CPCs.
 
 The HMC can manage a range of old and new CPC generations. Some older CPC
 generations are not capable of supporting the HMC Web Services API; these older
@@ -55,20 +57,22 @@ __all__ = ['CpcManager', 'Cpc']
 
 class CpcManager(BaseManager):
     """
-    Manager providing access to the CPCs exposed by the HMC this client is
-    connected to.
+    Manager providing access to the :term:`CPCs <CPC>` exposed by the HMC this
+    client is connected to.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case,
+    the :class:`~zhmcclient.Client` object connecting to the HMC).
     """
 
     def __init__(self, client):
-        """
-        Parameters:
-
-          client (:class:`~zhmcclient.Client`):
-            Client object for the HMC to be used.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   client (:class:`~zhmcclient.Client`):
+        #      Client object for the HMC to be used.
         super(CpcManager, self).__init__()
         self._session = client.session
 
@@ -109,27 +113,27 @@ class CpcManager(BaseManager):
 
 class Cpc(BaseResource):
     """
-    Representation of a CPC.
+    Representation of a :term:`CPC`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.CpcManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.CpcManager`):
-            Manager for this CPC.
-
-          uri (string):
-            Canonical URI path of this CPC.
-
-          properties (dict):
-            Properties to be set for this CPC.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.CpcManager`):
+        #     Manager for this CPC.
+        #   uri (string):
+        #     Canonical URI path of this CPC.
+        #   properties (dict):
+        #     Properties to be set for this CPC.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, CpcManager)
         super(Cpc, self).__init__(manager, uri, properties)
         # We do here some lazy loading.
@@ -145,7 +149,8 @@ class Cpc(BaseResource):
     @_log_call
     def lpars(self):
         """
-        :class:`~zhmcclient.LparManager`: Access to the LPARs in this CPC.
+        :class:`~zhmcclient.LparManager`: Access to the :term:`LPARs <LPAR>` in
+        this CPC.
         """
         # We do here some lazy loading.
         if not self._lpars:
@@ -156,8 +161,8 @@ class Cpc(BaseResource):
     @_log_call
     def partitions(self):
         """
-        :class:`~zhmcclient.PartitionManager`: Access to the Partitions in this
-        CPC.
+        :class:`~zhmcclient.PartitionManager`: Access to the
+        :term:`Partitions <Partition>` in this CPC.
         """
         # We do here some lazy loading.
         if not self._partitions:
@@ -168,8 +173,8 @@ class Cpc(BaseResource):
     @_log_call
     def adapters(self):
         """
-        :class:`~zhmcclient.AdapterManager`: Access to the Adapters in this
-        CPC.
+        :class:`~zhmcclient.AdapterManager`: Access to the
+        :term:`Adapters <Adapter>` in this CPC.
         """
         # We do here some lazy loading.
         if not self._adapters:
@@ -180,8 +185,8 @@ class Cpc(BaseResource):
     @_log_call
     def vswitches(self):
         """
-        :class:`~zhmcclient.VirtualSwitchManager`: Access to the Virtual
-        Switches in this CPC.
+        :class:`~zhmcclient.VirtualSwitchManager`: Access to the
+        :term:`Virtual Switches <Virtual Switch>` in this CPC.
         """
         # We do here some lazy loading.
         if not self._vswitches:
@@ -192,8 +197,9 @@ class Cpc(BaseResource):
     @_log_call
     def reset_activation_profiles(self):
         """
-        :class:`~zhmcclient.ActivationManager`: Access to the Reset
-        Activation Profiles in this CPC.
+        :class:`~zhmcclient.ActivationProfileManager`: Access to the
+        :term:`Reset Activation Profiles <Reset Activation Profile>` in this
+        CPC.
         """
         # We do here some lazy loading.
         if not self._reset_activation_profiles:
@@ -205,8 +211,9 @@ class Cpc(BaseResource):
     @_log_call
     def image_activation_profiles(self):
         """
-        :class:`~zhmcclient.ActivationManager`: Access to the Image
-        Activation Profiles in this CPC.
+        :class:`~zhmcclient.ActivationProfileManager`: Access to the
+        :term:`Image Activation Profiles <Image Activation Profile>` in this
+        CPC.
         """
         # We do here some lazy loading.
         if not self._image_activation_profiles:
@@ -218,8 +225,9 @@ class Cpc(BaseResource):
     @_log_call
     def load_activation_profiles(self):
         """
-        :class:`~zhmcclient.ActivationManager`: Access to the Load
-        Activation Profiles in this CPC.
+        :class:`~zhmcclient.ActivationProfileManager`: Access to the
+        :term:`Load Activation Profiles <load Activation Profile>` in this
+        CPC.
         """
         # We do here some lazy loading.
         if not self._load_activation_profiles:

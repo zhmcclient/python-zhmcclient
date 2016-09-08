@@ -19,26 +19,6 @@ Reference: Resources
 ====================
 
 
-.. _`BaseManager`:
-.. _`BaseResource`:
-.. _`Base classes for resources`:
-
-Base classes for resources
---------------------------
-
-.. automodule:: zhmcclient._manager
-
-.. autoclass:: zhmcclient.BaseManager
-   :members:
-   :special-members: __str__
-
-.. automodule:: zhmcclient._resource
-
-.. autoclass:: zhmcclient.BaseResource
-   :members:
-   :special-members: __str__
-
-
 .. _`CPCs`:
 
 CPCs

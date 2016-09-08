@@ -13,12 +13,12 @@
 # limitations under the License.
 
 """
-A **Virtual Function** provides a Partition with access to accelerator Adapters
-like the System z Enterprise Data Compression (zEDC) adapter.
+A **Virtual Function** is a logical entity that provides a :term:`Partition`
+with access to :term:`Accelerator Adapters <Accelerator Adapter>`.
 
 Virtual Function resources are contained in Partition resources.
 
-Virtual Functions only exist in CPCs that are in DPM mode.
+Virtual Functions only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -31,27 +31,30 @@ __all__ = ['VirtualFunctionManager', 'VirtualFunction']
 
 class VirtualFunctionManager(BaseManager):
     """
-    Manager providing access to the Virtual Functions in a particular
-    Partition.
+    Manager providing access to the
+    :term:`Virtual Functions <Virtual Function>` in a particular
+    :term:`Partition`.
 
-    Derived from :class:`~zhmcclient.BaseManager`;
-    see there for common methods and attributes.
+    Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
+    and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Partition` object).
     """
 
     def __init__(self, partition):
-        """
-        Parameters:
-
-          partition (:class:`~zhmcclient.Partition`):
-            Partition defining the scope for this manager.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   partition (:class:`~zhmcclient.Partition`):
+        #     Partition defining the scope for this manager.
         super(VirtualFunctionManager, self).__init__(partition)
 
     @property
     def partition(self):
         """
-        :class:`~zhmcclient.Partition`: Partition defining the scope for this
-        manager.
+        :class:`~zhmcclient.Partition`: :term:`Partition` defining the scope
+        for this manager.
         """
         return self._parent
 
@@ -99,7 +102,8 @@ class VirtualFunctionManager(BaseManager):
 
         Returns:
 
-          VirtualFunction: The resource object for the new virtual function.
+          VirtualFunction:
+            The resource object for the new Virtual Function.
             The object will have its 'element-uri' property set as returned by
             the HMC, and will also have the input properties set.
 
@@ -122,7 +126,7 @@ class VirtualFunctionManager(BaseManager):
 
 class VirtualFunction(BaseResource):
     """
-    Representation of a Virtual Function.
+    Representation of a :term:`Virtual Function`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
@@ -130,23 +134,23 @@ class VirtualFunction(BaseResource):
     For the properties of a Virtual Function, see section
     'Data model - Virtual Function Element Object' in section
     'Partition object' in the :term:`HMC API` book.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.VirtualFunctionManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.VirtualFunctionManager`):
-            Manager object for this Virtual Function.
-
-          uri (string):
-            Canonical URI path of this Virtual Function.
-
-          properties (dict):
-            Properties to be set for this Virtual Function.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.VirtualFunctionManager`):
+        #     Manager object for this Virtual Function.
+        #   uri (string):
+        #     Canonical URI path of this Virtual Function.
+        #   properties (dict):
+        #     Properties to be set for this Virtual Function.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, VirtualFunctionManager)
         super(VirtualFunction, self).__init__(manager, uri, properties)
 
