@@ -46,10 +46,10 @@ class BaseResource(object):
             type in the scope of that manager).
 
           uri (string):
-            Canonical URI path of the BaseResource object.
+            Canonical URI path of the resource.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for the resource.
 
             * Key: Name of the property.
             * Value: Value of the property.
@@ -62,8 +62,8 @@ class BaseResource(object):
             resource object. The properties on the resource object are
             mutable. Whether or not a particular property of the represented
             manageable resource can be updated is described in its property
-            qualifiers. See section "Property characteristics" in chapter 5 of
-            :term:`HMC API` for a description of the concept of property
+            qualifiers. See section "Property characteristics" in the
+            :term:`HMC API` book for a description of the concept of property
             qualifiers, and the respective sections describing the resources
             for their actual definitions of property qualifiers.
         """
@@ -77,24 +77,25 @@ class BaseResource(object):
     def properties(self):
         """
         dict:
-          The properties of this resource object.
+          The properties of this resource.
 
           * Key: Name of the property.
           * Value: Value of the property.
 
-          See the respective sections in :term:`HMC API` for a description
-          of the resources along with their properties.
+          See the respective 'Data model' sections in the :term:`HMC API` book
+          for a description of the resources along with their properties.
 
           The dictionary contains either the full set of resource properties,
-          or the short set of resource properties as obtained by list
-          operations.
+          or a subset thereof.
         """
         return self._properties
 
     @property
     def uri(self):
         """
-        string: The resource URI, in the format ``/api/cpcs/12345``.
+        string: The canonical URI path of the resource.
+
+        Example: ``/api/cpcs/12345``
         """
         return self._uri
 
@@ -121,7 +122,7 @@ class BaseResource(object):
     @property
     def properties_timestamp(self):
         """
-        The point in time of the last update of the resource properties
+        The point in time of the last update of the resource properties cached
         in this object, as Unix time (an integer that is the number of seconds
         since the Unix epoch).
         """
@@ -129,8 +130,8 @@ class BaseResource(object):
 
     def pull_full_properties(self):
         """
-        Retrieve the full set of properties for this resource (and store them
-        in :attr:`properties`).
+        Retrieve the full set of resource properties and cache them in this
+        object.
 
         Raises:
 
@@ -146,15 +147,17 @@ class BaseResource(object):
 
     def get_property(self, name):
         """
-        Return the value of a resource property. If the resource property
-        is not in the currently known set of properties, the full set of
-        resource properties is retrieved and the resource property is
-        again attempted to be returned.
+        Return the value of a resource property.
+
+        If the resource property is not cached in this object yet, the full set
+        of resource properties is retrieved and cached in this object, and the
+        resource property is again attempted to be returned.
 
         Parameters:
+
           name (:term:`string`):
             Name of the resource property, using the names defined in the
-            respective section of :term:`HMC API`.
+            respective 'Data model' sections in the :term:`HMC API` book.
 
         Returns:
 
@@ -179,12 +182,13 @@ class BaseResource(object):
 
     def __str__(self):
         """
-        Convert a BaseResource object to a string.
+        Return a human readable representation of this resource.
 
-        example:
-        Cpc(name=P0000S12,
-        object-uri=/api/cpcs/f1bc49af-f71a-3467-8def-3c186b5d9352,
-        status=service-required)
+        Example::
+
+            Cpc(name=P0000S12,
+                object-uri=/api/cpcs/f1bc49af-f71a-3467-8def-3c186b5d9352,
+                status=service-required)
         """
         properties_keys = self._properties.keys()
         search_keys = ['status', 'object-uri', 'element-uri', 'name', 'type']
@@ -195,6 +199,7 @@ class BaseResource(object):
 
     def __repr__(self):
         """
-        Convert a BaseResource object to a string.
+        Return a representation of this resource suitable for debugging its
+        state.
         """
         return self.__str__()

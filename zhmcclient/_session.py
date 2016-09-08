@@ -414,8 +414,8 @@ class Session(object):
             determine the status of the job and the result of the original
             operation, once the job has completed.
 
-            See the section in the :term:`HMC API` about the specific HMC
-            operation and about the "Query Job Status" operation, for a
+            See the section in the :term:`HMC API` book about the specific HMC
+            operation and about the 'Query Job Status' operation, for a
             description of the members of the returned JSON objects.
 
         Raises:
@@ -595,9 +595,8 @@ class Session(object):
             with members ``job-status-code``, ``job-reason-code``, and
             optionally ``job-results``.
 
-            For details, see the sections in the :term:`HMC API` about the
-            "Query Job Status" operation and about the original operation that
-            was performed asynchronously.
+            For details, see section 'Response body contents' in section
+            'Query Job Status' in the :term:`HMC API` book.
 
         Raises:
 

@@ -13,11 +13,8 @@
 # limitations under the License.
 
 """
-A **partition** is a subset of a physical z Systems or LinuxONE computer
-that is in DPM mode (Dynamic Partition Manager mode).
-Objects of this class are not provided when the CPC is not in DPM mode.
-
-A partition is always contained in a CPC.
+A **Partition** is a subset of the hardware resources of a :term:`CPC` in DPM
+mode, virtualized as a separate computer.
 
 Partitions can be created and deleted dynamically, and their resources such
 as CPU, memory or I/O devices can be configured dynamically.
@@ -25,6 +22,11 @@ You can create as many partition definitions as you want, but only a specific
 number of partitions can be active at any given time.
 
 TODO: How can a user find out what the maximum is, before it is reached?
+
+Partition resources are contained in CPC resources.
+
+Partition resources only exist in CPCs that are in DPM mode. CPCs in classic
+mode (or ensemble mode) have :term:`LPAR` resources, instead.
 """
 
 from __future__ import absolute_import
@@ -41,8 +43,7 @@ __all__ = ['PartitionManager', 'Partition']
 
 class PartitionManager(BaseManager):
     """
-    Manager object for Partitions. This manager object is scoped to the
-    partitions of a particular CPC.
+    Manager providing access to the Partitions in a particular CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -53,21 +54,20 @@ class PartitionManager(BaseManager):
         Parameters:
 
           cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager object.
+            CPC defining the scope for this manager.
         """
         super(PartitionManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: Parent object (CPC) defining the scope for
-        this manager object.
+        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
         """
         return self._parent
 
     def list(self, full_properties=False):
         """
-        List the partitions in scope of this manager object.
+        List the Partitions in this CPC.
 
         Parameters:
 
@@ -102,11 +102,13 @@ class PartitionManager(BaseManager):
 
     def create(self, properties):
         """
-        Create a partition with the specified resource properties.
+        Create a Partition in this CPC.
 
         Parameters:
 
-          properties (dict): Properties for the new partition.
+          properties (dict): Initial property values.
+            Allowable properties are defined in section 'Request body contents'
+            in section 'Create Partition' in the :term:`HMC API` book.
 
         Returns:
 
@@ -143,13 +145,13 @@ class Partition(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.PartitionManager`):
-            Manager object for this resource.
+            Manager for this Partition.
 
           uri (string):
-            Canonical URI path of the Partition object.
+            Canonical URI path of this Partition.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this Partition.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
@@ -163,8 +165,8 @@ class Partition(BaseResource):
     @_log_call
     def nics(self):
         """
-        :class:`~zhmcclient.NicManager`: Manager object for the
-        NICs in this Partition.
+        :class:`~zhmcclient.NicManager`: Access to the NICs in this
+        Partition.
         """
         # We do here some lazy loading.
         if not self._nics:
@@ -175,8 +177,8 @@ class Partition(BaseResource):
     @_log_call
     def hbas(self):
         """
-        :class:`~zhmcclient.NicManager`: Manager object for the
-        HBAs in this Partition.
+        :class:`~zhmcclient.NicManager`: Access to the HBAs in this
+        Partition.
         """
         # We do here some lazy loading.
         if not self._hbas:
@@ -187,8 +189,8 @@ class Partition(BaseResource):
     @_log_call
     def virtual_functions(self):
         """
-        :class:`~zhmcclient.VirtualFunctionManager`:
-        Manager object for the Virtual Functions in this Partition.
+        :class:`~zhmcclient.VirtualFunctionManager`: Access to the
+        Virtual Functions in this Partition.
         """
         # We do here some lazy loading.
         if not self._virtual_functions:
@@ -197,7 +199,7 @@ class Partition(BaseResource):
 
     def start(self, wait_for_completion=True):
         """
-        Start (activate) this partition, using the HMC operation "Start
+        Start (activate) this Partition, using the HMC operation "Start
         Partition".
 
         TODO: Describe what happens if the maximum number of active partitions
@@ -243,7 +245,7 @@ class Partition(BaseResource):
 
     def stop(self, wait_for_completion=True):
         """
-        Stop (deactivate) this partition, using the HMC operation "Stop
+        Stop (deactivate) this Partition, using the HMC operation "Stop
         Partition".
 
         Parameters:
@@ -286,7 +288,7 @@ class Partition(BaseResource):
 
     def delete(self):
         """
-        Deletes this partition.
+        Delete this Partition.
 
         Raises:
 
@@ -300,12 +302,15 @@ class Partition(BaseResource):
 
     def update_properties(self, properties):
         """
-        Updates one or more of the writable properties of a partition
-        with the specified resource properties.
+        Update writeable properties of this Partition.
 
         Parameters:
 
-          properties (dict): Updated properties for the partition.
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are the properties with qualifier (w) in
+            section 'Data model' in section 'Partition object' in the
+            :term:`HMC API` book.
 
         Raises:
 
@@ -317,17 +322,18 @@ class Partition(BaseResource):
         partition_uri = self.get_property('object-uri')
         self.manager.session.post(partition_uri, body=properties)
 
-    def dump_partition(self, properties, wait_for_completion=True):
+    def dump_partition(self, parameters, wait_for_completion=True):
         """
-        Loads a standalone dump program from a designated SCSI device,
-        using the HMC operation 'Dump Partition'.
+        Dump this Partition, by loading a standalone dump program from a SCSI
+        device and starting its execution, using the HMC operation
+        'Dump Partition'.
 
         Parameters:
 
-          properties (dict): Properties for the dump operation.
-            See the section in the :term:`HMC API` about the specific HMC
-            operation and about the 'Dump Partition' description of the
-            members of the passed properties dict.
+          parameters (dict): Input parameters for the operation.
+            Allowable input parameters are defined in section
+            'Request body contents' in section 'Dump Partition' in the
+            :term:`HMC API` book.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -362,12 +368,12 @@ class Partition(BaseResource):
         partition_uri = self.get_property('object-uri')
         result = self.manager.session.post(
             partition_uri + '/operations/scsi-dump',
-            wait_for_completion=True, body=properties)
+            wait_for_completion=True, body=parameters)
         return result
 
     def psw_restart(self, wait_for_completion=True):
         """
-        Initiates a PSW restart, using the HMC operation
+        Initiates a PSW restart for this Partition, using the HMC operation
         'Perform PSW Restart'.
 
         Parameters:
@@ -410,10 +416,13 @@ class Partition(BaseResource):
 
     def mount_iso_image(self, properties):
         """
-        Uploads an ISO image and associates it to the partition
+        Upload an ISO image and associate it to this Partition
         using the HMC operation 'Mount ISO Image'.
+
         When the partition already has an ISO image associated,
-        the newly uploaded image replaces the current one
+        the newly uploaded image replaces the current one.
+
+        TODO: The interface of this method has issues, see issue #57.
 
         Parameters:
 
@@ -436,8 +445,8 @@ class Partition(BaseResource):
 
     def unmount_iso_image(self):
         """
-        Unmounts the currently mounted ISO from the partition
-        using the HMC operation 'Unmount ISO Image'.
+        Unmount the currently mounted ISO from this Partition using the HMC
+        operation 'Unmount ISO Image'.
 
         Raises:
 

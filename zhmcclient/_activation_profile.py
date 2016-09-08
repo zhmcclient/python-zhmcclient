@@ -13,29 +13,35 @@
 # limitations under the License.
 
 """
-**Activation profiles** are required for CPC (processor)
-and CPC image (partition) activation. They are used to tailor the operation
-of a CPC and are stored in the Support Element associated with the CPC.
+**Activation Profiles** control the activation of CPCs and LPARs. They are used
+to tailor the operation of a CPC and are stored in the Support Element
+associated with the CPC.
 
-There are types of activation profiles:
+Activation Profile resources are contained in CPC resources.
+
+Activation Profile resources only exist in CPCs that are not in DPM mode.
+
+TODO: If Reset Activation Profiles are used to determine the CPC mode,
+      should they not exist in all CPC modes?
+
+There are three types of Activation Profiles:
 
 1. Reset:
-   Every CPC in the processor cluster requires a reset profile to determine
-   the mode in which the CPC licensed internal code will be loaded and
+   The Reset Activation Profile defines for a CPC the mode in which the CPC
+   licensed internal code will be loaded (e.g. DPM mode or classic mode) and
    how much central storage and expanded storage will be used.
 
 2. Image:
-   If LPAR mode is selected in the reset profile, each partition
-   can have an image profile. The image profile determines the number of CPs
-   that the image will use and whether these CPs will be dedicated
-   to the partition or shared. It also allows you to assign the amount of
-   central storage and expanded storage that will be used by each partition.
+   For CPCs in classic mode, each LPAR can have an Image Activation Profile.
+   The Image Activation Profile determines the number of CPs that the LPAR will
+   use and whether these CPs will be dedicated to the LPAR or shared. It also
+   allows assigning the amount of central storage and expanded storage that
+   will be used by each LPAR.
 
 3. Load:
-   A load profile is needed to define the channel address of the device that
-   the operating system will be loaded from.
-
-Activation Profiles are not provided when the CPC is enabled for DPM.
+   For CPCs in classic mode, each LPAR can have a Load Activation Profile.
+   The Load Activation Profile defines the channel address of the device that
+   the operating system for that LPAR will be loaded (booted) from.
 """
 
 from __future__ import absolute_import
@@ -50,9 +56,8 @@ __all__ = ['ActivationProfileManager', 'ActivationProfile']
 
 class ActivationProfileManager(BaseManager):
     """
-    Manager object for Activation Profiles.
-    This manager object is scoped to the Activation Profiles of a particular
-    CPC.
+    Manager providing access to the Activation Profiles of a particular type in
+    a particular CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -63,15 +68,14 @@ class ActivationProfileManager(BaseManager):
         Parameters:
 
           cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager object.
+            CPC defining the scope for this manager.
 
           profile_type (string):
-            Controls which type of Activation Profiles
-            this manager returns.
+            Type of Activation Profiles:
 
-            * If `reset`, this manager returns Reset Activation Profiles.
-            * If `image`, this manager returns Image Activation Profiles.
-            * If `load`, this manager returns Load Activation Profiles.
+            * `reset`: Reset Activation Profiles
+            * `image`: Image Activation Profiles
+            * `load`: Load Activation Profiles
         """
         super(ActivationProfileManager, self).__init__(cpc)
         self._profile_type = profile_type
@@ -79,25 +83,26 @@ class ActivationProfileManager(BaseManager):
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: Parent object (CPC) defining the scope for
-        this manager object.
+        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
         """
         return self._parent
 
     @property
     def profile_type(self):
         """
-        Returns type of Activation Profiles:
-          * If `reset`, this manager returns Reset Activation Profiles.
-          * If `image`, this manager returns Image Activation Profiles.
-          * If `load`, this manager returns Load Activation Profiles.
+        Return the type of the Activation Profiles managed by this object:
+
+        * `reset`: Reset Activation Profiles
+        * `image`: Image Activation Profiles
+        * `load`: Load Activation Profiles
         """
         return self._profile_type
 
     @_log_call
     def list(self, full_properties=False):
         """
-        List the Activation Profiles in scope of this manager object.
+        List the Activation Profiles of the type managed by this object and in
+        this CPC.
 
         Parameters:
 
@@ -135,7 +140,7 @@ class ActivationProfileManager(BaseManager):
 
 class ActivationProfile(BaseResource):
     """
-    Representation of an Activation Profile.
+    Representation of an Activation Profile of a particular type.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
@@ -146,13 +151,13 @@ class ActivationProfile(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.ActivationProfileManager`):
-            Manager object for this resource.
+            Manager for this Activation Profile.
 
           uri (string):
-            Canonical URI path of the Activation Profile object.
+            Canonical URI path of this Activation Profile.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this Activation Profile.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
@@ -161,12 +166,17 @@ class ActivationProfile(BaseResource):
 
     def update_properties(self, properties):
         """
-        Updates one or more of the writable properties of
-        an activation profile with the specified resource properties.
+        Update writeable properties of this Activation Profile.
 
         Parameters:
 
-          properties (dict): Updated properties for the activation profile.
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are the properties with qualifier (w) in
+            section 'Data model' in section
+            '<profile_type> activation profile' in the :term:`HMC API` book,
+            where <profile_type> is the profile type of this object
+            (e.g. Reset, Load, Image).
 
         Raises:
 

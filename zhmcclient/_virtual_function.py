@@ -13,13 +13,12 @@
 # limitations under the License.
 
 """
-A **Virtual Function** represents a unique connection between the partition
-and a accelerator adapter like System z Enterprise Data Compression (zEDC)
-that is configured on a physical z Systems or LinuxONE computer
-that is in DPM mode (Dynamic Partition Manager mode).
-Objects of this class are not provided when the CPC is not in DPM mode.
+A **Virtual Function** provides a Partition with access to accelerator Adapters
+like the System z Enterprise Data Compression (zEDC) adapter.
 
-A Virtual Function is always contained in a partition.
+Virtual Function resources are contained in Partition resources.
+
+Virtual Functions only exist in CPCs that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -32,8 +31,8 @@ __all__ = ['VirtualFunctionManager', 'VirtualFunction']
 
 class VirtualFunctionManager(BaseManager):
     """
-    Manager object for Virtual Functions. This manager object is scoped
-    to the Virtual Functions of a particular Partition.
+    Manager providing access to the Virtual Functions in a particular
+    Partition.
 
     Derived from :class:`~zhmcclient.BaseManager`;
     see there for common methods and attributes.
@@ -44,21 +43,21 @@ class VirtualFunctionManager(BaseManager):
         Parameters:
 
           partition (:class:`~zhmcclient.Partition`):
-            Partition defining the scope for this manager object.
+            Partition defining the scope for this manager.
         """
         super(VirtualFunctionManager, self).__init__(partition)
 
     @property
     def partition(self):
         """
-        :class:`~zhmcclient.Partition`: Parent object (Partition)
-        defining the scope for this manager object.
+        :class:`~zhmcclient.Partition`: Partition defining the scope for this
+        manager.
         """
         return self._parent
 
     def list(self, full_properties=False):
         """
-        List the Virtual Functions in scope of this manager object.
+        List the Virtual Functions of this Partition.
 
         Parameters:
 
@@ -90,15 +89,13 @@ class VirtualFunctionManager(BaseManager):
 
     def create(self, properties):
         """
-        Create and configures a Virtual Function with
-        the specified resource properties.
+        Create a Virtual Function in this Partition.
 
         Parameters:
 
-          properties (dict): Properties for the new Virtual Function.
-            See the section in the :term:`HMC API` about the specific HMC
-            operation and about the 'Create Virtual Function' description
-            of the members of the passed properties dict.
+          properties (dict): Initial property values.
+            Allowable properties are defined in section 'Request body contents'
+            in section 'Create Virtual Function' in the :term:`HMC API` book.
 
         Returns:
 
@@ -130,9 +127,9 @@ class VirtualFunction(BaseResource):
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
-    Properties of a VirtualFunction:
-      See the sub-section 'Data model - Virtual Function Element Object'
-      of the section 'Partition object' in the :term:`HMC API`.
+    For the properties of a Virtual Function, see section
+    'Data model - Virtual Function Element Object' in section
+    'Partition object' in the :term:`HMC API` book.
     """
 
     def __init__(self, manager, uri, properties):
@@ -140,13 +137,13 @@ class VirtualFunction(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.VirtualFunctionManager`):
-            Manager object for this resource.
+            Manager object for this Virtual Function.
 
           uri (string):
-            Canonical URI path of the VirtualFunction object.
+            Canonical URI path of this Virtual Function.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this Virtual Function.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
@@ -155,7 +152,7 @@ class VirtualFunction(BaseResource):
 
     def delete(self):
         """
-        Deletes this Virtual Function.
+        Delete this Virtual Function.
 
         Raises:
 
@@ -168,14 +165,15 @@ class VirtualFunction(BaseResource):
 
     def update_properties(self, properties):
         """
-        Updates one or more of the writable properties of Virtual Function
-        with the specified resource properties.
+        Update writeable properties of this Virtual Function.
 
         Parameters:
 
-          properties (dict): Updated properties for the Virtual Function.
-            See the sub-section 'Data model - Virtual Function Element Object'
-            of the section 'Partition object' in the :term:`HMC API`.
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are the properties with qualifier (w) in
+            section 'Data model - Virtual Function element object' in the
+            :term:`HMC API` book.
 
         Raises:
 

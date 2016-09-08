@@ -19,18 +19,18 @@ computer. A particular HMC can manage multiple CPCs.
 The HMC can manage a range of old and new CPC generations. Some older CPC
 generations are not capable of supporting the HMC Web Services API; these older
 CPCs can be managed using the GUI of the HMC, but not through its Web Services
-API. Therefore, such older CPCs will not show up at the HMC Web Services API,
-and thus will not show up in the API of this Python package.
+API. Therefore, such older CPCs will not be exposed at the HMC Web Services
+API, and thus will not show up in the API of this Python package.
 
 TODO: List earliest CPC generation that supports the HMC Web Services API.
 
 A CPC can be in any of the following three modes:
 
 - DPM mode: Dynamic Partition Manager is enabled for the CPC.
-- Ensemble mode: The CPC is member of an ensemble. This Python client
-  does not support the functionality that is specific to ensemble mode.
 - Classic mode: The CPC does not have Dynamic Partition Manager enabled,
   and is not member of an ensemble.
+- Ensemble mode: The CPC is member of an ensemble. This Python client
+  does not support the functionality that is specific to ensemble mode.
 
 The functionality supported at the HMC API and thus also for users of this
 Python client, depends on the mode in which the CPC currently is. If a
@@ -55,9 +55,8 @@ __all__ = ['CpcManager', 'Cpc']
 
 class CpcManager(BaseManager):
     """
-    Manager object for CPCs. This manager object is scoped to the HMC Web
-    Services API capable CPCs managed by the HMC that is associated with a
-    particular client.
+    Manager providing access to the CPCs exposed by the HMC this client is
+    connected to.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -76,7 +75,7 @@ class CpcManager(BaseManager):
     @_log_call
     def list(self, full_properties=False):
         """
-        List the CPCs in scope of this manager object.
+        List the CPCs exposed by the HMC this client is connected to.
 
         Parameters:
 
@@ -121,13 +120,13 @@ class Cpc(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.CpcManager`):
-            Manager object for this CPC.
+            Manager for this CPC.
 
           uri (string):
-            Canonical URI path of the CPC object.
+            Canonical URI path of this CPC.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this CPC.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
@@ -146,8 +145,7 @@ class Cpc(BaseResource):
     @_log_call
     def lpars(self):
         """
-        :class:`~zhmcclient.LparManager`: Manager object for the LPARs in this
-        CPC.
+        :class:`~zhmcclient.LparManager`: Access to the LPARs in this CPC.
         """
         # We do here some lazy loading.
         if not self._lpars:
@@ -158,8 +156,8 @@ class Cpc(BaseResource):
     @_log_call
     def partitions(self):
         """
-        :class:`~zhmcclient.PartitionManager`: Manager object for the
-        partitions in this CPC.
+        :class:`~zhmcclient.PartitionManager`: Access to the Partitions in this
+        CPC.
         """
         # We do here some lazy loading.
         if not self._partitions:
@@ -170,8 +168,8 @@ class Cpc(BaseResource):
     @_log_call
     def adapters(self):
         """
-        :class:`~zhmcclient.AdapterManager`: Manager object for the
-        adapters in this CPC.
+        :class:`~zhmcclient.AdapterManager`: Access to the Adapters in this
+        CPC.
         """
         # We do here some lazy loading.
         if not self._adapters:
@@ -182,8 +180,8 @@ class Cpc(BaseResource):
     @_log_call
     def vswitches(self):
         """
-        :class:`~zhmcclient.VirtualSwitchManager`: Manager object for the
-        Virtual Switches in this CPC.
+        :class:`~zhmcclient.VirtualSwitchManager`: Access to the Virtual
+        Switches in this CPC.
         """
         # We do here some lazy loading.
         if not self._vswitches:
@@ -194,9 +192,8 @@ class Cpc(BaseResource):
     @_log_call
     def reset_activation_profiles(self):
         """
-        :class:`~zhmcclient.ActivationManager`: Manager object for the
-        Reset Activation Profiles in this CPC.
-        `None`, if the CPC is in DPM mode.
+        :class:`~zhmcclient.ActivationManager`: Access to the Reset
+        Activation Profiles in this CPC.
         """
         # We do here some lazy loading.
         if not self._reset_activation_profiles:
@@ -208,8 +205,8 @@ class Cpc(BaseResource):
     @_log_call
     def image_activation_profiles(self):
         """
-        :class:`~zhmcclient.ActivationManager`: Manager object for the
-        Image Activation Profiles in this CPC.
+        :class:`~zhmcclient.ActivationManager`: Access to the Image
+        Activation Profiles in this CPC.
         """
         # We do here some lazy loading.
         if not self._image_activation_profiles:
@@ -221,8 +218,8 @@ class Cpc(BaseResource):
     @_log_call
     def load_activation_profiles(self):
         """
-        :class:`~zhmcclient.ActivationManager`: Manager object for the
-        Load Activation Profiles in this CPC.
+        :class:`~zhmcclient.ActivationManager`: Access to the Load
+        Activation Profiles in this CPC.
         """
         # We do here some lazy loading.
         if not self._load_activation_profiles:
@@ -338,17 +335,17 @@ class Cpc(BaseResource):
     @_log_call
     def import_profiles(self, profile_area, wait_for_completion=True):
         """
-        Imports activation profiles and/or system activity profiles for the CPC
-        from the SE hard drive into the CPC object using the HMC operation
+        Import activation profiles and/or system activity profiles for this CPC
+        from the SE hard drive into the CPC using the HMC operation
         "Import Profiles".
 
-        This operation is not permitted when the CPC is enabled for DPM.
+        This operation is not permitted when the CPC is in DPM mode.
 
         Parameters:
 
           profile_area (int):
-             The numbered hard drive area (1-4) from which the profiles are
-             imported.
+            The numbered hard drive area (1-4) from which the profiles are
+            imported.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -390,11 +387,10 @@ class Cpc(BaseResource):
     @_log_call
     def export_profiles(self, profile_area, wait_for_completion=True):
         """
-        Exports activation profiles and/or system activity profiles from the
-        CPC object designated to the SE hard drive using the HMC operation
-        "Export Profiles".
+        Export activation profiles and/or system activity profiles from this
+        CPC to the SE hard drive using the HMC operation "Export Profiles".
 
-        This operation is not permitted when the CPC is enabled for DPM.
+        This operation is not permitted when the CPC is in DPM mode.
 
         Parameters:
 

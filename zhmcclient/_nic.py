@@ -13,14 +13,12 @@
 # limitations under the License.
 
 """
-A **NIC** object represents a single Network interface card (NIC)
-of a physical z Systems or LinuxONE computer that is in DPM mode
-(Dynamic Partition Manager mode).
-Objects of this class are not provided when the CPC is not in DPM mode.
-Each NIC represents a unique connection between a partition and
-a specific network adapter that is defined or installed on the CPC.
+A **Network Interface Card (NIC)** provides a Partition with access to external
+communication networks through a network adapter.
 
-A NIC is always contained in a partition.
+NIC resources are contained in Partition resources.
+
+NICs only exist in CPCs that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -33,8 +31,7 @@ __all__ = ['NicManager', 'Nic']
 
 class NicManager(BaseManager):
     """
-    Manager object for NICs. This manager object is scoped to the NICs
-    of a particular Partition.
+    Manager providing access to the NICs in a particular Partition.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -45,21 +42,21 @@ class NicManager(BaseManager):
         Parameters:
 
           partition (:class:`~zhmcclient.Partition`):
-            Partition defining the scope for this manager object.
+            Partition defining the scope for this manager.
         """
         super(NicManager, self).__init__(partition)
 
     @property
     def partition(self):
         """
-        :class:`~zhmcclient.Partition`: Parent object (Partition)
-        defining the scope for this manager object.
+        :class:`~zhmcclient.Partition`: Partition defining the scope for this
+        manager.
         """
         return self._parent
 
     def list(self, full_properties=False):
         """
-        List the NICs in scope of this manager object.
+        List the NICs in this Partition.
 
         Parameters:
 
@@ -91,14 +88,13 @@ class NicManager(BaseManager):
 
     def create(self, properties):
         """
-        Create and configures a NIC with the specified resource properties.
+        Create and configure a NIC in this Partition.
 
         Parameters:
 
-          properties (dict): Properties for the new NIC.
-            See the section in the :term:`HMC API` about the specific HMC
-            operation and about the 'Create NIC' description of the members
-            of the passed properties dict.
+          properties (dict): Initial property values.
+            Allowable properties are defined in section 'Request body contents'
+            in section 'Create NIC' in the :term:`HMC API` book.
 
         Returns:
 
@@ -124,14 +120,14 @@ class NicManager(BaseManager):
 
 class Nic(BaseResource):
     """
-    Representation of a NIC.
+    Representation of a NIC resource.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
-    Properties of a Nic:
-      See the sub-section 'Data model - NIC Element Object' of the section
-      'Partition object' in the :term:`HMC API`.
+    For the properties of a NIC resource, see section
+    'Data model - NIC Element Object' in section 'Partition object' in the
+    :term:`HMC API` book.
     """
 
     def __init__(self, manager, uri, properties):
@@ -139,13 +135,13 @@ class Nic(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.NicManager`):
-            Manager object for this resource.
+            Manager for this resource.
 
           uri (string):
-            Canonical URI path of the Nic object.
+            Canonical URI path of this resource.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this resource.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
@@ -154,7 +150,7 @@ class Nic(BaseResource):
 
     def delete(self):
         """
-        Deletes this NIC.
+        Delete this NIC resource.
 
         Raises:
 
@@ -167,14 +163,15 @@ class Nic(BaseResource):
 
     def update_properties(self, properties):
         """
-        Updates one or more of the writable properties of NIC
-        with the specified resource properties.
+        Update writeable properties of this NIC.
 
         Parameters:
 
-          properties (dict): Updated properties for the NIC.
-            See the sub-section 'Data model - NIC Element Object'
-            of the section 'Partition object' in the :term:`HMC API`.
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are the properties with qualifier (w) in
+            section 'Data model - NIC Element Object' in the
+            :term:`HMC API` book.
 
         Raises:
 
