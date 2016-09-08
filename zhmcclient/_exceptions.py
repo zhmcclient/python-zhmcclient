@@ -162,9 +162,10 @@ class HTTPError(Error):
         conjunction with the HTTP status code to determine the error condition.
 
         Standard HMC reason codes that apply across the entire API are
-        described in section "Common request validation reason codes" in the
-        HMC API book. Additional operation-specific reason codes may also be
-        documented in the description of the specific API operations.
+        described in section 'Common request validation reason codes' in the
+        :term:`HMC API` book. Additional operation-specific reason codes may
+        also be documented in the description of specific API operations in the
+        :term:`HMC API` book.
         """
         return self._body.get('reason', None)
 

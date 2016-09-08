@@ -332,7 +332,7 @@ class PartitionTests(unittest.TestCase):
                 "/api/partitions/fake-part-id-1/operations/scsi-dump",
                 json=result)
             status = partition.dump_partition(
-                wait_for_completion=False, properties={})
+                wait_for_completion=False, parameters={})
             self.assertEqual(status, result)
 
     def test_psw_restart(self):

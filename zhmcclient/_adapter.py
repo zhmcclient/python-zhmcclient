@@ -13,15 +13,15 @@
 # limitations under the License.
 
 """
-An **Adapter** object represents a single adapter of a physical z Systems
-or LinuxONE computer that is in DPM mode (Dynamic Partition Manager mode).
-Objects of this class are not provided when the CPC is not in DPM mode.
+An **Adapter** resource represents a single adapter in a CPC.
+Most of the adapters are physical adapters which are installed in the I/O
+drawer of a CPC, but there also are not-physical adapters like HiperSockets.
 
-Most of the adapters are physical adapters which are installed
-in the I/O cage or drawer of a physical processor frame.
-But there also are not physical adapters like HiperSockets.
+Adapter resources resources are contained in CPC resources.
 
-There are four types of adapter types:
+Adapters only exist in CPCs that are in DPM mode.
+
+There are four types of Adapters:
 
 1. Network:
    Network adapters enable communication through different networking
@@ -71,8 +71,7 @@ __all__ = ['AdapterManager', 'Adapter']
 
 class AdapterManager(BaseManager):
     """
-    Manager object for Adapters. This manager object is scoped to the
-    adapters of a particular CPC.
+    Manager providing access to the Adapters in a particular CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -83,21 +82,20 @@ class AdapterManager(BaseManager):
         Parameters:
 
           cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager object.
+            CPC defining the scope for this manager.
         """
         super(AdapterManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: Parent object (CPC) defining the scope for
-        this manager object.
+        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
         """
         return self._parent
 
     def list(self, full_properties=False):
         """
-        List the adapters in scope of this manager object.
+        List the Adapters in this CPC.
 
         Parameters:
 
@@ -132,16 +130,13 @@ class AdapterManager(BaseManager):
 
     def create_hipersocket(self, properties):
         """
-        Create and configures a HiperSockets adapter
-        with the specified resource properties.
+        Create and configure a HiperSockets Adapter.
 
         Parameters:
 
-          properties (dict): Properties for the new adapter.
-            See the section in the :term:`HMC API` about the specific HMC
-            operation and about the 'Create Hipersocket'
-            description of the members of the passed properties
-            dict.
+          properties (dict): Initial property values.
+            Allowable properties are defined in section 'Request body contents'
+            in section 'Create Hipersocket' in the :term:`HMC API` book.
 
         Returns:
 
@@ -172,9 +167,8 @@ class Adapter(BaseResource):
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
-    Properties of an Adapter:
-      See the sub-section 'Data model' of the section 'Adapter object'
-      in the :term:`HMC API`.
+    For the properties of an Adapter, see section 'Data model' in section
+    'Adapter object' in the :term:`HMC API` book.
     """
 
     def __init__(self, manager, uri, properties):
@@ -182,13 +176,13 @@ class Adapter(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.AdapterManager`):
-            Manager object for this resource.
+            Manager for this Adapter.
 
           uri (string):
-            Canonical URI path of the Adapter object.
+            Canonical URI path of this Adapter.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this Adapter.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
@@ -197,7 +191,7 @@ class Adapter(BaseResource):
 
     def delete(self):
         """
-        Deletes this adapter.
+        Delete this Adapter.
 
         Raises:
 
@@ -211,16 +205,15 @@ class Adapter(BaseResource):
 
     def update_properties(self, properties):
         """
-        Updates one or more of the writable properties of a adapter
-        with the specified resource properties.
+        Update writeable properties of this Adapter.
 
         Parameters:
 
-          properties (dict): Updated properties for the adapter.
-            See the section in the :term:`HMC API` about
-            the specific HMC operation 'Update Adapter Properties'
-            description of the members of the passed properties
-            dict.
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are the properties with qualifier (w) in
+            section 'Data model' in section 'Adapter object' in the
+            :term:`HMC API` book.
 
         Raises:
 

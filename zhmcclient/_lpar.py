@@ -13,13 +13,16 @@
 # limitations under the License.
 
 """
-A **Logical Partition (LPAR)** is a subset of a physical z Systems or LinuxONE
-computer that is not in DPM mode (Dynamic Partition Manager mode).
-Objects of this class are not provided when the CPC is in DPM mode.
-
-An LPAR is always contained in a CPC.
+A **Logical Partition (LPAR)** is a subset of the hardware resources of a
+:term:`CPC` in classic mode (or ensemble mode), virtualized as a separate
+computer.
 
 LPARs cannot be created or deleted by the user; they can only be listed.
+
+LPAR resources are contained in CPC resources.
+
+LPAR resources only exist in CPCs that are in classic mode (or ensemble mode).
+CPCs in DPM mode have :term:`Partition` resources, instead.
 """
 
 from __future__ import absolute_import
@@ -33,8 +36,7 @@ __all__ = ['LparManager', 'Lpar']
 
 class LparManager(BaseManager):
     """
-    Manager object for LPARs. This manager object is scoped to the LPARs of a
-    particular CPC.
+    Manager providing access to the LPARs in a particular CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -45,22 +47,21 @@ class LparManager(BaseManager):
         Parameters:
 
           cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager object.
+            CPC defining the scope for this manager.
         """
         super(LparManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: Parent object (CPC) defining the scope for
-        this manager object.
+        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
         """
         return self._parent
 
     @_log_call
     def list(self, full_properties=False):
         """
-        List the LPARs in scope of this manager object.
+        List the LPARs in this CPC.
 
         Parameters:
 
@@ -106,13 +107,13 @@ class Lpar(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.LparManager`):
-            Manager object for this resource.
+            Manager object for this LPAR.
 
           uri (string):
-            Canonical URI path of the LPAR object.
+            Canonical URI path of this LPAR.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this LPAR.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """

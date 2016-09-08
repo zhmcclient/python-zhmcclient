@@ -95,13 +95,11 @@ class Client(object):
         Returns:
 
           :term:`json object`:
-
-           A JSON object with members ``api-major-version``,
+            A JSON object with members ``api-major-version``,
            ``api-minor-version``, ``hmc-version`` and ``hmc-name``.
-
-            For details, see the sections in the :term:`HMC API` about the
-            "Query API Version" operation.
-
+            For details about these properties, see section
+            'Response body contents' in section 'Query API Version' in the
+            :term:`HMC API` book.
 
         Raises:
 

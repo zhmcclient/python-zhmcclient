@@ -13,17 +13,14 @@
 # limitations under the License.
 
 """
-A Virtual Switch object is a virtualized representation of
-networking vswitch and port of a physical z Systems or LinuxONE computer
-that is in DPM mode (Dynamic Partition Manager mode).
-Objects of this class are not provided when the CPC is not in DPM mode.
-Network vswitchs without a physical port, such as hipersockets
-or single port OSAs are virtualized to a single virtual switch.
-Network vswitchs with multiple ports are virtualized into multiple virtual
-switches one for each port. Virtual switches are generated automatically
-every time a new network vswitch is detected and configured.
-The virtual switch serves as the connection point for network interfaces
-(VNICs) created by the virtual server administrator.
+A **Virtual Switch** is a virtualized networking switch connecting
+the NICs in Partitions with a Port on a Network Adapter.
+Virtual Switches are generated automatically every time a new Adapter
+is detected and configured.
+
+Virtual Switch resources are contained in CPC resources.
+
+Virtual Switches only exist in CPCs that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -36,8 +33,7 @@ __all__ = ['VirtualSwitchManager', 'VirtualSwitch']
 
 class VirtualSwitchManager(BaseManager):
     """
-    Manager object for Virtual Switches. This manager object is scoped to the
-    vswitchs of a particular CPC.
+    Manager providing access to the Virtual Switches in a particular CPC.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -48,21 +44,20 @@ class VirtualSwitchManager(BaseManager):
         Parameters:
 
           cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager object.
+            CPC defining the scope for this manager.
         """
         super(VirtualSwitchManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: Parent object (CPC) defining the scope for
-        this manager object.
+        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
         """
         return self._parent
 
     def list(self, full_properties=False):
         """
-        List the Virtual Switches in scope of this manager object.
+        List the Virtual Switches in this CPC.
 
         Parameters:
 
@@ -98,14 +93,13 @@ class VirtualSwitchManager(BaseManager):
 
 class VirtualSwitch(BaseResource):
     """
-    Representation of an VirtualSwitch.
+    Representation of a Virtual Switch.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
-    Properties of an VirtualSwitch:
-      See the sub-section 'Data model' of the section 'VirtualSwitch object'
-      in the :term:`HMC API`.
+    For the properties of a Virtual Switch, see section 'Data model'
+    in section 'Virtual Switch object' in the :term:`HMC API` book.
     """
 
     def __init__(self, manager, uri, properties):
@@ -113,13 +107,13 @@ class VirtualSwitch(BaseResource):
         Parameters:
 
           manager (:class:`~zhmcclient.VirtualSwitchManager`):
-            Manager object for this resource.
+            Manager object for this Virtual Switch.
 
           uri (string):
-            Canonical URI path of the VirtualSwitch object.
+            Canonical URI path of this Virtual Switch.
 
           properties (dict):
-            Properties to be set for this resource object.
+            Properties to be set for this Virtual Switch.
             See initialization of :class:`~zhmcclient.BaseResource` for
             details.
         """
@@ -128,8 +122,7 @@ class VirtualSwitch(BaseResource):
 
     def get_connected_vnics(self):
         """
-        Retrieves the list of network interfaces (VNICs)
-        connected to a single Virtual VirtualSwitch.
+        List the NICs connected to this Virtual Switch.
 
         Returns:
 
@@ -150,16 +143,15 @@ class VirtualSwitch(BaseResource):
 
     def update_properties(self, properties):
         """
-        Updates one or more of the writable properties of a vswitch
-        with the specified resource properties.
+        Update writeable properties of this Virtual Switch.
 
         Parameters:
 
-          properties (dict): Updated properties for the vswitch.
-            See the section in the :term:`HMC API` about
-            the specific HMC operation 'Update VirtualSwitch Properties'
-            description of the members of the passed properties
-            dict.
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are the properties with qualifier (w) in
+            section 'Data model' in section 'Virtual Switch object' in the
+            :term:`HMC API` book.
 
         Raises:
 
