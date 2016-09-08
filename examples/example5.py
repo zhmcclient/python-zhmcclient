@@ -20,6 +20,7 @@ Example 5: CRUD (Create-Read-Update-Delete) example for Partitions.
 import sys
 import logging
 import yaml
+import json
 import requests.packages.urllib3
 
 import zhmcclient
@@ -81,8 +82,7 @@ if timestats:
 print("Listing CPCs ...")
 cpcs = cl.cpcs.list()
 for cpc in cpcs:
-    print(cpc.properties["name"], cpc.properties["status"],
-          cpc.properties["object-uri"])
+    print(cpc)
 
 print("Finding CPC by name=%s ..." % cpcname)
 try:
@@ -108,37 +108,38 @@ if cpc.dpm_enabled:
     except zhmcclient.NotFound:
         print("Could not find Partition %s on CPC %s" % (partname, cpcname))
 
-    print("Creating Partition %s on CPC %s ..." % (partname, cpcname))
-    properties = dict()
-    properties["name"] = partname
-    properties["description"] = "Original partition description."
-    properties["cp-processors"] = 2
-    properties["initial-memory"] = 1024
-    properties["maximum-memory"] = 2048
-    properties["processor-mode"] = "shared"
-    properties["boot-device"]  = "test-operating-system"
-    print("Partition properties used:")
-    print(properties)
+    print("Creating a new Partition %s on CPC %s with following properties ..."
+          % (partname, cpcname))
+    properties = {
+         'name': partname,
+         'description': 'Original partition description.',
+         'cp-processors': 2,
+         'initial-memory': 1024,
+         'maximum-memory': 2048,
+         'processor-mode': 'shared',
+         'boot-device': 'test-operating-system'
+    }
+    print(json.dumps(properties, indent=4))
     new_partition = cpc.partitions.create(properties)
-    print("object-uri of new created Partition: %s" % new_partition)
-    try:
-        print("Finding Partition by name=%s ..." % partname)
-        partition = cpc.partitions.find(name=partname)
-        print("Starting Partition %s ..." % partname)
-        partition.start()
-        print("Pull full properties of Partition %s ..." % partname)
-        partition.pull_full_properties()
-        print("Description of Partition %s: %s" % (partname, partition.properties["description"]))
-        print("Updating Partition %s properties ..." % partname)
-        updated_properties = dict()
-        updated_properties["description"] = "Updated partition description."
-        partition.update_properties(updated_properties)
-        print("Pull full properties of Partition %s ..." % partname)
-        partition.pull_full_properties()
-        print("Updated description of Partition %s: %s" % (partname, partition.properties["description"]))
-    except zhmcclient.NotFound:
-        print("Could not find Partition %s on CPC %s" % (partname, cpcname))
-        sys.exit(1)
+    print("New Partition created: %s" % new_partition)
+
+    print("Starting Partition %s ..." % partname)
+    new_partition.start()
+
+    print("Pull full properties of Partition %s ..." % partname)
+    new_partition.pull_full_properties()
+    print("Description of Partition %s: %s"
+        % (partname, new_partition.properties["description"]))
+
+    print("Updating Partition %s properties ..." % partname)
+    updated_properties = dict()
+    updated_properties["description"] = "Updated partition description."
+    new_partition.update_properties(updated_properties)
+
+    print("Pull full properties of Partition %s ..." % partname)
+    new_partition.pull_full_properties()
+    print("Updated description of Partition %s: %s"
+        % (partname, new_partition.properties["description"]))
 
 print("Logging off ...")
 session.logoff()
