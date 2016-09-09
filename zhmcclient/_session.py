@@ -652,4 +652,3 @@ class Session(object):
         topics_uri = '/api/sessions/operations/get-notification-topics'
         response = self.get(topics_uri)
         return response['topics']
-
