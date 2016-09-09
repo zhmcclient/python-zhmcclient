@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client
+from zhmcclient import Session, Client, Nic
 
 
 class VirtualSwitchTests(unittest.TestCase):
@@ -224,8 +224,17 @@ class VirtualSwitchTests(unittest.TestCase):
                 "/api/virtual-switches/fake-vswitch-id1/"
                 "operations/get-connected-vnics",
                 json=result)
-            status = vswitch.get_connected_vnics()
-            self.assertEqual(status, result['connected-vnic-uris'])
+
+            nics = vswitch.get_connected_vnics()
+
+            self.assertTrue(isinstance(nics, list))
+            for i, nic in enumerate(nics):
+                self.assertTrue(isinstance(nic, Nic))
+                nic_uri = result['connected-vnic-uris'][i]
+                self.assertEqual(nic.uri, nic_uri)
+                self.assertEqual(nic.properties['element-uri'], nic_uri)
+                # TODO: Add test for element-id
+
 
 if __name__ == '__main__':
     unittest.main()
