@@ -23,6 +23,26 @@ This section contains information that is referenced from other sections,
 and that does not really need to be read in sequence.
 
 
+.. _`BaseManager`:
+.. _`BaseResource`:
+.. _`Base classes for resources`:
+
+Base classes for resources
+--------------------------
+
+.. automodule:: zhmcclient._manager
+
+.. autoclass:: zhmcclient.BaseManager
+   :members:
+   :special-members: __str__
+
+.. automodule:: zhmcclient._resource
+
+.. autoclass:: zhmcclient.BaseResource
+   :members:
+   :special-members: __str__
+
+
 .. _'Special type names`:
 
 Special type names
@@ -91,37 +111,46 @@ attaching storage.
 
 .. glossary::
 
-  accelerator adapter
-     Short term for an :term:`adapter` providing accelerator functions (e.g.
-     for data compression).
+  Activation Profile
+     A general term for specific activation profiles:
 
-  adapter
-     A physical adapter card (e.g. OSA-Express network adapter, FCP storage
-     adapter, accelerator adapter, crypto adapter) or a non-physical adapter
-     (e.g. HiperSockets switch) of a :term:`CPC` in DPM mode.
+     * :term:`Reset Activation Profile`
+     * :term:`Image Activation Profile`
+     * :term:`Load Activation Profile`
+
+     Scope: CPC in classic (or ensemble) mode
+
+  Accelerator Adapter
+     Short term for an :term:`Adapter` providing accelerator functions (e.g.
+     the z Systems Enterprise Data Compression (zEDC) adapter for data
+     compression).
+
+  Adapter
+     A physical adapter card (e.g. OSA-Express adapter, Crypto adapter) or a
+     logical adapter (e.g. HiperSockets switch).
 
      For details, see section :ref:`Adapters`.
 
      Scope: CPC in DPM mode
 
-  adapter port
-     The physical connector port of an :term:`adapter`.
+  Adapter Port
+     The physical connector port (jack) of an :term:`Adapter`.
 
      For details, see section :ref:`Adapter ports`.
 
      Scope: CPC in DPM mode
 
-  capacity group
+  Capacity Group
      TBD
 
      Scope: CPC in DPM mode
 
-  capacity record
+  Capacity Record
      TBD
 
      Scope: CPC in any mode
 
-  console
+  Console
      TBD
 
      Scope: HMC
@@ -133,57 +162,57 @@ attaching storage.
 
      Scope: CPC
 
-  crypto adapter
-     Short term for an :term:`adapter` providing cryptographic functions.
+  Crypto Adapter
+     Short term for an :term:`Adapter` providing cryptographic functions.
 
-  FCP adapter
-     Short term for a :term:`storage adapter` supporting FCP.
+  FCP Adapter
+     Short term for a :term:`Storage Adapter` supporting FCP.
 
-  group
+  Group
      TBD
 
      Scope: HMC
 
-  group profile
+  Group Profile
      TBD
 
      Scope: CPC in classic (or ensemble) mode
 
-  hardware message
+  Hardware Message
      TBD
 
      Scope: HMC, and CPC in any mode
 
   HBA
   vHBA
-     Host Bus Adapter, a virtualized FCP :term:`adapter` that is available to
-     a :term:`partition`.
+     A logical entity that provides a :term:`Partition` with access to
+     external storage area networks (SANs) through an :term:`FCP Adapter`.
 
      For details, see section :ref:`HBAs`.
 
      Scope: CPC in DPM mode
 
-  image activation profile
+  Image Activation Profile
      TBD
 
      Scope: CPC in classic (or ensemble) mode
 
-  job
+  Job
      TBD
 
      Scope: HMC
 
-  LDAP server definition
+  LDAP Server Definition
      TBD
 
      Scope: HMC
 
-  load activation profile
+  Load Activation Profile
      TBD
 
      Scope: CPC in classic (or ensemble) mode
 
-  logical partition
+  Logical Partition
   LPAR
      A subset of the hardware resources of a :term:`CPC` in classic mode (or
      ensemble mode), virtualized as a separate computer.
@@ -192,28 +221,29 @@ attaching storage.
 
      Scope: CPC in classic (or ensemble) mode
 
-  metrics context
+  Metrics Context
      TBD
 
      Scope: HMC
 
-  network adapter
-     Short term for an :term:`adapter` for attaching networks (e.g. OSA-Express
+  Network Adapter
+     Short term for an :term:`Adapter` for attaching networks (e.g. OSA-Express
      adapter).
 
-  network port
-     Short term for an :term:`adapter port` of a :term:`network adapter`.
+  Network Port
+     Short term for an :term:`Adapter Port` of a :term:`Network Adapter`.
 
   NIC
   vNIC
-     Network Interface Card, a virtualized :term:`network adapter` that is
-     available to a :term:`partition`.
+     Network Interface Card, a logical entity that provides a
+     :term:`Partition` with access to external communication networks through a
+     :term:`Network Adapter`.
 
      For details, see section :ref:`NICs`.
 
      Scope: CPC in DPM mode
 
-  partition
+  Partition
      A subset of the hardware resources of a :term:`CPC` in DPM mode,
      virtualized as a separate computer.
 
@@ -221,69 +251,65 @@ attaching storage.
 
      Scope: CPC in DPM mode
 
-  password rule
+  Password Rule
      TBD
 
      Scope: HMC
 
-  reset activation profile
+  Reset Activation Profile
      TBD
 
      Scope: CPC in classic (or ensemble) mode
 
-  session
+  Session
      TBD
 
      Scope: HMC
 
-  storage adapter
-     Short term for an :term:`adapter` for attaching storage (e.g. FCP
-     adapter).
+  Storage Adapter
+     Short term for an :term:`Adapter` for attaching storage.
 
-  storage port
-     Short term for an :term:`adapter port` of a :term:`storage adapter`.
+  Storage Port
+     Short term for an :term:`Adapter Port` of a :term:`Storage Adapter`.
 
-  task
+  Task
      TBD
 
      Scope: HMC
 
-  user
+  User
      TBD
 
      Scope: HMC
 
-  user pattern
+  User Pattern
      TBD
 
      Scope: HMC
 
-  user role
+  User Role
      TBD
 
      Scope: HMC
 
-  virtual function
-     A virtualized function of an :term:`accelerator adapter` (e.g. zEDC
-     compression adapter) or :term:`crypto adapter` that is available to a
-     :term:`partition`.
+  Virtual Function
+     A logical entity that provides a :term:`Partition` with access to
+     :term:`Accelerator Adapters <Accelerator Adapter>`.
 
      For details, see section :ref:`Virtual functions`.
 
      Scope: CPC in DPM mode
 
-  virtual machine
+  Virtual Machine
      TBD
 
      Scope: CPC in classic (or ensemble) mode
 
-  virtual switch
-     A virtualized switch that connects a :term:`network port` with the
-     :term:`NIC <NICs>` assigned to the :term:`partition <partitions>`. Virtual
-     switches are generated automatically every time a new network
-     :term:`adapter` is detected and configured.
+  Virtual Switch
+     A virtualized networking switch connecting :term:`NICs <NIC>` with a
+     :term:`Network Port`.
 
-     For details, see section :ref:`NICs`.
+     For details, see section :ref:`Virtual switches`.
 
      Scope: CPC in DPM mode
 

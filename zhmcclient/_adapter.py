@@ -13,30 +13,29 @@
 # limitations under the License.
 
 """
-An **Adapter** resource represents a single adapter in a CPC.
-Most of the adapters are physical adapters which are installed in the I/O
-drawer of a CPC, but there also are not-physical adapters like HiperSockets.
+An **Adapter** is a physical adapter card (e.g. OSA-Express adapter, Crypto
+adapter) or a logical adapter (e.g. HiperSockets switch).
 
-Adapter resources resources are contained in CPC resources.
+Adapter resources are contained in CPC resources.
 
 Adapters only exist in CPCs that are in DPM mode.
 
 There are four types of Adapters:
 
-1. Network:
+1. Network Adapters:
    Network adapters enable communication through different networking
    transport protocols. These network adapters are OSA-Express,
-   HiperSockets and 10 GbE RoCE Express.
+   HiperSockets and RoCE-Express.
    DPM automatically discovers OSA-Express and RoCE-Express adapters
    because they are physical cards that are installed on the CPC.
-   In contrast, HiperSockets are not physical adapters and must be
-   installed and configured by an administrator using the 'Create Hipersocket'
+   In contrast, HiperSockets are logical adapters and must be
+   created and configured by an administrator using the 'Create Hipersocket'
    operation (see create_hipersocket()).
-   Network interface cards (NICs) provide a partition with access to networks.
+   Network Interface Cards (NICs) provide a partition with access to networks.
    Each NIC represents a unique connection between the partition
    and a specific network adapter.
 
-2. Storage:
+2. Storage Adapters:
    Fibre Channel connections provide high-speed connections between CPCs
    and storage devices.
    DPM automatically discovers any storage adapters installed on the CPC.
@@ -45,8 +44,8 @@ There are four types of Adapters:
    Each HBA represents a unique connection between the partition
    and a specific storage adapter.
 
-3. Accelerators:
-   Accelerators are adapters that provide specialized functions to
+3. Accelerator Adapters:
+   Accelerator adapters provide specialized functions to
    improve performance or use of computer resource like the IBM System z
    Enterprise Data Compression (zEDC) feature.
    DPM automatically discovers accelerators that are installed on the CPC.
@@ -55,8 +54,8 @@ There are four types of Adapters:
    Each virtual function represents a unique connection between
    the partition and a physical feature card.
 
-4. Cryptos:
-   Cryptos are adapters that provide cryptographic processing functions.
+4. Crypto Adapters:
+   Crypto adapters provide cryptographic processing functions.
    DPM automatically discovers cryptographic features that are installed
    on the CPC.
 """
@@ -71,25 +70,29 @@ __all__ = ['AdapterManager', 'Adapter']
 
 class AdapterManager(BaseManager):
     """
-    Manager providing access to the Adapters in a particular CPC.
+    Manager providing access to the :term:`Adapters <Adapter>` in a particular
+    :term:`CPC`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Cpc` object).
     """
 
     def __init__(self, cpc):
-        """
-        Parameters:
-
-          cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   cpc (:class:`~zhmcclient.Cpc`):
+        #     CPC defining the scope for this manager.
         super(AdapterManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
+        :class:`~zhmcclient.Cpc`: :term:`CPC` defining the scope for this
+        manager.
         """
         return self._parent
 
@@ -130,7 +133,7 @@ class AdapterManager(BaseManager):
 
     def create_hipersocket(self, properties):
         """
-        Create and configure a HiperSockets Adapter.
+        Create and configure a HiperSockets Adapter in this CPC.
 
         Parameters:
 
@@ -140,7 +143,8 @@ class AdapterManager(BaseManager):
 
         Returns:
 
-          Adapter: The resource object for the new HiperSockets adapter.
+          Adapter:
+            The resource object for the new HiperSockets Adapter.
             The object will have its 'object-uri' property set as returned by
             the HMC, and will also have the input properties set.
 
@@ -162,36 +166,38 @@ class AdapterManager(BaseManager):
 
 class Adapter(BaseResource):
     """
-    Representation of an Adapter.
+    Representation of an :term:`Adapter`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
     For the properties of an Adapter, see section 'Data model' in section
     'Adapter object' in the :term:`HMC API` book.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.AdapterManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.AdapterManager`):
-            Manager for this Adapter.
-
-          uri (string):
-            Canonical URI path of this Adapter.
-
-          properties (dict):
-            Properties to be set for this Adapter.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.AdapterManager`):
+        #     Manager for this Adapter.
+        #   uri (string):
+        #     Canonical URI path of this Adapter.
+        #   properties (dict):
+        #     Properties to be set for this Adapter.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, AdapterManager)
         super(Adapter, self).__init__(manager, uri, properties)
 
     def delete(self):
         """
         Delete this Adapter.
+
+        The Adapter must be a HiperSockets Adapter.
 
         Raises:
 

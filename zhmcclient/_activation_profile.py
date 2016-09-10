@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """
-**Activation Profiles** control the activation of CPCs and LPARs. They are used
-to tailor the operation of a CPC and are stored in the Support Element
-associated with the CPC.
+**Activation Profiles** control the activation of :term:`CPCs <CPC>` and
+:term:`LPARs <LPAR>`. They are used to tailor the operation of a CPC and are
+stored in the Support Element associated with the CPC.
 
 Activation Profile resources are contained in CPC resources.
 
@@ -56,45 +56,47 @@ __all__ = ['ActivationProfileManager', 'ActivationProfile']
 
 class ActivationProfileManager(BaseManager):
     """
-    Manager providing access to the Activation Profiles of a particular type in
-    a particular CPC.
+    Manager providing access to the
+    :term:`Activation Profiles <Activation Profile>` of a particular type in
+    a particular :term:`CPC`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Cpc` object).
     """
 
     def __init__(self, cpc, profile_type):
-        """
-        Parameters:
-
-          cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager.
-
-          profile_type (string):
-            Type of Activation Profiles:
-
-            * `reset`: Reset Activation Profiles
-            * `image`: Image Activation Profiles
-            * `load`: Load Activation Profiles
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   cpc (:class:`~zhmcclient.Cpc`):
+        #     CPC defining the scope for this manager.
+        #   profile_type (string):
+        #     Type of Activation Profiles:
+        #     * `reset`: Reset Activation Profiles
+        #     * `image`: Image Activation Profiles
+        #     * `load`: Load Activation Profiles
         super(ActivationProfileManager, self).__init__(cpc)
         self._profile_type = profile_type
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
+        :class:`~zhmcclient.Cpc`: :term:`CPC` defining the scope for this
+        manager.
         """
         return self._parent
 
     @property
     def profile_type(self):
         """
-        Return the type of the Activation Profiles managed by this object:
+        :term:`string`: Type of the Activation Profiles managed by this object:
 
-        * `reset`: Reset Activation Profiles
-        * `image`: Image Activation Profiles
-        * `load`: Load Activation Profiles
+        * ``'reset'`` - Reset Activation Profiles
+        * ``'image'`` - Image Activation Profiles
+        * ``'load'`` - Load Activation Profiles
         """
         return self._profile_type
 
@@ -140,27 +142,27 @@ class ActivationProfileManager(BaseManager):
 
 class ActivationProfile(BaseResource):
     """
-    Representation of an Activation Profile of a particular type.
+    Representation of an :term:`Activation Profile` of a particular type.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.ActivationProfileManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.ActivationProfileManager`):
-            Manager for this Activation Profile.
-
-          uri (string):
-            Canonical URI path of this Activation Profile.
-
-          properties (dict):
-            Properties to be set for this Activation Profile.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.ActivationProfileManager`):
+        #     Manager for this Activation Profile.
+        #   uri (string):
+        #     Canonical URI path of this Activation Profile.
+        #   properties (dict):
+        #     Properties to be set for this Activation Profile.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, ActivationProfileManager)
         super(ActivationProfile, self).__init__(manager, uri, properties)
 

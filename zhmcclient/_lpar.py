@@ -36,25 +36,29 @@ __all__ = ['LparManager', 'Lpar']
 
 class LparManager(BaseManager):
     """
-    Manager providing access to the LPARs in a particular CPC.
+    Manager providing access to the :term:`LPARs <LPAR>` in a particular
+    :term:`CPC`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Cpc` object).
     """
 
     def __init__(self, cpc):
-        """
-        Parameters:
-
-          cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   cpc (:class:`~zhmcclient.Cpc`):
+        #     CPC defining the scope for this manager.
         super(LparManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
+        :class:`~zhmcclient.Cpc`: :term:`CPC` defining the scope for this
+        manager.
         """
         return self._parent
 
@@ -96,27 +100,27 @@ class LparManager(BaseManager):
 
 class Lpar(BaseResource):
     """
-    Representation of an LPAR.
+    Representation of an :term:`LPAR`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.LparManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.LparManager`):
-            Manager object for this LPAR.
-
-          uri (string):
-            Canonical URI path of this LPAR.
-
-          properties (dict):
-            Properties to be set for this LPAR.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.LparManager`):
+        #     Manager object for this LPAR.
+        #   uri (string):
+        #     Canonical URI path of this LPAR.
+        #   properties (dict):
+        #     Properties to be set for this LPAR.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, LparManager)
         super(Lpar, self).__init__(manager, uri, properties)
 

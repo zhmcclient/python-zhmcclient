@@ -43,25 +43,29 @@ __all__ = ['PartitionManager', 'Partition']
 
 class PartitionManager(BaseManager):
     """
-    Manager providing access to the Partitions in a particular CPC.
+    Manager providing access to the :term:`Partitions <Partition>` in a
+    particular :term:`CPC`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Cpc` object).
     """
 
     def __init__(self, cpc):
-        """
-        Parameters:
-
-          cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   cpc (:class:`~zhmcclient.Cpc`):
+        #     CPC defining the scope for this manager.
         super(PartitionManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
+        :class:`~zhmcclient.Cpc`: :term:`CPC` defining the scope for this
+        manager.
         """
         return self._parent
 
@@ -102,7 +106,7 @@ class PartitionManager(BaseManager):
 
     def create(self, properties):
         """
-        Create a Partition in this CPC.
+        Create and configure a Partition in this CPC.
 
         Parameters:
 
@@ -112,7 +116,8 @@ class PartitionManager(BaseManager):
 
         Returns:
 
-          Partition: The resource object for the new partition.
+          Partition:
+            The resource object for the new Partition.
             The object will have its 'object-uri' property set as returned by
             the HMC, and will also have the input properties set.
 
@@ -134,27 +139,27 @@ class PartitionManager(BaseManager):
 
 class Partition(BaseResource):
     """
-    Representation of a Partition.
+    Representation of a :term:`Partition`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.PartitionManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.PartitionManager`):
-            Manager for this Partition.
-
-          uri (string):
-            Canonical URI path of this Partition.
-
-          properties (dict):
-            Properties to be set for this Partition.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.PartitionManager`):
+        #     Manager for this Partition.
+        #   uri (string):
+        #     Canonical URI path of this Partition.
+        #   properties (dict):
+        #     Properties to be set for this Partition.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, PartitionManager)
         super(Partition, self).__init__(manager, uri, properties)
         self._nics = None
@@ -165,8 +170,8 @@ class Partition(BaseResource):
     @_log_call
     def nics(self):
         """
-        :class:`~zhmcclient.NicManager`: Access to the NICs in this
-        Partition.
+        :class:`~zhmcclient.NicManager`: Access to the :term:`NICs <NIC>` in
+        this Partition.
         """
         # We do here some lazy loading.
         if not self._nics:
@@ -177,8 +182,8 @@ class Partition(BaseResource):
     @_log_call
     def hbas(self):
         """
-        :class:`~zhmcclient.NicManager`: Access to the HBAs in this
-        Partition.
+        :class:`~zhmcclient.NicManager`: Access to the :term:`HBAs <HBA>` in
+        this Partition.
         """
         # We do here some lazy loading.
         if not self._hbas:
@@ -190,7 +195,7 @@ class Partition(BaseResource):
     def virtual_functions(self):
         """
         :class:`~zhmcclient.VirtualFunctionManager`: Access to the
-        Virtual Functions in this Partition.
+        :term:`Virtual Functions <Virtual Function>` in this Partition.
         """
         # We do here some lazy loading.
         if not self._virtual_functions:

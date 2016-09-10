@@ -13,12 +13,14 @@
 # limitations under the License.
 
 """
-A **Host Bus Adapter (HBA)** provides a Partition with access to external
-storage area networks (SANs) through a storage adapter.
+A **Host Bus Adapter (HBA)** is a logical entity that provides a
+:term:`Partition` with access to external storage area networks (SANs) through
+an :term:`FCP Adapter`. More specifically, an HBA connects a Partition with an
+:term:`Adapter Port` on an FCP Adapter.
 
 HBA resources are contained in Partition resources.
 
-HBAs only exist in CPCs that are in DPM mode.
+HBAs only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -31,26 +33,29 @@ __all__ = ['HbaManager', 'Hba']
 
 class HbaManager(BaseManager):
     """
-    Manager providing access to the HBAs in a particular Partition.
+    Manager providing access to the :term:`HBAs <HBA>` in a particular
+    :term:`Partition`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Partition` object).
     """
 
     def __init__(self, partition):
-        """
-        Parameters:
-
-          partition (:class:`~zhmcclient.Partition`):
-            Partition defining the scope for this manager.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   partition (:class:`~zhmcclient.Partition`):
+        #     Partition defining the scope for this manager.
         super(HbaManager, self).__init__(partition)
 
     @property
     def partition(self):
         """
-        :class:`~zhmcclient.Partition`: Partition defining the scope for this
-        manager.
+        :class:`~zhmcclient.Partition`: :term:`Partition` defining the scope
+        for this manager.
         """
         return self._parent
 
@@ -98,7 +103,8 @@ class HbaManager(BaseManager):
 
         Returns:
 
-          Hba: The resource object for the new HBA.
+          Hba:
+            The resource object for the new HBA.
             The object will have its 'element-uri' property set as returned by
             the HMC, and will also have the input properties set.
 
@@ -120,7 +126,7 @@ class HbaManager(BaseManager):
 
 class Hba(BaseResource):
     """
-    Representation of an HBA.
+    Representation of an :term:`HBA`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
@@ -128,23 +134,23 @@ class Hba(BaseResource):
     For the properties of an HBA resource, see section
     'Data model - HBA Element Object' in section 'Partition object' in the
     :term:`HMC API` book.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.HbaManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.HbaManager`):
-            Manager for this HBA.
-
-          uri (string):
-            Canonical URI path of this HBA.
-
-          properties (dict):
-            Properties to be set for this HBA.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.HbaManager`):
+        #     Manager for this HBA.
+        #   uri (string):
+        #     Canonical URI path of this HBA.
+        #   properties (dict):
+        #     Properties to be set for this HBA.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, HbaManager)
         super(Hba, self).__init__(manager, uri, properties)
 

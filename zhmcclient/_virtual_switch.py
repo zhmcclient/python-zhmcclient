@@ -14,13 +14,14 @@
 
 """
 A **Virtual Switch** is a virtualized networking switch connecting
-the NICs in Partitions with a Port on a Network Adapter.
-Virtual Switches are generated automatically every time a new Adapter
-is detected and configured.
+:term:`NICs <NIC>` with a :term:`Network Port`.
+
+Virtual Switches are generated automatically every time a new
+:term:`Network Adapter` is detected and configured.
 
 Virtual Switch resources are contained in CPC resources.
 
-Virtual Switches only exist in CPCs that are in DPM mode.
+Virtual Switches only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -33,25 +34,29 @@ __all__ = ['VirtualSwitchManager', 'VirtualSwitch']
 
 class VirtualSwitchManager(BaseManager):
     """
-    Manager providing access to the Virtual Switches in a particular CPC.
+    Manager providing access to the :term:`Virtual Switches <Virtual Switch>`
+    in a particular :term:`CPC`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Cpc` object).
     """
 
     def __init__(self, cpc):
-        """
-        Parameters:
-
-          cpc (:class:`~zhmcclient.Cpc`):
-            CPC defining the scope for this manager.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   cpc (:class:`~zhmcclient.Cpc`):
+        #     CPC defining the scope for this manager.
         super(VirtualSwitchManager, self).__init__(cpc)
 
     @property
     def cpc(self):
         """
-        :class:`~zhmcclient.Cpc`: CPC defining the scope for this manager.
+        :class:`~zhmcclient.Cpc`: :term:`CPC` defining the scope for this
+        manager.
         """
         return self._parent
 
@@ -93,30 +98,30 @@ class VirtualSwitchManager(BaseManager):
 
 class VirtualSwitch(BaseResource):
     """
-    Representation of a Virtual Switch.
+    Representation of a :term:`Virtual Switch`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
     For the properties of a Virtual Switch, see section 'Data model'
     in section 'Virtual Switch object' in the :term:`HMC API` book.
+
+    Objects of this class are not directly created by the user; they are
+    returned from creation or list functions on their manager object
+    (in this case, :class:`~zhmcclient.VirtualSwitchManager`).
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.VirtualSwitchManager`):
-            Manager object for this Virtual Switch.
-
-          uri (string):
-            Canonical URI path of this Virtual Switch.
-
-          properties (dict):
-            Properties to be set for this Virtual Switch.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.VirtualSwitchManager`):
+        #     Manager object for this Virtual Switch.
+        #   uri (string):
+        #     Canonical URI path of this Virtual Switch.
+        #   properties (dict):
+        #     Properties to be set for this Virtual Switch.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, VirtualSwitchManager)
         super(VirtualSwitch, self).__init__(manager, uri, properties)
 
