@@ -25,6 +25,16 @@ want to test the project are also considered developers for the purpose of
 this section.
 
 
+.. _`Repository`:
+
+Repository
+----------
+
+The repository for zhmcclient is on GitHub:
+
+https://github.com/zhmcclient/python-zhmcclient
+
+
 .. _`Setting up the development environment`:
 
 Setting up the development environment
