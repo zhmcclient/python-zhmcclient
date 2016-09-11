@@ -152,6 +152,139 @@ class CpcTests(unittest.TestCase):
                 else:
                     self.assertTrue(isinstance(cpc.lpars, LparManager))
 
+    def test_start(self):
+        """
+        This tests the 'Start CPC' operation.
+        """
+        cpc_mgr = self.client.cpcs
+        with requests_mock.mock() as m:
+            result = {
+                'cpcs': [
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-1',
+                        'name': 'P0ZHMP02',
+                        'status': 'service-required',
+                    },
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-2',
+                        'name': 'P0000P30',
+                        'status': 'service-required',
+                    }
+                ]
+            }
+            m.get('/api/cpcs', json=result)
+
+            cpcs = cpc_mgr.list(full_properties=False)
+            cpc = cpcs[0]
+            result = {
+                "job-reason-code": 0,
+                "job-status-code": 204,
+                "status": "complete"
+            }
+            m.post('/api/cpcs/fake-cpc-id-1/operations/start', json=result)
+            status = cpc.start(wait_for_completion=False)
+            self.assertEqual(status, result)
+
+    def test_stop(self):
+        """
+        This tests the 'Stop CPC' operation.
+        """
+        cpc_mgr = self.client.cpcs
+        with requests_mock.mock() as m:
+            result = {
+                'cpcs': [
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-1',
+                        'name': 'P0ZHMP02',
+                        'status': 'service-required',
+                    },
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-2',
+                        'name': 'P0000P30',
+                        'status': 'service-required',
+                    }
+                ]
+            }
+            m.get('/api/cpcs', json=result)
+
+            cpcs = cpc_mgr.list(full_properties=False)
+            cpc = cpcs[0]
+            result = {
+                "job-reason-code": 0,
+                "job-status-code": 204,
+                "status": "complete"
+            }
+            m.post('/api/cpcs/fake-cpc-id-1/operations/stop', json=result)
+            status = cpc.stop(wait_for_completion=False)
+            self.assertEqual(status, result)
+
+    def test_import_profiles(self):
+        """
+        This tests the 'Import Profiles' operation.
+        """
+        cpc_mgr = self.client.cpcs
+        with requests_mock.mock() as m:
+            result = {
+                'cpcs': [
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-1',
+                        'name': 'P0ZHMP02',
+                        'status': 'service-required',
+                    },
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-2',
+                        'name': 'P0000P30',
+                        'status': 'service-required',
+                    }
+                ]
+            }
+            m.get('/api/cpcs', json=result)
+
+            cpcs = cpc_mgr.list(full_properties=False)
+            cpc = cpcs[0]
+            result = {
+                "job-reason-code": 0,
+                "job-status-code": 204,
+                "status": "complete"
+            }
+            m.post('/api/cpcs/fake-cpc-id-1/operations/import-profiles',
+                   json=result)
+            status = cpc.import_profiles(1, wait_for_completion=False)
+            self.assertEqual(status, result)
+
+    def test_export_profiles(self):
+        """
+        This tests the 'Export Profiles' operation.
+        """
+        cpc_mgr = self.client.cpcs
+        with requests_mock.mock() as m:
+            result = {
+                'cpcs': [
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-1',
+                        'name': 'P0ZHMP02',
+                        'status': 'service-required',
+                    },
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-2',
+                        'name': 'P0000P30',
+                        'status': 'service-required',
+                    }
+                ]
+            }
+            m.get('/api/cpcs', json=result)
+
+            cpcs = cpc_mgr.list(full_properties=False)
+            cpc = cpcs[0]
+            result = {
+                "job-reason-code": 0,
+                "job-status-code": 204,
+                "status": "complete"
+            }
+            m.post('/api/cpcs/fake-cpc-id-1/operations/export-profiles',
+                   json=result)
+            status = cpc.export_profiles(1, wait_for_completion=False)
+            self.assertEqual(status, result)
 
 if __name__ == '__main__':
     unittest.main()
