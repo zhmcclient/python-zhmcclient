@@ -13,11 +13,11 @@
 # limitations under the License.
 
 """
-A **Port** represents a commuportation endpoint of an Adapter
-of a physical z Systems or LinuxONE computer that is in DPM mode
-(Dynamic Partition Manager mode).
-Objects of this class are not provided when the CPC is not in DPM mode.
-A Port is always contained in an Adapter.
+A **Port** is a physical connector port (jack) of an :term:`Adapter`.
+
+Port resources are contained in Adapter resources.
+
+Ports only exist in CPCs that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -30,33 +30,35 @@ __all__ = ['PortManager', 'Port']
 
 class PortManager(BaseManager):
     """
-    Manager object for Ports. This manager object is scoped to the Ports
-    of a particular Adapter.
+    Manager providing access to the :term:`Ports <Port>` in a particular
+    :term:`Adapter`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    Objects of this class are not directly created by the user; they are
+    accessible as properties in higher level resources (in this case, the
+    :class:`~zhmcclient.Adapter` object).
     """
 
     def __init__(self, adapter):
-        """
-        Parameters:
-
-          adapter (:class:`~zhmcclient.Adapter`):
-             defining the scope for this manager object.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   adapter (:class:`~zhmcclient.Adapter`):
+        #     Adapter defining the scope for this manager.
         super(PortManager, self).__init__(adapter)
 
     @property
     def adapter(self):
         """
-        :class:`~zhmcclient.Adapter`: Parent object (Adapter)
-        defining the scope for this manager object.
+        :class:`~zhmcclient.Adapter`: :term:`Adapter` defining the scope for
+        this manager.
         """
         return self._parent
 
     def list(self, full_properties=False):
         """
-        List the Portis of this Adapter.
+        List the Ports of this Adapter.
 
         Parameters:
 
@@ -96,12 +98,12 @@ class PortManager(BaseManager):
 
 class Port(BaseResource):
     """
-    Representation of an :term:`Port`.
+    Representation of a :term:`Port`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
-    For the properties of an Port resource, see section
+    For the properties of a Port, see section
     'Data model - Port Element Object' in section 'Adapter object' in the
     :term:`HMC API` book.
 
@@ -111,27 +113,22 @@ class Port(BaseResource):
     """
 
     def __init__(self, manager, uri, properties):
-        """
-        Parameters:
-
-          manager (:class:`~zhmcclient.PortManager`):
-            Manager object for this resource.
-
-          uri (string):
-            Canoportal URI path of the Port object.
-
-          properties (dict):
-            Properties to be set for this resource object.
-            See initialization of :class:`~zhmcclient.BaseResource` for
-            details.
-        """
+        # This function should not go into the docs.
+        # Parameters:
+        #   manager (:class:`~zhmcclient.PortManager`):
+        #     Manager for this Port.
+        #   uri (string):
+        #     Canonical URI path of this Port.
+        #   properties (dict):
+        #     Properties to be set for this Port.
+        #     See initialization of :class:`~zhmcclient.BaseResource` for
+        #     details.
         assert isinstance(manager, PortManager)
         super(Port, self).__init__(manager, uri, properties)
 
     def update_properties(self, properties):
         """
-        Updates one or more of the writable properties of Port
-        with the specified resource properties.
+        Update writeable properties of this Port.
 
         Parameters:
 
