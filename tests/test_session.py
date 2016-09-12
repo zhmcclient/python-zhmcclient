@@ -145,3 +145,45 @@ class SessionTests(unittest.TestCase):
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             session.logoff()
+
+    def test_get_notification_topics(self):
+        """
+        This tests the 'Get Notification Topics' operation.
+        """
+        session = Session('fake-host', 'fake-user', 'fake-id')
+        with requests_mock.mock() as m:
+            # Because logon is deferred until needed, we perform it
+            # explicitly in order to keep mocking in the actual test simple.
+            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
+            session.logon()
+        gnt_uri = "/api/sessions/operations/get-notification-topics"
+        with requests_mock.mock() as m:
+            gnt_result = {
+                "topics": [
+                    {
+                        'topic-name': 'ensadmin.145',
+                        'topic-type': 'object-notification',
+                    },
+                    {
+                        'topic-name': 'ensadmin.145job',
+                        'topic-type': 'job-notification',
+                    },
+                    {
+                        'topic-name': 'ensadmin.145aud',
+                        'topic-type': 'audit-notification',
+                    },
+                    {
+                        'topic-name': 'ensadmin.145sec',
+                        'topic-type': 'security-notification',
+                    }
+                ]
+            }
+            m.get(gnt_uri, json=gnt_result)
+
+            result = session.get_notification_topics()
+
+            self.assertEqual(result, gnt_result['topics'])
+
+        with requests_mock.mock() as m:
+            m.delete('/api/sessions/this-session', status_code=204)
+            session.logoff()
