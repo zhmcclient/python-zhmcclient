@@ -198,8 +198,8 @@ class Adapter(BaseResource):
     @property
     def ports(self):
         """
-        :class:`~zhmcclient.PortManager`: Manager object for the
-        Ports in this Adapter.
+        :class:`~zhmcclient.PortManager`: Access to the :term:`Ports <Port>` of
+        this Adapter.
         """
         # We do here some lazy loading.
         if not self._ports:
