@@ -134,9 +134,10 @@ attaching storage.
      Scope: CPC in DPM mode
 
   Adapter Port
+  Port
      The physical connector port (jack) of an :term:`Adapter`.
 
-     For details, see section :ref:`Adapter ports`.
+     For details, see section :ref:`Ports`.
 
      Scope: CPC in DPM mode
 

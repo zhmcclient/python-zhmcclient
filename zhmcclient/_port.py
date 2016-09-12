@@ -13,11 +13,11 @@
 # limitations under the License.
 
 """
-A **Port** is a physical connector port (jack) of an :term:`Adapter`.
+A :term:`Port` is a physical connector port (jack) of an :term:`Adapter`.
 
 Port resources are contained in Adapter resources.
 
-Ports only exist in CPCs that are in DPM mode.
+Ports only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
 from __future__ import absolute_import
@@ -30,7 +30,7 @@ __all__ = ['PortManager', 'Port']
 
 class PortManager(BaseManager):
     """
-    Manager providing access to the :term:`Ports <Port>` in a particular
+    Manager providing access to the :term:`Ports <Port>` of a particular
     :term:`Adapter`.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods

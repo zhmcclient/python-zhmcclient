@@ -13,15 +13,15 @@
 # limitations under the License.
 
 """
-A **Virtual Switch** is a virtualized networking switch connecting
+A :term:`Virtual Switch` is a virtualized networking switch connecting
 :term:`NICs <NIC>` with a :term:`Network Port`.
 
 Virtual Switches are generated automatically every time a new
 :term:`Network Adapter` is detected and configured.
 
-Virtual Switch resources are contained in CPC resources.
+Virtual Switch resources are contained in :term:`CPC` resources.
 
-Virtual Switches only exist in :term:`CPCs <CPC>` that are in DPM mode.
+Virtual Switches only exist in CPCs that are in DPM mode.
 """
 
 from __future__ import absolute_import

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-A **Central Processor Complex (CPC)** is a physical z Systems or LinuxONE
+A :term:`CPC` (Central Processor Complex) is a physical z Systems or LinuxONE
 computer.
 
 A particular HMC can manage multiple CPCs.
