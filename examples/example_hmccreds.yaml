@@ -46,7 +46,7 @@ examples:
       hmc: "9.152.133.209"
       cpcname: DPMSE2
       cpcstatus: Active
-      partitionname: sree_test
+      partname: sree_test
       amq_port: 61612
    example8:
       hmc: "9.152.150.65"

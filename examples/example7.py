@@ -53,8 +53,8 @@ if example7 is None:
 
 hmc = example7["hmc"]
 cpcname = example7["cpcname"]
-partitionname = example7["partitionname"]
-amq_port = example7['amq_port']
+partname = example7["partname"]
+amqport = example7['amqport']
 callback = None
 topic = None
 
@@ -107,37 +107,37 @@ try:
     cl = zhmcclient.Client(session)
 
     print("Retrieving notification topics ...")
-    topics = session.get_notfication_topics()
+    topics = session.get_notification_topics()
 
-    for entry in topics:
-        if entry['topic-type'] == 'job-notification':
-            job_topic = entry['topic-name']
+    for topic in topics:
+        if topic['topic-type'] == 'job-notification':
+            job_topic_name = topic['topic-name']
             break
 
-    conn = stomp.Connection([(session.host, amq_port)], use_ssl="SSL")
+    conn = stomp.Connection([(session.host, amqport)], use_ssl="SSL")
     conn.set_listener('', MyListener())
     conn.start()
     conn.connect(userid, password, wait=True)
 
     sub_id = 42  # subscription ID
 
-    print("Subscribing for job notifications using topic: %s" % job_topic)
-    conn.subscribe(destination="/topic/"+job_topic, id=sub_id, ack='auto')
+    print("Subscribing for job notifications using topic: %s" % job_topic_name)
+    conn.subscribe(destination="/topic/"+job_topic_name, id=sub_id, ack='auto')
 
     print("Finding CPC %s ..." % cpcname)
     cpc = cl.cpcs.find(name=cpcname)
     print("Status of CPC %s: %s" % (cpcname, cpc.get_property('status')))
 
-    print("Finding partition %s ..." % partitionname)
-    partition = cpc.partitions.find(name=partitionname)
+    print("Finding partition %s ..." % partname)
+    partition = cpc.partitions.find(name=partname)
     partition_status = partition.get_property('status')
-    print("Status of partition %s: %s" % (partitionname, partition_status))
+    print("Status of partition %s: %s" % (partname, partition_status))
 
     if partition_status == 'active':
-        print("Stopping partition %s asynchronously ..." % partitionname)
+        print("Stopping partition %s asynchronously ..." % partname)
         result = partition.stop(wait_for_completion=False)
-    elif partition_status == 'inactive':
-        print("Starting partition %s asynchronously ..." % partitionname)
+    elif partition_status in ('inactive', 'stopped'):
+        print("Starting partition %s asynchronously ..." % partname)
         result = partition.start(wait_for_completion=False)
     else:
         raise zhmcclient.Error("Cannot deal with partition status: %s" % \

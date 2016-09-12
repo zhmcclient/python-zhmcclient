@@ -637,17 +637,26 @@ class Session(object):
         self.delete(job_uri)
 
     @_log_call
-    def get_notfication_topics(self):
+    def get_notification_topics(self):
         """
-        The Get Notification Topics operation returns a structure that
+        The 'Get Notification Topics' operation returns a structure that
         describes the JMS notification topics associated with the
-        API session
+        API session.
 
         Returns:
 
-            The return value is a array of nested topic-info objects, which
-            contains the fields - topic-type, topic-name, object-uri and
-            include-refresh-messages
+            : List with one item for each notification topic. The dictionary
+            has the following keys:
+
+            * topic-type (string): Topic type, e.g. "job-notification".
+            * topic-name (string): Topic name; can be used for subscriptions.
+            * object-uri (string): When topic-type is
+              "os-message-notification", this item is the canonical URI path
+              of the Partition for which this topic exists.
+              This field does not exist for the other topic types.
+            * include-refresh-messages (bool): When the topic-type is
+              "os-message-notification", this item indicates whether refresh
+              operating system messages will be sent on this topic.
         """
         topics_uri = '/api/sessions/operations/get-notification-topics'
         response = self.get(topics_uri)
