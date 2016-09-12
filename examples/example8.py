@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 8: Using the Adapter, Virtual Switch, NIC, HBA
+Example 8: Using the Adapter, Port, Virtual Switch, NIC, HBA
            and Virtual Function interface.
 """
 
@@ -86,6 +86,12 @@ try:
         adapters = cpc.adapters.list()
         for i, adapter in enumerate(adapters):
             print('\t' + str(adapter))
+            ports = adapter.ports.list(full_properties=False)
+            for p, port in enumerate(ports):
+                if p == 0:
+                    print("\t\tListing Ports for %s ..." % adapter.properties['name'])
+#                port.pull_full_properties()
+                print('\t\t' + str(port))
         print("\tListing Virtual Switches for %s ..." % cpc.properties['name'])
         vswitches = cpc.vswitches.list()
         for i, vswitch in enumerate(vswitches):

@@ -99,6 +99,22 @@ Adapters
    :special-members: __str__
 
 
+.. _`Ports`:
+
+Ports
+-----
+
+.. automodule:: zhmcclient._port
+
+.. autoclass:: zhmcclient.PortManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Port
+   :members:
+   :special-members: __str__
+
+
 .. _`NICs`:
 
 NICs

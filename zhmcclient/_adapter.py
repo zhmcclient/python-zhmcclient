@@ -64,6 +64,7 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._port import PortManager
 
 __all__ = ['AdapterManager', 'Adapter']
 
@@ -192,6 +193,18 @@ class Adapter(BaseResource):
         #     details.
         assert isinstance(manager, AdapterManager)
         super(Adapter, self).__init__(manager, uri, properties)
+        self._ports = None
+
+    @property
+    def ports(self):
+        """
+        :class:`~zhmcclient.PortManager`: Manager object for the
+        Ports in this Adapter.
+        """
+        # We do here some lazy loading.
+        if not self._ports:
+            self._ports = PortManager(self)
+        return self._ports
 
     def delete(self):
         """
