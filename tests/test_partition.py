@@ -434,5 +434,24 @@ class PartitionTests(unittest.TestCase):
             status = partition.unmount_iso_image()
             self.assertEqual(status, None)
 
+    def test_partition_object(self):
+        """
+        This tests the `partition_object()` method.
+        """
+        partition_mgr = self.cpc.partitions
+        partition_id = 'fake-partition-id42'
+
+        partition = partition_mgr.partition_object(partition_id)
+
+        partition_uri = "/api/partitions/" + partition_id
+
+        self.assertTrue(isinstance(partition, Partition))
+        self.assertEqual(partition.uri, partition_uri)
+        self.assertEqual(partition.properties['object-uri'], partition_uri)
+        self.assertEqual(partition.properties['object-id'], partition_id)
+        self.assertEqual(partition.properties['class'], 'partition')
+        self.assertEqual(partition.properties['parent'], self.cpc.uri)
+
+
 if __name__ == '__main__':
     unittest.main()

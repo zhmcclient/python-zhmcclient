@@ -30,8 +30,6 @@ import re
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._partition import Partition
-from ._nic import Nic
 
 __all__ = ['VirtualSwitchManager', 'VirtualSwitch']
 
@@ -131,11 +129,18 @@ class VirtualSwitch(BaseResource):
 
     def get_connected_vnics(self):
         """
-        List the NICs connected to this Virtual Switch.
+        List the :term:`NICs <NIC>` connected to this Virtual Switch.
 
         Returns:
 
-          : A list of :term:`Nic` objects.
+          : A list of :term:`Nic` objects. These objects will be connected in
+          the resource tree (i.e. have a parent :term:`Partition` object,
+          etc.) and will have the following properties set:
+
+          * `element-uri`
+          * `element-id`
+          * `parent`
+          * `class`
 
         Raises:
 
@@ -149,18 +154,18 @@ class VirtualSwitch(BaseResource):
             vswitch_uri + '/operations/get-connected-vnics')
         nic_uris = result['connected-vnic-uris']
         nic_list = []
+        parts = {}  # Key: Partition ID; Value: Partition object
         for nic_uri in nic_uris:
-            # TODO: Instead of creating the NIC object and its parents on the
-            #       fly, we should use one set of such objects.
-            m = re.match(r"/api/partitions/([^/]+)/nics/([^/]+)", nic_uri)
+            m = re.match(r"^/api/partitions/([^/]+)/nics/([^/]+)/?$", nic_uri)
             part_id = m.group(1)
             nic_id = m.group(2)
-            part_uri = "/api/partitions/" + part_id
-            part_mgr = self.manager.cpc.partitions
-            part = Partition(part_mgr, part_uri, {'object-uri': part_uri})
-            nic_mgr = part.nics
-            nic = Nic(nic_mgr, nic_uri, {'element-uri': nic_uri,
-                                         'element-id': nic_id})
+            # We remember created Partition objects and reuse them.
+            try:
+                part = parts[part_id]
+            except KeyError:
+                part = self.manager.cpc.partitions.partition_object(part_id)
+                parts[part_id] = part
+            nic = part.nics.nic_object(nic_id)
             nic_list.append(nic)
         return nic_list
 

@@ -136,6 +136,38 @@ class PartitionManager(BaseManager):
         props.update(result)
         return Partition(self, props['object-uri'], props)
 
+    def partition_object(self, part_id):
+        """
+        Return a minimalistic :class:`~zhmcclient.Partition` object for a
+        Partition in this CPC.
+
+        This method is an internal helper function and is not normally called
+        by users.
+
+        This object will be connected in the Python object tree representing
+        the resources (i.e. it has this CPC as a parent), and will have the
+        following properties set:
+
+          * `object-uri`
+          * `object-id`
+          * `parent`
+          * `class`
+
+        Parameters:
+
+            part_id (string): `object-id` of the Partition
+
+        Returns:
+
+            :class:`~zhmcclient.Partition`: A Python object representing the
+            Partition.
+        """
+        part_uri = "/api/partitions/" + part_id
+        return Partition(self, part_uri, {'object-uri': part_uri,
+                                          'object-id': part_id,
+                                          'parent': self.parent.uri,
+                                          'class': 'partition'})
+
 
 class Partition(BaseResource):
     """

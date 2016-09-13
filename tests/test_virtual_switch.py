@@ -20,6 +20,7 @@ Unit tests for _virtual_switch module.
 from __future__ import absolute_import
 
 import unittest
+import re
 import requests_mock
 
 from zhmcclient import Session, Client, Nic
@@ -233,7 +234,10 @@ class VirtualSwitchTests(unittest.TestCase):
                 nic_uri = result['connected-vnic-uris'][i]
                 self.assertEqual(nic.uri, nic_uri)
                 self.assertEqual(nic.properties['element-uri'], nic_uri)
-                # TODO: Add test for element-id
+                m = re.match(r"^/api/partitions/([^/]+)/nics/([^/]+)/?$",
+                             nic_uri)
+                nic_id = m.group(2)
+                self.assertEqual(nic.properties['element-id'], nic_id)
 
 
 if __name__ == '__main__':
