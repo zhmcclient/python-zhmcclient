@@ -216,3 +216,78 @@ sign-off line by using a commit template file:
   ::
 
       git config commit.template ~/.git-signoff.template
+
+Releasing a version to PyPI
+---------------------------
+
+This section shows the steps to release a version to PyPI, and to start a new
+version. The description applies to pre-1.0.0 versions of zhmcclient, and
+therefore does not include creating a stable branch for fixing an existing
+release.
+
+A shell variable `$MNU` is used in the description to refer to the `M.N.U`
+version (e.g. `0.5.0`) that is to be released.
+
+1.  Switch to your work directory of the `python-zhmcclient` repo (this is
+    where the `Makefile` is), and perform the following steps in that
+    directory.
+
+2.  Set a shell variable for the version to be released::
+
+        MNU='0.5.0'
+
+3.  Verify that your working directory is in a git-wise clean state::
+
+        git status
+
+4.  Check out the `master` branch, and update it from upstream::
+
+        git checkout master
+        git pull
+
+5.  Perform a complete test::
+
+        tox
+
+    This should not fail because the same tests are run in the Travis CI.
+
+    However, run it for additional safety before the release. If it fails, fix
+    any issues using the normal process for changes (i.e. topic branches and
+    pull requests).
+    
+6.  Tag the head of the master branch with the release label::
+
+        git tag $MNU
+
+7.  Push the tag upstream::
+
+        git push --tags
+
+8.  On GitHub, edit the new tag, and create a release description on it. This
+    will cause it to appear in the Release tab.
+
+9.  Upload the package to PyPI:
+
+    **Attention!!** This only works once. You cannot re-release the same
+    version to PyPI.
+
+    ::
+
+        make upload
+
+    Verify that it arrived on PyPI: https://pypi.python.org/pypi/zhmcclient/
+
+10. Verify that RTD shows the released version as its stable version:
+
+    https://python-zhmcclient.readthedocs.io/en/stable/intro.html#versioning
+
+    Note: The pushing of the tag to GitHub should be sufficient for RTD to
+    rebuild the stable documentation.
+
+11. On GitHub, close milestone `M.N.U`.
+
+12. On GitHub, create a new milestone for development of the next release,
+    e.g. `M.N+1.0`.
+
+13. On GitHub, re-assign any open issues and pull request that still have
+    milestone `M.N.U` set, to the next milestone, or remove the milestone.
