@@ -13,10 +13,10 @@
 # limitations under the License.
 
 """
-An **Adapter** is a physical adapter card (e.g. OSA-Express adapter, Crypto
-adapter) or a logical adapter (e.g. HiperSockets switch).
+An :term:`Adapter` is a physical adapter card (e.g. OSA-Express adapter,
+Crypto adapter) or a logical adapter (e.g. HiperSockets switch).
 
-Adapter resources are contained in CPC resources.
+Adapter resources are contained in :term:`CPC` resources.
 
 Adapters only exist in CPCs that are in DPM mode.
 

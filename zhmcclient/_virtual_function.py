@@ -13,8 +13,9 @@
 # limitations under the License.
 
 """
-A **Virtual Function** is a logical entity that provides a :term:`Partition`
-with access to :term:`Accelerator Adapters <Accelerator Adapter>`.
+A :term:`Virtual Function` is a logical entity that provides a
+:term:`Partition` with access to
+:term:`Accelerator Adapters <Accelerator Adapter>`.
 
 Virtual Function resources are contained in Partition resources.
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-A **Network Interface Card (NIC)** is a logical entity that provides a
+A :term:`NIC` (Network Interface Card) is a logical entity that provides a
 :term:`Partition` with access to external communication networks through a
 :term:`Network Adapter`. More specifically, a NIC connects a Partition with a
 :term:`Network Port`, or with a :term:`Virtual Switch` which then connects to

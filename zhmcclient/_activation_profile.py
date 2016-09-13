@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-**Activation Profiles** control the activation of :term:`CPCs <CPC>` and
-:term:`LPARs <LPAR>`. They are used to tailor the operation of a CPC and are
+An :term:`Activation Profile` controls the activation of a :term:`CPC`
+or :term:`LPAR`. They are used to tailor the operation of a CPC and are
 stored in the Support Element associated with the CPC.
 
 Activation Profile resources are contained in CPC resources.

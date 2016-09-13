@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-A **Partition** is a subset of the hardware resources of a :term:`CPC` in DPM
-mode, virtualized as a separate computer.
+A :term:`Partition` is a subset of the hardware resources of a :term:`CPC`
+in DPM mode, virtualized as a separate computer.
 
 Partitions can be created and deleted dynamically, and their resources such
 as CPU, memory or I/O devices can be configured dynamically.

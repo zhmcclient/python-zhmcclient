@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-A **Host Bus Adapter (HBA)** is a logical entity that provides a
+A :term:`HBA` (Host Bus Adapter) is a logical entity that provides a
 :term:`Partition` with access to external storage area networks (SANs) through
 an :term:`FCP Adapter`. More specifically, an HBA connects a Partition with an
 :term:`Adapter Port` on an FCP Adapter.

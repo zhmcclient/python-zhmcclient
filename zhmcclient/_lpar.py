@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-A **Logical Partition (LPAR)** is a subset of the hardware resources of a
+A :term:`LPAR` (Logical Partition) is a subset of the hardware resources of a
 :term:`CPC` in classic mode (or ensemble mode), virtualized as a separate
 computer.
 
