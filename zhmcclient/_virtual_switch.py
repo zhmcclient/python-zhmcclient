@@ -127,9 +127,12 @@ class VirtualSwitch(BaseResource):
         assert isinstance(manager, VirtualSwitchManager)
         super(VirtualSwitch, self).__init__(manager, uri, properties)
 
-    def get_connected_vnics(self):
+    def get_connected_nics(self):
         """
         List the :term:`NICs <NIC>` connected to this Virtual Switch.
+
+        This method performs the "Get Connected VNICs of a Virtual Switch" HMC
+        operation.
 
         Returns:
 
