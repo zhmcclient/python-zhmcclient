@@ -101,6 +101,9 @@ class HbaManager(BaseManager):
             Allowable properties are defined in section 'Request body contents'
             in section 'Create HBA' in the :term:`HMC API` book.
 
+            The underlying :term:`FCP port` for the new HBA is assigned via the
+            "adapter-port-uri" property.
+
         Returns:
 
           Hba:
@@ -187,3 +190,27 @@ class Hba(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(self._uri, body=properties)
+
+    def reassign_port(self, port):
+        """
+        Reassign this HBA to a new underlying :term:`FCP port`.
+
+        This method performs the HMC operation "Reassign Storage Adapter Port".
+
+        Parameters:
+
+          port (:class:`~zhmcclient.Port`): :term:`FCP port` to be used.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: See the HTTP status and reason codes of
+            operation "Reassign Storage Adapter Port" in the :term:`HMC API`
+            book.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'adapter-port-uri': port.uri}
+        self.manager.session.post(self._uri +
+                                  '/operations/reassign-storage-adapter-port',
+                                  body=body)
