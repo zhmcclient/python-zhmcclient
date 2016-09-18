@@ -112,6 +112,25 @@ class CpcTests(unittest.TestCase):
                 'bla': 'blub',
             }
             m.get('/api/cpcs/fake-cpc-id-1', json=mock_result_cpc1)
+            mock_result_cpc1p = {
+                'partitions': [
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-1/'
+                                      'partitions/fake-part-id-1',
+                        'name': 'PART1',
+                        'status': 'active',
+                    }
+                ]
+            }
+            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=mock_result_cpc1p)
+            mock_result_cpc1l = {
+                'http-status': '404',
+                'reason': '1',
+                'message': 'Invalid resource',
+            }
+            m.get('/api/cpcs/fake-cpc-id-1/logical-partitions',
+                  json=mock_result_cpc1l, status_code=404, reason='Not Found')
+
             mock_result_cpc2 = {
                 'object-uri': '/api/cpcs/fake-cpc-id-2',
                 'name': 'P0000P30',
@@ -120,6 +139,26 @@ class CpcTests(unittest.TestCase):
                 'bla': 'baz',
             }
             m.get('/api/cpcs/fake-cpc-id-2', json=mock_result_cpc2)
+            mock_result_cpc2p = {
+                'http-status': '404',
+                'reason': '1',
+                'message': 'Invalid resource',
+            }
+            m.get('/api/cpcs/fake-cpc-id-2/partitions',
+                  json=mock_result_cpc2p, status_code=404, reason='Not Found')
+            mock_result_cpc2l = {
+                'logical-partitions': [
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-2/'
+                                      'logical-partitions/fake-lpar-id-1',
+                        'name': 'LPAR1',
+                        'status': 'active',
+                    }
+                ]
+            }
+            m.get('/api/cpcs/fake-cpc-id-2/logical-partitions',
+                  json=mock_result_cpc2l)
+
             mock_result_cpc3 = {
                 'object-uri': '/api/cpcs/fake-cpc-id-3',
                 'name': 'P0000OLD',
@@ -127,6 +166,26 @@ class CpcTests(unittest.TestCase):
                 'bla': 'foo',
             }
             m.get('/api/cpcs/fake-cpc-id-3', json=mock_result_cpc3)
+            mock_result_cpc3p = {
+                'http-status': '404',
+                'reason': '1',
+                'message': 'Invalid resource',
+            }
+            m.get('/api/cpcs/fake-cpc-id-3/partitions',
+                  json=mock_result_cpc3p, status_code=404, reason='Not Found')
+            mock_result_cpc3l = {
+                'logical-partitions': [
+                    {
+                        'object-uri': '/api/cpcs/fake-cpc-id-3/'
+                                      'logical-partitions/fake-lpar-id-1',
+                        'name': 'LPAR1',
+                        'status': 'active',
+                    }
+                ]
+            }
+            m.get('/api/cpcs/fake-cpc-id-3/logical-partitions',
+                  json=mock_result_cpc3l)
+
             result = {
                 'cpcs': [
                     mock_result_cpc1,
