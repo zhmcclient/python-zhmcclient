@@ -16,13 +16,39 @@
 zhmcclient - A pure Python client library for the z Systems HMC Web Services API
 ================================================================================
 
-.. image:: https://img.shields.io/pypi/v/zhmcclient.svg?maxAge=2592000
+.. PyPI download statistics are broken, but the new PyPI warehouse makes PyPI
+.. download statistics available through Google BigQuery
+.. (https://bigquery.cloud.google.com).
+.. Query to list package downloads by version:
+..
+   SELECT
+     file.project,
+     file.version,
+     COUNT(*) as total_downloads,
+     SUM(CASE WHEN REGEXP_EXTRACT(details.python, r"^([^\.]+\.[^\.]+)") = "2.6" THEN 1 ELSE 0 END) as py26_downloads,
+     SUM(CASE WHEN REGEXP_EXTRACT(details.python, r"^([^\.]+\.[^\.]+)") = "2.7" THEN 1 ELSE 0 END) as py27_downloads,
+     SUM(CASE WHEN REGEXP_EXTRACT(details.python, r"^([^\.]+)\.[^\.]+") = "3" THEN 1 ELSE 0 END) as py3_downloads,
+   FROM
+     TABLE_DATE_RANGE(
+       [the-psf:pypi.downloads],
+       TIMESTAMP("19700101"),
+       CURRENT_TIMESTAMP()
+     )
+   WHERE
+     file.project = 'zhmcclient'
+   GROUP BY
+     file.project, file.version
+   ORDER BY
+     file.version DESC
+
+
+.. image:: https://img.shields.io/pypi/v/zhmcclient.svg
     :target: https://pypi.python.org/pypi/zhmcclient/
     :alt: Version on Pypi
 
-.. image:: https://img.shields.io/pypi/dm/zhmcclient.svg?maxAge=2592000
-    :target: https://pypi.python.org/pypi/zhmcclient/
-    :alt: Pypi downloads
+.. # .. image:: https://img.shields.io/pypi/dm/zhmcclient.svg
+.. #     :target: https://pypi.python.org/pypi/zhmcclient/
+.. #     :alt: Pypi downloads
 
 .. image:: https://travis-ci.org/zhmcclient/python-zhmcclient.svg?branch=master
     :target: https://travis-ci.org/zhmcclient/python-zhmcclient
