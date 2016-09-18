@@ -180,6 +180,40 @@ class BaseResource(object):
             self.pull_full_properties()
             return self._properties[name]
 
+    def prop(self, name, default=None):
+        """
+        Return the value of a resource property, applying a default if it
+        does not exist.
+
+        If the resource property is not cached in this object yet, the full set
+        of resource properties is retrieved and cached in this object, and the
+        resource property is again attempted to be returned.
+
+        Parameters:
+
+          name (:term:`string`):
+            Name of the resource property, using the names defined in the
+            respective 'Data model' sections in the :term:`HMC API` book.
+
+          default:
+            Default value to be used, if the resource property does not exist.
+
+        Returns:
+
+          The value of the resource property.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        try:
+            return self.get_property(name)
+        except KeyError:
+            return default
+
     def __str__(self):
         """
         Return a human readable representation of this resource.
