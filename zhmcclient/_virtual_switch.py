@@ -26,6 +26,8 @@ Virtual Switches only exist in CPCs that are in DPM mode.
 
 from __future__ import absolute_import
 
+import re
+
 from ._manager import BaseManager
 from ._resource import BaseResource
 
@@ -127,11 +129,18 @@ class VirtualSwitch(BaseResource):
 
     def get_connected_vnics(self):
         """
-        List the NICs connected to this Virtual Switch.
+        List the :term:`NICs <NIC>` connected to this Virtual Switch.
 
         Returns:
 
-          : A list of NIC URIs.
+          : A list of :term:`Nic` objects. These objects will be connected in
+          the resource tree (i.e. have a parent :term:`Partition` object,
+          etc.) and will have the following properties set:
+
+          * `element-uri`
+          * `element-id`
+          * `parent`
+          * `class`
 
         Raises:
 
@@ -141,10 +150,24 @@ class VirtualSwitch(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         vswitch_uri = self.get_property('object-uri')
-        status = self.manager.session.get(
-            vswitch_uri +
-            '/operations/get-connected-vnics')
-        return status['connected-vnic-uris']
+        result = self.manager.session.get(
+            vswitch_uri + '/operations/get-connected-vnics')
+        nic_uris = result['connected-vnic-uris']
+        nic_list = []
+        parts = {}  # Key: Partition ID; Value: Partition object
+        for nic_uri in nic_uris:
+            m = re.match(r"^/api/partitions/([^/]+)/nics/([^/]+)/?$", nic_uri)
+            part_id = m.group(1)
+            nic_id = m.group(2)
+            # We remember created Partition objects and reuse them.
+            try:
+                part = parts[part_id]
+            except KeyError:
+                part = self.manager.cpc.partitions.partition_object(part_id)
+                parts[part_id] = part
+            nic = part.nics.nic_object(nic_id)
+            nic_list.append(nic)
+        return nic_list
 
     def update_properties(self, properties):
         """

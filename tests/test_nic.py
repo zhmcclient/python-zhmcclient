@@ -230,5 +230,24 @@ class NicTests(unittest.TestCase):
             status = nic.update_properties(properties={})
             self.assertEqual(status, None)
 
+    def test_nic_object(self):
+        """
+        This tests the `nic_object()` method.
+        """
+        nic_mgr = self.partition.nics
+        nic_id = 'fake-nic-id0711'
+
+        nic = nic_mgr.nic_object(nic_id)
+
+        nic_uri = self.partition.uri + "/nics/" + nic_id
+
+        self.assertTrue(isinstance(nic, Nic))
+        self.assertEqual(nic.uri, nic_uri)
+        self.assertEqual(nic.properties['element-uri'], nic_uri)
+        self.assertEqual(nic.properties['element-id'], nic_id)
+        self.assertEqual(nic.properties['class'], 'nic')
+        self.assertEqual(nic.properties['parent'], self.partition.uri)
+
+
 if __name__ == '__main__':
     unittest.main()
