@@ -189,9 +189,9 @@ class VirtualSwitchTests(unittest.TestCase):
             status = vswitch.update_properties(properties={})
             self.assertEqual(status, None)
 
-    def test_get_connected_vnics(self):
+    def test_get_connected_nics(self):
         """
-        This tests the 'Get Connected VNICs of a Virtual Switch' operation.
+        This tests the `get_connected_nics()` method.
         """
         vswitch_mgr = self.cpc.vswitches
         with requests_mock.mock() as m:
@@ -226,7 +226,7 @@ class VirtualSwitchTests(unittest.TestCase):
                 "operations/get-connected-vnics",
                 json=result)
 
-            nics = vswitch.get_connected_vnics()
+            nics = vswitch.get_connected_nics()
 
             self.assertTrue(isinstance(nics, list))
             for i, nic in enumerate(nics):
