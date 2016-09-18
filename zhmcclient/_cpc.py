@@ -460,3 +460,44 @@ class Cpc(BaseResource):
             cpc_uri + '/operations/export-profiles', body,
             wait_for_completion=wait_for_completion)
         return result
+
+    def get_wwpns(self, partitions):
+        """
+        Return the WWPNs of the host ports (of the :term:`HBAs <HBA>`) of the
+        specified :term:`Partitions <Partition>` of this CPC.
+
+        This method performs the HMC operation "Export WWPN List".
+
+        Parameters:
+
+          partitions (:term:`iterable` of :class:`~zhmcclient.Partition`):
+            :term:`Partitions <Partition>` to be used.
+
+        Returns:
+
+          A list of items for each WWPN, where each item is a dict with the
+          following keys:
+
+          * 'partition-name' (string): Name of the :term:`Partition`.
+          * 'adapter-id' (string): ID of the :term:`FCP Adapter`.
+          * 'device-number' (string): Virtual device number of the :term:`HBA`.
+          * 'wwpn' (string): WWPN of the HBA.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: See the HTTP status and reason codes of
+            operation "Export WWPN List" in the :term:`HMC API` book.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'partitions': [p.uri for p in partitions]}
+        result = self.manager.session.post(self._uri + '/operations/'
+                                           'export-port-names-list', body=body)
+        # Parse the returned comma-separated string for each WWPN into a dict:
+        wwpn_list = []
+        dict_keys = ('partition-name', 'adapter-id', 'device-number', 'wwpn')
+        for wwpn_item in result['wwpn-list']:
+            dict_values = wwpn_item.split(',')
+            wwpn_list.append(dict(zip(dict_keys, dict_values)))
+        return wwpn_list

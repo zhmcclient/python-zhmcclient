@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client, Hba
+from zhmcclient import Session, Client, Hba, Adapter, Port
 
 
 class HbaTests(unittest.TestCase):
@@ -229,6 +229,33 @@ class HbaTests(unittest.TestCase):
                 json=result)
             status = hba.update_properties(properties={})
             self.assertEqual(status, None)
+
+    def test_reassign_port(self):
+        """
+        This tests the 'reassign_port()' method.
+        """
+        hba_mgr = self.partition.hbas
+        hba_uri = '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1'
+        hba = Hba(hba_mgr, uri=hba_uri, properties={})
+
+        adapter_mgr = self.cpc.adapters
+        adapter_uri = '/api/adapters/fake-adapter-id-1'
+        adapter = Adapter(adapter_mgr, uri=adapter_uri, properties={})
+
+        port_mgr = adapter.ports
+        port2_uri = '/api/adapters/fake-adapter-id-2/'\
+                    'storage-ports/fake-port-id-2'
+        port2 = Port(port_mgr, uri=port2_uri, properties={})
+
+        with requests_mock.mock() as m:
+            # TODO: Add the request body to the mock call:
+            # request_reassign = {
+            #     'adapter-port-uri': port2_uri
+            # }
+            m.post(hba_uri + '/operations/reassign-storage-adapter-port',
+                   json={})
+
+            hba.reassign_port(port2)
 
 if __name__ == '__main__':
     unittest.main()

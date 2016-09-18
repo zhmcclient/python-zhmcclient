@@ -169,6 +169,9 @@ attaching storage.
   FCP Adapter
      Short term for a :term:`Storage Adapter` supporting FCP.
 
+  FCP Port
+     Short term for a :term:`Port` of an :term:`FCP Adapter`.
+
   Group
      TBD
 
