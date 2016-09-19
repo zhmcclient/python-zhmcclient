@@ -98,27 +98,82 @@ This documentation uses a few special terms to refer to Python types:
 Resource model
 --------------
 
-This section lists the resources that are available at the :term:`HMC API`,
-in alphabetical order.
+This section lists the resources that are available at the :term:`HMC API`.
 
-The *Scope* specifies whether the resource is available within a CPC and in
-what mode of the CPC, vs. being available across CPCs.
+The term *resource* in this documentation is used to denote a managed object
+in the system. The result of retrieving a resource through the HMC API is
+termed a *resource representation*. Python classes for resources are termed to
+*represent* a resource.
+
+For resources within a :term:`CPC`, this section covers CPCs in DPM mode and
+classic mode, but omits any resources that are available only in ensemble mode.
+See section :ref:`CPCs` for a definition of the CPC modes.
 
 Some of the items in this section are qualified as *short terms*. They are not
 separate types of resources, but specific usages of resources. For example,
 "storage adapter" is a short term for the resource "adapter" when used for
 attaching storage.
 
+Resources scoped to the HMC
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. glossary::
 
-  Activation Profile
-     A general term for specific activation profiles:
+  Console
+     TBD - Not yet supported.
 
-     * :term:`Reset Activation Profile`
-     * :term:`Image Activation Profile`
-     * :term:`Load Activation Profile`
+  Group
+     TBD - Not yet supported.
 
-     Scope: CPC in classic (or ensemble) mode
+  Hardware Message
+     TBD - Not yet supported.
+
+     Also scoped to CPCs in any mode.
+
+  Job
+     The execution of an asynchronous HMC operation.
+
+  LDAP Server Definition
+     TBD - Not yet supported.
+
+  Metrics Context
+     TBD - Not yet supported.
+
+  Password Rule
+     TBD - Not yet supported.
+
+  Session
+     A session between a client of the HMC API and the HMC.
+
+  Task
+     TBD - Not yet supported.
+
+  User
+     TBD - Not yet supported.
+
+  User Pattern
+     TBD - Not yet supported.
+
+  User Role
+     TBD - Not yet supported.
+
+Resources scoped to CPCs in any mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. glossary::
+
+  Capacity Record
+     TBD - Not yet supported.
+
+  CPC
+     Central Processor Complex, a physical z Systems or LinuxONE computer.
+
+     For details, see section :ref:`CPCs`.
+
+Resources scoped to CPCs in DPM mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. glossary::
 
   Accelerator Adapter
      Short term for an :term:`Adapter` providing accelerator functions (e.g.
@@ -131,90 +186,103 @@ attaching storage.
 
      For details, see section :ref:`Adapters`.
 
-     Scope: CPC in DPM mode
-
   Adapter Port
-  Port
-     The physical connector port (jack) of an :term:`Adapter`.
-
-     For details, see section :ref:`Ports`.
-
-     Scope: CPC in DPM mode
+     Synonym for :term:`Port`.
 
   Capacity Group
-     TBD
-
-     Scope: CPC in DPM mode
-
-  Capacity Record
-     TBD
-
-     Scope: CPC in any mode
-
-  Console
-     TBD
-
-     Scope: HMC
-
-  CPC
-     A physical z Systems or LinuxONE computer.
-
-     For details, see section :ref:`CPCs`.
-
-     Scope: CPC
+     TBD - Not yet supported.
 
   Crypto Adapter
      Short term for an :term:`Adapter` providing cryptographic functions.
 
   FCP Adapter
-     Short term for a :term:`Storage Adapter` supporting FCP.
+     Short term for a :term:`Storage Adapter` supporting FCP (Fibre Channel
+     Protocol).
 
   FCP Port
      Short term for a :term:`Port` of an :term:`FCP Adapter`.
 
-  Group
-     TBD
-
-     Scope: HMC
-
-  Group Profile
-     TBD
-
-     Scope: CPC in classic (or ensemble) mode
-
-  Hardware Message
-     TBD
-
-     Scope: HMC, and CPC in any mode
-
   HBA
-  vHBA
      A logical entity that provides a :term:`Partition` with access to
      external storage area networks (SANs) through an :term:`FCP Adapter`.
 
      For details, see section :ref:`HBAs`.
 
-     Scope: CPC in DPM mode
+  Network Adapter
+     Short term for an :term:`Adapter` for attaching networks (e.g. OSA-Express
+     adapter).
+
+  Network Port
+     Short term for a :term:`Port` of a :term:`Network Adapter`.
+
+  NIC
+     Network Interface Card, a logical entity that provides a
+     :term:`Partition` with access to external communication networks through a
+     :term:`Network Adapter`.
+
+     For details, see section :ref:`NICs`.
+
+  Partition
+     A subset of the hardware resources of a :term:`CPC` in DPM mode,
+     virtualized as a separate computer.
+
+     For details, see section :ref:`Partitions`.
+
+  Port
+     The physical connector port (jack) of an :term:`Adapter`.
+
+     For details, see section :ref:`Ports`.
+
+  Storage Adapter
+     Short term for an :term:`Adapter` for attaching storage.
+
+  Storage Port
+     Short term for a :term:`Port` of a :term:`Storage Adapter`.
+
+  vHBA
+     Synonym for :term:`HBA`. In this resource model, HBAs are always
+     virtualized because they belong to a :term:`Partition`. Therefore, the
+     terms vHBA and HBA can be used interchangeably.
+
+  Virtual Function
+     A logical entity that provides a :term:`Partition` with access to an
+     :term:`Accelerator Adapter`.
+
+     For details, see section :ref:`Virtual functions`.
+
+  Virtual Switch
+     A virtualized networking switch connecting :term:`NICs <NIC>` with a
+     :term:`Network Port`.
+
+     For details, see section :ref:`Virtual switches`.
+
+  vNIC
+     Synonym for :term:`NIC`. In this resource model, NICs are always
+     virtualized because they belong to a :term:`Partition`. Therefore, the
+     terms vNIC and NIC can be used interchangeably.
+
+Resources scoped to CPCs in classic (and ensemble) mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. glossary::
+
+  Activation Profile
+     A general term for specific types of activation profiles:
+
+     * :term:`Reset Activation Profile`
+     * :term:`Image Activation Profile`
+     * :term:`Load Activation Profile`
+
+  Group Profile
+     TBD
 
   Image Activation Profile
-     TBD
-
-     Scope: CPC in classic (or ensemble) mode
-
-  Job
-     TBD
-
-     Scope: HMC
-
-  LDAP Server Definition
-     TBD
-
-     Scope: HMC
+     A specific :term:`Activation Profile` that defines characteristics of
+     an :term:`LPAR`.
 
   Load Activation Profile
-     TBD
-
-     Scope: CPC in classic (or ensemble) mode
+     A specific :term:`Activation Profile` that defines an operating system
+     image that can be loaded (booted) into an :term:`LPAR`.
 
   Logical Partition
   LPAR
@@ -223,99 +291,9 @@ attaching storage.
 
      For details, see section :ref:`LPARs`.
 
-     Scope: CPC in classic (or ensemble) mode
-
-  Metrics Context
-     TBD
-
-     Scope: HMC
-
-  Network Adapter
-     Short term for an :term:`Adapter` for attaching networks (e.g. OSA-Express
-     adapter).
-
-  Network Port
-     Short term for an :term:`Adapter Port` of a :term:`Network Adapter`.
-
-  NIC
-  vNIC
-     Network Interface Card, a logical entity that provides a
-     :term:`Partition` with access to external communication networks through a
-     :term:`Network Adapter`.
-
-     For details, see section :ref:`NICs`.
-
-     Scope: CPC in DPM mode
-
-  Partition
-     A subset of the hardware resources of a :term:`CPC` in DPM mode,
-     virtualized as a separate computer.
-
-     For details, see section :ref:`Partitions`.
-
-     Scope: CPC in DPM mode
-
-  Password Rule
-     TBD
-
-     Scope: HMC
-
   Reset Activation Profile
-     TBD
-
-     Scope: CPC in classic (or ensemble) mode
-
-  Session
-     TBD
-
-     Scope: HMC
-
-  Storage Adapter
-     Short term for an :term:`Adapter` for attaching storage.
-
-  Storage Port
-     Short term for an :term:`Adapter Port` of a :term:`Storage Adapter`.
-
-  Task
-     TBD
-
-     Scope: HMC
-
-  User
-     TBD
-
-     Scope: HMC
-
-  User Pattern
-     TBD
-
-     Scope: HMC
-
-  User Role
-     TBD
-
-     Scope: HMC
-
-  Virtual Function
-     A logical entity that provides a :term:`Partition` with access to
-     :term:`Accelerator Adapters <Accelerator Adapter>`.
-
-     For details, see section :ref:`Virtual functions`.
-
-     Scope: CPC in DPM mode
-
-  Virtual Machine
-     TBD
-
-     Scope: CPC in classic (or ensemble) mode
-
-  Virtual Switch
-     A virtualized networking switch connecting :term:`NICs <NIC>` with a
-     :term:`Network Port`.
-
-     For details, see section :ref:`Virtual switches`.
-
-     Scope: CPC in DPM mode
+     A specific :term:`Activation Profile` that defines characteristics of a
+     :term:`CPC`.
 
   
 .. _`Bibliography`:
