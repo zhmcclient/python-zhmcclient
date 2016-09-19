@@ -17,10 +17,10 @@
 .. _`Change log`:
 
 Change log
-==========
+----------
 
 Version |version|
------------------
+^^^^^^^^^^^^^^^^^
 
 Released: Not yet
 
@@ -62,7 +62,7 @@ Released: Not yet
 
 
 Version 0.4.0
--------------
+^^^^^^^^^^^^^
 
 Released: 2016-09-13
 

@@ -358,3 +358,4 @@ Bibliography
    HMC API 2.13.1
        `IBM SC27-2634-01, z Systems Hardware Management Console Web Services API (Version 2.13.1) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/CB468B15654CA89B85257F7200746C16/>`_
 
+.. include:: changes.rst
