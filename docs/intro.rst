@@ -209,15 +209,19 @@ The public API of this package that is subject to the semantic versioning
 rules (and specificically to its compatibility rules) is the API described in
 this documentation.
 
+Violations of these compatibility rules are described in section
+:ref:`Change log`.
+
 
 .. _`Deprecations`:
 
 Deprecations
 ------------
 
-Deprecated functionality is marked accordingly in this documentation, and is
-made visible at runtime by issuing Python warnings of type
-:exc:`~py:exceptions.DeprecationWarning` (see :mod:`py:warnings` for details).
+Deprecated functionality is marked accordingly in this documentation and in the
+:ref:`Change log`, and is made visible at runtime by issuing Python warnings of
+type :exc:`~py:exceptions.DeprecationWarning` (see :mod:`py:warnings` for
+details).
 
 Since Python 2.7, :exc:`~py:exceptions.DeprecationWarning` warnings are
 suppressed by default. They can be shown for example in any of these ways:

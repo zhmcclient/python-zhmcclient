@@ -43,7 +43,7 @@ Base classes for resources
    :special-members: __str__
 
 
-.. _'Special type names`:
+.. _`Special type names`:
 
 Special type names
 ------------------
@@ -93,7 +93,7 @@ This documentation uses a few special terms to refer to Python types:
       functionality. See section :ref:`Deprecations` for details.
 
 
-.. _'Resource model`:
+.. _`Resource model`:
 
 Resource model
 --------------
@@ -317,7 +317,7 @@ attaching storage.
 
      Scope: CPC in DPM mode
 
-  
+
 .. _`Bibliography`:
 
 Bibliography
