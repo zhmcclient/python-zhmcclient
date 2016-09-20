@@ -16,6 +16,8 @@ python:
 install:
   - pip list
   - pip install --upgrade pip
+  - pip install .
+  - pip list
   - make develop
   - pip list
   - pip install python-coveralls
