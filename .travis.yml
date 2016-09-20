@@ -5,6 +5,10 @@
 notifications:
   email: false
 
+os:
+  - linux
+  - osx
+
 #sudo: required
 language: python
 python:
