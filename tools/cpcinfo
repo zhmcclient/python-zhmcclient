@@ -28,6 +28,7 @@ import requests.packages.urllib3
 from tabulate import tabulate
 import progressbar
 from pprint import pprint
+from platform import python_version
 
 import zhmcclient
 
@@ -40,6 +41,7 @@ def parse_args():
     """
 
     prog = "cpcinfo"  # Name of this program, used for help etc.
+    version = zhmcclient.__version__
     usage = '%(prog)s [options] hmc [cpcname ...]'
     desc = 'Display information about CPCs.'
     epilog = """
@@ -79,6 +81,11 @@ Example:
     general_arggroup.add_argument(
         '-t', '--timestats', dest='timestats', action='store_true',
         help='Display time statistics for the HMC operations that were used.')
+    version_str = '%s/zhmcclient %s, Python %s' %\
+        (prog, version, python_version())
+    general_arggroup.add_argument(
+        '--version', action='version', version=version_str,
+        help='Show the versions of this program etc. and exit')
     general_arggroup.add_argument(
         '-h', '--help', action='help',
         help='Show this help message and exit')
