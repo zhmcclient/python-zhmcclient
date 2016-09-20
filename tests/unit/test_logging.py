@@ -38,12 +38,11 @@ class TestLogging(unittest.TestCase):
             pass
 
         do_something()
-        capture.check(('tests.test_logging',
+        capture.check(('tests.unit.test_logging',
                        'DEBUG',
                        'Entering test_logging_decorator.do_something()'),
-                      ('tests.test_logging',
+                      ('tests.unit.test_logging',
                        'DEBUG',
                        'Leaving test_logging_decorator.do_something()'))
 
 # TODO: Add test cases for _get_logger(), specifically for null-handler
-
