@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2016 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +17,13 @@
 Unit tests for _session module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import unittest
 import requests
 import requests_mock
 
-from zhmcclient._session import Session
+from zhmcclient import Session
 
 
 class SessionTests(unittest.TestCase):
@@ -187,3 +188,7 @@ class SessionTests(unittest.TestCase):
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             session.logoff()
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -17,12 +17,12 @@
 Unit tests for _exceptions module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import unittest
 
-from zhmcclient._exceptions import Error, ConnectionError, AuthError,\
-    ParseError, VersionError, HTTPError
+from zhmcclient import Error, ConnectionError, AuthError, ParseError,\
+    VersionError, HTTPError
 
 # TODO: Add tests for NoUniqueMatch
 # TODO: Add tests for NotFound

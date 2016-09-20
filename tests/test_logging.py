@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +15,8 @@
 """
 Unit tests for _logging module.
 """
+
+from __future__ import absolute_import, print_function
 
 import logging
 import unittest
@@ -45,3 +46,4 @@ class TestLogging(unittest.TestCase):
                        'Leaving test_logging_decorator.do_something()'))
 
 # TODO: Add test cases for _get_logger(), specifically for null-handler
+

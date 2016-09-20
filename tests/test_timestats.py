@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Copyright 2016 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +16,8 @@
 """
 Tests for time statistics (`_timestats` module).
 """
+
+from __future__ import absolute_import, print_function
 
 import time
 import unittest
@@ -200,3 +203,7 @@ class TimeStatsTests(unittest.TestCase):
         keeper = TimeStatsKeeper()
         s = str(keeper)
         self.assertEqual(s, PRINT_HEADER_DISABLED)
+
+
+if __name__ == '__main__':
+    unittest.main()
