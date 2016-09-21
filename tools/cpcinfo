@@ -168,7 +168,7 @@ def main():
         else:
             cpcs = client.cpcs.list()
 
-        for cpc in sorted(cpcs, key=lambda cpc: cpc.prop('name')):
+        for cpc in sorted(cpcs, key=lambda cpc: cpc.prop('name', '')):
 
             print("\nRetrieving CPC %s ..." % cpc.prop('name'))
             sys.stdout.flush()
@@ -187,7 +187,7 @@ def main():
                                (1 if args.adapters else 0))
                 partition_rows = []
                 for partition in sorted(partitions,
-                                        key=lambda p: p.prop('name')):
+                                        key=lambda p: p.prop('name', '')):
                     row = (partition.prop('name'),
                            partition.prop('status'),
                            partition.prop('os-type'),
@@ -205,7 +205,7 @@ def main():
                                (1 if args.adapters else 0))
                 partition_rows = []
                 for partition in sorted(partitions,
-                                        key=lambda p: p.prop('name')):
+                                        key=lambda p: p.prop('name', '')):
                     row = (partition.prop('name'),
                            partition.prop('status'),
                            partition.prop('os-type'),
@@ -222,7 +222,7 @@ def main():
                 bar.progress()
                 adapter_rows = []
                 for adapter in sorted(adapters,
-                                      key=lambda p: p.prop('card-location')):
+                                      key=lambda p: p.prop('card-location', '')):
                     row = (adapter.prop('card-location'),
                            adapter.prop('detected-card-type'),
                            adapter.prop('type'),
