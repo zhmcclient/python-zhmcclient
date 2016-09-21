@@ -36,8 +36,7 @@ flake8>=2.0 # MIT
 twine # Apache-2.0
 
 # Jupyter Notebook
-# Install manually, to where you want to run Jupyter.
-# jupyter
+jupyter # BSD
 
 # Examples:
 PyYAML # MIT
