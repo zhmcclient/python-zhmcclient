@@ -117,7 +117,7 @@ help:
 	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_log_file)'
 	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
 	@echo '  all        - Do all of the above (except buildwin when not on Windows)'
-	@echo '  install    - Install package in active Python environment'
+	@echo '  install    - Install package in active Python environment and test import'
 	@echo '  upload     - build + upload the distribution files to PyPI'
 	@echo '  clean      - Remove any temporary files'
 	@echo '  clobber    - clean + remove any build products'
@@ -191,7 +191,8 @@ check: pylint.log flake8.log
 
 .PHONY: install
 install:
-	python setup.py install
+	pip install --upgrade .
+	python -c "import zhmcclient; print('Import: ok')"
 	@echo 'Done: Installed $(package_name) into current Python environment.'
 	@echo '$@ done.'
 

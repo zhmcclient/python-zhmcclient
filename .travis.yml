@@ -16,13 +16,15 @@ python:
 install:
   - pip list
   - pip install --upgrade pip
-  - make develop
+  - make install
   - pip list
+  - make develop
   - pip install python-coveralls
+  - pip list
+  - make clean
 
 # commands to run builds & tests
 script:
-  - make clean
   - make check
   - make build
   - make builddoc
