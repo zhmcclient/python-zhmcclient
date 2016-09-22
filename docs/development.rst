@@ -228,33 +228,49 @@ release.
 A shell variable `$MNU` is used in the description to refer to the `M.N.U`
 version (e.g. `0.5.0`) that is to be released.
 
-1.  Switch to your work directory of the `python-zhmcclient` repo (this is
-    where the `Makefile` is), and perform the following steps in that
-    directory.
+Switch to your work directory of the `python-zhmcclient` repo (this is where
+the `Makefile` is), and perform the following steps in that directory:
 
-2.  Set a shell variable for the version to be released::
+1.  Set a shell variable for the version to be released::
 
         MNU='0.5.0'
 
-3.  Verify that your working directory is in a git-wise clean state::
+2.  Verify that your working directory is in a git-wise clean state::
 
         git status
 
-4.  Check out the `master` branch, and update it from upstream::
+3.  Check out the `master` branch, and update it from upstream::
 
         git checkout master
         git pull
+
+4.  Verify that the change log (`docs/changes.rst`) reflects all changes since
+    the previous version. Make sure the changes listed there are relevant and
+    understandable for users.
+
+    * If changes were needed, commit them to the `master` branch and push them
+      upstream::
+
+          git add docs/changes.rst
+          git commit -sm "Updated change log."
+          git push
 
 5.  Perform a complete test::
 
         tox
 
-    This should not fail because the same tests are run in the Travis CI.
+    This should not fail because the same tests have already been run in the
+    Travis CI. However, run it for additional safety before the release.
 
-    However, run it for additional safety before the release. If it fails, fix
-    any issues using the normal process for changes (i.e. topic branches and
-    pull requests).
-    
+    * If this test fails, fix any issues until the test succeeds. Commit the
+      changes to the `master` branch and push them upstream::
+
+          git add <changed-files>
+          git commit -sm "<change description with details>"
+          git push
+
+      Wait for the Travis CI to show success for this change.
+
 6.  Tag the head of the master branch with the release label::
 
         git tag $MNU
@@ -266,28 +282,28 @@ version (e.g. `0.5.0`) that is to be released.
 8.  On GitHub, edit the new tag, and create a release description on it. This
     will cause it to appear in the Release tab.
 
-9.  Upload the package to PyPI:
+9.  Upload the package to PyPI::
+
+        make upload
 
     **Attention!!** This only works once. You cannot re-release the same
     version to PyPI.
 
-    ::
+10. Verify that the released version is shown on PyPI:
 
-        make upload
+    https://pypi.python.org/pypi/zhmcclient/
 
-    Verify that it arrived on PyPI: https://pypi.python.org/pypi/zhmcclient/
-
-10. Verify that RTD shows the released version as its stable version:
+11. Verify that RTD shows the released version as its stable version:
 
     https://python-zhmcclient.readthedocs.io/en/stable/intro.html#versioning
 
     Note: The pushing of the tag to GitHub should be sufficient for RTD to
-    rebuild the stable documentation.
+    rebuild the stable documentation, but it may take a while to build it.
 
-11. On GitHub, close milestone `M.N.U`.
+12. On GitHub, close milestone `M.N.U`.
 
-12. On GitHub, create a new milestone for development of the next release,
+13. On GitHub, create a new milestone for development of the next release,
     e.g. `M.N+1.0`.
 
-13. On GitHub, re-assign any open issues and pull request that still have
+14. On GitHub, re-assign any open issues and pull request that still have
     milestone `M.N.U` set, to the next milestone, or remove the milestone.
