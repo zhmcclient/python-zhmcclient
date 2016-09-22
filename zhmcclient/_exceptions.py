@@ -287,11 +287,15 @@ class HTTPError(Error):
         return self._body.get('error-details', None)
 
     def __str__(self):
-        return "{},{}: {}".format(self.http_status, self.reason, self.message)
+        return "{},{}: {} [{} {}]".\
+               format(self.http_status, self.reason, self.message,
+                      self.request_method, self.request_uri)
 
     def __repr__(self):
-        return "HTTPError({}, {}, {}, ...)".\
-               format(self.http_status, self.reason, self.message)
+        return "HTTPError(http_status={}, reason={}, message={}, "\
+               "request_method={}, request_uri={}, ...)".\
+               format(self.http_status, self.reason, self.message,
+                      self.request_method, self.request_uri)
 
 
 class NoUniqueMatch(Error):

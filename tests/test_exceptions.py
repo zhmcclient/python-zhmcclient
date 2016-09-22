@@ -249,13 +249,14 @@ class TestHTTPError(unittest.TestCase, SimpleTestMixin):
         self.assertEqual(exc.error_details, resp_body['error-details'])
 
         # Check str()
-        exp_str = str(resp_body['http-status']) + ',' + \
-            str(resp_body['reason']) + ': ' + resp_body['message']
+        exp_str = "{http-status},{reason}: {message} [{request-method} "\
+                  "{request-uri}]".format(**resp_body)
         self.assertEqual(str(exc), exp_str)
 
         # Check repr()
-        exp_repr = 'HTTPError(' + str(resp_body['http-status']) + ', ' + \
-            str(resp_body['reason']) + ', ' + resp_body['message'] + ', ...)'
+        exp_repr = "HTTPError(http_status={http-status}, reason={reason}, "\
+                   "message={message}, request_method={request-method}, "\
+                   "request_uri={request-uri}, ...)".format(**resp_body)
         self.assertEqual(repr(exc), exp_repr)
 
 
