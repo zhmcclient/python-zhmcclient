@@ -14,27 +14,60 @@
 ..
 
 .. _`Tutorial`:
+.. _`Tutorials`:
 
-Tutorial
-========
+Tutorials
+=========
 
-This is a short tutorial about using the zhmcclient package.
+This section contains tutorials explaining the use of the zhmcclient package.
 
-Python code examples this tutorial are shown using
-`Jupyter Notebooks <jupyter-notebook-beginner-guide.readthedocs.io/>`_
-(formerly known as IPython Notebooks), using the online
+Each tutorial is a
+`Jupyter Notebook <http://jupyter-notebook-beginner-guide.readthedocs.io/>`_
+(formerly known as IPython Notebook).
+In order to view a tutorial, just click on a link in the table below.
+This will show the tutorial in the online
 `Jupyter Notebook Viewer <http://nbviewer.jupyter.org/>`_.
-This allows viewing them without having Jupyter installed locally.
 
-In order to run or modify the examples, Jupyter Notebook must be installed,
-and a running WBEM server should be available.
+==================================  ===========================================
+Tutorial                            Short description
+==================================  ===========================================
+:nbview:`01_notebook_basics.ipynb`  1: Basics about Jupyter notebooks
+:nbview:`02_connections.ipynb`      2: Connecting to an HMC
+:nbview:`03_datamodel.ipynb`        3: Python data model for the HMC API
+==================================  ===========================================
 
-The following table lists the available tutorials:
+Executing code in the tutorials
+-------------------------------
 
-======================================================== ==================================
-View the tutorial                                        Download the Jupyter notebook
-======================================================== ==================================
-:nbview:`Making Connections <connections.ipynb>`         :nbdown:`connections.ipynb`
-:nbview:`Python Data Model <datamodel.ipynb>`            :nbdown:`datamodel.ipynb`
-======================================================== ==================================
+In order to execute and also modify the code in the tutorials, Jupyter Notebook
+needs to be installed in a Python environment, preferrably in a
+`virtual Python environment <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_,
+and you need to have the notebook files locally.
 
+There are two options on how to do that:
+
+1. Set up the development environment for zhmcclient (see
+   :ref:`Setting up the development environment`). This will provide you with
+   an installation of Jupyter Notebook and with all the tutorial notebooks in
+   directory ``docs/notebooks``.
+
+   To start Jupyter Notebook with all tutorial notebooks, issue from the repo
+   work directory::
+
+       $ jupyter notebook --notebook-dir=docs/notebooks
+
+   If you intend to keep your changes locally, you may want to work on a copy
+   of the ``docs/notebooks`` directory that is outside of the repo work
+   directory.
+
+2. Install Jupyter Notebook and the zhmcclient package into a Python
+   environment (preferrably virtual)::
+
+       $ pip install jupyter zhmcclient
+
+   and download the tutorial notebooks using the download button in the Jupyter
+   Notebook Viewer (following the links in the table above).
+
+   To start Jupyter Notebook with the downloaded tutorial notebooks, issue::
+
+       $ jupyter notebook --notebook-dir={your-notebook-dir}
