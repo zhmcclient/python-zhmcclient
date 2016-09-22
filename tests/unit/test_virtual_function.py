@@ -14,19 +14,21 @@
 # limitations under the License.
 
 """
-Unit tests for _nic module.
+Unit tests for _virtual_function module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client, Nic
+from zhmcclient import Session, Client, VirtualFunction
 
 
-class NicTests(unittest.TestCase):
-    """All tests for Nic and NicManager classes."""
+class VirtualFunctionTests(unittest.TestCase):
+    """
+    All tests for VirtualFunction and VirtualFunctionManager classes.
+    """
 
     def setUp(self):
         self.session = Session('test-dpm-host', 'test-user', 'test-id')
@@ -78,9 +80,11 @@ class NicTests(unittest.TestCase):
                 'name': 'PART1',
                 'description': 'Test Partition',
                 'more_properties': 'bliblablub',
-                'nic-uris': [
-                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
-                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-2'
+                'virtual-function-uris': [
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-1',
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-2'
                 ]
             }
             m.get('/api/partitions/fake-part-id-1',
@@ -91,9 +95,11 @@ class NicTests(unittest.TestCase):
                 'name': 'PART2',
                 'description': 'Test Partition',
                 'more_properties': 'bliblablub',
-                'nic-uris': [
-                    '/api/partitions/fake-part-id-2/nics/fake-nic-id-4',
-                    '/api/partitions/fake-part-id-2/nics/fake-nic-id-6'
+                'virtual-function-uris': [
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-1',
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-2'
                 ]
             }
             m.get('/api/partitions/fake-part-id-2',
@@ -108,146 +114,135 @@ class NicTests(unittest.TestCase):
             self.session.logoff()
 
     def test_init(self):
-        """Test __init__() on NicManager instance in Partition."""
-        nic_mgr = self.partition.nics
-        self.assertEqual(nic_mgr.partition, self.partition)
+        """Test __init__() on VirtualFunctionManager instance in Partition."""
+        vf_mgr = self.partition.virtual_functions
+        self.assertEqual(vf_mgr.partition, self.partition)
 
     def test_list_short_ok(self):
         """
         Test successful list() with short set of properties on
-        NicManager instance in partition.
+        VirtualFunctionManager instance in partition.
         """
-        nic_mgr = self.partition.nics
-        nics = nic_mgr.list(full_properties=False)
+        vf_mgr = self.partition.virtual_functions
+        vfs = vf_mgr.list(full_properties=False)
 
-        self.assertEqual(len(nics), len(self.partition.properties['nic-uris']))
-        for idx, nic in enumerate(nics):
+        self.assertEqual(
+            len(vfs),
+            len(self.partition.properties['virtual-function-uris']))
+        for idx, vf in enumerate(vfs):
             self.assertEqual(
-                nic.properties['element-uri'],
-                self.partition.properties['nic-uris'][idx])
+                vf.properties['element-uri'],
+                self.partition.properties['virtual-function-uris'][idx])
             self.assertEqual(
-                nic.uri,
-                self.partition.properties['nic-uris'][idx])
-            self.assertFalse(nic.full_properties)
-            self.assertEqual(nic.manager, nic_mgr)
+                vf.uri,
+                self.partition.properties['virtual-function-uris'][idx])
+            self.assertFalse(vf.full_properties)
+            self.assertEqual(vf.manager, vf_mgr)
 
     def test_list_full_ok(self):
         """
         Test successful list() with full set of properties on
-        NicManager instance in partition.
+        VirtualFunctionManager instance in partition.
         """
-        nic_mgr = self.partition.nics
+        vf_mgr = self.partition.virtual_functions
 
         with requests_mock.mock() as m:
 
-            mock_result_nic1 = {
+            mock_result_vf1 = {
                 'parent': '/api/partitions/fake-part-id-1',
-                'name': 'nic1',
+                'name': 'vf1',
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
-                'class': 'nic',
-                'element-id': 'fake-nic-id-1',
-                'type': 'osd',
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-1',
+                'class': 'virtual-function',
+                'element-id': 'fake-vf-id-1',
                 'description': '',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
-                  json=mock_result_nic1)
-            mock_result_nic2 = {
+            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
+                  'fake-vf-id-1',
+                  json=mock_result_vf1)
+            mock_result_vf2 = {
                 'parent': '/api/partitions/fake-part-id-1',
-                'name': 'nic2',
+                'name': 'vf2',
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
-                'class': 'nic',
-                'element-id': 'fake-nic-id-2',
-                'type': 'osd',
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-2',
+                'class': 'virtual-function',
+                'element-id': 'fake-vf-id-2',
                 'description': '',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
-                  json=mock_result_nic2)
+            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
+                  'fake-vf-id-2',
+                  json=mock_result_vf2)
 
-            nics = nic_mgr.list(full_properties=True)
+            vfs = vf_mgr.list(full_properties=True)
 
             self.assertEqual(
-                len(nics),
-                len(self.partition.properties['nic-uris']))
-            for idx, nic in enumerate(nics):
+                len(vfs),
+                len(self.partition.properties['virtual-function-uris']))
+            for idx, vf in enumerate(vfs):
                 self.assertEqual(
-                    nic.properties['element-uri'],
-                    self.partition.properties['nic-uris'][idx])
+                    vf.properties['element-uri'],
+                    self.partition.properties['virtual-function-uris'][idx])
                 self.assertEqual(
-                    nic.uri,
-                    self.partition.properties['nic-uris'][idx])
-                self.assertTrue(nic.full_properties)
-                self.assertEqual(nic.manager, nic_mgr)
+                    vf.uri,
+                    self.partition.properties['virtual-function-uris'][idx])
+                self.assertTrue(vf.full_properties)
+                self.assertEqual(vf.manager, vf_mgr)
 
     def test_create(self):
         """
-        This tests the 'Create NIC' operation.
+        This tests the 'Create Virtual Function' operation.
         """
-        nic_mgr = self.partition.nics
+        vf_mgr = self.partition.virtual_functions
         with requests_mock.mock() as m:
             result = {
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1'
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-1'
             }
-            m.post('/api/partitions/fake-part-id-1/nics', json=result)
+            m.post('/api/partitions/fake-part-id-1/virtual-functions',
+                   json=result)
 
-            nic = nic_mgr.create(properties={})
+            vf = vf_mgr.create(properties={})
 
-            self.assertTrue(isinstance(nic, Nic))
-            self.assertEqual(nic.properties, result)
-            self.assertEqual(nic.uri, result['element-uri'])
+            self.assertTrue(isinstance(vf, VirtualFunction))
+            self.assertEqual(vf.properties, result)
+            self.assertEqual(vf.uri, result['element-uri'])
 
     def test_delete(self):
         """
-        This tests the 'Delete NIC' operation.
+        This tests the 'Delete Virtual Function' operation.
         """
-        nic_mgr = self.partition.nics
-        nics = nic_mgr.list(full_properties=False)
-        nic = nics[0]
+        vf_mgr = self.partition.virtual_functions
+        vfs = vf_mgr.list(full_properties=False)
+        vf = vfs[0]
         with requests_mock.mock() as m:
             result = {}
             m.delete(
-                '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                '/api/partitions/fake-part-id-1/virtual-functions/'
+                'fake-vf-id-1',
                 json=result)
-            status = nic.delete()
+            status = vf.delete()
             self.assertEqual(status, None)
 
     def test_update_properties(self):
         """
-        This tests the 'Update NIC Properties' operation.
+        This tests the 'Update Virtual Function Properties' operation.
         """
-        nic_mgr = self.partition.nics
-        nics = nic_mgr.list(full_properties=False)
-        nic = nics[0]
+        vf_mgr = self.partition.virtual_functions
+        vfs = vf_mgr.list(full_properties=False)
+        vf = vfs[0]
         with requests_mock.mock() as m:
             result = {}
             m.post(
-                '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                '/api/partitions/fake-part-id-1/virtual-functions/'
+                'fake-vf-id-1',
                 json=result)
-            status = nic.update_properties(properties={})
+            status = vf.update_properties(properties={})
             self.assertEqual(status, None)
-
-    def test_nic_object(self):
-        """
-        This tests the `nic_object()` method.
-        """
-        nic_mgr = self.partition.nics
-        nic_id = 'fake-nic-id0711'
-
-        nic = nic_mgr.nic_object(nic_id)
-
-        nic_uri = self.partition.uri + "/nics/" + nic_id
-
-        self.assertTrue(isinstance(nic, Nic))
-        self.assertEqual(nic.uri, nic_uri)
-        self.assertEqual(nic.properties['element-uri'], nic_uri)
-        self.assertEqual(nic.properties['element-id'], nic_id)
-        self.assertEqual(nic.properties['class'], 'nic')
-        self.assertEqual(nic.properties['parent'], self.partition.uri)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -14,19 +14,19 @@
 # limitations under the License.
 
 """
-Unit tests for _hba module.
+Unit tests for _nic module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client, Hba, Adapter, Port
+from zhmcclient import Session, Client, Nic
 
 
-class HbaTests(unittest.TestCase):
-    """All tests for Hba and HbaManager classes."""
+class NicTests(unittest.TestCase):
+    """All tests for Nic and NicManager classes."""
 
     def setUp(self):
         self.session = Session('test-dpm-host', 'test-user', 'test-id')
@@ -78,9 +78,9 @@ class HbaTests(unittest.TestCase):
                 'name': 'PART1',
                 'description': 'Test Partition',
                 'more_properties': 'bliblablub',
-                'hba-uris': [
-                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
-                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2'
+                'nic-uris': [
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-2'
                 ]
             }
             m.get('/api/partitions/fake-part-id-1',
@@ -91,9 +91,9 @@ class HbaTests(unittest.TestCase):
                 'name': 'PART2',
                 'description': 'Test Partition',
                 'more_properties': 'bliblablub',
-                'hba-uris': [
-                    '/api/partitions/fake-part-id-2/hbas/fake-hba-id-4',
-                    '/api/partitions/fake-part-id-2/hbas/fake-hba-id-6'
+                'nic-uris': [
+                    '/api/partitions/fake-part-id-2/nics/fake-nic-id-4',
+                    '/api/partitions/fake-part-id-2/nics/fake-nic-id-6'
                 ]
             }
             m.get('/api/partitions/fake-part-id-2',
@@ -108,154 +108,146 @@ class HbaTests(unittest.TestCase):
             self.session.logoff()
 
     def test_init(self):
-        """Test __init__() on HbaManager instance in Partition."""
-        hba_mgr = self.partition.hbas
-        self.assertEqual(hba_mgr.partition, self.partition)
+        """Test __init__() on NicManager instance in Partition."""
+        nic_mgr = self.partition.nics
+        self.assertEqual(nic_mgr.partition, self.partition)
 
     def test_list_short_ok(self):
         """
         Test successful list() with short set of properties on
-        HbaManager instance in partition.
+        NicManager instance in partition.
         """
-        hba_mgr = self.partition.hbas
-        hbas = hba_mgr.list(full_properties=False)
+        nic_mgr = self.partition.nics
+        nics = nic_mgr.list(full_properties=False)
 
-        self.assertEqual(len(hbas), len(self.partition.properties['hba-uris']))
-        for idx, hba in enumerate(hbas):
+        self.assertEqual(len(nics), len(self.partition.properties['nic-uris']))
+        for idx, nic in enumerate(nics):
             self.assertEqual(
-                hba.properties['element-uri'],
-                self.partition.properties['hba-uris'][idx])
+                nic.properties['element-uri'],
+                self.partition.properties['nic-uris'][idx])
             self.assertEqual(
-                hba.uri,
-                self.partition.properties['hba-uris'][idx])
-            self.assertFalse(hba.full_properties)
-            self.assertEqual(hba.manager, hba_mgr)
+                nic.uri,
+                self.partition.properties['nic-uris'][idx])
+            self.assertFalse(nic.full_properties)
+            self.assertEqual(nic.manager, nic_mgr)
 
     def test_list_full_ok(self):
         """
         Test successful list() with full set of properties on
-        HbaManager instance in partition.
+        NicManager instance in partition.
         """
-        hba_mgr = self.partition.hbas
+        nic_mgr = self.partition.nics
 
         with requests_mock.mock() as m:
 
-            mock_result_hba1 = {
+            mock_result_nic1 = {
                 'parent': '/api/partitions/fake-part-id-1',
-                'name': 'hba1',
+                'name': 'nic1',
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
-                'class': 'hba',
-                'element-id': 'fake-hba-id-1',
-                'wwpn': 'AABBCCDDEC000082',
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                'class': 'nic',
+                'element-id': 'fake-nic-id-1',
+                'type': 'osd',
                 'description': '',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
-                  json=mock_result_hba1)
-            mock_result_hba2 = {
+            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                  json=mock_result_nic1)
+            mock_result_nic2 = {
                 'parent': '/api/partitions/fake-part-id-1',
-                'name': 'hba2',
+                'name': 'nic2',
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
-                'class': 'hba',
-                'element-id': 'fake-hba-id-2',
-                'wwpn': 'AABBCCDDEC000083',
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
+                'class': 'nic',
+                'element-id': 'fake-nic-id-2',
+                'type': 'osd',
                 'description': '',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
-                  json=mock_result_hba2)
+            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
+                  json=mock_result_nic2)
 
-            hbas = hba_mgr.list(full_properties=True)
+            nics = nic_mgr.list(full_properties=True)
 
             self.assertEqual(
-                len(hbas),
-                len(self.partition.properties['hba-uris']))
-            for idx, hba in enumerate(hbas):
+                len(nics),
+                len(self.partition.properties['nic-uris']))
+            for idx, nic in enumerate(nics):
                 self.assertEqual(
-                    hba.properties['element-uri'],
-                    self.partition.properties['hba-uris'][idx])
+                    nic.properties['element-uri'],
+                    self.partition.properties['nic-uris'][idx])
                 self.assertEqual(
-                    hba.uri,
-                    self.partition.properties['hba-uris'][idx])
-                self.assertTrue(hba.full_properties)
-                self.assertEqual(hba.manager, hba_mgr)
+                    nic.uri,
+                    self.partition.properties['nic-uris'][idx])
+                self.assertTrue(nic.full_properties)
+                self.assertEqual(nic.manager, nic_mgr)
 
     def test_create(self):
         """
-        This tests the 'Create HBA' operation.
+        This tests the 'Create NIC' operation.
         """
-        hba_mgr = self.partition.hbas
+        nic_mgr = self.partition.nics
         with requests_mock.mock() as m:
             result = {
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1'
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1'
             }
-            m.post('/api/partitions/fake-part-id-1/hbas', json=result)
+            m.post('/api/partitions/fake-part-id-1/nics', json=result)
 
-            hba = hba_mgr.create(properties={})
+            nic = nic_mgr.create(properties={})
 
-            self.assertTrue(isinstance(hba, Hba))
-            self.assertEqual(hba.properties, result)
-            self.assertEqual(hba.uri, result['element-uri'])
+            self.assertTrue(isinstance(nic, Nic))
+            self.assertEqual(nic.properties, result)
+            self.assertEqual(nic.uri, result['element-uri'])
 
     def test_delete(self):
         """
-        This tests the 'Delete HBA' operation.
+        This tests the 'Delete NIC' operation.
         """
-        hba_mgr = self.partition.hbas
-        hbas = hba_mgr.list(full_properties=False)
-        hba = hbas[0]
+        nic_mgr = self.partition.nics
+        nics = nic_mgr.list(full_properties=False)
+        nic = nics[0]
         with requests_mock.mock() as m:
             result = {}
             m.delete(
-                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
                 json=result)
-            status = hba.delete()
+            status = nic.delete()
             self.assertEqual(status, None)
 
     def test_update_properties(self):
         """
-        This tests the 'Update HBA Properties' operation.
+        This tests the 'Update NIC Properties' operation.
         """
-        hba_mgr = self.partition.hbas
-        hbas = hba_mgr.list(full_properties=False)
-        hba = hbas[0]
+        nic_mgr = self.partition.nics
+        nics = nic_mgr.list(full_properties=False)
+        nic = nics[0]
         with requests_mock.mock() as m:
             result = {}
             m.post(
-                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
                 json=result)
-            status = hba.update_properties(properties={})
+            status = nic.update_properties(properties={})
             self.assertEqual(status, None)
 
-    def test_reassign_port(self):
+    def test_nic_object(self):
         """
-        This tests the 'reassign_port()' method.
+        This tests the `nic_object()` method.
         """
-        hba_mgr = self.partition.hbas
-        hba_uri = '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1'
-        hba = Hba(hba_mgr, uri=hba_uri, properties={})
+        nic_mgr = self.partition.nics
+        nic_id = 'fake-nic-id0711'
 
-        adapter_mgr = self.cpc.adapters
-        adapter_uri = '/api/adapters/fake-adapter-id-1'
-        adapter = Adapter(adapter_mgr, uri=adapter_uri, properties={})
+        nic = nic_mgr.nic_object(nic_id)
 
-        port_mgr = adapter.ports
-        port2_uri = '/api/adapters/fake-adapter-id-2/'\
-                    'storage-ports/fake-port-id-2'
-        port2 = Port(port_mgr, uri=port2_uri, properties={})
+        nic_uri = self.partition.uri + "/nics/" + nic_id
 
-        with requests_mock.mock() as m:
-            # TODO: Add the request body to the mock call:
-            # request_reassign = {
-            #     'adapter-port-uri': port2_uri
-            # }
-            m.post(hba_uri + '/operations/reassign-storage-adapter-port',
-                   json={})
+        self.assertTrue(isinstance(nic, Nic))
+        self.assertEqual(nic.uri, nic_uri)
+        self.assertEqual(nic.properties['element-uri'], nic_uri)
+        self.assertEqual(nic.properties['element-id'], nic_id)
+        self.assertEqual(nic.properties['class'], 'nic')
+        self.assertEqual(nic.properties['parent'], self.partition.uri)
 
-            hba.reassign_port(port2)
 
 if __name__ == '__main__':
     unittest.main()

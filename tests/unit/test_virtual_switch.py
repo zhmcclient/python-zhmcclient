@@ -17,7 +17,7 @@
 Unit tests for _virtual_switch module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import unittest
 import re

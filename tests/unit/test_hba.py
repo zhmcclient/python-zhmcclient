@@ -14,21 +14,19 @@
 # limitations under the License.
 
 """
-Unit tests for _virtual_function module.
+Unit tests for _hba module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import unittest
 import requests_mock
 
-from zhmcclient import Session, Client, VirtualFunction
+from zhmcclient import Session, Client, Hba, Adapter, Port
 
 
-class VirtualFunctionTests(unittest.TestCase):
-    """
-    All tests for VirtualFunction and VirtualFunctionManager classes.
-    """
+class HbaTests(unittest.TestCase):
+    """All tests for Hba and HbaManager classes."""
 
     def setUp(self):
         self.session = Session('test-dpm-host', 'test-user', 'test-id')
@@ -80,11 +78,9 @@ class VirtualFunctionTests(unittest.TestCase):
                 'name': 'PART1',
                 'description': 'Test Partition',
                 'more_properties': 'bliblablub',
-                'virtual-function-uris': [
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-1',
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-2'
+                'hba-uris': [
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2'
                 ]
             }
             m.get('/api/partitions/fake-part-id-1',
@@ -95,11 +91,9 @@ class VirtualFunctionTests(unittest.TestCase):
                 'name': 'PART2',
                 'description': 'Test Partition',
                 'more_properties': 'bliblablub',
-                'virtual-function-uris': [
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-1',
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-2'
+                'hba-uris': [
+                    '/api/partitions/fake-part-id-2/hbas/fake-hba-id-4',
+                    '/api/partitions/fake-part-id-2/hbas/fake-hba-id-6'
                 ]
             }
             m.get('/api/partitions/fake-part-id-2',
@@ -114,135 +108,154 @@ class VirtualFunctionTests(unittest.TestCase):
             self.session.logoff()
 
     def test_init(self):
-        """Test __init__() on VirtualFunctionManager instance in Partition."""
-        vf_mgr = self.partition.virtual_functions
-        self.assertEqual(vf_mgr.partition, self.partition)
+        """Test __init__() on HbaManager instance in Partition."""
+        hba_mgr = self.partition.hbas
+        self.assertEqual(hba_mgr.partition, self.partition)
 
     def test_list_short_ok(self):
         """
         Test successful list() with short set of properties on
-        VirtualFunctionManager instance in partition.
+        HbaManager instance in partition.
         """
-        vf_mgr = self.partition.virtual_functions
-        vfs = vf_mgr.list(full_properties=False)
+        hba_mgr = self.partition.hbas
+        hbas = hba_mgr.list(full_properties=False)
 
-        self.assertEqual(
-            len(vfs),
-            len(self.partition.properties['virtual-function-uris']))
-        for idx, vf in enumerate(vfs):
+        self.assertEqual(len(hbas), len(self.partition.properties['hba-uris']))
+        for idx, hba in enumerate(hbas):
             self.assertEqual(
-                vf.properties['element-uri'],
-                self.partition.properties['virtual-function-uris'][idx])
+                hba.properties['element-uri'],
+                self.partition.properties['hba-uris'][idx])
             self.assertEqual(
-                vf.uri,
-                self.partition.properties['virtual-function-uris'][idx])
-            self.assertFalse(vf.full_properties)
-            self.assertEqual(vf.manager, vf_mgr)
+                hba.uri,
+                self.partition.properties['hba-uris'][idx])
+            self.assertFalse(hba.full_properties)
+            self.assertEqual(hba.manager, hba_mgr)
 
     def test_list_full_ok(self):
         """
         Test successful list() with full set of properties on
-        VirtualFunctionManager instance in partition.
+        HbaManager instance in partition.
         """
-        vf_mgr = self.partition.virtual_functions
+        hba_mgr = self.partition.hbas
 
         with requests_mock.mock() as m:
 
-            mock_result_vf1 = {
+            mock_result_hba1 = {
                 'parent': '/api/partitions/fake-part-id-1',
-                'name': 'vf1',
+                'name': 'hba1',
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-1',
-                'class': 'virtual-function',
-                'element-id': 'fake-vf-id-1',
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                'class': 'hba',
+                'element-id': 'fake-hba-id-1',
+                'wwpn': 'AABBCCDDEC000082',
                 'description': '',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
-                  'fake-vf-id-1',
-                  json=mock_result_vf1)
-            mock_result_vf2 = {
+            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                  json=mock_result_hba1)
+            mock_result_hba2 = {
                 'parent': '/api/partitions/fake-part-id-1',
-                'name': 'vf2',
+                'name': 'hba2',
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-2',
-                'class': 'virtual-function',
-                'element-id': 'fake-vf-id-2',
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
+                'class': 'hba',
+                'element-id': 'fake-hba-id-2',
+                'wwpn': 'AABBCCDDEC000083',
                 'description': '',
                 'more_properties': 'bliblablub'
             }
-            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
-                  'fake-vf-id-2',
-                  json=mock_result_vf2)
+            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
+                  json=mock_result_hba2)
 
-            vfs = vf_mgr.list(full_properties=True)
+            hbas = hba_mgr.list(full_properties=True)
 
             self.assertEqual(
-                len(vfs),
-                len(self.partition.properties['virtual-function-uris']))
-            for idx, vf in enumerate(vfs):
+                len(hbas),
+                len(self.partition.properties['hba-uris']))
+            for idx, hba in enumerate(hbas):
                 self.assertEqual(
-                    vf.properties['element-uri'],
-                    self.partition.properties['virtual-function-uris'][idx])
+                    hba.properties['element-uri'],
+                    self.partition.properties['hba-uris'][idx])
                 self.assertEqual(
-                    vf.uri,
-                    self.partition.properties['virtual-function-uris'][idx])
-                self.assertTrue(vf.full_properties)
-                self.assertEqual(vf.manager, vf_mgr)
+                    hba.uri,
+                    self.partition.properties['hba-uris'][idx])
+                self.assertTrue(hba.full_properties)
+                self.assertEqual(hba.manager, hba_mgr)
 
     def test_create(self):
         """
-        This tests the 'Create Virtual Function' operation.
+        This tests the 'Create HBA' operation.
         """
-        vf_mgr = self.partition.virtual_functions
+        hba_mgr = self.partition.hbas
         with requests_mock.mock() as m:
             result = {
                 'element-uri':
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-1'
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1'
             }
-            m.post('/api/partitions/fake-part-id-1/virtual-functions',
-                   json=result)
+            m.post('/api/partitions/fake-part-id-1/hbas', json=result)
 
-            vf = vf_mgr.create(properties={})
+            hba = hba_mgr.create(properties={})
 
-            self.assertTrue(isinstance(vf, VirtualFunction))
-            self.assertEqual(vf.properties, result)
-            self.assertEqual(vf.uri, result['element-uri'])
+            self.assertTrue(isinstance(hba, Hba))
+            self.assertEqual(hba.properties, result)
+            self.assertEqual(hba.uri, result['element-uri'])
 
     def test_delete(self):
         """
-        This tests the 'Delete Virtual Function' operation.
+        This tests the 'Delete HBA' operation.
         """
-        vf_mgr = self.partition.virtual_functions
-        vfs = vf_mgr.list(full_properties=False)
-        vf = vfs[0]
+        hba_mgr = self.partition.hbas
+        hbas = hba_mgr.list(full_properties=False)
+        hba = hbas[0]
         with requests_mock.mock() as m:
             result = {}
             m.delete(
-                '/api/partitions/fake-part-id-1/virtual-functions/'
-                'fake-vf-id-1',
+                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
                 json=result)
-            status = vf.delete()
+            status = hba.delete()
             self.assertEqual(status, None)
 
     def test_update_properties(self):
         """
-        This tests the 'Update Virtual Function Properties' operation.
+        This tests the 'Update HBA Properties' operation.
         """
-        vf_mgr = self.partition.virtual_functions
-        vfs = vf_mgr.list(full_properties=False)
-        vf = vfs[0]
+        hba_mgr = self.partition.hbas
+        hbas = hba_mgr.list(full_properties=False)
+        hba = hbas[0]
         with requests_mock.mock() as m:
             result = {}
             m.post(
-                '/api/partitions/fake-part-id-1/virtual-functions/'
-                'fake-vf-id-1',
+                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
                 json=result)
-            status = vf.update_properties(properties={})
+            status = hba.update_properties(properties={})
             self.assertEqual(status, None)
+
+    def test_reassign_port(self):
+        """
+        This tests the 'reassign_port()' method.
+        """
+        hba_mgr = self.partition.hbas
+        hba_uri = '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1'
+        hba = Hba(hba_mgr, uri=hba_uri, properties={})
+
+        adapter_mgr = self.cpc.adapters
+        adapter_uri = '/api/adapters/fake-adapter-id-1'
+        adapter = Adapter(adapter_mgr, uri=adapter_uri, properties={})
+
+        port_mgr = adapter.ports
+        port2_uri = '/api/adapters/fake-adapter-id-2/'\
+                    'storage-ports/fake-port-id-2'
+        port2 = Port(port_mgr, uri=port2_uri, properties={})
+
+        with requests_mock.mock() as m:
+            # TODO: Add the request body to the mock call:
+            # request_reassign = {
+            #     'adapter-port-uri': port2_uri
+            # }
+            m.post(hba_uri + '/operations/reassign-storage-adapter-port',
+                   json={})
+
+            hba.reassign_port(port2)
 
 if __name__ == '__main__':
     unittest.main()

@@ -17,13 +17,12 @@
 Unit tests for _resource module.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import unittest
 import time
 
-from zhmcclient._resource import BaseResource
-from zhmcclient._manager import BaseManager
+from zhmcclient import BaseResource, BaseManager
 
 
 class MyResource(BaseResource):

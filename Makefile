@@ -82,7 +82,8 @@ pylint_rc_file := .pylintrc
 check_py_files := \
     setup.py \
     $(wildcard $(package_name)/*.py) \
-    $(wildcard tests/test*.py) \
+    $(wildcard tests/unit/*.py) \
+    $(wildcard tests/function/*.py) \
 
 # Test log
 test_log_file := test_$(python_version_fn).log
@@ -265,7 +266,7 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
-$(test_log_file): Makefile $(package_name)/*.py tests/*.py .coveragerc
+$(test_log_file): Makefile $(package_name)/*.py tests/unit/*.py tests/function/*.py .coveragerc
 	rm -fv $@
 	bash -c "set -o pipefail; PYTHONWARNINGS=default py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) -s 2>&1 |tee $@.tmp"
 	mv -f $@.tmp $@
