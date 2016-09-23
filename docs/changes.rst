@@ -54,6 +54,8 @@ Released: Not yet
   'List Partitions' and  'List Logical Partitions' operations, in order to
   avoid the 'List CPC Properties' operation.
 
+* Improved tutorials.
+
 **Known Issues:**
 
 * See `list of open issues`_.
