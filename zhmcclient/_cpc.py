@@ -262,7 +262,7 @@ class Cpc(BaseResource):
             self.partitions.list()
             return True
         except HTTPError as exc:
-            if exc.http_status == '404' and exc.reason == '1':
+            if exc.http_status == 404 and exc.reason == 1:
                 # Description of this error: The request URI does not designate
                 # an existing resource of the expected type, or designates a
                 # resource for which the API user does not have object-access

@@ -124,8 +124,8 @@ class CpcTests(unittest.TestCase):
             }
             m.get('/api/cpcs/fake-cpc-id-1/partitions', json=mock_result_cpc1p)
             mock_result_cpc1l = {
-                'http-status': '404',
-                'reason': '1',
+                'http-status': 404,
+                'reason': 1,
                 'message': 'Invalid resource',
             }
             m.get('/api/cpcs/fake-cpc-id-1/logical-partitions',
@@ -140,8 +140,8 @@ class CpcTests(unittest.TestCase):
             }
             m.get('/api/cpcs/fake-cpc-id-2', json=mock_result_cpc2)
             mock_result_cpc2p = {
-                'http-status': '404',
-                'reason': '1',
+                'http-status': 404,
+                'reason': 1,
                 'message': 'Invalid resource',
             }
             m.get('/api/cpcs/fake-cpc-id-2/partitions',
@@ -167,8 +167,8 @@ class CpcTests(unittest.TestCase):
             }
             m.get('/api/cpcs/fake-cpc-id-3', json=mock_result_cpc3)
             mock_result_cpc3p = {
-                'http-status': '404',
-                'reason': '1',
+                'http-status': 404,
+                'reason': 1,
                 'message': 'Invalid resource',
             }
             m.get('/api/cpcs/fake-cpc-id-3/partitions',
