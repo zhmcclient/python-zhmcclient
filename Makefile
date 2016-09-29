@@ -84,6 +84,7 @@ check_py_files := \
     $(wildcard $(package_name)/*.py) \
     $(wildcard tests/unit/*.py) \
     $(wildcard tests/function/*.py) \
+    $(wildcard docs/notebooks/*.py) \
 
 # Test log
 test_log_file := test_$(python_version_fn).log
