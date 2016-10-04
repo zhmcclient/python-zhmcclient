@@ -26,7 +26,7 @@ except ImportError:
     from ordereddict import OrderedDict
 import requests
 
-from ._exceptions import HTTPError, AuthError, ConnectionError
+from ._exceptions import HTTPError, AuthError, ConnectionError, ParseError
 from ._timestats import TimeStatsKeeper
 from ._logging import _get_logger, _log_call
 
@@ -314,9 +314,9 @@ class Session(object):
             stats.end()
 
         if result.status_code == 200:
-            return result.json(object_pairs_hook=OrderedDict)
+            return _result_object(result)
         elif result.status_code == 403:
-            reason = result.json().get('reason', None)
+            reason = _result_object(result).get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
                 if logon_required:
@@ -328,11 +328,11 @@ class Session(object):
                                     format(uri))
                 return self.get(uri, logon_required)
             else:
-                exc = HTTPError(result.json(object_pairs_hook=OrderedDict))
+                exc = HTTPError(_result_object(result))
                 raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
-            raise HTTPError(result.json(object_pairs_hook=OrderedDict))
+            raise HTTPError(_result_object(result))
 
     @_log_call
     def post(self, uri, body=None, logon_required=True,
@@ -447,15 +447,15 @@ class Session(object):
             stats.end()
 
         if result.status_code in (200, 201):
-            return result.json(object_pairs_hook=OrderedDict)
+            return _result_object(result)
         elif result.status_code == 204:
             # No content
             return None
         elif result.status_code == 202:
-            job_uri = result.json()['job-uri']
+            job_uri = _result_object(result)['job-uri']
             job_url = self.base_url + job_uri
             if not wait_for_completion:
-                return result.json(object_pairs_hook=OrderedDict)
+                return _result_object(result)
             while 1:
                 self._log_http_method('GET', job_uri)
                 stats = self.time_stats_keeper.get_stats('get ' + job_uri)
@@ -469,16 +469,16 @@ class Session(object):
                 finally:
                     stats.end()
                 if result.status_code in (200, 204):
-                    if result.json()['status'] == 'complete':
+                    if _result_object(result)['status'] == 'complete':
                         self.delete_completed_job_status(job_uri)
-                        return result.json(object_pairs_hook=OrderedDict)
+                        return _result_object(result)
                     else:
                         # TODO: Add support for timeout
                         time.sleep(1)  # Avoid hot spin loop
                 else:
-                    raise HTTPError(result.json(object_pairs_hook=OrderedDict))
+                    raise HTTPError(_result_object(result))
         elif result.status_code == 403:
-            reason = result.json().get('reason', None)
+            reason = _result_object(result).get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
                 if logon_required:
@@ -490,11 +490,11 @@ class Session(object):
                                     format(uri))
                 return self.post(uri, body, logon_required)
             else:
-                exc = HTTPError(result.json(object_pairs_hook=OrderedDict))
+                exc = HTTPError(_result_object(result))
                 raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
-            raise HTTPError(result.json(object_pairs_hook=OrderedDict))
+            raise HTTPError(_result_object(result))
 
     @_log_call
     def delete(self, uri, logon_required=True):
@@ -546,7 +546,7 @@ class Session(object):
         if result.status_code in (200, 204):
             return
         elif result.status_code == 403:
-            reason = result.json().get('reason', None)
+            reason = _result_object(result).get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
                 if logon_required:
@@ -559,11 +559,11 @@ class Session(object):
                 self.delete(uri, logon_required)
                 return
             else:
-                exc = HTTPError(result.json(object_pairs_hook=OrderedDict))
+                exc = HTTPError(_result_object(result))
                 raise AuthError("HTTP authentication failed: {}".
                                 format(str(exc)))
         else:
-            raise HTTPError(result.json(object_pairs_hook=OrderedDict))
+            raise HTTPError(_result_object(result))
 
     @_log_call
     def query_job_status(self, job_uri):
@@ -661,3 +661,17 @@ class Session(object):
         topics_uri = '/api/sessions/operations/get-notification-topics'
         response = self.get(topics_uri)
         return response['topics']
+
+
+def _result_object(result):
+    """
+    Return the JSON payload in the HTTP response as a Python dict.
+
+    Raises:
+        zhmcclient.ParseError: Error parsing the returned JSON.
+    """
+    try:
+        return result.json(object_pairs_hook=OrderedDict)
+    except ValueError as exc:
+        raise ParseError("Parse error in returned JSON: {}".
+                         format(exc.args[0]))
