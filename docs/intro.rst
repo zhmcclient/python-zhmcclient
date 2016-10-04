@@ -100,18 +100,12 @@ your system Python installation unchanged.
 .. _virtual Python environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 
 As an alternative, if you want to install the latest development level of the
-zhmcclient package for some reason, clone the Git repository of the package and
-install it using Pip from its work directory:
+zhmcclient package for some reason, install directly from the ``master`` branch
+of the Git repository of the package:
 
 ::
 
-    $ git clone git@github.com:zhmcclient/python-zhmcclient.git
-    $ cd python-zhmcclient
-    $ pip install .
-
-This will install the package from the checked out branch in the Git work
-directory (by default, the ``master`` branch) and will download and install its
-dependent packages into your current Python environment.
+    $ pip install git+https://github.com/zhmcclient/python-zhmcclient.git@master
 
 You can verify that the zhmcclient package and its dependent packages are
 installed correctly by importing the package into Python:
