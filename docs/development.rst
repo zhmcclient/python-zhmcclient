@@ -244,18 +244,23 @@ the `Makefile` is), and perform the following steps in that directory:
         git checkout master
         git pull
 
-4.  Verify that the change log (`docs/changes.rst`) reflects all changes since
-    the previous version. Make sure the changes listed there are relevant and
-    understandable for users.
+4.  Edit the change log (`docs/changes.rst`) and perform the following changes:
 
-    * If changes were needed, commit them to the `master` branch and push them
-      upstream::
+    * Insert a heading and release date for the version that is now released,
+      below the "in development" heading and release date.
 
-          git add docs/changes.rst
-          git commit -sm "Updated change log."
-          git push
+    * Make sure that the change log entries for the new release reflect all
+      changes since the previous version. Make sure the changes listed there are
+      relevant and understandable for users.
 
-5.  Perform a complete test::
+5.  Commit your changes to the change log to the `master` branch and push them
+    upstream (without using a topic branch)::
+
+        git add docs/changes.rst
+        git commit -sm "Updated change log for $MNU release."
+        git push
+
+6.  Perform a complete test::
 
         tox
 
@@ -271,39 +276,39 @@ the `Makefile` is), and perform the following steps in that directory:
 
       Wait for the Travis CI to show success for this change.
 
-6.  Tag the head of the master branch with the release label::
+7.  Tag the head of the master branch with the release label::
 
         git tag $MNU
 
-7.  Push the tag upstream::
+8.  Push the tag upstream::
 
         git push --tags
 
-8.  On GitHub, edit the new tag, and create a release description on it. This
+9.  On GitHub, edit the new tag, and create a release description on it. This
     will cause it to appear in the Release tab.
 
-9.  Upload the package to PyPI::
+10. Upload the package to PyPI::
 
         make upload
 
     **Attention!!** This only works once. You cannot re-release the same
     version to PyPI.
 
-10. Verify that the released version is shown on PyPI:
+11. Verify that the released version is shown on PyPI:
 
     https://pypi.python.org/pypi/zhmcclient/
 
-11. Verify that RTD shows the released version as its stable version:
+12. Verify that RTD shows the released version as its stable version:
 
     https://python-zhmcclient.readthedocs.io/en/stable/intro.html#versioning
 
     Note: The pushing of the tag to GitHub should be sufficient for RTD to
     rebuild the stable documentation, but it may take a while to build it.
 
-12. On GitHub, close milestone `M.N.U`.
+13. On GitHub, close milestone `M.N.U`.
 
-13. On GitHub, create a new milestone for development of the next release,
+14. On GitHub, create a new milestone for development of the next release,
     e.g. `M.N+1.0`.
 
-14. On GitHub, re-assign any open issues and pull request that still have
+15. On GitHub, re-assign any open issues and pull request that still have
     milestone `M.N.U` set, to the next milestone, or remove the milestone.
