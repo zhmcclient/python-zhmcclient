@@ -57,14 +57,32 @@ class ConnectionError(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, msg):
+    def __init__(self, msg, details=None):
         """
         Parameters:
 
           msg (:term:`string`):
             A human readable message describing the problem.
+
+          details (Exception):
+            The original exception describing details about the error.
         """
         super(ConnectionError, self).__init__(msg)
+        self._details = details
+
+    @property
+    def details(self):
+        """
+        The original exception describing details about the error, if there
+        was such an original exception.  This may be one of the following
+        exceptions:
+
+        * :exc:`~requests.exceptions.RequestException`
+        * Other exceptions (TODO: Describe details)
+
+        `None`, otherwise.
+        """
+        return self._details
 
 
 class AuthError(Error):
@@ -76,14 +94,32 @@ class AuthError(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, msg):
+    def __init__(self, msg, details=None):
         """
         Parameters:
 
           msg (:term:`string`):
             A human readable message describing the problem.
+
+          details (Exception):
+            The original exception describing details about the error.
         """
         super(AuthError, self).__init__(msg)
+        self._details = details
+
+    @property
+    def details(self):
+        """
+        The original exception describing details about the error, if there
+        was such an original exception.  This may be one of the following
+        exceptions:
+
+        * :exc:`~zhmcclient.HTTPError`
+        * Other exceptions (TODO: Describe details)
+
+        `None`, otherwise.
+        """
+        return self._details
 
 
 class ParseError(Error):

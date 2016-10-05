@@ -36,6 +36,10 @@ Released: Not yet
   response cannot be parsed, and improved the definition of the ParseError
   exception by adding line and column information.
 
+* Improved the `AuthError` and `ConnectionError` exceptions by adding a
+  `details` property that provides access to the underlying exception
+  describing details.
+
 **Known Issues:**
 
 * See `list of open issues`_.

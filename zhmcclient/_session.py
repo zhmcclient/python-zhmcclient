@@ -309,30 +309,32 @@ class Session(object):
             result = req.get(url, headers=self.headers, verify=False)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
-            raise ConnectionError(str(exc))
+            raise ConnectionError(exc.args[0], exc)
         finally:
             stats.end()
 
         if result.status_code == 200:
             return _result_object(result)
         elif result.status_code == 403:
-            reason = _result_object(result).get('reason', None)
+            result_object = _result_object(result)
+            reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
                 if logon_required:
                     self._do_logon()
                 else:
                     raise AuthError("API session token unexpectedly expired "
-                                    "for GET on resource that does not "
+                                    "for GET on a resource that does not "
                                     "require authentication: {}".
-                                    format(uri))
+                                    format(uri), HTTPError(result_object))
                 return self.get(uri, logon_required)
             else:
-                exc = HTTPError(_result_object(result))
+                msg = result_object.get('message', None)
                 raise AuthError("HTTP authentication failed: {}".
-                                format(str(exc)))
+                                format(msg), HTTPError(result_object))
         else:
-            raise HTTPError(_result_object(result))
+            result_object = _result_object(result)
+            raise HTTPError(result_object)
 
     @_log_call
     def post(self, uri, body=None, logon_required=True,
@@ -442,7 +444,7 @@ class Session(object):
                                   verify=False)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
-            raise ConnectionError(str(exc))
+            raise ConnectionError(exc.args[0], exc)
         finally:
             stats.end()
 
@@ -452,10 +454,11 @@ class Session(object):
             # No content
             return None
         elif result.status_code == 202:
-            job_uri = _result_object(result)['job-uri']
+            result_object = _result_object(result)
+            job_uri = result_object['job-uri']
             job_url = self.base_url + job_uri
             if not wait_for_completion:
-                return _result_object(result)
+                return result_object
             while 1:
                 self._log_http_method('GET', job_uri)
                 stats = self.time_stats_keeper.get_stats('get ' + job_uri)
@@ -465,36 +468,38 @@ class Session(object):
                                      verify=False)
                     self._log_hmc_request_id(result)
                 except requests.exceptions.RequestException as exc:
-                    raise ConnectionError(str(exc))
+                    raise ConnectionError(exc.args[0], exc)
                 finally:
                     stats.end()
                 if result.status_code in (200, 204):
-                    if _result_object(result)['status'] == 'complete':
+                    if result_object['status'] == 'complete':
                         self.delete_completed_job_status(job_uri)
-                        return _result_object(result)
+                        return result_object
                     else:
                         # TODO: Add support for timeout
                         time.sleep(1)  # Avoid hot spin loop
                 else:
-                    raise HTTPError(_result_object(result))
+                    raise HTTPError(result_object)
         elif result.status_code == 403:
-            reason = _result_object(result).get('reason', None)
+            result_object = _result_object(result)
+            reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
                 if logon_required:
                     self._do_logon()
                 else:
                     raise AuthError("API session token unexpectedly expired "
-                                    "for POST on resource that does not "
+                                    "for POST on a resource that does not "
                                     "require authentication: {}".
-                                    format(uri))
+                                    format(uri), HTTPError(result_object))
                 return self.post(uri, body, logon_required)
             else:
-                exc = HTTPError(_result_object(result))
+                msg = result_object.get('message', None)
                 raise AuthError("HTTP authentication failed: {}".
-                                format(str(exc)))
+                                format(msg), HTTPError(result_object))
         else:
-            raise HTTPError(_result_object(result))
+            result_object = _result_object(result)
+            raise HTTPError(result_object)
 
     @_log_call
     def delete(self, uri, logon_required=True):
@@ -539,31 +544,33 @@ class Session(object):
             result = req.delete(url, headers=self.headers, verify=False)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
-            raise ConnectionError(str(exc))
+            raise ConnectionError(exc.args[0], exc)
         finally:
             stats.end()
 
         if result.status_code in (200, 204):
             return
         elif result.status_code == 403:
-            reason = _result_object(result).get('reason', None)
+            result_object = _result_object(result)
+            reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
                 if logon_required:
                     self._do_logon()
                 else:
                     raise AuthError("API session token unexpectedly expired "
-                                    "for DELETE on resource that does not "
+                                    "for DELETE on a resource that does not "
                                     "require authentication: {}".
-                                    format(uri))
+                                    format(uri), HTTPError(result_object))
                 self.delete(uri, logon_required)
                 return
             else:
-                exc = HTTPError(_result_object(result))
+                msg = result_object.get('message', None)
                 raise AuthError("HTTP authentication failed: {}".
-                                format(str(exc)))
+                                format(msg), HTTPError(result_object))
         else:
-            raise HTTPError(_result_object(result))
+            result_object = _result_object(result)
+            raise HTTPError(result_object)
 
     @_log_call
     def query_job_status(self, job_uri):

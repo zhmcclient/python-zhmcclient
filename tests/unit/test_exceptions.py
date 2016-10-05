@@ -84,11 +84,14 @@ class SimpleTestMixin(object):
     """
     Mixin to test a number of simple exception classes.
 
-    Simple exception classes take a message string as the single input
-    argument.
+    Simple exception classes take a message string as the first input
+    argument. Additional arguments may be defined and are not tested by this
+    mixin class.
     """
 
-    exc_class = Exception  # Exception class to be tested
+    # Derived classes set this (as an instance variable) to the exception class
+    # to be tested:
+    exc_class = None
 
     def test_empty(self):
         """Test simple exception with no argument."""
@@ -115,8 +118,14 @@ class SimpleTestMixin(object):
         self.assertEqual(len(exc.args), 1)
         self.assertEqual(exc.args[0], 'zaphod')
 
-    def test_two(self):
-        """Test simple exception with two arguments."""
+
+class SingleArgTestMixin(object):
+    """
+    Mixin to test simple exception classes with a single argument.
+    """
+
+    def test_fail_two(self):
+        """Test that single argument exception fails with two arguments."""
 
         try:
             self.exc_class('zaphod', 42)
@@ -130,7 +139,37 @@ class SimpleTestMixin(object):
             self.fail("No exception was raised.")
 
 
-class TestConnectionError(unittest.TestCase, SimpleTestMixin):
+class DetailsTestMixin(object):
+    """
+    Mixin to test exception classes with a `details` property.
+    """
+
+    def test_details_none(self):
+        """Test details property with None."""
+
+        exc = AuthError("Bla bla", None)
+
+        self.assertIsNone(exc.details)
+
+    def test_details_default(self):
+        """Test details property with default."""
+
+        exc = AuthError("Bla bla")
+
+        self.assertIsNone(exc.details)
+
+    def test_details_valueerror(self):
+        """Test details property with a ValueError."""
+
+        details_exc = ValueError("value error")
+
+        exc = AuthError("Bla bla", details_exc)
+
+        self.assertEqual(exc.details, details_exc)
+
+
+class TestConnectionError(unittest.TestCase, SimpleTestMixin,
+                          DetailsTestMixin):
     """
     Test the simple exception class ``ConnectionError``.
     """
@@ -139,7 +178,7 @@ class TestConnectionError(unittest.TestCase, SimpleTestMixin):
         self.exc_class = ConnectionError
 
 
-class TestAuthError(unittest.TestCase, SimpleTestMixin):
+class TestAuthError(unittest.TestCase, SimpleTestMixin, DetailsTestMixin):
     """
     Test the simple exception class ``AuthError``.
     """
@@ -148,7 +187,7 @@ class TestAuthError(unittest.TestCase, SimpleTestMixin):
         self.exc_class = AuthError
 
 
-class TestParseError(unittest.TestCase, SimpleTestMixin):
+class TestParseError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
     """
     Test the simple exception class ``ParseError``.
     """
@@ -182,7 +221,7 @@ class TestParseError(unittest.TestCase, SimpleTestMixin):
         self.assertEqual(exc.column, None)
 
 
-class TestVersionError(unittest.TestCase, SimpleTestMixin):
+class TestVersionError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
     """
     Test the simple exception class ``VersionError``.
     """
@@ -191,10 +230,13 @@ class TestVersionError(unittest.TestCase, SimpleTestMixin):
         self.exc_class = VersionError
 
 
-class TestHTTPError(unittest.TestCase, SimpleTestMixin):
+class TestHTTPError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
     """
     Test exception class ``HTTPError``.
     """
+
+    def setUp(self):
+        self.exc_class = HTTPError
 
     def test_empty(self):
         """Test HTTPError with no arguments (expecting failure)."""
