@@ -131,8 +131,7 @@ class PortTests(unittest.TestCase):
             ports = port_mgr.list(full_properties=False)
             if len(ports) != 0:
                 result_adapter = self.result['adapters'][idy]
-                if 'storage-port-uris' in self.result['adapters'][idy]:
-                    self.result['adapters'][idy]
+                if 'storage-port-uris' in result_adapter:
                     storage_uris = result_adapter['storage-port-uris']
                     uris = storage_uris
                 else:

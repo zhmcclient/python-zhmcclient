@@ -39,7 +39,7 @@ def make_client(zhmc, userid=None, password=None):
     to this method.
     """
 
-    global USERID, PASSWORD
+    global USERID, PASSWORD  # pylint: disable=global-statement
 
     USERID = userid or USERID or \
         six.input('Enter userid for HMC {}: '.format(zhmc))

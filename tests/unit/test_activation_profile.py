@@ -122,12 +122,12 @@ class ActivationProfileTests(unittest.TestCase):
                     {
                         'name': 'LPAR1',
                         'element-uri': '/api/cpcs/fake-element-uri-id-1/'
-                        'image-activation-profiles/LPAR1'
+                                       'image-activation-profiles/LPAR1'
                     },
                     {
                         'name': 'LPAR2',
                         'element-uri': '/api/cpcs/fake-element-uri-id-2/'
-                        'image-activation-profiles/LPAR2'
+                                       'image-activation-profiles/LPAR2'
                     }
                 ]
             }
@@ -181,12 +181,12 @@ class ActivationProfileTests(unittest.TestCase):
                     {
                         'name': 'LPAR1',
                         'element-uri': '/api/cpcs/fake-element-uri-id-1/'
-                        'image-activation-profiles/LPAR1'
+                                       'image-activation-profiles/LPAR1'
                     },
                     {
                         'name': 'LPAR2',
                         'element-uri': '/api/cpcs/fake-element-uri-id-2/'
-                        'image-activation-profiles/LPAR2'
+                                       'image-activation-profiles/LPAR2'
                     }
                 ]
             }
