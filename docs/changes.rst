@@ -62,6 +62,9 @@ Released: 2016-10-04
 
 **Bug fixes:**
 
+* Fixed that in `Partition.dump_partition()`, `wait_for_completion` was always
+  passed on as `True`, ignoring the corresponding input argument.
+
 **Enhancements:**
 
 * Added a script named ``tools/cpcinfo`` that displays information about CPCs.

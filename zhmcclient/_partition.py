@@ -405,7 +405,7 @@ class Partition(BaseResource):
         partition_uri = self.get_property('object-uri')
         result = self.manager.session.post(
             partition_uri + '/operations/scsi-dump',
-            wait_for_completion=True, body=parameters)
+            wait_for_completion=wait_for_completion, body=parameters)
         return result
 
     def psw_restart(self, wait_for_completion=True):

@@ -161,7 +161,7 @@ class SessionTests(unittest.TestCase):
                                    exp_col)
 
     @staticmethod
-    def test_delete_completed_job_status():
+    def test_delete_compl_job_status():
         """
         This tests the 'Delete Completed Job Status' operation.
         """
