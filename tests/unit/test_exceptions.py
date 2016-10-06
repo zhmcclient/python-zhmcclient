@@ -156,6 +156,31 @@ class TestParseError(unittest.TestCase, SimpleTestMixin):
     def setUp(self):
         self.exc_class = ParseError
 
+    def test_line_column_1(self):
+        """A simple message string that matches the line/col parsing."""
+
+        exc = ParseError("Bla: line 42 column 7 (char 6)")
+
+        self.assertEqual(exc.line, 42)
+        self.assertEqual(exc.column, 7)
+
+    def test_line_column_2(self):
+        """A minimally matching message string."""
+
+        exc = ParseError(": line 7 column 42 ")
+
+        self.assertEqual(exc.line, 7)
+        self.assertEqual(exc.column, 42)
+
+    def test_line_column_3(self):
+        """A message string that does not match (because of the 'x' in the
+        line)."""
+
+        exc = ParseError(": line 7x column 42 ")
+
+        self.assertEqual(exc.line, None)
+        self.assertEqual(exc.column, None)
+
 
 class TestVersionError(unittest.TestCase, SimpleTestMixin):
     """

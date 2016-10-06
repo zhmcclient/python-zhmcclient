@@ -16,6 +16,9 @@
 Exceptions that can be raised by the client.
 """
 
+import re
+
+
 __all__ = ['Error', 'ConnectionError', 'AuthError', 'ParseError',
            'VersionError', 'HTTPError', 'NoUniqueMatch', 'NotFound']
 
@@ -85,12 +88,15 @@ class AuthError(Error):
 
 class ParseError(Error):
     """
-    This exception indicates a parsing error while processing a response from
-    the HMC.
+    This exception indicates a parsing error while processing the JSON payload
+    in a response from the HMC.
 
     Derived from :exc:`~zhmcclient.Error`.
 
-    TODO: Do we need specific properties, e.g. for line/column?
+    The error location within the payload is automatically determined by
+    parsing the error message for the pattern::
+
+      ``': line 1 column 2 '``
     """
 
     def __init__(self, msg):
@@ -99,8 +105,38 @@ class ParseError(Error):
 
           msg (:term:`string`):
             A human readable message describing the problem.
+
+            This should be the message of the `ValueError` exception raised
+            by methods of the :class:`py:json.JSONDecoder` class.
         """
         super(ParseError, self).__init__(msg)
+        m = re.search(r': line ([0-9]+) column ([0-9]+) ', msg)
+        if m:
+            self._line = int(m.group(1))
+            self._column = int(m.group(2))
+        else:
+            self._line = None
+            self._column = None
+
+    @property
+    def line(self):
+        """
+        The 1-based line number of the error location within the JSON payload,
+        as an integer.
+
+        `None` indicates that the error location is not available.
+        """
+        return self._line
+
+    @property
+    def column(self):
+        """
+        The 1-based column number of the error location within the JSON
+        payload, as an integer.
+
+        `None` indicates that the error location is not available.
+        """
+        return self._column
 
 
 class VersionError(Error):

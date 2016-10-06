@@ -32,6 +32,10 @@ Released: Not yet
 
 **Enhancements:**
 
+* Started raising a `ParseError` exception when the JSON payload in a HTTP
+  response cannot be parsed, and improved the definition of the ParseError
+  exception by adding line and column information.
+
 **Known Issues:**
 
 * See `list of open issues`_.

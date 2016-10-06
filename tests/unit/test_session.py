@@ -23,7 +23,7 @@ import unittest
 import requests
 import requests_mock
 
-from zhmcclient import Session
+from zhmcclient import Session, ParseError
 
 
 class SessionTests(unittest.TestCase):
@@ -100,6 +100,65 @@ class SessionTests(unittest.TestCase):
         logged_on = session.is_logon()
 
         self.assertFalse(logged_on)
+
+    def _do_parse_error_logon(self, m, json_content, exp_msg_pattern, exp_line,
+                              exp_col):
+        """
+        Perform a session logon, and mock the provided (invalid) JSON content
+        for the response so that a JSON parsing error is triggered.
+
+        Assert that this is surfaced via a `zhmcclient.ParseError` exception,
+        with the expected message (as a regexp pattern), line and column.
+        """
+
+        m.register_uri('POST', '/api/sessions',
+                       content=json_content,
+                       headers={'X-Request-Id': 'fake-request-id'})
+
+        session = Session('fake-host', 'fake-user', 'fake-pw')
+
+        exp_pe_pattern = r"Parse error in returned JSON: %s" % exp_msg_pattern
+
+        with self.assertRaisesRegexp(ParseError, exp_pe_pattern) as cm:
+            session.logon()
+        self.assertEqual(cm.exception.line, exp_line)
+        self.assertEqual(cm.exception.column, exp_col)
+
+    @requests_mock.mock()
+    def test_logon_error_invalid_delim(self, m):
+        """
+        Logon with invalid JSON response that has an invalid delimiter.
+        """
+        json_content = b'{\n"api-session"; "fake-session-id"\n}'
+        exp_msg_pattern = r"Expecting ':' delimiter"
+        exp_line = 2
+        exp_col = 14
+        self._do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line,
+                                   exp_col)
+
+    @requests_mock.mock()
+    def test_logon_error_invalid_quotes(self, m):
+        """
+        Logon with invalid JSON response that incorrectly uses single quotes.
+        """
+        json_content = b'{\'api-session\': \'fake-session-id\'}'
+        exp_msg_pattern = r"Expecting property name enclosed in double quotes"
+        exp_line = 1
+        exp_col = 2
+        self._do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line,
+                                   exp_col)
+
+    @requests_mock.mock()
+    def test_logon_error_extra_closing(self, m):
+        """
+        Logon with invalid JSON response that has an extra closing brace.
+        """
+        json_content = b'{"api-session": "fake-session-id"}}'
+        exp_msg_pattern = r"Extra data"
+        exp_line = 1
+        exp_col = 35
+        self._do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line,
+                                   exp_col)
 
     @staticmethod
     def test_delete_completed_job_status():
