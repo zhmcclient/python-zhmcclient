@@ -26,6 +26,26 @@ Released: Not yet
 
 **Incompatible changes:**
 
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known Issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
+Version 0.5.0
+^^^^^^^^^^^^^
+
+Released: 2016-10-04
+
+**Incompatible changes:**
+
 * In ``VirtualSwitch.get_connected_vnics()``, renamed the method to
   :meth:`~zhmcclient.VirtualSwitch.get_connected_nics` and changed its return value
   to return :class:`~zhmcclient.Nic` objects instead of their URIs.
@@ -55,12 +75,6 @@ Released: Not yet
   avoid the 'List CPC Properties' operation.
 
 * Improved tutorials.
-
-**Known Issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.4.0
