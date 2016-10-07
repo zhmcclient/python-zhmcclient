@@ -307,6 +307,7 @@ class Session(object):
         req = self._session or requests
         try:
             result = req.get(url, headers=self.headers, verify=False)
+            result_object = _result_object(result)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(exc.args[0], exc)
@@ -314,9 +315,8 @@ class Session(object):
             stats.end()
 
         if result.status_code == 200:
-            return _result_object(result)
+            return result_object
         elif result.status_code == 403:
-            result_object = _result_object(result)
             reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
@@ -333,7 +333,6 @@ class Session(object):
                 raise AuthError("HTTP authentication failed: {}".
                                 format(msg), HTTPError(result_object))
         else:
-            result_object = _result_object(result)
             raise HTTPError(result_object)
 
     @_log_call
@@ -472,6 +471,7 @@ class Session(object):
                 finally:
                     stats.end()
                 if result.status_code in (200, 204):
+                    result_object = _result_object(result)
                     if result_object['status'] == 'complete':
                         self.delete_completed_job_status(job_uri)
                         return result_object
