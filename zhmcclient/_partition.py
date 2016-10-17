@@ -214,7 +214,7 @@ class Partition(BaseResource):
     @_log_call
     def hbas(self):
         """
-        :class:`~zhmcclient.NicManager`: Access to the :term:`HBAs <HBA>` in
+        :class:`~zhmcclient.HbaManager`: Access to the :term:`HBAs <HBA>` in
         this Partition.
         """
         # We do here some lazy loading.
