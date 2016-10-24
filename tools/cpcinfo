@@ -67,10 +67,10 @@ Example:
         'Options')
     general_arggroup.add_argument(
         '-u', '--user', dest='user', metavar='user',
-        help='Required: User name for authenticating with the WBEM server.')
+        help='Required: User name for authenticating with the HMC.')
     general_arggroup.add_argument(
         '-p', '--password', dest='password', metavar='password',
-        help='Password for authenticating with the WBEM server.\n'
+        help='Password for authenticating with the HMC.\n'
              'Default: Prompt for a password.')
     pos_arggroup.add_argument(
         '-m', '--mcl', dest='mcl', action='store_true',
