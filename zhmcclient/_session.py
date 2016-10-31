@@ -55,7 +55,7 @@ class Session(object):
     measurements, and to print the statistics.
     """
 
-    def __init__(self, host, userid=None, password=None):
+    def __init__(self, host, userid=None, password=None, session_id=None):
         """
         Creating a session object will not immediately cause a logon to be
         attempted; the logon is deferred until needed.
@@ -75,6 +75,11 @@ class Session(object):
           password (:term:`string`):
             Password of the HMC user to be used.
 
+          session_id (:term:`string`):
+            An opaque string that provides a cryptographically
+            strong identifier of the API session (known as a session id)
+            under which this request is executed.
+
         TODO: Add support for client-certificate-based authentication.
         """
         self._host = host
@@ -85,11 +90,11 @@ class Session(object):
             host=self._host,
             port=_HMC_PORT)
         self._headers = _STD_HEADERS  # dict with standard HTTP headers
-        self._session_id = None  # HMC session ID
+        self._session_id = session_id  # HMC session ID
+        if self._session_id is not None:
+            self._headers['X-API-Session'] = self._session_id
         self._session = None  # requests.Session() object
         self._time_stats_keeper = TimeStatsKeeper()
-        self._headers = _STD_HEADERS
-        self._session_id = None
         LOG.debug("Created session object for '%(user)s' on '%(host)s'",
                   {'user': self._userid, 'host': self._host})
 
