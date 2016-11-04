@@ -94,8 +94,9 @@ except zhmcclient.NotFound:
 print("Checking if DPM is enabled on CPC %s..." % cpcname)
 if cpc.dpm_enabled:
     print("CPC %s is in DPM mode." % cpcname)
-    if cpc.properties['status'] != "active":
-        print("CPC %s is not in 'active' state." % cpcname)
+    if cpc.properties['status'] not in ('active', 'service-required'):
+        print("CPC %s is in an inactive state: %s" %
+              (cpcname, cpc.properties['status']))
         sys.exit(1)
     try:
         print("Finding Partition by name=%s ..." % partname)
@@ -140,6 +141,9 @@ if cpc.dpm_enabled:
     new_partition.pull_full_properties()
     print("Updated description of Partition %s: %s"
         % (partname, new_partition.properties["description"]))
+
+else:
+    print("CPC %s is not in DPM mode." % cpcname)
 
 print("Logging off ...")
 session.logoff()
