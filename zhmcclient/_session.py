@@ -393,6 +393,11 @@ class Session(object):
               operation, regardless of whether the operation is synchronous or
               asynchronous.
 
+              This will cause an additional entry in the time statistics to be
+              created for the asynchronous operation and waiting for its
+              completion. This entry will have a URI that is the targeted URI,
+              appended with "+completion".
+
             * If `False`, this method will immediately return the result of the
               HTTP POST method, regardless of whether the operation is
               synchronous or asynchronous.
@@ -430,76 +435,85 @@ class Session(object):
             self.logon()
         url = self.base_url + uri
         self._log_http_method('POST', uri)
-        stats = self.time_stats_keeper.get_stats('post ' + uri)
-        stats.begin()
         req = self._session or requests
+        if wait_for_completion:
+            stats_total = self.time_stats_keeper.get_stats(
+                'post ' + uri + '+completion')
+            stats_total.begin()
         try:
-            if body is None:
-                result = req.post(url, headers=self.headers,
-                                  verify=False)
-            else:
-                data = json.dumps(body)
-                result = req.post(url, data=data, headers=self.headers,
-                                  verify=False)
-            self._log_hmc_request_id(result)
-        except requests.exceptions.RequestException as exc:
-            raise ConnectionError(exc.args[0], exc)
-        finally:
-            stats.end()
+            stats = self.time_stats_keeper.get_stats('post ' + uri)
+            stats.begin()
+            try:
+                if body is None:
+                    result = req.post(url, headers=self.headers,
+                                      verify=False)
+                else:
+                    data = json.dumps(body)
+                    result = req.post(url, data=data, headers=self.headers,
+                                      verify=False)
+                self._log_hmc_request_id(result)
+            except requests.exceptions.RequestException as exc:
+                raise ConnectionError(exc.args[0], exc)
+            finally:
+                stats.end()
 
-        if result.status_code in (200, 201):
-            return _result_object(result)
-        elif result.status_code == 204:
-            # No content
-            return None
-        elif result.status_code == 202:
-            result_object = _result_object(result)
-            job_uri = result_object['job-uri']
-            job_url = self.base_url + job_uri
-            if not wait_for_completion:
-                return result_object
-            while 1:
-                self._log_http_method('GET', job_uri)
-                stats = self.time_stats_keeper.get_stats('get ' + job_uri)
-                stats.begin()
-                try:
-                    result = req.get(job_url, headers=self.headers,
-                                     verify=False)
-                    self._log_hmc_request_id(result)
-                except requests.exceptions.RequestException as exc:
-                    raise ConnectionError(exc.args[0], exc)
-                finally:
-                    stats.end()
-                if result.status_code in (200, 204):
-                    result_object = _result_object(result)
-                    if result_object['status'] == 'complete':
-                        self.delete_completed_job_status(job_uri)
-                        return result_object
+            if result.status_code in (200, 201):
+                return _result_object(result)
+            elif result.status_code == 204:
+                # No content
+                return None
+            elif result.status_code == 202:
+                result_object = _result_object(result)
+                job_uri = result_object['job-uri']
+                job_url = self.base_url + job_uri
+                if not wait_for_completion:
+                    return result_object
+                while 1:
+                    self._log_http_method('GET', job_uri)
+                    stats = self.time_stats_keeper.get_stats('get ' + job_uri)
+                    stats.begin()
+                    try:
+                        result = req.get(job_url, headers=self.headers,
+                                         verify=False)
+                        self._log_hmc_request_id(result)
+                    except requests.exceptions.RequestException as exc:
+                        raise ConnectionError(exc.args[0], exc)
+                    finally:
+                        stats.end()
+                    if result.status_code in (200, 204):
+                        result_object = _result_object(result)
+                        if result_object['status'] == 'complete':
+                            self.delete_completed_job_status(job_uri)
+                            return result_object
+                        else:
+                            # TODO: Add support for timeout
+                            time.sleep(1)  # Avoid hot spin loop
                     else:
-                        # TODO: Add support for timeout
-                        time.sleep(1)  # Avoid hot spin loop
+                        raise HTTPError(result_object)
+            elif result.status_code == 403:
+                result_object = _result_object(result)
+                reason = result_object.get('reason', None)
+                if reason == 5:
+                    # API session token expired: re-logon and retry
+                    if logon_required:
+                        self._do_logon()
+                    else:
+                        raise AuthError(
+                            "API session token unexpectedly expired "
+                            "for POST on a resource that does not "
+                            "require authentication: {}".
+                            format(uri), HTTPError(result_object))
+                    return self.post(uri, body, logon_required)
                 else:
-                    raise HTTPError(result_object)
-        elif result.status_code == 403:
-            result_object = _result_object(result)
-            reason = result_object.get('reason', None)
-            if reason == 5:
-                # API session token expired: re-logon and retry
-                if logon_required:
-                    self._do_logon()
-                else:
-                    raise AuthError("API session token unexpectedly expired "
-                                    "for POST on a resource that does not "
-                                    "require authentication: {}".
-                                    format(uri), HTTPError(result_object))
-                return self.post(uri, body, logon_required)
+                    msg = result_object.get('message', None)
+                    raise AuthError("HTTP authentication failed: {}".
+                                    format(msg), HTTPError(result_object))
             else:
-                msg = result_object.get('message', None)
-                raise AuthError("HTTP authentication failed: {}".
-                                format(msg), HTTPError(result_object))
-        else:
-            result_object = _result_object(result)
-            raise HTTPError(result_object)
+                result_object = _result_object(result)
+                raise HTTPError(result_object)
+        finally:
+            if wait_for_completion:
+                stats_total.end()
 
     @_log_call
     def delete(self, uri, logon_required=True):

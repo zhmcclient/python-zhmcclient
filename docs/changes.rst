@@ -40,6 +40,11 @@ Released: Not yet
   `details` property that provides access to the underlying exception
   describing details.
 
+* For asynchronous operations that are invoked with `wait_for_completion`,
+  added an entry in the time statistics for the overall operation
+  from the start to completion of the asynchronous operation. That entry
+  is for a URI that is the target URI, appended with "+completion".
+
 **Known Issues:**
 
 * See `list of open issues`_.
