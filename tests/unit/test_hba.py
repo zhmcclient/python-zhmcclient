@@ -257,5 +257,6 @@ class HbaTests(unittest.TestCase):
 
             hba.reassign_port(port2)
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -81,5 +81,6 @@ class ClientTests(unittest.TestCase):
             self.assertEqual(vi[0], api_version['api-major-version'])
             self.assertEqual(vi[1], api_version['api-minor-version'])
 
+
 if __name__ == '__main__':
     unittest.main()

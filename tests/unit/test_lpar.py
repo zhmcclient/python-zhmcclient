@@ -258,5 +258,6 @@ class LparTests(unittest.TestCase):
             status = lpar.load(load_address='5162', wait_for_completion=False)
             self.assertEqual(status, result)
 
+
 if __name__ == '__main__':
     unittest.main()
