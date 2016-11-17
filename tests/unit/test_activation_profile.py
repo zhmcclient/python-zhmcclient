@@ -202,5 +202,6 @@ class ActivationProfileTests(unittest.TestCase):
             status = profile.update_properties(properties={})
             self.assertEqual(status, None)
 
+
 if __name__ == '__main__':
     unittest.main()

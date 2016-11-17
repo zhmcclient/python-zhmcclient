@@ -431,5 +431,6 @@ class CpcTests(unittest.TestCase):
 
             self.assertEqual(wwpn_list, exp_wwpn_list)
 
+
 if __name__ == '__main__':
     unittest.main()

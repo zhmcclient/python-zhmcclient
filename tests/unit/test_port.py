@@ -205,5 +205,6 @@ class PortTests(unittest.TestCase):
             status = port.update_properties(properties={})
             self.assertEqual(status, None)
 
+
 if __name__ == '__main__':
     unittest.main()
