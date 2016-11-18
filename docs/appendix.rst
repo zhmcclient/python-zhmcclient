@@ -92,6 +92,16 @@ This documentation uses a few special terms to refer to Python types:
       a standard Python warning that indicates the use of deprecated
       functionality. See section :ref:`Deprecations` for details.
 
+   HMC API version
+      an HMC API version, as a tuple of (api_major_version, api_minor_version),
+      where:
+
+      * `api_major_version` (:term:`integer`): The numeric major version of the
+        HMC API.
+
+      * `api_minor_version` (:term:`integer`): The numeric minor version of the
+        HMC API.
+
 
 .. _`Resource model`:
 

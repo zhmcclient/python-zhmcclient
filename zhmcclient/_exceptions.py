@@ -177,23 +177,43 @@ class ParseError(Error):
 
 class VersionError(Error):
     """
-    This exception indicates that there is a version mismatch between the
-    HMC API versions supported by the client and by the HMC.
-
-    TODO: Do we need specific properties, e.g. for client versions supported,
-    HMC versions supported?
+    This exception indicates that a function of the client requires a minimum
+    HMC API version which is not supported by the HMC.
 
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, msg):
+    def __init__(self, msg, min_api_version, api_version):
         """
         Parameters:
 
           msg (:term:`string`):
             A human readable message describing the problem.
+
+          min_api_version (:term:`HMC API version`):
+            The minimum HMC API version required to perform the function that
+            raised this exception.
+
+          api_version (:term:`HMC API version`):
+            The actual HMC API version supported by the HMC.
         """
-        super(VersionError, self).__init__(msg)
+        super(VersionError, self).__init__(msg, min_api_version, api_version)
+
+    @property
+    def min_api_version(self):
+        """
+        :term:`HMC API version`: The minimum HMC API version required to
+        perform the function that raised this exception.
+        """
+        return self.args[1]
+
+    @property
+    def api_version(self):
+        """
+        :term:`HMC API version`: The actual HMC API version supported by the
+        HMC.
+        """
+        return self.args[2]
 
 
 class HTTPError(Error):
