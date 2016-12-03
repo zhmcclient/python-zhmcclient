@@ -80,63 +80,42 @@ class TestError(unittest.TestCase):
         self.assertEqual(exc.args[0], ('zaphod', 42))
 
 
-class SimpleTestMixin(object):
+class NumberArgsTestMixin(object):
     """
-    Mixin to test a number of simple exception classes.
-
-    Simple exception classes take a message string as the first input
-    argument. Additional arguments may be defined and are not tested by this
-    mixin class.
+    Mixin to test exception classes with the allowable numbers of input
+    arguments.
     """
 
-    # Derived classes set this (as an instance variable) to the exception class
-    # to be tested:
+    # Derived classes set these class variables as instance variables:
+
+    # Exception class to be tested
     exc_class = None
 
-    def test_empty(self):
-        """Test simple exception with no argument."""
+    # Minimum number of input arguments to ctor
+    min_args = None
 
-        try:
-            self.exc_class()
-        except TypeError as e:
-            self.assertRegexpMatches(
-                e.args[0],
-                r"__init__\(\) (takes.* 2 .*arguments .*1 .*given.*|"
-                r"missing 1 .*argument.*)")
-        except Exception as e:  # pylint: disable=broad-except
-            self.fail("Exception was raised: %r" % e)
-        else:
-            self.fail("No exception was raised.")
+    # Maximum number of input arguments to ctor
+    max_args = None
 
-    def test_one(self):
-        """Test simple exception with one argument."""
+    def test_good(self):
+        """Test exception class with the allowable number of input arguments,
+        where the first argument is always a string."""
 
-        exc = self.exc_class('zaphod')
+        for nargs in range(self.min_args, self.max_args + 1):
+            args = ['zaphod']
+            args.extend((nargs - 1) * [42])
 
-        self.assertTrue(isinstance(exc, Error))
-        self.assertTrue(isinstance(exc.args, tuple))
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], 'zaphod')
+            exc = self.exc_class(*args)
 
-
-class SingleArgTestMixin(object):
-    """
-    Mixin to test simple exception classes with a single argument.
-    """
-
-    def test_fail_two(self):
-        """Test that single argument exception fails with two arguments."""
-
-        try:
-            self.exc_class('zaphod', 42)
-        except TypeError as e:
-            self.assertRegexpMatches(
-                e.args[0],
-                r"__init__\(\) takes.* 2 .*arguments .*3 .*given.*")
-        except Exception as e:  # pylint: disable=broad-except
-            self.fail("Exception was raised: %r" % e)
-        else:
-            self.fail("No exception was raised.")
+            self.assertTrue(isinstance(exc, Error))
+            self.assertTrue(isinstance(exc.args, tuple))
+            self.assertEqual(len(exc.args), len(args),
+                             "Expected %d arguments, got: %r" %
+                             (len(args), exc.args))
+            for i, arg in enumerate(args):
+                self.assertEqual(exc.args[i], arg,
+                                 "For argument at index %d, expected %r, "
+                                 "got: %r" % (i, arg, exc.args[i]))
 
 
 class DetailsTestMixin(object):
@@ -144,17 +123,22 @@ class DetailsTestMixin(object):
     Mixin to test exception classes with a `details` property.
     """
 
+    # Derived classes set these class variables as instance variables:
+
+    # Exception class to be tested
+    exc_class = None
+
     def test_details_none(self):
         """Test details property with None."""
 
-        exc = AuthError("Bla bla", None)
+        exc = self.exc_class("Bla bla", None)
 
         self.assertIsNone(exc.details)
 
     def test_details_default(self):
         """Test details property with default."""
 
-        exc = AuthError("Bla bla")
+        exc = self.exc_class("Bla bla")
 
         self.assertIsNone(exc.details)
 
@@ -163,12 +147,12 @@ class DetailsTestMixin(object):
 
         details_exc = ValueError("value error")
 
-        exc = AuthError("Bla bla", details_exc)
+        exc = self.exc_class("Bla bla", details_exc)
 
         self.assertEqual(exc.details, details_exc)
 
 
-class TestConnectionError(unittest.TestCase, SimpleTestMixin,
+class TestConnectionError(unittest.TestCase, NumberArgsTestMixin,
                           DetailsTestMixin):
     """
     Test the simple exception class ``ConnectionError``.
@@ -176,29 +160,35 @@ class TestConnectionError(unittest.TestCase, SimpleTestMixin,
 
     def setUp(self):
         self.exc_class = ConnectionError
+        self.min_args = 1
+        self.max_args = 1
 
 
-class TestAuthError(unittest.TestCase, SimpleTestMixin, DetailsTestMixin):
+class TestAuthError(unittest.TestCase, NumberArgsTestMixin, DetailsTestMixin):
     """
     Test the simple exception class ``AuthError``.
     """
 
     def setUp(self):
         self.exc_class = AuthError
+        self.min_args = 1
+        self.max_args = 1
 
 
-class TestParseError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
+class TestParseError(unittest.TestCase, NumberArgsTestMixin):
     """
     Test the simple exception class ``ParseError``.
     """
 
     def setUp(self):
         self.exc_class = ParseError
+        self.min_args = 1
+        self.max_args = 1
 
     def test_line_column_1(self):
         """A simple message string that matches the line/col parsing."""
 
-        exc = ParseError("Bla: line 42 column 7 (char 6)")
+        exc = self.exc_class("Bla: line 42 column 7 (char 6)")
 
         self.assertEqual(exc.line, 42)
         self.assertEqual(exc.column, 7)
@@ -206,7 +196,7 @@ class TestParseError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
     def test_line_column_2(self):
         """A minimally matching message string."""
 
-        exc = ParseError(": line 7 column 42 ")
+        exc = self.exc_class(": line 7 column 42 ")
 
         self.assertEqual(exc.line, 7)
         self.assertEqual(exc.column, 42)
@@ -215,62 +205,41 @@ class TestParseError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
         """A message string that does not match (because of the 'x' in the
         line)."""
 
-        exc = ParseError(": line 7x column 42 ")
+        exc = self.exc_class(": line 7x column 42 ")
 
         self.assertEqual(exc.line, None)
         self.assertEqual(exc.column, None)
 
 
-class TestVersionError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
+class TestVersionError(unittest.TestCase, NumberArgsTestMixin):
     """
     Test the simple exception class ``VersionError``.
     """
 
     def setUp(self):
         self.exc_class = VersionError
+        self.min_args = 3
+        self.max_args = 3
+
+    def test_api_version(self):
+        """Test that the minimum and actual API version can be retrieved."""
+
+        min_api_version = (2, 3)
+        api_version = (1, 4)
+
+        exc = self.exc_class("Bla", min_api_version, api_version)
+
+        self.assertEqual(exc.min_api_version, min_api_version)
+        self.assertEqual(exc.api_version, api_version)
 
 
-class TestHTTPError(unittest.TestCase, SimpleTestMixin, SingleArgTestMixin):
+class TestHTTPError(unittest.TestCase):
     """
     Test exception class ``HTTPError``.
     """
 
-    def setUp(self):
-        self.exc_class = HTTPError
-
-    def test_empty(self):
-        """Test HTTPError with no arguments (expecting failure)."""
-
-        try:
-            # pylint: disable=no-value-for-parameter
-            HTTPError()
-        except TypeError as e:
-            self.assertRegexpMatches(
-                e.args[0],
-                r"__init__\(\) (takes.* 2 .*arguments .*1 .*given.*|"
-                r"missing 1 .*argument.*)")
-        except Exception as e:  # pylint: disable=broad-except
-            self.fail("Exception was raised: %r" % e)
-        else:
-            self.fail("No exception was raised.")
-
-    def test_two(self):
-        """Test HTTPError with two arguments (expecting failure)."""
-
-        try:
-            # pylint: disable=too-many-function-args
-            HTTPError(dict(reason=42), 42)
-        except TypeError as e:
-            self.assertRegexpMatches(
-                e.args[0],
-                r"__init__\(\) takes.* 2 .*arguments .*3 .*given.*")
-        except Exception as e:  # pylint: disable=broad-except
-            self.fail("Exception was raised: %r" % e)
-        else:
-            self.fail("No exception was raised.")
-
-    def test_one(self):
-        """Test HTTPError with one argument."""
+    def test_good(self):
+        """Test HTTPError with a good input argument."""
 
         resp_body = {
             'http-status': 404,

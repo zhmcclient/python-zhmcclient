@@ -66,13 +66,7 @@ class Client(object):
 
         Returns:
 
-          : A tuple of (api_major_version, api_minor_version), where:
-
-            * `api_major_version` (:term:`integer`): The numeric major version
-              of the API supported by the HMC.
-
-            * `api_minor_version` (:term:`integer`): The numeric minor version
-              of the API supported by the HMC.
+          :term:`HMC API version`: The HMC API version supported by the HMC.
 
         Raises:
 
