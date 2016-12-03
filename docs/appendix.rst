@@ -43,6 +43,25 @@ Base classes for resources
    :special-members: __str__
 
 
+.. _`Glossary`:
+
+Glossary
+--------
+
+This documentation uses a few special terms:
+
+.. glossary::
+
+   HMC
+      Hardware Management Console; the node the zhmcclient talks to.
+
+   session-id
+      an opaque string returned by the HMC as the result of a successful
+      logon, for use by subsequent operations instead of credential data.
+      The HMC gives each newly created session-id a lifetime of 10 hours, and
+      expires it after that.
+
+
 .. _`Special type names`:
 
 Special type names

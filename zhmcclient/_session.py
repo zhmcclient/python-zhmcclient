@@ -55,10 +55,39 @@ class Session(object):
     measurements, and to print the statistics.
     """
 
-    def __init__(self, host, userid=None, password=None):
+    def __init__(self, host, userid=None, password=None, session_id=None):
         """
         Creating a session object will not immediately cause a logon to be
         attempted; the logon is deferred until needed.
+
+        There are several alternatives for specifying the authentication
+        related parameters:
+
+        * `userid`/`password` only: The session is initially in a logged-off
+          state and subsequent operations that require logon will use the
+          specified userid and password to automatically log on. The returned
+          session-id will be stored in this session object. Subsequent
+          operations that require logon will use that session-id. Once the HMC
+          expires that session-id, subsequent operations that require logon
+          will cause a re-logon with the specified userid and password.
+
+        * `userid`/`password` and `session_id`: The specified session-id will
+          be stored in this session object, so that the session is initially in
+          a logged-on state. Subsequent operations that require logon will use
+          that session-id. Once the HMC expires that session-id, subsequent
+          operations that require logon will cause a re-logon with the
+          specified userid/password.
+
+        * `session_id` only: The specified session-id will be stored in this
+          session object, so that the session is initially in a logged-on
+          state. Subsequent operations that require logon will use the stored
+          session-id. Once the HMC expires the session-id, subsequent
+          operations that require logon will cause an
+          :exc:`~zhmcclient.AuthError` to be raised (because userid/password
+          have not been specified, so an automatic re-logon is not possible).
+
+        * Neither `userid`/`password` nor `session_id`: Only operations that do
+          not require logon, are possible.
 
         Parameters:
 
@@ -68,14 +97,13 @@ class Session(object):
             Must not be `None`.
 
           userid (:term:`string`):
-            Userid of the HMC user to be used.
-            If `None`, only operations that do not require authentication, can
-            be performed.
+            Userid of the HMC user to be used, or `None`.
 
           password (:term:`string`):
-            Password of the HMC user to be used.
+            Password of the HMC user to be used, if `userid` was specified.
 
-        TODO: Add support for client-certificate-based authentication.
+          session_id (:term:`string`):
+            Session-id to be used for this session, or `None`.
         """
         self._host = host
         self._userid = userid
@@ -85,11 +113,16 @@ class Session(object):
             host=self._host,
             port=_HMC_PORT)
         self._headers = _STD_HEADERS  # dict with standard HTTP headers
-        self._session_id = None  # HMC session ID
-        self._session = None  # requests.Session() object
+        if session_id is not None:
+            # Create a logged-on state (same state as in _do_logon())
+            self._session_id = session_id
+            self._session = requests.Session()
+            self._headers['X-API-Session'] = session_id
+        else:
+            # Create a logged-off state (same state as in _do_logoff())
+            self._session_id = None
+            self._session = None
         self._time_stats_keeper = TimeStatsKeeper()
-        self._headers = _STD_HEADERS
-        self._session_id = None
         LOG.debug("Created session object for '%(user)s' on '%(host)s'",
                   {'user': self._userid, 'host': self._host})
 
@@ -181,7 +214,7 @@ class Session(object):
         After successful logon to the HMC, the following is stored in this
         session object for reuse in subsequent operations:
 
-        * the HMC session ID, in order to avoid extra userid authentications,
+        * the HMC session-id, in order to avoid extra userid authentications,
         * a :class:`requests.Session` object, in order to enable connection
           pooling. Connection pooling avoids repetitive SSL/TLS handshakes.
 
@@ -200,7 +233,7 @@ class Session(object):
         """
         Make sure the session is logged off from the HMC.
 
-        After successful logoff, the HMC session ID and
+        After successful logoff, the HMC session-id and
         :class:`requests.Session` object stored in this object are reset.
 
         Raises:
