@@ -1,4 +1,3 @@
-
 # Copyright 2016 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,57 +12,137 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, sys
+from __future__ import absolute_import
+
+import os
+import sys
+import json
 import click
+import click_spinner
 from tabulate import tabulate
 import zhmcclient
 
-global_session_filename = 'session.yml'
+
+class InvalidOutputFormatError(click.ClickException):
+    """
+    Exception indicating an invalid output format for zhmc.
+    """
+
+    def __init__(self, output_format):
+        msg = "Invalid output format: {of}".format(of=output_format)
+        super(InvalidOutputFormatError, self).__init__(msg)
+
 
 class CmdContext(object):
 
-    def __init__(self, host, userid, password, output_format):
-        if password is None:
-            if "ZHMC_SESSION_ID" in os.environ:
-                session_id = os.environ['ZHMC_SESSION_ID']
-                self._session = zhmcclient.Session(host, userid,
-                                 session_id=session_id)
-            else:
-                 self._session = zhmcclient.Session(host, userid)
-        else:
-            self._session = zhmcclient.Session(host, userid, password)
-
+    def __init__(self, host, userid, output_format, timestats, session_id,
+                 get_password):
         self._host = host
-        self_userid = userid
+        self._userid = userid
         self._output_format = output_format
+        self._timestats = timestats
+        self._session_id = session_id
+        self._get_password = get_password
+        self._session = None
+        self._spinner = None
 
     @property
-    def session(self):
+    def host(self):
         """
-        :term:`string`: :class:`requests.Session` object for this session.
+        :term:`string`: Hostname or IP address of the HMC.
         """
-        return self._session
+        return self._host
+
+    @property
+    def userid(self):
+        """
+        :term:`string`: Userid on the HMC.
+        """
+        return self._userid
 
     @property
     def output_format(self):
         """
+        :term:`string`: Output format to be used.
         """
         return self._output_format
 
-    def is_active_session(self):
-        if self._session is None:
-            return False
-        return True
+    @property
+    def timestats(self):
+        """
+        bool: Indicates whether time statistics should be printed.
+        """
+        return self._timestats
+
+    @property
+    def session_id(self):
+        """
+        :term:`string`: Session-id to be used instead of logging on, or `None`.
+        """
+        return self._session_id
+
+    @property
+    def get_password(self):
+        """
+        :term:`callable`: Password retrieval function, or `None`.
+        """
+        return self._get_password
+
+    @property
+    def session(self):
+        """
+        :class:`requests.Session` object once logged on, or `None`.
+        """
+        return self._session
+
+    @property
+    def spinner(self):
+        """
+        :class:`~click_spinner.Spinner` object if a spinner is running, or
+        `None`.
+        """
+        return self._spinner
+
+    def spinner_start(self):
+        """
+        Start the spinner (unless redirected).
+
+        Unlike :meth:`click_spinner.Spinner.start`, this function can be called
+        to restart the spinner after having stopped it (via
+        :meth:`spinner_stop`).
+        """
+        if sys.stdout.isatty():
+            self._spinner = click_spinner.Spinner()
+            self._spinner.start()
+
+    def spinner_stop(self):
+        """
+        Stop the spinner.
+        """
+        if self._spinner is not None:
+            self._spinner.stop()
+            self._spinner = None
 
     def execute_cmd(self, cmd):
-        if self.is_active_session():
+        if self._session is None:
+            if self._host is None:
+                raise click.ClickException("No HMC host provided")
+            if self._session_id is not None:
+                self._session = zhmcclient.Session(
+                    self._host, self._userid, session_id=self._session_id,
+                    get_password=self._get_password)
+            else:
+                self._session = zhmcclient.Session(
+                    self._host, self._userid, get_password=self._get_password)
+        if self.timestats:
+            self._session.time_stats_keeper.enable()
+        self.spinner_start()
+        try:
             cmd()
-            if self.session.time_stats_keeper.enabled:
-                click.echo(self.session.time_stats_keeper)
-            return True
-        else:
-            click.echo('Session is not available.')
-            return False
+        finally:
+            self.spinner_stop()
+            if self._session.time_stats_keeper.enabled:
+                click.echo(self._session.time_stats_keeper)
 
 
 def options_to_properties(options):
@@ -73,14 +152,39 @@ def options_to_properties(options):
     return properties
 
 
-def print_properties_in_table(properties, skip_list):
+def print_properties(properties, output_format, skip_list=None):
+    """
+    Print properties in the desired output format.
+    """
+    if output_format == 'table':
+        print_properties_in_table(properties, skip_list)
+    elif output_format == 'json':
+        print_properties_as_json(properties)
+    else:
+        raise InvalidOutputFormatError(output_format)
+
+
+def print_resources(resources, output_format):
+    """
+    Print the properties of a list of resources in the desired output format.
+    """
+    if output_format == 'table':
+        print_list_in_table(resources)
+    elif output_format == 'json':
+        print_resources_as_json(resources)
+    else:
+        raise InvalidOutputFormatError(output_format)
+
+
+# TODO: Rename to print_properties_as_table()
+def print_properties_in_table(properties, skip_list=None):
     """
     Print properties in tabular output format.
     """
     table = list()
     sorted_fields = sorted(properties)
     for field in sorted_fields:
-        if field in skip_list:
+        if skip_list and field in skip_list:
             continue
         value = properties[field]
         table.append((field, value))
@@ -88,6 +192,7 @@ def print_properties_in_table(properties, skip_list):
     click.echo(tabulate(table, headers, tablefmt="psql"))
 
 
+# TODO: Rename to print_resources_as_table()
 def print_list_in_table(resources):
     """
     Print list of resources in tabular output format.
@@ -103,3 +208,19 @@ def print_list_in_table(resources):
         click.echo("No entries.")
     else:
         click.echo(tabulate(table, reversed(headers), tablefmt="psql"))
+
+
+def print_properties_as_json(properties):
+    """
+    Print properties in JSON output format.
+    """
+    json_str = json.dumps(properties)
+    click.echo(json_str)
+
+
+def print_resources_as_json(resources):
+    """
+    Print properties of a list of resources in JSON output format.
+    """
+    json_str = json.dumps([r.properties for r in resources])
+    click.echo(json_str)

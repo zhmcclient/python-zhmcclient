@@ -12,52 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+
 import click
 import zhmcclient
 import click_spinner
-from _cmd_helper import *
+
+from ._cmd_helper import *
+
 
 def cmd_cpc_list(cmd_ctx):
     """
-    Lists CPCs.
+    List CPCs.
     """
     client = zhmcclient.Client(cmd_ctx.session)
     try:
-        with click_spinner.spinner():
-            cpcs = client.cpcs.list()
-        if cmd_ctx.output_format == 'table':
-            print_list_in_table(cpcs)
-        else:
-            for cpc in cpcs:
-                click.echo(cpc.properties)
+        cpcs = client.cpcs.list()
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    print_resources(cpcs, cmd_ctx.output_format)
+
 
 def cmd_cpc_show(cmd_ctx, cpc_name):
     """
-    Shows details of CPC.
+    Show details of a CPC. In table format, some properties are skipped.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
     try:
         cpc = client.cpcs.find(name=cpc_name)
+        cpc.pull_full_properties()
     except zhmcclient.NotFound:
-        click.echo("Could not find CPC %s on HMC %s" %
-                   (cpc_name, session.host))
-        return
-    try:
-        with click_spinner.spinner():
-            cpc.pull_full_properties()
-        skip_list = list(['ec-mcl-description',
-                         'cpc-power-saving-state',
-                         '@@implementation-errors',
-                         'network2-ipv6-info',
-                         'network1-ipv6-info',
-                         'auto-start-list'])
-        if cmd_ctx.output_format == 'table':
-            print_properties_in_table(cpc.properties, skip_list)
-        else:
-            click.echo(cpc.properties)
+        raise click.ClickException("Could not find CPC %s on HMC %s" %
+                                   (cpc_name, cmd_ctx.session.host))
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
-
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    skip_list = ('ec-mcl-description',
+                 'cpc-power-saving-state',
+                 '@@implementation-errors',
+                 'network2-ipv6-info',
+                 'network1-ipv6-info',
+                 'auto-start-list')
+    print_properties(cpc.properties, cmd_ctx.output_format, skip_list)

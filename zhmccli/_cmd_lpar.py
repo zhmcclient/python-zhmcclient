@@ -12,134 +12,105 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+
 import sys
 import time
 import click
 import zhmcclient
 import click_spinner
 
-from _cmd_helper import *
+from ._cmd_helper import *
 
-def find_lpar(client, cpc_name, lpar_name):
+
+def _find_cpc(client, cpc_name):
     try:
         cpc = client.cpcs.find(name=cpc_name)
     except zhmcclient.NotFound:
-        click.echo("Could not find CPC %s on HMC %s."
-                   % (cpc_name, client.session.host))
-        sys.exit(1)
+        raise click.ClickException("Could not find CPC %s on HMC %s." %
+                                   (cpc_name, client.session.host))
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    return cpc
+
+
+def _find_lpar(client, cpc_name, lpar_name):
+    cpc = _find_cpc(client, cpc_name)
+    if cpc.dpm_enabled:
+        raise click.ClickException("CPC %s is in DPM mode." % cpc_name)
     try:
         lpar = cpc.lpars.find(name=lpar_name)
-        return lpar
     except zhmcclient.NotFound:
-        click.echo("Could not find LPAR %s on HMC %s."
-                   % (lpar_name, client.session.host))
-        sys.exit(1)
+        raise click.ClickException("Could not find LPAR %s in CPC %s." %
+                                   (lpar_name, cpc_name))
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    return lpar
 
 
 def cmd_lpar_list(cmd_ctx, cpc_name):
     """
-    Lists the LPARs for a CPC.
+    List the LPARs in a CPC.
     """
     client = zhmcclient.Client(cmd_ctx.session)
+    cpc = _find_cpc(client, cpc_name)
+    if cpc.dpm_enabled:
+        raise click.ClickException("CPC %s is in DPM mode." % cpc_name)
     try:
-        cpc = client.cpcs.find(name=cpc_name)
-    except zhmcclient.NotFound:
-        click.echo("Could not find CPC %s on HMC %s" %
-                   (cpc_name, cmd_ctx.session.host))
-    try:
-        with click_spinner.spinner():
-            lpars = cpc.lpars.list()
-        if cmd_ctx.output_format == 'table':
-            print_list_in_table(lpars)
-        else:
-            for lpar in lpars:
-                click.echo(lpar.properties)
-    except zhmcclient.HTTPError:
-        if cpc.dpm_enabled:
-            click.echo("CPC %s is in DPM mode. No LPARs configured." % cpc_name)
-        else:
-            click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        lpars = cpc.lpars.list()
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    print_resources(lpars, cmd_ctx.output_format)
 
 
 def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):
     """
-    Shows the LPAR details for a CPC.
+    Show the details of an LPAR in a CPC.
     """
     client = zhmcclient.Client(cmd_ctx.session)
+    lpar = _find_lpar(client, cpc_name, lpar_name)
     try:
-        with click_spinner.spinner():
-            lpar = find_lpar(client, cpc_name, lpar_name)
-            skip_list = list(['program-status-word-information'])
-            lpar.pull_full_properties()
-        if cmd_ctx.output_format == 'table':
-            print_properties_in_table(lpar.properties, skip_list)
-        else:
-            click.echo(lpar.properties)
+        lpar.pull_full_properties()
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    skip_list = ('program-status-word-information')
+    print_properties(lpar.properties, cmd_ctx.output_format, skip_list)
 
 
 def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name):
     """
-    Activates the LPAR for a CPC.
+    Activate an LPAR in a CPC.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
+    lpar = _find_lpar(client, cpc_name, lpar_name)
     try:
-        with click_spinner.spinner():
-            lpar = find_lpar(client, cpc_name, lpar_name)
-            status = lpar.activate(wait_for_completion=False)
-            job = session.query_job_status(status['job-uri'])
-            while job['status'] != 'complete':
-                time.sleep(1)
-                job = session.query_job_status(status['job-uri'])
-            session.delete_completed_job_status(status['job-uri'])
-        click.echo('Activation of LPAR %s completed.' % lpar_name)
-
+        lpar.activate(wait_for_completion=True)
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo('Activation of LPAR %s is complete.' % lpar_name)
 
 
 def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
     """
-    Deactivates the LPAR for a CPC.
+    Deactivate an LPAR in a CPC.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
+    lpar = _find_lpar(client, cpc_name, lpar_name)
     try:
-        with click_spinner.spinner():
-            lpar = find_lpar(client, cpc_name, lpar_name)
-            status = lpar.deactivate(wait_for_completion=False)
-            job = session.query_job_status(status['job-uri'])
-            while job['status'] != 'complete':
-                time.sleep(1)
-                job = session.query_job_status(status['job-uri'])
-            session.delete_completed_job_status(status['job-uri'])
-        click.echo('Deactivation of LPAR %s completed.' % lpar_name)
-
+        lpar.deactivate(wait_for_completion=True)
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo('Deactivation of LPAR %s is complete.' % lpar_name)
 
 
 def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
     """
-    Loads the LPAR for a CPC.
+    Load an LPAR in a CPC from a load address.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
+    lpar = _find_lpar(client, cpc_name, lpar_name)
     try:
-        with click_spinner.spinner():
-            lpar = find_lpar(client, cpc_name, lpar_name)
-            status = lpar.load(load_address, wait_for_completion=False)
-            job = session.query_job_status(status['job-uri'])
-            while job['status'] != 'complete':
-                time.sleep(1)
-                job = session.query_job_status(status['job-uri'])
-            session.delete_completed_job_status(status['job-uri'])
-        click.echo('Loading of LPAR %s completed.' % lpar_name)
-
+        lpar.load(load_address, wait_for_completion=True)
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
-
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo('Loading of LPAR %s is complete.' % lpar_name)

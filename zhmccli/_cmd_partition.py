@@ -12,146 +12,121 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+
 import sys
 import time
 import click
 import zhmcclient
 import click_spinner
 
-from _cmd_helper import *
+from ._cmd_helper import *
 
-def find_partition(client, cpc_name, partition_name):
+
+def _find_cpc(client, cpc_name):
     try:
         cpc = client.cpcs.find(name=cpc_name)
     except zhmcclient.NotFound:
-        click.echo("Could not find CPC %s on HMC %s."
-                   % (cpc_name, client.session.host))
-        sys.exit(1)
+        raise click.ClickException("Could not find CPC %s on HMC %s." %
+                                   (cpc_name, client.session.host))
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    return cpc
+
+
+def _find_partition(client, cpc_name, partition_name):
+    cpc = _find_cpc(client, cpc_name)
+    if not cpc.dpm_enabled:
+        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
     try:
-        partition = cpc.partitions.find(name=partition_name)
-        return partition
+        lpar = cpc.partitions.find(name=partition_name)
     except zhmcclient.NotFound:
-        click.echo("Could not find Partition %s on HMC %s."
-                   % (partition_name, client.session.host))
-        sys.exit(1)
+        raise click.ClickException("Could not find partition %s in CPC %s." %
+                                   (partition_name, cpc_name))
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    return partition
 
 
 def cmd_partition_list(cmd_ctx, cpc_name):
     """
-    Lists the partitions for a CPC.
+    List the partitions in a CPC.
     """
     client = zhmcclient.Client(cmd_ctx.session)
+    cpc = _find_cpc(client, cpc_name)
+    if not cpc.dpm_enabled:
+        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
     try:
-        cpc = client.cpcs.find(name=cpc_name)
-    except zhmcclient.NotFound:
-        click.echo("Could not find CPC %s on HMC %s" % (cpc, session.host))
-    try:
-        with click_spinner.spinner():
-            partitions = cpc.partitions.list()
-        if cmd_ctx.output_format == 'table':
-            print_list_in_table(partitions)
-        else:
-            for partition in partitions:
-                click.echo(partition.properties)
-    except zhmcclient.HTTPError:
-        if not cpc.dpm_enabled:
-            click.echo("CPC %s is not in DPM mode. No partitions configured." % cpc_name)
-        else:
-            click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        partitions = cpc.partitions.list()
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    print_resources(partitions, cmd_ctx.output_format)
 
 
 def cmd_partition_show(cmd_ctx, cpc_name, partition_name):
     """
-    Shows the partition details for a CPC.
+    Show the details of a partition in a CPC.
     """
     client = zhmcclient.Client(cmd_ctx.session)
+    partition = _find_partition(client, cpc_name, partition_name)
     try:
-        with click_spinner.spinner():
-            partition = find_partition(client, cpc_name, partition_name)
-            partition.pull_full_properties()
-            skip_list = list(['nic-uris'])
-            partition.pull_full_properties()
-        if cmd_ctx.output_format == 'table':
-            print_properties_in_table(partition.properties, skip_list)
-        else:
-            click.echo(partition.properties)
+        partition.pull_full_properties()
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    skip_list = ('nic-uris')
+    print_properties(partition.properties, cmd_ctx.output_format, skip_list)
 
 
 def cmd_partition_start(cmd_ctx, cpc_name, partition_name):
     """
-    Starts the partition for a CPC.
+    Start a partition in a CPC.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = _find_partition(client, cpc_name, partition_name)
     try:
-        with click_spinner.spinner():
-            partition = find_partition(client, cpc_name, partition_name)
-            status = partition.start(wait_for_completion=False)
-            job = session.query_job_status(status['job-uri'])
-            while job['status'] != 'complete':
-                time.sleep(1)
-                job = session.query_job_status(status['job-uri'])
-            session.delete_completed_job_status(status['job-uri'])
-        click.echo('Starting of partition %s completed.' % partition_name)
+        partition.start(wait_for_completion=True)
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo('Partition %s has been started.' % partition_name)
 
 
 def cmd_partition_stop(cmd_ctx, cpc_name, partition_name):
     """
-    Stops the partition for a CPC.
+    Stop a partition in a CPC.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = _find_partition(client, cpc_name, partition_name)
     try:
-        with click_spinner.spinner():
-            partition = find_partition(client, cpc_name, partition_name)
-            status = partition.stop(wait_for_completion=False)
-            job = session.query_job_status(status['job-uri'])
-            while job['status'] != 'complete':
-                time.sleep(1)
-                job = session.query_job_status(status['job-uri'])
-            session.delete_completed_job_status(status['job-uri'])
-        click.echo('Stopping of partition %s completed.' % partition_name)
+        partition.stop(wait_for_completion=True)
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo('Partition %s has been stopped.' % partition_name)
 
 
 def cmd_partition_create(cmd_ctx, cpc_name, properties):
     """
-    Creates the partition for a CPC.
+    Create a new partition in a CPC.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
+    cpc = _find_cpc(client, cpc_name)
+    if not cpc.dpm_enabled:
+        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
     try:
-        cpc = client.cpcs.find(name=cpc_name)
-    except zhmcclient.NotFound:
-        click.echo("Could not find CPC %s on HMC %s."
-                   % (cpc_name, client.session.host))
-        sys.exit(1)
-    try:
-        with click_spinner.spinner():
-            new_partition = cpc.partitions.create(properties)
-        click.echo("New partition %s with uri %s created."
-                   % (new_partition.properties['name'], new_partition.uri))
+        new_partition = cpc.partitions.create(properties)
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo("New partition %s has been created." %
+               new_partition.properties['name'])
 
 
 def cmd_partition_delete(cmd_ctx, cpc_name, partition_name):
     """
-    Deletes the partition for a CPC.
+    Delete a partition in a CPC.
     """
-    session = cmd_ctx.session
-    client = zhmcclient.Client(session)
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = _find_partition(client, cpc_name, partition_name)
     try:
-        with click_spinner.spinner():
-            partition = find_partition(client, cpc_name, partition_name)
-            status = partition.delete()
-        click.echo('Deleting of partition %s completed.' % partition_name)
+        partition.delete()
     except zhmcclient.Error as exc:
-        click.echo("%s: %s" % (exc.__class__.__name__, exc))
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo('Partition %s has been deleted.' % partition_name)
