@@ -14,13 +14,19 @@
 
 from __future__ import absolute_import
 
-import os
 import sys
 import json
 import click
 import click_spinner
 from tabulate import tabulate
+
 import zhmcclient
+
+
+def abort_if_false(ctx, param, value):
+    # pylint: disable=unused-argument
+    if not value:
+        raise click.ClickException("Aborted.")
 
 
 class InvalidOutputFormatError(click.ClickException):
@@ -157,7 +163,7 @@ def print_properties(properties, output_format, skip_list=None):
     Print properties in the desired output format.
     """
     if output_format == 'table':
-        print_properties_in_table(properties, skip_list)
+        print_properties_as_table(properties, skip_list)
     elif output_format == 'json':
         print_properties_as_json(properties)
     else:
@@ -169,15 +175,14 @@ def print_resources(resources, output_format):
     Print the properties of a list of resources in the desired output format.
     """
     if output_format == 'table':
-        print_list_in_table(resources)
+        print_resources_as_table(resources)
     elif output_format == 'json':
         print_resources_as_json(resources)
     else:
         raise InvalidOutputFormatError(output_format)
 
 
-# TODO: Rename to print_properties_as_table()
-def print_properties_in_table(properties, skip_list=None):
+def print_properties_as_table(properties, skip_list=None):
     """
     Print properties in tabular output format.
     """
@@ -192,17 +197,15 @@ def print_properties_in_table(properties, skip_list=None):
     click.echo(tabulate(table, headers, tablefmt="psql"))
 
 
-# TODO: Rename to print_resources_as_table()
-def print_list_in_table(resources):
+def print_resources_as_table(resources):
     """
     Print list of resources in tabular output format.
     """
     table = list()
-    header = list()
     for i, resource in enumerate(resources):
         if i == 0:
-            headers = [ k for k in resource.properties]
-        row = [ v for v in resource.properties.values() ]
+            headers = resource.properties.keys()
+        row = resource.properties.values()
         table.append(reversed(row))
     if not table:
         click.echo("No entries.")

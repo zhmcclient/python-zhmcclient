@@ -15,9 +15,19 @@
 from __future__ import absolute_import
 
 import click
-import zhmcclient
 
+import zhmcclient
+from .zhmccli import cli
 from ._helper import print_properties
+
+
+@cli.command('info')
+@click.pass_obj
+def info(cmd_ctx):
+    """
+    Show information about the HMC.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_info(cmd_ctx))
 
 
 def cmd_info(cmd_ctx):

@@ -162,11 +162,11 @@ class Session(object):
         return self._userid
 
     @property
-    def password_callback(self):
+    def get_password(self):
         """
-        bool: The password callback function, or `None`.
+        bool: The function that returns the password as a string, or `None`.
         """
-        return self._password_callback
+        return self._get_password
 
     @property
     def base_url(self):

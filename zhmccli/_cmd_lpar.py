@@ -14,13 +14,68 @@
 
 from __future__ import absolute_import
 
-import sys
-import time
 import click
-import zhmcclient
-import click_spinner
 
-from ._helper import *
+import zhmcclient
+from .zhmccli import cli
+from ._helper import print_properties, print_resources, abort_if_false
+
+
+@cli.group('lpar')
+def lpar_group():
+    """Command group for managing LPARs."""
+
+
+@lpar_group.command('list')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.pass_obj
+def lpar_list(cmd_ctx, cpc_name):
+    """List the LPARs in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_list(cmd_ctx, cpc_name))
+
+
+@lpar_group.command('show')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@click.pass_obj
+def lpar_show(cmd_ctx, cpc_name, lpar_name):
+    """Show details of an LPAR in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_show(cmd_ctx, cpc_name, lpar_name))
+
+
+@lpar_group.command('activate')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@click.pass_obj
+def lpar_activate(cmd_ctx, cpc_name, lpar_name):
+    """Activate an LPAR in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_activate(cmd_ctx, cpc_name,
+                                                  lpar_name))
+
+
+@lpar_group.command('deactivate')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@click.option('--yes', is_flag=True, callback=abort_if_false,
+              expose_value=False,
+              help='Skip prompt to confirm deactivation of the LPAR.',
+              prompt='Are you sure you want to deactivate the LPAR ?')
+@click.pass_obj
+def lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
+    """Deactivate an LPAR in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_deactivate(cmd_ctx, cpc_name,
+                                                    lpar_name))
+
+
+@lpar_group.command('load')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@click.argument('LOAD-ADDRESS', type=str, metavar='LOAD-ADDRESS')
+@click.pass_obj
+def lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
+    """Load an LPAR in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_load(cmd_ctx, cpc_name, lpar_name,
+                                              load_address))
 
 
 def _find_cpc(client, cpc_name):

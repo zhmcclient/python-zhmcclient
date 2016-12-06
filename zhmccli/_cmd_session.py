@@ -15,9 +15,28 @@
 from __future__ import absolute_import
 
 import click
-import zhmcclient
 
-from ._helper import *
+import zhmcclient
+from .zhmccli import cli
+
+
+@cli.group('session')
+def session_group():
+    """Command group for managing sessions."""
+
+
+@session_group.command('create')
+@click.pass_obj
+def session_create(cmd_ctx):
+    """Create a HMC session."""
+    cmd_ctx.execute_cmd(lambda: cmd_session_create(cmd_ctx))
+
+
+@session_group.command('delete')
+@click.pass_obj
+def session_delete(cmd_ctx):
+    """Delete a HMC session."""
+    cmd_ctx.execute_cmd(lambda: cmd_session_delete(cmd_ctx))
 
 
 def cmd_session_create(cmd_ctx):

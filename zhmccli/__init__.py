@@ -14,8 +14,8 @@
 
 from __future__ import absolute_import
 
-from ._cmd_info import *
-from ._cmd_session import *
-from ._cmd_cpc import *
-from ._cmd_lpar import *
-from ._cmd_partition import *
+from ._cmd_info import *      # noqa: F401
+from ._cmd_session import *   # noqa: F401
+from ._cmd_cpc import *       # noqa: F401
+from ._cmd_lpar import *      # noqa: F401
+from ._cmd_partition import *  # noqa: F401

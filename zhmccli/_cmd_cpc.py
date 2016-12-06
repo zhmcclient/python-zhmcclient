@@ -15,10 +15,30 @@
 from __future__ import absolute_import
 
 import click
-import zhmcclient
-import click_spinner
 
-from ._helper import *
+import zhmcclient
+from .zhmccli import cli
+from ._helper import print_properties, print_resources
+
+
+@cli.group('cpc')
+def cpc_group():
+    """Command group for managing CPCs."""
+
+
+@cpc_group.command('list')
+@click.pass_obj
+def cpc_list(cmd_ctx):
+    """List the CPCs."""
+    cmd_ctx.execute_cmd(lambda: cmd_cpc_list(cmd_ctx))
+
+
+@cpc_group.command('show')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.pass_obj
+def cpc_show(cmd_ctx, cpc_name):
+    """Show details of a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_cpc_show(cmd_ctx, cpc_name))
 
 
 def cmd_cpc_list(cmd_ctx):

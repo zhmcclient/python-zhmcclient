@@ -14,13 +14,95 @@
 
 from __future__ import absolute_import
 
-import sys
-import time
 import click
-import zhmcclient
-import click_spinner
 
-from ._helper import *
+import zhmcclient
+from .zhmccli import cli
+from ._helper import print_properties, print_resources, abort_if_false, \
+    options_to_properties
+
+
+@cli.group('partition')
+def partition_group():
+    """Command group for managing partitions."""
+
+
+@partition_group.command('list')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.pass_obj
+def partition_list(cmd_ctx, cpc_name):
+    """List the partitions in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_partition_list(cmd_ctx, cpc_name))
+
+
+@partition_group.command('create')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.option('--name', type=str, required=True,
+              help='The name of the partition.')
+@click.option('--description', type=str, required=False,
+              help='The description associated with this partition.')
+@click.option('--cp-processors', type=int, required=True,
+              help='Defines the number of general purpose processors (CP).')
+@click.option('--initial-memory', type=int, required=True,
+              help='The initial amount of memory when the partition is '
+                   'started.')
+@click.option('--maximum-memory', type=int, required=True,
+              help='The maximum size while the partition is running.')
+@click.option('--processor-mode', type=str, required=True,
+              help='Defines how processors are allocated to the partition.')
+@click.option('--boot-device', type=str, required=True,
+              help='The type of device from which the partition is booted.')
+@click.pass_context
+def partition_create(ctx, cpc_name, **options):
+    """Create a partition in a CPC."""
+    properties = options_to_properties(options)
+    cmd_ctx = ctx.obj
+    cmd_ctx.execute_cmd(lambda: cmd_partition_create(cmd_ctx, cpc_name,
+                                                     properties))
+
+
+@partition_group.command('show')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.pass_obj
+def partition_show(cmd_ctx, cpc_name, partition_name):
+    """Show the details of a partition in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_partition_show(cmd_ctx, cpc_name,
+                                                   partition_name))
+
+
+@partition_group.command('start')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.pass_obj
+def partition_start(cmd_ctx, cpc_name, partition_name):
+    """Start a partition in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_partition_start(cmd_ctx, cpc_name,
+                                                    partition_name))
+
+
+@partition_group.command('stop')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.pass_obj
+def partition_stop(cmd_ctx, cpc_name, partition_name):
+    """Stop a partition in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_partition_stop(cmd_ctx, cpc_name,
+                                                   partition_name))
+
+
+@partition_group.command('delete')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.option('--yes', is_flag=True, callback=abort_if_false,
+              expose_value=False,
+              help='Skip prompt to confirm deletion of the partition.',
+              prompt='Are you sure you want to delete this partition ?')
+@click.pass_obj
+def partition_delete(cmd_ctx, cpc_name, partition_name):
+    """Delete a partition in a CPC."""
+    cmd_ctx.execute_cmd(lambda: cmd_partition_delete(cmd_ctx, cpc_name,
+                                                     partition_name))
 
 
 def _find_cpc(client, cpc_name):
@@ -39,7 +121,7 @@ def _find_partition(client, cpc_name, partition_name):
     if not cpc.dpm_enabled:
         raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
     try:
-        lpar = cpc.partitions.find(name=partition_name)
+        partition = cpc.partitions.find(name=partition_name)
     except zhmcclient.NotFound:
         raise click.ClickException("Could not find partition %s in CPC %s." %
                                    (partition_name, cpc_name))
