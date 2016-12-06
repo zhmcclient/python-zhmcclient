@@ -20,16 +20,14 @@ import click_spinner
 from click_repl import register_repl, repl
 import requests.packages.urllib3
 
-from ._cmd_client import *
+from ._cmd_info import *
 from ._cmd_session import *
 from ._cmd_cpc import *
 from ._cmd_lpar import *
 from ._cmd_partition import *
-from ._cmd_helper import *
+from ._helper import *
 
 
-# TODO: Rename _cmd_client.py to _cmd_info.py
-# TODO: Rename _cmd_helper.py to _helper.py
 # TODO: Move functions for sub-commands from zhmccli.py to _cmd_*.py
 # TODO: Automated tests for zhmc cli
 # TODO: Find a way to clarify in the sub-command help texts that the global

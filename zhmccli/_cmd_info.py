@@ -17,7 +17,7 @@ from __future__ import absolute_import
 import click
 import zhmcclient
 
-from ._cmd_helper import print_properties
+from ._helper import print_properties
 
 
 def cmd_info(cmd_ctx):

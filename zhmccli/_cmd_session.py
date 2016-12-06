@@ -17,7 +17,7 @@ from __future__ import absolute_import
 import click
 import zhmcclient
 
-from ._cmd_helper import *
+from ._helper import *
 
 
 def cmd_session_create(cmd_ctx):

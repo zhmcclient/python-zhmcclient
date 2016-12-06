@@ -20,7 +20,7 @@ import click
 import zhmcclient
 import click_spinner
 
-from ._cmd_helper import *
+from ._helper import *
 
 
 def _find_cpc(client, cpc_name):

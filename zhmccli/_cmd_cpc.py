@@ -18,7 +18,7 @@ import click
 import zhmcclient
 import click_spinner
 
-from ._cmd_helper import *
+from ._helper import *
 
 
 def cmd_cpc_list(cmd_ctx):

@@ -14,7 +14,7 @@
 
 from __future__ import absolute_import
 
-from ._cmd_client import *
+from ._cmd_info import *
 from ._cmd_session import *
 from ._cmd_cpc import *
 from ._cmd_lpar import *
