@@ -23,13 +23,25 @@ from ._helper import print_properties, print_resources
 
 @cli.group('cpc')
 def cpc_group():
-    """Command group for managing CPCs."""
+    """
+    Command group for managing CPCs.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
 
 
 @cpc_group.command('list')
 @click.pass_obj
 def cpc_list(cmd_ctx):
-    """List the CPCs."""
+    """
+    List the CPCs.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_cpc_list(cmd_ctx))
 
 
@@ -37,7 +49,14 @@ def cpc_list(cmd_ctx):
 @click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
 @click.pass_obj
 def cpc_show(cmd_ctx, cpc_name):
-    """Show details of a CPC."""
+    """
+    Show details of a CPC.
+    In table format, some properties are skipped.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_cpc_show(cmd_ctx, cpc_name))
 
 
@@ -55,7 +74,8 @@ def cmd_cpc_list(cmd_ctx):
 
 def cmd_cpc_show(cmd_ctx, cpc_name):
     """
-    Show details of a CPC. In table format, some properties are skipped.
+    Show details of a CPC.
+    In table format, some properties are skipped.
     """
     client = zhmcclient.Client(cmd_ctx.session)
     try:

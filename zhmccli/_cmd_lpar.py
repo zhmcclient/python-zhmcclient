@@ -23,14 +23,26 @@ from ._helper import print_properties, print_resources, abort_if_false
 
 @cli.group('lpar')
 def lpar_group():
-    """Command group for managing LPARs."""
+    """
+    Command group for managing LPARs.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
 
 
 @lpar_group.command('list')
 @click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
 @click.pass_obj
 def lpar_list(cmd_ctx, cpc_name):
-    """List the LPARs in a CPC."""
+    """
+    List the LPARs in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_lpar_list(cmd_ctx, cpc_name))
 
 
@@ -39,7 +51,14 @@ def lpar_list(cmd_ctx, cpc_name):
 @click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
 @click.pass_obj
 def lpar_show(cmd_ctx, cpc_name, lpar_name):
-    """Show details of an LPAR in a CPC."""
+    """
+    Show details of an LPAR in a CPC.
+    In table format, some properties are skipped.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_lpar_show(cmd_ctx, cpc_name, lpar_name))
 
 
@@ -48,7 +67,13 @@ def lpar_show(cmd_ctx, cpc_name, lpar_name):
 @click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
 @click.pass_obj
 def lpar_activate(cmd_ctx, cpc_name, lpar_name):
-    """Activate an LPAR in a CPC."""
+    """
+    Activate an LPAR in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_lpar_activate(cmd_ctx, cpc_name,
                                                   lpar_name))
 
@@ -62,7 +87,13 @@ def lpar_activate(cmd_ctx, cpc_name, lpar_name):
               prompt='Are you sure you want to deactivate the LPAR ?')
 @click.pass_obj
 def lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
-    """Deactivate an LPAR in a CPC."""
+    """
+    Deactivate an LPAR in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_lpar_deactivate(cmd_ctx, cpc_name,
                                                     lpar_name))
 
@@ -73,7 +104,13 @@ def lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
 @click.argument('LOAD-ADDRESS', type=str, metavar='LOAD-ADDRESS')
 @click.pass_obj
 def lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
-    """Load an LPAR in a CPC."""
+    """
+    Load an LPAR in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_lpar_load(cmd_ctx, cpc_name, lpar_name,
                                               load_address))
 
@@ -121,6 +158,7 @@ def cmd_lpar_list(cmd_ctx, cpc_name):
 def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):
     """
     Show the details of an LPAR in a CPC.
+    In table format, some properties are skipped.
     """
     client = zhmcclient.Client(cmd_ctx.session)
     lpar = _find_lpar(client, cpc_name, lpar_name)

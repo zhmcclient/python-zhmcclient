@@ -27,5 +27,6 @@ zhmcclient - A pure Python client library for the z Systems HMC Web Services API
    concepts.rst
    general.rst
    resources.rst
+   cli.rst
    development.rst
    appendix.rst

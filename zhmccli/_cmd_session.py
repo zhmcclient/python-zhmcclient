@@ -22,24 +22,43 @@ from .zhmccli import cli
 
 @cli.group('session')
 def session_group():
-    """Command group for managing sessions."""
+    """
+    Command group for managing sessions.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
 
 
 @session_group.command('create')
 @click.pass_obj
 def session_create(cmd_ctx):
-    """Create a HMC session."""
+    """
+    Create an HMC session.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_session_create(cmd_ctx))
 
 
 @session_group.command('delete')
 @click.pass_obj
 def session_delete(cmd_ctx):
-    """Delete a HMC session."""
+    """
+    Delete the current HMC session.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_session_delete(cmd_ctx))
 
 
 def cmd_session_create(cmd_ctx):
+    """Create an HMC session."""
     session = cmd_ctx.session
     try:
         session.logon(verify=True)
@@ -51,7 +70,7 @@ def cmd_session_create(cmd_ctx):
 
 
 def cmd_session_delete(cmd_ctx):
-    """Delete the current session."""
+    """Delete the current HMC session."""
     session = cmd_ctx.session
     try:
         session.logoff()

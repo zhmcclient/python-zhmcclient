@@ -24,15 +24,76 @@ from ._helper import print_properties, print_resources, abort_if_false, \
 
 @cli.group('partition')
 def partition_group():
-    """Command group for managing partitions."""
+    """
+    Command group for managing partitions.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
 
 
 @partition_group.command('list')
 @click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
 @click.pass_obj
 def partition_list(cmd_ctx, cpc_name):
-    """List the partitions in a CPC."""
+    """
+    List the partitions in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_partition_list(cmd_ctx, cpc_name))
+
+
+@partition_group.command('show')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.pass_obj
+def partition_show(cmd_ctx, cpc_name, partition_name):
+    """
+    Show the details of a partition in a CPC.
+    In table format, some properties are skipped.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_partition_show(cmd_ctx, cpc_name,
+                                                   partition_name))
+
+
+@partition_group.command('start')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.pass_obj
+def partition_start(cmd_ctx, cpc_name, partition_name):
+    """
+    Start a partition in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_partition_start(cmd_ctx, cpc_name,
+                                                    partition_name))
+
+
+@partition_group.command('stop')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.pass_obj
+def partition_stop(cmd_ctx, cpc_name, partition_name):
+    """
+    Stop a partition in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_partition_stop(cmd_ctx, cpc_name,
+                                                   partition_name))
 
 
 @partition_group.command('create')
@@ -54,41 +115,17 @@ def partition_list(cmd_ctx, cpc_name):
               help='The type of device from which the partition is booted.')
 @click.pass_context
 def partition_create(ctx, cpc_name, **options):
-    """Create a partition in a CPC."""
+    """
+    Create a partition in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     properties = options_to_properties(options)
     cmd_ctx = ctx.obj
     cmd_ctx.execute_cmd(lambda: cmd_partition_create(cmd_ctx, cpc_name,
                                                      properties))
-
-
-@partition_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.pass_obj
-def partition_show(cmd_ctx, cpc_name, partition_name):
-    """Show the details of a partition in a CPC."""
-    cmd_ctx.execute_cmd(lambda: cmd_partition_show(cmd_ctx, cpc_name,
-                                                   partition_name))
-
-
-@partition_group.command('start')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.pass_obj
-def partition_start(cmd_ctx, cpc_name, partition_name):
-    """Start a partition in a CPC."""
-    cmd_ctx.execute_cmd(lambda: cmd_partition_start(cmd_ctx, cpc_name,
-                                                    partition_name))
-
-
-@partition_group.command('stop')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.pass_obj
-def partition_stop(cmd_ctx, cpc_name, partition_name):
-    """Stop a partition in a CPC."""
-    cmd_ctx.execute_cmd(lambda: cmd_partition_stop(cmd_ctx, cpc_name,
-                                                   partition_name))
 
 
 @partition_group.command('delete')
@@ -100,7 +137,13 @@ def partition_stop(cmd_ctx, cpc_name, partition_name):
               prompt='Are you sure you want to delete this partition ?')
 @click.pass_obj
 def partition_delete(cmd_ctx, cpc_name, partition_name):
-    """Delete a partition in a CPC."""
+    """
+    Delete a partition in a CPC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
     cmd_ctx.execute_cmd(lambda: cmd_partition_delete(cmd_ctx, cpc_name,
                                                      partition_name))
 
@@ -148,6 +191,7 @@ def cmd_partition_list(cmd_ctx, cpc_name):
 def cmd_partition_show(cmd_ctx, cpc_name, partition_name):
     """
     Show the details of a partition in a CPC.
+    In table format, some properties are skipped.
     """
     client = zhmcclient.Client(cmd_ctx.session)
     partition = _find_partition(client, cpc_name, partition_name)
