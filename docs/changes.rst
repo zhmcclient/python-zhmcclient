@@ -19,16 +19,24 @@
 Change log
 ----------
 
-Version |version|
-^^^^^^^^^^^^^^^^^
+Version 0.6.0
+^^^^^^^^^^^^^
 
-Released: Not yet
+Released: 2016-12-07
 
 **Incompatible changes:**
 
 **Deprecations:**
 
 **Bug fixes:**
+
+* Fixed typo in help message of cpcinfo.
+
+* Fixed KeyError: 'status' when running example5.py (issue #99).
+
+* Fixed documentation of field Partition.hbas (issue #101).
+
+* Fixed new Flake8 issue E305.
 
 **Enhancements:**
 
@@ -44,6 +52,15 @@ Released: Not yet
   added an entry in the time statistics for the overall operation
   from the start to completion of the asynchronous operation. That entry
   is for a URI that is the target URI, appended with "+completion".
+
+* Added time statistics entry for overall asynchronous operations.
+
+* Improved VersionError exception class and removed number-of-args tests.
+
+* Added the option to create a session object with a given session id.
+
+* Added base implementation of a command line interface (zhmc)
+  for the zhmcclient.
 
 **Known Issues:**
 
