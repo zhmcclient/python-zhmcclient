@@ -19,14 +19,31 @@
 Change log
 ----------
 
-Version 0.6.0
-^^^^^^^^^^^^^
 
-Released: 2016-12-07
+Version 0.7.0.devXX
+^^^^^^^^^^^^^^^^^^^
+
+Released: not yet
 
 **Incompatible changes:**
 
 **Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known Issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
+Version 0.6.0
+^^^^^^^^^^^^^
+
+Released: 2016-12-07
 
 **Bug fixes:**
 
@@ -61,12 +78,6 @@ Released: 2016-12-07
 
 * Added base implementation of a command line interface (zhmc)
   for the zhmcclient.
-
-**Known Issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.5.0
