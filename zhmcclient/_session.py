@@ -55,7 +55,8 @@ class Session(object):
     measurements, and to print the statistics.
     """
 
-    def __init__(self, host, userid=None, password=None, session_id=None):
+    def __init__(self, host, userid=None, password=None, session_id=None,
+                 get_password=None):
         """
         Creating a session object will not immediately cause a logon to be
         attempted; the logon is deferred until needed.
@@ -104,10 +105,20 @@ class Session(object):
 
           session_id (:term:`string`):
             Session-id to be used for this session, or `None`.
+
+          get_password (:term:`callable`):
+            A function that returns the password as a string, or `None`.
+
+            If provided, this function will be called if a password is needed
+            but not provided.
+
+            This mechanism can be used for example by command line interfaces
+            for prompting for the password.
         """
         self._host = host
         self._userid = userid
         self._password = password
+        self._get_password = get_password
         self._base_url = "{scheme}://{host}:{port}".format(
             scheme=_HMC_SCHEME,
             host=self._host,
@@ -149,6 +160,13 @@ class Session(object):
         performed.
         """
         return self._userid
+
+    @property
+    def get_password(self):
+        """
+        bool: The function that returns the password as a string, or `None`.
+        """
+        return self._get_password
 
     @property
     def base_url(self):
@@ -207,9 +225,15 @@ class Session(object):
         return self._session
 
     @_log_call
-    def logon(self):
+    def logon(self, verify=False):
         """
         Make sure the session is logged on to the HMC.
+
+        By default, this method checks whether there is a session-id set
+        and considers that sufficient for determining that the session is
+        logged on. The `verify` parameter can be used to verify the validity
+        of a session-id that is already set, by issuing a dummy operation
+        ("Get Console Properties") to the HMC.
 
         After successful logon to the HMC, the following is stored in this
         session object for reuse in subsequent operations:
@@ -218,6 +242,10 @@ class Session(object):
         * a :class:`requests.Session` object, in order to enable connection
           pooling. Connection pooling avoids repetitive SSL/TLS handshakes.
 
+        Parameters:
+
+          verify (bool): If a session-id is already set, verify its validity.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -225,7 +253,7 @@ class Session(object):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if not self.is_logon():
+        if not self.is_logon(verify):
             self._do_logon()
 
     @_log_call
@@ -247,20 +275,42 @@ class Session(object):
             self._do_logoff()
 
     @_log_call
-    def is_logon(self):
+    def is_logon(self, verify=False):
         """
         Return a boolean indicating whether the session is currently logged on
         to the HMC.
+
+        By default, this method checks whether there is a session-id set
+        and considers that sufficient for determining that the session is
+        logged on. The `verify` parameter can be used to verify the validity
+        of a session-id that is already set, by issuing a dummy operation
+        ("Get Console Properties") to the HMC.
+
+        Parameters:
+
+          verify (bool): If a session-id is already set, verify its validity.
         """
-        return self._session_id is not None
+        if self._session_id is None:
+            return False
+        if verify:
+            try:
+                self.get('/api/console', logon_required=True)
+            except AuthError:
+                return False
+        return True
 
     def _do_logon(self):
         """
         Log on, unconditionally. This can be used to re-logon.
         This requires credentials to be provided.
         """
-        if self._userid is None or self._password is None:
-            raise AuthError("Userid or password not provided.")
+        if self._userid is None:
+            raise AuthError("Userid is not provided.")
+        if self._password is None:
+            if self._get_password:
+                self._password = self._get_password()
+            else:
+                raise AuthError("Password is not provided.")
         logon_uri = '/api/sessions'
         logon_body = {
             'userid': self._userid,
@@ -276,6 +326,7 @@ class Session(object):
         """
         Log off, unconditionally.
         """
+        assert 'X-API-Session' in self._headers
         session_uri = '/api/sessions/this-session'
         self.delete(session_uri, logon_required=False)
         self._session_id = None

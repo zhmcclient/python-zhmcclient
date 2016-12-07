@@ -8,4 +8,6 @@ requests>=2.10.0 # Apache-2.0
 decorator # new BSD
 tabulate # MIT
 progressbar2 # BSD
-
+click # BSD
+click-spinner # MIT
+click-repl # MIT
