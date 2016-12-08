@@ -20,16 +20,18 @@ Change log
 ----------
 
 
-Version 0.7.0.devXX
-^^^^^^^^^^^^^^^^^^^
+Version 0.7.0
+^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2016-12-08
 
 **Incompatible changes:**
 
 **Deprecations:**
 
 **Bug fixes:**
+
+* IOError during click-spinner 0.1.4 install (issue #120)
 
 **Enhancements:**
 

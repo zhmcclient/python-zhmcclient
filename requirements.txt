@@ -9,5 +9,5 @@ decorator # new BSD
 tabulate # MIT
 progressbar2 # BSD
 click # BSD
-click-spinner # MIT
+click-spinner==0.1.3 # MIT
 click-repl # MIT
