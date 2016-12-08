@@ -84,15 +84,12 @@ def cli(ctx, host, userid, output_format, timestats):
 
     def password_prompt():
         if userid is not None and host is not None:
-            spinner_running = (ctx.obj.spinner is not None)
-            if spinner_running:
-                ctx.obj.spinner_stop()
+            ctx.obj.spinner.stop()
             password = click.prompt(
                 "Enter password (for user {userid} at HMC {host})"
                 .format(userid=userid, host=host), hide_input=True,
                 confirmation_prompt=False, type=str, err=True)
-            if spinner_running:
-                ctx.obj.spinner_start()
+            ctx.obj.spinner.start()
             return password
         else:
             raise click.ClickException("{cmd} command requires logon, but "
