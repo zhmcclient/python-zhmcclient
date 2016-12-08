@@ -21,12 +21,6 @@ from click_repl import register_repl, repl
 from ._helper import CmdContext
 
 
-# TODO: Documentation for zhmc cli
-# TODO: Automated tests for zhmc cli
-# TODO: Find a way to clarify in the sub-command help texts that the global
-#       options can be used.
-
-
 requests.packages.urllib3.disable_warnings()
 
 # Default values for some options
@@ -52,77 +46,8 @@ def cli(ctx, host, userid, output_format, timestats):
     """
     Command line interface for the z Systems HMC.
 
-    zhmc is a command line interface for interacting with the Web Services API
-    of the Hardware Management Console (HMC) of z Systems or LinuxONE machines.
-    It allows management of LPARs, partitions and much more.
-
-    \b
-    The zhmc command line interface can be used in these modes:
-    - Interactive - an interactive shell
-    - Command-Session - command mode that prompts for a password only once and
-      stores the session-id in an environment variable
-    - Command-Prompt - command mode that prompts for a password every time
-
-    Example for interactive mode:
-
-       \b
-       $ zhmc -h zhmc.example.com -u hmcuser
-       Enter password: <password>
-       > cpc list
-       > partition list JLSE1
-       > partition create JLSE1 --name TESTPART_JL --description "blablabla"
-       --cp-processors 1 --initial-memory 4096 --maximum-memory 4096
-       --processor-mode shared --boot-device test-operating-system
-       > partition show JLSE1 TESTPART_JL
-       > partition start JLSE1 TESTPART_JL
-       > partition stop JLSE1 TESTPART_JL
-       > partition delete JLSE1 TESTPART_JL --yes
-       > :q
-
-    Example for command-session mode:
-
-       \b
-       $ eval $(zhmc -h zhmc.example.com -u hmcuser session create)
-       Enter password: <password>
-       $ zhmc cpc list
-       $ zhmc lpar list P0000P99
-       $ zhmc lpar deactivate P0000P99 PART8 --yes
-       $ zhmc --timestats lpar activate P0000P99 PART8
-       $ zhmc lpar load P0000P99 PART8 5172
-       $ zhmc lpar show P0000P99 PART8
-       $ zhmc -o json lpar show P0000P30 PART8
-       $ eval $(zhmc session delete --yes)
-
-    Example for command-prompt mode:
-
-       \b
-       $ zhmc -h zhmc.example.com -u hmcuser cpc list
-       Enter password: <password>
-       $ zhmc -h zhmc.example.com info
-       Enter password: <password>
-
-    To get overall help:
-
-       \b
-       $ zhmc --help
-
-    To get help for a specific command (or command group):
-
-       \b
-       $ zhmc <command> --help
-
-    To enable bash completion in the current shell:
-
-       \b
-       $ eval "$(_ZHMC_COMPLETE=source zhmc)"
-
-    To use bash completion:
-
-       \b
-       $ zhmc --<TAB><TAB>
-       ... shows the global options to select from ...
-       $ zhmc <TAB><TAB>
-       ... shows the commands to select from ...
+    The options shown in this help text are general options that can also
+    be specified on any of the (sub-)commands.
     """
 
     # Concept: In interactive mode, the global options specified in the command

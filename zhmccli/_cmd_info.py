@@ -26,6 +26,10 @@ from ._helper import print_properties
 def info(cmd_ctx):
     """
     Show information about the HMC.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
     """
     cmd_ctx.execute_cmd(lambda: cmd_info(cmd_ctx))
 
