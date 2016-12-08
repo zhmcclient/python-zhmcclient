@@ -124,10 +124,11 @@ help:
 	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_log_file)'
 	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
 	@echo '  all        - Do all of the above (except buildwin when not on Windows)'
-	@echo '  install    - Install package in active Python environment and test import'
-	@echo '  upload     - build + upload the distribution files to PyPI'
+	@echo '  install    - Install package in active Python environment and test import (includes build)'
+	@echo '  uninstall  - Uninstall package from active Python environment'
+	@echo '  upload     - Upload the distribution files to PyPI (includes uninstall+build)'
 	@echo '  clean      - Remove any temporary files'
-	@echo '  clobber    - clean + remove any build products'
+	@echo '  clobber    - Remove any build products (includes uninstall+clean)'
 
 .PHONY: develop
 develop:
@@ -203,21 +204,27 @@ install:
 	@echo 'Done: Installed $(package_name) into current Python environment.'
 	@echo '$@ done.'
 
+.PHONY: uninstall
+uninstall:
+	bash -c 'pip show $(package_name) >/dev/null; rc=$$?; if [[ $$rc == 0 ]]; then pip uninstall -y $(package_name); fi'
+	@echo '$@ done.'
+
 .PHONY: test
 test: $(test_log_file)
 	@echo '$@ done.'
 
 .PHONY: clobber
-clobber: clean
+clobber: uninstall clean
 	rm -fv pylint.log flake8.log test_*.log
 	rm -Rfv $(doc_build_dir) htmlcov .tox
-	@echo 'Done: Removed everything to get to a fresh state.'
+	rm -fv $(bdist_file) $(sdist_file) $(win64_dist_file)
+	@echo 'Done: Removed all build products to get to a fresh state.'
 	@echo '$@ done.'
 
 # Also remove any build products that are dependent on the Python version
 .PHONY: clean
 clean:
-	bash -c "find . -path ./.tox -prune -o -name \"*.pyc\" -print -o -name \"__pycache__\" -print -o -name \"*.tmp\" -print -o -name \"tmp_*\" -print |xargs -r rm -Rfv"
+	bash -c 'find . -path ./.tox -prune -o -name "*.pyc" -print -o -name "__pycache__" -print -o -name "*.tmp" -print -o -name "tmp_*" -print |xargs -r rm -Rfv'
 	rm -fv MANIFEST MANIFEST.in AUTHORS ChangeLog .coverage
 	rm -Rfv build .cache $(package_name).egg-info .eggs
 	@echo 'Done: Cleaned out all temporary files.'
@@ -228,13 +235,21 @@ all: develop check build builddoc test
 	@echo '$@ done.'
 
 .PHONY: upload
-upload:  $(dist_files)
+upload: uninstall $(dist_files)
+ifeq (,$(findstring .dev,$(package_version)))
+	@echo '==> This will upload $(package_name) version $(package_version) to PyPI!'
+	@echo -n '==> Continue? [yN] '
+	@bash -c 'read answer; if [[ "$$answer" != "y" ]]; then echo "Aborted."; false; fi'
 	twine upload $(dist_files)
 	@echo 'Done: Uploaded $(package_name) version to PyPI: $(package_version)'
 	@echo '$@ done.'
+else
+	@echo 'Error: A development version $(package_version) of $(package_name) cannot be uploaded to PyPI!'
+	@false
+endif
 
 # Distribution archives.
-$(bdist_file) $(sdist_file): setup.py $(dist_dependent_files)
+$(bdist_file) $(sdist_file): Makefile setup.py $(dist_dependent_files)
 ifneq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs
 	python setup.py sdist -d $(dist_dir) bdist_wheel -d $(dist_dir) --universal
@@ -244,7 +259,7 @@ else
 	@false
 endif
 
-$(win64_dist_file): setup.py $(dist_dependent_files)
+$(win64_dist_file): Makefile setup.py $(dist_dependent_files)
 ifeq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs
 	python setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
@@ -258,7 +273,7 @@ endif
 pylint.log: Makefile $(pylint_rc_file) $(check_py_files)
 ifeq ($(python_major_version), 2)
 	rm -fv $@
-	-bash -c "set -o pipefail; pylint --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files) 2>&1 |tee $@.tmp"
+	-bash -c 'set -o pipefail; pylint --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
 	@echo 'Done: Created PyLint log file: $@'
 else
@@ -268,12 +283,12 @@ endif
 # TODO: Once Flake8 has no more errors, remove the dash "-"
 flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	rm -fv $@
-	bash -c "set -o pipefail; flake8 $(check_py_files) 2>&1 |tee $@.tmp"
+	bash -c 'set -o pipefail; flake8 $(check_py_files) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
 $(test_log_file): Makefile $(package_name)/*.py tests/unit/*.py tests/function/*.py .coveragerc
 	rm -fv $@
-	bash -c "set -o pipefail; PYTHONWARNINGS=default py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) -s 2>&1 |tee $@.tmp"
+	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) -s 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
 	@echo 'Done: Created test log file: $@'

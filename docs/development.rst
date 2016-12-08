@@ -291,9 +291,11 @@ the `Makefile` is), and perform the following steps in that directory:
 
         make upload
 
-    **Attention!!** This only works once. You cannot re-release the same
-    version to PyPI.
+    This will show the package version and will ask for confirmation.
 
+    **Attention!!** This only works once for each version. You cannot
+    re-release the same version to PyPI.
+    
 11. Verify that the released version is shown on PyPI:
 
     https://pypi.python.org/pypi/zhmcclient/
