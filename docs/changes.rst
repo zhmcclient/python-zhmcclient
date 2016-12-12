@@ -20,18 +20,16 @@ Change log
 ----------
 
 
-Version 0.7.0
+Version 0.8.0
 ^^^^^^^^^^^^^
 
-Released: 2016-12-08
+Released: not yet
 
 **Incompatible changes:**
 
 **Deprecations:**
 
 **Bug fixes:**
-
-* IOError during click-spinner 0.1.4 install (issue #120)
 
 **Enhancements:**
 
@@ -40,6 +38,20 @@ Released: 2016-12-08
 * See `list of open issues`_.
 
 .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
+Version 0.7.0
+^^^^^^^^^^^^^
+
+Released: 2016-12-08
+
+**Bug fixes:**
+
+* IOError during click-spinner 0.1.4 install (issue #120)
+
+**Enhancements:**
+
+* Documentation for zhmc CLI
 
 
 Version 0.6.0
