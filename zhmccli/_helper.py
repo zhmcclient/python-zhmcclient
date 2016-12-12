@@ -14,7 +14,6 @@
 
 from __future__ import absolute_import
 
-import sys
 import json
 import click
 import click_spinner
@@ -50,7 +49,7 @@ class CmdContext(object):
         self._session_id = session_id
         self._get_password = get_password
         self._session = None
-        self._spinner = None
+        self._spinner = click_spinner.Spinner()
 
     @property
     def host(self):
@@ -104,30 +103,13 @@ class CmdContext(object):
     @property
     def spinner(self):
         """
-        :class:`~click_spinner.Spinner` object if a spinner is running, or
-        `None`.
+        :class:`~click_spinner.Spinner` object.
+
+        Since click_spinner 0.1.5, the Spinner object takes care of suppressing
+        the spinner when not on a tty, and is able to suspend/resume the
+        spinner via its stop() and start() methods.
         """
         return self._spinner
-
-    def spinner_start(self):
-        """
-        Start the spinner (unless redirected).
-
-        Unlike :meth:`click_spinner.Spinner.start`, this function can be called
-        to restart the spinner after having stopped it (via
-        :meth:`spinner_stop`).
-        """
-        if sys.stdout.isatty():
-            self._spinner = click_spinner.Spinner()
-            self._spinner.start()
-
-    def spinner_stop(self):
-        """
-        Stop the spinner.
-        """
-        if self._spinner is not None:
-            self._spinner.stop()
-            self._spinner = None
 
     def execute_cmd(self, cmd):
         if self._session is None:
@@ -142,11 +124,11 @@ class CmdContext(object):
                     self._host, self._userid, get_password=self._get_password)
         if self.timestats:
             self._session.time_stats_keeper.enable()
-        self.spinner_start()
+        self.spinner.start()
         try:
             cmd()
         finally:
-            self.spinner_stop()
+            self.spinner.stop()
             if self._session.time_stats_keeper.enabled:
                 click.echo(self._session.time_stats_keeper)
 
