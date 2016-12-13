@@ -1,0 +1,251 @@
+# Copyright 2016 IBM Corp. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import absolute_import
+
+import click
+
+import zhmcclient
+from .zhmccli import cli
+from ._helper import print_properties, print_resources, abort_if_false, \
+    options_to_properties, original_options
+from ._cmd_partition import find_partition
+
+
+def find_hba(client, cpc_name, partition_name, hba_name):
+    """
+    Find an HBA by name and return its resource object.
+    """
+    partition = find_partition(client, cpc_name, partition_name)
+    try:
+        hba = partition.hbas.find(name=hba_name)
+    except zhmcclient.NotFound:
+        raise click.ClickException("Could not find HBA %s in partition %s in "
+                                   "CPC %s." %
+                                   (hba_name, partition_name, cpc_name))
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    return hba
+
+
+@cli.group('hba')
+def hba_group():
+    """
+    Command group for managing HBAs.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+
+
+@hba_group.command('list')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.pass_obj
+def hba_list(cmd_ctx, cpc_name, partition_name):
+    """
+    List the HBAs in a partition.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_hba_list(cmd_ctx, cpc_name,
+                                             partition_name))
+
+
+@hba_group.command('show')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.argument('HBA-NAME', type=str, metavar='HBA-NAME')
+@click.pass_obj
+def hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
+    """
+    Show the details of an HBA.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_hba_show(cmd_ctx, cpc_name, partition_name,
+                                             hba_name))
+
+
+@hba_group.command('create')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.option('--name', type=str, required=True,
+              help='The name of the new HBA.')
+@click.option('--description', type=str, required=False,
+              help='The description of the new HBA. '
+              'Default: empty')
+@click.option('--adapter', type=str, required=True,
+              help='The name of the backing FCP adapter.')
+@click.option('--port', type=str, required=True,
+              help='The name of the port on the backing FCP adapter.')
+@click.option('--device-number', type=str, required=False,
+              help='The device number to be used for the new HBA. '
+              'Default: auto-generated')
+@click.pass_obj
+def hba_create(cmd_ctx, cpc_name, partition_name, **options):
+    """
+    Create an HBA in a partition.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_hba_create(cmd_ctx, cpc_name,
+                                               partition_name, options))
+
+
+@hba_group.command('update')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.argument('HBA-NAME', type=str, metavar='HBA-NAME')
+@click.option('--name', type=str, required=False,
+              help='The new name of the HBA. '
+              'Default: No change.')
+@click.option('--description', type=str, required=False,
+              help='The new description of the HBA. '
+              'Default: No change.')
+@click.option('--device-number', type=str, required=False,
+              help='The new device number to be used for the HBA. '
+              'Default: No change.')
+@click.pass_obj
+def hba_update(cmd_ctx, cpc_name, partition_name, hba_name, **options):
+    """
+    Update the properties of an HBA.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_hba_update(cmd_ctx, cpc_name,
+                                               partition_name, hba_name,
+                                               options))
+
+
+@hba_group.command('delete')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@click.argument('HBA-NAME', type=str, metavar='HBA-NAME')
+@click.option('--yes', is_flag=True, callback=abort_if_false,
+              expose_value=False,
+              help='Skip prompt to confirm deletion of the HBA.',
+              prompt='Are you sure you want to delete this HBA ?')
+@click.pass_obj
+def hba_delete(cmd_ctx, cpc_name, partition_name, hba_name):
+    """
+    Delete an HBA.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_hba_delete(cmd_ctx, cpc_name,
+                                               partition_name, hba_name))
+
+
+def cmd_hba_list(cmd_ctx, cpc_name, partition_name):
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = find_partition(client, cpc_name, partition_name)
+    try:
+        hbas = partition.hbas.list()
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    print_resources(hbas, cmd_ctx.output_format)
+
+
+def cmd_hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
+    client = zhmcclient.Client(cmd_ctx.session)
+    hba = find_hba(client, cpc_name, partition_name, hba_name)
+    try:
+        hba.pull_full_properties()
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    skip_list = ()
+    print_properties(hba.properties, cmd_ctx.output_format, skip_list)
+
+
+def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
+
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = find_partition(client, cpc_name, partition_name)
+
+    name_map = {
+        # The following options are handled in this function:
+        'adapter': None,
+        'port': None,
+    }
+    options = original_options(options)
+    properties = options_to_properties(options, name_map)
+
+    adapter_name = options['adapter']
+    try:
+        adapter = cpc.adapters.find(name=adapter_name)
+    except zhmcclient.NotFound:
+        raise click.ClickException("Could not find adapter %s in CPC %s." %
+                                   (adapter_name, cpc_name))
+    port_name = options['port']
+    try:
+        port = adapter.ports.find(name=port_name)
+    except zhmcclient.NotFound:
+        raise click.ClickException("Could not find port %s on adapter %s "
+                                   "in CPC %s." %
+                                   (port_name, adapter_name, cpc_name))
+    properties['adapter-port'] = port.uri
+
+    try:
+        new_hba = cpc.hbas.create(properties)
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+    click.echo("New HBA %s has been created." %
+               new_hba.properties['name'])
+
+
+def cmd_hba_update(cmd_ctx, cpc_name, partition_name, hba_name, options):
+
+    client = zhmcclient.Client(cmd_ctx.session)
+    hba = find_hba(client, cpc_name, partition_name, hba_name)
+
+    options = original_options(options)
+    properties = options_to_properties(options)
+
+    if not properties:
+        click.echo("No properties specified for updating HBA %s." % hba_name)
+        return
+
+    try:
+        hba.update_properties(properties)
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+    if 'name' in properties and properties['name'] != hba_name:
+        click.echo("HBA %s has been renamed to %s and was updated." %
+                   (hba_name, properties['name']))
+    else:
+        click.echo("HBA %s has been updated." % hba_name)
+
+
+def cmd_hba_delete(cmd_ctx, cpc_name, partition_name, hba_name):
+    client = zhmcclient.Client(cmd_ctx.session)
+    hba = find_hba(client, cpc_name, partition_name, hba_name)
+    try:
+        hba.delete()
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    click.echo('HBA %s has been deleted.' % hba_name)

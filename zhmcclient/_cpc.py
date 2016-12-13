@@ -75,6 +75,7 @@ class CpcManager(BaseManager):
         #   client (:class:`~zhmcclient.Client`):
         #      Client object for the HMC to be used.
         super(CpcManager, self).__init__()
+        self._resource_class = Cpc
         self._session = client.session
 
     @_log_call

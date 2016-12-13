@@ -100,6 +100,19 @@ class BaseResource(object):
         return self._uri
 
     @property
+    def name(self):
+        """
+        string: The name of the resource.
+
+        The name of a resource is the value of its `name` property.
+        The resource name is unique across its sibling resources of the same
+        type and with the same parent resource.
+        """
+        # Just in case this happens: If the statements above are not true for
+        # a particular resource class, it needs to re-implement this property.
+        return self._properties['name']
+
+    @property
     def manager(self):
         """
         Subclass of :class:`~zhmcclient.BaseManager`:

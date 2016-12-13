@@ -133,10 +133,71 @@ class CmdContext(object):
                 click.echo(self._session.time_stats_keeper)
 
 
-def options_to_properties(options):
+def original_options(options):
+    """
+    Return the input options with their original names.
+
+    This is used to undo the name change the click package applies
+    automatically before passing the options to the function that was decorated
+    with 'click.option()'. The original names are needed in case there is
+    special processing of the options on top of 'options_to_properties()'.
+
+    The original names are constructed by replacing any underscores '_' with
+    hyphens '-'. This approach may not be perfect in general, but it works for
+    the zhmc CLI because the original option names do not have any underscores.
+
+    Parameters:
+
+      options (dict): The click options dictionary as passed to the decorated
+        function by click (key: option name as changed by click, value: option
+        value).
+
+    Returns:
+
+      dict: Options with their original names.
+    """
+    org_options = {}
+    for name, value in options.iteritems():
+        org_name = name.replace('_', '-')
+        org_options[org_name] = value
+    return org_options
+
+
+def options_to_properties(options, name_map=None):
+    """
+    Convert click options into HMC resource properties.
+
+    The click option names in input parameters to this function are the
+    original option names (e.g. as produced by `original_options()`.
+
+    Options with a value of `None` are not added to the returned resource
+    properties.
+
+    If a name mapping dictionary is specified, the option names are mapped
+    using that dictionary. If an option name is mapped to `None`, it is not
+    going to be added to the set of returned resource properties.
+
+    Parameters:
+
+      options (dict): The options dictionary (key: original option name,
+        value: option value).
+
+      name_map (dict): `None` or name mapping dictionary (key: original
+        option name, value: property name, or `None` to not add this option to
+        the returned properties).
+
+    Returns:
+
+      dict: Resource properties (key: property name, value: option value)
+    """
     properties = {}
-    for k, v in options.iteritems():
-        properties[k.replace('_', '-')] = v
+    for name, value in options.iteritems():
+        if value is None:
+            continue
+        if name_map:
+            name = name_map.get(name, name)
+        if name is not None:
+            properties[name] = value
     return properties
 
 
@@ -144,8 +205,11 @@ def print_properties(properties, output_format, skip_list=None):
     """
     Print properties in the desired output format.
     """
+    _skip_list = ['@@implementation-errors']
+    if skip_list:
+        _skip_list.extend(skip_list)
     if output_format == 'table':
-        print_properties_as_table(properties, skip_list)
+        print_properties_as_table(properties, _skip_list)
     elif output_format == 'json':
         print_properties_as_json(properties)
     else:

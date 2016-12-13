@@ -19,6 +19,24 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false
+from ._cmd_cpc import find_cpc
+
+
+def find_lpar(client, cpc_name, lpar_name):
+    """
+    Find an LPAR by name and return its resource object.
+    """
+    cpc = find_cpc(client, cpc_name)
+    if cpc.dpm_enabled:
+        raise click.ClickException("CPC %s is in DPM mode." % cpc_name)
+    try:
+        lpar = cpc.lpars.find(name=lpar_name)
+    except zhmcclient.NotFound:
+        raise click.ClickException("Could not find LPAR %s in CPC %s." %
+                                   (lpar_name, cpc_name))
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+    return lpar
 
 
 @cli.group('lpar')
@@ -53,6 +71,7 @@ def lpar_list(cmd_ctx, cpc_name):
 def lpar_show(cmd_ctx, cpc_name, lpar_name):
     """
     Show details of an LPAR in a CPC.
+
     In table format, some properties are skipped.
 
     In addition to the command-specific options shown in this help text, the
@@ -62,13 +81,66 @@ def lpar_show(cmd_ctx, cpc_name, lpar_name):
     cmd_ctx.execute_cmd(lambda: cmd_lpar_show(cmd_ctx, cpc_name, lpar_name))
 
 
+@lpar_group.command('update')
+@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@click.option('--acceptable-status', type=str, required=False,
+              help='The new set of acceptable operational status values. '
+              'Default: No change.')
+# TODO: Support multiple values for acceptable-status
+@click.option('--next-activation-profile', type=str, required=False,
+              help='The name of the new next image or load activation '
+              'profile. '
+              'Default: No change.')
+# TODO: Add support for updating processor capping/sharing/weight related props
+@click.option('--zaware-host-name', type=str, required=False,
+              help='The new hostname for IBM zAware '
+              '(only for LPARs in zaware activation mode). '
+              'Default: No change.')
+@click.option('--zaware-master-userid', type=str, required=False,
+              help='The new master userid for IBM zAware '
+              '(only for LPARs in zaware activation mode). '
+              'Default: No change.')
+@click.option('--zaware-master-password', type=str, required=False,
+              help='The new master password for IBM zAware '
+              '(only for LPARs in zaware activation mode). '
+              'Default: No change.')
+# TODO: Change zAware master password option to ask for password
+# TODO: Add support for updating zAware network-related properties
+@click.option('--ssc-host-name', type=str, required=False,
+              help='The new hostname for the SSC appliance '
+              '(only for LPARs in ssc activation mode). '
+              'Default: No change.')
+@click.option('--ssc-master-userid', type=str, required=False,
+              help='The new master userid for the SSC appliance '
+              '(only for LPARs in ssc activation mode). '
+              'Default: No change.')
+@click.option('--ssc-master-password', type=str, required=False,
+              help='The new master password for the SSC appliance '
+              '(only for LPARs in ssc activation mode). '
+              'Default: No change.')
+# TODO: Change SSC master password option to ask for password
+# TODO: Add support for updating SSC network-related properties
+@click.pass_obj
+def lpar_update(cmd_ctx, cpc_name, lpar_name, **options):
+    """
+    Update the properties of an LPAR.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified before the
+    command.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_update(cmd_ctx, cpc_name, lpar_name,
+                                                options))
+
+
 @lpar_group.command('activate')
 @click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
 @click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
 @click.pass_obj
 def lpar_activate(cmd_ctx, cpc_name, lpar_name):
     """
-    Activate an LPAR in a CPC.
+    Activate an LPAR.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified before the
@@ -88,7 +160,7 @@ def lpar_activate(cmd_ctx, cpc_name, lpar_name):
 @click.pass_obj
 def lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
     """
-    Deactivate an LPAR in a CPC.
+    Deactivate an LPAR.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified before the
@@ -105,7 +177,7 @@ def lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
 @click.pass_obj
 def lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
     """
-    Load an LPAR in a CPC.
+    Load (Boot, IML) an LPAR.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified before the
@@ -115,37 +187,9 @@ def lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
                                               load_address))
 
 
-def _find_cpc(client, cpc_name):
-    try:
-        cpc = client.cpcs.find(name=cpc_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find CPC %s on HMC %s." %
-                                   (cpc_name, client.session.host))
-    except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    return cpc
-
-
-def _find_lpar(client, cpc_name, lpar_name):
-    cpc = _find_cpc(client, cpc_name)
-    if cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is in DPM mode." % cpc_name)
-    try:
-        lpar = cpc.lpars.find(name=lpar_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find LPAR %s in CPC %s." %
-                                   (lpar_name, cpc_name))
-    except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    return lpar
-
-
 def cmd_lpar_list(cmd_ctx, cpc_name):
-    """
-    List the LPARs in a CPC.
-    """
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = _find_cpc(client, cpc_name)
+    cpc = find_cpc(client, cpc_name)
     if cpc.dpm_enabled:
         raise click.ClickException("CPC %s is in DPM mode." % cpc_name)
     try:
@@ -156,12 +200,8 @@ def cmd_lpar_list(cmd_ctx, cpc_name):
 
 
 def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):
-    """
-    Show the details of an LPAR in a CPC.
-    In table format, some properties are skipped.
-    """
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = _find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(client, cpc_name, lpar_name)
     try:
         lpar.pull_full_properties()
     except zhmcclient.Error as exc:
@@ -170,12 +210,33 @@ def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):
     print_properties(lpar.properties, cmd_ctx.output_format, skip_list)
 
 
-def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name):
-    """
-    Activate an LPAR in a CPC.
-    """
+def cmd_lpar_update(cmd_ctx, cpc_name, lpar_name, options):
+
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = _find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(client, cpc_name, lpar_name)
+
+    name_map = {
+        'next-activation-profile': 'next-activation-profile-name',
+    }
+    options = original_options(options)
+    properties = options_to_properties(options, name_map)
+
+    if not properties:
+        click.echo("No properties specified for updating LPAR %s." % lpar_name)
+        return
+
+    try:
+        lpar.update_properties(properties)
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+    # LPARs cannot be renamed.
+    click.echo("LPAR %s has been updated." % lpar_name)
+
+
+def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name):
+    client = zhmcclient.Client(cmd_ctx.session)
+    lpar = find_lpar(client, cpc_name, lpar_name)
     try:
         lpar.activate(wait_for_completion=True)
     except zhmcclient.Error as exc:
@@ -184,11 +245,8 @@ def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name):
 
 
 def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
-    """
-    Deactivate an LPAR in a CPC.
-    """
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = _find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(client, cpc_name, lpar_name)
     try:
         lpar.deactivate(wait_for_completion=True)
     except zhmcclient.Error as exc:
@@ -197,11 +255,8 @@ def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
 
 
 def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
-    """
-    Load an LPAR in a CPC from a load address.
-    """
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = _find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(client, cpc_name, lpar_name)
     try:
         lpar.load(load_address, wait_for_completion=True)
     except zhmcclient.Error as exc:
