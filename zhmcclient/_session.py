@@ -326,7 +326,6 @@ class Session(object):
         """
         Log off, unconditionally.
         """
-        assert 'X-API-Session' in self._headers
         session_uri = '/api/sessions/this-session'
         self.delete(session_uri, logon_required=False)
         self._session_id = None

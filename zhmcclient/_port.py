@@ -123,7 +123,10 @@ class Port(BaseResource):
         #     Properties to be set for this Port.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, PortManager)
+        if not isinstance(manager, PortManager):
+            raise AssertionError("Port init: Expected manager type %s, "
+                                 "got %s" %
+                                 (PortManager, type(manager)))
         super(Port, self).__init__(manager, uri, properties)
 
     def update_properties(self, properties):

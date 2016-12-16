@@ -121,7 +121,10 @@ class Lpar(BaseResource):
         #     Properties to be set for this LPAR.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, LparManager)
+        if not isinstance(manager, LparManager):
+            raise AssertionError("Lpar init: Expected manager type %s, "
+                                 "got %s" %
+                                 (LparManager, type(manager)))
         super(Lpar, self).__init__(manager, uri, properties)
 
     @_log_call

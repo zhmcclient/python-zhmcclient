@@ -79,7 +79,10 @@ class BaseManager(object):
         """
         The Python class of the parent resource of this manager.
         """
-        assert self._resource_class is not None
+        if self._resource_class is None:
+            raise AssertionError("%s.resource_class: No resource "
+                                 "class set" %
+                                 self.__class__.__name__)
         return self._resource_class
 
     @property
@@ -88,7 +91,9 @@ class BaseManager(object):
         :class:`~zhmcclient.Session`:
           Session with the HMC.
         """
-        assert self._session is not None
+        if self._session is None:
+            raise AssertionError("%s.session: No session set" %
+                                 self.__class__.__name__)
         return self._session
 
     @property
@@ -231,8 +236,8 @@ class BaseManager(object):
           Exceptions raised by the `list()` method in the derived classes.
         """
         uri = self._get_uri(name)
-        props = self._session.get(uri)
-        obj = self._resource_class(self, uri, props)
+        props = self.session.get(uri)
+        obj = self.resource_class(self, uri, props)
         return obj
 
     def flush(self):

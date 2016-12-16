@@ -184,7 +184,9 @@ class Nic(BaseResource):
         #     Properties to be set for this resource.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, NicManager)
+        if not isinstance(manager, NicManager):
+            raise AssertionError("Nic init: Expected manager type %s, got %s" %
+                                 (NicManager, type(manager)))
         super(Nic, self).__init__(manager, uri, properties)
 
     def delete(self):

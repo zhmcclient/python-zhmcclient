@@ -152,7 +152,10 @@ class VirtualFunction(BaseResource):
         #     Properties to be set for this Virtual Function.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, VirtualFunctionManager)
+        if not isinstance(manager, VirtualFunctionManager):
+            raise AssertionError("VirtualFunction init: Expected manager "
+                                 "type %s, got %s" %
+                                 (VirtualFunctionManager, type(manager)))
         super(VirtualFunction, self).__init__(manager, uri, properties)
 
     def delete(self):

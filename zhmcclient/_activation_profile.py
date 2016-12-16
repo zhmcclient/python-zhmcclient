@@ -163,7 +163,10 @@ class ActivationProfile(BaseResource):
         #     Properties to be set for this Activation Profile.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, ActivationProfileManager)
+        if not isinstance(manager, ActivationProfileManager):
+            raise AssertionError("ActivationProfile init: Expected manager "
+                                 "type %s, got %s" %
+                                 (ActivationProfileManager, type(manager)))
         super(ActivationProfile, self).__init__(manager, uri, properties)
 
     def update_properties(self, properties):

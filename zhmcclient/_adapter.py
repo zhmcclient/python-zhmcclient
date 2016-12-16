@@ -191,7 +191,10 @@ class Adapter(BaseResource):
         #     Properties to be set for this Adapter.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, AdapterManager)
+        if not isinstance(manager, AdapterManager):
+            raise AssertionError("Adapter init: Expected manager type %s, "
+                                 "got %s" %
+                                 (AdapterManager, type(manager)))
         super(Adapter, self).__init__(manager, uri, properties)
         self._ports = None
 

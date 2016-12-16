@@ -154,7 +154,9 @@ class Hba(BaseResource):
         #     Properties to be set for this HBA.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, HbaManager)
+        if not isinstance(manager, HbaManager):
+            raise AssertionError("Hba init: Expected manager type %s, got %s" %
+                                 (HbaManager, type(manager)))
         super(Hba, self).__init__(manager, uri, properties)
 
     def delete(self):

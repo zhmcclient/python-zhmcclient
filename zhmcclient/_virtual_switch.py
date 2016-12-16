@@ -124,7 +124,10 @@ class VirtualSwitch(BaseResource):
         #     Properties to be set for this Virtual Switch.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, VirtualSwitchManager)
+        if not isinstance(manager, VirtualSwitchManager):
+            raise AssertionError("VirtualSwitch init: Expected manager "
+                                 "type %s, got %s" %
+                                 (VirtualSwitchManager, type(manager)))
         super(VirtualSwitch, self).__init__(manager, uri, properties)
 
     def get_connected_nics(self):

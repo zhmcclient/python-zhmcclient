@@ -192,7 +192,10 @@ class Partition(BaseResource):
         #     Properties to be set for this Partition.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, PartitionManager)
+        if not isinstance(manager, PartitionManager):
+            raise AssertionError("Partition init: Expected manager type %s, "
+                                 "got %s" %
+                                 (PartitionManager, type(manager)))
         super(Partition, self).__init__(manager, uri, properties)
         self._nics = None
         self._hbas = None

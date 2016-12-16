@@ -136,7 +136,9 @@ class Cpc(BaseResource):
         #     Properties to be set for this CPC.
         #     See initialization of :class:`~zhmcclient.BaseResource` for
         #     details.
-        assert isinstance(manager, CpcManager)
+        if not isinstance(manager, CpcManager):
+            raise AssertionError("Cpc init: Expected manager type %s, got %s" %
+                                 (CpcManager, type(manager)))
         super(Cpc, self).__init__(manager, uri, properties)
         # We do here some lazy loading.
         self._lpars = None
