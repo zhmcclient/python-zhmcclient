@@ -19,7 +19,7 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_partition import find_partition
 
 
@@ -39,53 +39,51 @@ def find_hba(client, cpc_name, partition_name, hba_name):
     return hba
 
 
-@cli.group('hba')
+@cli.group('hba', options_metavar=COMMAND_OPTIONS_METAVAR)
 def hba_group():
     """
     Command group for managing HBAs.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@hba_group.command('list')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@hba_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.pass_obj
-def hba_list(cmd_ctx, cpc_name, partition_name):
+def hba_list(cmd_ctx, cpc, partition):
     """
     List the HBAs in a partition.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_hba_list(cmd_ctx, cpc_name,
-                                             partition_name))
+    cmd_ctx.execute_cmd(lambda: cmd_hba_list(cmd_ctx, cpc, partition))
 
 
-@hba_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('HBA-NAME', type=str, metavar='HBA-NAME')
+@hba_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('HBA', type=str, metavar='HBA')
 @click.pass_obj
-def hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
+def hba_show(cmd_ctx, cpc, partition, hba):
     """
     Show the details of an HBA.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_hba_show(cmd_ctx, cpc_name, partition_name,
-                                             hba_name))
+    cmd_ctx.execute_cmd(lambda: cmd_hba_show(cmd_ctx, cpc, partition, hba))
 
 
-@hba_group.command('create')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@hba_group.command('create', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.option('--name', type=str, required=True,
               help='The name of the new HBA.')
 @click.option('--description', type=str, required=False,
@@ -99,22 +97,22 @@ def hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
               help='The device number to be used for the new HBA. '
               'Default: auto-generated')
 @click.pass_obj
-def hba_create(cmd_ctx, cpc_name, partition_name, **options):
+def hba_create(cmd_ctx, cpc, partition, **options):
     """
     Create an HBA in a partition.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_hba_create(cmd_ctx, cpc_name,
-                                               partition_name, options))
+    cmd_ctx.execute_cmd(lambda: cmd_hba_create(cmd_ctx, cpc, partition,
+                                               options))
 
 
-@hba_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('HBA-NAME', type=str, metavar='HBA-NAME')
+@hba_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('HBA', type=str, metavar='HBA')
 @click.option('--name', type=str, required=False,
               help='The new name of the HBA. '
               'Default: No change.')
@@ -125,38 +123,36 @@ def hba_create(cmd_ctx, cpc_name, partition_name, **options):
               help='The new device number to be used for the HBA. '
               'Default: No change.')
 @click.pass_obj
-def hba_update(cmd_ctx, cpc_name, partition_name, hba_name, **options):
+def hba_update(cmd_ctx, cpc, partition, hba, **options):
     """
     Update the properties of an HBA.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_hba_update(cmd_ctx, cpc_name,
-                                               partition_name, hba_name,
+    cmd_ctx.execute_cmd(lambda: cmd_hba_update(cmd_ctx, cpc,partition, hba,
                                                options))
 
 
-@hba_group.command('delete')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('HBA-NAME', type=str, metavar='HBA-NAME')
+@hba_group.command('delete', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('HBA', type=str, metavar='HBA')
 @click.option('--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deletion of the HBA.',
               prompt='Are you sure you want to delete this HBA ?')
 @click.pass_obj
-def hba_delete(cmd_ctx, cpc_name, partition_name, hba_name):
+def hba_delete(cmd_ctx, cpc, partition, hba):
     """
     Delete an HBA.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_hba_delete(cmd_ctx, cpc_name,
-                                               partition_name, hba_name))
+    cmd_ctx.execute_cmd(lambda: cmd_hba_delete(cmd_ctx, cpc, partition, hba))
 
 
 def cmd_hba_list(cmd_ctx, cpc_name, partition_name):

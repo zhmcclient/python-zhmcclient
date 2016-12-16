@@ -19,7 +19,7 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_cpc import find_cpc
 
 
@@ -40,7 +40,7 @@ def find_adapter(client, cpc_name, adapter_name):
     return adapter
 
 
-@cli.group('adapter')
+@cli.group('adapter', options_metavar=COMMAND_OPTIONS_METAVAR)
 def adapter_group():
     """
     Command group for managing adapters.
@@ -49,44 +49,43 @@ def adapter_group():
     created. Logical adapters (HiperSockets) can be created and deleted.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@adapter_group.command('list')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@adapter_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
 @click.pass_obj
-def adapter_list(cmd_ctx, cpc_name):
+def adapter_list(cmd_ctx, cpc):
     """
     List the adapters in a CPC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_adapter_list(cmd_ctx, cpc_name))
+    cmd_ctx.execute_cmd(lambda: cmd_adapter_list(cmd_ctx, cpc))
 
 
-@adapter_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('ADAPTER-NAME', type=str, metavar='ADAPTER-NAME')
+@adapter_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('ADAPTER', type=str, metavar='ADAPTER')
 @click.pass_obj
-def adapter_show(cmd_ctx, cpc_name, adapter_name):
+def adapter_show(cmd_ctx, cpc, adapter):
     """
     Show the details of an adapter.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_adapter_show(cmd_ctx, cpc_name,
-                                                 adapter_name))
+    cmd_ctx.execute_cmd(lambda: cmd_adapter_show(cmd_ctx, cpc, adapter))
 
 
-@adapter_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('ADAPTER-NAME', type=str, metavar='ADAPTER-NAME')
+@adapter_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('ADAPTER', type=str, metavar='ADAPTER')
 @click.option('--name', type=str, required=False,
               help='The new name of the adapter.')
 @click.option('--description', type=str, required=False,
@@ -112,7 +111,7 @@ def adapter_show(cmd_ctx, cpc_name, adapter_name):
               help='Permit TKE commands on the crypto adapter '
               '(Crypto only).')
 @click.pass_obj
-def adapter_update(cmd_ctx, cpc_name, adapter_name, **options):
+def adapter_update(cmd_ctx, cpc, adapter, **options):
     """
     Update the properties of an adapter.
 
@@ -120,15 +119,15 @@ def adapter_update(cmd_ctx, cpc_name, adapter_name, **options):
     logical adapter (e.g. HiperSockets).
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_adapter_update(
-                        cmd_ctx, cpc_name, adapter_name, options))
+    cmd_ctx.execute_cmd(lambda: cmd_adapter_update(cmd_ctx, cpc, adapter,
+                                                   options))
 
 
-@adapter_group.command('create')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@adapter_group.command('create', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
 @click.option('--name', type=str, required=True,
               help='The name of the new adapter.')
 @click.option('--description', type=str, required=False,
@@ -139,39 +138,39 @@ def adapter_update(cmd_ctx, cpc_name, adapter_name, **options):
               required=False,
               help='The MTU size of the new adapter in KiB.')
 @click.pass_obj
-def adapter_create_hipersocket(cmd_ctx, cpc_name, **options):
+def adapter_create_hipersocket(cmd_ctx, cpc, **options):
     """
     Create a HiperSockets adapter in a CPC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
 
     Some more properties of the new HiperSockets adapter can be set via
     adapter update.
     """
     cmd_ctx.execute_cmd(lambda: cmd_adapter_create_hipersocket(
-                        cmd_ctx, cpc_name, options))
+                        cmd_ctx, cpc, options))
 
 
-@adapter_group.command('delete')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('ADAPTER-NAME', type=str, metavar='ADAPTER-NAME')
+@adapter_group.command('delete', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('ADAPTER', type=str, metavar='ADAPTER')
 @click.option('--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deletion of the adapter.',
               prompt='Are you sure you want to delete this adapter ?')
 @click.pass_obj
-def adapter_delete_hipersocket(cmd_ctx, cpc_name, adapter_name):
+def adapter_delete_hipersocket(cmd_ctx, cpc, adapter):
     """
     Delete a HiperSockets adapter.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
     cmd_ctx.execute_cmd(lambda: cmd_adapter_delete_hipersocket(
-                        cmd_ctx, cpc_name, adapter_name))
+                        cmd_ctx, cpc, adapter))
 
 
 def cmd_adapter_list(cmd_ctx, cpc_name):

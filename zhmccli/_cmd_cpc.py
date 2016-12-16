@@ -18,7 +18,7 @@ import click
 
 import zhmcclient
 from .zhmccli import cli
-from ._helper import print_properties, print_resources
+from ._helper import print_properties, print_resources, COMMAND_OPTIONS_METAVAR
 
 
 def find_cpc(client, cpc_name):
@@ -35,48 +35,48 @@ def find_cpc(client, cpc_name):
     return cpc
 
 
-@cli.group('cpc')
+@cli.group('cpc', options_metavar=COMMAND_OPTIONS_METAVAR)
 def cpc_group():
     """
     Command group for managing CPCs.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@cpc_group.command('list')
+@cpc_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.pass_obj
 def cpc_list(cmd_ctx):
     """
     List the CPCs managed by the HMC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
     cmd_ctx.execute_cmd(lambda: cmd_cpc_list(cmd_ctx))
 
 
-@cpc_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@cpc_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
 @click.pass_obj
-def cpc_show(cmd_ctx, cpc_name):
+def cpc_show(cmd_ctx, cpc):
     """
     Show details of a CPC.
 
     In table format, some properties are skipped.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_cpc_show(cmd_ctx, cpc_name))
+    cmd_ctx.execute_cmd(lambda: cmd_cpc_show(cmd_ctx, cpc))
 
 
-@cpc_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@cpc_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
 @click.option('--description', type=str, required=False,
               help='The new description of the CPC '
               '(DPM mode only). '
@@ -102,27 +102,19 @@ def cpc_show(cmd_ctx, cpc_name):
               '(not in DPM mode). '
               'Default: No change.')
 @click.pass_obj
-def cpc_update(cmd_ctx, cpc_name, **options):
+def cpc_update(cmd_ctx, cpc, **options):
     """
     Update the properties of a CPC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
+
+    Limitations:
+      * The --acceptable-status option does not support multiple values.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_partition_update(cmd_ctx, cpc_name,
+    cmd_ctx.execute_cmd(lambda: cmd_partition_update(cmd_ctx, cpc,
                                                      options))
-
-
-def _find_cpc(client, cpc_name):
-    try:
-        cpc = client.cpcs.find(name=cpc_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find CPC %s on HMC %s." %
-                                   (cpc_name, client.session.host))
-    except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    return cpc
 
 
 def cmd_cpc_list(cmd_ctx):
@@ -137,7 +129,7 @@ def cmd_cpc_list(cmd_ctx):
 def cmd_cpc_show(cmd_ctx, cpc_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = _find_cpc(client, cpc_name)
+    cpc = find_cpc(client, cpc_name)
 
     try:
         cpc.pull_full_properties()
@@ -156,7 +148,7 @@ def cmd_cpc_show(cmd_ctx, cpc_name):
 def cmd_cpc_update(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = _find_cpc(client, cpc_name)
+    cpc = find_cpc(client, cpc_name)
 
     name_map = {
         'next-activation-profile': 'next-activation-profile-name',

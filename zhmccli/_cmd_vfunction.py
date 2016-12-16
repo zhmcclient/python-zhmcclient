@@ -19,7 +19,7 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_partition import find_partition
 
 
@@ -39,54 +39,52 @@ def find_vfunction(client, cpc_name, partition_name, vfunction_name):
     return vfunction
 
 
-@cli.group('vfunction')
+@cli.group('vfunction', options_metavar=COMMAND_OPTIONS_METAVAR)
 def vfunction_group():
     """
     Command group for managing virtual functions.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@vfunction_group.command('list')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@vfunction_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.pass_obj
-def vfunction_list(cmd_ctx, cpc_name, partition_name):
+def vfunction_list(cmd_ctx, cpc, partition):
     """
     List the virtual functions in a partition.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vfunction_list(cmd_ctx, cpc_name,
-                                                   partition_name))
+    cmd_ctx.execute_cmd(lambda: cmd_vfunction_list(cmd_ctx, cpc, partition))
 
 
-@vfunction_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('VFUNCTION-NAME', type=str, metavar='VFUNCTION-NAME')
+@vfunction_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('VFUNCTION', type=str, metavar='VFUNCTION')
 @click.pass_obj
-def vfunction_show(cmd_ctx, cpc_name, partition_name, vfunction_name):
+def vfunction_show(cmd_ctx, cpc, partition, vfunction):
     """
     Show the details of a virtual function.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vfunction_show(cmd_ctx, cpc_name,
-                                                   partition_name,
-                                                   vfunction_name))
+    cmd_ctx.execute_cmd(lambda: cmd_vfunction_show(cmd_ctx, cpc, partition,
+                                                   vfunction))
 
 
-@vfunction_group.command('create')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@vfunction_group.command('create', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.option('--name', type=str, required=True,
               help='The name of the new virtual function. Must be unique '
               'within the virtual functions of the partition')
@@ -99,7 +97,7 @@ def vfunction_show(cmd_ctx, cpc_name, partition_name, vfunction_name):
               help='The device number to be used for the new virtual '
               'function. Default: auto-generated')
 @click.pass_obj
-def vfunction_create(cmd_ctx, cpc_name, partition_name, **options):
+def vfunction_create(cmd_ctx, cpc, partition, **options):
     """
     Create a virtual function in a partition.
 
@@ -107,18 +105,17 @@ def vfunction_create(cmd_ctx, cpc_name, partition_name, **options):
     a named virtual function resource within that partition.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vfunction_create(cmd_ctx, cpc_name,
-                                                     partition_name,
+    cmd_ctx.execute_cmd(lambda: cmd_vfunction_create(cmd_ctx, cpc, partition,
                                                      options))
 
 
-@vfunction_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('VFUNCTION-NAME', type=str, metavar='VFUNCTION-NAME')
+@vfunction_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('VFUNCTION', type=str, metavar='VFUNCTION')
 @click.option('--name', type=str, required=False,
               help='The new name of the virtual function. Must be unique '
               'within the virtual functions of the partition. '
@@ -135,41 +132,38 @@ def vfunction_create(cmd_ctx, cpc_name, partition_name, **options):
               'function. '
               'Default: No change.')
 @click.pass_obj
-def vfunction_update(cmd_ctx, cpc_name, partition_name, vfunction_name,
+def vfunction_update(cmd_ctx, cpc, partition, vfunction,
                      **options):
     """
     Update the properties of a virtual function.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vfunction_update(cmd_ctx, cpc_name,
-                                                     partition_name,
-                                                     vfunction_name,
-                                                     options))
+    cmd_ctx.execute_cmd(lambda: cmd_vfunction_update(cmd_ctx, cpc, partition,
+                                                     vfunction, options))
 
 
-@vfunction_group.command('delete')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('VFUNCTION-NAME', type=str, metavar='VFUNCTION-NAME')
+@vfunction_group.command('delete', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('VFUNCTION', type=str, metavar='VFUNCTION')
 @click.option('--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deletion of the virtual function.',
               prompt='Are you sure you want to delete this virtual function ?')
 @click.pass_obj
-def vfunction_delete(cmd_ctx, cpc_name, partition_name, vfunction_name):
+def vfunction_delete(cmd_ctx, cpc, partition, vfunction):
     """
     Delete a virtual function.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vfunction_delete(cmd_ctx, cpc_name,
-                                                     partition_name,
-                                                     vfunction_name))
+    cmd_ctx.execute_cmd(lambda: cmd_vfunction_delete(cmd_ctx, cpc, partition,
+                                                     vfunction))
 
 
 def cmd_vfunction_list(cmd_ctx, cpc_name, partition_name):

@@ -19,7 +19,7 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_partition import find_partition
 
 
@@ -39,53 +39,51 @@ def find_nic(client, cpc_name, partition_name, nic_name):
     return nic
 
 
-@cli.group('nic')
+@cli.group('nic', options_metavar=COMMAND_OPTIONS_METAVAR)
 def nic_group():
     """
     Command group for managing NICs.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@nic_group.command('list')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@nic_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.pass_obj
-def nic_list(cmd_ctx, cpc_name, partition_name):
+def nic_list(cmd_ctx, cpc, partition):
     """
     List the NICs in a partition.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_nic_list(cmd_ctx, cpc_name,
-                                             partition_name))
+    cmd_ctx.execute_cmd(lambda: cmd_nic_list(cmd_ctx, cpc, partition))
 
 
-@nic_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('NIC-NAME', type=str, metavar='NIC-NAME')
+@nic_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('NIC', type=str, metavar='NIC')
 @click.pass_obj
-def nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
+def nic_show(cmd_ctx, cpc, partition, nic):
     """
     Show the details of a NIC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_nic_show(cmd_ctx, cpc_name, partition_name,
-                                             nic_name))
+    cmd_ctx.execute_cmd(lambda: cmd_nic_show(cmd_ctx, cpc, partition, nic))
 
 
-@nic_group.command('create')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
+@nic_group.command('create', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.option('--name', type=str, required=True,
               help='The name of the new NIC.')
 @click.option('--description', type=str, required=False,
@@ -106,7 +104,7 @@ def nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
               help='The device number to be used for the new NIC. '
               'Default: auto-generated')
 @click.pass_obj
-def nic_create(cmd_ctx, cpc_name, partition_name, **options):
+def nic_create(cmd_ctx, cpc, partition, **options):
     """
     Create a NIC in a partition.
 
@@ -116,17 +114,17 @@ def nic_create(cmd_ctx, cpc_name, partition_name, **options):
     by associating the NIC with the network adapter port directly.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_nic_create(cmd_ctx, cpc_name,
-                                               partition_name, options))
+    cmd_ctx.execute_cmd(lambda: cmd_nic_create(cmd_ctx, cpc, partition,
+                                               options))
 
 
-@nic_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('NIC-NAME', type=str, metavar='NIC-NAME')
+@nic_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('NIC', type=str, metavar='NIC')
 @click.option('--name', type=str, required=False,
               help='The new name of the NIC. '
               'Default: No change.')
@@ -151,43 +149,41 @@ def nic_create(cmd_ctx, cpc_name, partition_name, **options):
               help='The new device number to be used for the NIC. '
               'Default: No change.')
 @click.pass_obj
-def nic_update(cmd_ctx, cpc_name, partition_name, nic_name, **options):
+def nic_update(cmd_ctx, cpc, partition, nic, **options):
     """
     Update the properties of a NIC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_nic_update(cmd_ctx, cpc_name,
-                                               partition_name, nic_name,
+    cmd_ctx.execute_cmd(lambda: cmd_nic_update(cmd_ctx, cpc, partition, nic,
                                                options))
 
 
-@nic_group.command('delete')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('PARTITION-NAME', type=str, metavar='PARTITION-NAME')
-@click.argument('NIC-NAME', type=str, metavar='NIC-NAME')
+@nic_group.command('delete', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.argument('NIC', type=str, metavar='NIC')
 @click.option('--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deletion of the NIC.',
               prompt='Are you sure you want to delete this NIC ?')
 @click.pass_obj
-def nic_delete(cmd_ctx, cpc_name, partition_name, nic_name):
+def nic_delete(cmd_ctx, cpc, partition, nic):
     """
     Delete a NIC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_nic_delete(cmd_ctx, cpc_name,
-                                               partition_name, nic_name))
+    cmd_ctx.execute_cmd(lambda: cmd_nic_delete(cmd_ctx, cpc, partition, nic))
 
 
 def cmd_nic_list(cmd_ctx, cpc_name, partition_name):
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = _find_partition(client, cpc_name, partition_name)
+    partition = find_partition(client, cpc_name, partition_name)
     try:
         nics = partition.nics.list()
     except zhmcclient.Error as exc:
@@ -197,7 +193,7 @@ def cmd_nic_list(cmd_ctx, cpc_name, partition_name):
 
 def cmd_nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
     client = zhmcclient.Client(cmd_ctx.session)
-    nic = _find_nic(client, cpc_name, partition_name, nic_name)
+    nic = find_nic(client, cpc_name, partition_name, nic_name)
     try:
         nic.pull_full_properties()
     except zhmcclient.Error as exc:
@@ -340,7 +336,7 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
 
 def cmd_nic_delete(cmd_ctx, cpc_name, partition_name, nic_name):
     client = zhmcclient.Client(cmd_ctx.session)
-    nic = _find_nic(client, cpc_name, partition_name, nic_name)
+    nic = find_nic(client, cpc_name, partition_name, nic_name)
     try:
         nic.delete()
     except zhmcclient.Error as exc:

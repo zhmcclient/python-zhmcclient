@@ -19,7 +19,7 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_cpc import find_cpc
 
 
@@ -40,50 +40,49 @@ def find_vswitch(client, cpc_name, vswitch_name):
     return vswitch
 
 
-@cli.group('vswitch')
+@cli.group('vswitch', options_metavar=COMMAND_OPTIONS_METAVAR)
 def vswitch_group():
     """
     Command group for managing virtual switches.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@vswitch_group.command('list')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@vswitch_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
 @click.pass_obj
-def vswitch_list(cmd_ctx, cpc_name):
+def vswitch_list(cmd_ctx, cpc):
     """
     List the virtual switches in a CPC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vswitch_list(cmd_ctx, cpc_name))
+    cmd_ctx.execute_cmd(lambda: cmd_vswitch_list(cmd_ctx, cpc))
 
 
-@vswitch_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('VSWITCH-NAME', type=str, metavar='VSWITCH-NAME')
+@vswitch_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('VSWITCH', type=str, metavar='VSWITCH')
 @click.pass_obj
-def vswitch_show(cmd_ctx, cpc_name, vswitch_name):
+def vswitch_show(cmd_ctx, cpc, vswitch):
     """
     Show the details of a virtual switch.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vswitch_show(cmd_ctx, cpc_name,
-                                                 vswitch_name))
+    cmd_ctx.execute_cmd(lambda: cmd_vswitch_show(cmd_ctx, cpc, vswitch))
 
 
-@vswitch_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('VSWITCH-NAME', type=str, metavar='VSWITCH-NAME')
+@vswitch_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('VSWITCH', type=str, metavar='VSWITCH')
 @click.option('--name', type=str, required=False,
               help='The new name of the virtual switch. '
               'Default: No change.')
@@ -91,16 +90,16 @@ def vswitch_show(cmd_ctx, cpc_name, vswitch_name):
               help='The new description of the virtual switch. '
               'Default: No change.')
 @click.pass_obj
-def vswitch_update(cmd_ctx, cpc_name, vswitch_name, **options):
+def vswitch_update(cmd_ctx, cpc, vswitch, **options):
     """
     Update the properties of a virtual switch.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vswitch_update(
-                        cmd_ctx, cpc_name, vswitch_name, options))
+    cmd_ctx.execute_cmd(lambda: cmd_vswitch_update(cmd_ctx, cpc, vswitch,
+                                                   options))
 
 
 def cmd_vswitch_list(cmd_ctx, cpc_name):

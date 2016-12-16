@@ -21,6 +21,10 @@ from tabulate import tabulate
 
 import zhmcclient
 
+# Display of options in usage line
+GENERAL_OPTIONS_METAVAR = '[GENERAL-OPTIONS]'
+COMMAND_OPTIONS_METAVAR = '[COMMAND-OPTIONS]'
+
 
 def abort_if_false(ctx, param, value):
     # pylint: disable=unused-argument

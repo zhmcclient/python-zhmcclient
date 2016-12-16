@@ -18,7 +18,8 @@ import click
 
 import zhmcclient
 from .zhmccli import cli
-from ._helper import print_properties, print_resources, abort_if_false
+from ._helper import print_properties, print_resources, abort_if_false, \
+    COMMAND_OPTIONS_METAVAR
 from ._cmd_cpc import find_cpc
 
 
@@ -39,51 +40,51 @@ def find_lpar(client, cpc_name, lpar_name):
     return lpar
 
 
-@cli.group('lpar')
+@cli.group('lpar', options_metavar=COMMAND_OPTIONS_METAVAR)
 def lpar_group():
     """
     Command group for managing LPARs.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@lpar_group.command('list')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
+@lpar_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
 @click.pass_obj
-def lpar_list(cmd_ctx, cpc_name):
+def lpar_list(cmd_ctx, cpc):
     """
     List the LPARs in a CPC.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_list(cmd_ctx, cpc_name))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_list(cmd_ctx, cpc))
 
 
-@lpar_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@lpar_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('LPAR', type=str, metavar='LPAR')
 @click.pass_obj
-def lpar_show(cmd_ctx, cpc_name, lpar_name):
+def lpar_show(cmd_ctx, cpc, lpar):
     """
     Show details of an LPAR in a CPC.
 
     In table format, some properties are skipped.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_show(cmd_ctx, cpc_name, lpar_name))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_show(cmd_ctx, cpc, lpar))
 
 
-@lpar_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@lpar_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('LPAR', type=str, metavar='LPAR')
 @click.option('--acceptable-status', type=str, required=False,
               help='The new set of acceptable operational status values. '
               'Default: No change.')
@@ -122,68 +123,73 @@ def lpar_show(cmd_ctx, cpc_name, lpar_name):
 # TODO: Change SSC master password option to ask for password
 # TODO: Add support for updating SSC network-related properties
 @click.pass_obj
-def lpar_update(cmd_ctx, cpc_name, lpar_name, **options):
+def lpar_update(cmd_ctx, cpc, lpar, **options):
     """
     Update the properties of an LPAR.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
+
+    Limitations:
+      * The --acceptable-status option does not support multiple values.
+      * The processor capping/sharing/weight related properties cannot be
+        updated.
+      * The network-related properties for zaware and ssc cannot beupdated.
+      * The --zaware-master-password and --ssc-master-password options do not
+        ask for the password.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_update(cmd_ctx, cpc_name, lpar_name,
-                                                options))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_update(cmd_ctx, cpc, lpar, options))
 
 
-@lpar_group.command('activate')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@lpar_group.command('activate', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('LPAR', type=str, metavar='LPAR')
 @click.pass_obj
-def lpar_activate(cmd_ctx, cpc_name, lpar_name):
+def lpar_activate(cmd_ctx, cpc, lpar):
     """
     Activate an LPAR.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_activate(cmd_ctx, cpc_name,
-                                                  lpar_name))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_activate(cmd_ctx, cpc, lpar))
 
 
-@lpar_group.command('deactivate')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@lpar_group.command('deactivate', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('LPAR', type=str, metavar='LPAR')
 @click.option('--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deactivation of the LPAR.',
               prompt='Are you sure you want to deactivate the LPAR ?')
 @click.pass_obj
-def lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
+def lpar_deactivate(cmd_ctx, cpc, lpar):
     """
     Deactivate an LPAR.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_deactivate(cmd_ctx, cpc_name,
-                                                    lpar_name))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_deactivate(cmd_ctx, cpc, lpar))
 
 
-@lpar_group.command('load')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('LPAR-NAME', type=str, metavar='LPAR-NAME')
+@lpar_group.command('load', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('LPAR', type=str, metavar='LPAR')
 @click.argument('LOAD-ADDRESS', type=str, metavar='LOAD-ADDRESS')
 @click.pass_obj
-def lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
+def lpar_load(cmd_ctx, cpc, lpar, load_address):
     """
     Load (Boot, IML) an LPAR.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_load(cmd_ctx, cpc_name, lpar_name,
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_load(cmd_ctx, cpc, lpar,
                                               load_address))
 
 

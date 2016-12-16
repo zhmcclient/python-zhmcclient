@@ -19,11 +19,8 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_adapter import find_adapter
-
-
-# TODO: Add "update" using new approach from partition.
 
 
 def find_port(client, cpc_name, adapter_name, port_name):
@@ -42,57 +39,56 @@ def find_port(client, cpc_name, adapter_name, port_name):
     return port
 
 
-@cli.group('port')
+@cli.group('port', options_metavar=COMMAND_OPTIONS_METAVAR)
 def port_group():
     """
     Command group for managing adapter ports.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
 
 
-@port_group.command('list')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('ADAPTER-NAME', type=str, metavar='ADAPTER-NAME')
+@port_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('ADAPTER', type=str, metavar='ADAPTER')
 @click.pass_obj
-def port_list(cmd_ctx, cpc_name, adapter_name):
+def port_list(cmd_ctx, cpc, adapter):
     """
     List the ports of an adapter.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_port_list(cmd_ctx, cpc_name, adapter_name))
+    cmd_ctx.execute_cmd(lambda: cmd_port_list(cmd_ctx, cpc, adapter))
 
 
-@port_group.command('show')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('ADAPTER-NAME', type=str, metavar='ADAPTER-NAME')
-@click.argument('PORT-NAME', type=str, metavar='PORT-NAME')
+@port_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('ADAPTER', type=str, metavar='ADAPTER')
+@click.argument('PORT', type=str, metavar='PORT')
 @click.pass_obj
-def port_show(cmd_ctx, cpc_name, adapter_name, port_name):
+def port_show(cmd_ctx, cpc, adapter, port):
     """
     Show the details of an adapter port.
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_port_show(cmd_ctx, cpc_name, adapter_name,
-                                              port_name))
+    cmd_ctx.execute_cmd(lambda: cmd_port_show(cmd_ctx, cpc, adapter, port))
 
 
-@port_group.command('update')
-@click.argument('CPC-NAME', type=str, metavar='CPC-NAME')
-@click.argument('ADAPTER-NAME', type=str, metavar='ADAPTER-NAME')
-@click.argument('PORT-NAME', type=str, metavar='PORT-NAME')
+@port_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('ADAPTER', type=str, metavar='ADAPTER')
+@click.argument('PORT', type=str, metavar='PORT')
 @click.option('--description', type=str, required=False,
               help='The new description of the port.')
 @click.pass_obj
-def port_update(cmd_ctx, cpc_name, adapter_name, port_name, **options):
+def port_update(cmd_ctx, cpc, adapter, port, **options):
     """
     Update the properties of an adapter port.
 
@@ -100,16 +96,16 @@ def port_update(cmd_ctx, cpc_name, adapter_name, port_name, **options):
     logical adapter (e.g. HiperSockets).
 
     In addition to the command-specific options shown in this help text, the
-    general options (see 'zhmc --help') can also be specified before the
-    command.
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_port_update(
-                        cmd_ctx, cpc_name, adapter_name, port_name, options))
+    cmd_ctx.execute_cmd(lambda: cmd_port_update(cmd_ctx, cpc, adapter, port,
+                                                options))
 
 
 def cmd_port_list(cmd_ctx, cpc_name, adapter_name):
     client = zhmcclient.Client(cmd_ctx.session)
-    adapter = _find_adapter(client, cpc_name, adapter_name)
+    adapter = find_adapter(client, cpc_name, adapter_name)
     try:
         ports = adapter.ports.list()
     except zhmcclient.Error as exc:
@@ -119,7 +115,7 @@ def cmd_port_list(cmd_ctx, cpc_name, adapter_name):
 
 def cmd_port_show(cmd_ctx, cpc_name, adapter_name, port_name):
     client = zhmcclient.Client(cmd_ctx.session)
-    port = _find_port(client, cpc_name, adapter_name, port_name)
+    port = find_port(client, cpc_name, adapter_name, port_name)
     try:
         port.pull_full_properties()
     except zhmcclient.Error as exc:
