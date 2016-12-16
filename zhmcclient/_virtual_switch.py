@@ -112,22 +112,22 @@ class VirtualSwitch(BaseResource):
     (in this case, :class:`~zhmcclient.VirtualSwitchManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.VirtualSwitchManager`):
-        #     Manager object for this Virtual Switch.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Virtual Switch.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Virtual Switch.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
         if not isinstance(manager, VirtualSwitchManager):
             raise AssertionError("VirtualSwitch init: Expected manager "
                                  "type %s, got %s" %
                                  (VirtualSwitchManager, type(manager)))
-        super(VirtualSwitch, self).__init__(manager, uri, properties)
+        super(VirtualSwitch, self).__init__(manager, uri, properties,
+                                            uri_prop='object-uri',
+                                            name_prop='name')
 
     def get_connected_nics(self):
         """

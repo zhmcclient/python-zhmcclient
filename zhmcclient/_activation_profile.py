@@ -151,22 +151,22 @@ class ActivationProfile(BaseResource):
     (in this case, :class:`~zhmcclient.ActivationProfileManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.ActivationProfileManager`):
-        #     Manager for this Activation Profile.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Activation Profile.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Activation Profile.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
         if not isinstance(manager, ActivationProfileManager):
             raise AssertionError("ActivationProfile init: Expected manager "
                                  "type %s, got %s" %
                                  (ActivationProfileManager, type(manager)))
-        super(ActivationProfile, self).__init__(manager, uri, properties)
+        super(ActivationProfile, self).__init__(manager, uri, properties,
+                                                uri_prop='element-uri',
+                                                name_prop='name')
 
     def update_properties(self, properties):
         """

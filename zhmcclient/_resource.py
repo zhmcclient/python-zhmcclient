@@ -37,39 +37,58 @@ class BaseResource(object):
     methods that have a common implementation for the derived resource classes.
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties, uri_prop, name_prop):
         """
         Parameters:
 
           manager (subclass of :class:`~zhmcclient.BaseManager`):
-            Manager object for this resource (and for all resources of the same
-            type in the scope of that manager).
+            Manager object for this resource object (and for all resource
+            objects of the same type in the scope of that manager). Must not be
+            `None`.
 
           uri (string):
             Canonical URI path of the resource.
+            Will be used to set the corresponding property in this resource
+            object (see `uri_prop` parameter).
+            Must not be `None`.
 
           properties (dict):
-            Properties to be set for the resource.
+            Properties for this resource object. May be `None` or empty.
 
             * Key: Name of the property.
             * Value: Value of the property.
 
-            The input dictionary is copied (shallow), so that the input
-            dictionary can be modified by the user without affecting the
-            properties of resource objects created from that input dictionary.
+            The properties on this resource object are mutable. However, the
+            properties of the actual resource in the HMC may or may not be
+            mutable. Mutability for each property of a resource is indicated
+            with the 'w' qualifier in its data model in the :term:`HMC API`
+            book.
 
-            Property qualifiers (read-only, etc.) are not represented on the
-            resource object. The properties on the resource object are
-            mutable. Whether or not a particular property of the represented
-            manageable resource can be updated is described in its property
-            qualifiers. See section "Property characteristics" in the
-            :term:`HMC API` book for a description of the concept of property
-            qualifiers, and the respective sections describing the resources
-            for their actual definitions of property qualifiers.
+          uri_prop (string):
+            Name of the resource property that is the canonical URI path of
+            the resource (e.g. 'object-uri' or 'element-uri').
+            Must not be `None`.
+
+          name_prop (string):
+            Name of the resource property that is the name of the resource
+            (e.g. 'name'). Must not be `None`.
         """
+
+        # We want to surface precondition violations as early as possible,
+        # so we test those that are not surfaced through the init code:
+        assert manager is not None
+        assert uri is not None
+        assert uri_prop is not None
+        assert name_prop is not None
+
         self._manager = manager
         self._uri = uri
-        self._properties = dict(properties)
+        self._properties = dict(properties) if properties else {}
+        self._properties[uri_prop] = uri
+        self._uri_prop = uri_prop
+        self._name_prop = name_prop
+
+        self._name = None  # Will be retrieved once needed
         self._properties_timestamp = int(time.time())
         self._full_properties = False
 
@@ -77,7 +96,7 @@ class BaseResource(object):
     def properties(self):
         """
         dict:
-          The properties of this resource.
+          The properties of this resource. Will not be `None`.
 
           * Key: Name of the property.
           * Value: Value of the property.
@@ -86,14 +105,20 @@ class BaseResource(object):
           for a description of the resources along with their properties.
 
           The dictionary contains either the full set of resource properties,
-          or a subset thereof.
+          or a subset thereof, or can be empty in some cases.
+
+          Because this dictionary may be empty in some cases, the name and the
+          URI of the resource should be obtained via the
+          :attr:`~zhmcclient.BaseResource.name` and
+          :attr:`~zhmcclient.BaseResource.uri` attributes of this object,
+          respectively.
         """
         return self._properties
 
     @property
     def uri(self):
         """
-        string: The canonical URI path of the resource.
+        string: The canonical URI path of the resource. Will not be `None`.
 
         Example: ``/api/cpcs/12345``
         """
@@ -102,22 +127,28 @@ class BaseResource(object):
     @property
     def name(self):
         """
-        string: The name of the resource.
+        string: The name of the resource. Will not be `None`.
 
-        The name of a resource is the value of its `name` property.
         The resource name is unique across its sibling resources of the same
         type and with the same parent resource.
+
+        Accessing this property will cause the properties of this resource
+        object to be updated from the HMC, if it does not yet contain the
+        property for the resource name.
         """
-        # Just in case this happens: If the statements above are not true for
-        # a particular resource class, it needs to re-implement this property.
-        return self._properties['name']
+        # The name property of the actual resource in the HMC will never
+        # be None, so we can use `None` for indicating that it is not yet
+        # initialized.
+        if self._name is None:
+            self._name = self.get_property(self._name_prop)
+        return self._name
 
     @property
     def manager(self):
         """
         Subclass of :class:`~zhmcclient.BaseManager`:
           Manager object for this resource (and for all resources of the same
-          type in the scope of that manager).
+          type in the scope of that manager). Will not be `None`.
         """
         return self._manager
 

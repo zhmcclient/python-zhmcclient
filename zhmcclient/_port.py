@@ -89,7 +89,7 @@ class PortManager(BaseManager):
             return port_list
         if ports_res:
             for port_uri in ports_res:
-                port = Port(self, port_uri, {'element-uri': port_uri})
+                port = Port(self, port_uri)
                 if full_properties:
                     port.pull_full_properties()
                 port_list.append(port)
@@ -112,22 +112,22 @@ class Port(BaseResource):
     (in this case, :class:`~zhmcclient.PortManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.PortManager`):
-        #     Manager for this Port.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Port.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Port.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
         if not isinstance(manager, PortManager):
             raise AssertionError("Port init: Expected manager type %s, "
                                  "got %s" %
                                  (PortManager, type(manager)))
-        super(Port, self).__init__(manager, uri, properties)
+        super(Port, self).__init__(manager, uri, properties,
+                                   uri_prop='element-uri',
+                                   name_prop='name')
 
     def update_properties(self, properties):
         """

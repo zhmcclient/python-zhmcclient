@@ -109,22 +109,22 @@ class Lpar(BaseResource):
     (in this case, :class:`~zhmcclient.LparManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.LparManager`):
-        #     Manager object for this LPAR.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this LPAR.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this LPAR.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
         if not isinstance(manager, LparManager):
             raise AssertionError("Lpar init: Expected manager type %s, "
                                  "got %s" %
                                  (LparManager, type(manager)))
-        super(Lpar, self).__init__(manager, uri, properties)
+        super(Lpar, self).__init__(manager, uri, properties,
+                                   uri_prop='object-uri',
+                                   name_prop='name')
 
     @_log_call
     def activate(self, wait_for_completion=True):

@@ -162,10 +162,12 @@ class PartitionManager(BaseManager):
             Partition.
         """
         part_uri = "/api/partitions/" + part_id
-        return Partition(self, part_uri, {'object-uri': part_uri,
-                                          'object-id': part_id,
-                                          'parent': self.parent.uri,
-                                          'class': 'partition'})
+        part_props = {
+            'object-id': part_id,
+            'parent': self.parent.uri,
+            'class': 'partition',
+        }
+        return Partition(self, part_uri, part_props)
 
 
 class Partition(BaseResource):
@@ -180,22 +182,23 @@ class Partition(BaseResource):
     (in this case, :class:`~zhmcclient.PartitionManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.PartitionManager`):
-        #     Manager for this Partition.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Partition.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Partition.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
         if not isinstance(manager, PartitionManager):
             raise AssertionError("Partition init: Expected manager type %s, "
                                  "got %s" %
                                  (PartitionManager, type(manager)))
-        super(Partition, self).__init__(manager, uri, properties)
+        super(Partition, self).__init__(manager, uri, properties,
+                                        uri_prop='object-uri',
+                                        name_prop='name')
+        # The manager objects for child resources (with lazy initialization):
         self._nics = None
         self._hbas = None
         self._virtual_functions = None

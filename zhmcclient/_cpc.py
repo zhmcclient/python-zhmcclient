@@ -124,22 +124,22 @@ class Cpc(BaseResource):
     (in this case, :class:`~zhmcclient.CpcManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.CpcManager`):
-        #     Manager for this CPC.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this CPC.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this CPC.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
         if not isinstance(manager, CpcManager):
             raise AssertionError("Cpc init: Expected manager type %s, got %s" %
                                  (CpcManager, type(manager)))
-        super(Cpc, self).__init__(manager, uri, properties)
-        # We do here some lazy loading.
+        super(Cpc, self).__init__(manager, uri, properties,
+                                  uri_prop='object-uri',
+                                  name_prop='name')
+        # The manager objects for child resources (with lazy initialization):
         self._lpars = None
         self._partitions = None
         self._adapters = None

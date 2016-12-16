@@ -178,22 +178,23 @@ class Adapter(BaseResource):
     (in this case, :class:`~zhmcclient.AdapterManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.AdapterManager`):
-        #     Manager for this Adapter.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Adapter.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Adapter.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
         if not isinstance(manager, AdapterManager):
             raise AssertionError("Adapter init: Expected manager type %s, "
                                  "got %s" %
                                  (AdapterManager, type(manager)))
-        super(Adapter, self).__init__(manager, uri, properties)
+        super(Adapter, self).__init__(manager, uri, properties,
+                                      uri_prop='object-uri',
+                                      name_prop='name')
+        # The manager objects for child resources (with lazy initialization):
         self._ports = None
 
     @property
