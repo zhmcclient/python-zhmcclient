@@ -53,8 +53,10 @@ def nic_group():
 @nic_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def nic_list(cmd_ctx, cpc, partition):
+def nic_list(cmd_ctx, cpc, partition, **options):
     """
     List the NICs in a partition.
 
@@ -62,7 +64,7 @@ def nic_list(cmd_ctx, cpc, partition):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_nic_list(cmd_ctx, cpc, partition))
+    cmd_ctx.execute_cmd(lambda: cmd_nic_list(cmd_ctx, cpc, partition, options))
 
 
 @nic_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -180,7 +182,7 @@ def nic_delete(cmd_ctx, cpc, partition, nic):
     cmd_ctx.execute_cmd(lambda: cmd_nic_delete(cmd_ctx, cpc, partition, nic))
 
 
-def cmd_nic_list(cmd_ctx, cpc_name, partition_name):
+def cmd_nic_list(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     partition = find_partition(client, cpc_name, partition_name)
@@ -190,6 +192,15 @@ def cmd_nic_list(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    show_list = [
+        'name',
+        'status',
+    ]
+    if options['uri']:
+        show_list.extend([
+            'element-uri',
+        ])
+    # TODO: Finalize
     print_resources(nics, cmd_ctx.output_format)
 
 

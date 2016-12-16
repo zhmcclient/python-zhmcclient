@@ -56,8 +56,13 @@ def adapter_group():
 
 @adapter_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
+@click.option('--type', is_flag=True, required=False,
+              help='Show additional properties for the adapter family and '
+              'type.')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def adapter_list(cmd_ctx, cpc):
+def adapter_list(cmd_ctx, cpc, **options):
     """
     List the adapters in a CPC.
 
@@ -65,7 +70,7 @@ def adapter_list(cmd_ctx, cpc):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_adapter_list(cmd_ctx, cpc))
+    cmd_ctx.execute_cmd(lambda: cmd_adapter_list(cmd_ctx, cpc, options))
 
 
 @adapter_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -176,7 +181,7 @@ def adapter_delete_hipersocket(cmd_ctx, cpc, adapter):
                         cmd_ctx, cpc, adapter))
 
 
-def cmd_adapter_list(cmd_ctx, cpc_name):
+def cmd_adapter_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
@@ -186,7 +191,21 @@ def cmd_adapter_list(cmd_ctx, cpc_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
-    print_resources(adapters, cmd_ctx.output_format)
+    show_list = [
+        'name',
+        'adapter-id',
+        'status',
+    ]
+    if options['type']:
+        show_list.extend([
+            'adapter-family',
+            'type',
+        ])
+    if options['uri']:
+        show_list.extend([
+            'object-uri',
+        ])
+    print_resources(adapters, cmd_ctx.output_format, show_list)
 
 
 def cmd_adapter_show(cmd_ctx, cpc_name, adapter_name):

@@ -53,8 +53,10 @@ def hba_group():
 @hba_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def hba_list(cmd_ctx, cpc, partition):
+def hba_list(cmd_ctx, cpc, partition, **options):
     """
     List the HBAs in a partition.
 
@@ -62,7 +64,7 @@ def hba_list(cmd_ctx, cpc, partition):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_hba_list(cmd_ctx, cpc, partition))
+    cmd_ctx.execute_cmd(lambda: cmd_hba_list(cmd_ctx, cpc, partition, options))
 
 
 @hba_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -155,7 +157,7 @@ def hba_delete(cmd_ctx, cpc, partition, hba):
     cmd_ctx.execute_cmd(lambda: cmd_hba_delete(cmd_ctx, cpc, partition, hba))
 
 
-def cmd_hba_list(cmd_ctx, cpc_name, partition_name):
+def cmd_hba_list(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     partition = find_partition(client, cpc_name, partition_name)
@@ -165,7 +167,15 @@ def cmd_hba_list(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
-    print_resources(hbas, cmd_ctx.output_format)
+    show_list = [
+        'name',
+        'status',
+    ]
+    if options['uri']:
+        show_list.extend([
+            'element-uri',
+        ])
+    print_resources(hbas, cmd_ctx.output_format, show_list)
 
 
 def cmd_hba_show(cmd_ctx, cpc_name, partition_name, hba_name):

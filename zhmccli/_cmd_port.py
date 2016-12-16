@@ -53,8 +53,10 @@ def port_group():
 @port_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('ADAPTER', type=str, metavar='ADAPTER')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def port_list(cmd_ctx, cpc, adapter):
+def port_list(cmd_ctx, cpc, adapter, **options):
     """
     List the ports of an adapter.
 
@@ -62,7 +64,7 @@ def port_list(cmd_ctx, cpc, adapter):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_port_list(cmd_ctx, cpc, adapter))
+    cmd_ctx.execute_cmd(lambda: cmd_port_list(cmd_ctx, cpc, adapter, options))
 
 
 @port_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -106,16 +108,25 @@ def port_update(cmd_ctx, cpc, adapter, port, **options):
                                                 options))
 
 
-def cmd_port_list(cmd_ctx, cpc_name, adapter_name):
+def cmd_port_list(cmd_ctx, cpc_name, adapter_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     adapter = find_adapter(client, cpc_name, adapter_name)
 
     try:
-        ports = adapter.ports.list()
+        ports = adapter.ports.list(full_properties=True)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    show_list = [
+        'name',
+        'status',
+    ]
+    if options['uri']:
+        show_list.extend([
+            'element-uri',
+        ])
+    # TODO: Finalize
     print_resources(ports, cmd_ctx.output_format)
 
 

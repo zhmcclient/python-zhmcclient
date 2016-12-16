@@ -48,8 +48,14 @@ def cpc_group():
 
 
 @cpc_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.option('--type', is_flag=True, required=False,
+              help='Show additional properties for CPC mode / type.')
+@click.option('--mach', is_flag=True, required=False,
+              help='Show additional properties with machine information.')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def cpc_list(cmd_ctx):
+def cpc_list(cmd_ctx, **options):
     """
     List the CPCs managed by the HMC.
 
@@ -57,7 +63,7 @@ def cpc_list(cmd_ctx):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_cpc_list(cmd_ctx))
+    cmd_ctx.execute_cmd(lambda: cmd_cpc_list(cmd_ctx, options))
 
 
 @cpc_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -122,7 +128,7 @@ def cpc_update(cmd_ctx, cpc, **options):
     cmd_ctx.execute_cmd(lambda: cmd_cpc_update(cmd_ctx, cpc, options))
 
 
-def cmd_cpc_list(cmd_ctx):
+def cmd_cpc_list(cmd_ctx, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
 
@@ -131,7 +137,27 @@ def cmd_cpc_list(cmd_ctx):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
-    print_resources(cpcs, cmd_ctx.output_format)
+    show_list = [
+        'name',
+        'status',
+    ]
+    if options['type']:
+        show_list.extend([
+            'iml-mode',
+            'dpm-enabled',
+            'is-ensemble-member',
+        ])
+    if options['mach']:
+        show_list.extend([
+            'machine-type',
+            'machine-model',
+            'machine-serial-number',
+        ])
+    if options['uri']:
+        show_list.extend([
+            'object-uri',
+        ])
+    print_resources(cpcs, cmd_ctx.output_format, show_list)
 
 
 def cmd_cpc_show(cmd_ctx, cpc_name):

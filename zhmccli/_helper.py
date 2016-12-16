@@ -15,6 +15,7 @@
 from __future__ import absolute_import
 
 import json
+from collections import OrderedDict
 import click
 import click_spinner
 from tabulate import tabulate
@@ -209,25 +210,22 @@ def print_properties(properties, output_format, skip_list=None):
     """
     Print properties in the desired output format.
     """
-    _skip_list = ['@@implementation-errors']
-    if skip_list:
-        _skip_list.extend(skip_list)
     if output_format == 'table':
-        print_properties_as_table(properties, _skip_list)
+        print_properties_as_table(properties, skip_list)
     elif output_format == 'json':
         print_properties_as_json(properties)
     else:
         raise InvalidOutputFormatError(output_format)
 
 
-def print_resources(resources, output_format):
+def print_resources(resources, output_format, show_list=None):
     """
     Print the properties of a list of resources in the desired output format.
     """
     if output_format == 'table':
-        print_resources_as_table(resources)
+        print_resources_as_table(resources, show_list)
     elif output_format == 'json':
-        print_resources_as_json(resources)
+        print_resources_as_json(resources, show_list)
     else:
         raise InvalidOutputFormatError(output_format)
 
@@ -235,11 +233,23 @@ def print_resources(resources, output_format):
 def print_properties_as_table(properties, skip_list=None):
     """
     Print properties in tabular output format.
+
+    The order of rows is ascending by property name.
+
+    Parameters:
+
+      properties (dict): The properties.
+
+      skip_list (iterable of string): The property names to be skipped.
+        If `None`, all properties are shown.
     """
+    additional_skip_list = (
+        '@@implementation-errors',
+    )
     table = list()
     sorted_fields = sorted(properties)
     for field in sorted_fields:
-        if skip_list and field in skip_list:
+        if skip_list and field in skip_list or field in additional_skip_list:
             continue
         value = properties[field]
         table.append((field, value))
@@ -247,33 +257,84 @@ def print_properties_as_table(properties, skip_list=None):
     click.echo(tabulate(table, headers, tablefmt="psql"))
 
 
-def print_resources_as_table(resources):
+def print_resources_as_table(resources, show_list=None):
     """
-    Print list of resources in tabular output format.
+    Print resources in tabular output format.
+
+    Parameters:
+
+      resources (iterable of BaseResource):
+        The resources.
+
+      show_list (iterable of string):
+        The property names to be shown. If a property is not in the resource
+        object, it will be retrieved from the HMC. This iterable also defines
+        the order of columns in the table, from left to right in iteration
+        order.
+
+        If `None`, all properties in the resource objects are shown, and their
+        column order is ascending by property name.
     """
     table = list()
     for i, resource in enumerate(resources):
+        properties = OrderedDict()
+        if show_list:
+            for name in show_list:
+                # By using prop(), the resource with the full set of
+                # properties will be retrieved, if a desired property is not
+                # yet in the resource object
+                properties[name] = resource.prop(name)
+        else:
+            for name in sorted(resource.properties.keys()):
+                properties[name] = resource.prop(name)
         if i == 0:
-            headers = resource.properties.keys()
-        row = resource.properties.values()
-        table.append(reversed(row))
+            headers = properties.keys()
+        row = properties.values()
+        table.append(row)
     if not table:
         click.echo("No entries.")
     else:
-        click.echo(tabulate(table, reversed(headers), tablefmt="psql"))
+        click.echo(tabulate(table, headers, tablefmt="psql"))
 
 
 def print_properties_as_json(properties):
     """
     Print properties in JSON output format.
+
+    Parameters:
+
+      properties (dict): The properties.
     """
     json_str = json.dumps(properties)
     click.echo(json_str)
 
 
-def print_resources_as_json(resources):
+def print_resources_as_json(resources, show_list=None):
     """
-    Print properties of a list of resources in JSON output format.
+    Print resources in JSON output format.
+
+    Parameters:
+
+      resources (iterable of BaseResource):
+        The resources.
+
+      show_list (iterable of string):
+        The property names to be shown. If a property is not in a resource
+        object, it will be retrieved from the HMC.
+
+        If `None`, all properties in the input resource objects are shown.
     """
-    json_str = json.dumps([r.properties for r in resources])
+    json_obj = list()
+    for i, resource in enumerate(resources):
+        if show_list:
+            properties = OrderedDict()
+            for name in show_list:
+                # By using prop(), the resource with the full set of
+                # properties will be retrieved, if a desired property is not
+                # yet in the resource object
+                properties[name] = resource.prop(name, None)
+        else:
+            properties = resource.properties
+        json_obj.append(properties)
+    json_str = json.dumps(json_obj)
     click.echo(json_str)

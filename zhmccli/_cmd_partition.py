@@ -53,8 +53,13 @@ def partition_group():
 
 @partition_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
+@click.option('--type', is_flag=True, required=False,
+              help='Show additional properties indicating the partition and '
+              'OS type.')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def partition_list(cmd_ctx, cpc):
+def partition_list(cmd_ctx, cpc, **options):
     """
     List the partitions in a CPC.
 
@@ -62,7 +67,7 @@ def partition_list(cmd_ctx, cpc):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_partition_list(cmd_ctx, cpc))
+    cmd_ctx.execute_cmd(lambda: cmd_partition_list(cmd_ctx, cpc, options))
 
 
 @partition_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -238,7 +243,7 @@ def partition_delete(cmd_ctx, cpc, partition):
     cmd_ctx.execute_cmd(lambda: cmd_partition_delete(cmd_ctx, cpc, partition))
 
 
-def cmd_partition_list(cmd_ctx, cpc_name):
+def cmd_partition_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
@@ -248,7 +253,20 @@ def cmd_partition_list(cmd_ctx, cpc_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
-    print_resources(partitions, cmd_ctx.output_format)
+    show_list = [
+        'name',
+        'status',
+    ]
+    if options['type']:
+        show_list.extend([
+            'partition-type',
+            'os-type',
+        ])
+    if options['uri']:
+        show_list.extend([
+            'object-uri',
+        ])
+    print_resources(partitions, cmd_ctx.output_format, show_list)
 
 
 def cmd_partition_show(cmd_ctx, cpc_name, partition_name):

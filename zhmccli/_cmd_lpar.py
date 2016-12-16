@@ -53,8 +53,13 @@ def lpar_group():
 
 @lpar_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
+@click.option('--type', is_flag=True, required=False,
+              help='Show additional properties indicating the LPAR and OS '
+              'type.')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def lpar_list(cmd_ctx, cpc):
+def lpar_list(cmd_ctx, cpc, **options):
     """
     List the LPARs in a CPC.
 
@@ -62,7 +67,7 @@ def lpar_list(cmd_ctx, cpc):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_list(cmd_ctx, cpc))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_list(cmd_ctx, cpc, options))
 
 
 @lpar_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -190,7 +195,7 @@ def lpar_load(cmd_ctx, cpc, lpar, load_address):
                                               load_address))
 
 
-def cmd_lpar_list(cmd_ctx, cpc_name):
+def cmd_lpar_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
@@ -200,7 +205,21 @@ def cmd_lpar_list(cmd_ctx, cpc_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
-    print_resources(lpars, cmd_ctx.output_format)
+    show_list = [
+        'name',
+        'status',
+    ]
+    if options['type']:
+        show_list.extend([
+            'activation-mode',
+            'os-type',
+            'workload-manager-enabled',
+        ])
+    if options['uri']:
+        show_list.extend([
+            'object-uri',
+        ])
+    print_resources(lpars, cmd_ctx.output_format, show_list)
 
 
 def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):

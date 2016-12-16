@@ -53,8 +53,10 @@ def vfunction_group():
 @vfunction_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.option('--uri', is_flag=True, required=False,
+              help='Show additional properties for the resource URI.')
 @click.pass_obj
-def vfunction_list(cmd_ctx, cpc, partition):
+def vfunction_list(cmd_ctx, cpc, partition, **options):
     """
     List the virtual functions in a partition.
 
@@ -62,7 +64,8 @@ def vfunction_list(cmd_ctx, cpc, partition):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_vfunction_list(cmd_ctx, cpc, partition))
+    cmd_ctx.execute_cmd(lambda: cmd_vfunction_list(cmd_ctx, cpc, partition,
+                                                   options))
 
 
 @vfunction_group.command('show', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -164,7 +167,7 @@ def vfunction_delete(cmd_ctx, cpc, partition, vfunction):
                                                      vfunction))
 
 
-def cmd_vfunction_list(cmd_ctx, cpc_name, partition_name):
+def cmd_vfunction_list(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     partition = find_partition(client, cpc_name, partition_name)
@@ -174,6 +177,15 @@ def cmd_vfunction_list(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    show_list = [
+        'name',
+        'status',
+    ]
+    if options['uri']:
+        show_list.extend([
+            'object-uri',
+        ])
+    # TODO: Finalize
     print_resources(vfunctions, cmd_ctx.output_format)
 
 
