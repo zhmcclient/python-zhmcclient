@@ -78,7 +78,7 @@ class ActivationProfileManager(BaseManager):
         #     * `reset`: Reset Activation Profiles
         #     * `image`: Image Activation Profiles
         #     * `load`: Load Activation Profiles
-        super(ActivationProfileManager, self).__init__(cpc)
+        super(ActivationProfileManager, self).__init__(ActivationProfile, cpc)
         self._profile_type = profile_type
 
     @property

@@ -46,7 +46,7 @@ class PortManager(BaseManager):
         # Parameters:
         #   adapter (:class:`~zhmcclient.Adapter`):
         #     Adapter defining the scope for this manager.
-        super(PortManager, self).__init__(adapter)
+        super(PortManager, self).__init__(Port, adapter)
 
     @property
     def adapter(self):

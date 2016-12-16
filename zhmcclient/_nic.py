@@ -50,7 +50,7 @@ class NicManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(NicManager, self).__init__(partition)
+        super(NicManager, self).__init__(Nic, partition)
 
     @property
     def partition(self):

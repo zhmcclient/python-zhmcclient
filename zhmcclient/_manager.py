@@ -41,9 +41,12 @@ class BaseManager(object):
     methods that have a common implementation for the derived manager classes.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, resource_class, parent=None):
         """
         Parameters:
+
+          resource_class (class):
+            Python class for the resources of this manager.
 
           parent (subclass of :class:`~zhmcclient.BaseResource`):
             Parent resource defining the scope for this manager.
@@ -51,12 +54,12 @@ class BaseManager(object):
             `None`, if the manager has no parent, i.e. when it manages
             top-level resources.
         """
+        self._resource_class = resource_class
         self._parent = parent
         self._uris = {}
         # Note: Managers of top-level resources must update the following
         # instance variables in their init:
         self._session = parent.manager.session if parent else None
-        self._resource_class = parent.__class__ if parent else None
 
     def _get_uri(self, name):
         """
@@ -79,10 +82,6 @@ class BaseManager(object):
         """
         The Python class of the parent resource of this manager.
         """
-        if self._resource_class is None:
-            raise AssertionError("%s.resource_class: No resource "
-                                 "class set" %
-                                 self.__class__.__name__)
         return self._resource_class
 
     @property
@@ -92,7 +91,8 @@ class BaseManager(object):
           Session with the HMC.
         """
         if self._session is None:
-            raise AssertionError("%s.session: No session set" %
+            raise AssertionError("%s.session: No session set (in top-level "
+                                 "resource manager class?)" %
                                  self.__class__.__name__)
         return self._session
 

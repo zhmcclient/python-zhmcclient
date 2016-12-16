@@ -87,7 +87,7 @@ class AdapterManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(AdapterManager, self).__init__(cpc)
+        super(AdapterManager, self).__init__(Adapter, cpc)
 
     @property
     def cpc(self):

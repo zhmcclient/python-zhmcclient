@@ -49,7 +49,8 @@ class VirtualFunctionManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(VirtualFunctionManager, self).__init__(partition)
+        super(VirtualFunctionManager, self).__init__(VirtualFunction,
+                                                     partition)
 
     @property
     def partition(self):

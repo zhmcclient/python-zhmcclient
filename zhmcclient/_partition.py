@@ -59,7 +59,7 @@ class PartitionManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(PartitionManager, self).__init__(cpc)
+        super(PartitionManager, self).__init__(Partition, cpc)
 
     @property
     def cpc(self):

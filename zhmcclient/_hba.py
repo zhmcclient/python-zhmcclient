@@ -49,7 +49,7 @@ class HbaManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(HbaManager, self).__init__(partition)
+        super(HbaManager, self).__init__(Hba, partition)
 
     @property
     def partition(self):

@@ -52,7 +52,7 @@ class VirtualSwitchManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(VirtualSwitchManager, self).__init__(cpc)
+        super(VirtualSwitchManager, self).__init__(VirtualSwitch, cpc)
 
     @property
     def cpc(self):

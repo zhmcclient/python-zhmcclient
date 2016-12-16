@@ -52,7 +52,7 @@ class LparManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(LparManager, self).__init__(cpc)
+        super(LparManager, self).__init__(Lpar, cpc)
 
     @property
     def cpc(self):
