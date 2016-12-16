@@ -75,7 +75,7 @@ class BaseManager(object):
             try:
                 return self._uris[name]
             except KeyError:
-                raise zhmcclient.NotFound
+                raise NotFound
 
     @property
     def resource_class(self):

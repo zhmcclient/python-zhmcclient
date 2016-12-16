@@ -53,6 +53,8 @@ def nic_group():
 @nic_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.option('--type', is_flag=True, required=False,
+              help='Show additional properties for the NIC type.')
 @click.option('--uri', is_flag=True, required=False,
               help='Show additional properties for the resource URI.')
 @click.pass_obj
@@ -194,14 +196,16 @@ def cmd_nic_list(cmd_ctx, cpc_name, partition_name, options):
 
     show_list = [
         'name',
-        'status',
     ]
+    if options['type']:
+        show_list.extend([
+            'type',
+        ])
     if options['uri']:
         show_list.extend([
             'element-uri',
         ])
-    # TODO: Finalize
-    print_resources(nics, cmd_ctx.output_format)
+    print_resources(nics, cmd_ctx.output_format, show_list)
 
 
 def cmd_nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
@@ -271,7 +275,7 @@ def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
                                    "specified.")
 
     try:
-        new_nic = cpc.nics.create(properties)
+        new_nic = partition.nics.create(properties)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 

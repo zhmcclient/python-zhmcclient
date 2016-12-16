@@ -133,7 +133,7 @@ def hba_update(cmd_ctx, cpc, partition, hba, **options):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_hba_update(cmd_ctx, cpc,partition, hba,
+    cmd_ctx.execute_cmd(lambda: cmd_hba_update(cmd_ctx, cpc, partition, hba,
                                                options))
 
 
@@ -169,7 +169,6 @@ def cmd_hba_list(cmd_ctx, cpc_name, partition_name, options):
 
     show_list = [
         'name',
-        'status',
     ]
     if options['uri']:
         show_list.extend([
@@ -206,7 +205,7 @@ def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
 
     adapter_name = options['adapter']
     try:
-        adapter = cpc.adapters.find(name=adapter_name)
+        adapter = partition.cpc.adapters.find(name=adapter_name)
     except zhmcclient.NotFound:
         raise click.ClickException("Could not find adapter %s in CPC %s." %
                                    (adapter_name, cpc_name))
@@ -220,7 +219,7 @@ def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
     properties['adapter-port'] = port.uri
 
     try:
-        new_hba = cpc.hbas.create(properties)
+        new_hba = partition.hbas.create(properties)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 

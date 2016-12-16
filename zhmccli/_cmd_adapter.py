@@ -200,6 +200,7 @@ def cmd_adapter_list(cmd_ctx, cpc_name, options):
         show_list.extend([
             'adapter-family',
             'type',
+            'detected-card-type',
         ])
     if options['uri']:
         show_list.extend([

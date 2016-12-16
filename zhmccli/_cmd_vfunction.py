@@ -179,21 +179,19 @@ def cmd_vfunction_list(cmd_ctx, cpc_name, partition_name, options):
 
     show_list = [
         'name',
-        'status',
     ]
     if options['uri']:
         show_list.extend([
-            'object-uri',
+            'element-uri',
         ])
-    # TODO: Finalize
-    print_resources(vfunctions, cmd_ctx.output_format)
+    print_resources(vfunctions, cmd_ctx.output_format, show_list)
 
 
 def cmd_vfunction_show(cmd_ctx, cpc_name, partition_name, vfunction_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
     vfunction = find_vfunction(client, cpc_name, partition_name,
-                                vfunction_name)
+                               vfunction_name)
 
     try:
         vfunction.pull_full_properties()

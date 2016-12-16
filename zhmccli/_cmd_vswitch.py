@@ -18,7 +18,7 @@ import click
 
 import zhmcclient
 from .zhmccli import cli
-from ._helper import print_properties, print_resources, abort_if_false, \
+from ._helper import print_properties, print_resources, \
     options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_cpc import find_cpc
 
@@ -53,6 +53,8 @@ def vswitch_group():
 
 @vswitch_group.command('list', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
+@click.option('--adapter', is_flag=True, required=False,
+              help='Show additional properties for the backing adapter.')
 @click.option('--uri', is_flag=True, required=False,
               help='Show additional properties for the resource URI.')
 @click.pass_obj
@@ -117,14 +119,17 @@ def cmd_vswitch_list(cmd_ctx, cpc_name, options):
 
     show_list = [
         'name',
-        'status',
     ]
+    if options['adapter']:
+        show_list.extend([
+            'type',  # part of list()
+            'port',  # needs to be retrieved
+        ])
     if options['uri']:
         show_list.extend([
             'object-uri',
         ])
-    # TODO: Finalize
-    print_resources(vswitches, cmd_ctx.output_format)
+    print_resources(vswitches, cmd_ctx.output_format, show_list)
 
 
 def cmd_vswitch_show(cmd_ctx, cpc_name, vswitch_name):
@@ -146,7 +151,7 @@ def cmd_vswitch_update(cmd_ctx, cpc_name, vswitch_name, options):
     vswitch = find_vswitch(client, cpc_name, vswitch_name)
 
     options = original_options(options)
-    properties = options_to_properties(options, name_map)
+    properties = options_to_properties(options)
 
     if not properties:
         click.echo("No properties specified for updating virtual switch %s." %

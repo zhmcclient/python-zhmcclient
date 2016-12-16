@@ -292,9 +292,10 @@ def print_resources_as_table(resources, show_list=None):
         row = properties.values()
         table.append(row)
     if not table:
-        click.echo("No entries.")
+        click.echo("No resources.")
     else:
-        click.echo(tabulate(table, headers, tablefmt="psql"))
+        sorted_table = sorted(table, key=lambda row: row[0])
+        click.echo(tabulate(sorted_table, headers, tablefmt="psql"))
 
 
 def print_properties_as_json(properties):

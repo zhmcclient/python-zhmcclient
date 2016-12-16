@@ -125,7 +125,7 @@ class ActivationProfileManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         activation_profiles_name = self._profile_type + '-activation-profiles'
-        profiles_res = self.session.get(self.cpc.uri + '/' + \
+        profiles_res = self.session.get(self.cpc.uri + '/' +
                                         activation_profiles_name)
         profile_list = []
         if profiles_res:

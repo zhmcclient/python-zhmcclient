@@ -18,7 +18,7 @@ import click
 
 import zhmcclient
 from .zhmccli import cli
-from ._helper import print_properties, print_resources, abort_if_false, \
+from ._helper import print_properties, print_resources, \
     options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 from ._cmd_adapter import find_adapter
 
@@ -120,14 +120,13 @@ def cmd_port_list(cmd_ctx, cpc_name, adapter_name, options):
 
     show_list = [
         'name',
-        'status',
+        'index',
     ]
     if options['uri']:
         show_list.extend([
             'element-uri',
         ])
-    # TODO: Finalize
-    print_resources(ports, cmd_ctx.output_format)
+    print_resources(ports, cmd_ctx.output_format, show_list)
 
 
 def cmd_port_show(cmd_ctx, cpc_name, adapter_name, port_name):

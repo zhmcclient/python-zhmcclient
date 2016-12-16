@@ -143,7 +143,7 @@ class Cpc(BaseResource):
         self._lpars = None
         self._partitions = None
         self._adapters = None
-        self._vswitches = None
+        self._virtual_switches = None
         self._reset_activation_profiles = None
         self._image_activation_profiles = None
         self._load_activation_profiles = None
@@ -186,15 +186,23 @@ class Cpc(BaseResource):
 
     @property
     @_log_call
-    def vswitches(self):
+    def virtual_switches(self):
         """
         :class:`~zhmcclient.VirtualSwitchManager`: Access to the
         :term:`Virtual Switches <Virtual Switch>` in this CPC.
         """
         # We do here some lazy loading.
-        if not self._vswitches:
-            self._vswitches = VirtualSwitchManager(self)
-        return self._vswitches
+        if not self._virtual_switches:
+            self._virtual_switches = VirtualSwitchManager(self)
+        return self._virtual_switches
+
+    @property
+    def vswitches(self):
+        """
+        Deprecated: Use :attr:`~zhmcclient.Cpc.virtual_switches` instead.
+        """
+        # TODO: Issue a deprecation warning
+        return self.virtual_switches
 
     @property
     @_log_call
