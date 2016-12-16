@@ -18,7 +18,8 @@ import click
 
 import zhmcclient
 from .zhmccli import cli
-from ._helper import print_properties, print_resources, COMMAND_OPTIONS_METAVAR
+from ._helper import print_properties, print_resources, \
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
 
 
 def find_cpc(client, cpc_name):
@@ -66,7 +67,13 @@ def cpc_show(cmd_ctx, cpc):
     """
     Show details of a CPC.
 
-    In table format, some properties are skipped.
+    Limitations:
+      * In table format, the following properties are not shown:
+        - ec-mcl-description
+        - cpc-power-saving-state
+        - network2-ipv6-info
+        - network1-ipv6-info
+        - auto-start-list
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified right after the
@@ -78,33 +85,32 @@ def cpc_show(cmd_ctx, cpc):
 @cpc_group.command('update', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.option('--description', type=str, required=False,
-              help='The new description of the CPC '
-              '(DPM mode only). '
-              'Default: No change.')
+              help='The new description of the CPC. '
+              '(DPM mode only).')
 @click.option('--acceptable-status', type=str, required=False,
-              help='The new set of acceptable operational status values. '
-              'Default: No change.')
+              help='The new set of acceptable operational status values.')
 # TODO: Support multiple values for acceptable-status
 @click.option('--next-activation-profile', type=str, required=False,
-              help='The name of the new next reset activation profile '
-              '(not in DPM mode). '
-              'Default: No change.')
+              help='The name of the new next reset activation profile. '
+              '(not in DPM mode).')
 @click.option('--processor-time-slice', type=int, required=False,
               help='The new time slice (in ms) for logical processors. '
               'A value of 0 causes the time slice to be dynamically '
               'determined by the system. A positive value causes a constant '
               'time slice to be used. '
-              '(not in DPM mode). '
-              'Default: No change.')
-@click.option('--wait-ends-slice/--no-wait-ends-slice', required=False,
+              '(not in DPM mode).')
+@click.option('--wait-ends-slice/--no-wait-ends-slice', default=None,
+              required=False,
               help='The new setting for making logical processors lose their '
               'time slice when they enter a wait state. '
-              '(not in DPM mode). '
-              'Default: No change.')
+              '(not in DPM mode).')
 @click.pass_obj
 def cpc_update(cmd_ctx, cpc, **options):
     """
     Update the properties of a CPC.
+
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified right after the
@@ -113,16 +119,18 @@ def cpc_update(cmd_ctx, cpc, **options):
     Limitations:
       * The --acceptable-status option does not support multiple values.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_partition_update(cmd_ctx, cpc,
-                                                     options))
+    cmd_ctx.execute_cmd(lambda: cmd_cpc_update(cmd_ctx, cpc, options))
 
 
 def cmd_cpc_list(cmd_ctx):
+
     client = zhmcclient.Client(cmd_ctx.session)
+
     try:
         cpcs = client.cpcs.list()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     print_resources(cpcs, cmd_ctx.output_format)
 
 
@@ -141,7 +149,8 @@ def cmd_cpc_show(cmd_ctx, cpc_name):
         'cpc-power-saving-state',
         'network2-ipv6-info',
         'network1-ipv6-info',
-        'auto-start-list')
+        'auto-start-list',
+    )
     print_properties(cpc.properties, cmd_ctx.output_format, skip_list)
 
 
@@ -172,10 +181,9 @@ def cmd_cpc_update(cmd_ctx, cpc_name, options):
         properties['processor-running-time-type'] = 'user-determined'
         properties['processor-running-time'] = time_slice
 
-    if options['wait-ends-slice']:
-        properties['does-wait-state-end-time-slice'] = True
-    elif options['no-wait-ends-slice']:
-        properties['does-wait-state-end-time-slice'] = False
+    if options['wait-ends-slice'] is not None:
+        properties['does-wait-state-end-time-slice'] = \
+            options['wait-ends-slice']
 
     if not properties:
         click.echo("No properties specified for updating CPC %s." % cpc_name)

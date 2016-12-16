@@ -118,24 +118,22 @@ def vfunction_create(cmd_ctx, cpc, partition, **options):
 @click.argument('VFUNCTION', type=str, metavar='VFUNCTION')
 @click.option('--name', type=str, required=False,
               help='The new name of the virtual function. Must be unique '
-              'within the virtual functions of the partition. '
-              'Default: No change.')
+              'within the virtual functions of the partition.')
 @click.option('--description', type=str, required=False,
-              help='The new description of the virtual function. '
-              'Default: No change.')
+              help='The new description of the virtual function.')
 @click.option('--adapter', type=str, required=False,
               help='The name of the new adapter (in the same CPC) that will '
-              'back the virtual function. '
-              'Default: No change.')
+              'back the virtual function.')
 @click.option('--device-number', type=str, required=False,
               help='The new device number to be used for the virtual '
-              'function. '
-              'Default: No change.')
+              'function.')
 @click.pass_obj
-def vfunction_update(cmd_ctx, cpc, partition, vfunction,
-                     **options):
+def vfunction_update(cmd_ctx, cpc, partition, vfunction, **options):
     """
     Update the properties of a virtual function.
+
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified right after the
@@ -167,25 +165,30 @@ def vfunction_delete(cmd_ctx, cpc, partition, vfunction):
 
 
 def cmd_vfunction_list(cmd_ctx, cpc_name, partition_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     partition = find_partition(client, cpc_name, partition_name)
+
     try:
         vfunctions = partition.virtual_functions.list()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     print_resources(vfunctions, cmd_ctx.output_format)
 
 
 def cmd_vfunction_show(cmd_ctx, cpc_name, partition_name, vfunction_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     vfunction = find_vfunction(client, cpc_name, partition_name,
                                 vfunction_name)
+
     try:
         vfunction.pull_full_properties()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    skip_list = ()
-    print_properties(vfunction.properties, cmd_ctx.output_format, skip_list)
+
+    print_properties(vfunction.properties, cmd_ctx.output_format)
 
 
 def cmd_vfunction_create(cmd_ctx, cpc_name, partition_name, options):
@@ -258,11 +261,14 @@ def cmd_vfunction_update(cmd_ctx, cpc_name, partition_name, vfunction_name,
 
 
 def cmd_vfunction_delete(cmd_ctx, cpc_name, partition_name, vfunction_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     vfunction = find_vfunction(client, cpc_name, partition_name,
-                                vfunction_name)
+                               vfunction_name)
+
     try:
         vfunction.delete()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     click.echo('Virtual function %s has been deleted.' % vfunction_name)

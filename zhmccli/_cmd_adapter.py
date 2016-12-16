@@ -28,8 +28,8 @@ def find_adapter(client, cpc_name, adapter_name):
     Find an adapter by name and return its resource object.
     """
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
+    # The CPC must be in DPM mode. We don't check that because it would
+    # cause a GET to the CPC resource that we otherwise don't need.
     try:
         adapter = cpc.adapters.find(name=adapter_name)
     except zhmcclient.NotFound:
@@ -94,26 +94,29 @@ def adapter_show(cmd_ctx, cpc, adapter):
               help='The new description of the single port of the adapter.')
 @click.option('--mtu-size', type=click.Choice(['8', '16', '32', '56']),
               required=False,
-              help='The new MTU size of the adapter in KiB '
+              help='The new MTU size of the adapter in KiB. '
               '(HiperSockets only).')
 @click.option('--allowed-capacity', type=int, required=False,
-              help='The maximum number of HBAs per partition '
+              help='The maximum number of HBAs per partition. '
               '(FCP only).')
 @click.option('--chpid', type=str, required=False,
               help='Channel path ID (CHPID, 2 hex chars) used by the '
-              'adapter\'s port '
+              'adapter\'s port. '
               '(OSA, FICON, HiperSockets only).')
 @click.option('--crypto-number', type=int, required=False,
               help='Identifier of the crypto adapter in the range 0-15 '
-              'Must be unique within the CPC '
+              'Must be unique within the CPC. '
               '(Crypto only).')
-@click.option('--crypto-tke', is_flag=True, required=False,
-              help='Permit TKE commands on the crypto adapter '
+@click.option('--crypto-tke/--no-crypto-tke', default=None, required=False,
+              help='Permit TKE commands on the crypto adapter. '
               '(Crypto only).')
 @click.pass_obj
 def adapter_update(cmd_ctx, cpc, adapter, **options):
     """
     Update the properties of an adapter.
+
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
 
     The adapter may be a physical adapter (e.g. a discovered OSA card) or a
     logical adapter (e.g. HiperSockets).
@@ -174,26 +177,29 @@ def adapter_delete_hipersocket(cmd_ctx, cpc, adapter):
 
 
 def cmd_adapter_list(cmd_ctx, cpc_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
+
     try:
         adapters = cpc.adapters.list()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     print_resources(adapters, cmd_ctx.output_format)
 
 
 def cmd_adapter_show(cmd_ctx, cpc_name, adapter_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     adapter = find_adapter(client, cpc_name, adapter_name)
+
     try:
         adapter.pull_full_properties()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    skip_list = ()
-    print_properties(adapter.properties, cmd_ctx.output_format, skip_list)
+
+    print_properties(adapter.properties, cmd_ctx.output_format)
 
 
 def cmd_adapter_update(cmd_ctx, cpc_name, adapter_name, options):
@@ -230,8 +236,6 @@ def cmd_adapter_create_hipersocket(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
 
     name_map = {
         'mtu-size': 'maximum-transmission-unit-size',
@@ -249,10 +253,13 @@ def cmd_adapter_create_hipersocket(cmd_ctx, cpc_name, options):
 
 
 def cmd_adapter_delete_hipersocket(cmd_ctx, cpc_name, adapter_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     adapter = find_adapter(client, cpc_name, adapter_name)
+
     try:
         adapter.delete()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     click.echo('HiperSockets adapter %s has been deleted.' % adapter_name)

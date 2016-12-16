@@ -92,6 +92,9 @@ def port_update(cmd_ctx, cpc, adapter, port, **options):
     """
     Update the properties of an adapter port.
 
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
+
     The port may be on a physical adapter (e.g. a discovered OSA card) or a
     logical adapter (e.g. HiperSockets).
 
@@ -104,24 +107,29 @@ def port_update(cmd_ctx, cpc, adapter, port, **options):
 
 
 def cmd_port_list(cmd_ctx, cpc_name, adapter_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     adapter = find_adapter(client, cpc_name, adapter_name)
+
     try:
         ports = adapter.ports.list()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     print_resources(ports, cmd_ctx.output_format)
 
 
 def cmd_port_show(cmd_ctx, cpc_name, adapter_name, port_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     port = find_port(client, cpc_name, adapter_name, port_name)
+
     try:
         port.pull_full_properties()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    skip_list = ()
-    print_properties(port.properties, cmd_ctx.output_format, skip_list)
+
+    print_properties(port.properties, cmd_ctx.output_format)
 
 
 def cmd_port_update(cmd_ctx, cpc_name, adapter_name, port_name, options):
@@ -143,4 +151,3 @@ def cmd_port_update(cmd_ctx, cpc_name, adapter_name, port_name, options):
 
     # Adapter ports cannot be renamed.
     click.echo("Port %s has been updated." % port_name)
-

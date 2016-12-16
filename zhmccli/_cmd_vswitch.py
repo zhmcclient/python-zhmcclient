@@ -28,8 +28,8 @@ def find_vswitch(client, cpc_name, vswitch_name):
     Find a virtual switch by name and return its resource object.
     """
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
+    # The CPC must be in DPM mode. We don't check that because it would
+    # cause a GET to the CPC resource that we otherwise don't need.
     try:
         vswitch = cpc.virtual_switches.find(name=vswitch_name)
     except zhmcclient.NotFound:
@@ -84,15 +84,16 @@ def vswitch_show(cmd_ctx, cpc, vswitch):
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('VSWITCH', type=str, metavar='VSWITCH')
 @click.option('--name', type=str, required=False,
-              help='The new name of the virtual switch. '
-              'Default: No change.')
+              help='The new name of the virtual switch.')
 @click.option('--description', type=str, required=False,
-              help='The new description of the virtual switch. '
-              'Default: No change.')
+              help='The new description of the virtual switch.')
 @click.pass_obj
 def vswitch_update(cmd_ctx, cpc, vswitch, **options):
     """
     Update the properties of a virtual switch.
+
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified right after the
@@ -103,26 +104,29 @@ def vswitch_update(cmd_ctx, cpc, vswitch, **options):
 
 
 def cmd_vswitch_list(cmd_ctx, cpc_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
+
     try:
         vswitches = cpc.virtual_switches.list()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     print_resources(vswitches, cmd_ctx.output_format)
 
 
 def cmd_vswitch_show(cmd_ctx, cpc_name, vswitch_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     vswitch = find_vswitch(client, cpc_name, vswitch_name)
+
     try:
         vswitch.pull_full_properties()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    skip_list = ()
-    print_properties(vswitch.properties, cmd_ctx.output_format, skip_list)
+
+    print_properties(vswitch.properties, cmd_ctx.output_format)
 
 
 def cmd_vswitch_update(cmd_ctx, cpc_name, vswitch_name, options):

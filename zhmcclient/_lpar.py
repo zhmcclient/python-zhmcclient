@@ -85,8 +85,7 @@ class LparManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        lpars_res = self.session.get(cpc_uri + '/logical-partitions')
+        lpars_res = self.session.get(self.cpc.uri + '/logical-partitions')
         lpar_list = []
         if lpars_res:
             lpar_items = lpars_res['logical-partitions']
@@ -165,10 +164,9 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        lpar_uri = self.get_property('object-uri')
         body = {}
         result = self.manager.session.post(
-            lpar_uri + '/operations/activate', body,
+            self.uri + '/operations/activate', body,
             wait_for_completion=wait_for_completion)
         return result
 
@@ -210,10 +208,9 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        lpar_uri = self.get_property('object-uri')
         body = {'force': True}
         result = self.manager.session.post(
-            lpar_uri + '/operations/deactivate', body,
+            self.uri + '/operations/deactivate', body,
             wait_for_completion=wait_for_completion)
         return result
 
@@ -257,9 +254,8 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        lpar_uri = self.get_property('object-uri')
         body = {'load-address': load_address}
         result = self.manager.session.post(
-            lpar_uri + '/operations/load', body,
+            self.uri + '/operations/load', body,
             wait_for_completion=wait_for_completion)
         return result

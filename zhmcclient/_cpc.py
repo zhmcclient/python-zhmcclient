@@ -313,9 +313,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            cpc_uri + '/operations/start',
+            self.uri + '/operations/start',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -354,9 +353,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            cpc_uri + '/operations/stop',
+            self.uri + '/operations/stop',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -405,10 +403,9 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            cpc_uri + '/operations/import-profiles', body,
+            self.uri + '/operations/import-profiles', body,
             wait_for_completion=wait_for_completion)
         return result
 
@@ -456,10 +453,9 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            cpc_uri + '/operations/export-profiles', body,
+            self.uri + '/operations/export-profiles', body,
             wait_for_completion=wait_for_completion)
         return result
 

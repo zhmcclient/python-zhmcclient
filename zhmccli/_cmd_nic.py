@@ -126,11 +126,9 @@ def nic_create(cmd_ctx, cpc, partition, **options):
 @click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.argument('NIC', type=str, metavar='NIC')
 @click.option('--name', type=str, required=False,
-              help='The new name of the NIC. '
-              'Default: No change.')
+              help='The new name of the NIC.')
 @click.option('--description', type=str, required=False,
-              help='The new description of the NIC. '
-              'Default: No change.')
+              help='The new description of the NIC.')
 @click.option('--adapter', type=str, required=False,
               help='The name of the new network adapter with the port backing '
               'the NIC. '
@@ -143,15 +141,16 @@ def nic_create(cmd_ctx, cpc, partition, **options):
 @click.option('--virtual-switch', type=str, required=False,
               help='The name of the virtual switch of the new network port '
               'backing the NIC. '
-              'Only for OSA and HiperSocket adapters. '
-              'Default: No change.')
+              'Only for OSA and HiperSocket adapters.')
 @click.option('--device-number', type=str, required=False,
-              help='The new device number to be used for the NIC. '
-              'Default: No change.')
+              help='The new device number to be used for the NIC.')
 @click.pass_obj
 def nic_update(cmd_ctx, cpc, partition, nic, **options):
     """
     Update the properties of a NIC.
+
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified right after the
@@ -182,24 +181,29 @@ def nic_delete(cmd_ctx, cpc, partition, nic):
 
 
 def cmd_nic_list(cmd_ctx, cpc_name, partition_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     partition = find_partition(client, cpc_name, partition_name)
+
     try:
         nics = partition.nics.list()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     print_resources(nics, cmd_ctx.output_format)
 
 
 def cmd_nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     nic = find_nic(client, cpc_name, partition_name, nic_name)
+
     try:
         nic.pull_full_properties()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    skip_list = ()
-    print_properties(nic.properties, cmd_ctx.output_format, skip_list)
+
+    print_properties(nic.properties, cmd_ctx.output_format)
 
 
 def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
@@ -335,10 +339,13 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
 
 
 def cmd_nic_delete(cmd_ctx, cpc_name, partition_name, nic_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     nic = find_nic(client, cpc_name, partition_name, nic_name)
+
     try:
         nic.delete()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     click.echo('NIC %s has been deleted.' % nic_name)

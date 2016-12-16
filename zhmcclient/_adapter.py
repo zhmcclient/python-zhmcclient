@@ -119,8 +119,7 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        adapters_res = self.session.get(cpc_uri + '/adapters')
+        adapters_res = self.session.get(self.cpc.uri + '/adapters')
         adapter_list = []
         if adapters_res:
             adapter_items = adapters_res['adapters']
@@ -156,8 +155,7 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        result = self.session.post(cpc_uri + '/adapters', body=properties)
+        result = self.session.post(self.cpc.uri + '/adapters', body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
         props = properties.copy()
@@ -222,8 +220,7 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        adapter_uri = self.get_property('object-uri')
-        self.manager.session.delete(adapter_uri)
+        self.manager.session.delete(self.uri)
 
     def update_properties(self, properties):
         """
@@ -244,5 +241,4 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        adapter_uri = self.get_property('object-uri')
-        self.manager.session.post(adapter_uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)

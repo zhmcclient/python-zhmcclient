@@ -114,18 +114,18 @@ def hba_create(cmd_ctx, cpc, partition, **options):
 @click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.argument('HBA', type=str, metavar='HBA')
 @click.option('--name', type=str, required=False,
-              help='The new name of the HBA. '
-              'Default: No change.')
+              help='The new name of the HBA.')
 @click.option('--description', type=str, required=False,
-              help='The new description of the HBA. '
-              'Default: No change.')
+              help='The new description of the HBA.')
 @click.option('--device-number', type=str, required=False,
-              help='The new device number to be used for the HBA. '
-              'Default: No change.')
+              help='The new device number to be used for the HBA.')
 @click.pass_obj
 def hba_update(cmd_ctx, cpc, partition, hba, **options):
     """
     Update the properties of an HBA.
+
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified right after the
@@ -156,24 +156,29 @@ def hba_delete(cmd_ctx, cpc, partition, hba):
 
 
 def cmd_hba_list(cmd_ctx, cpc_name, partition_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     partition = find_partition(client, cpc_name, partition_name)
+
     try:
         hbas = partition.hbas.list()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     print_resources(hbas, cmd_ctx.output_format)
 
 
 def cmd_hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     hba = find_hba(client, cpc_name, partition_name, hba_name)
+
     try:
         hba.pull_full_properties()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
-    skip_list = ()
-    print_properties(hba.properties, cmd_ctx.output_format, skip_list)
+
+    print_properties(hba.properties, cmd_ctx.output_format)
 
 
 def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
@@ -238,10 +243,13 @@ def cmd_hba_update(cmd_ctx, cpc_name, partition_name, hba_name, options):
 
 
 def cmd_hba_delete(cmd_ctx, cpc_name, partition_name, hba_name):
+
     client = zhmcclient.Client(cmd_ctx.session)
     hba = find_hba(client, cpc_name, partition_name, hba_name)
+
     try:
         hba.delete()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
     click.echo('HBA %s has been deleted.' % hba_name)

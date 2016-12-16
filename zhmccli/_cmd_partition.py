@@ -28,8 +28,8 @@ def find_partition(client, cpc_name, partition_name):
     Find a partition by name and return its resource object.
     """
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
+    # The CPC must be in DPM mode. We don't check that because it would
+    # cause a GET to the CPC resource that we otherwise don't need.
     try:
         partition = cpc.partitions.find(name=partition_name)
     except zhmcclient.NotFound:
@@ -163,67 +163,53 @@ def partition_create(cmd_ctx, cpc, **options):
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.option('--name', type=str, required=False,
-              help='The new name of the partition. '
-              'Default: No change.')
+              help='The new name of the partition.')
 @click.option('--description', type=str, required=False,
-              help='The new description of the partition. '
-              'Default: No change.')
+              help='The new description of the partition.')
 @click.option('--cp-processors', type=int, required=False,
-              help='The new number of general purpose (CP) processors. '
-              'Default: No change.')
+              help='The new number of general purpose (CP) processors.')
 @click.option('--ifl-processors', type=int, required=False,
-              help='The new number of IFL processors. '
-              'Default: No change.')
+              help='The new number of IFL processors.')
 @click.option('--processor-mode', type=click.Choice(['dedicated', 'shared']),
               required=False,
-              help='The new sharing mode for processors. '
-              'Default: No change.')
+              help='The new sharing mode for processors.')
 @click.option('--initial-memory', type=int, required=False,
               help='The new initial amount of memory (in MiB) when the '
-              'partition is started. '
-              'Default: No change.')
+              'partition is started.')
 @click.option('--maximum-memory', type=int, required=False,
               help='The new maximum amount of memory (in MiB) while the '
-              'partition is running. '
-              'Default: No change.')
+              'partition is running.')
 @click.option('--boot-storage-hba', type=str, required=False,
-              help='Boot from an FCP LUN: The name of the HBA to be used. '
-              'Default: No change.')
+              help='Boot from an FCP LUN: The name of the HBA to be used.')
 @click.option('--boot-storage-lun', type=str, required=False,
-              help='Boot from an FCP LUN: The LUN to boot from. '
-              'Default: No change.')
+              help='Boot from an FCP LUN: The LUN to boot from.')
 @click.option('--boot-storage-wwpn', type=str, required=False,
               help='Boot from an FCP LUN: The WWPN of the storage '
-              'controller exposing the LUN. '
-              'Default: No change.')
+              'controller exposing the LUN.')
 @click.option('--boot-network-nic', type=str, required=False,
-              help='Boot from a PXE server: The name of the NIC to be used. '
-              'Default: No change.')
+              help='Boot from a PXE server: The name of the NIC to be used.')
 @click.option('--boot-ftp-host', type=str, required=False,
               help='Boot from an FTP server: The hostname or IP address of '
-              'the FTP server. '
-              'Default: No change.')
+              'the FTP server.')
 @click.option('--boot-ftp-username', type=str, required=False,
-              help='Boot from an FTP server: The user name on the FTP server. '
-              'Default: No change.')
+              help='Boot from an FTP server: The user name on the FTP server.')
 @click.option('--boot-ftp-password', type=str, required=False,
-              help='Boot from an FTP server: The password on the FTP server. '
-              'Default: No change.')
+              help='Boot from an FTP server: The password on the FTP server.')
 @click.option('--boot-ftp-insfile', type=str, required=False,
               help='Boot from an FTP server: The path to the INS-file on the '
-              'FTP server. '
-              'Default: No change.')
+              'FTP server.')
 @click.option('--boot-media-file', type=str, required=False,
               help='Boot from removable media on the HMC: The path to the '
-              'image file on the HMC. '
-              'Default: No change.')
+              'image file on the HMC.')
 @click.option('--boot-iso', type=str, required=False,
-              help='Boot from an ISO image mounted to this partition. '
-              'Default: No change.')
+              help='Boot from an ISO image mounted to this partition.')
 @click.pass_obj
 def partition_update(cmd_ctx, cpc, partition, **options):
     """
     Update the properties of a partition.
+
+    Only the properties will be changed for which a corresponding option is
+    specified, so the default for all options is not to change properties.
 
     In addition to the command-specific options shown in this help text, the
     general options (see 'zhmc --help') can also be specified right after the
@@ -256,8 +242,6 @@ def cmd_partition_list(cmd_ctx, cpc_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
 
     try:
         partitions = cpc.partitions.list()
@@ -277,8 +261,7 @@ def cmd_partition_show(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
-    skip_list = ()
-    print_properties(partition.properties, cmd_ctx.output_format, skip_list)
+    print_properties(partition.properties, cmd_ctx.output_format)
 
 
 def cmd_partition_start(cmd_ctx, cpc_name, partition_name):
@@ -311,8 +294,6 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     cpc = find_cpc(client, cpc_name)
-    if not cpc.dpm_enabled:
-        raise click.ClickException("CPC %s is not in DPM mode." % cpc_name)
 
     name_map = {
         # The following options are handled in this function:

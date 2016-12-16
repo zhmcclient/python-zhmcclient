@@ -118,8 +118,8 @@ class HbaManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.partition.get_property('object-uri')
-        result = self.session.post(partition_uri + '/hbas', body=properties)
+        result = self.session.post(self.partition.uri + '/hbas',
+                                   body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
         props = properties.copy()

@@ -124,13 +124,12 @@ class ActivationProfileManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        activation_profile = self._profile_type + '-activation-profiles'
-        profiles_res = self.session.get(cpc_uri + '/' + activation_profile)
+        activation_profiles_name = self._profile_type + '-activation-profiles'
+        profiles_res = self.session.get(self.cpc.uri + '/' + \
+                                        activation_profiles_name)
         profile_list = []
         if profiles_res:
-            profile_items = profiles_res[self._profile_type +
-                                         '-activation-profiles']
+            profile_items = profiles_res[activation_profiles_name]
             for profile_props in profile_items:
                 profile = ActivationProfile(self, profile_props['element-uri'],
                                             profile_props)
@@ -190,5 +189,4 @@ class ActivationProfile(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        profile_uri = self.get_property('element-uri')
-        self.manager.session.post(profile_uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)

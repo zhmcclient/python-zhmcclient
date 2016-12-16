@@ -84,8 +84,7 @@ class VirtualSwitchManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        vswitch_res = self.session.get(cpc_uri + '/virtual-switches')
+        vswitch_res = self.session.get(self.cpc.uri + '/virtual-switches')
         vswitch_list = []
         if vswitch_res:
             vswitch_items = vswitch_res['virtual-switches']
@@ -155,9 +154,8 @@ class VirtualSwitch(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        vswitch_uri = self.get_property('object-uri')
         result = self.manager.session.get(
-            vswitch_uri + '/operations/get-connected-vnics')
+            self.uri + '/operations/get-connected-vnics')
         nic_uris = result['connected-vnic-uris']
         nic_list = []
         parts = {}  # Key: Partition ID; Value: Partition object
@@ -194,5 +192,4 @@ class VirtualSwitch(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        vswitch_uri = self.get_property('object-uri')
-        self.manager.session.post(vswitch_uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)
