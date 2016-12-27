@@ -78,7 +78,7 @@ class ActivationProfileManager(BaseManager):
         #     * `reset`: Reset Activation Profiles
         #     * `image`: Image Activation Profiles
         #     * `load`: Load Activation Profiles
-        super(ActivationProfileManager, self).__init__(cpc)
+        super(ActivationProfileManager, self).__init__(ActivationProfile, cpc)
         self._profile_type = profile_type
 
     @property
@@ -124,13 +124,12 @@ class ActivationProfileManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        activation_profile = self._profile_type + '-activation-profiles'
-        profiles_res = self.session.get(cpc_uri + '/' + activation_profile)
+        activation_profiles_name = self._profile_type + '-activation-profiles'
+        profiles_res = self.session.get(self.cpc.uri + '/' +
+                                        activation_profiles_name)
         profile_list = []
         if profiles_res:
-            profile_items = profiles_res[self._profile_type +
-                                         '-activation-profiles']
+            profile_items = profiles_res[activation_profiles_name]
             for profile_props in profile_items:
                 profile = ActivationProfile(self, profile_props['element-uri'],
                                             profile_props)
@@ -152,19 +151,22 @@ class ActivationProfile(BaseResource):
     (in this case, :class:`~zhmcclient.ActivationProfileManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.ActivationProfileManager`):
-        #     Manager for this Activation Profile.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Activation Profile.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Activation Profile.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, ActivationProfileManager)
-        super(ActivationProfile, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, ActivationProfileManager):
+            raise AssertionError("ActivationProfile init: Expected manager "
+                                 "type %s, got %s" %
+                                 (ActivationProfileManager, type(manager)))
+        super(ActivationProfile, self).__init__(manager, uri, properties,
+                                                uri_prop='element-uri',
+                                                name_prop='name')
 
     def update_properties(self, properties):
         """
@@ -187,5 +189,4 @@ class ActivationProfile(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        profile_uri = self.get_property('element-uri')
-        self.manager.session.post(profile_uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)

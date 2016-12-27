@@ -62,7 +62,7 @@ class VirtualSwitchTests(unittest.TestCase):
 
     def test_init(self):
         """Test __init__() on VirtualSwitchManager instance in CPC."""
-        vswitch_mgr = self.cpc.vswitches
+        vswitch_mgr = self.cpc.virtual_switches
         self.assertEqual(vswitch_mgr.cpc, self.cpc)
 
     def test_list_short_ok(self):
@@ -70,7 +70,7 @@ class VirtualSwitchTests(unittest.TestCase):
         Test successful list() with short set of properties
         on VirtualSwitchManager instance in CPC.
         """
-        vswitch_mgr = self.cpc.vswitches
+        vswitch_mgr = self.cpc.virtual_switches
         with requests_mock.mock() as m:
             result = {
                 'virtual-switches': [
@@ -107,7 +107,7 @@ class VirtualSwitchTests(unittest.TestCase):
         Test successful list() with full set of properties on
         VirtualSwitchManager instance in CPC.
         """
-        vswitch_mgr = self.cpc.vswitches
+        vswitch_mgr = self.cpc.virtual_switches
         with requests_mock.mock() as m:
             result = {
                 'virtual-switches': [
@@ -163,7 +163,7 @@ class VirtualSwitchTests(unittest.TestCase):
         """
         This tests the 'Update VirtualSwitch Properties' operation.
         """
-        vswitch_mgr = self.cpc.vswitches
+        vswitch_mgr = self.cpc.virtual_switches
         with requests_mock.mock() as m:
             result = {
                 'virtual-switches': [
@@ -193,7 +193,7 @@ class VirtualSwitchTests(unittest.TestCase):
         """
         This tests the `get_connected_nics()` method.
         """
-        vswitch_mgr = self.cpc.vswitches
+        vswitch_mgr = self.cpc.virtual_switches
         with requests_mock.mock() as m:
             result = {
                 'virtual-switches': [

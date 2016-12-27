@@ -52,7 +52,7 @@ class LparManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(LparManager, self).__init__(cpc)
+        super(LparManager, self).__init__(Lpar, cpc)
 
     @property
     def cpc(self):
@@ -85,8 +85,7 @@ class LparManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        lpars_res = self.session.get(cpc_uri + '/logical-partitions')
+        lpars_res = self.session.get(self.cpc.uri + '/logical-partitions')
         lpar_list = []
         if lpars_res:
             lpar_items = lpars_res['logical-partitions']
@@ -110,19 +109,22 @@ class Lpar(BaseResource):
     (in this case, :class:`~zhmcclient.LparManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.LparManager`):
-        #     Manager object for this LPAR.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this LPAR.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this LPAR.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, LparManager)
-        super(Lpar, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, LparManager):
+            raise AssertionError("Lpar init: Expected manager type %s, "
+                                 "got %s" %
+                                 (LparManager, type(manager)))
+        super(Lpar, self).__init__(manager, uri, properties,
+                                   uri_prop='object-uri',
+                                   name_prop='name')
 
     @_log_call
     def activate(self, wait_for_completion=True):
@@ -162,10 +164,9 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        lpar_uri = self.get_property('object-uri')
         body = {}
         result = self.manager.session.post(
-            lpar_uri + '/operations/activate', body,
+            self.uri + '/operations/activate', body,
             wait_for_completion=wait_for_completion)
         return result
 
@@ -207,10 +208,9 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        lpar_uri = self.get_property('object-uri')
         body = {'force': True}
         result = self.manager.session.post(
-            lpar_uri + '/operations/deactivate', body,
+            self.uri + '/operations/deactivate', body,
             wait_for_completion=wait_for_completion)
         return result
 
@@ -254,9 +254,8 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        lpar_uri = self.get_property('object-uri')
         body = {'load-address': load_address}
         result = self.manager.session.post(
-            lpar_uri + '/operations/load', body,
+            self.uri + '/operations/load', body,
             wait_for_completion=wait_for_completion)
         return result

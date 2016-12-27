@@ -52,7 +52,7 @@ class VirtualSwitchManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(VirtualSwitchManager, self).__init__(cpc)
+        super(VirtualSwitchManager, self).__init__(VirtualSwitch, cpc)
 
     @property
     def cpc(self):
@@ -84,8 +84,7 @@ class VirtualSwitchManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        vswitch_res = self.session.get(cpc_uri + '/virtual-switches')
+        vswitch_res = self.session.get(self.cpc.uri + '/virtual-switches')
         vswitch_list = []
         if vswitch_res:
             vswitch_items = vswitch_res['virtual-switches']
@@ -113,19 +112,22 @@ class VirtualSwitch(BaseResource):
     (in this case, :class:`~zhmcclient.VirtualSwitchManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.VirtualSwitchManager`):
-        #     Manager object for this Virtual Switch.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Virtual Switch.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Virtual Switch.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, VirtualSwitchManager)
-        super(VirtualSwitch, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, VirtualSwitchManager):
+            raise AssertionError("VirtualSwitch init: Expected manager "
+                                 "type %s, got %s" %
+                                 (VirtualSwitchManager, type(manager)))
+        super(VirtualSwitch, self).__init__(manager, uri, properties,
+                                            uri_prop='object-uri',
+                                            name_prop='name')
 
     def get_connected_nics(self):
         """
@@ -152,9 +154,8 @@ class VirtualSwitch(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        vswitch_uri = self.get_property('object-uri')
         result = self.manager.session.get(
-            vswitch_uri + '/operations/get-connected-vnics')
+            self.uri + '/operations/get-connected-vnics')
         nic_uris = result['connected-vnic-uris']
         nic_list = []
         parts = {}  # Key: Partition ID; Value: Partition object
@@ -191,5 +192,4 @@ class VirtualSwitch(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        vswitch_uri = self.get_property('object-uri')
-        self.manager.session.post(vswitch_uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)

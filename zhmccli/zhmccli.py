@@ -18,7 +18,7 @@ import requests.packages.urllib3
 import click
 from click_repl import register_repl, repl
 
-from ._helper import CmdContext
+from ._helper import CmdContext, GENERAL_OPTIONS_METAVAR
 
 
 requests.packages.urllib3.disable_warnings()
@@ -28,7 +28,8 @@ DEFAULT_OUTPUT_FORMAT = 'table'
 DEFAULT_TIMESTATS = False
 
 
-@click.group(invoke_without_command=True)
+@click.group(invoke_without_command=True,
+             options_metavar=GENERAL_OPTIONS_METAVAR)
 @click.option('-h', '--host', type=str, envvar='ZHMC_HOST',
               help="Hostname or IP address of the HMC "
                    "(Default: ZHMC_HOST environment variable).")

@@ -236,16 +236,16 @@ class HbaTests(unittest.TestCase):
         """
         hba_mgr = self.partition.hbas
         hba_uri = '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1'
-        hba = Hba(hba_mgr, uri=hba_uri, properties={})
+        hba = Hba(hba_mgr, hba_uri)
 
         adapter_mgr = self.cpc.adapters
         adapter_uri = '/api/adapters/fake-adapter-id-1'
-        adapter = Adapter(adapter_mgr, uri=adapter_uri, properties={})
+        adapter = Adapter(adapter_mgr, adapter_uri)
 
         port_mgr = adapter.ports
         port2_uri = '/api/adapters/fake-adapter-id-2/'\
                     'storage-ports/fake-port-id-2'
-        port2 = Port(port_mgr, uri=port2_uri, properties={})
+        port2 = Port(port_mgr, port2_uri)
 
         with requests_mock.mock() as m:
             # TODO: Add the request body to the mock call:

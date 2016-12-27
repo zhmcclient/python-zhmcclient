@@ -49,7 +49,7 @@ class HbaManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(HbaManager, self).__init__(partition)
+        super(HbaManager, self).__init__(Hba, partition)
 
     @property
     def partition(self):
@@ -81,11 +81,11 @@ class HbaManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        hbas_res = self.partition.get_property('hba-uris')
+        hba_uris = self.partition.get_property('hba-uris')
         hba_list = []
-        if hbas_res:
-            for hba_uri in hbas_res:
-                hba = Hba(self, hba_uri, {'element-uri': hba_uri})
+        if hba_uris:
+            for uri in hba_uris:
+                hba = Hba(self, uri)
                 if full_properties:
                     hba.pull_full_properties()
                 hba_list.append(hba)
@@ -118,8 +118,8 @@ class HbaManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.partition.get_property('object-uri')
-        result = self.session.post(partition_uri + '/hbas', body=properties)
+        result = self.session.post(self.partition.uri + '/hbas',
+                                   body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
         props = properties.copy()
@@ -143,19 +143,22 @@ class Hba(BaseResource):
     (in this case, :class:`~zhmcclient.HbaManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
         # Parameters:
         #   manager (:class:`~zhmcclient.HbaManager`):
-        #     Manager for this HBA.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this HBA.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this HBA.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, HbaManager)
-        super(Hba, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, HbaManager):
+            raise AssertionError("Hba init: Expected manager type %s, got %s" %
+                                 (HbaManager, type(manager)))
+        super(Hba, self).__init__(manager, uri, properties,
+                                  uri_prop='element-uri',
+                                  name_prop='name')
 
     def delete(self):
         """

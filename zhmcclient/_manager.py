@@ -41,9 +41,12 @@ class BaseManager(object):
     methods that have a common implementation for the derived manager classes.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, resource_class, parent=None):
         """
         Parameters:
+
+          resource_class (class):
+            Python class for the resources of this manager.
 
           parent (subclass of :class:`~zhmcclient.BaseResource`):
             Parent resource defining the scope for this manager.
@@ -51,9 +54,35 @@ class BaseManager(object):
             `None`, if the manager has no parent, i.e. when it manages
             top-level resources.
         """
+        self._resource_class = resource_class
         self._parent = parent
+        self._uris = {}
+        # Note: Managers of top-level resources must update the following
+        # instance variables in their init:
         self._session = parent.manager.session if parent else None
-        # Note: Managers of top-level resources must set session in their init.
+
+    def _get_uri(self, name):
+        """
+        Look up a resource of this manager by name, using and possibly
+        refreshing the cached name-to-URI mapping.
+        """
+        try:
+            return self._uris[name]
+        except KeyError:
+            res_list = self.list()
+            for res in res_list:
+                self._uris[res.name] = res.uri
+            try:
+                return self._uris[name]
+            except KeyError:
+                raise NotFound
+
+    @property
+    def resource_class(self):
+        """
+        The Python class of the parent resource of this manager.
+        """
+        return self._resource_class
 
     @property
     def session(self):
@@ -61,7 +90,10 @@ class BaseManager(object):
         :class:`~zhmcclient.Session`:
           Session with the HMC.
         """
-        assert self._session is not None
+        if self._session is None:
+            raise AssertionError("%s.session: No session set (in top-level "
+                                 "resource manager class?)" %
+                                 self.__class__.__name__)
         return self._session
 
     @property
@@ -105,6 +137,10 @@ class BaseManager(object):
         If more than one attribute is specified, all attributes need to match
         for the resource to be found.
 
+        If only the 'name' property is specified, an optimized lookup is
+        performed that uses a name-to-URI mapping cached in this manager
+        object.
+
         Keyword Arguments:
 
           : Each keyword argument is used to filter the resources managed by
@@ -140,6 +176,10 @@ class BaseManager(object):
         If more than one property is specified, all properties need to match
         for the resources to be found.
 
+        If only the 'name' property is specified, an optimized lookup is
+        performed that uses a name-to-URI mapping cached in this manager
+        object.
+
         Keyword Arguments:
 
           : Each keyword argument is used to filter the resources managed by
@@ -156,14 +196,53 @@ class BaseManager(object):
 
           Exceptions raised by :meth:`~zhmcclient.BaseManager.list`.
         """
-        searches = kwargs.items()
         found = list()
-        listing = self.list()
-        for obj in listing:
-            try:
-                if all(obj.get_property(propname) == value
-                       for (propname, value) in searches):
-                    found.append(obj)
-            except AttributeError:
-                continue
+        if list(kwargs.keys()) == ['name']:
+            obj = self.find_by_name(kwargs['name'])
+            found.append(obj)
+        else:
+            searches = kwargs.items()
+            listing = self.list()
+            for obj in listing:
+                try:
+                    if all(obj.get_property(propname) == value
+                           for (propname, value) in searches):
+                        found.append(obj)
+                except AttributeError:
+                    continue
         return found
+
+    def find_by_name(self, name):
+        """
+        Find a resource by name (i.e. value of its 'name' property) and return
+        its Python resource object (e.g. for a CPC, a
+        :class:`~zhmcclient.Cpc` object is returned).
+
+        This method performs an optimized lookup that uses a name-to-URI
+        mapping cached in this manager object.
+
+        Parameters:
+
+          name (string):
+            Name of the resource.
+
+        Returns:
+
+          Resource object, if found.
+
+        Raises:
+
+          :exc:`~zhmcclient.NotFound`: Resource not found.
+          Exceptions raised by the `list()` method in the derived classes.
+        """
+        uri = self._get_uri(name)
+        obj = self.resource_class(self, uri)
+        return obj
+
+    def flush(self):
+        """
+        Flush the cached name-to-URI mapping.
+
+        This only needs to be done after renaming a resource.
+        """
+        self._uris.clear()

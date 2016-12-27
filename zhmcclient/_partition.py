@@ -59,7 +59,7 @@ class PartitionManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(PartitionManager, self).__init__(cpc)
+        super(PartitionManager, self).__init__(Partition, cpc)
 
     @property
     def cpc(self):
@@ -91,8 +91,7 @@ class PartitionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        partitions_res = self.session.get(cpc_uri + '/partitions')
+        partitions_res = self.session.get(self.cpc.uri + '/partitions')
         partition_list = []
         if partitions_res:
             partition_items = partitions_res['partitions']
@@ -128,8 +127,8 @@ class PartitionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        result = self.session.post(cpc_uri + '/partitions', body=properties)
+        result = self.session.post(self.cpc.uri + '/partitions',
+                                   body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
         props = properties.copy()
@@ -163,10 +162,12 @@ class PartitionManager(BaseManager):
             Partition.
         """
         part_uri = "/api/partitions/" + part_id
-        return Partition(self, part_uri, {'object-uri': part_uri,
-                                          'object-id': part_id,
-                                          'parent': self.parent.uri,
-                                          'class': 'partition'})
+        part_props = {
+            'object-id': part_id,
+            'parent': self.parent.uri,
+            'class': 'partition',
+        }
+        return Partition(self, part_uri, part_props)
 
 
 class Partition(BaseResource):
@@ -181,19 +182,23 @@ class Partition(BaseResource):
     (in this case, :class:`~zhmcclient.PartitionManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.PartitionManager`):
-        #     Manager for this Partition.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Partition.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Partition.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, PartitionManager)
-        super(Partition, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, PartitionManager):
+            raise AssertionError("Partition init: Expected manager type %s, "
+                                 "got %s" %
+                                 (PartitionManager, type(manager)))
+        super(Partition, self).__init__(manager, uri, properties,
+                                        uri_prop='object-uri',
+                                        name_prop='name')
+        # The manager objects for child resources (with lazy initialization):
         self._nics = None
         self._hbas = None
         self._virtual_functions = None
@@ -274,9 +279,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            partition_uri + '/operations/start',
+            self.uri + '/operations/start',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -317,9 +321,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            partition_uri + '/operations/stop',
+            self.uri + '/operations/stop',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -334,8 +337,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
-        self.manager.session.delete(partition_uri)
+        self.manager.session.delete(self.uri)
 
     def update_properties(self, properties):
         """
@@ -356,8 +358,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
-        self.manager.session.post(partition_uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)
 
     def dump_partition(self, parameters, wait_for_completion=True):
         """
@@ -402,9 +403,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            partition_uri + '/operations/scsi-dump',
+            self.uri + '/operations/scsi-dump',
             wait_for_completion=wait_for_completion, body=parameters)
         return result
 
@@ -445,9 +445,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            partition_uri + '/operations/psw-restart',
+            self.uri + '/operations/psw-restart',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -475,9 +474,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
         self.manager.session.post(
-            partition_uri + '/operations/mount-iso-image',
+            self.uri + '/operations/mount-iso-image',
             wait_for_completion=True, body=properties)
 
     def unmount_iso_image(self):
@@ -492,6 +490,5 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.get_property('object-uri')
         self.manager.session.post(
-            partition_uri + '/operations/unmount-iso-image')
+            self.uri + '/operations/unmount-iso-image')

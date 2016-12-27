@@ -87,7 +87,7 @@ class AdapterManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(AdapterManager, self).__init__(cpc)
+        super(AdapterManager, self).__init__(Adapter, cpc)
 
     @property
     def cpc(self):
@@ -119,8 +119,7 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        adapters_res = self.session.get(cpc_uri + '/adapters')
+        adapters_res = self.session.get(self.cpc.uri + '/adapters')
         adapter_list = []
         if adapters_res:
             adapter_items = adapters_res['adapters']
@@ -156,8 +155,7 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.cpc.get_property('object-uri')
-        result = self.session.post(cpc_uri + '/adapters', body=properties)
+        result = self.session.post(self.cpc.uri + '/adapters', body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
         props = properties.copy()
@@ -180,19 +178,23 @@ class Adapter(BaseResource):
     (in this case, :class:`~zhmcclient.AdapterManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.AdapterManager`):
-        #     Manager for this Adapter.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Adapter.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Adapter.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, AdapterManager)
-        super(Adapter, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, AdapterManager):
+            raise AssertionError("Adapter init: Expected manager type %s, "
+                                 "got %s" %
+                                 (AdapterManager, type(manager)))
+        super(Adapter, self).__init__(manager, uri, properties,
+                                      uri_prop='object-uri',
+                                      name_prop='name')
+        # The manager objects for child resources (with lazy initialization):
         self._ports = None
 
     @property
@@ -219,8 +221,7 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        adapter_uri = self.get_property('object-uri')
-        self.manager.session.delete(adapter_uri)
+        self.manager.session.delete(self.uri)
 
     def update_properties(self, properties):
         """
@@ -241,5 +242,4 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        adapter_uri = self.get_property('object-uri')
-        self.manager.session.post(adapter_uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)

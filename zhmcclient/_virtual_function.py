@@ -49,7 +49,8 @@ class VirtualFunctionManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(VirtualFunctionManager, self).__init__(partition)
+        super(VirtualFunctionManager, self).__init__(VirtualFunction,
+                                                     partition)
 
     @property
     def partition(self):
@@ -81,11 +82,11 @@ class VirtualFunctionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        vfs_res = self.partition.get_property('virtual-function-uris')
+        vfs_uris = self.partition.get_property('virtual-function-uris')
         vf_list = []
-        if vfs_res:
-            for vf_uri in vfs_res:
-                vf = VirtualFunction(self, vf_uri, {'element-uri': vf_uri})
+        if vfs_uris:
+            for uri in vfs_uris:
+                vf = VirtualFunction(self, uri)
                 if full_properties:
                     vf.pull_full_properties()
                 vf_list.append(vf)
@@ -115,8 +116,7 @@ class VirtualFunctionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.partition.get_property('object-uri')
-        result = self.session.post(partition_uri + '/virtual-functions',
+        result = self.session.post(self.partition.uri + '/virtual-functions',
                                    body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
@@ -141,19 +141,22 @@ class VirtualFunction(BaseResource):
     (in this case, :class:`~zhmcclient.VirtualFunctionManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.VirtualFunctionManager`):
-        #     Manager object for this Virtual Function.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this Virtual Function.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this Virtual Function.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, VirtualFunctionManager)
-        super(VirtualFunction, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, VirtualFunctionManager):
+            raise AssertionError("VirtualFunction init: Expected manager "
+                                 "type %s, got %s" %
+                                 (VirtualFunctionManager, type(manager)))
+        super(VirtualFunction, self).__init__(manager, uri, properties,
+                                              uri_prop='element-uri',
+                                              name_prop='name')
 
     def delete(self):
         """

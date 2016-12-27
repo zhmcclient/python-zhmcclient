@@ -50,7 +50,7 @@ class NicManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(NicManager, self).__init__(partition)
+        super(NicManager, self).__init__(Nic, partition)
 
     @property
     def partition(self):
@@ -82,11 +82,11 @@ class NicManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        nics_res = self.partition.get_property('nic-uris')
+        nic_uris = self.partition.get_property('nic-uris')
         nic_list = []
-        if nics_res:
-            for nic_uri in nics_res:
-                nic = Nic(self, nic_uri, {'element-uri': nic_uri})
+        if nic_uris:
+            for uri in nic_uris:
+                nic = Nic(self, uri)
                 if full_properties:
                     nic.pull_full_properties()
                 nic_list.append(nic)
@@ -116,8 +116,8 @@ class NicManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partition_uri = self.partition.get_property('object-uri')
-        result = self.session.post(partition_uri + '/nics', body=properties)
+        result = self.session.post(self.partition.uri + '/nics',
+                                   body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
         props = properties.copy()
@@ -151,10 +151,12 @@ class NicManager(BaseManager):
         """
         part_uri = self.parent.uri
         nic_uri = part_uri + "/nics/" + nic_id
-        return Nic(self, nic_uri, {'element-uri': nic_uri,
-                                   'element-id': nic_id,
-                                   'parent': part_uri,
-                                   'class': 'nic'})
+        nic_props = {
+            'element-id': nic_id,
+            'parent': part_uri,
+            'class': 'nic',
+        }
+        return Nic(self, nic_uri, nic_props)
 
 
 class Nic(BaseResource):
@@ -173,19 +175,21 @@ class Nic(BaseResource):
     (in this case, :class:`~zhmcclient.NicManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.NicManager`):
-        #     Manager for this resource.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this resource.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this resource.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, NicManager)
-        super(Nic, self).__init__(manager, uri, properties)
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, NicManager):
+            raise AssertionError("Nic init: Expected manager type %s, got %s" %
+                                 (NicManager, type(manager)))
+        super(Nic, self).__init__(manager, uri, properties,
+                                  uri_prop='element-uri',
+                                  name_prop='name')
 
     def delete(self):
         """

@@ -74,7 +74,7 @@ class CpcManager(BaseManager):
         # Parameters:
         #   client (:class:`~zhmcclient.Client`):
         #      Client object for the HMC to be used.
-        super(CpcManager, self).__init__()
+        super(CpcManager, self).__init__(Cpc)
         self._session = client.session
 
     @_log_call
@@ -124,24 +124,26 @@ class Cpc(BaseResource):
     (in this case, :class:`~zhmcclient.CpcManager`).
     """
 
-    def __init__(self, manager, uri, properties):
+    def __init__(self, manager, uri, properties=None):
         # This function should not go into the docs.
-        # Parameters:
         #   manager (:class:`~zhmcclient.CpcManager`):
-        #     Manager for this CPC.
+        #     Manager object for this resource object.
         #   uri (string):
-        #     Canonical URI path of this CPC.
+        #     Canonical URI path of the resource.
         #   properties (dict):
-        #     Properties to be set for this CPC.
-        #     See initialization of :class:`~zhmcclient.BaseResource` for
-        #     details.
-        assert isinstance(manager, CpcManager)
-        super(Cpc, self).__init__(manager, uri, properties)
-        # We do here some lazy loading.
+        #     Properties to be set for this resource object. May be `None` or
+        #     empty.
+        if not isinstance(manager, CpcManager):
+            raise AssertionError("Cpc init: Expected manager type %s, got %s" %
+                                 (CpcManager, type(manager)))
+        super(Cpc, self).__init__(manager, uri, properties,
+                                  uri_prop='object-uri',
+                                  name_prop='name')
+        # The manager objects for child resources (with lazy initialization):
         self._lpars = None
         self._partitions = None
         self._adapters = None
-        self._vswitches = None
+        self._virtual_switches = None
         self._reset_activation_profiles = None
         self._image_activation_profiles = None
         self._load_activation_profiles = None
@@ -184,15 +186,23 @@ class Cpc(BaseResource):
 
     @property
     @_log_call
-    def vswitches(self):
+    def virtual_switches(self):
         """
         :class:`~zhmcclient.VirtualSwitchManager`: Access to the
         :term:`Virtual Switches <Virtual Switch>` in this CPC.
         """
         # We do here some lazy loading.
-        if not self._vswitches:
-            self._vswitches = VirtualSwitchManager(self)
-        return self._vswitches
+        if not self._virtual_switches:
+            self._virtual_switches = VirtualSwitchManager(self)
+        return self._virtual_switches
+
+    @property
+    def vswitches(self):
+        """
+        Deprecated: Use :attr:`~zhmcclient.Cpc.virtual_switches` instead.
+        """
+        # TODO: Issue a deprecation warning
+        return self.virtual_switches
 
     @property
     @_log_call
@@ -311,9 +321,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            cpc_uri + '/operations/start',
+            self.uri + '/operations/start',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -352,9 +361,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         result = self.manager.session.post(
-            cpc_uri + '/operations/stop',
+            self.uri + '/operations/stop',
             wait_for_completion=wait_for_completion)
         return result
 
@@ -403,10 +411,9 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            cpc_uri + '/operations/import-profiles', body,
+            self.uri + '/operations/import-profiles', body,
             wait_for_completion=wait_for_completion)
         return result
 
@@ -454,10 +461,9 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpc_uri = self.get_property('object-uri')
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            cpc_uri + '/operations/export-profiles', body,
+            self.uri + '/operations/export-profiles', body,
             wait_for_completion=wait_for_completion)
         return result
 

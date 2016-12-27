@@ -30,8 +30,12 @@ class MyResource(BaseResource):
     A derived resource for testing the (abstract) BaseResource class.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(MyResource, self).__init__(*args, **kwargs)
+    # This init method is not part of the external API, so this testcase may
+    # need to be updated if the API changes.
+    def __init__(self, manager, uri, properties):
+        super(MyResource, self).__init__(manager, uri, properties,
+                                         uri_prop='fake-uri-prop',
+                                         name_prop='fake-name-prop')
 
 
 class MyManager(BaseManager):
@@ -42,8 +46,10 @@ class MyManager(BaseManager):
     of test in this unit test module.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(MyManager, self).__init__(*args, **kwargs)
+    # This init method is not part of the external API, so this testcase may
+    # need to be updated if the API changes.
+    def __init__(self, parent=None):
+        super(MyManager, self).__init__(MyResource, parent)
 
     def list(self, full_properties=False):
         pass  # to avoid warning about unimplemented abstract method.
@@ -57,6 +63,8 @@ class ResourceTestCase(unittest.TestCase):
     def setUp(self):
         self.mgr = MyManager()
         self.uri = "/api/resource/deadbeef-beef-beef-beef-deadbeefbeef"
+        self.uri_prop = 'fake-uri-prop'
+        self.name_prop = 'fake-name-prop'
 
     def assert_properties(self, resource, exp_props):
         """
@@ -78,12 +86,15 @@ class InitTests(ResourceTestCase):
     def test_empty(self):
         """Test with an empty set of input properties."""
         init_props = {}
+        res_props = {
+            self.uri_prop: self.uri,
+        }
 
         res = MyResource(self.mgr, self.uri, init_props)
 
         self.assertTrue(res.manager is self.mgr)
         self.assertEqual(res.uri, self.uri)
-        self.assert_properties(res, init_props)
+        self.assert_properties(res, res_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
         self.assertTrue(repr(res).startswith(res.__class__.__name__ + '('))
@@ -94,12 +105,17 @@ class InitTests(ResourceTestCase):
             'prop1': 'abc',
             'prop2': 100042
         }
+        res_props = {
+            self.uri_prop: self.uri,
+            'prop1': 'abc',
+            'prop2': 100042
+        }
 
         res = MyResource(self.mgr, self.uri, init_props)
 
         self.assertTrue(res.manager is self.mgr)
         self.assertEqual(res.uri, self.uri)
-        self.assert_properties(res, init_props)
+        self.assert_properties(res, res_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
 
@@ -107,14 +123,19 @@ class InitTests(ResourceTestCase):
         """Test case sensitivity for the input properties."""
         init_props = {
             'prop1': 'abc',
-            'Prop1': 100042
+            'Prop1': 100042,
+        }
+        res_props = {
+            self.uri_prop: self.uri,
+            'prop1': 'abc',
+            'Prop1': 100042,
         }
 
         res = MyResource(self.mgr, self.uri, init_props)
 
         self.assertTrue(res.manager is self.mgr)
         self.assertEqual(res.uri, self.uri)
-        self.assert_properties(res, init_props)
+        self.assert_properties(res, res_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
 
@@ -140,10 +161,14 @@ class PropertySetTests(ResourceTestCase):
         init_props = {}
         set_props = {
             'prop1': 'abc',
-            'prop2': 100042
+            'prop2': 100042,
         }
-        res_props = dict(init_props)
-        res_props.update(set_props)
+        res_props = {
+            self.uri_prop: self.uri,
+            'prop1': 'abc',
+            'prop2': 100042,
+        }
+
         res = MyResource(self.mgr, self.uri, init_props)
 
         for key, value in set_props.items():
@@ -158,10 +183,14 @@ class PropertySetTests(ResourceTestCase):
         }
         set_props = {
             'prop1': 'abc',
-            'prop2': 100042
+            'prop2': 100042,
         }
-        res_props = dict(init_props)
-        res_props.update(set_props)
+        res_props = {
+            self.uri_prop: self.uri,
+            'prop1': 'abc',
+            'prop2': 100042,
+        }
+
         res = MyResource(self.mgr, self.uri, init_props)
 
         for key, value in set_props.items():
@@ -177,12 +206,14 @@ class PropertyDelTests(ResourceTestCase):
         """Test deleting a property in a resource object."""
         init_props = {
             'prop1': 'abc',
-            'prop2': 100042
+            'prop2': 100042,
         }
         del_keys = ('prop1',)
         res_props = {
-            'prop2': 100042
+            self.uri_prop: self.uri,
+            'prop2': 100042,
         }
+
         res = MyResource(self.mgr, self.uri, init_props)
 
         for key in del_keys:
@@ -190,14 +221,17 @@ class PropertyDelTests(ResourceTestCase):
 
         self.assert_properties(res, res_props)
 
-    def test_del_all(self):
-        """Test deleting all properties in a resource object."""
+    def test_del_all_input(self):
+        """Test deleting all input properties in a resource object."""
         init_props = {
             'prop1': 'abc',
-            'prop2': 100042
+            'prop2': 100042,
         }
         del_keys = ('prop1', 'prop2')
-        res_props = {}
+        res_props = {
+            self.uri_prop: self.uri,
+        }
+
         res = MyResource(self.mgr, self.uri, init_props)
 
         for key in del_keys:
@@ -209,10 +243,12 @@ class PropertyDelTests(ResourceTestCase):
         """Test deleting an invalid property in a resource object."""
         init_props = {
             'prop1': 'abc',
-            'prop2': 100042
+            'prop2': 100042,
         }
         org_init_props = dict(init_props)
+
         res = MyResource(self.mgr, self.uri, init_props)
+
         invalid_key = 'inv1'
         try:
 
@@ -229,8 +265,9 @@ class PropertyDelTests(ResourceTestCase):
         """Test clearing the properties in a resource object."""
         init_props = {
             'prop1': 'abc',
-            'prop2': 100042
+            'prop2': 100042,
         }
+
         res = MyResource(self.mgr, self.uri, init_props)
 
         res.properties.clear()
