@@ -20,6 +20,26 @@ Change log
 ----------
 
 
+Version 0.9.0
+^^^^^^^^^^^^^
+
+Released: not yet
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known Issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
 Version 0.8.0
 ^^^^^^^^^^^^^
 
@@ -33,17 +53,11 @@ Released: 2016-12-27
 
 **Enhancements:**
 
-* Added support in CLI for remaining cmds; client improvements. 
+* Added support in CLI for remaining cmds; client improvements.
 
 * Added a tool 'tools/cpcdata' for gathering information about all
   CPCs managed by a set of HMCs. The data can optionally be appended
   to a CSV spreadsheet, for regular monitoring.
-
-**Known Issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.7.0
