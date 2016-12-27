@@ -23,7 +23,7 @@ Change log
 Version 0.8.0
 ^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2016-12-27
 
 **Incompatible changes:**
 
@@ -32,6 +32,8 @@ Released: not yet
 **Bug fixes:**
 
 **Enhancements:**
+
+* Added support in CLI for remaining cmds; client improvements. 
 
 * Added a tool 'tools/cpcdata' for gathering information about all
   CPCs managed by a set of HMCs. The data can optionally be appended
