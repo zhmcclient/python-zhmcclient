@@ -33,6 +33,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Added a tool 'tools/cpcdata' for gathering information about all
+  CPCs managed by a set of HMCs. The data can optionally be appended
+  to a CSV spreadsheet, for regular monitoring.
+
 **Known Issues:**
 
 * See `list of open issues`_.
