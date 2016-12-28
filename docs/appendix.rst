@@ -351,18 +351,18 @@ Bibliography
        The Web Services API of the z Systems Hardware Management Console, described in the following books:
 
    HMC API 2.11.1
-       `IBM SC27-2616-01, z Systems Hardware Management Console Web Services API (Version 2.11.1) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/38BA3E47697D87E385257967006AB34E/>`_
+       `IBM SC27-2616, z Systems Hardware Management Console Web Services API (Version 2.11.1) <https://www-01.ibm.com/support/docview.wss?uid=isg238ba3e47697d87e385257967006ab34e>`_
 
    HMC API 2.12.0
-       `IBM SC27-2617-01, z Systems Hardware Management Console Web Services API (Version 2.12.0) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/9B97F40675618BA085257A6A00777BEA/>`_
+       `IBM SC27-2617, z Systems Hardware Management Console Web Services API (Version 2.12.0) <https://www-01.ibm.com/support/docview.wss?uid=isg29b97f40675618ba085257a6a00777bea>`_
 
    HMC API 2.12.1
-       `IBM SC27-2626-00a, z Systems Hardware Management Console Web Services API (Version 2.12.1) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/3DDB93B38680A72F85257BA600515AA7/>`_
+       `IBM SC27-2626, z Systems Hardware Management Console Web Services API (Version 2.12.1) <https://www-01.ibm.com/support/docview.wss?uid=isg23ddb93b38680a72f85257ba600515aa7>`_
 
    HMC API 2.13.0
-       `IBM SC27-2627-00a, z Systems Hardware Management Console Web Services API (Version 2.13.0) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/7FA57A5A8A5297B185257DE7004E7144/>`_
+       `IBM SC27-2627, z Systems Hardware Management Console Web Services API (Version 2.13.0) <https://www-01.ibm.com/support/docview.wss?uid=isg27fa57a5a8a5297b185257de7004e7144>`_
 
    HMC API 2.13.1
-       `IBM SC27-2634-01, z Systems Hardware Management Console Web Services API (Version 2.13.1) <https://www-304.ibm.com/servers/resourcelink/lib03010.nsf/0/CB468B15654CA89B85257F7200746C16/>`_
+       `IBM SC27-2634, z Systems Hardware Management Console Web Services API (Version 2.13.1) <https://www-01.ibm.com/support/docview.wss?uid=isg2cb468b15654ca89b85257f7200746c16>`_
 
 .. include:: changes.rst

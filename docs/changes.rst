@@ -33,6 +33,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Changed links to HMC API books in Bibliography to no longer require IBM ID
+  (issue #131).
+
 **Known Issues:**
 
 * See `list of open issues`_.
