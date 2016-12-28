@@ -66,6 +66,9 @@ examples:
       partname: PART8
       #loglevel: debug
       #logmodule: zhmcclient._session
+   metrics:
+      hmc: "9.152.150.65"
+      #loglevel: debug
       #timestats: yes
    get_inventory:
       hmc: "192.168.111.5"

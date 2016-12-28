@@ -1300,6 +1300,12 @@ def _result_object(result):
             'request-method': result.request.method,
         }
         return result_obj
+    elif content_type.startswith('application/vnd.ibm-z-zmanager-metrics'):
+        try:
+            return result.content
+        except ValueError as exc:
+            raise ParseError("Parse error in returned RAW: {}".
+                             format(exc.args[0]))
     else:
         raise ParseError(
             "Unknown content type in HTTP response: {}. "
