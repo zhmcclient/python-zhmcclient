@@ -36,6 +36,8 @@ Released: not yet
 * Changed links to HMC API books in Bibliography to no longer require IBM ID
   (issue #131).
 
+* Improved documentation of find(), findall(), and find_by_name() methods.
+
 **Known Issues:**
 
 * See `list of open issues`_.

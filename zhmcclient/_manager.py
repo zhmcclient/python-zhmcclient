@@ -109,8 +109,8 @@ class BaseManager(object):
 
     def list(self, full_properties=False):
         """
-        Interface for the list function that is used by the :meth:`find` and
-        :meth:`findall` methods.
+        Interface for a method that lists resources, and that needs to be
+        implemented by resource manager classes derived from this base class.
 
         Parameters:
 
@@ -125,29 +125,34 @@ class BaseManager(object):
 
         Raises:
 
-          Exceptions raised by the `list()` method in the derived classes.
+          See derived resource manager classes in :ref:`Resources`.
         """
         raise NotImplementedError
 
     def find(self, **kwargs):
         """
         Find exactly one resource that is managed by this manager, by the value
-        of zero or more resource attributes.
+        of zero or more resource properties.
 
-        If more than one attribute is specified, all attributes need to match
-        for the resource to be found.
+        If more than one resource property is specified, all of them need to
+        match for the resource to be found.
 
-        If only the 'name' property is specified, an optimized lookup is
-        performed that uses a name-to-URI mapping cached in this manager
+        If only the 'name' resource property is specified, an optimized lookup
+        is performed that uses a name-to-URI mapping cached in this manager
         object.
 
         Keyword Arguments:
 
           : Each keyword argument is used to filter the resources managed by
             this manager, whereby the name of the keyword argument is used to
-            look up the same-named resource attribute, and the value of the
-            keyword argument is used to compare the resource's attribute value
+            look up the same-named resource property, and the value of the
+            keyword argument is used to compare the resource property value
             against.
+
+            Note that some resource property names are not valid as Python
+            parameter names (e.g. "adapter-family"). Such resource properties
+            can still be used for this method, but must be specified via a
+            parameter dictionary (see the example for details).
 
         Returns:
 
@@ -158,6 +163,21 @@ class BaseManager(object):
           :exc:`~zhmcclient.NotFound`
           :exc:`~zhmcclient.NoUniqueMatch`
           Exceptions raised by :meth:`~zhmcclient.BaseManager.list`
+
+        Example:
+
+          The following example finds a CPC by its name. Because the 'name'
+          resource property is also a valid Python variable name, there are two
+          ways to specify the parameters to this method:
+
+          * As named parameters::
+
+              cpc = client.cpcs.find(name='CPC001')
+
+          * As a parameter dictionary::
+
+              find_args = {'name': 'CPC0001'}
+              cpc = client.cpcs.find(**find_args)
         """
         matches = self.findall(**kwargs)
         num_matches = len(matches)
@@ -173,11 +193,11 @@ class BaseManager(object):
         Find zero or more resources that are managed by this manager, by the
         value of zero or more resource properties.
 
-        If more than one property is specified, all properties need to match
-        for the resources to be found.
+        If more than one resource property is specified, all of them need to
+        match for the resources to be found.
 
-        If only the 'name' property is specified, an optimized lookup is
-        performed that uses a name-to-URI mapping cached in this manager
+        If only the 'name' resource property is specified, an optimized lookup
+        is performed that uses a name-to-URI mapping cached in this manager
         object.
 
         Keyword Arguments:
@@ -185,8 +205,13 @@ class BaseManager(object):
           : Each keyword argument is used to filter the resources managed by
             this manager, whereby the name of the keyword argument is used to
             look up the same-named resource property, and the value of the
-            keyword argument is used to compare the resource's property value
+            keyword argument is used to compare the resource property value
             against.
+
+            Note that some resource property names are not valid as Python
+            parameter names (e.g. "adapter-family"). Such resource properties
+            can still be used for this method, but must be specified via a
+            parameter dictionary (see the example for details).
 
         Returns:
 
@@ -195,6 +220,16 @@ class BaseManager(object):
         Raises:
 
           Exceptions raised by :meth:`~zhmcclient.BaseManager.list`.
+
+        Example:
+
+          The following example finds adapters of the OSA family in a CPC.
+          Because the resource property for the adapter family is named
+          'adapter-family', it is not suitable as a Python variable name.
+          Therefore, the only way to specify it is via a parameter dictionary::
+
+              find_args = {'adapter-family': 'osa'}
+              osa_adapters = cpc.adapters.findall(**find_args)
         """
         found = list()
         if list(kwargs.keys()) == ['name']:
@@ -214,17 +249,22 @@ class BaseManager(object):
 
     def find_by_name(self, name):
         """
-        Find a resource by name (i.e. value of its 'name' property) and return
-        its Python resource object (e.g. for a CPC, a
+        Find a resource by name (i.e. value of its 'name' resource property)
+        and return its Python resource object (e.g. for a CPC, a
         :class:`~zhmcclient.Cpc` object is returned).
 
         This method performs an optimized lookup that uses a name-to-URI
         mapping cached in this manager object.
 
+        This method is automatically used by the
+        :meth:`~zhmcclient.BaseManager.find` and
+        :meth:`~zhmcclient.BaseManager.findall` methods, so it does not
+        normally need to be used directly by users.
+
         Parameters:
 
           name (string):
-            Name of the resource.
+            Name of the resource (value of its 'name' resource property).
 
         Returns:
 
@@ -234,6 +274,12 @@ class BaseManager(object):
 
           :exc:`~zhmcclient.NotFound`: Resource not found.
           Exceptions raised by the `list()` method in the derived classes.
+
+        Example:
+
+          The following example finds a CPC by its name::
+
+              cpc = client.cpcs.find_by_name('CPC001')
         """
         uri = self._get_uri(name)
         obj = self.resource_class(self, uri)
