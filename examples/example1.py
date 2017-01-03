@@ -89,8 +89,7 @@ if timestats:
 print("Listing CPCs ...")
 cpcs = cl.cpcs.list()
 for cpc in cpcs:
-    print(cpc.properties['name'], cpc.properties['status'],
-          cpc.properties['object-uri'])
+    print(cpc.name, cpc.get_property('status'), cpc.uri)
 
 print("Finding CPC by name=%s ..." % cpcname)
 try:
@@ -98,8 +97,7 @@ try:
 except zhmcclient.NotFound:
     print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
-print(cpc.properties['name'], cpc.properties['status'],
-      cpc.properties['object-uri'])
+print(cpc.name, cpc.get_property('status'), cpc.uri)
 
 print("Checking if DPM is enabled on CPC %s..." % cpcname)
 if cpc.dpm_enabled:
@@ -109,8 +107,7 @@ else:
     print("CPC %s is in classic mode: Listing LPARs ..." % cpcname)
     partitions = cpc.lpars.list()
 for partition in partitions:
-    print(partition.properties['name'], partition.properties['status'],
-          partition.properties['object-uri'])
+    print(partition.name, partition.get_property('status'), partition.uri)
 
 print("Logging off ...")
 session.logoff()

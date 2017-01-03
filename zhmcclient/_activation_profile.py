@@ -132,7 +132,7 @@ class ActivationProfileManager(BaseManager):
             profile_items = profiles_res[activation_profiles_name]
             for profile_props in profile_items:
                 profile = ActivationProfile(self, profile_props['element-uri'],
-                                            profile_props)
+                                            None, profile_props)
                 if full_properties:
                     profile.pull_full_properties()
                 profile_list.append(profile)
@@ -151,12 +151,14 @@ class ActivationProfile(BaseResource):
     (in this case, :class:`~zhmcclient.ActivationProfileManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.ActivationProfileManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
@@ -164,7 +166,7 @@ class ActivationProfile(BaseResource):
             raise AssertionError("ActivationProfile init: Expected manager "
                                  "type %s, got %s" %
                                  (ActivationProfileManager, type(manager)))
-        super(ActivationProfile, self).__init__(manager, uri, properties,
+        super(ActivationProfile, self).__init__(manager, uri, name, properties,
                                                 uri_prop='element-uri',
                                                 name_prop='name')
 

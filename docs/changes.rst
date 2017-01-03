@@ -31,6 +31,13 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a bug where accessing the 'name' property via the `properties`
+  attribute caused `KeyError` to be raised (issue #137). Note that there
+  is now a recommendation to use `get_property()` or the `name` or `uri`
+  attributes for accessing specific properties. The `properties` attribute
+  should only be used for iterating over the currently present resource
+  properties, but not for expecting particular properties.
+
 **Enhancements:**
 
 * Changed links to HMC API books in Bibliography to no longer require IBM ID

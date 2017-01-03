@@ -105,7 +105,7 @@ class CpcManager(BaseManager):
         if cpcs_res:
             cpc_items = cpcs_res['cpcs']
             for cpc_props in cpc_items:
-                cpc = Cpc(self, cpc_props['object-uri'], cpc_props)
+                cpc = Cpc(self, cpc_props['object-uri'], None, cpc_props)
                 if full_properties:
                     cpc.pull_full_properties()
                 cpc_list.append(cpc)
@@ -124,19 +124,21 @@ class Cpc(BaseResource):
     (in this case, :class:`~zhmcclient.CpcManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.CpcManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         if not isinstance(manager, CpcManager):
             raise AssertionError("Cpc init: Expected manager type %s, got %s" %
                                  (CpcManager, type(manager)))
-        super(Cpc, self).__init__(manager, uri, properties,
+        super(Cpc, self).__init__(manager, uri, name, properties,
                                   uri_prop='object-uri',
                                   name_prop='name')
         # The manager objects for child resources (with lazy initialization):

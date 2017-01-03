@@ -124,7 +124,7 @@ class HbaManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return Hba(self, props['element-uri'], props)
+        return Hba(self, props['element-uri'], None, props)
 
 
 class Hba(BaseResource):
@@ -143,20 +143,22 @@ class Hba(BaseResource):
     (in this case, :class:`~zhmcclient.HbaManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         # Parameters:
         #   manager (:class:`~zhmcclient.HbaManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         if not isinstance(manager, HbaManager):
             raise AssertionError("Hba init: Expected manager type %s, got %s" %
                                  (HbaManager, type(manager)))
-        super(Hba, self).__init__(manager, uri, properties,
+        super(Hba, self).__init__(manager, uri, name, properties,
                                   uri_prop='element-uri',
                                   name_prop='name')
 

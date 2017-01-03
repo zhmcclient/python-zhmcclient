@@ -90,7 +90,7 @@ class VirtualSwitchManager(BaseManager):
             vswitch_items = vswitch_res['virtual-switches']
             for vswitch_props in vswitch_items:
                 vswitch = VirtualSwitch(self, vswitch_props['object-uri'],
-                                        vswitch_props)
+                                        None, vswitch_props)
                 if full_properties:
                     vswitch.pull_full_properties()
                 vswitch_list.append(vswitch)
@@ -112,12 +112,14 @@ class VirtualSwitch(BaseResource):
     (in this case, :class:`~zhmcclient.VirtualSwitchManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.VirtualSwitchManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
@@ -125,7 +127,7 @@ class VirtualSwitch(BaseResource):
             raise AssertionError("VirtualSwitch init: Expected manager "
                                  "type %s, got %s" %
                                  (VirtualSwitchManager, type(manager)))
-        super(VirtualSwitch, self).__init__(manager, uri, properties,
+        super(VirtualSwitch, self).__init__(manager, uri, name, properties,
                                             uri_prop='object-uri',
                                             name_prop='name')
 

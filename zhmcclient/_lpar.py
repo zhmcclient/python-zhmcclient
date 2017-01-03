@@ -90,7 +90,7 @@ class LparManager(BaseManager):
         if lpars_res:
             lpar_items = lpars_res['logical-partitions']
             for lpar_props in lpar_items:
-                lpar = Lpar(self, lpar_props['object-uri'], lpar_props)
+                lpar = Lpar(self, lpar_props['object-uri'], None, lpar_props)
                 if full_properties:
                     lpar.pull_full_properties()
                 lpar_list.append(lpar)
@@ -109,12 +109,14 @@ class Lpar(BaseResource):
     (in this case, :class:`~zhmcclient.LparManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.LparManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
@@ -122,7 +124,7 @@ class Lpar(BaseResource):
             raise AssertionError("Lpar init: Expected manager type %s, "
                                  "got %s" %
                                  (LparManager, type(manager)))
-        super(Lpar, self).__init__(manager, uri, properties,
+        super(Lpar, self).__init__(manager, uri, name, properties,
                                    uri_prop='object-uri',
                                    name_prop='name')
 

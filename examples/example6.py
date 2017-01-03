@@ -81,8 +81,7 @@ if timestats:
 print("Listing CPCs ...")
 cpcs = cl.cpcs.list()
 for cpc in cpcs:
-    print(cpc.properties["name"], cpc.properties["status"],
-          cpc.properties["object-uri"])
+    print(cpc.name, cpc.get_property('status'), cpc.uri)
 
 
 print("Finding CPC by name=%s ..." % cpcname)
@@ -101,8 +100,7 @@ try:
             print("Listing %d %s Activation Profiles ..."
                     % (len(profiles), profile_type.capitalize()))
             for profile in profiles:
-                print(profile.properties["name"],
-                      profile.properties["element-uri"])
+                print(profile.name, profile.get_property('element-uri'))
 
             if profile_type == 'image':
                 print("Finding %s Activation Profile by name=%s ..."
@@ -115,21 +113,21 @@ try:
 #                print("Printing full properties:")
 #                profile.pull_full_properties()
 #                print(profile.properties)
-                original_description = profile.get_property("description")
+                original_description = profile.get_property('description')
                 print("description: %s" % original_description)
                 updated_properties = dict()
                 updated_properties["description"] = "Test Test Test"
                 profile.update_properties(updated_properties)
                 print("Pull full properties of Image Activation Profile %s ..." % lparname)
                 profile.pull_full_properties()
-                print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.properties["description"]))
+                print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
                 print("Re-setting description ...")
                 original_properties = dict()
                 original_properties["description"] = original_description
 #                original_properties["description"] = "OpenStack zKVM"
                 profile.update_properties(original_properties)
                 profile.pull_full_properties()
-                print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.properties["description"]))
+                print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
 
 
 

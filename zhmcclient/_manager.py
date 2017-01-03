@@ -236,7 +236,7 @@ class BaseManager(object):
           Exceptions raised by the `list()` method in the derived classes.
         """
         uri = self._get_uri(name)
-        obj = self.resource_class(self, uri)
+        obj = self.resource_class(self, uri, name)
         return obj
 
     def flush(self):

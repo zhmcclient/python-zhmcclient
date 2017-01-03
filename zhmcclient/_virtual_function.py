@@ -122,7 +122,7 @@ class VirtualFunctionManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return VirtualFunction(self, props['element-uri'], props)
+        return VirtualFunction(self, props['element-uri'], None, props)
 
 
 class VirtualFunction(BaseResource):
@@ -141,12 +141,14 @@ class VirtualFunction(BaseResource):
     (in this case, :class:`~zhmcclient.VirtualFunctionManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.VirtualFunctionManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
@@ -154,7 +156,7 @@ class VirtualFunction(BaseResource):
             raise AssertionError("VirtualFunction init: Expected manager "
                                  "type %s, got %s" %
                                  (VirtualFunctionManager, type(manager)))
-        super(VirtualFunction, self).__init__(manager, uri, properties,
+        super(VirtualFunction, self).__init__(manager, uri, name, properties,
                                               uri_prop='element-uri',
                                               name_prop='name')
 
