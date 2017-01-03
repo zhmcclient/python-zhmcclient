@@ -49,7 +49,13 @@ class HbaManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(HbaManager, self).__init__(Hba, partition)
+
+        super(HbaManager, self).__init__(
+            resource_class=Hba,
+            parent=partition,
+            uri_prop='element-uri',
+            name_prop='name',
+            query_props=[])
 
     @property
     def partition(self):
@@ -59,7 +65,7 @@ class HbaManager(BaseManager):
         """
         return self._parent
 
-    def list(self, full_properties=False):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the HBAs in this Partition.
 
@@ -69,6 +75,14 @@ class HbaManager(BaseManager):
             Controls whether the full set of resource properties should be
             retrieved, vs. only the short set as returned by the list
             operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
 
         Returns:
 
@@ -81,15 +95,22 @@ class HbaManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        hba_uris = self.partition.get_property('hba-uris')
-        hba_list = []
-        if hba_uris:
-            for uri in hba_uris:
-                hba = Hba(self, uri)
-                if full_properties:
-                    hba.pull_full_properties()
-                hba_list.append(hba)
-        return hba_list
+        resource_obj_list = []
+        uris = self.partition.get_property('hba-uris')
+        if uris:
+            for uri in uris:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=uri,
+                    name=None,
+                    properties=None)
+
+                if self._matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+        return resource_obj_list
 
     def create(self, properties):
         """
@@ -158,9 +179,7 @@ class Hba(BaseResource):
         if not isinstance(manager, HbaManager):
             raise AssertionError("Hba init: Expected manager type %s, got %s" %
                                  (HbaManager, type(manager)))
-        super(Hba, self).__init__(manager, uri, name, properties,
-                                  uri_prop='element-uri',
-                                  name_prop='name')
+        super(Hba, self).__init__(manager, uri, name, properties)
 
     def delete(self):
         """

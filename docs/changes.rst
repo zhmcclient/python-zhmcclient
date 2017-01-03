@@ -27,11 +27,33 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The support for server-side filtering caused an incompatibility for the
+  `find()` and `findall()` methods: For String typed resource properties,
+  the provided filter string is now interpreted as a regular expression
+  that is matched against the actual property value, whereby previously it
+  was matched by exact string comparison.
+
+* The parameter signatures of the `__init__()` methods of `BaseResource` and
+  `BaseManager` have changed incompatibly. These methods have always been
+  considered internal to the package. They are now explicitly stated to be
+  internal and their parameters are no longer documented.
+  If users have made themselves dependent on these parameters (e.g. by writing
+  a mock layer), they will need to adjust to the new parameter signature. See
+  the code for details.
+
 **Deprecations:**
 
 **Bug fixes:**
 
 **Enhancements:**
+
+* Added filter arguments to the `list()` method, and added support for
+  processing as many filter arguments as supported on the server side via
+  filter query parameters in the URI of the HMC List operation. The remaining
+  filter arguments are processed on the client side in the `list()` method.
+
+* Changed the keyword arguments of the `find()` and `findall()` methods to be
+  interpreted as filter arguments that are passed to the `list()` method.
 
 **Known Issues:**
 

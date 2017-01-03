@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function
 
 import unittest
 import time
+from collections import OrderedDict
 
 from zhmcclient import BaseResource, BaseManager
 
@@ -33,9 +34,7 @@ class MyResource(BaseResource):
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
     def __init__(self, manager, uri, name, properties):
-        super(MyResource, self).__init__(manager, uri, name, properties,
-                                         uri_prop='fake-uri-prop',
-                                         name_prop='fake-name-prop')
+        super(MyResource, self).__init__(manager, uri, name, properties)
 
 
 class MyManager(BaseManager):
@@ -49,10 +48,18 @@ class MyManager(BaseManager):
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
     def __init__(self, parent=None):
-        super(MyManager, self).__init__(MyResource, parent)
+        super(MyManager, self).__init__(
+            resource_class=MyResource,
+            parent=parent,
+            uri_prop='fake-uri-prop',
+            name_prop='fake-name-prop',
+            query_props=['qp1', 'qp2'])
 
-    def list(self, full_properties=False):
-        pass  # to avoid warning about unimplemented abstract method.
+    def list(self, full_properties=False, filter_args=None):
+        # We have this method here just to avoid the warning about
+        # an unimplemented abstract method. It is not being used in this
+        # set of testcases.
+        raise NotImplemented
 
 
 class ResourceTestCase(unittest.TestCase):
@@ -64,8 +71,8 @@ class ResourceTestCase(unittest.TestCase):
         self.mgr = MyManager()
         self.uri = "/api/resource/deadbeef-beef-beef-beef-deadbeefbeef"
         self.name = "fake-name"
-        self.uri_prop = 'fake-uri-prop'
-        self.name_prop = 'fake-name-prop'
+        self.uri_prop = 'fake-uri-prop'  # same as in MyManager
+        self.name_prop = 'fake-name-prop'  # same as in MyManager
 
     def assert_properties(self, resource, exp_props):
         """
@@ -292,6 +299,175 @@ class PropertyDelTests(ResourceTestCase):
         res.properties.clear()
 
         self.assertEqual(len(res.properties), 0)
+
+
+class ManagerDivideFilterTests(ResourceTestCase):
+    """Test the _divide_filter_args() method of BaseManager."""
+
+    # Reserved chars are defined in RFC 3986 as gen-delims and sub-delims.
+    reserved_chars = [
+        ':', '/', '?', '#', '[', ']', '@',  # gen-delims
+        '!', '$', '&', "'", '(', ')', '*', '+', ',', ';', '='  # sub-delims
+    ]
+
+    # Percent-escapes for the reserved chars, in the same order.
+    reserved_escapes = [
+        '%3A', '%2F', '%3F', '%23', '%5B', '%5D', '%40',  # gen-delims
+        '%21', '%24', '%26', '%27', '%28', '%29', '%2A',  # sub-delims
+        '%2B', '%2C', '%3B', '%3D',  # sub-delims
+    ]
+
+    def test_none(self):
+        """Test with None as filter arguments."""
+        filter_args = None
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '')
+        self.assertEqual(cf_args, {})
+
+    def test_empty(self):
+        """Test with an empty set of filter arguments."""
+        filter_args = {}
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '')
+        self.assertEqual(cf_args, {})
+
+    def test_one_string_qp(self):
+        """Test with one string filter argument that is a query parm."""
+        filter_args = {'qp1': 'bar'}
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp1=bar')
+        self.assertEqual(cf_args, {})
+
+    def test_one_string_cf(self):
+        """Test with one string filter argument that is a client filter."""
+        filter_args = {'foo': 'bar'}
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '')
+        self.assertEqual(cf_args, {'foo': 'bar'})
+
+    def test_one_integer_qp(self):
+        """Test with one integer filter argument that is a query parm."""
+        filter_args = {'qp2': 42}
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp2=42')
+        self.assertEqual(cf_args, {})
+
+    def test_one_integer_cf(self):
+        """Test with one integer filter argument that is a client filter."""
+        filter_args = {'foo': 42}
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '')
+        self.assertEqual(cf_args, {'foo': 42})
+
+    def test_one_str_reserved_val_qp(self):
+        """Test with one string filter argument with reserved URI chars in
+        its value that is a query parm."""
+        char_str = '_'.join(self.reserved_chars)
+        escape_str = '_'.join(self.reserved_escapes)
+        filter_args = {'qp1': char_str}
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp1={}'.format(escape_str))
+        self.assertEqual(cf_args, {})
+
+    def test_one_str_reserved_val_cf(self):
+        """Test with one string filter argument with reserved URI chars in
+        its value that is a client filter."""
+        char_str = '_'.join(self.reserved_chars)
+        filter_args = {'foo': char_str}
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '')
+        self.assertEqual(cf_args, {'foo': char_str})
+
+    def test_one_str_dash_name_qp(self):
+        """Test with one string filter argument with a dash in its name that is
+        a query parm."""
+        filter_args = {'foo-boo': 'bar'}
+        self.mgr._query_props.append('foo-boo')
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?foo-boo=bar')
+        self.assertEqual(cf_args, {})
+
+    def test_one_str_reserved_name_qp(self):
+        """Test with one string filter argument with reserved URI chars in
+        its name that is a query parm."""
+        char_str = '_'.join(self.reserved_chars)
+        escape_str = '_'.join(self.reserved_escapes)
+        filter_args = {char_str: 'bar'}
+        self.mgr._query_props.append(char_str)
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?{}=bar'.format(escape_str))
+        self.assertEqual(cf_args, {})
+
+    def test_two_qp(self):
+        """Test with two filter arguments that are query parms."""
+        filter_args = OrderedDict([('qp1', 'bar'), ('qp2', 42)])
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp1=bar&qp2=42')
+        self.assertEqual(cf_args, {})
+
+    def test_two_qp_cf(self):
+        """Test with two filter arguments where one is a query parm and one is
+        a client filter."""
+        filter_args = OrderedDict([('qp1', 'bar'), ('foo', 42)])
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp1=bar')
+        self.assertEqual(cf_args, {'foo': 42})
+
+    def test_two_cf_qp(self):
+        """Test with two filter arguments where one is a client filter and one
+        is a query parm."""
+        filter_args = OrderedDict([('foo', 'bar'), ('qp1', 42)])
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp1=42')
+        self.assertEqual(cf_args, {'foo': 'bar'})
+
+    def test_two_two_qp(self):
+        """Test with two filter arguments, one of which is a list of two, and
+        both are query parms."""
+        filter_args = OrderedDict([('qp1', 'bar'), ('qp2', [42, 7])])
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp1=bar&qp2=42&qp2=7')
+        self.assertEqual(cf_args, {})
+
+    def test_two_str_reserved_val_qp(self):
+        """Test with two filter arguments, one of which is a list of two, and
+        has reserved URI chars, and both are query parms."""
+        char_str = '_'.join(self.reserved_chars)
+        escape_str = '_'.join(self.reserved_escapes)
+        filter_args = OrderedDict([('qp1', 'bar'), ('qp2', [42, char_str])])
+
+        parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
+
+        self.assertEqual(parm_str, '?qp1=bar&qp2=42&qp2={}'.format(escape_str))
+        self.assertEqual(cf_args, {})
 
 
 if __name__ == '__main__':

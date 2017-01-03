@@ -87,7 +87,25 @@ class AdapterManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(AdapterManager, self).__init__(Adapter, cpc)
+
+        # Resource properties that are supported as filter query parameters.
+        # If the support for a resource property changes within the set of HMC
+        # versions that support this type of resource, this list must be set up
+        # for the version of the HMC this session is connected to.
+        query_props = [
+            'name',
+            'adapter-id',
+            'adapter-family',
+            'type',
+            'status',
+        ]
+
+        super(AdapterManager, self).__init__(
+            resource_class=Adapter,
+            parent=cpc,
+            uri_prop='object-uri',
+            name_prop='name',
+            query_props=query_props)
 
     @property
     def cpc(self):
@@ -97,7 +115,7 @@ class AdapterManager(BaseManager):
         """
         return self._parent
 
-    def list(self, full_properties=False):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the Adapters in this CPC.
 
@@ -107,6 +125,14 @@ class AdapterManager(BaseManager):
             Controls whether the full set of resource properties should be
             retrieved, vs. only the short set as returned by the list
             operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
 
         Returns:
 
@@ -119,17 +145,29 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        adapters_res = self.session.get(self.cpc.uri + '/adapters')
-        adapter_list = []
-        if adapters_res:
-            adapter_items = adapters_res['adapters']
-            for adapter_props in adapter_items:
-                adapter = Adapter(self, adapter_props['object-uri'],
-                                  None, adapter_props)
-                if full_properties:
-                    adapter.pull_full_properties()
-                adapter_list.append(adapter)
-        return adapter_list
+        query_parms, client_filters = self._divide_filter_args(filter_args)
+
+        resources_name = 'adapters'
+        uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
+
+        resource_obj_list = []
+        result = self.session.get(uri)
+        if result:
+            props_list = result[resources_name]
+            for props in props_list:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=props[self._uri_prop],
+                    name=props.get(self._name_prop, None),
+                    properties=props)
+
+                if self._matches_filters(resource_obj, client_filters):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+
+        return resource_obj_list
 
     def create_hipersocket(self, properties):
         """
@@ -193,9 +231,7 @@ class Adapter(BaseResource):
             raise AssertionError("Adapter init: Expected manager type %s, "
                                  "got %s" %
                                  (AdapterManager, type(manager)))
-        super(Adapter, self).__init__(manager, uri, name, properties,
-                                      uri_prop='object-uri',
-                                      name_prop='name')
+        super(Adapter, self).__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._ports = None
 

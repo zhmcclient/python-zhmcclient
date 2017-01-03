@@ -59,7 +59,22 @@ class PartitionManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(PartitionManager, self).__init__(Partition, cpc)
+
+        # Resource properties that are supported as filter query parameters.
+        # If the support for a resource property changes within the set of HMC
+        # versions that support this type of resource, this list must be set up
+        # for the version of the HMC this session is connected to.
+        query_props = [
+            'name',
+            'status',
+        ]
+
+        super(PartitionManager, self).__init__(
+            resource_class=Partition,
+            parent=cpc,
+            uri_prop='object-uri',
+            name_prop='name',
+            query_props=query_props)
 
     @property
     def cpc(self):
@@ -69,7 +84,7 @@ class PartitionManager(BaseManager):
         """
         return self._parent
 
-    def list(self, full_properties=False):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the Partitions in this CPC.
 
@@ -79,6 +94,14 @@ class PartitionManager(BaseManager):
             Controls whether the full set of resource properties should be
             retrieved, vs. only the short set as returned by the list
             operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
 
         Returns:
 
@@ -91,17 +114,29 @@ class PartitionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        partitions_res = self.session.get(self.cpc.uri + '/partitions')
-        partition_list = []
-        if partitions_res:
-            partition_items = partitions_res['partitions']
-            for partition_props in partition_items:
-                partition = Partition(self, partition_props['object-uri'],
-                                      None, partition_props)
-                if full_properties:
-                    partition.pull_full_properties()
-                partition_list.append(partition)
-        return partition_list
+        query_parms, client_filters = self._divide_filter_args(filter_args)
+
+        resources_name = 'partitions'
+        uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
+
+        resource_obj_list = []
+        result = self.session.get(uri)
+        if result:
+            props_list = result[resources_name]
+            for props in props_list:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=props[self._uri_prop],
+                    name=props.get(self._name_prop, None),
+                    properties=props)
+
+                if self._matches_filters(resource_obj, client_filters):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+
+        return resource_obj_list
 
     def create(self, properties):
         """
@@ -197,9 +232,7 @@ class Partition(BaseResource):
             raise AssertionError("Partition init: Expected manager type %s, "
                                  "got %s" %
                                  (PartitionManager, type(manager)))
-        super(Partition, self).__init__(manager, uri, name, properties,
-                                        uri_prop='object-uri',
-                                        name_prop='name')
+        super(Partition, self).__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._nics = None
         self._hbas = None
