@@ -83,57 +83,58 @@ cpcs = cl.cpcs.list()
 for cpc in cpcs:
     print(cpc.name, cpc.get_property('status'), cpc.uri)
 
-
 print("Finding CPC by name=%s ..." % cpcname)
 try:
     cpc = cl.cpcs.find(name=cpcname)
-    print("Checking if DPM is enabled on CPC %s..." % cpcname)
-    if cpc.dpm_enabled:
-        print("CPC %s is in DPM mode." % cpcname)
-        sys.exit(1)
-    else:
-        managers = {'reset': 'reset_activation_profiles',
-                   'image' : 'image_activation_profiles',
-                   'load' : 'load_activation_profiles'}
-        for profile_type, manager in managers.items():
-            profiles = getattr(cpc, manager).list()
-            print("Listing %d %s Activation Profiles ..."
-                    % (len(profiles), profile_type.capitalize()))
-            for profile in profiles:
-                print(profile.name, profile.get_property('element-uri'))
+except zhmcclient.NotFound:
+    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
+    sys.exit(1)
 
-            if profile_type == 'image':
-                print("Finding %s Activation Profile by name=%s ..."
-                    % (profile_type.capitalize(), lparname))
-                profile = getattr(cpc, manager).find(name=lparname)
+print("Checking if DPM is enabled on CPC %s..." % cpcname)
+if cpc.dpm_enabled:
+    print("CPC %s is in DPM mode." % cpcname)
+    sys.exit(1)
 
-                print("Printing info properties:")
-                print(profile.properties)
+managers = {'reset': 'reset_activation_profiles',
+           'image' : 'image_activation_profiles',
+           'load' : 'load_activation_profiles'}
+
+for profile_type, manager in managers.items():
+    profiles = getattr(cpc, manager).list()
+
+    print("Listing %d %s Activation Profiles ..."
+            % (len(profiles), profile_type.capitalize()))
+
+    for profile in profiles:
+        print(profile.name, profile.get_property('element-uri'))
+
+    if profile_type == 'image':
+
+        print("Finding %s Activation Profile by name=%s ..."
+            % (profile_type.capitalize(), lparname))
+        profile = getattr(cpc, manager).find(name=lparname)
+
+        print("Printing info properties:")
+        print(profile.properties)
 
 #                print("Printing full properties:")
 #                profile.pull_full_properties()
 #                print(profile.properties)
-                original_description = profile.get_property('description')
-                print("description: %s" % original_description)
-                updated_properties = dict()
-                updated_properties["description"] = "Test Test Test"
-                profile.update_properties(updated_properties)
-                print("Pull full properties of Image Activation Profile %s ..." % lparname)
-                profile.pull_full_properties()
-                print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
-                print("Re-setting description ...")
-                original_properties = dict()
-                original_properties["description"] = original_description
+        original_description = profile.get_property('description')
+        print("description: %s" % original_description)
+        updated_properties = dict()
+        updated_properties["description"] = "Test Test Test"
+        profile.update_properties(updated_properties)
+        print("Pull full properties of Image Activation Profile %s ..." % lparname)
+        profile.pull_full_properties()
+        print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
+        print("Re-setting description ...")
+        original_properties = dict()
+        original_properties["description"] = original_description
 #                original_properties["description"] = "OpenStack zKVM"
-                profile.update_properties(original_properties)
-                profile.pull_full_properties()
-                print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
-
-
-
-except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
-    sys.exit(1)
+        profile.update_properties(original_properties)
+        profile.pull_full_properties()
+        print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
 
 print("Logging off ...")
 session.logoff()

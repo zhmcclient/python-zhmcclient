@@ -97,14 +97,14 @@ try:
 except zhmcclient.NotFound:
     print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
-print(cpc.name, cpc.get_property('status'), cpc.uri)
+print("Found CPC %s at: %s" % (cpc.name, cpc.uri))
 
-print("Checking if DPM is enabled on CPC %s..." % cpcname)
+print("Checking if DPM is enabled on CPC %s..." % cpc.name)
 if cpc.dpm_enabled:
-    print("CPC %s is in DPM mode: Listing Partitions ..." % cpcname)
+    print("CPC %s is in DPM mode: Listing Partitions ..." % cpc.name)
     partitions = cpc.partitions.list()
 else:
-    print("CPC %s is in classic mode: Listing LPARs ..." % cpcname)
+    print("CPC %s is in classic mode: Listing LPARs ..." % cpc.name)
     partitions = cpc.lpars.list()
 for partition in partitions:
     print(partition.name, partition.get_property('status'), partition.uri)

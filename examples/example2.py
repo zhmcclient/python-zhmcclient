@@ -71,69 +71,81 @@ if cred is None:
 userid = cred['userid']
 password = cred['password']
 
+print(__doc__)
+
+print("Using HMC %s with userid %s ..." % (hmc, userid))
+session = zhmcclient.Session(hmc, userid, password)
+cl = zhmcclient.Client(session)
+
+timestats = example2.get("timestats", None)
+if timestats:
+    session.time_stats_keeper.enable()
+
+print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
 try:
-    print(__doc__)
-
-    print("Using HMC %s with userid %s ..." % (hmc, userid))
-    session = zhmcclient.Session(hmc, userid, password)
-    cl = zhmcclient.Client(session)
-
-    timestats = example2.get("timestats", None)
-    if timestats:
-        session.time_stats_keeper.enable()
-
-    print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
-    print("Status of CPC %s: %s" % \
-          (cpc.name, cpc.get_property('status')))
+except zhmcclient.NotFound:
+    print("Could not find CPC %s with status %s on HMC %s" %
+          (cpcname, cpcstatus, hmc))
+    sys.exit(1)
+print("Found CPC %s at: %s" % (cpc.name, cpc.uri))
 
-    print("Finding LPAR by name=%s ..." % lparname)
+print("Accessing status of CPC %s ..." % cpc.name)
+status = cpc.get_property('status')
+print("Status of CPC %s: %s" % (cpc.name, status))
+
+print("Finding LPAR by name=%s ..." % lparname)
+try:
     lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.name, lpar.get_property('status')))
+except zhmcclient.NotFound:
+    print("Could not find LPAR %s in CPC %s" % (lparname, cpc.name))
+    sys.exit(1)
+print("Found LPAR %s at: %s" % (lpar.name, lpar.uri))
 
+print("Accessing status of LPAR %s ..." % lpar.name)
+status = lpar.get_property('status')
+print("Status of LPAR %s: %s" % (lpar.name, status))
+
+print("Deactivating LPAR %s ..." % lpar.name)
+lpar.deactivate()
+print("Refreshing properties of LPAR %s ..." % lpar.name)
+lpar.pull_full_properties()
+print("Accessing status of LPAR %s ..." % lpar.name)
+status = lpar.get_property('status')
+print("Status of LPAR %s: %s" % (lpar.name, status))
+
+print("Activating LPAR %s ..." % lpar.name)
+lpar.activate()
+print("Refreshing properties of LPAR %s ..." % lpar.name)
+lpar.pull_full_properties()
+print("Accessing status of LPAR %s ..." % lpar.name)
+status = lpar.get_property('status')
+print("Status of LPAR %s: %s" % (lpar.name, status))
+
+print("Loading LPAR %s from device %s ..." % (lpar.name, loaddev))
+lpar.load(loaddev)
+for i in range(0, 5):
+    print("Refreshing properties of LPAR %s ..." % lpar.name)
+    lpar.pull_full_properties()
+    print("Accessing status of LPAR %s ..." % lpar.name)
+    status = lpar.get_property('status')
+    print("Status of LPAR %s: %s" % (lpar.name, status))
+    if status == 'operating':
+        break
+
+if deactivate == "yes":
     print("Deactivating LPAR %s ..." % lpar.name)
     lpar.deactivate()
+    print("Refreshing properties of LPAR %s ..." % lpar.name)
+    lpar.pull_full_properties()
+    print("Accessing status of LPAR %s ..." % lpar.name)
+    status = lpar.get_property('status')
+    print("Status of LPAR %s: %s" % (lpar.name, status))
 
-    print("Finding LPAR by name=%s ..." % lparname)
-    lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.name, lpar.get_property('status')))
+print("Logging off ...")
+session.logoff()
 
-    print("Activating LPAR %s ..." % lpar.name)
-    lpar.activate()
+if timestats:
+    print(session.time_stats_keeper)
 
-    print("Finding LPAR by name=%s ..." % lparname)
-    lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.name, lpar.get_property('status')))
-
-    print("Loading LPAR %s from device %s ..." % \
-          (lpar.name, loaddev))
-    lpar.load(loaddev)
-
-    print("Finding LPAR by name=%s ..." % lparname)
-    lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.name, lpar.get_property('status')))
-
-    if deactivate == "yes":
-        print("Deactivating LPAR %s ..." % lpar.name)
-        lpar.deactivate()
-
-        print("Finding LPAR by name=%s ..." % lparname)
-        lpar = cpc.lpars.find(name=lparname)
-        print("Status of LPAR %s: %s" % \
-              (lpar.name, lpar.get_property('status')))
-
-    print("Logging off ...")
-    session.logoff()
-
-    if timestats:
-        print(session.time_stats_keeper)
-
-    print("Done.")
-
-except zhmcclient.Error as exc:
-    print("%s: %s" % (exc.__class__.__name__, exc))
-    sys.exit(1)
+print("Done.")
