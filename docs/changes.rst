@@ -36,6 +36,8 @@ Released: not yet
 * Changed links to HMC API books in Bibliography to no longer require IBM ID
   (issue #131).
 
+* Added example shell script showing how to use the command line interface.
+
 **Known Issues:**
 
 * See `list of open issues`_.
