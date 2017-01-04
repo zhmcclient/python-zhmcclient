@@ -86,10 +86,9 @@ for full_properties in (False, True):
     print("Local current time :", localtime)
     for cpc in cpcs:
         print("Number of properties of cpc %s: %d (full_properties_flag=%r timestamp=%d)" \
-        % (cpc.properties['name'], len(cpc.properties), cpc.full_properties, \
+        % (cpc.name, len(cpc.properties), cpc.full_properties, \
         cpc.properties_timestamp))
-        print(cpc.properties['name'], cpc.properties['status'],
-        cpc.properties['object-uri'])
+        print(cpc.name, cpc.get_property('status'), cpc.uri)
 
 print("Finding CPC by name=%s ..." % cpcname)
 try:
@@ -107,10 +106,9 @@ for full_properties in (False, True):
     print("Local current time :", localtime)
     for lpar in lpars:
         print("Number of properties of lpar %s: %d (full_properties_flag=%r timestamp=%d)" \
-        % (lpar.properties['name'], len(lpar.properties), lpar.full_properties, \
+        % (lpar.name, len(lpar.properties), lpar.full_properties, \
         lpar.properties_timestamp))
-#        print(lpar.properties['name'], lpar.properties['status'], \
-#              lpar.properties['object-uri'])
+#        print(lpar.name, lpar.get_property('status'), lpar.uri)
 
 print("Logging off ...")
 session.logoff()

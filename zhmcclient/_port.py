@@ -112,12 +112,14 @@ class Port(BaseResource):
     (in this case, :class:`~zhmcclient.PortManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.PortManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
@@ -125,7 +127,7 @@ class Port(BaseResource):
             raise AssertionError("Port init: Expected manager type %s, "
                                  "got %s" %
                                  (PortManager, type(manager)))
-        super(Port, self).__init__(manager, uri, properties,
+        super(Port, self).__init__(manager, uri, name, properties,
                                    uri_prop='element-uri',
                                    name_prop='name')
 

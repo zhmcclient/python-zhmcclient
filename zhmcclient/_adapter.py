@@ -125,7 +125,7 @@ class AdapterManager(BaseManager):
             adapter_items = adapters_res['adapters']
             for adapter_props in adapter_items:
                 adapter = Adapter(self, adapter_props['object-uri'],
-                                  adapter_props)
+                                  None, adapter_props)
                 if full_properties:
                     adapter.pull_full_properties()
                 adapter_list.append(adapter)
@@ -160,7 +160,7 @@ class AdapterManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return Adapter(self, props['object-uri'], props)
+        return Adapter(self, props['object-uri'], None, props)
 
 
 class Adapter(BaseResource):
@@ -178,12 +178,14 @@ class Adapter(BaseResource):
     (in this case, :class:`~zhmcclient.AdapterManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.AdapterManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
@@ -191,7 +193,7 @@ class Adapter(BaseResource):
             raise AssertionError("Adapter init: Expected manager type %s, "
                                  "got %s" %
                                  (AdapterManager, type(manager)))
-        super(Adapter, self).__init__(manager, uri, properties,
+        super(Adapter, self).__init__(manager, uri, name, properties,
                                       uri_prop='object-uri',
                                       name_prop='name')
         # The manager objects for child resources (with lazy initialization):

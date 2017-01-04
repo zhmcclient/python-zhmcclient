@@ -97,7 +97,7 @@ class PartitionManager(BaseManager):
             partition_items = partitions_res['partitions']
             for partition_props in partition_items:
                 partition = Partition(self, partition_props['object-uri'],
-                                      partition_props)
+                                      None, partition_props)
                 if full_properties:
                     partition.pull_full_properties()
                 partition_list.append(partition)
@@ -133,7 +133,7 @@ class PartitionManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return Partition(self, props['object-uri'], props)
+        return Partition(self, props['object-uri'], None, props)
 
     def partition_object(self, part_id):
         """
@@ -167,7 +167,7 @@ class PartitionManager(BaseManager):
             'parent': self.parent.uri,
             'class': 'partition',
         }
-        return Partition(self, part_uri, part_props)
+        return Partition(self, part_uri, None, part_props)
 
 
 class Partition(BaseResource):
@@ -182,12 +182,14 @@ class Partition(BaseResource):
     (in this case, :class:`~zhmcclient.PartitionManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.PartitionManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
@@ -195,7 +197,7 @@ class Partition(BaseResource):
             raise AssertionError("Partition init: Expected manager type %s, "
                                  "got %s" %
                                  (PartitionManager, type(manager)))
-        super(Partition, self).__init__(manager, uri, properties,
+        super(Partition, self).__init__(manager, uri, name, properties,
                                         uri_prop='object-uri',
                                         name_prop='name')
         # The manager objects for child resources (with lazy initialization):

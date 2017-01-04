@@ -82,41 +82,41 @@ try:
     cpcs = cl.cpcs.list()
     for cpc in cpcs:
         print(cpc)
-        print("\tListing Adapters for %s ..." % cpc.properties['name'])
+        print("\tListing Adapters for %s ..." % cpc.name)
         adapters = cpc.adapters.list()
         for i, adapter in enumerate(adapters):
             print('\t' + str(adapter))
             ports = adapter.ports.list(full_properties=False)
             for p, port in enumerate(ports):
                 if p == 0:
-                    print("\t\tListing Ports for %s ..." % adapter.properties['name'])
+                    print("\t\tListing Ports for %s ..." % adapter.name)
 #                port.pull_full_properties()
                 print('\t\t' + str(port))
-        print("\tListing Virtual Switches for %s ..." % cpc.properties['name'])
+        print("\tListing Virtual Switches for %s ..." % cpc.name)
         vswitches = cpc.vswitches.list()
         for i, vswitch in enumerate(vswitches):
             print('\t' + str(vswitch))
-        print("\tListing Partitions for %s ..." % cpc.properties['name'])
+        print("\tListing Partitions for %s ..." % cpc.name)
         partitions = cpc.partitions.list()
         for i, partition in enumerate(partitions):
             print('\t' + str(partition))
             nics = partition.nics.list(full_properties=False)
             for j, nic in enumerate(nics):
                 if j == 0:
-                    print("\t\tListing NICs for %s ..." % partition.properties['name'])
+                    print("\t\tListing NICs for %s ..." % partition.name)
                 print('\t\t' + str(nic))
 
             hbas = partition.hbas.list(full_properties=False)
             for j, hba in enumerate(hbas):
                 if j == 0:
-                    print("\t\tListing HBAs for %s ..." % partition.properties['name'])
+                    print("\t\tListing HBAs for %s ..." % partition.name)
                 print('\t\t' + str(hba))
 #                hba.pull_full_properties()
 #                print('\t\t' + str(hba.properties))
             vfs = partition.virtual_functions.list(full_properties=False)
             for k, vf in enumerate(vfs):
                 if k == 0:
-                    print("\t\tListing Virtual Functions for %s ..." % partition.properties['name'])
+                    print("\t\tListing Virtual Functions for %s ..." % partition.name)
                 print('\t\t' + str(vf))
 #                vf.pull_full_properties()
 #                print('\t\t' + str(vf.properties))

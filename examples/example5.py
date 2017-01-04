@@ -94,14 +94,14 @@ except zhmcclient.NotFound:
 print("Checking if DPM is enabled on CPC %s..." % cpcname)
 if cpc.dpm_enabled:
     print("CPC %s is in DPM mode." % cpcname)
-    if cpc.properties['status'] not in ('active', 'service-required'):
+    if cpc.get_property('status') not in ('active', 'service-required'):
         print("CPC %s is in an inactive state: %s" %
-              (cpcname, cpc.properties['status']))
+              (cpcname, cpc.get_property('status')))
         sys.exit(1)
     try:
         print("Finding Partition by name=%s ..." % partname)
         partition = cpc.partitions.find(name=partname)
-        if partition.properties['status'] == 'active':
+        if partition.get_property('status') == 'active':
             print("Stopping Partition %s ..." % partname)
             partition.stop()
         print("Deleting Partition %s ..." % partname)
@@ -130,7 +130,7 @@ if cpc.dpm_enabled:
     print("Pull full properties of Partition %s ..." % partname)
     new_partition.pull_full_properties()
     print("Description of Partition %s: %s"
-        % (partname, new_partition.properties["description"]))
+        % (partname, new_partition.get_property('description')))
 
     print("Updating Partition %s properties ..." % partname)
     updated_properties = dict()
@@ -140,7 +140,7 @@ if cpc.dpm_enabled:
     print("Pull full properties of Partition %s ..." % partname)
     new_partition.pull_full_properties()
     print("Updated description of Partition %s: %s"
-        % (partname, new_partition.properties["description"]))
+        % (partname, new_partition.get_property('description')))
 
 else:
     print("CPC %s is not in DPM mode." % cpcname)

@@ -83,32 +83,37 @@ try:
 
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
-          (cpc.properties['name'], cpc.properties['status']))
+          (cpc.name, cpc.get_property('status')))
 
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
+          (lpar.name, lpar.get_property('status')))
 
-    print("De-Activating LPAR %s ..." % lpar.properties['name'])
-    status = lpar.deactivate(wait_for_completion=False)
+    print("De-Activating LPAR %s (async.) ..." % lpar.name)
+    job_obj = lpar.deactivate(wait_for_completion=False)
+    job_uri = job_obj['job-uri']
+    print("Job URI: %s" % job_uri)
 
-    print("job-uri: %s" % (status['job-uri']))
-    job = session.query_job_status(status['job-uri'])
-    print("job response: %s" % job)
+    print("Retrieving job properties ...")
+    job = session.query_job_status(job_uri)
+    print("Job properties: %s" % job)
 
     while job['status'] != 'complete':
-        print("Job Status: %s" % (job['status']))
         time.sleep(1)
-        job = session.query_job_status(status['job-uri'])
+        print("Retrieving job properties ...")
+        job = session.query_job_status(job_uri)
+        print("Job properties: %s" % job)
 
-    print("job response: %s" % job)
-    print('De-Activate complete !')
+    print('De-Activate complete!')
 
-    print('Deleting completed job status ...')
-    session.delete_completed_job_status(status['job-uri'])
+    print("Status of LPAR %s: %s" % \
+          (lpar.name, lpar.get_property('status')))
+
+    print('Deleting completed job ...')
+    session.delete_completed_job_status(job_uri)
 
 #    print('Deleting completed job status again ...')
-#    session.delete_completed_job_status(status['job-uri'])
+#    session.delete_completed_job_status(job_uri)
 #    Returns exception:
 #    HTTPError: 404,1: No job or status for 'b571dbde-c9cb-11e1-8327-00215e676926_45fdd752-65f4-11e6-a6c3-00215e676926
 

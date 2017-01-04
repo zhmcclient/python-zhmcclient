@@ -37,7 +37,7 @@ class BaseResource(object):
     methods that have a common implementation for the derived resource classes.
     """
 
-    def __init__(self, manager, uri, properties, uri_prop, name_prop):
+    def __init__(self, manager, uri, name, properties, uri_prop, name_prop):
         """
         Parameters:
 
@@ -51,6 +51,13 @@ class BaseResource(object):
             Will be used to set the corresponding property in this resource
             object (see `uri_prop` parameter).
             Must not be `None`.
+
+          name (string):
+            The name of the resource.
+            Will be used to set the corresponding property in this resource
+            object (see `name_prop` parameter).
+            May be `None`; in that case, the resource properties will be
+            retrieved from the resource, once the name property accessed.
 
           properties (dict):
             Properties for this resource object. May be `None` or empty.
@@ -84,11 +91,19 @@ class BaseResource(object):
         self._manager = manager
         self._uri = uri
         self._properties = dict(properties) if properties else {}
-        self._properties[uri_prop] = uri
+        if name:
+            if name_prop in self._properties:
+                assert self._properties[name_prop] == name
+            else:
+                self._properties[name_prop] = name
+        if uri_prop in self._properties:
+            assert self._properties[uri_prop] == uri
+        else:
+            self._properties[uri_prop] = uri
         self._uri_prop = uri_prop
         self._name_prop = name_prop
+        self._name = name  # Will be retrieved once needed, if None
 
-        self._name = None  # Will be retrieved once needed
         self._properties_timestamp = int(time.time())
         self._full_properties = False
 
@@ -107,11 +122,15 @@ class BaseResource(object):
           The dictionary contains either the full set of resource properties,
           or a subset thereof, or can be empty in some cases.
 
-          Because this dictionary may be empty in some cases, the name and the
-          URI of the resource should be obtained via the
-          :attr:`~zhmcclient.BaseResource.name` and
-          :attr:`~zhmcclient.BaseResource.uri` attributes of this object,
-          respectively.
+          Because the presence of properties in this dictionary depends on the
+          situation, the purpose of this dictionary is only for iterating
+          through the resource properties that are currently present.
+
+          Specific resource properties should be accessed via:
+          * The resource name, via :attr:`~zhmcclient.BaseResource.name`.
+          * The resource URI, via :attr:`~zhmcclient.BaseResource.uri`.
+          * Any resource property, via
+            :meth:`~zhmcclient.BaseResource.get_property`.
         """
         return self._properties
 

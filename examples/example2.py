@@ -85,47 +85,46 @@ try:
     print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
     cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
     print("Status of CPC %s: %s" % \
-          (cpc.properties['name'], cpc.properties['status']))
+          (cpc.name, cpc.get_property('status')))
 
     print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
+          (lpar.name, lpar.get_property('status')))
 
-    print("Deactivating LPAR %s ..." % lpar.properties['name'])
-    status = lpar.deactivate()
-    print("status: %s" % status)
-
-    print("Finding LPAR by name=%s ..." % lparname)
-    lpar = cpc.lpars.find(name=lparname)
-    print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
-
-    print("Activating LPAR %s ..." % lpar.properties['name'])
-    status = lpar.activate()
+    print("Deactivating LPAR %s ..." % lpar.name)
+    lpar.deactivate()
 
     print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
+          (lpar.name, lpar.get_property('status')))
+
+    print("Activating LPAR %s ..." % lpar.name)
+    lpar.activate()
+
+    print("Finding LPAR by name=%s ..." % lparname)
+    lpar = cpc.lpars.find(name=lparname)
+    print("Status of LPAR %s: %s" % \
+          (lpar.name, lpar.get_property('status')))
 
     print("Loading LPAR %s from device %s ..." % \
-          (lpar.properties['name'], loaddev))
-    status = lpar.load(loaddev)
+          (lpar.name, loaddev))
+    lpar.load(loaddev)
 
     print("Finding LPAR by name=%s ..." % lparname)
     lpar = cpc.lpars.find(name=lparname)
     print("Status of LPAR %s: %s" % \
-          (lpar.properties['name'], lpar.properties['status']))
+          (lpar.name, lpar.get_property('status')))
 
     if deactivate == "yes":
-        print("Deactivating LPAR %s ..." % lpar.properties['name'])
-        status = lpar.deactivate()
+        print("Deactivating LPAR %s ..." % lpar.name)
+        lpar.deactivate()
 
         print("Finding LPAR by name=%s ..." % lparname)
         lpar = cpc.lpars.find(name=lparname)
         print("Status of LPAR %s: %s" % \
-              (lpar.properties['name'], lpar.properties['status']))
+              (lpar.name, lpar.get_property('status')))
 
     print("Logging off ...")
     session.logoff()

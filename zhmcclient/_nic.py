@@ -122,7 +122,7 @@ class NicManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return Nic(self, props['element-uri'], props)
+        return Nic(self, props['element-uri'], None, props)
 
     def nic_object(self, nic_id):
         """
@@ -156,7 +156,7 @@ class NicManager(BaseManager):
             'parent': part_uri,
             'class': 'nic',
         }
-        return Nic(self, nic_uri, nic_props)
+        return Nic(self, nic_uri, None, nic_props)
 
 
 class Nic(BaseResource):
@@ -175,19 +175,21 @@ class Nic(BaseResource):
     (in this case, :class:`~zhmcclient.NicManager`).
     """
 
-    def __init__(self, manager, uri, properties=None):
+    def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.NicManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
+        #   name (string):
+        #     Name of the resource.
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         if not isinstance(manager, NicManager):
             raise AssertionError("Nic init: Expected manager type %s, got %s" %
                                  (NicManager, type(manager)))
-        super(Nic, self).__init__(manager, uri, properties,
+        super(Nic, self).__init__(manager, uri, name, properties,
                                   uri_prop='element-uri',
                                   name_prop='name')
 
