@@ -114,7 +114,7 @@ class FakedHmcTests(unittest.TestCase):
 
     def test_res_dict(self):
         cpc1_in_props = {'name': 'cpc1'}
-        adapter1_in_props = {'name': 'osa1'}
+        adapter1_in_props = {'name': 'osa1', 'adapter-family': 'hipersockets'}
         port1_in_props = {'name': 'osa1_1'}
 
         rd = {
@@ -219,7 +219,7 @@ class FakedActivationProfileTests(unittest.TestCase):
                               FakedActivationProfileManager)
         self.assertEqual(cpc1.reset_activation_profiles.profile_type, 'reset')
         self.assertRegexpMatches(cpc1.reset_activation_profiles.base_uri,
-                                 r'/api/cpcs/.*/reset-activation-profiles')
+                                 r'/api/cpcs/[^/]+/reset-activation-profiles')
 
         # Test image activation profiles
 
@@ -227,7 +227,7 @@ class FakedActivationProfileTests(unittest.TestCase):
                               FakedActivationProfileManager)
         self.assertEqual(cpc1.image_activation_profiles.profile_type, 'image')
         self.assertRegexpMatches(cpc1.image_activation_profiles.base_uri,
-                                 r'/api/cpcs/.*/image-activation-profiles')
+                                 r'/api/cpcs/[^/]+/image-activation-profiles')
 
         # Test load activation profiles
 
@@ -235,7 +235,7 @@ class FakedActivationProfileTests(unittest.TestCase):
                               FakedActivationProfileManager)
         self.assertEqual(cpc1.load_activation_profiles.profile_type, 'load')
         self.assertRegexpMatches(cpc1.load_activation_profiles.base_uri,
-                                 r'/api/cpcs/.*/load-activation-profiles')
+                                 r'/api/cpcs/[^/]+/load-activation-profiles')
 
     def test_profiles_list(self):
         """Test list() of FakedActivationProfileManager."""
@@ -250,8 +250,8 @@ class FakedActivationProfileTests(unittest.TestCase):
         resetprofile1 = resetprofiles[0]
         resetprofile1_out_props = self.resetprofile1_in_props.copy()
         resetprofile1_out_props.update({
-            'object-id': resetprofile1.oid,
-            'object-uri': resetprofile1.uri,
+            'element-id': resetprofile1.oid,
+            'element-uri': resetprofile1.uri,
         })
         self.assertIsInstance(resetprofile1, FakedActivationProfile)
         self.assertEqual(resetprofile1.properties, resetprofile1_out_props)
@@ -265,8 +265,8 @@ class FakedActivationProfileTests(unittest.TestCase):
         imageprofile1 = imageprofiles[0]
         imageprofile1_out_props = self.imageprofile1_in_props.copy()
         imageprofile1_out_props.update({
-            'object-id': imageprofile1.oid,
-            'object-uri': imageprofile1.uri,
+            'element-id': imageprofile1.oid,
+            'element-uri': imageprofile1.uri,
         })
         self.assertIsInstance(imageprofile1, FakedActivationProfile)
         self.assertEqual(imageprofile1.properties, imageprofile1_out_props)
@@ -280,8 +280,8 @@ class FakedActivationProfileTests(unittest.TestCase):
         loadprofile1 = loadprofiles[0]
         loadprofile1_out_props = self.loadprofile1_in_props.copy()
         loadprofile1_out_props.update({
-            'object-id': loadprofile1.oid,
-            'object-uri': loadprofile1.uri,
+            'element-id': loadprofile1.oid,
+            'element-uri': loadprofile1.uri,
         })
         self.assertIsInstance(loadprofile1, FakedActivationProfile)
         self.assertEqual(loadprofile1.properties, loadprofile1_out_props)
@@ -312,8 +312,8 @@ class FakedActivationProfileTests(unittest.TestCase):
 
         resetprofile2_out_props = resetprofile2_in_props.copy()
         resetprofile2_out_props.update({
-            'object-id': resetprofile2.oid,
-            'object-uri': resetprofile2.uri,
+            'element-id': resetprofile2.oid,
+            'element-uri': resetprofile2.uri,
         })
         self.assertIsInstance(resetprofile2, FakedActivationProfile)
         self.assertEqual(resetprofile2.properties, resetprofile2_out_props)
@@ -346,7 +346,7 @@ class FakedAdapterTests(unittest.TestCase):
     def setUp(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
-        self.adapter1_in_props = {'name': 'adapter1'}
+        self.adapter1_in_props = {'name': 'adapter1', 'type': 'roce'}
         rd = {
             'cpcs': [
                 {
@@ -397,7 +397,7 @@ class FakedAdapterTests(unittest.TestCase):
         adapters = cpc1.adapters.list()
         self.assertEqual(len(adapters), 1)
 
-        adapter2_in_props = {'name': 'adapter2'}
+        adapter2_in_props = {'name': 'adapter2', 'adapter-family': 'ficon'}
 
         # the function to be tested:
         new_adapter = cpc1.adapters.add(
@@ -533,7 +533,19 @@ class FakedHbaTests(unittest.TestCase):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
-        self.hba1_in_props = {'name': 'hba1'}
+        self.adapter1_in_props = {
+            'object-id': '1',
+            'name': 'fcp1',
+            'type': 'fcp',
+        }
+        self.port1_in_props = {
+            'element-id': '1',
+            'name': 'port1',
+        }
+        self.hba1_in_props = {
+            'name': 'hba1',
+            'adapter-port-uri': '/api/adapters/1/storage-ports/1',
+        }
         rd = {
             'cpcs': [
                 {
@@ -543,6 +555,14 @@ class FakedHbaTests(unittest.TestCase):
                             'properties': self.partition1_in_props,
                             'hbas': [
                                 {'properties': self.hba1_in_props},
+                            ],
+                        },
+                    ],
+                    'adapters': [
+                        {
+                            'properties': self.adapter1_in_props,
+                            'ports': [
+                                {'properties': self.port1_in_props},
                             ],
                         },
                     ],
@@ -561,7 +581,7 @@ class FakedHbaTests(unittest.TestCase):
 
         self.assertIsInstance(partition1.hbas, FakedHbaManager)
         self.assertRegexpMatches(partition1.hbas.base_uri,
-                                 r'/api/partitions/.*/hbas')
+                                 r'/api/partitions/[^/]+/hbas')
 
     def test_hbas_list(self):
         """Test list() of FakedHbaManager."""
@@ -593,7 +613,11 @@ class FakedHbaTests(unittest.TestCase):
         hbas = partition1.hbas.list()
         self.assertEqual(len(hbas), 1)
 
-        hba2_in_props = {'name': 'hba2'}
+        hba2_in_props = {
+            'element-id': '2',
+            'name': 'hba2',
+            'adapter-port-uri': '/api/adapters/1/storage-ports/1',
+        }
 
         # the function to be tested:
         new_hba = partition1.hbas.add(
@@ -737,7 +761,19 @@ class FakedNicTests(unittest.TestCase):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
-        self.nic1_in_props = {'name': 'nic1'}
+        self.nic1_in_props = {
+            'name': 'nic1',
+            'network-adapter-port-uri': '/api/adapters/1/network-ports/1',
+        }
+        self.adapter1_in_props = {
+            'object-id': '1',
+            'name': 'roce1',
+            'type': 'roce',
+        }
+        self.port1_in_props = {
+            'element-id': '1',
+            'name': 'port1',
+        }
         rd = {
             'cpcs': [
                 {
@@ -747,6 +783,14 @@ class FakedNicTests(unittest.TestCase):
                             'properties': self.partition1_in_props,
                             'nics': [
                                 {'properties': self.nic1_in_props},
+                            ],
+                        },
+                    ],
+                    'adapters': [
+                        {
+                            'properties': self.adapter1_in_props,
+                            'ports': [
+                                {'properties': self.port1_in_props},
                             ],
                         },
                     ],
@@ -765,7 +809,7 @@ class FakedNicTests(unittest.TestCase):
 
         self.assertIsInstance(partition1.nics, FakedNicManager)
         self.assertRegexpMatches(partition1.nics.base_uri,
-                                 r'/api/partitions/.*/nics')
+                                 r'/api/partitions/[^/]+/nics')
 
     def test_nics_list(self):
         """Test list() of FakedNicManager."""
@@ -797,7 +841,10 @@ class FakedNicTests(unittest.TestCase):
         nics = partition1.nics.list()
         self.assertEqual(len(nics), 1)
 
-        nic2_in_props = {'name': 'nic2'}
+        nic2_in_props = {
+            'name': 'nic2',
+            'network-adapter-port-uri': '/api/adapters/1/network-ports/1',
+        }
 
         # the function to be tested:
         new_nic = partition1.nics.add(
@@ -940,7 +987,7 @@ class FakedPortTests(unittest.TestCase):
     def setUp(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
-        self.adapter1_in_props = {'name': 'adapter1'}
+        self.adapter1_in_props = {'name': 'adapter1', 'adapter-family': 'osa'}
         self.port1_in_props = {'name': 'port1'}
         rd = {
             'cpcs': [
@@ -969,7 +1016,7 @@ class FakedPortTests(unittest.TestCase):
 
         self.assertIsInstance(adapter1.ports, FakedPortManager)
         self.assertRegexpMatches(adapter1.ports.base_uri,
-                                 r'/api/adapters/.*/ports')
+                                 r'/api/adapters/[^/]+/network-ports')
 
     def test_ports_list(self):
         """Test list() of FakedPortManager."""
@@ -1083,7 +1130,7 @@ class FakedVirtualFunctionTests(unittest.TestCase):
         self.assertIsInstance(partition1.virtual_functions,
                               FakedVirtualFunctionManager)
         self.assertRegexpMatches(partition1.virtual_functions.base_uri,
-                                 r'/api/partitions/.*/virtual-functions')
+                                 r'/api/partitions/[^/]+/virtual-functions')
 
     def test_virtual_functions_list(self):
         """Test list() of FakedVirtualFunctionManager."""

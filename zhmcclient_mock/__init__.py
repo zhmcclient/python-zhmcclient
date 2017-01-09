@@ -18,4 +18,6 @@ zhmcclient_mock - Unit test support for users of the zhmcclient package.
 
 from __future__ import absolute_import
 
+from ._session import *       # noqa: F401
+from ._urihandler import *    # noqa: F401
 from ._hmc import *           # noqa: F401

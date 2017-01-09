@@ -25,9 +25,6 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 import six
-# from six.moves.urllib.parse import urlparse, parse_qsl
-
-# TODO: Move the resources into their own files.
 
 __all__ = ['FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedActivationProfileManager', 'FakedActivationProfile',
@@ -92,6 +89,18 @@ class FakedBaseResource(object):
         """
         return self._uri
 
+    def update(self, properties):
+        """
+        update the properties of this resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties to be updated. Any other properties remain
+            unchanged.
+        """
+        self.properties.update(properties)
+
 
 class FakedBaseManager(object):
     """
@@ -101,13 +110,23 @@ class FakedBaseManager(object):
     api_root = '/api'  # root of all resource URIs
     next_oid = 1  # next object ID, for auto-generating them
 
-    def __init__(self, parent, resource_class, base_uri, oid_prop, uri_prop):
+    def __init__(self, hmc, parent, resource_class, base_uri, oid_prop,
+                 uri_prop):
+        self._hmc = hmc
         self._parent = parent
         self._resource_class = resource_class
         self._base_uri = base_uri  # Base URI for resources of this type
         self._oid_prop = oid_prop
         self._uri_prop = uri_prop
         self._resources = OrderedDict()  # Resource objects, by object ID
+
+    @property
+    def hmc(self):
+        """
+        The faked HMC this manager is part of (an object of
+        :class:`~zhmcclient_mock.FakedHmc`).
+        """
+        return self._hmc
 
     @property
     def parent(self):
@@ -157,6 +176,8 @@ class FakedBaseManager(object):
         """
         Add a faked resource to this manager.
 
+        For URI-based lookup, the resource is also added to the faked HMC.
+
         Parameters:
 
           properties (dict):
@@ -169,6 +190,7 @@ class FakedBaseManager(object):
         """
         resource = self.resource_class(self, properties)
         self._resources[resource.oid] = resource
+        self._hmc._resources[resource.uri] = resource
         return resource
 
     def remove(self, oid):
@@ -181,7 +203,9 @@ class FakedBaseManager(object):
             The object ID of the resource (e.g. value of the 'object-uri'
             property).
         """
+        uri = self._resources[oid].uri
         del self._resources[oid]
+        del self._hmc._resources[uri]
 
     def list(self):
         """
@@ -195,12 +219,13 @@ class FakedBaseManager(object):
 
     def lookup_by_oid(self, oid):
         """
-        Look up a faked resource by its object ID.
+        Look up a faked resource by its object ID, in the scope of this
+        manager.
 
         Parameters:
 
           oid (string):
-            The object ID of the faked resource (e.g. value of the 'object-uri'
+            The object ID of the faked resource (e.g. value of the 'object-id'
             property).
 
         Returns:
@@ -236,8 +261,8 @@ class FakedHmc(FakedBaseResource):
         self.hmc_name = hmc_name
         self.hmc_version = hmc_version
         self.api_version = api_version
-        self.special_operations = {}  # user-provided operations
-        self.cpcs = FakedCpcManager(client=self)
+        self.cpcs = FakedCpcManager(hmc=self, client=self)
+        self._resources = {}  # by URI
 
     def add_resources(self, resources):
         """
@@ -252,9 +277,15 @@ class FakedHmc(FakedBaseResource):
         Parameters:
 
           resources (dict):
-            Definitions of faked resources to be added, see example below.
+            resource dictionary with definitions of faked resources to be
+            added. For an explanation of how the resource dictionary is set up,
+            see the example below.
 
-        Example for 'resources' parameter::
+            For requirements on and auto-generation of certain resource
+            properties, see the ``add()`` methods of the various faked resource
+            managers (e.g. :meth:`zhmcclient_mock.FakedCpcManager.add`).
+
+        Example for resource dictionary::
 
             resources = {
                 'cpcs': [  # name of manager attribute for this resource
@@ -293,6 +324,21 @@ class FakedHmc(FakedBaseResource):
                     . . .  # more CPCs
                 ]
             }
+
+        The resource dictionary specifies a tree of resource managers and
+        resources, in an alternating manner. It starts with the top-level
+        resource managers (``cpcs`` key), which contains a list of CPC
+        resources.
+
+        Each resource specifies its own properties (``properties`` key)
+        and the resource managers for its child resources. For example, the
+        CPC resource specifies its adapter child resources using the
+        ``adapters`` key. The keys for the child resource managers are the
+        attribute names of these resource managers in the parent resource. For
+        example, the ``adapters`` key is named after the
+        :attr:`zhmcclient.Cpc.adapters` attribute (which has the same name
+        as in its corresponding faked CPC resource:
+        :attr:`zhmcclient_mock.FakedCpc.adapters`).
         """
         for child_attr in resources:
             child_list = resources[child_attr]
@@ -317,20 +363,23 @@ class FakedHmc(FakedBaseResource):
                 self._process_child_list(child_resource, grandchild_attr,
                                          grandchild_list)
 
-    @staticmethod
-    def _assert_op_key(i, op, key):
-        if key not in op:
-            raise ValueError("Missing '{}' key in operations item #{}".
-                             format(key, i))
+    def lookup_by_uri(self, uri):
+        """
+        Look up a faked resource by its object URI, within this faked HMC.
 
-    def get(self, uri, logon_required):
-        raise NotImplemented("TODO: Implement his method via the faked HMC.")
+        Parameters:
 
-    def post(self, uri, body, logon_required, wait_for_completion):
-        raise NotImplemented("TODO: Implement his method via the faked HMC.")
+          uri (string):
+            The object URI of the faked resource (e.g. value of the
+            'object-uri' property).
 
-    def delete(self, uri, logon_required):
-        raise NotImplemented("TODO: Implement his method via the faked HMC.")
+        Returns:
+          :class:`~zhmcclient_mock.FakedBaseResource`: The faked resource.
+
+        Raises:
+          KeyError: No resource found for this object ID.
+        """
+        return self._resources[uri]
 
 
 class FakedActivationProfileManager(FakedBaseManager):
@@ -342,15 +391,38 @@ class FakedActivationProfileManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, cpc, profile_type):
+    def __init__(self, hmc, cpc, profile_type):
         activation_profiles = profile_type + '-activation-profiles'
         super(FakedActivationProfileManager, self).__init__(
+            hmc=hmc,
             parent=cpc,
             resource_class=FakedActivationProfile,
             base_uri=cpc.uri + '/' + activation_profiles,
-            oid_prop='object-id',
-            uri_prop='object-uri')
+            oid_prop='element-id',
+            uri_prop='element-uri')
         self._profile_type = profile_type
+
+    def add(self, properties):
+        """
+        Add a faked Activation Profile resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedActivationProfile`: The faked
+            Activation Profile resource.
+        """
+        return super(FakedActivationProfileManager, self).add(properties)
 
     @property
     def profile_type(self):
@@ -384,13 +456,42 @@ class FakedAdapterManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, cpc):
+    def __init__(self, hmc, cpc):
         super(FakedAdapterManager, self).__init__(
+            hmc=hmc,
             parent=cpc,
             resource_class=FakedAdapter,
             base_uri=self.api_root + '/adapters',
             oid_prop='object-id',
             uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked Adapter resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'adapter-family' or 'type' is required to be specified, in order
+              to determine whether the adapter is a network or storage adapter.
+            * 'adapter-family' is auto-set based upon 'type', if not specified.
+            * 'network-port-uris' is auto-set to an empty list, if not set,
+              for network adapters.
+            * 'storage-port-uris' is auto-set to an empty list, if not set,
+              for storage adapters.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedAdapter`: The faked Adapter resource.
+        """
+        return super(FakedAdapterManager, self).add(properties)
 
 
 class FakedAdapter(FakedBaseResource):
@@ -406,15 +507,78 @@ class FakedAdapter(FakedBaseResource):
         super(FakedAdapter, self).__init__(
             manager=manager,
             properties=properties)
-        self._ports = FakedPortManager(adapter=self)
+        if 'adapter-family' in properties:
+            family = properties['adapter-family']
+            if family in ('osa', 'roce', 'hipersockets'):
+                self._adapter_kind = 'network'
+            elif family in ('ficon',):
+                self._adapter_kind = 'storage'
+            else:
+                self._adapter_kind = 'other'
+        elif 'type' in properties:
+            # because 'type' is more specific than 'adapter-family', we can
+            # auto-set 'adapter-family' from 'type'.
+            type_ = properties['type']
+            if type_ in ('osd', 'osm'):
+                self._properties['adapter-family'] = 'osa'
+                self._adapter_kind = 'network'
+            elif type_ == 'roce':
+                self._properties['adapter-family'] = 'roce'
+                self._adapter_kind = 'network'
+            elif type_ == 'hipersockets':
+                self._properties['adapter-family'] = 'hipersockets'
+                self._adapter_kind = 'network'
+            elif type_ == 'fcp':
+                self._properties['adapter-family'] = 'ficon'
+                self._adapter_kind = 'storage'
+            elif type_ == 'crypto':
+                self._properties['adapter-family'] = 'crypto'
+                self._adapter_kind = 'other'
+            elif type_ == 'zedc':
+                self._properties['adapter-family'] = 'accelerator'
+                self._adapter_kind = 'other'
+            else:
+                raise ValueError("FakedAdapter with object-id=%s has an "
+                                 "unknown value in its 'type' property: %s." %
+                                 (self.oid, type_))
+        else:
+            raise ValueError("FakedAdapter with object-id=%s must have "
+                             "'adapter-family' or 'type' property specified." %
+                             self.oid)
+        if self.adapter_kind == 'network':
+            if 'network-port-uris' not in self.properties:
+                self._properties['network-port-uris'] = []
+            self._ports = FakedPortManager(hmc=manager.hmc, adapter=self)
+        elif self.adapter_kind == 'storage':
+            if 'storage-port-uris' not in self.properties:
+                self._properties['storage-port-uris'] = []
+            self._ports = FakedPortManager(hmc=manager.hmc, adapter=self)
+        else:
+            self._ports = None
 
     @property
     def ports(self):
         """
-        The Port resources of this Adapter
-        (:class:`~zhmcclient_mock.FakedPort`).
+        :class:`~zhmcclient_mock.FakedPort`: The Port resources of this
+        Adapter.
+
+        If the kind of adapter does not have ports, this is `None`.
         """
         return self._ports
+
+    @property
+    def adapter_kind(self):
+        """
+        string: The kind of adapter, determined from the 'adapter-family' or
+        'type' properties. This is currently used to distinguish storage and
+        network adapters.
+
+        Possible values are:
+        * 'network' - A network adapter (OSA, ROCE, Hipersockets)
+        * 'storage' - A storage adapter (FICON, FCP)
+        * 'other' - Another adapter (zEDC, Crypto)
+        """
+        return self._adapter_kind
 
 
 class FakedCpcManager(FakedBaseManager):
@@ -426,13 +590,35 @@ class FakedCpcManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, client):
+    def __init__(self, hmc, client):
         super(FakedCpcManager, self).__init__(
+            hmc=hmc,
             parent=client,
             resource_class=FakedCpc,
             base_uri=self.api_root + '/cpcs',
             oid_prop='object-id',
             uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked CPC resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedCpc`: The faked CPC resource.
+        """
+        return super(FakedCpcManager, self).add(properties)
 
 
 class FakedCpc(FakedBaseResource):
@@ -448,16 +634,26 @@ class FakedCpc(FakedBaseResource):
         super(FakedCpc, self).__init__(
             manager=manager,
             properties=properties)
-        self._lpars = FakedLparManager(cpc=self)
-        self._partitions = FakedPartitionManager(cpc=self)
-        self._adapters = FakedAdapterManager(cpc=self)
-        self._virtual_switches = FakedVirtualSwitchManager(cpc=self)
+        self._lpars = FakedLparManager(hmc=manager.hmc, cpc=self)
+        self._partitions = FakedPartitionManager(hmc=manager.hmc, cpc=self)
+        self._adapters = FakedAdapterManager(hmc=manager.hmc, cpc=self)
+        self._virtual_switches = FakedVirtualSwitchManager(
+            hmc=manager.hmc, cpc=self)
         self._reset_activation_profiles = FakedActivationProfileManager(
-            cpc=self, profile_type='reset')
+            hmc=manager.hmc, cpc=self, profile_type='reset')
         self._image_activation_profiles = FakedActivationProfileManager(
-            cpc=self, profile_type='image')
+            hmc=manager.hmc, cpc=self, profile_type='image')
         self._load_activation_profiles = FakedActivationProfileManager(
-            cpc=self, profile_type='load')
+            hmc=manager.hmc, cpc=self, profile_type='load')
+
+    @property
+    def dpm_enabled(self):
+        """
+        bool: Indicates whether this CPC is in DPM mode.
+
+        This is based upon the 'dpm-enabled' property and defaults to `False`.
+        """
+        return self.properties.get('dpm-enabled', False)
 
     @property
     def lpars(self):
@@ -525,8 +721,9 @@ class FakedHbaManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, partition):
+    def __init__(self, hmc, partition):
         super(FakedHbaManager, self).__init__(
+            hmc=hmc,
             parent=partition,
             resource_class=FakedHba,
             base_uri=partition.uri + '/hbas',
@@ -535,33 +732,48 @@ class FakedHbaManager(FakedBaseManager):
 
     def add(self, properties):
         """
-        Add a faked HBA resource to this manager.
-
-        This method also updates the 'hba-uris' property in the parent
-        Partition resource (if it exists).
+        Add a faked HBA resource.
 
         Parameters:
 
           properties (dict):
-            Resource properties. If the URI property ('element-uri') or the
-            object ID property ('element-id') are not specified, they
-            will be auto-generated.
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'adapter-port-uri' identifies the backing FCP port for this HBA
+              and is required to be specified.
+
+            This method also updates the 'hba-uris' property in the parent
+            faked Partition resource, by adding the URI for the faked HBA
+            resource.
 
         Returns:
-          :class:`zhmcclient_mock.FakedHba`: The faked resource object.
+          :class:`~zhmcclient_mock.FakedHba`: The faked HBA resource.
         """
         new_hba = super(FakedHbaManager, self).add(properties)
+        if 'adapter-port-uri' not in new_hba.properties:
+            raise ValueError("FakedHba with object-id=%s must have "
+                             "'adapter-port-uri' property." %
+                             new_hba.oid)
+        # We don't verify that the specified URI actually exists, because
+        # it might not have been added yet, and we don't want to impose too
+        # much of an ordering requirement on the resources that are added.
         partition = self.parent
-        if 'hba-uris' in partition.properties:
-            partition.properties['hba-uris'].append(new_hba.uri)
+        assert 'hba-uris' in partition.properties
+        partition.properties['hba-uris'].append(new_hba.uri)
         return new_hba
 
     def remove(self, oid):
         """
-        Remove a faked HBA resource from this manager.
+        Remove a faked HBA resource.
 
         This method also updates the 'hba-uris' property in the parent
-        Partition resource (if it exists).
+        Partition resource, by removing the URI for the faked HBA resource.
 
         Parameters:
 
@@ -570,8 +782,9 @@ class FakedHbaManager(FakedBaseManager):
         """
         hba = self.lookup_by_oid(oid)
         partition = self.parent
-        if 'hba-uris' in partition.properties:
-            del partition.properties['hba-uris'][hba.uri]
+        assert 'hba-uris' in partition.properties
+        hba_uris = partition.properties['hba-uris']
+        hba_uris.remove(hba.uri)
         super(FakedHbaManager, self).remove(oid)  # deletes the resource
 
 
@@ -599,13 +812,35 @@ class FakedLparManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, cpc):
+    def __init__(self, hmc, cpc):
         super(FakedLparManager, self).__init__(
+            hmc=hmc,
             parent=cpc,
             resource_class=FakedLpar,
             base_uri=self.api_root + '/logical-partitions',
             oid_prop='object-id',
             uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked LPAR resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedLpar`: The faked LPAR resource.
+        """
+        return super(FakedLparManager, self).add(properties)
 
 
 class FakedLpar(FakedBaseResource):
@@ -632,8 +867,9 @@ class FakedNicManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, partition):
+    def __init__(self, hmc, partition):
         super(FakedNicManager, self).__init__(
+            hmc=hmc,
             parent=partition,
             resource_class=FakedNic,
             base_uri=partition.uri + '/nics',
@@ -642,33 +878,52 @@ class FakedNicManager(FakedBaseManager):
 
     def add(self, properties):
         """
-        Add a faked NIC resource to this manager.
-
-        This method also updates the 'nic-uris' property in the parent
-        Partition resource (if it exists).
+        Add a faked NIC resource.
 
         Parameters:
 
           properties (dict):
-            Resource properties. If the URI property ('element-uri') or the
-            object ID property ('element-id') are not specified, they
-            will be auto-generated.
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * Either 'network-adapter-port-uri' (for backing ROCE adapters) or
+              'virtual-switch-uri'(for backing OSA or Hipersockets adapters) is
+              required to be specified.
+
+            This method also updates the 'nic-uris' property in the parent
+            faked Partition resource, by adding the URI for the faked NIC
+            resource.
 
         Returns:
-          :class:`zhmcclient_mock.FakedNic`: The faked resource object.
+          :class:`zhmcclient_mock.FakedNic`: The faked NIC resource.
         """
         new_nic = super(FakedNicManager, self).add(properties)
+        if 'network-adapter-port-uri' not in new_nic.properties and \
+                'virtual-switch-uri' not in new_nic.properties:
+            raise ValueError("FakedNic with object ID %s must specify "
+                             "either a 'network-adapter-port-uri' property "
+                             "(for backing ROCE adapters) or a "
+                             "'virtual-switch-uri' property (for backing OSA "
+                             "and Hipersocket adapters)." % new_nic.oid)
+        # We don't verify that the specified URI actually exists, because
+        # it might not have been added yet, and we don't want to impose too
+        # much of an ordering requirement on the resources that are added.
         partition = self.parent
-        if 'nic-uris' in partition.properties:
-            partition.properties['nic-uris'].append(new_nic.uri)
+        assert 'nic-uris' in partition.properties
+        partition.properties['nic-uris'].append(new_nic.uri)
         return new_nic
 
     def remove(self, oid):
         """
-        Remove a faked NIC resource from this manager.
+        Remove a faked NIC resource.
 
         This method also updates the 'nic-uris' property in the parent
-        Partition resource (if it exists).
+        Partition resource, by removing the URI for the faked NIC resource.
 
         Parameters:
 
@@ -677,8 +932,9 @@ class FakedNicManager(FakedBaseManager):
         """
         nic = self.lookup_by_oid(oid)
         partition = self.parent
-        if 'nic-uris' in partition.properties:
-            del partition.properties['nic-uris'][nic.uri]
+        assert 'nic-uris' in partition.properties
+        nic_uris = partition.properties['nic-uris']
+        nic_uris.remove(nic.uri)
         super(FakedNicManager, self).remove(oid)  # deletes the resource
 
 
@@ -706,13 +962,42 @@ class FakedPartitionManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, cpc):
+    def __init__(self, hmc, cpc):
         super(FakedPartitionManager, self).__init__(
+            hmc=hmc,
             parent=cpc,
             resource_class=FakedPartition,
             base_uri=self.api_root + '/partitions',
             oid_prop='object-id',
             uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked Partition resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'hba-uris' will be auto-generated as an empty array, if not
+              specified.
+            * 'nic-uris' will be auto-generated as an empty array, if not
+              specified.
+            * 'virtual-function-uris' will be auto-generated as an empty array,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedPartition`: The faked Partition
+            resource.
+        """
+        return super(FakedPartitionManager, self).add(properties)
 
 
 class FakedPartition(FakedBaseResource):
@@ -728,9 +1013,16 @@ class FakedPartition(FakedBaseResource):
         super(FakedPartition, self).__init__(
             manager=manager,
             properties=properties)
-        self._nics = FakedNicManager(partition=self)
-        self._hbas = FakedHbaManager(partition=self)
-        self._virtual_functions = FakedVirtualFunctionManager(partition=self)
+        if 'hba-uris' not in self.properties:
+            self.properties['hba-uris'] = []
+        if 'nic-uris' not in self.properties:
+            self.properties['nic-uris'] = []
+        if 'virtual-function-uris' not in self.properties:
+            self.properties['virtual-function-uris'] = []
+        self._nics = FakedNicManager(hmc=manager.hmc, partition=self)
+        self._hbas = FakedHbaManager(hmc=manager.hmc, partition=self)
+        self._virtual_functions = FakedVirtualFunctionManager(
+            hmc=manager.hmc, partition=self)
 
     @property
     def nics(self):
@@ -766,59 +1058,75 @@ class FakedPortManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, adapter):
+    def __init__(self, hmc, adapter):
+        if adapter.adapter_kind == 'network':
+            port_segment = 'network-ports'
+        elif adapter.adapter_kind == 'storage':
+            port_segment = 'storage-ports'
+        else:
+            raise ValueError("FakedAdapter with object-id=%s must be a "
+                             "storage or network adapter to have ports." %
+                             adapter.oid)
         super(FakedPortManager, self).__init__(
+            hmc=hmc,
             parent=adapter,
             resource_class=FakedPort,
-            base_uri=adapter.uri + '/ports',
+            base_uri=adapter.uri + '/' + port_segment,
             oid_prop='element-id',
             uri_prop='element-uri')
 
     def add(self, properties):
         """
-        Add a faked Port resource to this manager.
-
-        This method also updates the 'network-port-uris' or 'storage-port-uris'
-        property in the parent Adapter resource (whichever exists, gets
-        updated).
+        Add a faked Port resource.
 
         Parameters:
 
           properties (dict):
-            Resource properties. If the URI property ('element-uri') or the
-            object ID property ('element-id') are not specified, they
-            will be auto-generated.
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+
+            This method also updates the 'network-port-uris' or
+            'storage-port-uris' property in the parent Adapter resource, by
+            adding the URI for the faked Port resource.
 
         Returns:
-          :class:`zhmcclient_mock.FakedPort`: The resource object.
+          :class:`zhmcclient_mock.FakedPort`: The faked Port resource.
         """
         new_port = super(FakedPortManager, self).add(properties)
         adapter = self.parent
         if 'network-port-uris' in adapter.properties:
             adapter.properties['network-port-uris'].append(new_port.uri)
-        elif 'storage-port-uris' in adapter.properties:
+        if 'storage-port-uris' in adapter.properties:
             adapter.properties['storage-port-uris'].append(new_port.uri)
         return new_port
 
     def remove(self, oid):
         """
-        Remove a faked Port resource from this manager.
+        Remove a faked Port resource.
 
         This method also updates the 'network-port-uris' or 'storage-port-uris'
-        property in the parent Adapter resource (whichever exists, gets
-        updated).
+        property in the parent Adapter resource, by removing the URI for the
+        faked Port resource.
 
         Parameters:
 
           oid (string):
-            The object ID of the Port resource.
+            The object ID of the faked Port resource.
         """
         port = self.lookup_by_oid(oid)
         adapter = self.parent
         if 'network-port-uris' in adapter.properties:
-            del adapter.properties['network-port-uris'][port.uri]
-        elif 'storage-port-uris' in adapter.properties:
-            del adapter.properties['storage-port-uris'][port.uri]
+            port_uris = adapter.properties['network-port-uris']
+            port_uris.remove(port.uri)
+        if 'storage-port-uris' in adapter.properties:
+            port_uris = adapter.properties['storage-port-uris']
+            port_uris.remove(port.uri)
         super(FakedPortManager, self).remove(oid)  # deletes the resource
 
 
@@ -846,8 +1154,9 @@ class FakedVirtualFunctionManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, partition):
+    def __init__(self, hmc, partition):
         super(FakedVirtualFunctionManager, self).__init__(
+            hmc=hmc,
             parent=partition,
             resource_class=FakedVirtualFunction,
             base_uri=partition.uri + '/virtual-functions',
@@ -856,36 +1165,41 @@ class FakedVirtualFunctionManager(FakedBaseManager):
 
     def add(self, properties):
         """
-        Add a faked Virtual Function resource to this manager.
-
-        This method also updates the 'virtual-function-uris' property in the
-        parent Partition resource (if it exists).
+        Add a faked Virtual Function resource.
 
         Parameters:
 
           properties (dict):
-            Resource properties. If the URI property ('element-uri') or the
-            object ID property ('element-id') are not specified, they
-            will be auto-generated.
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+
+            This method also updates the 'virtual-function-uris' property in
+            the parent Partition resource, by adding the URI for the faked
+            Virtual Function resource.
 
         Returns:
-          :class:`zhmcclient_mock.FakedVirtualFunction`: The faked resource
-            object.
+          :class:`zhmcclient_mock.FakedVirtualFunction`: The faked Virtual
+            Function resource.
         """
-        new_virtual_function = super(FakedVirtualFunctionManager,
-                                     self).add(properties)
+        new_vf = super(FakedVirtualFunctionManager, self).add(properties)
         partition = self.parent
-        if 'virtual-function-uris' in partition.properties:
-            partition.properties['virtual-function-uris'].append(
-                new_virtual_function.uri)
-        return new_virtual_function
+        assert 'virtual-function-uris' in partition.properties
+        partition.properties['virtual-function-uris'].append(new_vf.uri)
+        return new_vf
 
     def remove(self, oid):
         """
-        Remove a faked Virtual Function resource from this manager.
+        Remove a faked Virtual Function resource.
 
         This method also updates the 'virtual-function-uris' property in the
-        parent Partition resource (if it exists).
+        parent Partition resource, by removing the URI for the faked Virtual
+        Function resource.
 
         Parameters:
 
@@ -894,9 +1208,9 @@ class FakedVirtualFunctionManager(FakedBaseManager):
         """
         virtual_function = self.lookup_by_oid(oid)
         partition = self.parent
-        if 'virtual-function-uris' in partition.properties:
-            vf_uris = partition.properties['virtual-function-uris']
-            del vf_uris[virtual_function.uri]
+        assert 'virtual-function-uris' in partition.properties
+        vf_uris = partition.properties['virtual-function-uris']
+        vf_uris.remove(virtual_function.uri)
         super(FakedVirtualFunctionManager, self).remove(oid)  # deletes res.
 
 
@@ -924,13 +1238,36 @@ class FakedVirtualSwitchManager(FakedBaseManager):
     common methods and attributes.
     """
 
-    def __init__(self, cpc):
+    def __init__(self, hmc, cpc):
         super(FakedVirtualSwitchManager, self).__init__(
+            hmc=hmc,
             parent=cpc,
             resource_class=FakedVirtualSwitch,
             base_uri=self.api_root + '/virtual-switches',
             oid_prop='object-id',
             uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked Virtual Switch resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedVirtualSwitch`: The faked Virtual
+            Switch resource.
+        """
+        return super(FakedVirtualSwitchManager, self).add(properties)
 
 
 class FakedVirtualSwitch(FakedBaseResource):
@@ -946,69 +1283,3 @@ class FakedVirtualSwitch(FakedBaseResource):
         super(FakedVirtualSwitch, self).__init__(
             manager=manager,
             properties=properties)
-
-
-URLS = (
-
-    # In all modes:
-    '/api/cpcs', 'CpcsHandler',
-    '/api/cpcs/(.*)', 'CpcHandler',
-    '/api/version', 'VersionHandler',
-
-    # Only in DPM mode:
-    '/api/cpcs/(.*)/operations/start', 'CpcStartHandler',
-    '/api/cpcs', 'CpcsHandler',
-    '/api/cpcs/(.*)', 'CpcHandler',
-    '/api/version', 'VersionHandler',
-
-    # Only in DPM mode:
-    '/api/cpcs/(.*)/operations/start', 'CpcStartHandler',
-    '/api/cpcs/(.*)/operations/stop', 'CpcStopHandler',
-    '/api/cpcs/(.*)/operations/export-port-names-list',
-    'CpcExportPortNamesListHandler',
-    '/api/cpcs/(.*)/adapters', 'AdaptersHandler',
-    '/api/adapters/(.*)', 'AdapterHandler',
-    '/api/adapters/(.*)/network-ports/(.*)', 'NetworkPortHandler',
-    '/api/adapters/(.*)/storage-ports/(.*)', 'StoragePortHandler',
-    '/api/cpcs/(.*)/partitions', 'PartitionsHandler',
-    '/api/partitions/(.*)', 'PartitionHandler',
-    '/api/partitions/(.*)/operations/start', 'PartitionStartHandler',
-    '/api/partitions/(.*)/operations/stop', 'PartitionStopHandler',
-    '/api/partitions/(.*)/operations/scsi-dump', 'PartitionScsiDumpHandler',
-    '/api/partitions/(.*)/operations/psw-restart',
-    'PartitionPswRestartHandler',
-    '/api/partitions/(.*)/operations/mount-iso-image',
-    'PartitionMountIsoImageHandler',
-    '/api/partitions/(.*)/operations/unmount-iso-image',
-    'PartitionUnmountIsoImageHandler',
-    '/api/partitions/(.*)/hbas', 'HbasHandler',
-    '/api/partitions/(.*)/hbas/(.*)', 'HbaHandler',
-    '/api/partitions/(.*)/hbas/(.*)/operations/reassign-storage-adapter-port',
-    'HbaReassignPortHandler',
-    '/api/partitions/(.*)/nics', 'NicsHandler',
-    '/api/partitions/(.*)/nics/(.*)', 'NicHandler',
-    '/api/partitions/(.*)/virtual-functions', 'VirtualFunctionsHandler',
-    '/api/partitions/(.*)/virtual-functions/(.*)', 'VirtualFunctionHandler',
-    '/api/cpcs/(.*)/virtual-switches', 'VirtualSwitchesHandler',
-    '/api/virtual-switches/(.*)', 'VirtualSwitchHandler',
-    '/api/virtual-switches/(.*)/operations/get-connected-vnics',
-    'VirtualSwitchGetVnicsHandler',
-
-    # Only in classic (or ensemble) mode:
-    # '/api/cpcs/(.*)/operations/activate', 'CpcActivateHandler',
-    # '/api/cpcs/(.*)/operations/deactivate', 'CpcDeactivateHandler',
-    '/api/cpcs/(.*)/operations/import-profiles', 'CpcImportProfilesHandler',
-    '/api/cpcs/(.*)/operations/export-profiles', 'CpcExportProfilesHandler',
-    '/api/cpcs/(.*)/logical-partitions', 'LparsHandler',
-    '/api/logical-partitions/(.*)', 'LparHandler',
-    '/api/logical-partitions/(.*)/operations/activate', 'LparActivateHandler',
-    '/api/logical-partitions/(.*)/operations/deactivate',
-    'LparDeactivateHandler',
-    '/api/logical-partitions/(.*)/operations/load', 'LparLoadHandler',
-    '/api/cpcs/(.*)/reset-activation-profiles', 'ResetActProfilesHandler',
-    '/api/cpcs/(.*)/reset-activation-profiles/(.*)', 'ResetActProfileHandler',
-    '/api/cpcs/(.*)/image-activation-profiles', 'ImageActProfilesHandler',
-    '/api/cpcs/(.*)/image-activation-profiles/(.*)', 'ImageActProfileHandler',
-    '/api/cpcs/(.*)/load-activation-profiles', 'LoadActProfilesHandler',
-    '/api/cpcs/(.*)/load-activation-profiles/(.*)', 'LoadActProfileHandler',
-)
