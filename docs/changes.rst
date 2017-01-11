@@ -20,6 +20,26 @@ Change log
 ----------
 
 
+Version 0.10.0
+^^^^^^^^^^^^^^
+
+Released: not yet
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known Issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
 Version 0.9.0
 ^^^^^^^^^^^^^
 
@@ -51,12 +71,6 @@ Released: 2017-01-11
   access of resource properties, and refreshing of resources.
 
 * Added support for load-parameter field in lpar.load().
-
-**Known Issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.8.0
