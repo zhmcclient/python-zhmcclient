@@ -23,7 +23,7 @@ Change log
 Version 0.9.0
 ^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-01-11
 
 **Incompatible changes:**
 
@@ -38,6 +38,8 @@ Released: not yet
   should only be used for iterating over the currently present resource
   properties, but not for expecting particular properties.
 
+* Fixing regression in findall(name=..) (issue #141).
+
 **Enhancements:**
 
 * Changed links to HMC API books in Bibliography to no longer require IBM ID
@@ -47,6 +49,8 @@ Released: not yet
 
 * Improved the examples with better print messages, exception handling,
   access of resource properties, and refreshing of resources.
+
+* Added support for load-parameter field in lpar.load().
 
 **Known Issues:**
 
