@@ -217,7 +217,7 @@ class Lpar(BaseResource):
         return result
 
     @_log_call
-    def load(self, load_address, wait_for_completion=True):
+    def load(self, load_address, load_parameter="", wait_for_completion=True):
         """
         Load (boot) this LPAR from a load address (boot device), using the HMC
         operation "Load Logical Partition".
@@ -225,6 +225,8 @@ class Lpar(BaseResource):
         Parameters:
 
           load_address (:term:`string`): Device number of the boot device.
+
+          load_parameter (:term:`string`): Optional load control string.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -257,6 +259,8 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         body = {'load-address': load_address}
+        if load_parameter != "":
+            body['load-parameter'] = load_parameter
         result = self.manager.session.post(
             self.uri + '/operations/load', body,
             wait_for_completion=wait_for_completion)
