@@ -101,86 +101,94 @@ class MyListener(object):
             NOTI_DATA = headers
             NOTI_LOCK.notifyAll()
 
+print(__doc__)
+
+print("Using HMC %s with userid %s ..." % (hmc, userid))
+session = zhmcclient.Session(hmc, userid, password)
+cl = zhmcclient.Client(session)
+
+print("Retrieving notification topics ...")
+topics = session.get_notification_topics()
+
+for topic in topics:
+    if topic['topic-type'] == 'job-notification':
+        job_topic_name = topic['topic-name']
+        break
+
+conn = stomp.Connection([(session.host, amqport)], use_ssl="SSL")
+conn.set_listener('', MyListener())
+conn.start()
+conn.connect(userid, password, wait=True)
+
+sub_id = 42  # subscription ID
+
+print("Subscribing for job notifications using topic: %s" % job_topic_name)
+conn.subscribe(destination="/topic/"+job_topic_name, id=sub_id, ack='auto')
+
+print("Finding CPC by name=%s ..." % cpcname)
 try:
-    print("Using HMC %s with userid %s ..." % (hmc, userid))
-    session = zhmcclient.Session(hmc, userid, password)
-    cl = zhmcclient.Client(session)
-
-    print("Retrieving notification topics ...")
-    topics = session.get_notification_topics()
-
-    for topic in topics:
-        if topic['topic-type'] == 'job-notification':
-            job_topic_name = topic['topic-name']
-            break
-
-    conn = stomp.Connection([(session.host, amqport)], use_ssl="SSL")
-    conn.set_listener('', MyListener())
-    conn.start()
-    conn.connect(userid, password, wait=True)
-
-    sub_id = 42  # subscription ID
-
-    print("Subscribing for job notifications using topic: %s" % job_topic_name)
-    conn.subscribe(destination="/topic/"+job_topic_name, id=sub_id, ack='auto')
-
-    print("Finding CPC %s ..." % cpcname)
     cpc = cl.cpcs.find(name=cpcname)
-    print("Status of CPC %s: %s" % (cpcname, cpc.get_property('status')))
+except zhmcclient.NotFound:
+    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
+    sys.exit(1)
 
-    print("Finding partition %s ..." % partname)
+print("Finding partition by name=%s ..." % partname)
+try:
     partition = cpc.partitions.find(name=partname)
-    partition_status = partition.get_property('status')
-    print("Status of partition %s: %s" % (partname, partition_status))
+except zhmcclient.NotFound:
+    print("Could not find partition %s in CPC %s" % (partname, cpc.name))
+    sys.exit(1)
 
-    if partition_status == 'active':
-        print("Stopping partition %s asynchronously ..." % partname)
-        result = partition.stop(wait_for_completion=False)
-    elif partition_status in ('inactive', 'stopped'):
-        print("Starting partition %s asynchronously ..." % partname)
-        result = partition.start(wait_for_completion=False)
-    else:
-        raise zhmcclient.Error("Cannot deal with partition status: %s" % \
-                               partition_status)
+print("Accessing status of partition %s ..." % partition.name)
+partition_status = partition.get_property('status')
+print("Status of partition %s: %s" % (partition.name, partition_status))
 
-    job_uri = result['job-uri']
-    print("Waiting for completion of job %s ..." % job_uri)
-    sys.stdout.flush()
+if partition_status == 'active':
+    print("Stopping partition %s asynchronously ..." % partition.name)
+    result = partition.stop(wait_for_completion=False)
+elif partition_status in ('inactive', 'stopped'):
+    print("Starting partition %s asynchronously ..." % partition.name)
+    result = partition.start(wait_for_completion=False)
+else:
+    raise zhmcclient.Error("Cannot deal with partition status: %s" % \
+                           partition_status)
 
-    # Just for demo purposes, we show how a loop for processing multiple
-    # notifications would look like.
-    while True:
-        with NOTI_LOCK:
+job_uri = result['job-uri']
+print("Waiting for completion of job %s ..." % job_uri)
+sys.stdout.flush()
 
-            # Wait until listener has a new notification
-            while not NOTI_DATA:
-                NOTI_LOCK.wait()
+# Just for demo purposes, we show how a loop for processing multiple
+# notifications would look like.
+while True:
+    with NOTI_LOCK:
 
-            # Process the notification
-            print("Received notification:")
-            pprint(NOTI_DATA)
+        # Wait until listener has a new notification
+        while not NOTI_DATA:
+            NOTI_LOCK.wait()
+
+        # Process the notification
+        print("Received notification:")
+        pprint(NOTI_DATA)
+        sys.stdout.flush()
+
+        # This test is just for demo purposes, it should always be our job
+        # given what we subscribed for.
+        if NOTI_DATA['job-uri'] == job_uri:
+            break
+        else:
+            print("Unexpected completion received for job %s" % \
+                  NOTI_DATA['job-uri'])
             sys.stdout.flush()
 
-            # This test is just for demo purposes, it should always be our job
-            # given what we subscribed for.
-            if NOTI_DATA['job-uri'] == job_uri:
-                break
-            else:
-                print("Unexpected completion received for job %s" % \
-                      NOTI_DATA['job-uri'])
-                sys.stdout.flush()
+        # Indicate to listener that we are ready for next notification
+        NOTI_DATA = None
+        NOTI_LOCK.notifyAll()
 
-            # Indicate to listener that we are ready for next notification
-            NOTI_DATA = None
-            NOTI_LOCK.notifyAll()
+job_uri = NOTI_DATA['job-uri']
+print("Job has completed: %s" % job_uri)
+sys.stdout.flush()
 
-    job_uri = NOTI_DATA['job-uri']
-    print("Job has completed: %s" % job_uri)
-    sys.stdout.flush()
+conn.disconnect()
+sleep(1)  # Allow listener to print disconnect message (just for demo)
 
-    conn.disconnect()
-    sleep(1)  # Allow listener to print disconnect message (just for demo)
-
-except zhmcclient.Error as exc:
-    print("%s: %s" % (exc.__class__.__name__, exc))
-    sys.exit(1)
+print("Done.")

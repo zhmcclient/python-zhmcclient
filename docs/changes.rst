@@ -45,6 +45,9 @@ Released: not yet
 
 * Added example shell script showing how to use the command line interface.
 
+* Improved the examples with better print messages, exception handling,
+  access of resource properties, and refreshing of resources.
+
 **Known Issues:**
 
 * See `list of open issues`_.

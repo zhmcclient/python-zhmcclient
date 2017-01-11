@@ -69,66 +69,61 @@ password = cred['password']
 
 print(__doc__)
 
-try:
-    print("Using HMC %s with userid %s ..." % (hmc, userid))
-    session = zhmcclient.Session(hmc, userid, password)
-    cl = zhmcclient.Client(session)
+print("Using HMC %s with userid %s ..." % (hmc, userid))
+session = zhmcclient.Session(hmc, userid, password)
+cl = zhmcclient.Client(session)
 
-    timestats = example8.get("timestats", None)
-    if timestats:
-        session.time_stats_keeper.enable()
+timestats = example8.get("timestats", None)
+if timestats:
+    session.time_stats_keeper.enable()
 
-    print("Listing CPCs ...")
-    cpcs = cl.cpcs.list()
-    for cpc in cpcs:
-        print(cpc)
-        print("\tListing Adapters for %s ..." % cpc.name)
-        adapters = cpc.adapters.list()
-        for i, adapter in enumerate(adapters):
-            print('\t' + str(adapter))
-            ports = adapter.ports.list(full_properties=False)
-            for p, port in enumerate(ports):
-                if p == 0:
-                    print("\t\tListing Ports for %s ..." % adapter.name)
+print("Listing CPCs ...")
+cpcs = cl.cpcs.list()
+for cpc in cpcs:
+    print(cpc)
+    print("\tListing Adapters for %s ..." % cpc.name)
+    adapters = cpc.adapters.list()
+    for i, adapter in enumerate(adapters):
+        print('\t' + str(adapter))
+        ports = adapter.ports.list(full_properties=False)
+        for p, port in enumerate(ports):
+            if p == 0:
+                print("\t\tListing Ports for %s ..." % adapter.name)
 #                port.pull_full_properties()
-                print('\t\t' + str(port))
-        print("\tListing Virtual Switches for %s ..." % cpc.name)
-        vswitches = cpc.vswitches.list()
-        for i, vswitch in enumerate(vswitches):
-            print('\t' + str(vswitch))
-        print("\tListing Partitions for %s ..." % cpc.name)
-        partitions = cpc.partitions.list()
-        for i, partition in enumerate(partitions):
-            print('\t' + str(partition))
-            nics = partition.nics.list(full_properties=False)
-            for j, nic in enumerate(nics):
-                if j == 0:
-                    print("\t\tListing NICs for %s ..." % partition.name)
-                print('\t\t' + str(nic))
+            print('\t\t' + str(port))
+    print("\tListing Virtual Switches for %s ..." % cpc.name)
+    vswitches = cpc.vswitches.list()
+    for i, vswitch in enumerate(vswitches):
+        print('\t' + str(vswitch))
+    print("\tListing Partitions for %s ..." % cpc.name)
+    partitions = cpc.partitions.list()
+    for i, partition in enumerate(partitions):
+        print('\t' + str(partition))
+        nics = partition.nics.list(full_properties=False)
+        for j, nic in enumerate(nics):
+            if j == 0:
+                print("\t\tListing NICs for %s ..." % partition.name)
+            print('\t\t' + str(nic))
 
-            hbas = partition.hbas.list(full_properties=False)
-            for j, hba in enumerate(hbas):
-                if j == 0:
-                    print("\t\tListing HBAs for %s ..." % partition.name)
-                print('\t\t' + str(hba))
+        hbas = partition.hbas.list(full_properties=False)
+        for j, hba in enumerate(hbas):
+            if j == 0:
+                print("\t\tListing HBAs for %s ..." % partition.name)
+            print('\t\t' + str(hba))
 #                hba.pull_full_properties()
 #                print('\t\t' + str(hba.properties))
-            vfs = partition.virtual_functions.list(full_properties=False)
-            for k, vf in enumerate(vfs):
-                if k == 0:
-                    print("\t\tListing Virtual Functions for %s ..." % partition.name)
-                print('\t\t' + str(vf))
+        vfs = partition.virtual_functions.list(full_properties=False)
+        for k, vf in enumerate(vfs):
+            if k == 0:
+                print("\t\tListing Virtual Functions for %s ..." % partition.name)
+            print('\t\t' + str(vf))
 #                vf.pull_full_properties()
 #                print('\t\t' + str(vf.properties))
 
-    print("Logging off ...")
-    session.logoff()
+print("Logging off ...")
+session.logoff()
 
-    if timestats:
-        print(session.time_stats_keeper)
+if timestats:
+    print(session.time_stats_keeper)
 
-    print("Done.")
-
-except zhmcclient.Error as exc:
-    print("%s: %s" % (exc.__class__.__name__, exc))
-    sys.exit(1)
+print("Done.")

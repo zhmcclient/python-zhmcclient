@@ -21,7 +21,7 @@ import sys
 import logging
 import yaml
 import requests.packages.urllib3
-import time
+from datetime import datetime
 
 import zhmcclient
 
@@ -78,17 +78,15 @@ if timestats:
     session.time_stats_keeper.enable()
 
 for full_properties in (False, True):
-    localtime = time.asctime(time.localtime(time.time()))
-    print("Local current time :", localtime)
-    print("Listing CPCs (full_properties=%r) ..." % full_properties)
+    print("Listing CPCs with full_properties=%s ..." % full_properties)
+    start_dt = datetime.now()
     cpcs = cl.cpcs.list(full_properties)
-    localtime = time.asctime(time.localtime(time.time()))
-    print("Local current time :", localtime)
+    end_dt = datetime.now()
+    duration = end_dt - start_dt
+    print("Duration: %s" % duration)
     for cpc in cpcs:
-        print("Number of properties of cpc %s: %d (full_properties_flag=%r timestamp=%d)" \
-        % (cpc.name, len(cpc.properties), cpc.full_properties, \
-        cpc.properties_timestamp))
-        print(cpc.name, cpc.get_property('status'), cpc.uri)
+        print("Number of properties of CPC %s: %s" %
+              (cpc.name, len(cpc.properties)))
 
 print("Finding CPC by name=%s ..." % cpcname)
 try:
@@ -96,19 +94,19 @@ try:
 except zhmcclient.NotFound:
     print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
+print("Found CPC %s at: %s" % (cpc.name, cpc.uri))
 
 for full_properties in (False, True):
-    localtime = time.asctime(time.localtime(time.time()))
-    print("Local current time :", localtime)
-    print("Listing LPARs on CPC %s (full_properties=%r) ..." % (cpcname, full_properties))
+    print("Listing LPARs on CPC %s with full_properties=%s ..." %
+          (cpc.name, full_properties))
+    start_dt = datetime.now()
     lpars = cpc.lpars.list(full_properties)
-    localtime = time.asctime(time.localtime(time.time()))
-    print("Local current time :", localtime)
+    end_dt = datetime.now()
+    duration = end_dt - start_dt
+    print("Duration: %s" % duration)
     for lpar in lpars:
-        print("Number of properties of lpar %s: %d (full_properties_flag=%r timestamp=%d)" \
-        % (lpar.name, len(lpar.properties), lpar.full_properties, \
-        lpar.properties_timestamp))
-#        print(lpar.name, lpar.get_property('status'), lpar.uri)
+        print("Number of properties of LPAR %s: %s" %
+              (lpar.name, len(lpar.properties)))
 
 print("Logging off ...")
 session.logoff()

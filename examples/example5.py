@@ -22,6 +22,7 @@ import logging
 import yaml
 import json
 import requests.packages.urllib3
+from pprint import pprint
 
 import zhmcclient
 
@@ -91,59 +92,59 @@ except zhmcclient.NotFound:
     print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
 
-print("Checking if DPM is enabled on CPC %s..." % cpcname)
-if cpc.dpm_enabled:
-    print("CPC %s is in DPM mode." % cpcname)
-    if cpc.get_property('status') not in ('active', 'service-required'):
-        print("CPC %s is in an inactive state: %s" %
-              (cpcname, cpc.get_property('status')))
-        sys.exit(1)
-    try:
-        print("Finding Partition by name=%s ..." % partname)
-        partition = cpc.partitions.find(name=partname)
-        if partition.get_property('status') == 'active':
-            print("Stopping Partition %s ..." % partname)
-            partition.stop()
-        print("Deleting Partition %s ..." % partname)
-        partition.delete()
-    except zhmcclient.NotFound:
-        print("Could not find Partition %s on CPC %s" % (partname, cpcname))
+print("Checking if DPM is enabled on CPC %s..." % cpc.name)
+if not cpc.dpm_enabled:
+    print("CPC %s is not in DPM mode." % cpc.name)
+    sys.exit(1)
+print("CPC %s is in DPM mode." % cpc.name)
 
-    print("Creating a new Partition %s on CPC %s with following properties ..."
-          % (partname, cpcname))
-    properties = {
-         'name': partname,
-         'description': 'Original partition description.',
-         'cp-processors': 2,
-         'initial-memory': 1024,
-         'maximum-memory': 2048,
-         'processor-mode': 'shared',
-         'boot-device': 'test-operating-system'
-    }
-    print(json.dumps(properties, indent=4))
-    new_partition = cpc.partitions.create(properties)
-    print("New Partition created: %s" % new_partition)
-
-    print("Starting Partition %s ..." % partname)
-    new_partition.start()
-
-    print("Pull full properties of Partition %s ..." % partname)
-    new_partition.pull_full_properties()
-    print("Description of Partition %s: %s"
-        % (partname, new_partition.get_property('description')))
-
-    print("Updating Partition %s properties ..." % partname)
-    updated_properties = dict()
-    updated_properties["description"] = "Updated partition description."
-    new_partition.update_properties(updated_properties)
-
-    print("Pull full properties of Partition %s ..." % partname)
-    new_partition.pull_full_properties()
-    print("Updated description of Partition %s: %s"
-        % (partname, new_partition.get_property('description')))
-
+print("Finding Partition by name=%s on CPC %s ..." % (partname, cpc.name))
+try:
+    partition = cpc.partitions.find(name=partname)
+except zhmcclient.NotFound:
+    print("Partition %s does not exist yet" % partition.name)
 else:
-    print("CPC %s is not in DPM mode." % cpcname)
+    print("Partition %s already exists - cleaning it up" % partition.name)
+    status = partition.get_property('status')
+    print("Partition %s status: %s" % (partition.name, status))
+    if status == 'active':
+        print("Stopping Partition %s ..." % partition.name)
+        partition.stop()
+    print("Deleting Partition %s ..." % partition.name)
+    partition.delete()
+
+properties = {
+     'name': partname,
+     'description': 'Original partition description.',
+     'cp-processors': 2,
+     'initial-memory': 1024,
+     'maximum-memory': 2048,
+     'processor-mode': 'shared',
+     'boot-device': 'test-operating-system'
+}
+print("Creating a new Partition %s on CPC %s with following properties ..."
+      % (partname, cpcname))
+pprint(properties)
+new_partition = cpc.partitions.create(properties)
+print("New Partition %s created at: %s" %
+      (new_partition.name, new_partition.uri))
+
+print("Starting Partition %s ..." % new_partition.name)
+new_partition.start()
+
+print("Description of Partition %s: %s"
+    % (new_partition.name, new_partition.get_property('description')))
+
+new_description = "Updated partition description."
+print("Updating partition description to: %s" % new_description)
+updated_properties = dict()
+updated_properties["description"] = new_description
+new_partition.update_properties(updated_properties)
+
+print("Refreshing properties of Partition %s ..." % new_partition.name)
+new_partition.pull_full_properties()
+print("Description of Partition %s: %s"
+    % (new_partition.name, new_partition.get_property('description')))
 
 print("Logging off ...")
 session.logoff()
