@@ -198,8 +198,11 @@ class BaseManager(object):
         """
         found = list()
         if list(kwargs.keys()) == ['name']:
-            obj = self.find_by_name(kwargs['name'])
-            found.append(obj)
+            try:
+                obj = self.find_by_name(kwargs['name'])
+                found.append(obj)
+            except NotFound:
+                pass
         else:
             searches = kwargs.items()
             listing = self.list()
