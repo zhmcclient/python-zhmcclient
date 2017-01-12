@@ -6,14 +6,16 @@
 #     Windows with CygWin
 #     Linux (any)
 #     OS-X
-#   All of these commands:
+#   These commands on all OS platforms:
 #     make (GNU make)
 #     bash
-#     rm, find, xargs, grep, sed, tar
+#     rm, mv, find, xargs, tee
 #     python (This Makefile uses the active Python environment, virtual Python
 #        environments are supported)
 #     pip (in the active Python environment)
-#
+#     twine (in the active Python environment)
+#   These commands on Linux and OS-X:
+#     uname
 # Additional prerequisites for running this Makefile are installed by running:
 #   make develop
 # ------------------------------------------------------------------------------
