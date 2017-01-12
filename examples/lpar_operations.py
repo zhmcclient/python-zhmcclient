@@ -14,14 +14,14 @@
 # limitations under the License.
 
 """
-Example 4: Using the asynchronous interface.
+Example shows how to find an LPAR in a CPC
+and activate/deactivate/load of an LPAR.
 """
 
 import sys
 import logging
 import yaml
 import requests.packages.urllib3
-import time
 
 import zhmcclient
 
@@ -41,13 +41,13 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example4 = examples.get("example4", None)
-if example4 is None:
-    print("example4 not found in credentials file %s" % \
+lpar_operations = examples.get("lpar_operations", None)
+if lpar_operations is None:
+    print("lpar_operations not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example4.get("loglevel", None)
+loglevel = lpar_operations.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
@@ -56,10 +56,12 @@ if loglevel is not None:
         sys.exit(1)
     logging.basicConfig(level=level)
 
-hmc = example4["hmc"]
-cpcname = example4["cpcname"]
-cpcstatus = example4["cpcstatus"]
-lparname = example4["lparname"]
+hmc = lpar_operations["hmc"]
+cpcname = lpar_operations["cpcname"]
+cpcstatus = lpar_operations["cpcstatus"]
+lparname = lpar_operations["lparname"]
+loaddev = lpar_operations["loaddev"]
+deactivate = lpar_operations["deactivate"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
@@ -76,7 +78,7 @@ print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
-timestats = example4.get("timestats", None)
+timestats = lpar_operations.get("timestats", None)
 if timestats:
     session.time_stats_keeper.enable()
 
@@ -87,6 +89,11 @@ except zhmcclient.NotFound:
     print("Could not find CPC %s with status %s on HMC %s" %
           (cpcname, cpcstatus, hmc))
     sys.exit(1)
+print("Found CPC %s at: %s" % (cpc.name, cpc.uri))
+
+print("Accessing status of CPC %s ..." % cpc.name)
+status = cpc.get_property('status')
+print("Status of CPC %s: %s" % (cpc.name, status))
 
 print("Finding LPAR by name=%s ..." % lparname)
 try:
@@ -94,30 +101,47 @@ try:
 except zhmcclient.NotFound:
     print("Could not find LPAR %s in CPC %s" % (lparname, cpc.name))
     sys.exit(1)
+print("Found LPAR %s at: %s" % (lpar.name, lpar.uri))
 
 print("Accessing status of LPAR %s ..." % lpar.name)
 status = lpar.get_property('status')
 print("Status of LPAR %s: %s" % (lpar.name, status))
 
-print("De-Activating LPAR %s (async.) ..." % lpar.name)
-job_obj = lpar.deactivate(wait_for_completion=False)
-job_uri = job_obj['job-uri']
-print("Job URI: %s" % job_uri)
+print("Deactivating LPAR %s ..." % lpar.name)
+lpar.deactivate()
+print("Refreshing properties of LPAR %s ..." % lpar.name)
+lpar.pull_full_properties()
+print("Accessing status of LPAR %s ..." % lpar.name)
+status = lpar.get_property('status')
+print("Status of LPAR %s: %s" % (lpar.name, status))
 
-print("Retrieving job properties ...")
-job = session.query_job_status(job_uri)
-print("Job properties: %s" % job)
+print("Activating LPAR %s ..." % lpar.name)
+lpar.activate()
+print("Refreshing properties of LPAR %s ..." % lpar.name)
+lpar.pull_full_properties()
+print("Accessing status of LPAR %s ..." % lpar.name)
+status = lpar.get_property('status')
+print("Status of LPAR %s: %s" % (lpar.name, status))
 
-while job['status'] != 'complete':
-    time.sleep(1)
-    print("Retrieving job properties ...")
-    job = session.query_job_status(job_uri)
-    print("Job properties: %s" % job)
+print("Loading LPAR %s from device %s ..." % (lpar.name, loaddev))
+lpar.load(loaddev)
+for i in range(0, 5):
+    print("Refreshing properties of LPAR %s ..." % lpar.name)
+    lpar.pull_full_properties()
+    print("Accessing status of LPAR %s ..." % lpar.name)
+    status = lpar.get_property('status')
+    print("Status of LPAR %s: %s" % (lpar.name, status))
+    if status == 'operating':
+        break
 
-print('De-Activation complete!')
-
-print('Deleting completed job ...')
-session.delete_completed_job_status(job_uri)
+if deactivate == "yes":
+    print("Deactivating LPAR %s ..." % lpar.name)
+    lpar.deactivate()
+    print("Refreshing properties of LPAR %s ..." % lpar.name)
+    lpar.pull_full_properties()
+    print("Accessing status of LPAR %s ..." % lpar.name)
+    status = lpar.get_property('status')
+    print("Status of LPAR %s: %s" % (lpar.name, status))
 
 print("Logging off ...")
 session.logoff()
