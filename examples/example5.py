@@ -102,7 +102,7 @@ print("Finding Partition by name=%s on CPC %s ..." % (partname, cpc.name))
 try:
     partition = cpc.partitions.find(name=partname)
 except zhmcclient.NotFound:
-    print("Partition %s does not exist yet" % partition.name)
+    print("Partition %s does not exist yet" % partname)
 else:
     print("Partition %s already exists - cleaning it up" % partition.name)
     status = partition.get_property('status')
