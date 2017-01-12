@@ -22,7 +22,7 @@ zhmcclient.
 Requirements
 ------------
 
-* Must avoid the need for a real HMC and still allow usage of the zhmcclient
+* Must avoid the need for an actual HMC and still allow usage of the zhmcclient
   API.
 * Both read-only and read-write operations must be supported.
 * Read-write operations must reflect their changes properly (i.e. they must be
@@ -31,6 +31,10 @@ Requirements
   that cannot be created by clients), and its resource descriptions must be
   easy to use (i.e. not in terms of REST URIs.
 * It must be possible to define testcases with error injection.
+* The solution must be usable in unit tests of zhmcclient users.
+* The solution needs to perform fast, because it is used in a unit test.
+* The solution should not rely on external componentry such as a small HTTP
+  server.
 
 It seems that with these requirements, we can assume that there is a need for
 a faked HMC that can represent its resources and properties as Python objects,
@@ -44,7 +48,7 @@ There are two basic design options for the fake client:
 * Complete re-implementation of the zhmcclient API, that behaves the same
   way as the zhmcclient package, but consists of a different classes that
   implement a faked HMC.
-* Usage of the real zhmcclient package, and replacing its Session object
+* Usage of the zhmcclient package, and replacing its Session object
   with a fake session that implements a faked HMC.
 
 The first design option is probably less effort, but it has the drawback that
@@ -63,16 +67,22 @@ Design
 In the following description, the second design option is used.
 
 There is a fake session object that the user of the zhmcclient package
-will use instead of zhmcclient.Session. The fake session object contains a
+will use instead of `zhmcclient.Session`. The fake session object contains a
 faked HMC that can represent all resources relevant for the zhmcclient.
-There fake session object implements the same API as zhmcclient.Session, so
-that the rest of the zhmcclient classes does not need to be changed.
-The get(), post() and delete() methods of the fake session class will
+
+This fake session object implements the same API as `zhmcclient.Session`, so
+that the rest of the zhmcclient classes do not need to be changed.
+The `get()`, `post()` and `delete()` methods of the fake session class will
 be redirected to operate on the faked HMC.
 
-The fake session object will have the ability to be "loaded" with an
-initial state of resources. The resource definitions can be provided as
-a dictionary of nested dictionaries, following this example::
+The fake session object will have the ability to be populated with a resource
+state. This is supported in two ways that can both be used:
+
+* By adding an entire tree of resources.
+* By invoking add/remove methods for each resource.
+
+When adding an entire tree of resources, the resources are defined as a
+dictionary of nested dictionaries, following this example::
 
     resources = {
         'cpcs': [  # name of manager attribute for this resource
@@ -109,16 +119,44 @@ a dictionary of nested dictionaries, following this example::
         ]
     }
 
-The properties for object ID ("object-id" or "element-id") and URI
-("object-uri" or "element-uri") are auto-generated, if not provided by
+The dictionary keys for the resources in this dictionary structure are the
+names of the attributes for navigating to the child resources within their
+parent resources, in the zhmcclient package. For example, the 'cpcs' dictionary
+key corresponds to the `zhmcclient.Client.cpcs` attribute name.
+
+When invoking add/remove methods for each resource, the resource tree is built
+up by the user, from top to bottom. Besides just being an alternative to
+the bulk input with the resource dictionary, this approach also allows changing
+the resource state incrementally between test cases.
+
+In both approaches, the properties for object ID ("object-id" or "element-id")
+and URI ("object-uri" or "element-uri") are auto-generated, if not provided by
 the user. All other properties will only exist as provided by the user.
-There is no checking for invalid properties.
+
+In both approaches, there is no checking for invalid properties (neither for
+property name, nor for property type). Checking for invalid properties would
+require knowing the names of all properties of all resource types. Right now,
+the zhmcclient code and the code for the fake session/HMC have to know only a
+very small number of properties (object-id, object-uri, name). Plus, the set of
+properties depends on the HMC API version, and probably some properties even
+depend on the CPC machine generation. It saves a significant effort not having
+this knowledge in the zhmcclient code and in the code for the fake session/HMC.
 
 For all operations against the faked HMC, a successful operation is
-implemented by default. Only if a testcase needs error injection, the user
-needs to deal with setting up the behavior of faked HMC operations.
+implemented by default.
 
-To support this, the fake session object will have the ability to specify
+The unit testcases of users can use the `side_effects` approach of the `mock`
+package for error injection. The fake session/HMC does not need to do anything
+for that to work.
+
+Possible future extensions
+--------------------------
+
+Specific operation behavior
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If a need arises to have other behavior in the operations than the default
+implementation, the fake session object can have the ability to specify
 non-standard behavior of HMC operations, at the level of the HTTP interactions,
 following this example::
 
@@ -151,3 +189,6 @@ standard responses (see the first list item in the example above) as well as
 error responses (see the second list item). Because the zhmcclient only
 evaluates HTTP status code, HMC reason code and the message text, these are the
 only attributes that can be specified (to keep it simple).
+
+Note that normal error injection can already be done with the `side_effects`
+approach of the `mock` package.
