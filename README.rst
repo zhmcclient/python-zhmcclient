@@ -52,7 +52,11 @@ zhmcclient - A pure Python client library for the z Systems HMC Web Services API
 
 .. image:: https://travis-ci.org/zhmcclient/python-zhmcclient.svg?branch=master
     :target: https://travis-ci.org/zhmcclient/python-zhmcclient
-    :alt: Test status (master)
+    :alt: Travis test status (master)
+
+.. image:: https://ci.appveyor.com/api/projects/status/i022iaeu3dao8j5x/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/leopoldjuergen/python-zhmcclient
+    :alt: Appveyor test status (master)
 
 .. image:: https://readthedocs.org/projects/python-zhmcclient/badge/?version=latest
     :target: http://python-zhmcclient.readthedocs.io/en/latest/
