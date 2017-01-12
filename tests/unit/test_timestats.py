@@ -34,11 +34,11 @@ PRINT_HEADER_DISABLED = \
     "Disabled."
 
 
-def time_equal(t1, t2, delta):
+def time_abs_delta(t1, t2):
     """
-    Return True if two float values are nearly equal (as defined by delta).
+    Return the positive difference between two float values.
     """
-    return abs(t1 - t2) < delta
+    return abs(t1 - t2)
 
 
 class TimeStatsTests(unittest.TestCase):
@@ -120,8 +120,9 @@ class TimeStatsTests(unittest.TestCase):
         keeper = TimeStatsKeeper()
         keeper.enable()
 
-        duration = 0.2
-        delta = duration / 100
+        duration = 0.4
+        # TimeStatsKeeper on Windows has only a precision of 1/60 sec:
+        delta = 0.04
 
         stats = keeper.get_stats('foo')
         stats.begin()
@@ -130,9 +131,9 @@ class TimeStatsTests(unittest.TestCase):
 
         for _, stats in keeper.snapshot():
             self.assertEqual(stats.count, 1)
-            self.assertTrue(time_equal(stats.avg_time, duration, delta))
-            self.assertTrue(time_equal(stats.min_time, duration, delta))
-            self.assertTrue(time_equal(stats.max_time, duration, delta))
+            self.assertLess(time_abs_delta(stats.avg_time, duration), delta)
+            self.assertLess(time_abs_delta(stats.min_time, duration), delta)
+            self.assertLess(time_abs_delta(stats.max_time, duration), delta)
 
         stats.reset()
         self.assertEqual(stats.count, 0)
@@ -166,8 +167,9 @@ class TimeStatsTests(unittest.TestCase):
         keeper = TimeStatsKeeper()
         keeper.enable()
 
-        duration = 0.2
-        delta = duration / 100
+        duration = 0.4
+        # TimeStatsKeeper on Windows has only a precision of 1/60 sec:
+        delta = 0.04
 
         stats = keeper.get_stats('foo')
         stats.begin()
@@ -179,15 +181,15 @@ class TimeStatsTests(unittest.TestCase):
 
         # keep producing statistics data
         stats.begin()
-        time.sleep(duration * 2)
+        time.sleep(duration)
         stats.end()
 
         # verify that only the first set of data is in the snapshot
         for _, stats in snapshot:
             self.assertEqual(stats.count, 1)
-            self.assertTrue(time_equal(stats.avg_time, duration, delta))
-            self.assertTrue(time_equal(stats.min_time, duration, delta))
-            self.assertTrue(time_equal(stats.max_time, duration, delta))
+            self.assertLess(time_abs_delta(stats.avg_time, duration), delta)
+            self.assertLess(time_abs_delta(stats.min_time, duration), delta)
+            self.assertLess(time_abs_delta(stats.max_time, duration), delta)
 
     def test_str_empty(self):
         """Test str() for an empty enabled keeper."""
