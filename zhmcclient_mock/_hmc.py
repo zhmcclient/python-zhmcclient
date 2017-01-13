@@ -20,11 +20,14 @@ for the zhmcclient package.
 from __future__ import absolute_import
 
 import os
+import json
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 import six
+from six.moves.urllib.parse import urlparse, parse_qsl
+import web
 
 # TODO: Move the resources into their own files.
 
@@ -126,8 +129,11 @@ class LocalResourceManager(object):
 
         Returns:
           LocalResource: The resource object.
+
+        Raises:
+          KeyError: No resource found for this object ID.
         """
-        del self.resources[oid]
+        return self.resources[oid]
 
 
 class Hmc(LocalResource):
@@ -148,11 +154,13 @@ class Hmc(LocalResource):
     fake session object (see :class:`~zhmcclient_mock.Session`).
     """
 
-    def __init__(self, host, api_version):
-        self.host = host
+    def __init__(self, hmc_name, hmc_version, api_version):
+        self.hmc_name = hmc_name
+        self.hmc_version = hmc_version
         self.api_version = api_version
         self.special_operations = {}  # user-provided operations
         self.cpcs = CpcManager(client=self)
+        self.web_app = web.application(URLS, globals())
 
     def add_resources(self, resources):
         """
@@ -248,7 +256,7 @@ class Hmc(LocalResource):
 
         Parameters:
 
-          operations (list):
+          operations (:class:`py:list`):
             List of operation behavior definitions to be added, see example
             below.
 
@@ -305,16 +313,15 @@ class Hmc(LocalResource):
                              format(key, i))
 
     def get(self, uri, logon_required):
-        # TODO: Implement
-        pass
+        response = self.web_app.request(uri, 'GET', env={'hmc': self})
+        return json.loads(response.data)
 
     def post(self, uri, body, logon_required, wait_for_completion):
-        # TODO: Implement
-        pass
+        response = self.web_app.request(uri, 'POST', body, env={'hmc': self})
+        return json.loads(response.data)
 
     def delete(self, uri, logon_required):
-        # TODO: Implement
-        pass
+        self.web_app.request(uri, 'DELETE', env={'hmc': self})
 
 
 class CpcManager(LocalResourceManager):
@@ -401,7 +408,7 @@ class PortManager(LocalResourceManager):
             will be auto-generated.
 
         Returns:
-          Port: The resource object.
+          :class:`zhmcclient_mock.Port`: The resource object.
         """
         adapter = self.parent
         if 'network-port-uris' in adapter.properties:
@@ -442,3 +449,123 @@ class Port(LocalResource):
         super(Port, self).__init__(
             manager=manager,
             properties=properties)
+
+
+URLS = (
+
+    # In all modes:
+    '/api/cpcs', 'CpcsHandler',
+    '/api/cpcs/(.*)', 'CpcHandler',
+    '/api/version', 'VersionHandler',
+
+    # Only in DPM mode:
+    '/api/cpcs/(.*)/operations/start', 'CpcStartHandler',
+    '/api/cpcs', 'CpcsHandler',
+    '/api/cpcs/(.*)', 'CpcHandler',
+    '/api/version', 'VersionHandler',
+
+    # Only in DPM mode:
+    '/api/cpcs/(.*)/operations/start', 'CpcStartHandler',
+    '/api/cpcs/(.*)/operations/stop', 'CpcStopHandler',
+    '/api/cpcs/(.*)/operations/export-port-names-list',
+        'CpcExportPortNamesListHandler',
+    '/api/cpcs/(.*)/adapters', 'AdaptersHandler',
+    '/api/adapters/(.*)', 'AdapterHandler',
+    '/api/adapters/(.*)/network-ports/(.*)', 'NetworkPortHandler',
+    '/api/adapters/(.*)/storage-ports/(.*)', 'StoragePortHandler',
+    '/api/cpcs/(.*)/partitions', 'PartitionsHandler',
+    '/api/partitions/(.*)', 'PartitionHandler',
+    '/api/partitions/(.*)/operations/start', 'PartitionStartHandler',
+    '/api/partitions/(.*)/operations/stop', 'PartitionStopHandler',
+    '/api/partitions/(.*)/operations/scsi-dump', 'PartitionScsiDumpHandler',
+    '/api/partitions/(.*)/operations/psw-restart',
+        'PartitionPswRestartHandler',
+    '/api/partitions/(.*)/operations/mount-iso-image',
+        'PartitionMountIsoImageHandler',
+    '/api/partitions/(.*)/operations/unmount-iso-image',
+        'PartitionUnmountIsoImageHandler',
+    '/api/partitions/(.*)/hbas', 'HbasHandler',
+    '/api/partitions/(.*)/hbas/(.*)', 'HbaHandler',
+    '/api/partitions/(.*)/hbas/(.*)/operations/reassign-storage-adapter-port',
+        'HbaReassignPortHandler',
+    '/api/partitions/(.*)/nics', 'NicsHandler',
+    '/api/partitions/(.*)/nics/(.*)', 'NicHandler',
+    '/api/partitions/(.*)/virtual-functions', 'VirtualFunctionsHandler',
+    '/api/partitions/(.*)/virtual-functions/(.*)', 'VirtualFunctionHandler',
+    '/api/cpcs/(.*)/virtual-switches', 'VirtualSwitchesHandler',
+    '/api/virtual-switches/(.*)', 'VirtualSwitchHandler',
+    '/api/virtual-switches/(.*)/operations/get-connected-vnics',
+        'VirtualSwitchGetVnicsHandler',
+
+    # Only in classic (or ensemble) mode:
+    #'/api/cpcs/(.*)/operations/activate', 'CpcActivateHandler',
+    #'/api/cpcs/(.*)/operations/deactivate', 'CpcDeactivateHandler',
+    '/api/cpcs/(.*)/operations/import-profiles', 'CpcImportProfilesHandler',
+    '/api/cpcs/(.*)/operations/export-profiles', 'CpcExportProfilesHandler',
+    '/api/cpcs/(.*)/logical-partitions', 'LparsHandler',
+    '/api/logical-partitions/(.*)', 'LparHandler',
+    '/api/logical-partitions/(.*)/operations/activate', 'LparActivateHandler',
+    '/api/logical-partitions/(.*)/operations/deactivate',
+        'LparDeactivateHandler',
+    '/api/logical-partitions/(.*)/operations/load', 'LparLoadHandler',
+    '/api/cpcs/(.*)/reset-activation-profiles', 'ResetActProfilesHandler',
+    '/api/cpcs/(.*)/reset-activation-profiles/(.*)', 'ResetActProfileHandler',
+    '/api/cpcs/(.*)/image-activation-profiles', 'ImageActProfilesHandler',
+    '/api/cpcs/(.*)/image-activation-profiles/(.*)', 'ImageActProfileHandler',
+    '/api/cpcs/(.*)/load-activation-profiles', 'LoadActProfilesHandler',
+    '/api/cpcs/(.*)/load-activation-profiles/(.*)', 'LoadActProfileHandler',
+)
+
+
+class VersionHandler(object):
+
+    def GET(self):
+        hmc = web.ctx.env['hmc']
+        # import pdb; pdb.set_trace()
+        api_versions = hmc.api_version.split('.')
+        response_obj = {
+            'api-major-version': int(api_versions[0]),
+            'api-minor-version': int(api_versions[1]),
+            'hmc-version': hmc.hmc_version,
+            'hmc-name': hmc.hmc_name,
+        }
+        return json.dumps(response_obj)
+
+
+class CpcsHandler(object):
+
+    def GET(self):
+        hmc = web.ctx.env['hmc']
+        response_obj = {
+            'cpcs': [cpc.properties for cpc in hmc.cpcs.list()]
+        }
+        return json.dumps(response_obj)
+
+
+class CpcHandler(object):
+
+    def _lookup(self, hmc, cpc_oid):
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise Exception("No CPC found with object-id: %s" % cpc_oid)
+        return cpc
+
+    def GET(self, cpc_oid):
+        hmc = web.ctx.env['hmc']
+        cpc = self._lookup(hmc, cpc_oid)
+        response_obj = cpc.properties
+        return json.dumps(response_obj)
+
+    def POST(self, cpc_oid):
+        hmc = web.ctx.env['hmc']
+        cpc = self._lookup(hmc, cpc_oid)
+        data = json.loads(web.data())
+        cpc.properties.update(data)
+
+# TODO: Implement these handlers:
+#    '/api/cpcs/(.*)/adapters', AdaptersHandler,
+#    '/api/adapters/(.*)', AdapterHandler,
+#    '/api/adapters/(.*)/network-ports/(.*)', NetworkPortHandler,
+#    '/api/adapters/(.*)/storage-ports/(.*)', StoragePortHandler,
+

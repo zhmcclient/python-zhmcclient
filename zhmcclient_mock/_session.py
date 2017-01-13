@@ -53,24 +53,26 @@ class Session(ZhmcclientSession):
     :meth:`~zhmcclient_mock.Session.add_operations`).
     """
 
-    def __init__(self, host, api_version):
+    def __init__(self, host, hmc_name, hmc_version, api_version):
         """
         Parameters:
 
           host (:term:`string`):
-            HMC host. For valid formats, see the
-            :attr:`~zhmcclient.Session.host` property.
+            HMC host.
 
-            May be `None`.
+          hmc_name (:term:`string`):
+            HMC name. Used for result of Query Version Info operation.
 
-            This parameter is used only for descriptiove purposes. No
-            communication will happen to that host.
+          hmc_version (:term:`string`):
+            HMC version string (e.g. '2.13.1'). Used for result of
+            Query Version Info operation.
 
           api_version (:term:`string`):
-            Version string for the HMC API version (e.g. '2.13.1').
+            HMC API version string (e.g. '1.8'). Used for result of
+            Query Version Info operation.
         """
         super(Session, self).__init__(host)
-        self._hmc = Hmc(host, api_version)
+        self._hmc = Hmc(hmc_name, hmc_version, api_version)
 
     @property
     def hmc(self):
@@ -116,7 +118,7 @@ class Session(ZhmcclientSession):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self._hmc.get(uri, logon_required)
+        return self._hmc.get(uri, logon_required)
 
     def post(self, uri, body=None, logon_required=True,
              wait_for_completion=True):
@@ -211,7 +213,7 @@ class Session(ZhmcclientSession):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self._hmc.post(uri, body, logon_required, wait_for_completion)
+        return self._hmc.post(uri, body, logon_required, wait_for_completion)
 
     def delete(self, uri, logon_required=True):
         """

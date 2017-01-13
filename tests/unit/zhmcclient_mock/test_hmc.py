@@ -27,27 +27,25 @@ from zhmcclient_mock._hmc import Hmc, CpcManager, Cpc, Adapter, Port
 class HmcTests(unittest.TestCase):
     """All tests for the zhmcclient_mock._hmc.Hmc class."""
 
+    def setUp(self):
+        self.hmc = Hmc('fake-hmc', '2.13.1', '1.8')
+
     def test_hmc(self):
+        self.assertEqual(self.hmc.hmc_name, 'fake-hmc')
+        self.assertEqual(self.hmc.hmc_version, '2.13.1')
+        self.assertEqual(self.hmc.api_version, '1.8')
+        self.assertIsInstance(self.hmc.cpcs, CpcManager)
 
         # the function to be tested:
-        hmc = Hmc('fake-host', '2.13.1')
-
-        self.assertEqual(hmc.host, 'fake-host')
-        self.assertEqual(hmc.api_version, '2.13.1')
-        self.assertIsInstance(hmc.cpcs, CpcManager)
-
-        # the function to be tested:
-        cpcs = hmc.cpcs.list()
+        cpcs = self.hmc.cpcs.list()
 
         self.assertEqual(len(cpcs), 0)
 
     def test_hmc_1_cpc(self):
-        hmc = Hmc('fake-host', '2.13.1')
-
         cpc1_in_props = {'name': 'cpc1'}
 
         # the function to be tested:
-        cpc1 = hmc.cpcs.add({'name': 'cpc1'})
+        cpc1 = self.hmc.cpcs.add({'name': 'cpc1'})
 
         cpc1_out_props = cpc1_in_props.copy()
         cpc1_out_props.update({
@@ -56,22 +54,20 @@ class HmcTests(unittest.TestCase):
         })
 
         # the function to be tested:
-        cpcs = hmc.cpcs.list()
+        cpcs = self.hmc.cpcs.list()
 
         self.assertEqual(len(cpcs), 1)
         self.assertEqual(cpcs[0], cpc1)
 
         self.assertIsInstance(cpc1, Cpc)
         self.assertEqual(cpc1.properties, cpc1_out_props)
-        self.assertEqual(cpc1.manager, hmc.cpcs)
+        self.assertEqual(cpc1.manager, self.hmc.cpcs)
 
     def test_hmc_2_cpcs(self):
-        hmc = Hmc('fake-host', '2.13.1')
-
         cpc1_in_props = {'name': 'cpc1'}
 
         # the function to be tested:
-        cpc1 = hmc.cpcs.add(cpc1_in_props)
+        cpc1 = self.hmc.cpcs.add(cpc1_in_props)
 
         cpc1_out_props = cpc1_in_props.copy()
         cpc1_out_props.update({
@@ -82,7 +78,7 @@ class HmcTests(unittest.TestCase):
         cpc2_in_props = {'name': 'cpc2'}
 
         # the function to be tested:
-        cpc2 = hmc.cpcs.add(cpc2_in_props)
+        cpc2 = self.hmc.cpcs.add(cpc2_in_props)
 
         cpc2_out_props = cpc2_in_props.copy()
         cpc2_out_props.update({
@@ -91,7 +87,7 @@ class HmcTests(unittest.TestCase):
         })
 
         # the function to be tested:
-        cpcs = hmc.cpcs.list()
+        cpcs = self.hmc.cpcs.list()
 
         self.assertEqual(len(cpcs), 2)
         # We expect the order of addition to be maintained:
@@ -100,11 +96,11 @@ class HmcTests(unittest.TestCase):
 
         self.assertIsInstance(cpc1, Cpc)
         self.assertEqual(cpc1.properties, cpc1_out_props)
-        self.assertEqual(cpc1.manager, hmc.cpcs)
+        self.assertEqual(cpc1.manager, self.hmc.cpcs)
 
         self.assertIsInstance(cpc2, Cpc)
         self.assertEqual(cpc2.properties, cpc2_out_props)
-        self.assertEqual(cpc2.manager, hmc.cpcs)
+        self.assertEqual(cpc2.manager, self.hmc.cpcs)
 
     # TODO: Add test cases for:
     #    osa1 = cpc1.adapters.add({'adapter-family': 'osa'})
@@ -113,8 +109,6 @@ class HmcTests(unittest.TestCase):
     #    manager attributes for all types
 
     def test_res_dict(self):
-        hmc = Hmc('fake-host', '2.13.1')
-
         cpc1_in_props = {'name': 'cpc1'}
         adapter1_in_props = {'name': 'osa1'}
         port1_in_props = {'name': 'osa1_1'}
@@ -136,9 +130,9 @@ class HmcTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        hmc.add_resources(rd)
+        self.hmc.add_resources(rd)
 
-        cpcs = hmc.cpcs.list()
+        cpcs = self.hmc.cpcs.list()
 
         self.assertEqual(len(cpcs), 1)
 
@@ -150,7 +144,7 @@ class HmcTests(unittest.TestCase):
         })
         self.assertIsInstance(cpc1, Cpc)
         self.assertEqual(cpc1.properties, cpc1_out_props)
-        self.assertEqual(cpc1.manager, hmc.cpcs)
+        self.assertEqual(cpc1.manager, self.hmc.cpcs)
 
         cpc1_adapters = cpc1.adapters.list()
 

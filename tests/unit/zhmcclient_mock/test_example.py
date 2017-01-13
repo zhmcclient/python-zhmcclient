@@ -29,7 +29,8 @@ class MyTests(unittest.TestCase):
 
     def setUp(self):
 
-        self.session = zhmcclient_mock.Session('fake-host', '2.13.1')
+        self.session = zhmcclient_mock.Session('fake-host', 'fake-hmc',
+                                               '2.13.1', '1.8')
         self.session.hmc.add_resources({
             'cpcs': [
                 {
@@ -55,7 +56,7 @@ class MyTests(unittest.TestCase):
     def test_initial(self):
 
         self.assertEqual(self.session.host, 'fake-host')
-        #self.assertEqual(self.client.version_info(), (2, 13))
+        self.assertEqual(self.client.version_info(), (1, 8))
 
     def test_list(self):
 
@@ -64,15 +65,38 @@ class MyTests(unittest.TestCase):
 
         self.assertEqual(len(cpcs), 2)
 
-        self.assertEqual(cpcs[0].uri, '/api/cpcs/%s' % cpcs[0]['object-id'])
-        self.assertEqual(cpcs[0].name, 'cpc_1')
-        self.assertEqual(cpcs[0].get_property('name'), 'cpc_1')
-        self.assertEqual(cpcs[0].get_property('description'), 'CPC #1')
+        cpc_1 = cpcs[0]
+        cpc_1_oid = cpc_1.uri.split('/')[-1]
+        self.assertEqual(cpc_1.uri, '/api/cpcs/%s' % cpc_1_oid)
+        self.assertEqual(cpc_1.name, 'cpc_1')
+        self.assertEqual(cpc_1.get_property('object-id'), cpc_1_oid)
+        self.assertEqual(cpc_1.get_property('object-uri'), cpc_1.uri)
+        self.assertEqual(cpc_1.get_property('name'), cpc_1.name)
 
-        self.assertEqual(cpcs[1].uri, '/api/cpcs/%s' % cpcs[1]['object-id'])
-        self.assertEqual(cpcs[1].name, 'cpc_2')
-        self.assertEqual(cpcs[1].get_property('name'), 'cpc_2')
-        self.assertEqual(cpcs[1].get_property('description'), 'CPC #2')
+        cpc_2 = cpcs[1]
+        cpc_2_oid = cpc_2.uri.split('/')[-1]
+        self.assertEqual(cpc_2.uri, '/api/cpcs/%s' % cpc_2_oid)
+        self.assertEqual(cpc_2.name, 'cpc_2')
+        self.assertEqual(cpc_2.get_property('object-id'), cpc_2_oid)
+        self.assertEqual(cpc_2.get_property('object-uri'), cpc_2.uri)
+        self.assertEqual(cpc_2.get_property('name'), cpc_2.name)
+
+    def test_get_properties(self):
+        cpcs = self.client.cpcs.list()
+        cpc_1 = cpcs[0]
+
+        # the function to be tested:
+        cpc_1.pull_full_properties()
+
+        cpc_1_uri = cpc_1.uri
+        cpc_1_oid = cpc_1.uri.split('/')[-1]
+
+        self.assertEqual(len(cpc_1.properties), 4)
+        self.assertEqual(cpc_1.get_property('object-id'), cpc_1_oid)
+        self.assertEqual(cpc_1.get_property('object-uri'), cpc_1_uri)
+        self.assertEqual(cpc_1.get_property('name'), 'cpc_1')
+        self.assertEqual(cpc_1.get_property('description'), 'CPC #1')
+
 
 if __name__ == '__main__':
     requests.packages.urllib3.disable_warnings()
