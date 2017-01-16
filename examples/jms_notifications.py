@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 7: Demonstrate JMS notifications for completion of async operation
+Example demonstrates JMS notifications for completion of async operation
 """
 
 import sys
@@ -45,16 +45,16 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example7 = examples.get("example7", None)
-if example7 is None:
-    print("example7 not found in credentials file %s" %
+jms_notifications = examples.get("jms_notifications", None)
+if jms_notifications is None:
+    print("jms_notifications not found in credentials file %s" %
           (hmccreds_file))
     sys.exit(1)
 
-hmc = example7["hmc"]
-cpcname = example7["cpcname"]
-partname = example7["partname"]
-amqport = example7['amqport']
+hmc = jms_notifications["hmc"]
+cpcname = jms_notifications["cpcname"]
+partname = jms_notifications["partname"]
+amqport = jms_notifications['amqport']
 callback = None
 topic = None
 

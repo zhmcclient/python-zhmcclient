@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 5: CRUD (Create-Read-Update-Delete) example for Partitions.
+Example shows lifecycle (Create-Read-Update-Delete) of a Partition.
 """
 
 import sys
@@ -42,13 +42,13 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example5 = examples.get("example5", None)
-if example5 is None:
-    print("example5 not found in credentials file %s" % \
+partition_lifecycle = examples.get("partition_lifecycle", None)
+if partition_lifecycle is None:
+    print("partition_lifecycle not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example5.get("loglevel", None)
+loglevel = partition_lifecycle.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
@@ -57,9 +57,9 @@ if loglevel is not None:
         sys.exit(1)
     logging.basicConfig(level=level)
 
-hmc = example5["hmc"]
-cpcname = example5["cpcname"]
-partname = example5["partname"]
+hmc = partition_lifecycle["hmc"]
+cpcname = partition_lifecycle["cpcname"]
+partname = partition_lifecycle["partname"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
@@ -76,7 +76,7 @@ print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
-timestats = example5.get("timestats", False)
+timestats = partition_lifecycle.get("timestats", False)
 if timestats:
     session.time_stats_keeper.enable()
 

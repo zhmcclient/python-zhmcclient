@@ -14,8 +14,8 @@
 # limitations under the License.
 
 """
-Example 8: Using the Adapter, Port, Virtual Switch, NIC, HBA
-           and Virtual Function interface.
+Example shows how to use the Adapter, Port, Virtual Switch, NIC, HBA
+and Virtual Function interface.
 """
 
 import sys
@@ -41,13 +41,13 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example8 = examples.get("example8", None)
-if example8 is None:
-    print("example8 not found in credentials file %s" % \
+adapter_port_vswitch = examples.get("adapter_port_vswitch", None)
+if adapter_port_vswitch is None:
+    print("adapter_port_vswitch not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example8.get("loglevel", None)
+loglevel = adapter_port_vswitch.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
@@ -56,7 +56,7 @@ if loglevel is not None:
         sys.exit(1)
     logging.basicConfig(level=level)
 
-hmc = example8["hmc"]
+hmc = adapter_port_vswitch["hmc"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
@@ -73,7 +73,7 @@ print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
-timestats = example8.get("timestats", None)
+timestats = adapter_port_vswitch.get("timestats", None)
 if timestats:
     session.time_stats_keeper.enable()
 

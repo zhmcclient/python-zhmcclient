@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 6: Activation Profiles.
+Example shows Activation Profiles handling.
 """
 
 import sys
@@ -40,13 +40,13 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example6 = examples.get("example6", None)
-if example6 is None:
-    print("example5 not found in credentials file %s" % \
+activation_profiles = examples.get("activation_profiles", None)
+if activation_profiles is None:
+    print("activation_profiles not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example6.get("loglevel", None)
+loglevel = activation_profiles.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
@@ -55,9 +55,9 @@ if loglevel is not None:
         sys.exit(1)
     logging.basicConfig(level=level)
 
-hmc = example6["hmc"]
-cpcname = example6["cpcname"]
-lparname = example6["lparname"]
+hmc = activation_profiles["hmc"]
+cpcname = activation_profiles["cpcname"]
+lparname = activation_profiles["lparname"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
@@ -74,7 +74,7 @@ print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
-timestats = example6.get("timestats", False)
+timestats = activation_profiles.get("timestats", False)
 if timestats:
     session.time_stats_keeper.enable()
 

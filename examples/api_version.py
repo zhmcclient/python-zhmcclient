@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 0: Show the API version of an HMC.
+Example shows the API version of an HMC.
 """
 
 import sys
@@ -40,13 +40,13 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example0 = examples.get("example0", None)
-if example0 is None:
-    print("example0 not found in credentials file %s" % \
+api_version = examples.get("api_version", None)
+if api_version is None:
+    print("api_version not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example0.get("loglevel", None)
+loglevel = api_version.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
@@ -55,7 +55,7 @@ if loglevel is not None:
         sys.exit(1)
     logging.basicConfig(level=level)
 
-hmc = example0["hmc"]
+hmc = api_version["hmc"]
 
 print(__doc__)
 

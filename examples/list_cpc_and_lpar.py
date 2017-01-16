@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Example 1: List CPCs and LPARs/partitions on a CPC; demonstrate logging.
+Example shows list CPCs and LPARs/partitions on a CPC; demonstrate logging.
 """
 
 import sys
@@ -40,20 +40,20 @@ if examples is None:
           (hmccreds_file))
     sys.exit(1)
 
-example1 = examples.get("example1", None)
-if example1 is None:
-    print("example1 not found in credentials file %s" % \
+list_cpc_and_lpar = examples.get("list_cpc_and_lpar", None)
+if list_cpc_and_lpar is None:
+    print("list_cpc_and_lpar not found in credentials file %s" % \
           (hmccreds_file))
     sys.exit(1)
 
-loglevel = example1.get("loglevel", None)
+loglevel = list_cpc_and_lpar.get("loglevel", None)
 if loglevel is not None:
     level = getattr(logging, loglevel.upper(), None)
     if level is None:
         print("Invalid value for loglevel in credentials file %s: %s" % \
               (hmccreds_file, loglevel))
         sys.exit(1)
-    logmodule = example1.get("logmodule", None)
+    logmodule = list_cpc_and_lpar.get("logmodule", None)
     if logmodule is None:
         logmodule = ''  # root logger
     print("Logging for module %s with level %s" % (logmodule, loglevel))
@@ -64,8 +64,8 @@ if loglevel is not None:
     logger.addHandler(handler)
     logger.setLevel(level)
 
-hmc = example1["hmc"]
-cpcname = example1["cpcname"]
+hmc = list_cpc_and_lpar["hmc"]
+cpcname = list_cpc_and_lpar["cpcname"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
@@ -82,7 +82,7 @@ print("Using HMC %s with userid %s ..." % (hmc, userid))
 session = zhmcclient.Session(hmc, userid, password)
 cl = zhmcclient.Client(session)
 
-timestats = example1.get("timestats", False)
+timestats = list_cpc_and_lpar.get("timestats", False)
 if timestats:
     session.time_stats_keeper.enable()
 
