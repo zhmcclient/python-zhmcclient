@@ -116,6 +116,72 @@ installed correctly by importing the package into Python:
     ok
 
 
+.. _`Setting up the HMC`:
+
+Setting up the HMC
+------------------
+
+Usage of the zhmcclient package requires that the HMC in question is prepared
+accordingly:
+
+1. The Web Services API must be enabled on the HMC.
+
+2. The HMC user ID that will be used by the zhmcclient must be authorized for
+   the following tasks:
+
+   * Use of the Web Services API.
+
+   When using CPCs in DPM mode:
+
+   * Start (a CPC in DPM mode)
+   * Stop (a CPC in DPM mode)
+   * New Partition
+   * Delete Partition
+   * Partition Details
+   * Start Partition
+   * Stop Partition
+   * Dump Partition
+   * PSW Restart (a Partition)
+   * Create HiperSockets Adapter
+   * Delete HiperSockets Adapter
+   * Adapter Details
+   * Manage Adapters
+   * Export WWPNs
+
+   When using CPCs in classic mode (or ensemble mode):
+
+   * Activate (an LPAR)
+   * Deactivate (an LPAR)
+   * Load (an LPAR)
+   * Customize/Delete Activation Profiles
+   * CIM Actions ExportSettingsData
+
+3. (Optional) If desired, the HMC user ID that will be used by the zhmcclient
+   can be restricted to accessing only certain resources managed by the HMC.
+   To establish such a restriction, create a custom HMC user role, limit
+   resource access for that role accordingly, and associate the HMC user ID
+   with that role.
+
+   The zhmcclient needs object-access permission for the following resources:
+
+   * CPCs to be accessed
+
+   For CPCs in DPM mode:
+
+   * Partitions to be accessed
+   * Adapters to be accessed
+
+   For CPCs in classic mode (or ensemble mode):
+
+   * LPARs to be accessed
+
+For details, see the :term:`HMC Operations Guide`.
+
+A step-by-step description for a similar use case can be found in chapter 11,
+section "Enabling the System z HMC to work the Pacemaker STONITH Agent", in the
+:term:`KVM for IBM z Systems V1.1.2 System Administration` book.
+
+
 .. _`Examples`:
 
 Examples

@@ -41,8 +41,10 @@ class NicManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Partition` object).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Partition` object (in DPM mode):
+
+    * :attr:`~zhmcclient.Partition.nics`
     """
 
     def __init__(self, partition):
@@ -69,6 +71,10 @@ class NicManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the NICs in this Partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
 
         Parameters:
 
@@ -117,11 +123,25 @@ class NicManager(BaseManager):
         """
         Create and configure a NIC in this Partition.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Object-access permission to the backing Adapter for the new NIC.
+        * Task permission to the "Partition Details" task.
+
         Parameters:
 
           properties (dict): Initial property values.
             Allowable properties are defined in section 'Request body contents'
             in section 'Create NIC' in the :term:`HMC API` book.
+
+            The backing Adapter for the new NIC is identified as follows:
+
+            * For OSA and Hipersockets adapters, the Adapter associated with
+              the Virtual Switch designated by the "virtual-switch-uri"
+              property.
+            * For RoCE adapters, the Adapter of the Port designated by the
+              "network-adapter-port-uri" property.
 
         Returns:
 
@@ -216,6 +236,11 @@ class Nic(BaseResource):
         """
         Delete this NIC.
 
+        Authorization requirements:
+
+        * Object-access permission to the Partition containing this HBA.
+        * Task permission to the "Partition Details" task.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -228,6 +253,12 @@ class Nic(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this NIC.
+
+        Authorization requirements:
+
+        * Object-access permission to the Partition containing this NIC.
+        * Object-access permission to the backing Adapter for this NIC.
+        * Task permission to the "Partition Details" task.
 
         Parameters:
 

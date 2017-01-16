@@ -58,14 +58,24 @@ class ActivationProfileManager(BaseManager):
     """
     Manager providing access to the
     :term:`Activation Profiles <Activation Profile>` of a particular type in
-    a particular :term:`CPC`.
+    a particular :term:`CPC` (the scoping CPC).
+
+    Possible types of activation profiles are:
+
+    * Reset Activation Profile
+    * Image Activation Profile
+    * Load Activation Profile
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Cpc` object).
+    accessible via the following instance variables of a
+    :class:`~zhmcclient.Cpc` object (in classic mode or ensemble mode):
+
+    * :attr:`~zhmcclient.Cpc.reset_activation_profiles`
+    * :attr:`~zhmcclient.Cpc.image_activation_profiles`
+    * :attr:`~zhmcclient.Cpc.load_activation_profiles`
     """
 
     def __init__(self, cpc, profile_type):
@@ -118,8 +128,12 @@ class ActivationProfileManager(BaseManager):
     @_log_call
     def list(self, full_properties=False, filter_args=None):
         """
-        List the Activation Profiles of the type managed by this object and in
-        this CPC.
+        List the Activation Profiles of this CPC, of the profile type
+        managed by this object.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
 
         Parameters:
 
@@ -204,6 +218,11 @@ class ActivationProfile(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this Activation Profile.
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC of this Activation Profile.
+        * Task permission for the "Customize/Delete Activation Profiles" task.
 
         Parameters:
 

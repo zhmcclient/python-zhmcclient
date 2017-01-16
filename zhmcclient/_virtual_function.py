@@ -40,8 +40,10 @@ class VirtualFunctionManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Partition` object).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Partition` object (in DPM mode):
+
+    * :attr:`~zhmcclient.Partition.virtual_functions`
     """
 
     def __init__(self, partition):
@@ -67,6 +69,10 @@ class VirtualFunctionManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the Virtual Functions of this Partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
 
         Parameters:
 
@@ -114,6 +120,12 @@ class VirtualFunctionManager(BaseManager):
     def create(self, properties):
         """
         Create a Virtual Function in this Partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Object-access permission to the backing accelerator Adapter.
+        * Task permission for the "Partition Details" task.
 
         Parameters:
 
@@ -181,6 +193,11 @@ class VirtualFunction(BaseResource):
         """
         Delete this Virtual Function.
 
+        Authorization requirements:
+
+        * Object-access permission to the Partition of this Virtual Function.
+        * Task permission for the "Partition Details" task.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -193,6 +210,13 @@ class VirtualFunction(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this Virtual Function.
+
+        Authorization requirements:
+
+        * Object-access permission to the Partition of this Virtual Function.
+        * When updating the "adapter-uri" property, object-access permission to
+          the Adapter identified in that URI.
+        * Task permission for the "Partition Details" task.
 
         Parameters:
 

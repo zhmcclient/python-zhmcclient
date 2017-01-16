@@ -43,8 +43,10 @@ class VirtualSwitchManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Cpc` object).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Cpc` object (in DPM mode):
+
+    * :attr:`~zhmcclient.Cpc.virtual_switches`
     """
 
     def __init__(self, cpc):
@@ -80,6 +82,12 @@ class VirtualSwitchManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the Virtual Switches in this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to the backing Adapters of any Virtual
+          Switches to be included in the result.
 
         Parameters:
 
@@ -171,6 +179,12 @@ class VirtualSwitch(BaseResource):
         This method performs the "Get Connected VNICs of a Virtual Switch" HMC
         operation.
 
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to the backing Adapter of this Virtual
+          Switch.
+
         Returns:
 
           : A list of :term:`Nic` objects. These objects will be connected in
@@ -211,6 +225,12 @@ class VirtualSwitch(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this Virtual Switch.
+
+        Authorization requirements:
+
+        * Object-access permission to the backing Adapter of this Virtual
+          Switch.
+        * Task permission for the "Manage Adapters" task.
 
         Parameters:
 

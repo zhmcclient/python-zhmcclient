@@ -43,8 +43,10 @@ class LparManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Cpc` object).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Cpc` object (in DPM mode):
+
+    * :attr:`~zhmcclient.Cpc.lpars`
     """
 
     def __init__(self, cpc):
@@ -80,6 +82,11 @@ class LparManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the LPARs in this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to any LPAR to be included in the result.
 
         Parameters:
 
@@ -167,6 +174,12 @@ class Lpar(BaseResource):
         Activate (start) this LPAR, using the HMC operation "Activate Logical
         Partition".
 
+        Authorization requirements:
+
+        * Object-access permission to the CPC containing this LPAR.
+        * Object-access permission to this LPAR.
+        * Task permission for the "Activate" task.
+
         Parameters:
 
           wait_for_completion (bool):
@@ -211,6 +224,12 @@ class Lpar(BaseResource):
         De-activate (stop) this LPAR, using the HMC operation "Deactivate
         Logical Partition".
 
+        Authorization requirements:
+
+        * Object-access permission to the CPC containing this LPAR.
+        * Object-access permission to this LPAR.
+        * Task permission for the "Deactivate" task.
+
         Parameters:
 
           wait_for_completion (bool):
@@ -254,6 +273,12 @@ class Lpar(BaseResource):
         """
         Load (boot) this LPAR from a load address (boot device), using the HMC
         operation "Load Logical Partition".
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC containing this LPAR.
+        * Object-access permission to this LPAR.
+        * Task permission for the "Load" task.
 
         Parameters:
 

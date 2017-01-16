@@ -50,8 +50,10 @@ class PartitionManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Cpc` object).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Cpc` object (in DPM mode):
+
+    * :attr:`~zhmcclient.Cpc.partitions`
     """
 
     def __init__(self, cpc):
@@ -87,6 +89,12 @@ class PartitionManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the Partitions in this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to any Partition to be included in the
+          result.
 
         Parameters:
 
@@ -141,6 +149,11 @@ class PartitionManager(BaseManager):
     def create(self, properties):
         """
         Create and configure a Partition in this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "New Partition" task.
 
         Parameters:
 
@@ -282,6 +295,11 @@ class Partition(BaseResource):
         TODO: Describe what happens if the maximum number of active partitions
         is exceeded.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Start Partition" task.
+
         Parameters:
 
           wait_for_completion (bool):
@@ -324,6 +342,11 @@ class Partition(BaseResource):
         Stop (deactivate) this Partition, using the HMC operation "Stop
         Partition".
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Stop Partition" task.
+
         Parameters:
 
           wait_for_completion (bool):
@@ -365,6 +388,11 @@ class Partition(BaseResource):
         """
         Delete this Partition.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Delete Partition" task.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -377,6 +405,11 @@ class Partition(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this Partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Partition Details" task.
 
         Parameters:
 
@@ -400,6 +433,11 @@ class Partition(BaseResource):
         Dump this Partition, by loading a standalone dump program from a SCSI
         device and starting its execution, using the HMC operation
         'Dump Partition'.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Dump Partition" task.
 
         Parameters:
 
@@ -448,6 +486,11 @@ class Partition(BaseResource):
         Initiates a PSW restart for this Partition, using the HMC operation
         'Perform PSW Restart'.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "PSW Restart" task.
+
         Parameters:
 
           wait_for_completion (bool):
@@ -495,6 +538,11 @@ class Partition(BaseResource):
 
         TODO: The interface of this method has issues, see issue #57.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Partition Details" task.
+
         Parameters:
 
           properties (dict): Properties for the dump operation.
@@ -517,6 +565,11 @@ class Partition(BaseResource):
         """
         Unmount the currently mounted ISO from this Partition using the HMC
         operation 'Unmount ISO Image'.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Partition Details" task.
 
         Raises:
 
