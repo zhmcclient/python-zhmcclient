@@ -103,3 +103,67 @@ Exceptions
 .. autoclass:: zhmcclient.NoUniqueMatch
    :members:
    :special-members: __str__
+
+
+.. _`Filtering`:
+
+Filtering
+---------
+
+Some methods (e.g. :meth:`~zhmcclient.BaseManager.list` or
+:meth:`~zhmcclient.BaseManager.find`) support the concept of resource
+filtering. This concept allows narrowing the set of returned resources based
+upon matching their resource properties against filter arguments.
+
+The filter arguments are used to construct filter query parameters in the
+HMC operations, so that they are processed on the server side by the HMC.
+
+The methods that support resource filtering either have keyword arguments
+``**filter_args``, or have a parameter ``filter_args`` that can be `None` for
+no filtering or a dictionary to enable filtering. In both cases,
+``filter_args`` is a dictionary.
+
+The dictionary keys specify the names of the resource properties that need to
+match for the resource to be included in the result. A resource is included
+in the result only if all resource properties specified in the dictionary
+match.
+
+The dictionary value specifies how the corresponding resource property matches:
+
+* For resource properties of type String (as per the resource's data model in
+  the :term:`HMC API`), the dictionary value is interpreted as a regular
+  expression that must match the actual resource property value. The regular
+  expression syntax used is the same as that used by the Java programming
+  language, as specified for the ``java.util.regex.Pattern`` class (see
+  http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html).
+
+* For resource properties of type String Enum, the dictionary value is
+  interpreted as an exact string that must be equal to the actual resource
+  property value.
+
+* TBD: What happens for other types of resource properties?
+
+* If the dictionary value is a list or a tuple, the resource matches if any
+  item in the list or tuple matches.
+
+Examples:
+
+* This example uses the :meth:`~zhmcclient.BaseManager.findall` method to
+  return those OSA adapters in cage '1234' of a given CPC, whose state is
+  'stand-by', 'reserved', or 'unknown'::
+
+      filter_args = {
+          'adapter-family': 'osa',
+          'card-location': '1234-.*',
+          'state': ['stand-by', 'reserved', 'unknown'],
+      }
+      osa_adapters = cpc.adapters.findall(**filter_args)
+
+  The returned resource objects will have only a minimal set of properties.
+
+* This example uses the :meth:`~zhmcclient.BaseManager.list` method to return
+  the same set of OSA adapters as the previous example, but the returned
+  resource objects have the full set of properties::
+
+      osa_adapters = cpc.adapters.list(full_properties=True,
+                                       filter_args=filter_args)

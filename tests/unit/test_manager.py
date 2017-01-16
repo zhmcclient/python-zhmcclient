@@ -27,18 +27,28 @@ from zhmcclient._resource import BaseResource
 
 class MyResource(BaseResource):
     def __init__(self, manager, uri, name=None, properties=None):
-        super(MyResource, self).__init__(manager, uri, name, properties,
-                                         uri_prop='object-uri',
-                                         name_prop='name')
+        super(MyResource, self).__init__(manager, uri, name, properties)
 
 
 class MyManager(BaseManager):
-    def __init__(self):
-        super(MyManager, self).__init__(MyResource)
-        self._items = []
+    def __init__(self, parent=None):
+        super(MyManager, self).__init__(
+            resource_class=MyResource,
+            parent=parent,
+            uri_prop='object-uri',
+            name_prop='name',
+            query_props=[])
+        self._list_items = []
 
-    def list(self):
-        return self._items
+    def list(self, full_properties=False, filter_args=None):
+        # We need to have a quick way to mock this method. This mocked
+        # implementation basically uses the _list_items instance variable,
+        # and then applies the client-side filtering on top of it.
+        result_list = []
+        for obj in self._list_items:
+            if not filter_args or self._matches_filters(obj, filter_args):
+                result_list.append(obj)
+        return result_list
 
 
 class ManagerTests(unittest.TestCase):
@@ -48,7 +58,7 @@ class ManagerTests(unittest.TestCase):
         self.resource = MyResource(self.manager, "foo-uri",
                                    properties={"name": "foo-name",
                                                "other": "foo-other"})
-        self.manager._items = [self.resource]
+        self.manager._list_items = [self.resource]
 
     def test_findall_attribute(self):
         items = self.manager.findall(other="foo-other")

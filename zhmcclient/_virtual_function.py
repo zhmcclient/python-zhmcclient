@@ -49,8 +49,12 @@ class VirtualFunctionManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(VirtualFunctionManager, self).__init__(VirtualFunction,
-                                                     partition)
+        super(VirtualFunctionManager, self).__init__(
+            resource_class=VirtualFunction,
+            parent=partition,
+            uri_prop='element-uri',
+            name_prop='name',
+            query_props=[])
 
     @property
     def partition(self):
@@ -60,7 +64,7 @@ class VirtualFunctionManager(BaseManager):
         """
         return self._parent
 
-    def list(self, full_properties=False):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the Virtual Functions of this Partition.
 
@@ -70,6 +74,14 @@ class VirtualFunctionManager(BaseManager):
             Controls whether the full set of resource properties should be
             retrieved, vs. only the short set as returned by the list
             operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
 
         Returns:
 
@@ -82,15 +94,22 @@ class VirtualFunctionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        vfs_uris = self.partition.get_property('virtual-function-uris')
-        vf_list = []
-        if vfs_uris:
-            for uri in vfs_uris:
-                vf = VirtualFunction(self, uri)
-                if full_properties:
-                    vf.pull_full_properties()
-                vf_list.append(vf)
-        return vf_list
+        resource_obj_list = []
+        uris = self.partition.get_property('virtual-function-uris')
+        if uris:
+            for uri in uris:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=uri,
+                    name=None,
+                    properties=None)
+
+                if self._matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+        return resource_obj_list
 
     def create(self, properties):
         """
@@ -156,9 +175,7 @@ class VirtualFunction(BaseResource):
             raise AssertionError("VirtualFunction init: Expected manager "
                                  "type %s, got %s" %
                                  (VirtualFunctionManager, type(manager)))
-        super(VirtualFunction, self).__init__(manager, uri, name, properties,
-                                              uri_prop='element-uri',
-                                              name_prop='name')
+        super(VirtualFunction, self).__init__(manager, uri, name, properties)
 
     def delete(self):
         """

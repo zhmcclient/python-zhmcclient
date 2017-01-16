@@ -74,11 +74,24 @@ class CpcManager(BaseManager):
         # Parameters:
         #   client (:class:`~zhmcclient.Client`):
         #      Client object for the HMC to be used.
-        super(CpcManager, self).__init__(Cpc)
+
+        # Resource properties that are supported as filter query parameters
+        # (for server-side filtering).
+        query_props = [
+            'name',
+        ]
+
+        super(CpcManager, self).__init__(
+            resource_class=Cpc,
+            parent=None,
+            uri_prop='object-uri',
+            name_prop='name',
+            query_props=query_props)
+
         self._session = client.session
 
     @_log_call
-    def list(self, full_properties=False):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the CPCs exposed by the HMC this client is connected to.
 
@@ -88,6 +101,14 @@ class CpcManager(BaseManager):
             Controls whether the full set of resource properties should be
             retrieved, vs. only the short set as returned by the list
             operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
 
         Returns:
 
@@ -100,16 +121,29 @@ class CpcManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        cpcs_res = self.session.get('/api/cpcs')
-        cpc_list = []
-        if cpcs_res:
-            cpc_items = cpcs_res['cpcs']
-            for cpc_props in cpc_items:
-                cpc = Cpc(self, cpc_props['object-uri'], None, cpc_props)
-                if full_properties:
-                    cpc.pull_full_properties()
-                cpc_list.append(cpc)
-        return cpc_list
+        query_parms, client_filters = self._divide_filter_args(filter_args)
+
+        resources_name = 'cpcs'
+        uri = '/api/{}{}'.format(resources_name, query_parms)
+
+        resource_obj_list = []
+        result = self.session.get(uri)
+        if result:
+            props_list = result[resources_name]
+            for props in props_list:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=props[self._uri_prop],
+                    name=props.get(self._name_prop, None),
+                    properties=props)
+
+                if self._matches_filters(resource_obj, client_filters):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+
+        return resource_obj_list
 
 
 class Cpc(BaseResource):
@@ -138,9 +172,8 @@ class Cpc(BaseResource):
         if not isinstance(manager, CpcManager):
             raise AssertionError("Cpc init: Expected manager type %s, got %s" %
                                  (CpcManager, type(manager)))
-        super(Cpc, self).__init__(manager, uri, name, properties,
-                                  uri_prop='object-uri',
-                                  name_prop='name')
+        super(Cpc, self).__init__(manager, uri, name, properties)
+
         # The manager objects for child resources (with lazy initialization):
         self._lpars = None
         self._partitions = None

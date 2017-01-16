@@ -52,7 +52,22 @@ class VirtualSwitchManager(BaseManager):
         # Parameters:
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
-        super(VirtualSwitchManager, self).__init__(VirtualSwitch, cpc)
+
+        # Resource properties that are supported as filter query parameters.
+        # If the support for a resource property changes within the set of HMC
+        # versions that support this type of resource, this list must be set up
+        # for the version of the HMC this session is connected to.
+        query_props = [
+            'name',
+            'type',
+        ]
+
+        super(VirtualSwitchManager, self).__init__(
+            resource_class=VirtualSwitch,
+            parent=cpc,
+            uri_prop='object-uri',
+            name_prop='name',
+            query_props=query_props)
 
     @property
     def cpc(self):
@@ -62,7 +77,7 @@ class VirtualSwitchManager(BaseManager):
         """
         return self._parent
 
-    def list(self, full_properties=False):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the Virtual Switches in this CPC.
 
@@ -72,6 +87,14 @@ class VirtualSwitchManager(BaseManager):
             Controls whether the full set of resource properties should be
             retrieved, vs. only the short set as returned by the list
             operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
 
         Returns:
 
@@ -84,17 +107,29 @@ class VirtualSwitchManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        vswitch_res = self.session.get(self.cpc.uri + '/virtual-switches')
-        vswitch_list = []
-        if vswitch_res:
-            vswitch_items = vswitch_res['virtual-switches']
-            for vswitch_props in vswitch_items:
-                vswitch = VirtualSwitch(self, vswitch_props['object-uri'],
-                                        None, vswitch_props)
-                if full_properties:
-                    vswitch.pull_full_properties()
-                vswitch_list.append(vswitch)
-        return vswitch_list
+        query_parms, client_filters = self._divide_filter_args(filter_args)
+
+        resources_name = 'virtual-switches'
+        uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
+
+        resource_obj_list = []
+        result = self.session.get(uri)
+        if result:
+            props_list = result[resources_name]
+            for props in props_list:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=props[self._uri_prop],
+                    name=props.get(self._name_prop, None),
+                    properties=props)
+
+                if self._matches_filters(resource_obj, client_filters):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+
+        return resource_obj_list
 
 
 class VirtualSwitch(BaseResource):
@@ -127,9 +162,7 @@ class VirtualSwitch(BaseResource):
             raise AssertionError("VirtualSwitch init: Expected manager "
                                  "type %s, got %s" %
                                  (VirtualSwitchManager, type(manager)))
-        super(VirtualSwitch, self).__init__(manager, uri, name, properties,
-                                            uri_prop='object-uri',
-                                            name_prop='name')
+        super(VirtualSwitch, self).__init__(manager, uri, name, properties)
 
     def get_connected_nics(self):
         """

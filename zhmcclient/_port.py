@@ -46,7 +46,13 @@ class PortManager(BaseManager):
         # Parameters:
         #   adapter (:class:`~zhmcclient.Adapter`):
         #     Adapter defining the scope for this manager.
-        super(PortManager, self).__init__(Port, adapter)
+
+        super(PortManager, self).__init__(
+            resource_class=Port,
+            parent=adapter,
+            uri_prop='element-uri',
+            name_prop='name',
+            query_props=[])
 
     @property
     def adapter(self):
@@ -56,7 +62,7 @@ class PortManager(BaseManager):
         """
         return self._parent
 
-    def list(self, full_properties=False):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the Ports of this Adapter.
 
@@ -66,6 +72,14 @@ class PortManager(BaseManager):
             Controls whether the full set of resource properties should be
             retrieved, vs. only the short set as returned by the list
             operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
 
         Returns:
 
@@ -78,22 +92,29 @@ class PortManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        port_list = []
+        resource_obj_list = []
         storage_family = ('ficon')
         network_family = ('osa', 'roce', 'hipersockets')
         if self.adapter.get_property('adapter-family') in storage_family:
-            ports_res = self.adapter.get_property('storage-port-uris')
+            uris = self.adapter.get_property('storage-port-uris')
         elif self.adapter.get_property('adapter-family') in network_family:
-            ports_res = self.adapter.get_property('network-port-uris')
+            uris = self.adapter.get_property('network-port-uris')
         else:
-            return port_list
-        if ports_res:
-            for port_uri in ports_res:
-                port = Port(self, port_uri)
-                if full_properties:
-                    port.pull_full_properties()
-                port_list.append(port)
-        return port_list
+            return resource_obj_list
+        if uris:
+            for uri in uris:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=uri,
+                    name=None,
+                    properties=None)
+
+                if self._matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+        return resource_obj_list
 
 
 class Port(BaseResource):
@@ -127,9 +148,7 @@ class Port(BaseResource):
             raise AssertionError("Port init: Expected manager type %s, "
                                  "got %s" %
                                  (PortManager, type(manager)))
-        super(Port, self).__init__(manager, uri, name, properties,
-                                   uri_prop='element-uri',
-                                   name_prop='name')
+        super(Port, self).__init__(manager, uri, name, properties)
 
     def update_properties(self, properties):
         """
