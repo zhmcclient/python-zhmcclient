@@ -248,7 +248,7 @@ def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
 
         adapter_name = options['adapter']
         try:
-            adapter = partition.cpc.adapters.find(name=adapter_name)
+            adapter = partition.manager.cpc.adapters.find(name=adapter_name)
         except zhmcclient.NotFound:
             raise click.ClickException("Could not find adapter %s in CPC %s." %
                                        (adapter_name, cpc_name))
@@ -264,7 +264,8 @@ def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
     elif options['virtual-switch'] is not None:
         vswitch_name = options['virtual-switch']
         try:
-            vswitch = partition.cpc.virtual_switches.find(name=vswitch_name)
+            vswitch = partition.manager.cpc.virtual_switches.find(
+                name=vswitch_name)
         except zhmcclient.NotFound:
             raise click.ClickException("Could not find virtual switch %s "
                                        "in CPC %s." %
@@ -310,7 +311,8 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
 
         adapter_name = options['adapter']
         try:
-            adapter = nic.partition.cpc.adapters.find(name=adapter_name)
+            adapter = nic.partition.manager.cpc.adapters.find(
+                name=adapter_name)
         except zhmcclient.NotFound:
             raise click.ClickException("Could not find adapter %s in CPC %s." %
                                        (adapter_name, cpc_name))
@@ -326,7 +328,7 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
     elif options['virtual-switch'] is not None:
         vswitch_name = options['virtual-switch']
         try:
-            vswitch = nic.partition.cpc.virtual_switches.find(
+            vswitch = nic.partition.manager.cpc.virtual_switches.find(
                 name=vswitch_name)
         except zhmcclient.NotFound:
             raise click.ClickException("Could not find virtual switch %s "
