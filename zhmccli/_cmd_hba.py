@@ -216,7 +216,7 @@ def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
         raise click.ClickException("Could not find port %s on adapter %s "
                                    "in CPC %s." %
                                    (port_name, adapter_name, cpc_name))
-    properties['adapter-port'] = port.uri
+    properties['adapter-port-uri'] = port.uri
 
     try:
         new_hba = partition.hbas.create(properties)

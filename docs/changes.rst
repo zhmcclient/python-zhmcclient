@@ -49,6 +49,8 @@ Released: not yet
   directly without going via the manager property. This caused
   an AttributeError (issue #161).
 
+* Fixed unrecognized field ('adapter-port') during 'HBA create' (issue #163).
+
 **Enhancements:**
 
 * Added filter arguments to the `list()` method, and added support for
