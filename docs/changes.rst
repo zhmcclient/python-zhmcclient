@@ -45,6 +45,10 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a bug where the CLI code tries to access 'cpc'  from the 'partition'
+  directly without going via the manager property. This caused
+  an AttributeError (issue #161).
+
 **Enhancements:**
 
 * Added filter arguments to the `list()` method, and added support for

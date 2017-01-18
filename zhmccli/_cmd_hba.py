@@ -205,7 +205,7 @@ def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
 
     adapter_name = options['adapter']
     try:
-        adapter = partition.cpc.adapters.find(name=adapter_name)
+        adapter = partition.manager.cpc.adapters.find(name=adapter_name)
     except zhmcclient.NotFound:
         raise click.ClickException("Could not find adapter %s in CPC %s." %
                                    (adapter_name, cpc_name))
