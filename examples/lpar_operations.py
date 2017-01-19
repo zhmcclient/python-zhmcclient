@@ -21,6 +21,7 @@ and activate/deactivate/load of an LPAR.
 import sys
 import logging
 import yaml
+import time
 import requests.packages.urllib3
 
 import zhmcclient
@@ -58,7 +59,6 @@ if loglevel is not None:
 
 hmc = lpar_operations["hmc"]
 cpcname = lpar_operations["cpcname"]
-cpcstatus = lpar_operations["cpcstatus"]
 lparname = lpar_operations["lparname"]
 loaddev = lpar_operations["loaddev"]
 deactivate = lpar_operations["deactivate"]
@@ -82,66 +82,89 @@ timestats = lpar_operations.get("timestats", None)
 if timestats:
     session.time_stats_keeper.enable()
 
-print("Finding CPC by name=%s and status=%s ..." % (cpcname, cpcstatus))
+retries = 10
+
+print("Finding CPC by name=%s ..." % cpcname)
 try:
-    cpc = cl.cpcs.find(name=cpcname, status=cpcstatus)
+    cpc = cl.cpcs.find(name=cpcname)
 except zhmcclient.NotFound:
-    print("Could not find CPC %s with status %s on HMC %s" %
-          (cpcname, cpcstatus, hmc))
+    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
     sys.exit(1)
 print("Found CPC %s at: %s" % (cpc.name, cpc.uri))
 
-print("Accessing status of CPC %s ..." % cpc.name)
-status = cpc.get_property('status')
-print("Status of CPC %s: %s" % (cpc.name, status))
-
 print("Finding LPAR by name=%s ..." % lparname)
-try:
-    lpar = cpc.lpars.find(name=lparname)
-except zhmcclient.NotFound:
+# We use list() instead of find() because find(name=..) is optimized by using
+# the name-to-uri cache and therefore returns an Lpar object with only a
+# minimal set of properties, and particularly no 'status' property.
+# That would drive an extra "Get Partition Properties" operation when the
+# status property is accessed.
+lpars = cpc.lpars.list(filter_args={'name': lparname})
+if len(lpars) != 1:
     print("Could not find LPAR %s in CPC %s" % (lparname, cpc.name))
     sys.exit(1)
+lpar = lpars[0]
 print("Found LPAR %s at: %s" % (lpar.name, lpar.uri))
 
-print("Accessing status of LPAR %s ..." % lpar.name)
 status = lpar.get_property('status')
 print("Status of LPAR %s: %s" % (lpar.name, status))
 
-print("Deactivating LPAR %s ..." % lpar.name)
-lpar.deactivate()
-print("Refreshing properties of LPAR %s ..." % lpar.name)
-lpar.pull_full_properties()
-print("Accessing status of LPAR %s ..." % lpar.name)
-status = lpar.get_property('status')
-print("Status of LPAR %s: %s" % (lpar.name, status))
+if status != "not-activated":
+    print("Deactivating LPAR %s ..." % lpar.name)
+    lpar.deactivate()
+    for i in range(0, retries):
+        print("Refreshing ...")
+        lpar = cpc.lpars.list(filter_args={'name': lparname})[0]
+        status = lpar.get_property('status')
+        print("Status of LPAR %s: %s" % (lpar.name, status))
+        if status == 'not-activated':
+            break
+        time.sleep(1)
+    else:
+        print("Warning: After %d retries, status of LPAR %s after Deactivate "
+              "is still: %s" % (retries, lpar.name, status))
 
 print("Activating LPAR %s ..." % lpar.name)
 lpar.activate()
-print("Refreshing properties of LPAR %s ..." % lpar.name)
-lpar.pull_full_properties()
-print("Accessing status of LPAR %s ..." % lpar.name)
-status = lpar.get_property('status')
-print("Status of LPAR %s: %s" % (lpar.name, status))
+for i in range(0, retries):
+    print("Refreshing ...")
+    lpar = cpc.lpars.list(filter_args={'name': lparname})[0]
+    status = lpar.get_property('status')
+    print("Status of LPAR %s: %s" % (lpar.name, status))
+    if status == 'not-operating':
+        break
+    time.sleep(1)
+else:
+    print("Warning: After %d retries, status of LPAR %s after Activate "
+          "is still: %s" % (retries, lpar.name, status))
 
 print("Loading LPAR %s from device %s ..." % (lpar.name, loaddev))
 lpar.load(loaddev)
-for i in range(0, 5):
-    print("Refreshing properties of LPAR %s ..." % lpar.name)
-    lpar.pull_full_properties()
-    print("Accessing status of LPAR %s ..." % lpar.name)
+for i in range(0, retries):
+    print("Refreshing ...")
+    lpar = cpc.lpars.list(filter_args={'name': lparname})[0]
     status = lpar.get_property('status')
     print("Status of LPAR %s: %s" % (lpar.name, status))
     if status == 'operating':
         break
+    time.sleep(1)
+else:
+    print("Warning: After %d retries, status of LPAR %s after Load "
+          "is still: %s" % (retries, lpar.name, status))
 
 if deactivate == "yes":
     print("Deactivating LPAR %s ..." % lpar.name)
     lpar.deactivate()
-    print("Refreshing properties of LPAR %s ..." % lpar.name)
-    lpar.pull_full_properties()
-    print("Accessing status of LPAR %s ..." % lpar.name)
-    status = lpar.get_property('status')
-    print("Status of LPAR %s: %s" % (lpar.name, status))
+    for i in range(0, retries):
+        print("Refreshing ...")
+        lpar = cpc.lpars.list(filter_args={'name': lparname})[0]
+        status = lpar.get_property('status')
+        print("Status of LPAR %s: %s" % (lpar.name, status))
+        if status == 'not-activated':
+            break
+        time.sleep(1)
+    else:
+        print("Warning: After %d retries, status of LPAR %s after Deactivate "
+              "is still: %s" % (retries, lpar.name, status))
 
 print("Logging off ...")
 session.logoff()
