@@ -11,3 +11,6 @@ progressbar2 # BSD
 click # BSD
 click-spinner>=0.1.5 # MIT
 click-repl # MIT
+
+# for zhmcclient_mock:
+web.py # Public domain
