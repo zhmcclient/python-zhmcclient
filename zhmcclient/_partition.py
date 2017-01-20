@@ -527,3 +527,41 @@ class Partition(BaseResource):
         """
         self.manager.session.post(
             self.uri + '/operations/unmount-iso-image')
+
+    def open_os_message_channel(self, include_refresh_messages=True):
+        """
+        Open a JMS message channel to this partition's operating system,
+        returning the string "topic" representing the message channel.
+
+        Parameters:
+
+          include_refresh_messages (bool):
+            Boolean controlling whether refresh operating systems messages
+            should be sent, as follows:
+
+            * If `True`, refresh messages will be recieved when the user
+              connects to the topic. The default.
+
+            * If `False`, refresh messages will not be recieved when the user
+              connects to the topic.
+
+        Returns:
+
+          :term:`json object`:
+
+            Returns a JSON object with a member named ``topic-name``, a string
+            representing the os-message-notification JMS topic. The user can
+            connect to this topic to start the flow of operating system
+            messages.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'include-refresh-messages': include_refresh_messages}
+        result = self.manager.session.post(
+            self.uri + '/operations/open-os-message-channel', body)
+        return result
