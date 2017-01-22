@@ -19,15 +19,40 @@ Mock support
 ============
 
 The zhmcclient PyPI package provides unit testing support for its users via its
-`zhmcclient_mock` Python package. This package allows users of
-the zhmcclient package to easily define a mocked environment that provides
-a faked HMC that is pre-populated with resource state as needed by the test
-case, and that supports all relevant operations.
+``zhmcclient_mock`` Python package. That package allows users of zhmcclient to
+easily define a faked HMC that is populated with resources as needed by the
+test case.
 
-The mocked environment is set up by the user by using an instance of the
+The faked HMC environment is set up by creating an instance of the
 :class:`zhmcclient_mock.FakedSession` class instead of the
-:class:`zhmcclient.Session` class when setting up the zhmcclient package
-in a unit test::
+:class:`zhmcclient.Session` class::
+
+    import zhmcclient
+    import zhmcclient_mock
+
+    session = zhmcclient_mock.FakedSession('fake-host', 'fake-hmc', '2.13.1',
+                                           '1.8')
+    client = zhmcclient.Client(session)
+    cpcs = client.cpcs.list()
+    . . .
+
+Other than using a different session class, the code operates against the same
+zhmcclient API as before. For example, you can see in the example above that
+the client object is set up from the same :class:`zhmcclient.Client` class as
+before, and that the CPCs can be listed through the API of the client object as
+before.
+
+The difference is that the faked session object contains a faked HMC and
+does not communicate at all with an actual HMC.
+
+The faked HMC of the faked session object can be accessed via the
+:attr:`~zhmcclient_mock.FakedSession.hmc` attribute of the faked session object
+in order to populate it with resources, for example to build up an initial
+resource environment for a test case.
+
+The following example of a unit test case shows how an initial set of resources
+that is defined as a dictionary and loaded into the faked HMC using the
+:meth:`~zhmcclient_mock.FakedHmc.add_resources` method::
 
     import unittest
     import zhmcclient
@@ -51,6 +76,7 @@ in a unit test::
                                 'properties': {
                                     'name': 'osa_1',
                                     'description': 'OSA #1',
+                                    'adapter-family': 'osa',
                                 },
                                 'ports': [
                                     {
@@ -72,20 +98,56 @@ in a unit test::
             self.assertEqual(len(cpcs), 1)
             self.assertEqual(cpcs[0].name, 'cpc_1')
 
-In this example, the faked HMC of the faked session is preloaded with a
-CPC that has one adapter with one port. For details on the format of
-the input dictionary, see :meth:`zhmcclient_mock.FakedHmc.add_resources`.
+In this example, the ``test_list()`` method tests the CPC list method of the
+zhmcclient package, but the same approach is used for testing code that
+uses the zhmcclient package.
 
-It is also possible to add resources one by one, from top to bottom,
-by using add() methods on the resource manager classes, for example see
-:meth:`zhmcclient_mock.FakedBaseManager.add`.
+As an alternative to bulk-loading resources via the input dictionary, it is
+also possible to add resources one by one using the ``add()`` methods of the
+faked resource manager classes, as shown in the following example::
+
+    class MyTests(unittest.TestCase):
+
+        def setUp(self):
+
+            self.session = zhmcclient_mock.FakedSession(
+                'fake-host', 'fake-hmc', '2.13.1', '1.8')
+
+            cpc1 = self.session.hmc.cpcs.add({
+                'name': 'cpc_1',
+                'description': 'CPC #1',
+            })
+            adapter1 = cpc1.adapters.add({
+                'name': 'osa_1',
+                'description': 'OSA #1',
+                'adapter-family': 'osa',
+            })
+            port1 = adapter1.ports.add({
+                'name': 'osa_1_1',
+                'description': 'OSA #1 Port #1',
+            })
+
+            self.client = zhmcclient.Client(self.session)
+
+As you can see, the resources need to be added from top to bottom in the
+resource tree, starting at the :attr:`~zhmcclient_mock.FakedSession.hmc`
+attribute of the faked session object.
+
+Section :ref:`Faked HMC` describes all faked resource and manager classes
+that you can use to add resources that way.
+
+Section :ref:`Faked session` describes the faked session class.
+
 
 .. _`Faked session`:
 
 Faked session
 -------------
 
-TODO: Add the faked Session class.
+.. automodule:: zhmcclient_mock._session
+
+.. autoclass:: zhmcclient_mock.FakedSession
+   :members:
 
 
 .. _`Faked HMC`:
