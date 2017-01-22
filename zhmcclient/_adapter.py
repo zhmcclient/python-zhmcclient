@@ -181,7 +181,7 @@ class AdapterManager(BaseManager):
 
         Returns:
 
-          Adapter:
+          :class:`~zhmcclient.Adapter`:
             The resource object for the new HiperSockets Adapter.
             The object will have its 'object-uri' property set as returned by
             the HMC, and will also have the input properties set.

@@ -76,6 +76,7 @@ doc_dependent_files := \
     $(wildcard $(doc_conf_dir)/*.rst) \
     $(wildcard $(doc_conf_dir)/notebooks/*.ipynb) \
     $(wildcard $(package_name)/*.py) \
+    $(wildcard zhmcclient_mock/*.py) \
 
 # Flake8 config file
 flake8_rc_file := setup.cfg
@@ -87,8 +88,10 @@ pylint_rc_file := .pylintrc
 check_py_files := \
     setup.py \
     $(wildcard $(package_name)/*.py) \
+    $(wildcard zhmcclient_mock/*.py) \
     $(wildcard $(cli_package_name)/*.py) \
     $(wildcard tests/unit/*.py) \
+    $(wildcard tests/unit/zhmcclient_mock/*.py) \
     $(wildcard tests/function/*.py) \
     $(wildcard docs/notebooks/*.py) \
 
@@ -289,7 +292,7 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
-$(test_log_file): Makefile $(package_name)/*.py tests/unit/*.py tests/function/*.py .coveragerc
+$(test_log_file): Makefile $(package_name)/*.py zhmcclient_mock/*.py tests/unit/*.py tests/unit/zhmcclient_mock/*.py tests/function/*.py .coveragerc
 	rm -fv $@
 	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test --cov $(package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) -s 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
