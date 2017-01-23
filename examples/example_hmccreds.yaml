@@ -52,6 +52,13 @@ examples:
       hmc: "192.168.111.5"
       #loglevel: debug
       #timestats: yes
+   show_os_messages:
+      hmc: "192.168.111.5"
+      cpcname: P0000P30
+      partname: PART8
+      #loglevel: debug
+      #logmodule: zhmcclient._session
+      #timestats: yes
 
 "192.168.111.5":
    userid: ensadmin

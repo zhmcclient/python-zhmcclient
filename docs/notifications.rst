@@ -13,21 +13,13 @@
 .. limitations under the License.
 ..
 
-zhmcclient - A pure Python client library for the z Systems HMC Web Services API
-********************************************************************************
+.. _`Notifications`:
 
-.. _GitHub project page: https://github.com/zhmcclient/python-zhmcclient
+Notifications
+=============
 
-.. toctree::
-   :maxdepth: 2
-   :numbered:
+.. automodule:: zhmcclient._notification
 
-   intro.rst
-   tutorial.rst
-   concepts.rst
-   general.rst
-   resources.rst
-   notifications.rst
-   cli.rst
-   development.rst
-   appendix.rst
+.. autoclass:: zhmcclient.NotificationReceiver
+   :members:
+   :special-members: __str__
