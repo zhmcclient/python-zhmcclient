@@ -318,12 +318,11 @@ class Lpar(BaseResource):
 
         Returns:
 
-          :term:`json object`:
+          :term:`string`:
 
-            Returns a JSON object with a member named ``topic-name``, a string
-            representing the os-message-notification JMS topic. The user can
-            connect to this topic to start the flow of operating system
-            messages.
+            Returns a string representing the os-message-notification JMS
+            topic. The user can connect to this topic to start the flow of
+            operating system messages.
 
         Raises:
 
@@ -335,4 +334,4 @@ class Lpar(BaseResource):
         body = {'include-refresh-messages': include_refresh_messages}
         result = self.manager.session.post(
             self.uri + '/operations/open-os-message-channel', body)
-        return result
+        return result['topic-name']
