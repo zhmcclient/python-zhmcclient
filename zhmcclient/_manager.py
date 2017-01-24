@@ -237,6 +237,10 @@ class BaseManager(object):
         Interface for a method that lists resources, and that needs to be
         implemented by resource manager classes derived from this base class.
 
+        Authorization requirements:
+
+        * see the `list()` method in the derived classes.
+
         Parameters:
 
           full_properties (bool):
@@ -275,6 +279,10 @@ class BaseManager(object):
         If only the 'name' resource property is specified, an optimized lookup
         is performed that uses a name-to-URI mapping cached in this manager
         object.
+
+        Authorization requirements:
+
+        * see the `list()` method in the derived classes.
 
         Keyword Arguments:
 
@@ -335,6 +343,10 @@ class BaseManager(object):
         is performed that uses a name-to-URI mapping cached in this manager
         object.
 
+        Authorization requirements:
+
+        * see the `list()` method in the derived classes.
+
         Keyword Arguments:
 
           : The keyword arguments are used as filter arguments that narrow the
@@ -390,6 +402,10 @@ class BaseManager(object):
         :meth:`~zhmcclient.BaseManager.find` and
         :meth:`~zhmcclient.BaseManager.findall` methods, so it does not
         normally need to be used directly by users.
+
+        Authorization requirements:
+
+        * see the `list()` method in the derived classes.
 
         Parameters:
 

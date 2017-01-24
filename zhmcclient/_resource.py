@@ -190,6 +190,10 @@ class BaseResource(object):
         Retrieve the full set of resource properties and cache them in this
         object.
 
+        Authorization requirements:
+
+        * Object-access permission to this resource.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -209,6 +213,10 @@ class BaseResource(object):
         If the resource property is not cached in this object yet, the full set
         of resource properties is retrieved and cached in this object, and the
         resource property is again attempted to be returned.
+
+        Authorization requirements:
+
+        * Object-access permission to this resource.
 
         Parameters:
 
@@ -246,6 +254,10 @@ class BaseResource(object):
         of resource properties is retrieved and cached in this object, and the
         resource property is again attempted to be returned.
 
+        Authorization requirements:
+
+        * Object-access permission to this resource.
+
         Parameters:
 
           name (:term:`string`):
@@ -275,6 +287,10 @@ class BaseResource(object):
         """
         Return a human readable representation of this resource.
 
+        Authorization requirements:
+
+        * Object-access permission to this resource.
+
         Example::
 
             Cpc(name=P0000S12,
@@ -293,5 +309,9 @@ class BaseResource(object):
         """
         Return a representation of this resource suitable for debugging its
         state.
+
+        Authorization requirements:
+
+        * Object-access permission to this resource.
         """
         return self.__str__()

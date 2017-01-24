@@ -40,8 +40,10 @@ class HbaManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Partition` object).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Partition` object (in DPM mode):
+
+    * :attr:`~zhmcclient.Partition.hbas`
     """
 
     def __init__(self, partition):
@@ -68,6 +70,10 @@ class HbaManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the HBAs in this Partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
 
         Parameters:
 
@@ -116,6 +122,12 @@ class HbaManager(BaseManager):
         """
         Create and configure an HBA in this Partition.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Object-access permission to the backing Adapter for the new HBA.
+        * Task permission to the "Partition Details" task.
+
         Parameters:
 
           properties (dict): Initial property values.
@@ -123,7 +135,8 @@ class HbaManager(BaseManager):
             in section 'Create HBA' in the :term:`HMC API` book.
 
             The underlying :term:`FCP port` for the new HBA is assigned via the
-            "adapter-port-uri" property.
+            "adapter-port-uri" property, which specifies the Port on the
+            backing Adapter.
 
         Returns:
 
@@ -185,6 +198,11 @@ class Hba(BaseResource):
         """
         Delete this HBA.
 
+        Authorization requirements:
+
+        * Object-access permission to the Partition containing this HBA.
+        * Task permission to the "Partition Details" task.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -197,6 +215,13 @@ class Hba(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this HBA.
+
+        Authorization requirements:
+
+        * Object-access permission to the Partition containing this HBA.
+        * **TBD: Verify:** Object-access permission to the backing Adapter for
+          this HBA.
+        * Task permission to the "Partition Details" task.
 
         Parameters:
 
@@ -220,6 +245,12 @@ class Hba(BaseResource):
         Reassign this HBA to a new underlying :term:`FCP port`.
 
         This method performs the HMC operation "Reassign Storage Adapter Port".
+
+        Authorization requirements:
+
+        * Object-access permission to the Partition containing this HBA.
+        * Object-access permission to the Adapter with the new Port.
+        * Task permission to the "Partition Details" task.
 
         Parameters:
 

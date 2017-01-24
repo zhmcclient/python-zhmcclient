@@ -66,6 +66,10 @@ class PortManager(BaseManager):
         """
         List the Ports of this Adapter.
 
+        Authorization requirements:
+
+        * Object-access permission to this Adapter.
+
         Parameters:
 
           full_properties (bool):
@@ -153,6 +157,11 @@ class Port(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this Port.
+
+        Authorization requirements:
+
+        * Object-access permission to the Adapter of this Port.
+        * Task permission to the "Adapter Details" task.
 
         Parameters:
 

@@ -78,8 +78,10 @@ class AdapterManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case, the
-    :class:`~zhmcclient.Cpc` object).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Cpc` object (in DPM mode):
+
+    * :attr:`~zhmcclient.Cpc.adapters`
     """
 
     def __init__(self, cpc):
@@ -118,6 +120,11 @@ class AdapterManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the Adapters in this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to any Adapter to be included in the result.
 
         Parameters:
 
@@ -172,6 +179,11 @@ class AdapterManager(BaseManager):
     def create_hipersocket(self, properties):
         """
         Create and configure a HiperSockets Adapter in this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to the scoping CPC.
+        * Task permission to the "Create HiperSockets Adapter" task.
 
         Parameters:
 
@@ -252,6 +264,11 @@ class Adapter(BaseResource):
 
         The Adapter must be a HiperSockets Adapter.
 
+        Authorization requirements:
+
+        * Object-access permission to the HiperSockets Adapter to be deleted.
+        * Task permission to the "Delete HiperSockets Adapter" task.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -264,6 +281,11 @@ class Adapter(BaseResource):
     def update_properties(self, properties):
         """
         Update writeable properties of this Adapter.
+
+        Authorization requirements:
+
+        * Object-access permission to the Adapter.
+        * Task permission for the "Adapter Details" task.
 
         Parameters:
 

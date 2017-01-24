@@ -65,8 +65,10 @@ class CpcManager(BaseManager):
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case,
-    the :class:`~zhmcclient.Client` object connecting to the HMC).
+    accessible via the following instance variable of a
+    :class:`~zhmcclient.Client` object:
+
+    * :attr:`~zhmcclient.Client.cpcs`
     """
 
     def __init__(self, client):
@@ -94,6 +96,10 @@ class CpcManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the CPCs exposed by the HMC this client is connected to.
+
+        Authorization requirements:
+
+        * Object-access permission to any CPC to be included in the result.
 
         Parameters:
 
@@ -291,6 +297,14 @@ class Cpc(BaseResource):
         If the CPC is not currently in DPM mode, or if the CPC does not
         support DPM mode (i.e. before z13), `False` is returned.
 
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to all Partitions of this CPC, when the
+          CPC is in DPM mode.
+        * Object-access permission to all LPARs of this CPC, when the
+          CPC is in classic (or ensemble) mode.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -323,6 +337,11 @@ class Cpc(BaseResource):
     def start(self, wait_for_completion=True):
         """
         Start this CPC, using the HMC operation "Start CPC".
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "Start (start a single DPM system)" task.
 
         Parameters:
 
@@ -364,6 +383,11 @@ class Cpc(BaseResource):
     def stop(self, wait_for_completion=True):
         """
         Stop this CPC, using the HMC operation "Stop CPC".
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "Stop (stop a single DPM system)" task.
 
         Parameters:
 
@@ -409,6 +433,11 @@ class Cpc(BaseResource):
         "Import Profiles".
 
         This operation is not permitted when the CPC is in DPM mode.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "CIM Actions ExportSettingsData" task.
 
         Parameters:
 
@@ -460,6 +489,11 @@ class Cpc(BaseResource):
 
         This operation is not permitted when the CPC is in DPM mode.
 
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "CIM Actions ExportSettingsData" task.
+
         Parameters:
 
           profile_area (int):
@@ -508,6 +542,13 @@ class Cpc(BaseResource):
         specified :term:`Partitions <Partition>` of this CPC.
 
         This method performs the HMC operation "Export WWPN List".
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to the Partitions designated by the
+          "partitions" parameter.
+        * Task permission for the "Export WWPNs" task.
 
         Parameters:
 

@@ -365,4 +365,16 @@ Bibliography
    HMC API 2.13.1
        `IBM SC27-2634, z Systems Hardware Management Console Web Services API (Version 2.13.1) <https://www-01.ibm.com/support/docview.wss?uid=isg2cb468b15654ca89b85257f7200746c16>`_
 
+   HMC Operations Guide
+       The operations guide of the z Systems Hardware Management Console, described in the following books:
+
+   HMC Operations Guide 2.11.1
+       `IBM SC28-6905, System z Hardware Management Console Operations Guide (Version 2.11.1) <https://www-01.ibm.com/support/docview.wss?uid=isg2f287015984420833852578ff0067d8f9>`_
+
+   HMC Operations Guide 2.13.1
+       `IBM z Systems Hardware Management Console Operations Guide (Version 2.13.1) <https://www-01.ibm.com/support/docview.wss?uid=isg20351070eb1b67cd985257f7000487d13>`_
+
+   KVM for IBM z Systems V1.1.2 System Administration
+       `IBM SC27-8237, KVM for IBM z Systems V1.1.2 System Administration <https://www.ibm.com/support/knowledgecenter/SSNW54_1.1.2/com.ibm.kvm.v112.kvmlp/KVM.htm>`_
+
 .. include:: changes.rst

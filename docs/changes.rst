@@ -61,6 +61,9 @@ Released: not yet
 * Changed the keyword arguments of the `find()` and `findall()` methods to be
   interpreted as filter arguments that are passed to the `list()` method.
 
+* Documented the authorization requirements for each method, and in total
+  in a new section "Setting up the HMC".
+
 **Known Issues:**
 
 * See `list of open issues`_.
