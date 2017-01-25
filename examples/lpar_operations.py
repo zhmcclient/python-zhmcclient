@@ -96,8 +96,8 @@ print("Finding LPAR by name=%s ..." % lparname)
 # We use list() instead of find() because find(name=..) is optimized by using
 # the name-to-uri cache and therefore returns an Lpar object with only a
 # minimal set of properties, and particularly no 'status' property.
-# That would drive an extra "Get Partition Properties" operation when the
-# status property is accessed.
+# That would drive an extra "Get Logical Partition Properties" operation when
+# the status property is accessed.
 lpars = cpc.lpars.list(filter_args={'name': lparname})
 if len(lpars) != 1:
     print("Could not find LPAR %s in CPC %s" % (lparname, cpc.name))
