@@ -11,7 +11,6 @@ examples:
    lpar_operations:
       hmc: "192.168.111.5"
       cpcname: P0000P30
-      cpcstatus: service-required
       lparname: PART8
       loaddev: "5172"
       deactivate: yes
