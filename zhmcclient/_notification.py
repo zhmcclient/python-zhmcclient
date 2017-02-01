@@ -198,6 +198,9 @@ class NotificationReceiver(object):
                 while len(self._handover_dict) == 0:
                     self._handover_cond.wait(self._wait_timeout)
 
+                if self._handover_dict['headers'] is None:
+                    return
+
                 # Process the notification
                 yield (self._handover_dict['headers'],
                        self._handover_dict['message'])
@@ -210,8 +213,12 @@ class NotificationReceiver(object):
 
     def close(self):
         """
-        Close the JMS session with the HMC. This implicitly unsubscribes from
-        the notification topic this receiver was created for.
+        Disconnect and close the JMS session with the HMC.
+
+        This implicitly unsubscribes from the notification topic this receiver
+        was created for, and causes the
+        :meth:`~zhmcclient.NotificationReceiver.notifications` method to
+        stop its iterations.
         """
         self._conn.disconnect()
 
@@ -246,6 +253,26 @@ class _NotificationListener(object):
 
         # Wait timeout to honor keyboard interrupts after this time:
         self._wait_timeout = 10.0  # seconds
+
+    def on_disconnected(self):
+        """
+        Event method that gets called when the JMS session has been
+        disconnected.
+
+        It hands over a termination notification (headers and message are
+        None).
+        """
+
+        with self._handover_cond:
+
+            # Wait until receiver has processed the previous notification
+            while len(self._handover_dict) > 0:
+                self._handover_cond.wait(self._wait_timeout)
+
+            # Indicate to receiver that there is a termination notification
+            self._handover_dict['headers'] = None  # terminate receiver
+            self._handover_dict['message'] = None
+            self._handover_cond.notifyAll()
 
     def on_error(self, headers, message):
         """
