@@ -80,6 +80,9 @@ class NotificationReceiver(object):
     A class for receiving HMC notifications that are published to a particular
     single HMC notification topic.
 
+    **Experimental:** This class is considered experimental at this point, and
+    its API may change incompatibly as long as it is experimental.
+
     Creating an object of this class establishes a JMS session with the
     HMC and subscribes for a particular HMC notification topic.
 

@@ -64,6 +64,14 @@ Released: not yet
 * Documented the authorization requirements for each method, and in total
   in a new section "Setting up the HMC".
 
+* Added a method `open_os_message_channel()` on Partition and Lpar objects,
+  that returns a notification token for receiving operating system messages
+  as HMC notifications.
+
+* Experimental: Added a class `NotificationReceiver` that supports receiving
+  and iterating through HMC notificationsi for a notification token, e.g.
+  those produced by `open_os_message_channel()`.
+
 **Known Issues:**
 
 * See `list of open issues`_.
