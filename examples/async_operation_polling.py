@@ -100,24 +100,15 @@ status = lpar.get_property('status')
 print("Status of LPAR %s: %s" % (lpar.name, status))
 
 print("De-Activating LPAR %s (async.) ..." % lpar.name)
-job_obj = lpar.deactivate(wait_for_completion=False)
-job_uri = job_obj['job-uri']
-print("Job URI: %s" % job_uri)
-
-print("Retrieving job properties ...")
-job = session.query_job_status(job_uri)
-print("Job properties: %s" % job)
-
-while job['status'] != 'complete':
+job = lpar.deactivate(wait_for_completion=False)
+while True:
+    print("Retrieving job status ...")
+    job_status, _ = job.check_for_completion()
+    print("Job status: %s" % job_status)
+    if job_status == 'complete':
+        break
     time.sleep(1)
-    print("Retrieving job properties ...")
-    job = session.query_job_status(job_uri)
-    print("Job properties: %s" % job)
-
 print('De-Activation complete!')
-
-print('Deleting completed job ...')
-session.delete_completed_job_status(job_uri)
 
 print("Logging off ...")
 session.logoff()

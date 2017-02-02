@@ -145,16 +145,14 @@ print("Status of partition %s: %s" % (partition.name, partition_status))
 
 if partition_status == 'active':
     print("Stopping partition %s asynchronously ..." % partition.name)
-    result = partition.stop(wait_for_completion=False)
+    job = partition.stop(wait_for_completion=False)
 elif partition_status in ('inactive', 'stopped'):
     print("Starting partition %s asynchronously ..." % partition.name)
-    result = partition.start(wait_for_completion=False)
+    job = partition.start(wait_for_completion=False)
 else:
     raise zhmcclient.Error("Cannot deal with partition status: %s" % \
                            partition_status)
-
-job_uri = result['job-uri']
-print("Waiting for completion of job %s ..." % job_uri)
+print("Waiting for completion of job %s ..." % job.uri)
 sys.stdout.flush()
 
 # Just for demo purposes, we show how a loop for processing multiple
@@ -173,7 +171,7 @@ while True:
 
         # This test is just for demo purposes, it should always be our job
         # given what we subscribed for.
-        if NOTI_DATA['job-uri'] == job_uri:
+        if NOTI_DATA['job-uri'] == job.uri:
             break
         else:
             print("Unexpected completion received for job %s" % \
@@ -184,8 +182,7 @@ while True:
         NOTI_DATA = None
         NOTI_LOCK.notifyAll()
 
-job_uri = NOTI_DATA['job-uri']
-print("Job has completed: %s" % job_uri)
+print("Job has completed: %s" % job.uri)
 sys.stdout.flush()
 
 conn.disconnect()

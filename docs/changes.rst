@@ -27,11 +27,35 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Changed the return value of all methods on resource classes that invoke
+  asynchronous operations (i.e. all methods that have a `wait_for_completion`
+  parameter), as follows:
+
+  - For `wait_for_completion=True`, the JSON object in the 'job-results' field
+    is now returned, or `None` if not present (i.e. no result data).
+    Previously, the complete response was returned as a JSON object.
+
+  - For `wait_for_completion=False`, a new `Job` object is now returned that
+    allows checking and waiting for completion directly on the `Job` object.
+    Previously, the whole response of the 'Query Job Status' operation was
+    returned as a JSON object, and the job completion was checked on the
+    `Session` object, and one could not wait for completion.
+
+* Changed the default value of the `wait_for_completion` parameter of the
+  `Session.post()` method from `True` to `False`, in order to avoid
+  superfluos timestats entries. This method is not normally used by
+  users of the zhmcclient package.
+
 **Deprecations:**
 
 **Bug fixes:**
 
 **Enhancements:**
+
+* Fixed a discrepancy between documentation and actual behavior of the return
+  value of all methods on resource classes that invoke asynchronous operations
+  (i.e. all methods that have a `wait_for_completion` parameter). See also
+  the corresponding incompatible change (issue #178).
 
 **Known Issues:**
 
