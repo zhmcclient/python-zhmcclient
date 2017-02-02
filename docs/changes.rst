@@ -20,6 +20,26 @@ Change log
 ----------
 
 
+Version 0.11.0
+^^^^^^^^^^^^^^
+
+Released: not yet
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known Issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
 Version 0.10.0
 ^^^^^^^^^^^^^^
 
@@ -71,12 +91,6 @@ Released: 2017-02-02
 * Experimental: Added a class `NotificationReceiver` that supports receiving
   and iterating through HMC notificationsi for a notification token, e.g.
   those produced by `open_os_message_channel()`.
-
-**Known Issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.9.0
