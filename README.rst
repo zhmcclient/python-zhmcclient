@@ -41,7 +41,6 @@ zhmcclient - A pure Python client library for the z Systems HMC Web Services API
    ORDER BY
      file.version DESC
 
-
 .. image:: https://img.shields.io/pypi/v/zhmcclient.svg
     :target: https://pypi.python.org/pypi/zhmcclient/
     :alt: Version on Pypi
@@ -72,7 +71,7 @@ zhmcclient - A pure Python client library for the z Systems HMC Web Services API
 Overview
 ========
 
-The zhmcclient package (also known as python-zhmcclient) is a client library
+The zhmcclient package is a client library
 written in pure Python that interacts with the Web Services API of the Hardware
 Management Console (HMC) of `z Systems`_ or `LinuxONE`_ machines. The goal of
 this package is to make the HMC Web Services API easily consumable for Python
@@ -94,7 +93,7 @@ Services API:
   complete asynchronously.
 
 * JMS (Java Messaging Services) for notifications from the HMC to the client.
-  This is used for notification about changes in the system, or about
+  This can be used to be notified about changes in the system, or about
   completion of asynchronous tasks started using REST.
 
 Installation
@@ -106,12 +105,14 @@ The quick way:
 
     $ pip install zhmcclient
 
-For more details see the `Installation section`_ in the documentation.
+For more details, see the `Installation section`_ in the documentation.
 
 .. _Installation section: http://python-zhmcclient.readthedocs.io/en/stable/intro.html#installation
 
 Quickstart
 ===========
+
+The following example code lists the machines (CPCs) managed by an HMC:
 
 .. code-block:: python
 
@@ -119,46 +120,63 @@ Quickstart
 
     import zhmcclient
     import requests.packages.urllib3
-
-    # Set these variables for your environment:
-    zhmc = "<IP address or hostname of the HMC>"
-    userid = "<userid on that HMC>"
-    password = "<password of that HMC userid>"
-
     requests.packages.urllib3.disable_warnings()
 
-    session = zhmcclient.Session(zhmc, userid, password)
+    # Set these variables for your environment:
+    hmc_host = "<IP address or hostname of the HMC>"
+    hmc_userid = "<userid on that HMC>"
+    hmc_password = "<password of that HMC userid>"
+
+    session = zhmcclient.Session(hmc_host, hmc_userid, hmc_password)
     client = zhmcclient.Client(session)
 
-    vi = client.version_info()
-    print("HMC API version: {}.{}".format(vi[0], vi[1]))
-
-    print("Listing CPCs ...")
     cpcs = client.cpcs.list()
     for cpc in cpcs:
         print(cpc)
+
+Possible output when running the script:
+
+.. code-block:: text
+
+    Cpc(name=P000S67B, object-uri=/api/cpcs/fa1f2466-12df-311a-804c-4ed2cc1d6564, status=service-required)
+
+This example uses the zhmc CLI to list the CPCs managed by an HMC, and shows
+a possible output:
+
+.. code-block:: bash
+
+    $ hmc_host="<IP address or hostname of the HMC>"
+    $ hmc_userid="<userid on that HMC>"
+    $ zhmc -h $hmc_host -u $hmc_userid cpc list
+    Enter password (for user <hmc_user> at HMC <hmc_host>): .......
+    +----------+------------------+
+    | name     | status           |
+    |----------+------------------|
+    | P000S67B | service-required |
+    +----------+------------------+
 
 Documentation
 =============
 
 The zhmcclient documentation is on RTD:
 
-* `Documentation for version on Pypi`_
+* `Documentation for latest version on Pypi`_
 * `Documentation for master branch in Git repo`_
 
-.. _Documentation for version on Pypi: http://python-zhmcclient.readthedocs.io/en/stable/
+.. _Documentation for latest version on Pypi: http://python-zhmcclient.readthedocs.io/en/stable/
 .. _Documentation for master branch in Git repo: http://python-zhmcclient.readthedocs.io/en/latest/
 
-Development, testing, and contributing
-======================================
+Contributing
+============
 
-For more details, see the `Development section`_ in the documentation.
+For information on how to contribute to this project, see the
+`Development section`_ in the documentation.
 
 .. _Development section: http://python-zhmcclient.readthedocs.io/en/stable/development.html
 
 License
 =======
 
-python-zhmcclient is licensed under the `Apache 2.0 License`_.
+The zhmcclient package is licensed under the `Apache 2.0 License`_.
 
 .. _Apache 2.0 License: https://github.com/zhmcclient/python-zhmcclient/tree/master/LICENSE

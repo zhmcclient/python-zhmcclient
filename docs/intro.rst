@@ -187,33 +187,48 @@ section "Enabling the System z HMC to work the Pacemaker STONITH Agent", in the
 Examples
 --------
 
-For a quick start, the following example code lists the machines (CPCs) managed
-by a particular HMC:
+The following example code lists the machines (CPCs) managed by an HMC:
 
-::
+.. code-block:: python
 
     #!/usr/bin/env python
 
     import zhmcclient
     import requests.packages.urllib3
-
-    # Set these variables for your environment:
-    zhmc = "<IP address or hostname of the HMC>"
-    userid = "<userid on that HMC>"
-    password = "<password of that HMC userid>"
-
     requests.packages.urllib3.disable_warnings()
 
-    session = zhmcclient.Session(zhmc, userid, password)
+    # Set these variables for your environment:
+    hmc_host = "<IP address or hostname of the HMC>"
+    hmc_userid = "<userid on that HMC>"
+    hmc_password = "<password of that HMC userid>"
+
+    session = zhmcclient.Session(hmc_host, hmc_userid, hmc_password)
     client = zhmcclient.Client(session)
 
-    vi = client.version_info()
-    print("HMC API version: {}.{}".format(vi[0], vi[1]))
-
-    print("Listing CPCs ...")
     cpcs = client.cpcs.list()
     for cpc in cpcs:
         print(cpc)
+
+Possible output when running the script:
+
+.. code-block:: text
+
+    Cpc(name=P000S67B, object-uri=/api/cpcs/fa1f2466-12df-311a-804c-4ed2cc1d6564, status=service-required)
+
+This example uses the zhmc CLI to list the CPCs managed by an HMC, and shows
+a possible output:
+
+.. code-block:: bash
+
+    $ hmc_host="<IP address or hostname of the HMC>"
+    $ hmc_userid="<userid on that HMC>"
+    $ zhmc -h $hmc_host -u $hmc_userid cpc list
+    Enter password (for user <hmc_user> at HMC <hmc_host>): .......
+    +----------+------------------+
+    | name     | status           |
+    |----------+------------------|
+    | P000S67B | service-required |
+    +----------+------------------+
 
 For more example code, see the Python scripts in the `examples directory`_ of
 the Git repository, or the :ref:`Tutorial` section of this documentation.
