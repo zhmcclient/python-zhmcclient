@@ -108,6 +108,30 @@ Released: not yet
   it would be returned, it is now handled in the same way as when the operation
   does require logon, i.e. by a re-logon.
 
+* Added exception class `TimeoutError` that is used to indicate asynchronous
+  operation timeouts and LPAR deferred status polling timeouts (issues #6 and
+  #191).
+
+* Added support for deferred status polling to the
+  `Lpar.activate/deactivate/load()` methods. The HMC operations issued by these
+  methods exhibit "deferred status" behavior, which means that it takes a few
+  seconds after successful completion of the asynchronous job that executes the
+  operation, until the new status can be observed in the 'status' property of
+  the LPAR resource. These methods will poll the LPAR status until the desired
+  status value is reached. A status timeout can be specified via a new
+  `status_timeout` parameter to these methods, which defaults to 1 hour
+  (issue #191).
+
+* Added operation timeout support to `Session.post()` and to all resource
+  methods with a `wait_for_completion` parameter (i.e. the asynchronous
+  methods). The operation timeout on the asynchronous methods can be specified
+  via a new `operation_timeout` parameter, which defaults to no timeout
+  (issue #6).
+
+* Added a new module that defines public constants, and that defines the
+  default timeout values for the operation timeout and the status timeout
+  (issues #6 and #191).
+
 **Known Issues:**
 
 * See `list of open issues`_.

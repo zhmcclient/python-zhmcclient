@@ -21,7 +21,8 @@ import re
 
 __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'RetriesExceeded', 'AuthError', 'ParseError', 'VersionError',
-           'HTTPError', 'NoUniqueMatch', 'NotFound']
+           'HTTPError', 'AsyncOperationTimeout', 'ResourceStatusTimeout',
+           'NoUniqueMatch', 'NotFound']
 
 
 class Error(Exception):
@@ -438,6 +439,26 @@ class HTTPError(Error):
                "request_method={}, request_uri={}, ...)".\
                format(self.http_status, self.reason, self.message,
                       self.request_method, self.request_uri)
+
+
+class AsyncOperationTimeout(Error):
+    """
+    This exception indicates that the waiting for completion of an asynchronous
+    HMC operation has timed out.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+    pass
+
+
+class ResourceStatusTimeout(Error):
+    """
+    This exception indicates that the waiting for reaching a desired resource
+    status has timed out.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+    pass
 
 
 class NoUniqueMatch(Error):

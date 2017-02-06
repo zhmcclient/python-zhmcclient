@@ -29,11 +29,12 @@ import requests
 from requests.packages import urllib3
 
 from ._exceptions import HTTPError, AuthError, ConnectionError, ParseError, \
-    ConnectTimeout, ReadTimeout, RetriesExceeded
+    ConnectTimeout, ReadTimeout, RetriesExceeded, AsyncOperationTimeout
 from ._timestats import TimeStatsKeeper
 from ._logging import _get_logger, _log_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
-    DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS
+    DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
+    DEFAULT_ASYNC_OPERATION_TIMEOUT
 
 LOG = _get_logger(__name__)
 
@@ -602,7 +603,8 @@ class Session(object):
 
     @_log_call
     def post(self, uri, body=None, logon_required=True,
-             wait_for_completion=False):
+             wait_for_completion=False,
+             timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -663,6 +665,15 @@ class Session(object):
             it should still be set (or defaulted) to `False` in order to avoid
             the additional entry in the time statistics.
 
+          timeout (:term:`number`):
+            Timeout in seconds, when waiting for completion of an asynchronous
+            operation. `None` means that no timeout is set.
+
+            For `wait_for_completion=True`, a :exc:`~zhmcclient.TimeoutError`
+            is raised when the timeout expires.
+
+            For `wait_for_completion=False`, this parameter has no effect.
+
         Returns:
 
           : A :term:`json object` or `None` or a :class:`~zhmcclient.Job`
@@ -697,6 +708,8 @@ class Session(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
+            for completion of the asynchronous operation.
         """
         if logon_required:
             self.logon()
@@ -736,7 +749,7 @@ class Session(object):
                 job_uri = result_object['job-uri']
                 job = Job(self, job_uri)
                 if wait_for_completion:
-                    return job.wait_for_completion()
+                    return job.wait_for_completion(timeout)
                 else:
                     return job
             elif result.status_code == 403:
@@ -955,7 +968,7 @@ class Job(object):
         return job_status, oper_result_obj
 
     @_log_call
-    def wait_for_completion(self):
+    def wait_for_completion(self, timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
         """
         Wait for completion of the job, then delete the job on the HMC and
         return the result of the original asynchronous HMC operation, if it
@@ -963,6 +976,17 @@ class Job(object):
 
         If the job completed in error, an :exc:`~zhmcclient.HTTPError`
         exception is raised.
+
+        Parameters:
+
+          timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the job. `None`
+            means that no timeout is set. If the timeout expires, a
+            :exc:`~zhmcclient.TimeoutError` is raised.
+
+            This method gives completion of the job priority over strictly
+            achieving the timeout. This may cause a slightly longer duration of
+            the method than prescribed by the timeout.
 
         Returns:
 
@@ -980,14 +1004,31 @@ class Job(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
+            for completion.
         """
+
+        if timeout is not None:
+            start_time = time.time()
+
         while True:
             job_status, oper_result_obj = self.check_for_completion()
+
+            # We give completion of status priority over strictly achieving
+            # the timeout, so we check status first. This may cause a longer
+            # duration of the method than prescribed by the timeout.
             if job_status == 'complete':
                 return oper_result_obj
-            else:
-                # TODO: Add support for timeout
-                time.sleep(1)  # Avoid hot spin loop
+
+            if timeout is not None:
+                current_time = time.time()
+                if current_time > start_time + timeout:
+                    raise AsyncOperationTimeout(
+                        "Waiting for completion of job {} timed out after "
+                        "{} s (timeout: {} s)".
+                        format(self.uri, current_time - start_time, timeout))
+
+            time.sleep(1)  # Avoid hot spin loop
 
 
 def _result_object(result):

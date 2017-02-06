@@ -27,9 +27,14 @@ CPCs in DPM mode have :term:`Partition` resources, instead.
 
 from __future__ import absolute_import
 
+import time
+
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import _log_call
+from ._exceptions import AsyncOperationTimeout
+from ._constants import DEFAULT_ASYNC_OPERATION_TIMEOUT, \
+    DEFAULT_LPAR_STATUS_TIMEOUT
 
 __all__ = ['LparManager', 'Lpar']
 
@@ -169,10 +174,19 @@ class Lpar(BaseResource):
         super(Lpar, self).__init__(manager, uri, name, properties)
 
     @_log_call
-    def activate(self, wait_for_completion=True):
+    def activate(self, wait_for_completion=True,
+                 operation_timeout=None, status_timeout=None):
         """
         Activate (start) this LPAR, using the HMC operation "Activate Logical
         Partition".
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the LPAR
+        status has reached the desired value. If `wait_for_completion=True`,
+        this method repeatedly checks the status of the LPAR after the HMC
+        operation has completed, and waits until the status is in the desired
+        state "non-operating" (which indicates that the LPAR is active but
+        no operating system is running).
 
         Authorization requirements:
 
@@ -187,10 +201,27 @@ class Lpar(BaseResource):
             of the requested asynchronous HMC operation, as follows:
 
             * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation.
+              asynchronous job performing the operation, and for the status
+              becoming "non-operating".
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.AsyncOperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status, after the HMC operation has completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
 
         Returns:
 
@@ -208,18 +239,36 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.AsyncOperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
         """
         body = {}
+        # TODO: Determine effective timeout
         result = self.manager.session.post(
-            self.uri + '/operations/activate', body,
-            wait_for_completion=wait_for_completion)
+            self.uri + '/operations/activate',
+            body,
+            wait_for_completion=wait_for_completion,
+            timeout=operation_timeout)
+        if wait_for_completion:
+            # TODO: Determine effective timeout
+            self._wait_for_status("non-operating", status_timeout)
         return result
 
     @_log_call
-    def deactivate(self, wait_for_completion=True):
+    def deactivate(self, wait_for_completion=True,
+                   operation_timeout=None, status_timeout=None):
         """
         De-activate (stop) this LPAR, using the HMC operation "Deactivate
         Logical Partition".
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the LPAR
+        status has reached the desired value. If `wait_for_completion=True`,
+        this method repeatedly checks the status of the LPAR after the HMC
+        operation has completed, and waits until the status is in the desired
+        state "not-activated".
 
         Authorization requirements:
 
@@ -234,10 +283,27 @@ class Lpar(BaseResource):
             of the requested asynchronous HMC operation, as follows:
 
             * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation.
+              asynchronous job performing the operation, and for the status
+              becoming "non-activated".
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.AsyncOperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status, after the HMC operation has completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
 
         Returns:
 
@@ -255,18 +321,36 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.AsyncOperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
         """
         body = {'force': True}
+        # TODO: Determine effective timeout
         result = self.manager.session.post(
-            self.uri + '/operations/deactivate', body,
-            wait_for_completion=wait_for_completion)
+            self.uri + '/operations/deactivate',
+            body,
+            wait_for_completion=wait_for_completion,
+            timeout=operation_timeout)
+        if wait_for_completion:
+            # TODO: Determine effective timeout
+            self._wait_for_status("not-activated", status_timeout)
         return result
 
     @_log_call
-    def load(self, load_address, load_parameter="", wait_for_completion=True):
+    def load(self, load_address, load_parameter="", wait_for_completion=True,
+             operation_timeout=None, status_timeout=None):
         """
         Load (boot) this LPAR from a load address (boot device), using the HMC
         operation "Load Logical Partition".
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the LPAR
+        status has reached the desired value. If `wait_for_completion=True`,
+        this method repeatedly checks the status of the LPAR after the HMC
+        operation has completed, and waits until the status is in the desired
+        state "operating".
 
         Authorization requirements:
 
@@ -285,10 +369,27 @@ class Lpar(BaseResource):
             of the requested asynchronous HMC operation, as follows:
 
             * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation.
+              asynchronous job performing the operation, and for the status
+              becoming "operating".
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.AsyncOperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status, after the HMC operation has completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
 
         Returns:
 
@@ -306,13 +407,23 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.AsyncOperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
         """
         body = {'load-address': load_address}
         if load_parameter != "":
             body['load-parameter'] = load_parameter
+        # TODO: Determine effective timeout
         result = self.manager.session.post(
-            self.uri + '/operations/load', body,
-            wait_for_completion=wait_for_completion)
+            self.uri + '/operations/load',
+            body,
+            wait_for_completion=wait_for_completion,
+            timeout=operation_timeout)
+        if wait_for_completion:
+            # TODO: Determine effective timeout
+            self._wait_for_status("operating", status_timeout)
         return result
 
     def open_os_message_channel(self, include_refresh_messages=True):
@@ -385,3 +496,59 @@ class Lpar(BaseResource):
                 'operating-system-command-text': os_command_text}
         self.manager.session.post(
             self.uri + '/operations/send-os-cmd', body)
+
+    def _wait_for_status(self, status, timeout=None):
+        """
+        Wait until the status of this LPAR has a desired value.
+
+        Parameters:
+
+          status (:term:`string`):
+            Desired LPAR status to reach.
+
+            Possible LPAR status values are:
+            * ``"not-activated"`` - The LPAR is not active.
+            * ``"not-operating" - The LPAR is active but no operating system is
+              running in the LPAR.
+            * ``"operating"`` - The LPAR is active and an operating system is
+              running in the LPAR.
+            * ``"exceptions"`` - The LPAR or its CPC has one or more unusual
+              conditions.
+
+            Note that the description of LPAR status values in the
+            :term:`HMC API` book (as of its version 2.13.1) is confusing and
+            partly incorrect.
+
+          timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status. The special value 0 means that no
+            timeout is set.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
+        """
+        end_time = time.time() + timeout if timeout > 0 else None
+        while True:
+
+            # Fastest way to get actual property values:
+            lpars = self.manager.cpc.lpars.list(
+                filter_args={'name': self.name})
+            assert len(lpars) == 0
+            this_lpar = lpars[0]
+            actual_status = this_lpar.get_property('status')
+            if actual_status == status:
+                return
+            if end_time is not None and time.time() > end_time:
+                raise ResourceStatusTimeout(
+                    "Waiting for LPAR {} to reach status '{}' timed out after "
+                    "{} s - current status is '{}'".
+                    format(self.name, status, timeout, actual_status))
+            time.sleep(1)  # Avoid hot spin loop

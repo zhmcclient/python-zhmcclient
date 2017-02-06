@@ -27,7 +27,9 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_CONNECT_RETRIES',
            'DEFAULT_READ_TIMEOUT',
            'DEFAULT_READ_RETRIES',
-           'DEFAULT_MAX_REDIRECTS']
+           'DEFAULT_MAX_REDIRECTS',
+           'DEFAULT_ASYNC_OPERATION_TIMEOUT',
+           'DEFAULT_LPAR_STATUS_TIMEOUT']
 
 
 #: Default HTTP connect timeout in seconds,
@@ -54,3 +56,17 @@ DEFAULT_READ_RETRIES = 3
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 DEFAULT_MAX_REDIRECTS = 30
+
+#: Default timeout in seconds for waiting for completion of an asynchronous
+#: HMC operation. This is used as a default value in asynchronous methods on
+#: resource objects (e.g. :meth:`zhmcclient.Partition.start`), in the
+#: :meth:`zhmcclient.Job.wait_for_completion` method, and in the
+#: low level method :meth:`zhmcclient.Session.post`.
+DEFAULT_ASYNC_OPERATION_TIMEOUT = None
+
+#: Default timeout in seconds for waiting for completion of deferred status
+#: changes for LPARs. This is used as a default value in asynchronous methods
+#: of the :class:`~zhmcclient.Lpar` class that change its status (e.g.
+#: :meth:`zhmcclient.Lpar.activate`)).
+DEFAULT_LPAR_STATUS_TIMEOUT = 3600
+
