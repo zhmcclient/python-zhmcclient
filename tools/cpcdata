@@ -23,12 +23,10 @@ import os
 import platform
 import sys
 import logging
-import traceback
 import argparse
 from datetime import datetime
 import requests.packages.urllib3
 import yaml
-from pprint import pprint
 from platform import python_version
 
 import zhmcclient
@@ -138,7 +136,7 @@ def main():
         handler = logging.StreamHandler()  # log to stdout
         format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         handler.setFormatter(logging.Formatter(format_string))
-        logger = logging.getLogger(config.logmodule)
+        logger = logging.getLogger(logmodule)
         logger.addHandler(handler)
         logger.setLevel(level)
 
@@ -204,8 +202,7 @@ def process_hmc(config, hmc_host, hmc_userid, hmc_password):
 
             if config.verbose:
                 print("Attempting to get HMC version ...")
-            version_info = client.version_info()
-            hmc_version = '{}.{}'.format(version_info[0], version_info[1])
+            client.version_info()
 
         except zhmcclient.ConnectionError as exc:
             print("Warning: Cannot connect to API on HMC %s" % hmc_host)
@@ -322,6 +319,7 @@ def print_csv_header(config):
             if config.verbose:
                 print("Appending to existing CSV output file: %s" %
                       config.csv_file)
+
 
 def parse_args():
     """
@@ -440,11 +438,11 @@ def ping(host, timeout=10):
       bool: Host has responded.
     """
     if platform.system() == "Windows":
-       ping_options = "-n 1 -w %d" % (timeout * 1000)
-       ping_drop_output = ">nul 2>&1"
+        ping_options = "-n 1 -w %d" % (timeout * 1000)
+        ping_drop_output = ">nul 2>&1"
     else:  # Linux or OS-X
-       ping_options = "-c 1 -W %d" % timeout
-       ping_drop_output = ">/dev/null 2>&1"
+        ping_options = "-c 1 -W %d" % timeout
+        ping_drop_output = ">/dev/null 2>&1"
     rc = os.system("ping %s %s %s" % (ping_options, host, ping_drop_output))
     return rc == 0
 

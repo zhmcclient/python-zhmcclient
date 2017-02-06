@@ -20,14 +20,12 @@ Display information about a CPC.
 from __future__ import absolute_import, print_function
 
 import sys
-import logging
 import argparse
 from getpass import getpass
 from datetime import datetime
 import requests.packages.urllib3
 from tabulate import tabulate
 import progressbar
-from pprint import pprint
 from platform import python_version
 
 import zhmcclient
@@ -112,9 +110,9 @@ class ProgressBar(object):
     def __init__(self, max_value):
         self._max = max_value
         self._current = 0
-        self._widgets =  [progressbar.Percentage(),
-                          ' ', progressbar.Bar(),
-                          ' ', progressbar.ETA()]
+        self._widgets = [progressbar.Percentage(),
+                         ' ', progressbar.Bar(),
+                         ' ', progressbar.ETA()]
         self._bar = progressbar.ProgressBar(widgets=self._widgets,
                                             max_value=max_value)
 
@@ -162,7 +160,7 @@ def main():
                 try:
                     cpc = client.cpcs.find(name=cpcname)
                 except zhmcclient.NotFound:
-                    raise zhmcclient.Error("Could not find CPC %s on HMC %s" %\
+                    raise zhmcclient.Error("Could not find CPC %s on HMC %s" %
                                            (cpcname, args.hmc))
                 cpcs.append(cpc)
         else:
@@ -178,7 +176,6 @@ def main():
 
             if cpc.dpm_enabled:
                 bar.progress()  # dpm_enabled performs "Get CPC Properties"
-                cpc_mode = "DPM"
                 partitions_kind = "Partitions"
                 partition_header = ("Name", "Status", "OS Type", "OS Version")
                 partitions = cpc.partitions.list()
@@ -196,7 +193,6 @@ def main():
                     partition_rows.append(row)
             else:
                 bar.progress()
-                cpc_mode = "Classic"
                 partitions_kind = "LPARs"
                 partition_header = ("Name", "Status", "OS Type", "OS Level")
                 partitions = cpc.lpars.list()
@@ -222,7 +218,8 @@ def main():
                 bar.progress()
                 adapter_rows = []
                 for adapter in sorted(adapters,
-                                      key=lambda p: p.prop('card-location', '')):
+                                      key=lambda p: p.prop('card-location',
+                                                           '')):
                     row = (adapter.prop('card-location'),
                            adapter.prop('detected-card-type'),
                            adapter.prop('type'),
@@ -238,26 +235,26 @@ def main():
             print("  IML mode: %s" % cpc.prop('iml-mode'))
 
             print("\nCPUs:")
-            print("  CP:  %s" %\
+            print("  CP:  %s" %
                   cpc.prop('processor-count-general-purpose'))
-            print("  IFL: %s" %\
+            print("  IFL: %s" %
                   cpc.prop('processor-count-ifl'))
-            print("  IIP: %s" %\
+            print("  IIP: %s" %
                   cpc.prop('processor-count-iip'))
-            print("  AAP: %s" %\
+            print("  AAP: %s" %
                   cpc.prop('processor-count-aap'))
-            print("  ICF: %s" %\
+            print("  ICF: %s" %
                   cpc.prop('processor-count-icf'))
-            print("  SAP: %s" %\
+            print("  SAP: %s" %
                   cpc.prop('processor-count-service-assist'))
-            print("  spare: %s" %\
+            print("  spare: %s" %
                   cpc.prop('processor-count-spare'))
-            print("  defective: %s" %\
+            print("  defective: %s" %
                   cpc.prop('processor-count-defective'))
 
             mem_cust = int(cpc.prop('storage-customer', '0')) / 1024
             mem_hsa = int(cpc.prop('storage-hardware-system-area', '0')) /\
-                      1024
+                1024
             print("\nMemory:")
             print("  Customer:  %d GB" % mem_cust)
             print("  HSA:       %d GB" % mem_hsa)
@@ -266,7 +263,8 @@ def main():
                 mc_desc = cpc.prop('ec-mcl-description')
                 mc_header = ["Component", "Level"]
                 mc_rows = []
-                for ec in sorted(mc_desc['ec'], key=lambda ec: ec['description']):
+                for ec in sorted(mc_desc['ec'],
+                                 key=lambda ec: ec['description']):
                     mc_component = ec['description']
                     mc_level = 'unknown'
                     for mcl in ec['mcl']:
@@ -289,7 +287,7 @@ def main():
 
         dt_end = datetime.now()
         delta = dt_end - dt_start
-        print("Total time for retrieving the information: %d s" % \
+        print("Total time for retrieving the information: %d s" %
               delta.total_seconds())
 
         if args.timestats:
