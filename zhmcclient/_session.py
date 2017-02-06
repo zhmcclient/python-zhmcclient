@@ -32,7 +32,7 @@ from ._logging import _get_logger, _log_call
 
 LOG = _get_logger(__name__)
 
-__all__ = ['Session']
+__all__ = ['Session', 'Job']
 
 _HMC_PORT = 6794
 _HMC_SCHEME = "https"
@@ -420,7 +420,7 @@ class Session(object):
 
     @_log_call
     def post(self, uri, body=None, logon_required=True,
-             wait_for_completion=True):
+             wait_for_completion=False):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -433,16 +433,12 @@ class Session(object):
 
         Examples for synchronous operations:
 
-        * With no response body: "Logon", "Update CPC Properties"
-        * With a response body: "Create Partition"
+        * With no result: "Logon", "Update CPC Properties"
+        * With a result: "Create Partition"
 
         Examples for asynchronous operations:
 
-        * With no ``job-results`` field in the completed job status response:
-          "Start Partition"
-        * With a ``job-results`` field in the completed job status response
-          (under certain conditions): "Activate a Blade", or "Set CPC Power
-          Save"
+        * With no result: "Start Partition"
 
         The `wait_for_completion` parameter of this method can be used to deal
         with asynchronous HMC operations in a synchronous way.
@@ -470,42 +466,46 @@ class Session(object):
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
-            of the requested HMC operation, as follows:
+            of the requested asynchronous HMC operation.
 
-            * If `True`, this method will wait for completion of the requested
-              operation, regardless of whether the operation is synchronous or
-              asynchronous.
+            A value of `True` will cause an additional entry in the time
+            statistics to be created that represents the entire asynchronous
+            operation including the waiting for its completion.
+            That time statistics entry will have a URI that is the targeted
+            URI, appended with "+completion".
 
-              This will cause an additional entry in the time statistics to be
-              created for the asynchronous operation and waiting for its
-              completion. This entry will have a URI that is the targeted URI,
-              appended with "+completion".
-
-            * If `False`, this method will immediately return the result of the
-              HTTP POST method, regardless of whether the operation is
-              synchronous or asynchronous.
+            For synchronous HMC operations, this parameter has no effect on
+            the operation execution or on the return value of this method, but
+            it should still be set (or defaulted) to `False` in order to avoid
+            the additional entry in the time statistics.
 
         Returns:
 
-          :term:`json object`:
+          : A :term:`json object` or `None` or a :class:`~zhmcclient.Job`
+          object, as follows:
 
-            If `wait_for_completion` is `True`, returns a JSON object
-            representing the response body of the synchronous operation, or the
-            response body of the completed job that performed the asynchronous
-            operation. If a synchronous operation has no response body, `None`
-            is returned.
+          * For synchronous HMC operations, and for asynchronous HMC
+            operations with `wait_for_completion=True`:
 
-            If `wait_for_completion` is `False`, returns a JSON object
-            representing the response body of the synchronous or asynchronous
-            operation. In case of an asynchronous operation, the JSON object
-            will have a member named ``job-uri``, whose value can be used with
-            the :meth:`~zhmcclient.Session.query_job_status` method to
-            determine the status of the job and the result of the original
-            operation, once the job has completed.
+            If this method returns, the HMC operation has completed
+            successfully (otherwise, an exception is raised).
+            For asynchronous HMC operations, the associated job has been
+            deleted.
 
-            See the section in the :term:`HMC API` book about the specific HMC
-            operation and about the 'Query Job Status' operation, for a
-            description of the members of the returned JSON objects.
+            The return value is the result of the HMC operation as a
+            :term:`json object`, or `None` if the operation has no result.
+            See the section in the :term:`HMC API` book about the specific
+            HMC operation for a description of the members of the returned
+            JSON object.
+
+          * For asynchronous HMC operations with `wait_for_completion=False`:
+
+            If this method returns, the asynchronous execution of the HMC
+            operation has been started successfully as a job on the HMC (if
+            the operation could not be started, an exception is raised).
+
+            The return value is a :class:`~zhmcclient.Job` object
+            representing the job on the HMC.
 
         Raises:
 
@@ -548,31 +548,11 @@ class Session(object):
             elif result.status_code == 202:
                 result_object = _result_object(result)
                 job_uri = result_object['job-uri']
-                job_url = self.base_url + job_uri
-                if not wait_for_completion:
-                    return result_object
-                while 1:
-                    self._log_http_method('GET', job_uri)
-                    stats = self.time_stats_keeper.get_stats('get ' + job_uri)
-                    stats.begin()
-                    try:
-                        result = req.get(job_url, headers=self.headers,
-                                         verify=False)
-                        self._log_hmc_request_id(result)
-                    except requests.exceptions.RequestException as exc:
-                        raise ConnectionError(exc.args[0], exc)
-                    finally:
-                        stats.end()
-                    if result.status_code in (200, 204):
-                        result_object = _result_object(result)
-                        if result_object['status'] == 'complete':
-                            self.delete_completed_job_status(job_uri)
-                            return result_object
-                        else:
-                            # TODO: Add support for timeout
-                            time.sleep(1)  # Avoid hot spin loop
-                    else:
-                        raise HTTPError(result_object)
+                job = Job(self, job_uri)
+                if wait_for_completion:
+                    return job.wait_for_completion()
+                else:
+                    return job
             elif result.status_code == 403:
                 result_object = _result_object(result)
                 reason = result_object.get('reason', None)
@@ -670,77 +650,6 @@ class Session(object):
             raise HTTPError(result_object)
 
     @_log_call
-    def query_job_status(self, job_uri):
-        """
-        Perform the "Query Job Status" operation on a job identified by its
-        URI and return the status of the job. If the job is complete, the
-        return value also contains the result of the operation the job was
-        performing asynchronously.
-
-        A set of standard HTTP headers is automatically part of the request.
-
-        If the HMC session token is expired, this method re-logs on and retries
-        the operation.
-
-        Parameters:
-
-          job_uri (:term:`string`):
-            Job URI; e.g. from the value of the ``job-uri`` field of the
-            result of the original operation that was performed asynchronously
-            by the job.
-            Must not be `None`.
-
-        Returns:
-
-          :term:`json object`:
-
-            A JSON object indicating the status of the job in its ``status``
-            member, and if the job is complete (``status='complete'``), also
-            with members ``job-status-code``, ``job-reason-code``, and
-            optionally ``job-results``.
-
-            For details, see section 'Response body contents' in section
-            'Query Job Status' in the :term:`HMC API` book.
-
-        Raises:
-
-          :exc:`~zhmcclient.HTTPError`
-          :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
-          :exc:`~zhmcclient.ConnectionError`
-        """
-        result = self.get(job_uri)
-        return result
-
-    @_log_call
-    def delete_completed_job_status(self, job_uri):
-        """
-        Perform the "Delete completed Job Status" operation on a job identified
-        by its URI and return the status of the job.
-
-        A set of standard HTTP headers is automatically part of the request.
-
-        If the HMC session token is expired, this method re-logs on and retries
-        the operation.
-
-        Parameters:
-
-          job_uri (:term:`string`):
-            Job URI; e.g. from the value of the ``job-uri`` field of the
-            result of the original operation that was performed asynchronously
-            by the job.
-            Must not be `None`.
-
-        Raises:
-
-          :exc:`~zhmcclient.HTTPError`
-          :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
-          :exc:`~zhmcclient.ConnectionError`
-        """
-        self.delete(job_uri)
-
-    @_log_call
     def get_notification_topics(self):
         """
         The 'Get Notification Topics' operation returns a structure that
@@ -749,22 +658,160 @@ class Session(object):
 
         Returns:
 
-            : List with one item for each notification topic. The dictionary
-            has the following keys:
+          : A list with one item for each notification topic. Each item is a
+          dictionary with the following keys:
 
-            * topic-type (string): Topic type, e.g. "job-notification".
-            * topic-name (string): Topic name; can be used for subscriptions.
-            * object-uri (string): When topic-type is
-              "os-message-notification", this item is the canonical URI path
-              of the Partition for which this topic exists.
-              This field does not exist for the other topic types.
-            * include-refresh-messages (bool): When the topic-type is
-              "os-message-notification", this item indicates whether refresh
-              operating system messages will be sent on this topic.
+          * ``"topic-type"`` (string): Topic type, e.g. "job-notification".
+          * ``"topic-name"`` (string): Topic name; can be used for
+            subscriptions.
+          * ``"object-uri"`` (string): When topic-type is
+            "os-message-notification", this item is the canonical URI path
+            of the Partition for which this topic exists.
+            This field does not exist for the other topic types.
+          * ``"include-refresh-messages"`` (bool): When the topic-type is
+            "os-message-notification", this item indicates whether refresh
+            operating system messages will be sent on this topic.
         """
         topics_uri = '/api/sessions/operations/get-notification-topics'
         response = self.get(topics_uri)
         return response['topics']
+
+
+class Job(object):
+    """
+    A job on the HMC that performs an asynchronous HMC operation.
+
+    This class supports checking the job for completion, and waiting for job
+    completion.
+    """
+
+    def __init__(self, session, uri):
+        """
+        Parameters:
+
+          session (:class:`~zhmcclient.Session`):
+            Session with the HMC.
+            Must not be `None`.
+
+          uri (:term:`string`):
+            Canonical URI of the job on the HMC.
+            Must not be `None`.
+
+            Example: ``"/api/jobs/{job-id}"``
+        """
+        self._session = session
+        self._uri = uri
+
+    @property
+    def session(self):
+        """
+        :class:`~zhmcclient.Session`: Session with the HMC.
+        """
+        return self._session
+
+    @property
+    def uri(self):
+        """
+        :term:`string`: Canonical URI of the job on the HMC.
+
+        Example: ``"/api/jobs/{job-id}"``
+        """
+        return self._uri
+
+    @_log_call
+    def check_for_completion(self):
+        """
+        Check once for completion of the job and return completion status and
+        result if it has completed.
+
+        If the job completed in error, an :exc:`~zhmcclient.HTTPError`
+        exception is raised.
+
+        Returns:
+
+          : A tuple (status, result) with:
+
+          * status (:term:`string`): Completion status of the job, as
+            returned in the ``status`` field of the response body of the
+            "Query Job Status" HMC operation, as follows:
+
+            * ``"complete"``: Job completed (successfully).
+            * any other value: Job is not yet complete.
+
+          * result (:term:`json object` or `None`): `None` for incomplete
+            jobs. For completed jobs, the result of the original asynchronous
+            operation that was performed by the job, from the ``job-results``
+            field of the response body of the "Query Job Status" HMC
+            operation. That result is a :term:`json object` as described
+            for the asynchronous operation, or `None` if the operation has no
+            result.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: The job completed in error, or the job
+            status cannot be retrieved, or the job cannot be deleted.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        job_result_obj = self.session.get(self.uri)
+        job_status = job_result_obj['status']
+        if job_status == 'complete':
+            self.session.delete(self.uri)
+            oper_status_code = job_result_obj['job-status-code']
+            if oper_status_code in (200, 201):
+                oper_result_obj = job_result_obj.get('job-results', None)
+            elif oper_status_code == 204:
+                # No content
+                oper_result_obj = None
+            else:
+                error_result_obj = job_result_obj.get('job-results', None)
+                message = error_result_obj.get('message', None) \
+                    if error_result_obj else None
+                error_obj = {
+                    'http-status': oper_status_code,
+                    'reason': job_result_obj['job-reason-code'],
+                    'message': message,
+                }
+                raise HTTPError(error_obj)
+        else:
+            oper_result_obj = None
+        return job_status, oper_result_obj
+
+    @_log_call
+    def wait_for_completion(self):
+        """
+        Wait for completion of the job, then delete the job on the HMC and
+        return the result of the original asynchronous HMC operation, if it
+        completed successfully.
+
+        If the job completed in error, an :exc:`~zhmcclient.HTTPError`
+        exception is raised.
+
+        Returns:
+
+          :term:`json object` or `None`:
+            The result of the original asynchronous operation that was
+            performed by the job, from the ``job-results`` field of the
+            response body of the "Query Job Status" HMC operation. That result
+            is a :term:`json object` as described for the asynchronous
+            operation, or `None` if the operation has no result.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: The job completed in error, or the job
+            status cannot be retrieved, or the job cannot be deleted.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        while True:
+            job_status, oper_result_obj = self.check_for_completion()
+            if job_status == 'complete':
+                return oper_result_obj
+            else:
+                # TODO: Add support for timeout
+                time.sleep(1)  # Avoid hot spin loop
 
 
 def _result_object(result):

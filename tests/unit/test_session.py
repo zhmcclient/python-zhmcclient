@@ -23,7 +23,7 @@ import unittest
 import requests
 import requests_mock
 
-from zhmcclient import Session, ParseError
+from zhmcclient import Session, ParseError, Job, HTTPError
 
 
 class SessionTests(unittest.TestCase):
@@ -160,52 +160,6 @@ class SessionTests(unittest.TestCase):
         self._do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line,
                                    exp_col)
 
-    @staticmethod
-    def test_delete_compl_job_status():
-        """
-        This tests the 'Delete Completed Job Status' operation.
-        """
-        session = Session('fake-host', 'fake-user', 'fake-id')
-        with requests_mock.mock() as m:
-            # Because logon is deferred until needed, we perform it
-            # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
-            session.logon()
-        job_uri = "/api/jobs/d9a3788e-683a-11e6-817c-00215e676926"
-        with requests_mock.mock() as m:
-            result = {}
-            m.delete(job_uri, json=result)
-            session.delete_completed_job_status(job_uri)
-
-        with requests_mock.mock() as m:
-            m.delete('/api/sessions/this-session', status_code=204)
-            session.logoff()
-
-    @staticmethod
-    def test_query_job_status():
-        """
-        This tests the 'Query Job Status' operation.
-        """
-        session = Session('fake-host', 'fake-user', 'fake-id')
-        with requests_mock.mock() as m:
-            # Because logon is deferred until needed, we perform it
-            # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
-            session.logon()
-        job_uri = "/api/jobs/d9a3788e-683a-11e6-817c-00215e676926"
-        with requests_mock.mock() as m:
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.get(job_uri, json=result)
-            session.query_job_status(job_uri)
-
-        with requests_mock.mock() as m:
-            m.delete('/api/sessions/this-session', status_code=204)
-            session.logoff()
-
     def test_get_notification_topics(self):
         """
         This tests the 'Get Notification Topics' operation.
@@ -216,8 +170,7 @@ class SessionTests(unittest.TestCase):
             # explicitly in order to keep mocking in the actual test simple.
             m.post('/api/sessions', json={'api-session': 'fake-session-id'})
             session.logon()
-        gnt_uri = "/api/sessions/operations/get-notification-topics"
-        with requests_mock.mock() as m:
+            gnt_uri = "/api/sessions/operations/get-notification-topics"
             gnt_result = {
                 "topics": [
                     {
@@ -244,9 +197,126 @@ class SessionTests(unittest.TestCase):
 
             self.assertEqual(result, gnt_result['topics'])
 
-        with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
+
             session.logoff()
+
+
+class JobTests(unittest.TestCase):
+    """
+    Test the ``Job`` class.
+    """
+
+    job_uri = '/api/jobs/fake-job-uri'
+
+    @staticmethod
+    def mock_server_1(m):
+        """
+        Set up the mocked responses for a simple HMC server that supports
+        logon, logoff.
+        """
+        m.register_uri('POST', '/api/sessions',
+                       json={'api-session': 'fake-session-id'},
+                       headers={'X-Request-Id': 'fake-request-id'})
+        m.register_uri('DELETE', '/api/sessions/this-session',
+                       headers={'X-Request-Id': 'fake-request-id'},
+                       status_code=204)
+
+    def test_init(self):
+        """Test initialization of Job object."""
+        session = Session('fake-host', 'fake-user', 'fake-pw')
+
+        job = Job(session, self.job_uri)
+
+        self.assertEqual(job.uri, self.job_uri)
+        self.assertEqual(job.session, session)
+
+    def test_check_incomplete(self):
+        """Test check_for_completion() with incomplete job."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            job = Job(session, self.job_uri)
+            query_job_status_result = {
+                'status': 'running',
+            }
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            job_status, oper_result = job.check_for_completion()
+
+            self.assertEqual(job_status, 'running')
+            self.assertIsNone(oper_result)
+
+    def test_check_complete_success_noresult(self):
+        """Test check_for_completion() with successful complete job without
+        result."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            job = Job(session, self.job_uri)
+            query_job_status_result = {
+                'status': 'complete',
+                'job-status-code': 200,
+                # 'job-reason-code' omitted because HTTP status good
+                # 'job-results' is optional and is omitted
+            }
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            job_status, oper_result = job.check_for_completion()
+
+            self.assertEqual(job_status, 'complete')
+            self.assertIsNone(oper_result)
+
+    def test_check_complete_success_result(self):
+        """Test check_for_completion() with successful complete job with a
+        result."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            job = Job(session, self.job_uri)
+            exp_oper_result = {
+                'foo': 'bar',
+            }
+            query_job_status_result = {
+                'status': 'complete',
+                'job-status-code': 200,
+                # 'job-reason-code' omitted because HTTP status good
+                'job-results': exp_oper_result,
+            }
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            job_status, oper_result = job.check_for_completion()
+
+            self.assertEqual(job_status, 'complete')
+            self.assertEqual(oper_result, exp_oper_result)
+
+    def test_check_complete_error(self):
+        """Test check_for_completion() with complete job in error."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            job = Job(session, self.job_uri)
+            error_result = {
+                'message': 'bla',
+            }
+            query_job_status_result = {
+                'status': 'complete',
+                'job-status-code': 500,
+                'job-reason-code': 42,
+                'job-results': error_result,
+            }
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            with self.assertRaises(HTTPError) as cm:
+                job_status, oper_result = job.check_for_completion()
+
+            self.assertEqual(cm.exception.http_status, 500)
+            self.assertEqual(cm.exception.reason, 42)
+            self.assertEqual(cm.exception.message, 'bla')
 
 
 if __name__ == '__main__':

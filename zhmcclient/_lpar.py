@@ -194,16 +194,13 @@ class Lpar(BaseResource):
 
         Returns:
 
-          :term:`json object`:
+          `None` or :class:`~zhmcclient.Job`:
 
-            If `wait_for_completion` is `True`, returns None.
+            If `wait_for_completion` is `True`, returns `None`.
 
-            If `wait_for_completion` is `False`, returns a JSON object with a
-            member named ``job-uri``. The value of ``job-uri`` identifies the
-            job that was started, and can be used with the
-            :meth:`~zhmcclient.Session.query_job_status` method to determine
-            the status of the job and the result of the asynchronous HMC
-            operation, once the job has completed.
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
 
         Raises:
 
@@ -244,16 +241,13 @@ class Lpar(BaseResource):
 
         Returns:
 
-          :term:`json object`:
+          `None` or :class:`~zhmcclient.Job`:
 
-            If `wait_for_completion` is `True`, returns None.
+            If `wait_for_completion` is `True`, returns `None`.
 
-            If `wait_for_completion` is `False`, returns a JSON object with a
-            member named ``job-uri``. The value of ``job-uri`` identifies the
-            job that was started, and can be used with the
-            :meth:`~zhmcclient.Session.query_job_status` method to determine
-            the status of the job and the result of the asynchronous HMC
-            operation, once the job has completed.
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
 
         Raises:
 
@@ -298,16 +292,13 @@ class Lpar(BaseResource):
 
         Returns:
 
-          :term:`json object`:
+          `None` or :class:`~zhmcclient.Job`:
 
-            If `wait_for_completion` is `True`, returns None.
+            If `wait_for_completion` is `True`, returns `None`.
 
-            If `wait_for_completion` is `False`, returns a JSON object with a
-            member named ``job-uri``. The value of ``job-uri`` identifies the
-            job that was started, and can be used with the
-            :meth:`~zhmcclient.Session.query_job_status` method to determine
-            the status of the job and the result of the asynchronous HMC
-            operation, once the job has completed.
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
 
         Raises:
 

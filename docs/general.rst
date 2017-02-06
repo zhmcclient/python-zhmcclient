@@ -30,6 +30,10 @@ Session
    :members:
    :special-members: __str__
 
+.. autoclass:: zhmcclient.Job
+   :members:
+   :special-members: __str__
+
 
 .. _`Client`:
 
