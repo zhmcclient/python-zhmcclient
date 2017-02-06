@@ -351,3 +351,37 @@ class Lpar(BaseResource):
         result = self.manager.session.post(
             self.uri + '/operations/open-os-message-channel', body)
         return result['topic-name']
+
+    def send_os_command(self, os_command_text, is_priority=False):
+        """
+        Send a command to the operating system running in this LPAR.
+
+        Parameters:
+
+          os_command_text (string): The text of the operating system command.
+
+          is_priority (bool):
+            Boolean controlling whether this is a priority operating system
+            command, as follows:
+
+            * If `true`, this message is treated as a priority operating
+              system command.
+
+            * If `false`, this message is not treated as a priority
+              operating system command. The default.
+
+        Returns:
+
+          None
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'is-priority': is_priority,
+                'operating-system-command-text': os_command_text}
+        self.manager.session.post(
+            self.uri + '/operations/send-os-cmd', body)
