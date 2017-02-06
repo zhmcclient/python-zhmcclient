@@ -131,7 +131,8 @@ class BaseManager(object):
             returned.
 
         Returns:
-          tuple: Tuple (query_parms_str, client_filter_args)
+
+          : tuple (query_parms_str, client_filter_args)
         """
         query_parms = []  # query parameter strings
         client_filter_args = {}

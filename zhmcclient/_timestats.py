@@ -271,7 +271,7 @@ class TimeStatsKeeper(object):
 
         Returns:
 
-          list of tuple(name,stats) with
+          : A list of tuples (name, stats) with:
 
           - name (:term:`string`): Name of the operation
           - stats (:class:`~zhmcclient.TimeStats`): Time statistics for the

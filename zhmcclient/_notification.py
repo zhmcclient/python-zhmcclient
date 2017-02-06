@@ -157,8 +157,8 @@ class NotificationReceiver(object):
                 . . .
 
         Yields:
-          tuple(headers, message): One HMC notification as a tuple with the
-          items:
+
+          : A tuple (headers, message) representing one HMC notification, with:
 
           * headers (dict): The notification header fields.
 
