@@ -56,12 +56,24 @@ Released: not yet
 * Increased minimum version of "click-spinner" package to 0.1.7, in order to
   pick up the fix for zhmcclient issue #116.
 
+* Fixed CLI help text for multiple commands, where the text was incorrectly
+  flowed into a paragraph.
+
 **Enhancements:**
 
 * Fixed a discrepancy between documentation and actual behavior of the return
   value of all methods on resource classes that invoke asynchronous operations
   (i.e. all methods that have a `wait_for_completion` parameter). See also
   the corresponding incompatible change (issue #178).
+
+* In the CLI, added a 'help' command that displays help for interactive mode,
+  and a one-line hint that explains how to get help and how to exit
+  interactive mode (issue #197).
+
+* In the CLI, added support for command history. The history is stored in
+  the file `~/.zhmc_history`.
+
+* In the CLI, changed the prompt of the interactive mode to `zhmc> `.
 
 **Known Issues:**
 

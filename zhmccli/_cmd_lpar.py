@@ -78,6 +78,7 @@ def lpar_show(cmd_ctx, cpc, lpar):
     """
     Show details of an LPAR in a CPC.
 
+    \b
     Limitations:
       * In table format, the following properties are not shown:
         - program-status-word-information
@@ -133,6 +134,7 @@ def lpar_update(cmd_ctx, cpc, lpar, **options):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
 
+    \b
     Limitations:
       * The --acceptable-status option does not support multiple values.
       * The processor capping/sharing/weight related properties cannot be

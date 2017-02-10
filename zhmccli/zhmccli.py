@@ -16,12 +16,14 @@ from __future__ import absolute_import
 import os
 import requests.packages.urllib3
 import click
-from click_repl import register_repl, repl
+import click_repl
+from prompt_toolkit.history import FileHistory
 
-from ._helper import CmdContext, GENERAL_OPTIONS_METAVAR
-
+from ._helper import CmdContext, GENERAL_OPTIONS_METAVAR, REPL_HISTORY_FILE, \
+    REPL_PROMPT
 
 requests.packages.urllib3.disable_warnings()
+
 
 # Default values for some options
 DEFAULT_OUTPUT_FORMAT = 'table'
@@ -105,7 +107,52 @@ def cli(ctx, host, userid, output_format, timestats):
 
     # Invoke default command
     if ctx.invoked_subcommand is None:
-        repl(ctx)
+        ctx.invoke(repl)
 
 
-register_repl(cli)
+@cli.command('help')
+@click.pass_context
+def repl_help(ctx):
+    """
+    Show help message for interactive mode.
+    """
+    print("""
+The following can be entered in interactive mode:
+
+  <zhmc-cmd>                  Execute zhmc command <zhmc-cmd>.
+  !<shell-cmd>                Execute shell command <shell-cmd>.
+
+  <CTRL-D>, :q, :quit, :exit  Exit interactive mode.
+
+  <TAB>                       Tab completion (can be used anywhere).
+  --help                      Show zhmc general help message, including a list
+                              of zhmc commands.
+  <zhmc-cmd> --help           Show help message for zhmc command <zhmc-cmd>.
+  help                        Show this help message.
+  :?, :h, :help               Show (incomplete) help message about interactive
+                              mode.
+""")
+
+
+@cli.command('repl')
+@click.pass_context
+def repl(ctx):
+    """
+    Enter interactive (REPL) mode (default).
+    """
+
+    history_file = REPL_HISTORY_FILE
+    if history_file.startswith('~'):
+        history_file = os.path.expanduser(history_file)
+
+    print("Enter 'help' for help, <CTRL-D> or ':q' to exit.")
+
+    prompt_kwargs = {
+        'message': REPL_PROMPT,
+        'history': FileHistory(history_file),
+    }
+    click_repl.repl(ctx, prompt_kwargs=prompt_kwargs)
+
+
+# TODO: Apparently registering is not needed, clarify that.
+# click_repl.register_repl(repl)
