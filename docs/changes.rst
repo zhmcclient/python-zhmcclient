@@ -50,6 +50,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Added a minimum version requirement `>=4.0.0` for the dependency on the
+  "decorate" Python package (issue #199).
+
 **Enhancements:**
 
 * Fixed a discrepancy between documentation and actual behavior of the return
