@@ -13,11 +13,13 @@ python:
   - "3.5"
   - "3.6"
   - "pypy"
+env:
+  - PACKAGE_LEVEL=minimum
+  - PACKAGE_LEVEL=latest
 
 # commands to install dependencies
 install:
   - pip list
-  - pip install --upgrade pip
   - make install
   - pip list
   - make develop
@@ -33,4 +35,4 @@ script:
   - make test
 
 after_success:
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 && $PACKAGE_LEVEL == latest ]]; then coveralls; fi

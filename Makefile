@@ -20,6 +20,22 @@
 #   make develop
 # ------------------------------------------------------------------------------
 
+# Package level
+ifndef PACKAGE_LEVEL
+  PACKAGE_LEVEL := latest
+endif
+ifeq ($(PACKAGE_LEVEL),minimum)
+  pip_constraint_opts := -c minimum-constraints.txt
+  pip_upgrade_opts := "pip >=8.0.0"
+else
+  ifeq ($(PACKAGE_LEVEL),latest)
+    pip_constraint_opts :=
+    pip_upgrade_opts := pip --upgrade
+  else
+    $(error Error: Invalid value for PACKAGE_LEVEL variable: $(PACKAGE_LEVEL))
+  endif
+endif
+
 # Determine OS platform make runs on
 ifeq ($(OS),Windows_NT)
   PLATFORM := Windows
@@ -136,11 +152,20 @@ help:
 	@echo '  upload     - Upload the distribution files to PyPI (includes uninstall+build)'
 	@echo '  clean      - Remove any temporary files'
 	@echo '  clobber    - Remove any build products (includes uninstall+clean)'
+	@echo 'Environment variables:'
+	@echo '  PACKAGE_LEVEL="minimum" - Install minimum version of dependent Python packages'
+	@echo '  PACKAGE_LEVEL="latest" - Default: Install latest version of dependent Python packages'
+
+.PHONY: _pip
+_pip:
+	@echo 'Installing/upgrading pip and setuptools with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
+	pip install $(pip_upgrade_opts)
+	pip install $(pip_constraint_opts) setuptools
 
 .PHONY: develop
-develop:
-	pip install --upgrade pip
-	pip install -r dev-requirements.txt
+develop: _pip
+	@echo 'Installing runtime and development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
+	pip install $(pip_constraint_opts) --upgrade -r dev-requirements.txt
 	@echo '$@ done.'
 
 .PHONY: build
@@ -205,8 +230,9 @@ check: pylint.log flake8.log
 	@echo '$@ done.'
 
 .PHONY: install
-install:
-	pip install --upgrade .
+install: _pip
+	@echo 'Installing runtime requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
+	pip install $(pip_constraint_opts) --upgrade .
 	python -c "import zhmcclient; print('Import: ok')"
 	@echo 'Done: Installed $(package_name) into current Python environment.'
 	@echo '$@ done.'

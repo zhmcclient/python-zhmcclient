@@ -28,7 +28,15 @@ environment:
       PYTHON_ARCH: 64
       PYTHON_HOME: C:\Python36-x64
 
+configuration:
+# These values will become the values of the PACKAGE_LEVEL env.var.
+  - minimum
+  - latest
+
 install:
+
+  # Set PACKAGE_LEVEL for make
+  - set PACKAGE_LEVEL=%configuration%
 
   # Examine the environment
   - echo %PATH%
