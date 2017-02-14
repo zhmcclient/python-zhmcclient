@@ -618,10 +618,10 @@ class Partition(BaseResource):
             Boolean controlling whether this is a priority operating system
             command, as follows:
 
-            * If `true`, this message is treated as a priority operating
+            * If `True`, this message is treated as a priority operating
               system command.
 
-            * If `false`, this message is not treated as a priority
+            * If `False`, this message is not treated as a priority
               operating system command. The default.
 
         Returns:
