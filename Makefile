@@ -94,6 +94,8 @@ check_py_files := \
     $(wildcard tests/unit/zhmcclient_mock/*.py) \
     $(wildcard tests/function/*.py) \
     $(wildcard docs/notebooks/*.py) \
+    $(wildcard tools/cpcinfo) \
+    $(wildcard tools/cpcdata) \
 
 # Test log
 test_log_file := test_$(python_version_fn).log
