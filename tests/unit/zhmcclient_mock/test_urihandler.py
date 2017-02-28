@@ -454,6 +454,7 @@ def standard_test_hmc():
                                     'adapter-port-uri':
                                         '/api/adapters/2/storage-ports/1',
                                     'wwpn': 'wwpn_1',
+                                    'device-number': '1001',
                                 },
                             },
                         ],
@@ -465,6 +466,7 @@ def standard_test_hmc():
                                     'description': 'NIC #1 in Partition #1',
                                     'network-adapter-port-uri':
                                         '/api/adapters/3/network-ports/1',
+                                    'device-number': '2001',
                                 },
                             },
                         ],
@@ -474,6 +476,7 @@ def standard_test_hmc():
                                     'element-id': '1',
                                     'name': 'vf_1',
                                     'description': 'VF #1 in Partition #1',
+                                    'device-number': '3001',
                                 },
                             },
                         ],
@@ -779,7 +782,7 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
             ]
         }
         exp_wwpn_list = [
-            'partition_1,2,,wwpn_1',
+            'partition_1,2,1001,wwpn_1',
         ]
 
         # the function to be tested:
@@ -1106,6 +1109,7 @@ class HbaHandlerTests(unittest.TestCase):
             'description': 'HBA #1 in Partition #1',
             'adapter-port-uri': '/api/adapters/2/storage-ports/1',
             'wwpn': 'wwpn_1',
+            'device-number': '1001',
         }
         self.assertEqual(hba1, exp_hba1)
 
@@ -1125,15 +1129,16 @@ class HbaHandlerTests(unittest.TestCase):
         new_hba2_uri = resp['element-uri']
         self.assertEqual(new_hba2_uri, '/api/partitions/1/hbas/2')
 
+        # the function to be tested:
+        hba2 = self.urihandler.get(self.hmc, '/api/partitions/1/hbas/2', True)
+
         exp_hba2 = {
             'element-id': '2',
             'element-uri': '/api/partitions/1/hbas/2',
             'name': 'hba_2',
             'adapter-port-uri': '/api/adapters/2/storage-ports/1',
+            'device-number': hba2['device-number'],  # auto-generated
         }
-
-        # the function to be tested:
-        hba2 = self.urihandler.get(self.hmc, '/api/partitions/1/hbas/2', True)
 
         self.assertEqual(hba2, exp_hba2)
 
@@ -1198,6 +1203,7 @@ class NicHandlerTests(unittest.TestCase):
             'name': 'nic_1',
             'description': 'NIC #1 in Partition #1',
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
+            'device-number': '2001',
         }
         self.assertEqual(nic1, exp_nic1)
 
@@ -1217,15 +1223,16 @@ class NicHandlerTests(unittest.TestCase):
         new_nic2_uri = resp['element-uri']
         self.assertEqual(new_nic2_uri, '/api/partitions/1/nics/2')
 
+        # the function to be tested:
+        nic2 = self.urihandler.get(self.hmc, '/api/partitions/1/nics/2', True)
+
         exp_nic2 = {
             'element-id': '2',
             'element-uri': '/api/partitions/1/nics/2',
             'name': 'nic_2',
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
+            'device-number': nic2['device-number'],  # auto-generated
         }
-
-        # the function to be tested:
-        nic2 = self.urihandler.get(self.hmc, '/api/partitions/1/nics/2', True)
 
         self.assertEqual(nic2, exp_nic2)
 
@@ -1292,6 +1299,7 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
             'element-uri': '/api/partitions/1/virtual-functions/1',
             'name': 'vf_1',
             'description': 'VF #1 in Partition #1',
+            'device-number': '3001',
         }
         self.assertEqual(vf1, exp_vf1)
 
@@ -1311,16 +1319,17 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
         new_vf2_uri = resp['element-uri']
         self.assertEqual(new_vf2_uri, '/api/partitions/1/virtual-functions/2')
 
-        exp_vf2 = {
-            'element-id': '2',
-            'element-uri': '/api/partitions/1/virtual-functions/2',
-            'name': 'vf_2',
-        }
-
         # the function to be tested:
         vf2 = self.urihandler.get(self.hmc,
                                   '/api/partitions/1/virtual-functions/2',
                                   True)
+
+        exp_vf2 = {
+            'element-id': '2',
+            'element-uri': '/api/partitions/1/virtual-functions/2',
+            'name': 'vf_2',
+            'device-number': vf2['device-number'],  # auto-generated
+        }
 
         self.assertEqual(vf2, exp_vf2)
 

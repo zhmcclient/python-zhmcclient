@@ -21,3 +21,4 @@ from __future__ import absolute_import
 from ._session import *       # noqa: F401
 from ._urihandler import *    # noqa: F401
 from ._hmc import *           # noqa: F401
+from ._idpool import *        # noqa: F401
