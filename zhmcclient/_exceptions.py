@@ -19,8 +19,9 @@ Exceptions that can be raised by the client.
 import re
 
 
-__all__ = ['Error', 'ConnectionError', 'AuthError', 'ParseError',
-           'VersionError', 'HTTPError', 'NoUniqueMatch', 'NotFound']
+__all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
+           'RetriesExceeded', 'AuthError', 'ParseError', 'VersionError',
+           'HTTPError', 'NoUniqueMatch', 'NotFound']
 
 
 class Error(Exception):
@@ -47,12 +48,12 @@ class Error(Exception):
 
 class ConnectionError(Error):
     """
-    This exception indicates a problem with the connection to the HMC, at the
-    transport level or below.
+    This exception indicates a problem with the connection to the HMC, below
+    the HTTP level. HTTP errors are indicated via :exc:`~zhmcclient.HTTPError`.
 
-    A retry may or may not succeed.
-
-    TODO: Do we need specific properties for some details, e.g. errno value?
+    A retry by the user code is not likely to be successful, unless connect or
+    read retries had been disabled when creating the session (see
+    :class:`~zhmcclient.Session`).
 
     Derived from :exc:`~zhmcclient.Error`.
     """
@@ -73,16 +74,60 @@ class ConnectionError(Error):
     @property
     def details(self):
         """
-        The original exception describing details about the error, if there
-        was such an original exception.  This may be one of the following
-        exceptions:
-
-        * :exc:`~requests.exceptions.RequestException`
-        * Other exceptions (TODO: Describe details)
-
+        The original exception caught by this package, providing more
+        information about the problem, if there was such an original exception.
         `None`, otherwise.
+
+        This may be one of the following exceptions:
+
+        * Any exception derived from
+          :exc:`requests.exceptions.RequestException`.
         """
         return self._details
+
+
+class ConnectTimeout(ConnectionError):
+    """
+    This exception indicates that a connection to the HMC timed out after
+    exhausting the connect retries (see
+    :attr:`zhmcclient.RetryTimeoutConfig.connect_retries`).
+
+    Further retrying by the user code is not likely to be successful, unless
+    connect retries had been disabled when creating the session (see
+    :class:`~zhmcclient.Session`).
+
+    Derived from :exc:`~zhmcclient.ConnectionError`.
+    """
+
+
+class ReadTimeout(ConnectionError):
+    """
+    This exception indicates that reading an HTTP response from the HMC timed
+    out after exhausting the read retries (see
+    :attr:`zhmcclient.RetryTimeoutConfig.read_retries`).
+
+    Further retrying by the user code is not likely to be successful, unless
+    read retries had been disabled when creating the session (see
+    :class:`~zhmcclient.Session`).
+
+    Derived from :exc:`~zhmcclient.ConnectionError`.
+    """
+
+
+class RetriesExceeded(ConnectionError):
+    """
+    This exception indicates that the maximum number of retries for connecting
+    to the HMC, sending HTTP requests or reading HTTP responses was exceeded,
+    for reasons other than connect timeouts (see
+    :exc:`~zhmcclient.ConnectTimeout`) or read timeouts (see
+    :exc:`~zhmcclient.ReadTimeout`).
+
+    Further retrying by the user code is not likely to be successful, unless
+    connect or read retries had been disabled when creating the session (see
+    :class:`~zhmcclient.Session`).
+
+    Derived from :exc:`~zhmcclient.ConnectionError`.
+    """
 
 
 class AuthError(Error):
@@ -111,13 +156,11 @@ class AuthError(Error):
     def details(self):
         """
         The original exception describing details about the error, if there
-        was such an original exception.  This may be one of the following
-        exceptions:
+        was such an original exception. `None`, otherwise.
+
+        This may be one of the following exceptions:
 
         * :exc:`~zhmcclient.HTTPError`
-        * Other exceptions (TODO: Describe details)
-
-        `None`, otherwise.
         """
         return self._details
 
@@ -197,7 +240,9 @@ class VersionError(Error):
           api_version (:term:`HMC API version`):
             The actual HMC API version supported by the HMC.
         """
-        super(VersionError, self).__init__(msg, min_api_version, api_version)
+        super(VersionError, self).__init__(msg)
+        self._min_api_version = min_api_version
+        self._api_version = api_version
 
     @property
     def min_api_version(self):
@@ -205,7 +250,7 @@ class VersionError(Error):
         :term:`HMC API version`: The minimum HMC API version required to
         perform the function that raised this exception.
         """
-        return self.args[1]
+        return self._min_api_version
 
     @property
     def api_version(self):
@@ -213,7 +258,7 @@ class VersionError(Error):
         :term:`HMC API version`: The actual HMC API version supported by the
         HMC.
         """
-        return self.args[2]
+        return self._api_version
 
 
 class HTTPError(Error):

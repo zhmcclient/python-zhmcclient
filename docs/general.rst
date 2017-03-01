@@ -35,6 +35,39 @@ Session
    :special-members: __str__
 
 
+.. _`Retry-timeout configuration`:
+
+Retry / timeout configuration
+-----------------------------
+
+.. autoclass:: zhmcclient.RetryTimeoutConfig
+   :members:
+   :special-members: __str__
+
+
+.. _`Default retry-timeout configuration`:
+
+Default values for the retries and timeouts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section defines the default values that will be used if the corresponding
+retry or timeout value is not specified at any level.
+
+Note that for technical limitations, the documentation shows these constants
+in the ``zhmcclient._session`` namespace, but they are available and should be
+used from the ``zhmcclient`` namespace.
+
+.. autodata:: zhmcclient._session.DEFAULT_CONNECT_TIMEOUT
+
+.. autodata:: zhmcclient._session.DEFAULT_CONNECT_RETRIES
+
+.. autodata:: zhmcclient._session.DEFAULT_READ_TIMEOUT
+
+.. autodata:: zhmcclient._session.DEFAULT_READ_RETRIES
+
+.. autodata:: zhmcclient._session.DEFAULT_MAX_REDIRECTS
+
+
 .. _`Client`:
 
 Client
@@ -81,6 +114,18 @@ Exceptions
 .. autoclass:: zhmcclient.Error
 
 .. autoclass:: zhmcclient.ConnectionError
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.ConnectTimeout
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.ReadTimeout
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.RetriesExceeded
    :members:
    :special-members: __str__
 

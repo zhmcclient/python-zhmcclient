@@ -46,6 +46,12 @@ Released: not yet
   superfluos timestats entries. This method is not normally used by
   users of the zhmcclient package.
 
+* Removed the version strings from the ``args[]`` property of the
+  ``zhmcclient.VersionError`` exception class. They had been available as
+  ``args[1]`` and ``args[2]``. ``args[0]`` continues to be the error message,
+  and the ``min_api_version`` and ``api_version`` properties continue to
+  provide the version strings.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -60,6 +66,21 @@ Released: not yet
   flowed into a paragraph.
 
 **Enhancements:**
+
+* Added support for retry/timeout configuration of HTTP sessions, via
+  a new ``RetryTimeoutConfig`` class that can be specified for the ``Session``
+  object. The retry/timeout configuration can specify:
+
+  - HTTP connect timeout and number of retries.
+
+  - HTTP read timeout (of HTTP responses), and number of retries.
+
+  - Maximum number of HTTP redirects.
+
+* Added new exceptions ``zhmcclient.ConnectTimeout`` (for HTTP connect
+  timeout), ``zhmcclient.ResponseReadTimeout`` (for HTTP response read
+  timeout), and ``zhmcclient.RequestRetriesExceeded`` (for HTTP request retry
+  exceeded). They are all derived from ``zhmcclient.ConnectionError``.
 
 * Fixed a discrepancy between documentation and actual behavior of the return
   value of all methods on resource classes that invoke asynchronous operations
@@ -79,6 +100,13 @@ Released: not yet
   An HTML formatted error message may be in the response for some 4xx and
   5xx HTTP status codes (e.g. when the WS API is disabled). Such responses
   are raised as ``HTTPError`` exceptions with an artificial reason code of 999.
+
+* Fixed an incorrect use of the ``zhmcclient.AuthError`` exception and
+  unnecessary checking of HMC behavior, i.e. when the HMC fails with "API
+  session token expired" for an operation that does not require logon. This
+  error should never be returned for operations that do not require logon. If
+  it would be returned, it is now handled in the same way as when the operation
+  does require logon, i.e. by a re-logon.
 
 **Known Issues:**
 

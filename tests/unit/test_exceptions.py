@@ -99,7 +99,9 @@ class NumberArgsTestMixin(object):
 
     def test_good(self):
         """Test exception class with the allowable number of input arguments,
-        where the first argument is always a string."""
+        where the first argument is always a string.
+        Verify that the first argument is put into exc.args[0] and that no
+        other arguments are put there."""
 
         for nargs in range(self.min_args, self.max_args + 1):
             args = ['zaphod']
@@ -109,13 +111,12 @@ class NumberArgsTestMixin(object):
 
             self.assertTrue(isinstance(exc, Error))
             self.assertTrue(isinstance(exc.args, tuple))
-            self.assertEqual(len(exc.args), len(args),
-                             "Expected %d arguments, got: %r" %
-                             (len(args), exc.args))
-            for i, arg in enumerate(args):
-                self.assertEqual(exc.args[i], arg,
-                                 "For argument at index %d, expected %r, "
-                                 "got: %r" % (i, arg, exc.args[i]))
+            self.assertEqual(len(exc.args), 1,
+                             "Expected exc.args[] to have 1 item, got: %r" %
+                             exc.args)
+            self.assertEqual(exc.args[0], args[0],
+                             "For exc.args[0], expected %r, "
+                             "got: %r" % (args[0], exc.args[0]))
 
 
 class DetailsTestMixin(object):
