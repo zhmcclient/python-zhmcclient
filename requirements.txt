@@ -9,6 +9,6 @@ decorator>=4.0.0 # new BSD
 tabulate # MIT
 progressbar2 # BSD
 click # BSD
-click-spinner>=0.1.5 # MIT
+click-spinner>=0.1.7 # MIT
 click-repl # MIT
 stomp.py # Apache 

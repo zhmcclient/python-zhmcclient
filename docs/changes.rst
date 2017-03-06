@@ -53,6 +53,9 @@ Released: not yet
 * Added a minimum version requirement `>=4.0.0` for the dependency on the
   "decorate" Python package (issue #199).
 
+* Increased minimum version of "click-spinner" package to 0.1.7, in order to
+  pick up the fix for zhmcclient issue #116.
+
 **Enhancements:**
 
 * Fixed a discrepancy between documentation and actual behavior of the return
