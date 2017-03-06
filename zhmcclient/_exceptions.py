@@ -224,6 +224,8 @@ class HTTPError(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
+    html_error_reason = 999  # Used when the HMC returns HTML content
+
     def __init__(self, body):
         """
         Parameters:
@@ -258,6 +260,9 @@ class HTTPError(Error):
         :term:`HMC API` book. Additional operation-specific reason codes may
         also be documented in the description of specific API operations in the
         :term:`HMC API` book.
+
+        The articial reason code 999 is used when the response from the HMC
+        contains an HTML-formatted error message.
         """
         return self._body.get('reason', None)
 

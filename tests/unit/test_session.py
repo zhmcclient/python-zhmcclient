@@ -201,6 +201,69 @@ class SessionTests(unittest.TestCase):
 
             session.logoff()
 
+    def test_get_error_html_1(self):
+        """
+        This tests a dummy GET with a 500 response with HTML content.
+        """
+        session = Session('fake-host', 'fake-user', 'fake-id')
+        with requests_mock.mock() as m:
+            get_uri = "/api/version"
+            get_resp_status = 500
+            get_resp_content_type = 'text/html; charset=ISO-5589-1'
+            get_resp_headers = {
+                'content-type': get_resp_content_type,
+            }
+            get_resp_content = u"""\
+<!doctype html public "-//IETF//DTD HTML 2.0//EN">\
+ <html>\
+<head>\
+<title>Console Internal Error</title>\
+ <link href="/skin/HMCskin.css" rel="stylesheet" type="text/css"/>\
+</head>\
+ <body>\
+<h1>Console Internal Error</h1>\
+<br><hr size="1" noshade>\
+<h2>Details:</h2>\
+<p><br>HTTP status code: 500\
+<p><br>The server encountered an internal error that prevented it from\
+ fulfilling this request.\
+<p><br>\
+<pre>javax.servlet.ServletException: Web Services are not enabled.
+\tat com.ibm.hwmca.fw.api.ApiServlet.execute(ApiServlet.java:135)
+\t. . .
+</pre>\
+<hr size="1" noshade>\
+</body>\
+</html>"""
+            m.get(get_uri, text=get_resp_content, headers=get_resp_headers,
+                  status_code=get_resp_status)
+
+            # The following expected results reflect what is done in
+            # _session._result_object().
+
+            exp_reason = 999
+            exp_message = \
+                "Console Internal Error: \\n" \
+                "HTTP status code: 500\\n" \
+                "The server encountered an internal error that prevented it " \
+                "from fulfilling this request.\\n" \
+                "<pre>javax.servlet.ServletException: Web Services are not " \
+                "enabled.\\n" \
+                "\tat com.ibm.hwmca.fw.api.ApiServlet.execute(ApiServlet." \
+                "java:135)\\n" \
+                "\t. . .\\n" \
+                "</pre>"
+
+            with self.assertRaises(HTTPError) as cm:
+                session.get(get_uri, logon_required=False)
+            exc = cm.exception
+
+            self.assertEqual(exc.http_status, get_resp_status)
+            self.assertEqual(exc.reason, exp_reason)
+            self.assertEqual(exc.message, exp_message)
+            self.assertTrue(exc.request_uri.endswith(get_uri))
+            self.assertEqual(exc.request_method, 'GET')
+
 
 class JobTests(unittest.TestCase):
     """
