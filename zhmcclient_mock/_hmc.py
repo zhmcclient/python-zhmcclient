@@ -26,6 +26,8 @@ except ImportError:
     from ordereddict import OrderedDict
 import six
 
+from ._idpool import IdPool
+
 __all__ = ['FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedActivationProfileManager', 'FakedActivationProfile',
            'FakedAdapterManager', 'FakedAdapter',
@@ -747,6 +749,9 @@ class FakedHbaManager(FakedBaseManager):
               if not specified.
             * 'adapter-port-uri' identifies the backing FCP port for this HBA
               and is required to be specified.
+            * 'device-number' will be auto-generated with a unique value
+              within the partition in the range 0x8000 to 0xFFFF, if not
+              specified.
 
             This method also updates the 'hba-uris' property in the parent
             faked Partition resource, by adding the URI for the faked HBA
@@ -766,6 +771,9 @@ class FakedHbaManager(FakedBaseManager):
         partition = self.parent
         assert 'hba-uris' in partition.properties
         partition.properties['hba-uris'].append(new_hba.uri)
+        if 'device-number' not in new_hba.properties:
+            devno = partition.devno_alloc()
+            new_hba.properties['device-number'] = devno
         return new_hba
 
     def remove(self, oid):
@@ -782,6 +790,9 @@ class FakedHbaManager(FakedBaseManager):
         """
         hba = self.lookup_by_oid(oid)
         partition = self.parent
+        devno = hba.properties.get('device-number', None)
+        if devno:
+            partition.devno_free_if_allocated(devno)
         assert 'hba-uris' in partition.properties
         hba_uris = partition.properties['hba-uris']
         hba_uris.remove(hba.uri)
@@ -894,6 +905,9 @@ class FakedNicManager(FakedBaseManager):
             * Either 'network-adapter-port-uri' (for backing ROCE adapters) or
               'virtual-switch-uri'(for backing OSA or Hipersockets adapters) is
               required to be specified.
+            * 'device-number' will be auto-generated with a unique value
+              within the partition in the range 0x8000 to 0xFFFF, if not
+              specified.
 
             This method also updates the 'nic-uris' property in the parent
             faked Partition resource, by adding the URI for the faked NIC
@@ -916,6 +930,9 @@ class FakedNicManager(FakedBaseManager):
         partition = self.parent
         assert 'nic-uris' in partition.properties
         partition.properties['nic-uris'].append(new_nic.uri)
+        if 'device-number' not in new_nic.properties:
+            devno = partition.devno_alloc()
+            new_nic.properties['device-number'] = devno
         return new_nic
 
     def remove(self, oid):
@@ -932,6 +949,9 @@ class FakedNicManager(FakedBaseManager):
         """
         nic = self.lookup_by_oid(oid)
         partition = self.parent
+        devno = nic.properties.get('device-number', None)
+        if devno:
+            partition.devno_free_if_allocated(devno)
         assert 'nic-uris' in partition.properties
         nic_uris = partition.properties['nic-uris']
         nic_uris.remove(nic.uri)
@@ -1007,6 +1027,11 @@ class FakedPartition(FakedBaseResource):
 
     Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
     common methods and attributes.
+
+    Each partition uses the device number range of 0x8000 to 0xFFFF for
+    automatically assigned device numbers of HBAs, NICs and virtual functions.
+    Users of the mock support should not use device numbers in that range
+    (unless all of them are user-assigned for a particular partition).
     """
 
     def __init__(self, manager, properties):
@@ -1023,6 +1048,7 @@ class FakedPartition(FakedBaseResource):
         self._hbas = FakedHbaManager(hmc=manager.hmc, partition=self)
         self._virtual_functions = FakedVirtualFunctionManager(
             hmc=manager.hmc, partition=self)
+        self._devno_pool = IdPool(0x8000, 0xFFFF)
 
     @property
     def nics(self):
@@ -1047,6 +1073,50 @@ class FakedPartition(FakedBaseResource):
         faked Virtual Function resources of this Partition.
         """
         return self._virtual_functions
+
+    def devno_alloc(self):
+        """
+        Allocates a device number unique to this partition, in the range of
+        0x8000 to 0xFFFF.
+
+        Returns:
+          string: The device number as four hexadecimal digits in upper case.
+
+        Raises:
+          ValueError: No more device numbers available in that range.
+        """
+        devno_int = self._devno_pool.alloc()
+        devno = "{:04X}".format(devno_int)
+        return devno
+
+    def devno_free(self, devno):
+        """
+        Free a device number allocated with :meth:`devno_alloc`.
+
+        The device number must be allocated.
+
+        Parameters:
+          devno (string): The device number as four hexadecimal digits.
+
+        Raises:
+          ValueError: Device number not in pool range or not currently
+            allocated.
+        """
+        devno_int = int(devno, 16)
+        self._devno_pool.free(devno_int)
+
+    def devno_free_if_allocated(self, devno):
+        """
+        Free a device number allocated with :meth:`devno_alloc`.
+
+        If the device number is not currently allocated or not in the pool
+        range, nothing happens.
+
+        Parameters:
+          devno (string): The device number as four hexadecimal digits.
+        """
+        devno_int = int(devno, 16)
+        self._devno_pool.free_if_allocated(devno_int)
 
 
 class FakedPortManager(FakedBaseManager):
@@ -1178,6 +1248,9 @@ class FakedVirtualFunctionManager(FakedBaseManager):
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
               if not specified.
+            * 'device-number' will be auto-generated with a unique value
+              within the partition in the range 0x8000 to 0xFFFF, if not
+              specified.
 
             This method also updates the 'virtual-function-uris' property in
             the parent Partition resource, by adding the URI for the faked
@@ -1191,6 +1264,9 @@ class FakedVirtualFunctionManager(FakedBaseManager):
         partition = self.parent
         assert 'virtual-function-uris' in partition.properties
         partition.properties['virtual-function-uris'].append(new_vf.uri)
+        if 'device-number' not in new_vf.properties:
+            devno = partition.devno_alloc()
+            new_vf.properties['device-number'] = devno
         return new_vf
 
     def remove(self, oid):
@@ -1208,6 +1284,9 @@ class FakedVirtualFunctionManager(FakedBaseManager):
         """
         virtual_function = self.lookup_by_oid(oid)
         partition = self.parent
+        devno = virtual_function.properties.get('device-number', None)
+        if devno:
+            partition.devno_free_if_allocated(devno)
         assert 'virtual-function-uris' in partition.properties
         vf_uris = partition.properties['virtual-function-uris']
         vf_uris.remove(virtual_function.uri)
