@@ -73,6 +73,7 @@ def cpc_show(cmd_ctx, cpc):
     """
     Show details of a CPC.
 
+    \b
     Limitations:
       * In table format, the following properties are not shown:
         - ec-mcl-description
@@ -122,6 +123,7 @@ def cpc_update(cmd_ctx, cpc, **options):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
 
+    \b
     Limitations:
       * The --acceptable-status option does not support multiple values.
     """

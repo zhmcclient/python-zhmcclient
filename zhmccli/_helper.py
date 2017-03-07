@@ -26,6 +26,13 @@ import zhmcclient
 GENERAL_OPTIONS_METAVAR = '[GENERAL-OPTIONS]'
 COMMAND_OPTIONS_METAVAR = '[COMMAND-OPTIONS]'
 
+# File path of history file for interactive mode.
+# If the file name starts with tilde (which is handled by the shell, not by
+# the file system), it is properly expanded.
+REPL_HISTORY_FILE = '~/.zhmc_history'
+
+REPL_PROMPT = u'zhmc> '  # Must be Unicode
+
 
 def abort_if_false(ctx, param, value):
     # pylint: disable=unused-argument
