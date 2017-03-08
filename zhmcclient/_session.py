@@ -20,6 +20,7 @@ from __future__ import absolute_import
 
 import json
 import time
+import re
 try:
     from collections import OrderedDict
 except ImportError:
@@ -390,7 +391,6 @@ class Session(object):
         req = self._session or requests
         try:
             result = req.get(url, headers=self.headers, verify=False)
-            result_object = _result_object(result)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             raise ConnectionError(exc.args[0], exc)
@@ -398,8 +398,9 @@ class Session(object):
             stats.end()
 
         if result.status_code == 200:
-            return result_object
+            return _result_object(result)
         elif result.status_code == 403:
+            result_object = _result_object(result)
             reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
@@ -416,6 +417,7 @@ class Session(object):
                 raise AuthError("HTTP authentication failed: {}".
                                 format(msg), HTTPError(result_object))
         else:
+            result_object = _result_object(result)
             raise HTTPError(result_object)
 
     @_log_call
@@ -821,8 +823,49 @@ def _result_object(result):
     Raises:
         zhmcclient.ParseError: Error parsing the returned JSON.
     """
-    try:
-        return result.json(object_pairs_hook=OrderedDict)
-    except ValueError as exc:
-        raise ParseError("Parse error in returned JSON: {}".
-                         format(exc.args[0]))
+    content_type = result.headers.get('content-type', None)
+
+    if content_type is None or content_type.startswith('application/json'):
+        try:
+            return result.json(object_pairs_hook=OrderedDict)
+        except ValueError as exc:
+            raise ParseError("Parse error in returned JSON: {}".
+                             format(exc.args[0]))
+    elif content_type.startswith('text/html'):
+        # We are in some error situation. The HMC returns HTML content
+        # for some 5xx status codes. We try to deal with it somehow,
+        # but we are not going as far as real HTML parsing.
+        m = re.search(r'charset=([^;,]+)', content_type)
+        if m:
+            encoding = m.group(1)  # e.g. RFC "ISO-8859-1"
+        else:
+            encoding = 'utf-8'
+        try:
+            html_uni = result.content.decode(encoding)
+        except LookupError as exc:
+            html_uni = result.content.decode()
+        # We convert to one line to be regexp-friendly.
+        html_oneline = html_uni.replace('\r', '\\n').replace('\n', '\\n')
+        m = re.search(r'<title>([^<]*)</title>', html_oneline)
+        html_title = m.group(1) if m else ""
+        m = re.search(r'<h2>Details:</h2>(.*)<hr', html_oneline)
+        html_details = m.group(1) if m else ""
+        # Some rudimentary beautifying
+        html_details = html_details. \
+            replace('<p>', '\\n'). \
+            replace('<br>', '\\n'). \
+            replace('\\n\\n', '\\n')
+        message = "{}: {}".format(html_title, html_details)
+        # We create a minimal JSON error object (to the extent we use it
+        # when processing it):
+        result_obj = {
+            'http-status': result.status_code,
+            'reason': HTTPError.html_error_reason,
+            'message': message,
+            'request-uri': result.request.url,
+            'request-method': result.request.method,
+        }
+        return result_obj
+    else:
+        raise ParseError("Unknown content type response: {}, data(0..200): {}".
+                         format(content_type), result.content[0:200])

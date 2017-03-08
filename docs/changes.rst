@@ -75,6 +75,11 @@ Released: not yet
 
 * In the CLI, changed the prompt of the interactive mode to `zhmc> `.
 
+* Added support for tolerating HTML content in the response, instead of JSON.
+  An HTML formatted error message may be in the response for some 4xx and
+  5xx HTTP status codes (e.g. when the WS API is disabled). Such responses
+  are raised as ``HTTPError`` exceptions with an artificial reason code of 999.
+
 **Known Issues:**
 
 * See `list of open issues`_.
