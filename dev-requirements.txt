@@ -1,3 +1,5 @@
+# Pip requirements file for development dependencies.
+#
 # The order of packages is significant, because pip processes them in the order
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
@@ -5,20 +7,20 @@
 -r requirements.txt
 
 # Unit test:
-pytest>=2.4 # MIT
-pytest-cov # BSD
-mock # BSD
-requests-mock>=1.0 # Apache-2.0
-testfixtures # Apache-2.0
+pytest>=3.0.0 # MIT
+pytest-cov>=2.0.0 # BSD
+mock>=2.0.0 # BSD
+requests-mock>=1.0.0 # Apache-2.0
+testfixtures>=4.0.0 # Apache-2.0
 
 # Sphinx:
 # Note: The ordereddict package is a backport of collections.OrderedDict
 #       to Python 2.6 and earlier. OrderedDict is needed by GitPython, which
 #       is needed by sphinx-git.
-Sphinx>=1.3 # BSD
-ordereddict ; python_version < '2.7' # MIT
+Sphinx>=1.5.1 # BSD
+ordereddict>=1.0 ; python_version < '2.7' # MIT
 GitPython>=2.0.6 # BSD
-sphinx-git  # GPL
+sphinx-git>=10.0.0 # GPL
 
 # PyLint:
 # Astroid is used by Pylint. Astroid 1.3 and above, and Pylint 1.4
@@ -26,19 +28,17 @@ sphinx-git  # GPL
 # from Pypi in 2/2016 after being available for some time.
 # Therefore, we cannot use Pylint under Python 2.6.
 # Also, Pylint does not support Python 3.
-astroid ; python_version == '2.7'
-pylint ; python_version == '2.7'
+astroid>=1.0.0 ; python_version == '2.7'
+pylint>=1.0.0 ; python_version == '2.7'
 
 # Flake8:
 flake8>=2.0 # MIT
 
 # Twine: Needed for uploading to Pypi
-twine # Apache-2.0
+twine>=1.0.1 # Apache-2.0
 
 # Jupyter Notebook
-jupyter # BSD
+jupyter>=1.0.0 # BSD
 
 # Examples:
-PyYAML # MIT
-stomp.py # Apache
-
+PyYAML>=3.10 # MIT
