@@ -74,6 +74,16 @@ Released: 2017-03-16
   and the ``min_api_version`` and ``api_version`` properties continue to
   provide the version strings.
 
+* Changed the names of the Python loggers as follows:
+
+  1. Logger 'zhmcclient.api' logs API calls made by the user of the package,
+     at log level DEBUG. Internal calls to API functions are no longer logged.
+
+  2. Logger 'zhmcclient.hmc' logs HMC operations. Their log level has been
+     changed from INFO to DEBUG.
+
+* Removed the log calls for the HMC request ID.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -153,6 +163,18 @@ Released: 2017-03-16
 
 * Experimental: In the CLI, added more supported table formats (plain,
   simple, psql, rst, mediawiki, html, LaTeX).
+
+* Improved the content of the log messages for logged API calls and HMC
+  operations to now contain the function call arguments and return values (for
+  API calls) and the HTTP request and response details (for HMC operations).
+  For HMC operations and API calls that contain the HMC password, the password
+  is hidden in the log message by replacing it with a few '*' characters.
+
+**Known Issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.10.0

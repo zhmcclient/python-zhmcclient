@@ -65,8 +65,11 @@ from __future__ import absolute_import
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._port import PortManager
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['AdapterManager', 'Adapter']
+
+LOG = get_logger(__name__)
 
 
 class AdapterManager(BaseManager):
@@ -117,6 +120,7 @@ class AdapterManager(BaseManager):
         """
         return self._parent
 
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the Adapters in this CPC.
@@ -176,6 +180,7 @@ class AdapterManager(BaseManager):
 
         return resource_obj_list
 
+    @logged_api_call
     def create_hipersocket(self, properties):
         """
         Create and configure a HiperSockets Adapter in this CPC.
@@ -258,6 +263,7 @@ class Adapter(BaseResource):
             self._ports = PortManager(self)
         return self._ports
 
+    @logged_api_call
     def delete(self):
         """
         Delete this Adapter.
@@ -278,6 +284,7 @@ class Adapter(BaseResource):
         """
         self.manager.session.delete(self.uri)
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Adapter.

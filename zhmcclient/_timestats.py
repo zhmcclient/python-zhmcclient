@@ -45,7 +45,11 @@ from __future__ import absolute_import
 import time
 import copy
 
+from ._logging import get_logger, logged_api_call
+
 __all__ = ['TimeStatsKeeper', 'TimeStats']
+
+LOG = get_logger(__name__)
 
 
 class TimeStats(object):
@@ -130,6 +134,7 @@ class TimeStats(object):
         """
         return self._max
 
+    @logged_api_call
     def reset(self):
         """
         Reset the time statistics data for the operation.
@@ -139,6 +144,7 @@ class TimeStats(object):
         self._min = float('inf')
         self._max = float(0)
 
+    @logged_api_call
     def begin(self):
         """
         This method must be called before invoking the operation.
@@ -156,6 +162,7 @@ class TimeStats(object):
         if self.keeper.enabled:
             self._begin_time = time.time()
 
+    @logged_api_call
     def end(self):
         """
         This method must be called after the operation returns.
@@ -227,18 +234,21 @@ class TimeStatsKeeper(object):
         """
         return self._enabled
 
+    @logged_api_call
     def enable(self):
         """
         Enable the statistics keeper.
         """
         self._enabled = True
 
+    @logged_api_call
     def disable(self):
         """
         Disable the statistics keeper.
         """
         self._enabled = False
 
+    @logged_api_call
     def get_stats(self, name):
         """
         Get the time statistics for a name.
@@ -261,6 +271,7 @@ class TimeStatsKeeper(object):
             self._time_stats[name] = TimeStats(self, name)
         return self._time_stats[name]
 
+    @logged_api_call
     def snapshot(self):
         """
         Return a snapshot of the time statistics of this keeper.

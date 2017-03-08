@@ -24,8 +24,11 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['PortManager', 'Port']
+
+LOG = get_logger(__name__)
 
 
 class PortManager(BaseManager):
@@ -62,6 +65,7 @@ class PortManager(BaseManager):
         """
         return self._parent
 
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the Ports of this Adapter.
@@ -154,6 +158,7 @@ class Port(BaseResource):
                                  (PortManager, type(manager)))
         super(Port, self).__init__(manager, uri, name, properties)
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Port.

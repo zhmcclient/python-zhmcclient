@@ -30,8 +30,11 @@ import re
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['VirtualSwitchManager', 'VirtualSwitch']
+
+LOG = get_logger(__name__)
 
 
 class VirtualSwitchManager(BaseManager):
@@ -79,6 +82,7 @@ class VirtualSwitchManager(BaseManager):
         """
         return self._parent
 
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the Virtual Switches in this CPC.
@@ -172,6 +176,7 @@ class VirtualSwitch(BaseResource):
                                  (VirtualSwitchManager, type(manager)))
         super(VirtualSwitch, self).__init__(manager, uri, name, properties)
 
+    @logged_api_call
     def get_connected_nics(self):
         """
         List the :term:`NICs <NIC>` connected to this Virtual Switch.
@@ -222,6 +227,7 @@ class VirtualSwitch(BaseResource):
             nic_list.append(nic)
         return nic_list
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Virtual Switch.

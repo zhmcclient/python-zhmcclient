@@ -31,14 +31,17 @@ from requests.packages import urllib3
 from ._exceptions import HTTPError, AuthError, ConnectionError, ParseError, \
     ConnectTimeout, ReadTimeout, RetriesExceeded, OperationTimeout
 from ._timestats import TimeStatsKeeper
-from ._logging import _get_logger, _log_call
+from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT
 
-LOG = _get_logger(__name__)
-
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig']
+
+LOG = get_logger(__name__)
+
+HMC_LOGGER_NAME = 'zhmcclient.hmc'
+HMC_LOG = get_logger(HMC_LOGGER_NAME)
 
 _HMC_PORT = 6794
 _HMC_SCHEME = "https"
@@ -306,8 +309,6 @@ class Session(object):
             self._session_id = None
             self._session = None
         self._time_stats_keeper = TimeStatsKeeper()
-        LOG.debug("Created session object for '%(user)s' on '%(host)s'",
-                  {'user': self._userid, 'host': self._host})
 
     @property
     def host(self):
@@ -405,7 +406,7 @@ class Session(object):
         """
         return self._session
 
-    @_log_call
+    @logged_api_call
     def logon(self, verify=False):
         """
         Make sure the session is logged on to the HMC.
@@ -437,7 +438,7 @@ class Session(object):
         if not self.is_logon(verify):
             self._do_logon()
 
-    @_log_call
+    @logged_api_call
     def logoff(self):
         """
         Make sure the session is logged off from the HMC.
@@ -455,7 +456,7 @@ class Session(object):
         if self.is_logon():
             self._do_logoff()
 
-    @_log_call
+    @logged_api_call
     def is_logon(self, verify=False):
         """
         Return a boolean indicating whether the session is currently logged on
@@ -536,21 +537,52 @@ class Session(object):
         self._headers.pop('X-API-Session', None)
 
     @staticmethod
-    def _log_hmc_request_id(response):
+    def _log_http_request(method, url, headers=None, content=None):
         """
-        Log the identifier the HMC uses to distinguish requests.
+        Log the HTTP request of an HMC REST API call, at the debug level.
+
+        Parameters:
+
+          method (:term:`string`): HTTP method name in upper case, e.g. 'GET'
+
+          url (:term:`string`): HTTP URL (base URL and operation URI)
+
+          headers (iterable): HTTP headers used for the request
+
+          content (:term:`string`): HTTP body (aka content) used for the
+            request
         """
-        LOG.info("Returned HMC request ID: %r",
-                 response.headers.get('X-Request-Id', ''))
+        if method == 'POST' and url.endswith('/api/sessions'):
+            content_dict = json.loads(content)
+            content_dict['password'] = '********'
+            content = json.dumps(content)
+        HMC_LOG.debug("HMC request: %s %s, headers: %r, "
+                      "content(max.1000): %.1000r",
+                      method, url, headers, content)
 
     @staticmethod
-    def _log_http_method(http_method, uri):
+    def _log_http_response(method, url, status, headers=None, content=None):
         """
-        Log HTTP method name and target URI.
-        """
-        LOG.info("HTTP request: %s %s", http_method, uri)
+        Log the HTTP response of an HMC REST API call, at the debug level.
 
-    @_log_call
+        Parameters:
+
+          method (:term:`string`): HTTP method name in upper case, e.g. 'GET'
+
+          url (:term:`string`): HTTP URL (base URL and operation URI)
+
+          status (integer): HTTP status code
+
+          headers (iterable): HTTP headers returned in the response
+
+          content (:term:`string`): HTTP body (aka content) returned in the
+            response
+        """
+        HMC_LOG.debug("HMC response: %s %s, status: %s, headers: %r, "
+                      "content(max.1000): %.1000r",
+                      method, url, status, headers, content)
+
+    @logged_api_call
     def get(self, uri, logon_required=True):
         """
         Perform the HTTP GET method against the resource identified by a URI.
@@ -587,7 +619,7 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        self._log_http_method('GET', uri)
+        self._log_http_request('GET', url, headers=self.headers)
         stats = self.time_stats_keeper.get_stats('get ' + uri)
         stats.begin()
         req = self._session or requests
@@ -596,11 +628,14 @@ class Session(object):
         try:
             result = req.get(url, headers=self.headers, verify=False,
                              timeout=req_timeout)
-            self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             _handle_request_exc(exc)
         finally:
             stats.end()
+        self._log_http_response('GET', url,
+                                status=result.status_code,
+                                headers=result.headers,
+                                content=result.content)
 
         if result.status_code == 200:
             return _result_object(result)
@@ -619,7 +654,7 @@ class Session(object):
             result_object = _result_object(result)
             raise HTTPError(result_object)
 
-    @_log_call
+    @logged_api_call
     def post(self, uri, body=None, logon_required=True,
              wait_for_completion=False, operation_timeout=None):
         """
@@ -734,7 +769,8 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        self._log_http_method('POST', uri)
+        data = json.dumps(body) if body is not None else None
+        self._log_http_request('POST', url, headers=self.headers, content=data)
         req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
@@ -746,18 +782,20 @@ class Session(object):
             stats = self.time_stats_keeper.get_stats('post ' + uri)
             stats.begin()
             try:
-                if body is None:
+                if data is None:
                     result = req.post(url, headers=self.headers,
                                       verify=False, timeout=req_timeout)
                 else:
-                    data = json.dumps(body)
                     result = req.post(url, data=data, headers=self.headers,
                                       verify=False, timeout=req_timeout)
-                self._log_hmc_request_id(result)
             except requests.exceptions.RequestException as exc:
                 _handle_request_exc(exc)
             finally:
                 stats.end()
+            self._log_http_response('POST', url,
+                                    status=result.status_code,
+                                    headers=result.headers,
+                                    content=result.content)
 
             if result.status_code in (200, 201):
                 return _result_object(result)
@@ -790,7 +828,7 @@ class Session(object):
             if wait_for_completion:
                 stats_total.end()
 
-    @_log_call
+    @logged_api_call
     def delete(self, uri, logon_required=True):
         """
         Perform the HTTP DELETE method against the resource identified by a
@@ -825,7 +863,7 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        self._log_http_method('DELETE', uri)
+        self._log_http_request('DELETE', url, headers=self.headers)
         stats = self.time_stats_keeper.get_stats('delete ' + uri)
         stats.begin()
         req = self._session or requests
@@ -834,11 +872,14 @@ class Session(object):
         try:
             result = req.delete(url, headers=self.headers, verify=False,
                                 timeout=req_timeout)
-            self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             _handle_request_exc(exc)
         finally:
             stats.end()
+        self._log_http_response('DELETE', url,
+                                status=result.status_code,
+                                headers=result.headers,
+                                content=result.content)
 
         if result.status_code in (200, 204):
             return
@@ -858,7 +899,7 @@ class Session(object):
             result_object = _result_object(result)
             raise HTTPError(result_object)
 
-    @_log_call
+    @logged_api_call
     def get_notification_topics(self):
         """
         The 'Get Notification Topics' operation returns a structure that
@@ -927,7 +968,7 @@ class Job(object):
         """
         return self._uri
 
-    @_log_call
+    @logged_api_call
     def check_for_completion(self):
         """
         Check once for completion of the job and return completion status and
@@ -987,7 +1028,7 @@ class Job(object):
             oper_result_obj = None
         return job_status, oper_result_obj
 
-    @_log_call
+    @logged_api_call
     def wait_for_completion(self, operation_timeout=None):
         """
         Wait for completion of the job, then delete the job on the HMC and

@@ -28,8 +28,11 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['NicManager', 'Nic']
+
+LOG = get_logger(__name__)
 
 
 class NicManager(BaseManager):
@@ -68,6 +71,7 @@ class NicManager(BaseManager):
         """
         return self._parent
 
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the NICs in this Partition.
@@ -119,6 +123,7 @@ class NicManager(BaseManager):
                         resource_obj.pull_full_properties()
         return resource_obj_list
 
+    @logged_api_call
     def create(self, properties):
         """
         Create and configure a NIC in this Partition.
@@ -165,6 +170,7 @@ class NicManager(BaseManager):
         props.update(result)
         return Nic(self, props['element-uri'], None, props)
 
+    @logged_api_call
     def nic_object(self, nic_id):
         """
         Return a minimalistic :class:`~zhmcclient.Nic` object for a Nic in this
@@ -232,6 +238,7 @@ class Nic(BaseResource):
                                  (NicManager, type(manager)))
         super(Nic, self).__init__(manager, uri, name, properties)
 
+    @logged_api_call
     def delete(self):
         """
         Delete this NIC.
@@ -250,6 +257,7 @@ class Nic(BaseResource):
         """
         self.manager.session.delete(self._uri)
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this NIC.

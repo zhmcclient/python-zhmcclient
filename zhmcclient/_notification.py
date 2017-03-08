@@ -67,8 +67,11 @@ import threading
 import stomp
 import json
 
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['NotificationReceiver']
+
+LOG = get_logger(__name__)
 
 
 # Port on which the HMC issues JMS over STOMP messages:
@@ -144,6 +147,7 @@ class NotificationReceiver(object):
         dest = "/topic/" + topic
         self._conn.subscribe(destination=dest, id=self._sub_id, ack='auto')
 
+    @logged_api_call
     def notifications(self):
         """
         Generator method that yields all HMC notifications (= JMS messages)
@@ -214,6 +218,7 @@ class NotificationReceiver(object):
                 del self._handover_dict['message']
                 self._handover_cond.notifyAll()
 
+    @logged_api_call
     def close(self):
         """
         Disconnect and close the JMS session with the HMC.

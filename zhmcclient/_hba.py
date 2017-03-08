@@ -27,8 +27,11 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['HbaManager', 'Hba']
+
+LOG = get_logger(__name__)
 
 
 class HbaManager(BaseManager):
@@ -67,6 +70,7 @@ class HbaManager(BaseManager):
         """
         return self._parent
 
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the HBAs in this Partition.
@@ -118,6 +122,7 @@ class HbaManager(BaseManager):
                         resource_obj.pull_full_properties()
         return resource_obj_list
 
+    @logged_api_call
     def create(self, properties):
         """
         Create and configure an HBA in this Partition.
@@ -194,6 +199,7 @@ class Hba(BaseResource):
                                  (HbaManager, type(manager)))
         super(Hba, self).__init__(manager, uri, name, properties)
 
+    @logged_api_call
     def delete(self):
         """
         Delete this HBA.
@@ -212,6 +218,7 @@ class Hba(BaseResource):
         """
         self.manager.session.delete(self._uri)
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this HBA.
@@ -240,6 +247,7 @@ class Hba(BaseResource):
         """
         self.manager.session.post(self._uri, body=properties)
 
+    @logged_api_call
     def reassign_port(self, port):
         """
         Reassign this HBA to a new underlying :term:`FCP port`.

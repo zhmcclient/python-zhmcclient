@@ -49,10 +49,12 @@ from ._partition import PartitionManager
 from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
-from ._logging import _log_call
+from ._logging import get_logger, logged_api_call
 from ._exceptions import HTTPError
 
 __all__ = ['CpcManager', 'Cpc']
+
+LOG = get_logger(__name__)
 
 
 class CpcManager(BaseManager):
@@ -91,7 +93,7 @@ class CpcManager(BaseManager):
 
         self._session = client.session
 
-    @_log_call
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the CPCs exposed by the HMC this client is connected to.
@@ -189,7 +191,6 @@ class Cpc(BaseResource):
         self._load_activation_profiles = None
 
     @property
-    @_log_call
     def lpars(self):
         """
         :class:`~zhmcclient.LparManager`: Access to the :term:`LPARs <LPAR>` in
@@ -201,7 +202,6 @@ class Cpc(BaseResource):
         return self._lpars
 
     @property
-    @_log_call
     def partitions(self):
         """
         :class:`~zhmcclient.PartitionManager`: Access to the
@@ -213,7 +213,6 @@ class Cpc(BaseResource):
         return self._partitions
 
     @property
-    @_log_call
     def adapters(self):
         """
         :class:`~zhmcclient.AdapterManager`: Access to the
@@ -225,7 +224,6 @@ class Cpc(BaseResource):
         return self._adapters
 
     @property
-    @_log_call
     def virtual_switches(self):
         """
         :class:`~zhmcclient.VirtualSwitchManager`: Access to the
@@ -245,7 +243,6 @@ class Cpc(BaseResource):
         return self.virtual_switches
 
     @property
-    @_log_call
     def reset_activation_profiles(self):
         """
         :class:`~zhmcclient.ActivationProfileManager`: Access to the
@@ -259,7 +256,6 @@ class Cpc(BaseResource):
         return self._reset_activation_profiles
 
     @property
-    @_log_call
     def image_activation_profiles(self):
         """
         :class:`~zhmcclient.ActivationProfileManager`: Access to the
@@ -273,7 +269,6 @@ class Cpc(BaseResource):
         return self._image_activation_profiles
 
     @property
-    @_log_call
     def load_activation_profiles(self):
         """
         :class:`~zhmcclient.ActivationProfileManager`: Access to the
@@ -287,7 +282,7 @@ class Cpc(BaseResource):
         return self._load_activation_profiles
 
     @property
-    @_log_call
+    @logged_api_call
     def dpm_enabled(self):
         """
         bool: Indicates whether this CPC is currently in DPM mode
@@ -333,6 +328,7 @@ class Cpc(BaseResource):
             else:
                 raise
 
+    @logged_api_call
     def start(self, wait_for_completion=True, operation_timeout=None):
         """
         Start this CPC, using the HMC operation "Start CPC".
@@ -387,6 +383,7 @@ class Cpc(BaseResource):
             operation_timeout=operation_timeout)
         return result
 
+    @logged_api_call
     def stop(self, wait_for_completion=True, operation_timeout=None):
         """
         Stop this CPC, using the HMC operation "Stop CPC".
@@ -441,7 +438,7 @@ class Cpc(BaseResource):
             operation_timeout=operation_timeout)
         return result
 
-    @_log_call
+    @logged_api_call
     def import_profiles(self, profile_area, wait_for_completion=True,
                         operation_timeout=None):
         """
@@ -507,7 +504,7 @@ class Cpc(BaseResource):
             operation_timeout=operation_timeout)
         return result
 
-    @_log_call
+    @logged_api_call
     def export_profiles(self, profile_area, wait_for_completion=True,
                         operation_timeout=None):
         """
@@ -572,6 +569,7 @@ class Cpc(BaseResource):
             operation_timeout=operation_timeout)
         return result
 
+    @logged_api_call
     def get_wwpns(self, partitions):
         """
         Return the WWPNs of the host ports (of the :term:`HBAs <HBA>`) of the

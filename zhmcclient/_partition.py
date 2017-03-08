@@ -36,9 +36,11 @@ from ._resource import BaseResource
 from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
-from ._logging import _log_call
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['PartitionManager', 'Partition']
+
+LOG = get_logger(__name__)
 
 
 class PartitionManager(BaseManager):
@@ -86,6 +88,7 @@ class PartitionManager(BaseManager):
         """
         return self._parent
 
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the Partitions in this CPC.
@@ -146,6 +149,7 @@ class PartitionManager(BaseManager):
 
         return resource_obj_list
 
+    @logged_api_call
     def create(self, properties):
         """
         Create and configure a Partition in this CPC.
@@ -183,6 +187,7 @@ class PartitionManager(BaseManager):
         props.update(result)
         return Partition(self, props['object-uri'], None, props)
 
+    @logged_api_call
     def partition_object(self, part_id):
         """
         Return a minimalistic :class:`~zhmcclient.Partition` object for a
@@ -252,7 +257,6 @@ class Partition(BaseResource):
         self._virtual_functions = None
 
     @property
-    @_log_call
     def nics(self):
         """
         :class:`~zhmcclient.NicManager`: Access to the :term:`NICs <NIC>` in
@@ -264,7 +268,6 @@ class Partition(BaseResource):
         return self._nics
 
     @property
-    @_log_call
     def hbas(self):
         """
         :class:`~zhmcclient.HbaManager`: Access to the :term:`HBAs <HBA>` in
@@ -276,7 +279,6 @@ class Partition(BaseResource):
         return self._hbas
 
     @property
-    @_log_call
     def virtual_functions(self):
         """
         :class:`~zhmcclient.VirtualFunctionManager`: Access to the
@@ -287,6 +289,7 @@ class Partition(BaseResource):
             self._virtual_functions = VirtualFunctionManager(self)
         return self._virtual_functions
 
+    @logged_api_call
     def start(self, wait_for_completion=True, operation_timeout=None):
         """
         Start (activate) this Partition, using the HMC operation "Start
@@ -345,6 +348,7 @@ class Partition(BaseResource):
             operation_timeout=operation_timeout)
         return result
 
+    @logged_api_call
     def stop(self, wait_for_completion=True, operation_timeout=None):
         """
         Stop (deactivate) this Partition, using the HMC operation "Stop
@@ -400,6 +404,7 @@ class Partition(BaseResource):
             operation_timeout=operation_timeout)
         return result
 
+    @logged_api_call
     def delete(self):
         """
         Delete this Partition.
@@ -418,6 +423,7 @@ class Partition(BaseResource):
         """
         self.manager.session.delete(self.uri)
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Partition.
@@ -444,6 +450,7 @@ class Partition(BaseResource):
         """
         self.manager.session.post(self.uri, body=properties)
 
+    @logged_api_call
     def dump_partition(self, parameters, wait_for_completion=True,
                        operation_timeout=None):
         """
@@ -507,6 +514,7 @@ class Partition(BaseResource):
             body=parameters)
         return result
 
+    @logged_api_call
     def psw_restart(self, wait_for_completion=True, operation_timeout=None):
         """
         Initiates a PSW restart for this Partition, using the HMC operation
@@ -562,6 +570,7 @@ class Partition(BaseResource):
             operation_timeout=operation_timeout)
         return result
 
+    @logged_api_call
     def mount_iso_image(self, properties):
         """
         Upload an ISO image and associate it to this Partition
@@ -595,6 +604,7 @@ class Partition(BaseResource):
             self.uri + '/operations/mount-iso-image',
             wait_for_completion=True, body=properties)
 
+    @logged_api_call
     def unmount_iso_image(self):
         """
         Unmount the currently mounted ISO from this Partition using the HMC
@@ -615,6 +625,7 @@ class Partition(BaseResource):
         self.manager.session.post(
             self.uri + '/operations/unmount-iso-image')
 
+    @logged_api_call
     def open_os_message_channel(self, include_refresh_messages=True):
         """
         Open a JMS message channel to this partition's operating system,
@@ -652,6 +663,7 @@ class Partition(BaseResource):
             self.uri + '/operations/open-os-message-channel', body)
         return result['topic-name']
 
+    @logged_api_call
     def send_os_command(self, os_command_text, is_priority=False):
         """
         Send a command to the operating system running in this partition.
