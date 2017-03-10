@@ -22,6 +22,7 @@ For documentation, see TODO: Add link to RTD once available.
 from __future__ import absolute_import
 
 from ._version import *       # noqa: F401
+from ._constants import *     # noqa: F401
 from ._exceptions import *    # noqa: F401
 from ._manager import *       # noqa: F401
 from ._resource import *      # noqa: F401

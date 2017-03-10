@@ -32,15 +32,12 @@ from ._exceptions import HTTPError, AuthError, ConnectionError, ParseError, \
     ConnectTimeout, ReadTimeout, RetriesExceeded
 from ._timestats import TimeStatsKeeper
 from ._logging import _get_logger, _log_call
+from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
+    DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS
 
 LOG = _get_logger(__name__)
 
-__all__ = ['Session', 'Job', 'RetryTimeoutConfig',
-           'DEFAULT_CONNECT_TIMEOUT',
-           'DEFAULT_CONNECT_RETRIES',
-           'DEFAULT_READ_TIMEOUT',
-           'DEFAULT_READ_RETRIES',
-           'DEFAULT_MAX_REDIRECTS']
+__all__ = ['Session', 'Job', 'RetryTimeoutConfig']
 
 _HMC_PORT = 6794
 _HMC_SCHEME = "https"
@@ -113,7 +110,7 @@ class RetryTimeoutConfig(object):
         """
         For all parameters, `None` means that this object does not specify a
         value for the parameter, and that a default value should be used
-        (see :ref:`Default retry-timeout configuration`).
+        (see :ref:`Constants`).
 
         All parameters are available as instance attributes.
 
@@ -173,36 +170,6 @@ class RetryTimeoutConfig(object):
                 value = getattr(override_config, attr)
             setattr(ret, attr, value)
         return ret
-
-
-#: Default HTTP connect timeout in seconds,
-#: if not specified in the ``retry_timeout_config`` init argument to
-#: :class:`~zhmcclient.Session`.
-DEFAULT_CONNECT_TIMEOUT = 30
-
-
-#: Default number of HTTP connect retries,
-#: if not specified in the ``retry_timeout_config`` init argument to
-#: :class:`~zhmcclient.Session`.
-DEFAULT_CONNECT_RETRIES = 3
-
-
-#: Default HTTP read timeout in seconds,
-#: if not specified in the ``retry_timeout_config`` init argument to
-#: :class:`~zhmcclient.Session`.
-DEFAULT_READ_TIMEOUT = 30
-
-
-#: Default number of HTTP read retries,
-#: if not specified in the ``retry_timeout_config`` init argument to
-#: :class:`~zhmcclient.Session`.
-DEFAULT_READ_RETRIES = 3
-
-
-#: Default max. number of HTTP redirects,
-#: if not specified in the ``retry_timeout_config`` init argument to
-#: :class:`~zhmcclient.Session`.
-DEFAULT_MAX_REDIRECTS = 30
 
 
 class Session(object):
@@ -297,8 +264,7 @@ class Session(object):
             default configuration will be used with the default values for all
             of its attributes.
 
-            See :ref:`Default retry-timeout configuration` for the default
-            values.
+            See :ref:`Constants` for the default values.
         """
         self._host = host
         self._userid = userid
