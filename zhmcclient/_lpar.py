@@ -31,12 +31,14 @@ import time
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._logging import _log_call
+from ._logging import _log_call, _get_logger
 from ._exceptions import AsyncOperationTimeout
 from ._constants import DEFAULT_ASYNC_OPERATION_TIMEOUT, \
     DEFAULT_LPAR_STATUS_TIMEOUT
 
 __all__ = ['LparManager', 'Lpar']
+
+LOG = _get_logger(__name__)
 
 
 class LparManager(BaseManager):
@@ -185,7 +187,7 @@ class Lpar(BaseResource):
         status has reached the desired value. If `wait_for_completion=True`,
         this method repeatedly checks the status of the LPAR after the HMC
         operation has completed, and waits until the status is in the desired
-        state "non-operating" (which indicates that the LPAR is active but
+        state "not-operating" (which indicates that the LPAR is active but
         no operating system is running).
 
         Authorization requirements:
@@ -202,7 +204,7 @@ class Lpar(BaseResource):
 
             * If `True`, this method will wait for completion of the
               asynchronous job performing the operation, and for the status
-              becoming "non-operating".
+              becoming "not-operating".
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
@@ -253,7 +255,7 @@ class Lpar(BaseResource):
             timeout=operation_timeout)
         if wait_for_completion:
             # TODO: Determine effective timeout
-            self._wait_for_status("non-operating", status_timeout)
+            self._wait_for_status("not-operating", status_timeout)
         return result
 
     @_log_call
@@ -504,20 +506,23 @@ class Lpar(BaseResource):
         Parameters:
 
           status (:term:`string`):
-            Desired LPAR status to reach.
-
-            Possible LPAR status values are:
+            Desired LPAR status(es) to reach; one of the following values:
             * ``"not-activated"`` - The LPAR is not active.
             * ``"not-operating" - The LPAR is active but no operating system is
               running in the LPAR.
             * ``"operating"`` - The LPAR is active and an operating system is
               running in the LPAR.
-            * ``"exceptions"`` - The LPAR or its CPC has one or more unusual
-              conditions.
+
+            The fourth possible LPAR status value ``"exceptions"`` indicates
+            that the LPAR or its CPC has one or more unusual conditions. This
+            value should not normally be specified for this parameter. Each
+            time the ``"exceptions"`` status is seen by this method, a log
+            entry at the info level is written to record that, but otherwise
+            it is treated like other undesired suatus values.
 
             Note that the description of LPAR status values in the
-            :term:`HMC API` book (as of its version 2.13.1) is confusing and
-            partly incorrect.
+            :term:`HMC API` book (as of its version 2.13.1) is partly
+            confusing.
 
           timeout (:term:`number`):
             Timeout in seconds, for waiting that the status of the LPAR has
@@ -538,14 +543,21 @@ class Lpar(BaseResource):
         end_time = time.time() + timeout if timeout > 0 else None
         while True:
 
-            # Fastest way to get actual property values:
+            # Fastest way to get actual status value:
             lpars = self.manager.cpc.lpars.list(
                 filter_args={'name': self.name})
-            assert len(lpars) == 0
+            assert len(lpars) == 1
             this_lpar = lpars[0]
             actual_status = this_lpar.get_property('status')
+
             if actual_status == status:
                 return
+            elif actual_status == "exceptions":
+                LOG.info("LPAR {} in CPC {} has status 'exceptions' while "
+                         "waiting for status '{}' (if no other errors follow, "
+                         "this was a temporary condition)".
+                         format(this_lpar.name, this_lpar.manager.cpc.name,
+                                status))
             if end_time is not None and time.time() > end_time:
                 raise ResourceStatusTimeout(
                     "Waiting for LPAR {} to reach status '{}' timed out after "
