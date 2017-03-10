@@ -32,9 +32,7 @@ import time
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import _log_call, _get_logger
-from ._exceptions import AsyncOperationTimeout
-from ._constants import DEFAULT_ASYNC_OPERATION_TIMEOUT, \
-    DEFAULT_LPAR_STATUS_TIMEOUT
+from ._exceptions import StatusTimeout
 
 __all__ = ['LparManager', 'Lpar']
 
@@ -215,7 +213,7 @@ class Lpar(BaseResource):
             timeout is set. `None` means that the default async operation
             timeout of the session is used. If the timeout expires when
             `wait_for_completion=True`, a
-            :exc:`~zhmcclient.AsyncOperationTimeout` is raised.
+            :exc:`~zhmcclient.OperationTimeout` is raised.
 
           status_timeout (:term:`number`):
             Timeout in seconds, for waiting that the status of the LPAR has
@@ -223,7 +221,7 @@ class Lpar(BaseResource):
             The special value 0 means that no timeout is set. `None` means that
             the default async operation timeout of the session is used.
             If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
+            :exc:`~zhmcclient.StatusTimeout` is raised.
 
         Returns:
 
@@ -241,20 +239,18 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.AsyncOperationTimeout`: The timeout expired while
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
-          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
             waiting for the desired LPAR status.
         """
         body = {}
-        # TODO: Determine effective timeout
         result = self.manager.session.post(
             self.uri + '/operations/activate',
             body,
             wait_for_completion=wait_for_completion,
-            timeout=operation_timeout)
+            operation_timeout=operation_timeout)
         if wait_for_completion:
-            # TODO: Determine effective timeout
             self._wait_for_status("not-operating", status_timeout)
         return result
 
@@ -297,7 +293,7 @@ class Lpar(BaseResource):
             timeout is set. `None` means that the default async operation
             timeout of the session is used. If the timeout expires when
             `wait_for_completion=True`, a
-            :exc:`~zhmcclient.AsyncOperationTimeout` is raised.
+            :exc:`~zhmcclient.OperationTimeout` is raised.
 
           status_timeout (:term:`number`):
             Timeout in seconds, for waiting that the status of the LPAR has
@@ -305,7 +301,7 @@ class Lpar(BaseResource):
             The special value 0 means that no timeout is set. `None` means that
             the default async operation timeout of the session is used.
             If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
+            :exc:`~zhmcclient.StatusTimeout` is raised.
 
         Returns:
 
@@ -323,20 +319,18 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.AsyncOperationTimeout`: The timeout expired while
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
-          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
             waiting for the desired LPAR status.
         """
         body = {'force': True}
-        # TODO: Determine effective timeout
         result = self.manager.session.post(
             self.uri + '/operations/deactivate',
             body,
             wait_for_completion=wait_for_completion,
-            timeout=operation_timeout)
+            operation_timeout=operation_timeout)
         if wait_for_completion:
-            # TODO: Determine effective timeout
             self._wait_for_status("not-activated", status_timeout)
         return result
 
@@ -383,7 +377,7 @@ class Lpar(BaseResource):
             timeout is set. `None` means that the default async operation
             timeout of the session is used. If the timeout expires when
             `wait_for_completion=True`, a
-            :exc:`~zhmcclient.AsyncOperationTimeout` is raised.
+            :exc:`~zhmcclient.OperationTimeout` is raised.
 
           status_timeout (:term:`number`):
             Timeout in seconds, for waiting that the status of the LPAR has
@@ -391,7 +385,7 @@ class Lpar(BaseResource):
             The special value 0 means that no timeout is set. `None` means that
             the default async operation timeout of the session is used.
             If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
+            :exc:`~zhmcclient.StatusTimeout` is raised.
 
         Returns:
 
@@ -409,22 +403,20 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.AsyncOperationTimeout`: The timeout expired while
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
-          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
             waiting for the desired LPAR status.
         """
         body = {'load-address': load_address}
         if load_parameter != "":
             body['load-parameter'] = load_parameter
-        # TODO: Determine effective timeout
         result = self.manager.session.post(
             self.uri + '/operations/load',
             body,
             wait_for_completion=wait_for_completion,
-            timeout=operation_timeout)
+            operation_timeout=operation_timeout)
         if wait_for_completion:
-            # TODO: Determine effective timeout
             self._wait_for_status("operating", status_timeout)
         return result
 
@@ -499,7 +491,7 @@ class Lpar(BaseResource):
         self.manager.session.post(
             self.uri + '/operations/send-os-cmd', body)
 
-    def _wait_for_status(self, status, timeout=None):
+    def _wait_for_status(self, status, status_timeout=None):
         """
         Wait until the status of this LPAR has a desired value.
 
@@ -524,12 +516,12 @@ class Lpar(BaseResource):
             :term:`HMC API` book (as of its version 2.13.1) is partly
             confusing.
 
-          timeout (:term:`number`):
+          status_timeout (:term:`number`):
             Timeout in seconds, for waiting that the status of the LPAR has
             reached the desired status. The special value 0 means that no
             timeout is set.
             If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.ResourceStatusTimeout` is raised.
+            :exc:`~zhmcclient.StatusTimeout` is raised.
 
         Raises:
 
@@ -537,10 +529,14 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.ResourceStatusTimeout`: The timeout expired while
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
             waiting for the desired LPAR status.
         """
-        end_time = time.time() + timeout if timeout > 0 else None
+        if status_timeout is None:
+            status_timeout = \
+                self.manager.session.retry_timeout_config.status_timeout
+        if status_timeout > 0:
+            end_time = time.time() + status_timeout
         while True:
 
             # Fastest way to get actual status value:
@@ -558,9 +554,11 @@ class Lpar(BaseResource):
                          "this was a temporary condition)".
                          format(this_lpar.name, this_lpar.manager.cpc.name,
                                 status))
-            if end_time is not None and time.time() > end_time:
-                raise ResourceStatusTimeout(
+
+            if status_timeout > 0 and time.time() > end_time:
+                raise StatusTimeout(
                     "Waiting for LPAR {} to reach status '{}' timed out after "
                     "{} s - current status is '{}'".
-                    format(self.name, status, timeout, actual_status))
+                    format(self.name, status, status_timeout, actual_status))
+
             time.sleep(1)  # Avoid hot spin loop

@@ -21,7 +21,7 @@ import re
 
 __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'RetriesExceeded', 'AuthError', 'ParseError', 'VersionError',
-           'HTTPError', 'AsyncOperationTimeout', 'ResourceStatusTimeout',
+           'HTTPError', 'OperationTimeout', 'StatusTimeout',
            'NoUniqueMatch', 'NotFound']
 
 
@@ -441,7 +441,7 @@ class HTTPError(Error):
                       self.request_method, self.request_uri)
 
 
-class AsyncOperationTimeout(Error):
+class OperationTimeout(Error):
     """
     This exception indicates that the waiting for completion of an asynchronous
     HMC operation has timed out.
@@ -451,7 +451,7 @@ class AsyncOperationTimeout(Error):
     pass
 
 
-class ResourceStatusTimeout(Error):
+class StatusTimeout(Error):
     """
     This exception indicates that the waiting for reaching a desired resource
     status has timed out.

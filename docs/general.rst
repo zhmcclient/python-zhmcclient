@@ -122,7 +122,11 @@ Exceptions
    :members:
    :special-members: __str__
 
-.. autoclass:: zhmcclient.TimeoutError
+.. autoclass:: zhmcclient.OperationTimeout
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StatusTimeout
    :members:
    :special-members: __str__
 

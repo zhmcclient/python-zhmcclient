@@ -37,7 +37,6 @@ from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
 from ._logging import _log_call
-from ._constants import DEFAULT_ASYNC_OPERATION_TIMEOUT
 
 __all__ = ['PartitionManager', 'Partition']
 
@@ -288,8 +287,7 @@ class Partition(BaseResource):
             self._virtual_functions = VirtualFunctionManager(self)
         return self._virtual_functions
 
-    def start(self, wait_for_completion=True,
-              operation_timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
+    def start(self, wait_for_completion=True, operation_timeout=None):
         """
         Start (activate) this Partition, using the HMC operation "Start
         Partition".
@@ -316,9 +314,11 @@ class Partition(BaseResource):
 
           operation_timeout (:term:`number`):
             Timeout in seconds, for waiting for completion of the asynchronous
-            job performing the operation. `None` means that no timeout is set.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.TimeoutError` is raised.
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
 
         Returns:
 
@@ -336,17 +336,16 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
-            for completion of the operation.
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         result = self.manager.session.post(
             self.uri + '/operations/start',
             wait_for_completion=wait_for_completion,
-            timeout=operation_timeout)
+            operation_timeout=operation_timeout)
         return result
 
-    def stop(self, wait_for_completion=True,
-             operation_timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
+    def stop(self, wait_for_completion=True, operation_timeout=None):
         """
         Stop (deactivate) this Partition, using the HMC operation "Stop
         Partition".
@@ -370,9 +369,11 @@ class Partition(BaseResource):
 
           operation_timeout (:term:`number`):
             Timeout in seconds, for waiting for completion of the asynchronous
-            job performing the operation. `None` means that no timeout is set.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.TimeoutError` is raised.
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
 
         Returns:
 
@@ -390,13 +391,13 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
-            for completion of the operation.
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         result = self.manager.session.post(
             self.uri + '/operations/stop',
             wait_for_completion=wait_for_completion,
-            timeout=operation_timeout)
+            operation_timeout=operation_timeout)
         return result
 
     def delete(self):
@@ -444,7 +445,7 @@ class Partition(BaseResource):
         self.manager.session.post(self.uri, body=properties)
 
     def dump_partition(self, parameters, wait_for_completion=True,
-                       operation_timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
+                       operation_timeout=None):
         """
         Dump this Partition, by loading a standalone dump program from a SCSI
         device and starting its execution, using the HMC operation
@@ -474,9 +475,11 @@ class Partition(BaseResource):
 
           operation_timeout (:term:`number`):
             Timeout in seconds, for waiting for completion of the asynchronous
-            job performing the operation. `None` means that no timeout is set.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.TimeoutError` is raised.
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
 
         Returns:
 
@@ -494,18 +497,17 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
-            for completion of the operation.
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         result = self.manager.session.post(
             self.uri + '/operations/scsi-dump',
             wait_for_completion=wait_for_completion,
-            timeout=operation_timeout,
+            operation_timeout=operation_timeout,
             body=parameters)
         return result
 
-    def psw_restart(self, wait_for_completion=True,
-                    operation_timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
+    def psw_restart(self, wait_for_completion=True, operation_timeout=None):
         """
         Initiates a PSW restart for this Partition, using the HMC operation
         'Perform PSW Restart'.
@@ -529,9 +531,11 @@ class Partition(BaseResource):
 
           operation_timeout (:term:`number`):
             Timeout in seconds, for waiting for completion of the asynchronous
-            job performing the operation. `None` means that no timeout is set.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.TimeoutError` is raised.
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
 
         Returns:
 
@@ -549,13 +553,13 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
-            for completion of the operation.
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         result = self.manager.session.post(
             self.uri + '/operations/psw-restart',
             wait_for_completion=wait_for_completion,
-            timeout=operation_timeout)
+            operation_timeout=operation_timeout)
         return result
 
     def mount_iso_image(self, properties):

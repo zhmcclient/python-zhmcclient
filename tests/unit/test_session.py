@@ -25,7 +25,7 @@ import requests_mock
 import time
 import json
 
-from zhmcclient import Session, ParseError, Job, HTTPError, TimeoutError
+from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout
 
 
 class SessionTests(unittest.TestCase):
@@ -453,14 +453,14 @@ class JobTests(unittest.TestCase):
             # timeout exception needs to be shorter by the last status
             # retrieval (the one that completes the job), so 3 s is the
             # boundary for the timeout value.
-            timeout = 2.9
+            operation_timeout = 2.9
             try:
                 start_time = time.time()
-                job.wait_for_completion(timeout=timeout)
+                job.wait_for_completion(operation_timeout=operation_timeout)
                 duration = time.time() - start_time
-                self.fail("No TimeoutError raised. Actual duration: %s s, "
-                          "timeout: %s s" % (duration, timeout))
-            except TimeoutError as exc:
+                self.fail("No OperationTimeout raised. Actual duration: %s s, "
+                          "timeout: %s s" % (duration, operation_timeout))
+            except OperationTimeout as exc:
                 msg = exc.args[0]
                 self.assertTrue(msg.startswith(
                     "Waiting for completion of job"))

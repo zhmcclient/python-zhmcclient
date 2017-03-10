@@ -29,12 +29,12 @@ import requests
 from requests.packages import urllib3
 
 from ._exceptions import HTTPError, AuthError, ConnectionError, ParseError, \
-    ConnectTimeout, ReadTimeout, RetriesExceeded, AsyncOperationTimeout
+    ConnectTimeout, ReadTimeout, RetriesExceeded, OperationTimeout
 from ._timestats import TimeStatsKeeper
 from ._logging import _get_logger, _log_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
-    DEFAULT_ASYNC_OPERATION_TIMEOUT
+    DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT
 
 LOG = _get_logger(__name__)
 
@@ -107,7 +107,8 @@ class RetryTimeoutConfig(object):
     """
 
     def __init__(self, connect_timeout=None, connect_retries=None,
-                 read_timeout=None, read_retries=None, max_redirects=None):
+                 read_timeout=None, read_retries=None, max_redirects=None,
+                 operation_timeout=None, status_timeout=None):
         """
         For all parameters, `None` means that this object does not specify a
         value for the parameter, and that a default value should be used
@@ -121,6 +122,7 @@ class RetryTimeoutConfig(object):
             This timeout applies to making a connection at the socket level.
             The same socket connection is used for sending an HTTP request to
             the HMC and for receiving its HTTP response.
+            The special value 0 means that no timeout is set.
 
           connect_retries (:term:`integer`): Number of retries (after the
             initial attempt) for connection-related issues. These retries are
@@ -130,21 +132,35 @@ class RetryTimeoutConfig(object):
           read_timeout (:term:`number`): Read timeout in seconds.
             This timeout applies to reading at the socket level, when receiving
             an HTTP response.
+            The special value 0 means that no timeout is set.
 
           read_retries (:term:`integer`): Number of retries (after the
             initial attempt) for read-related issues. These retries are
             performed for failed socket reads and socket read timeouts.
 
           max_redirects (:term:`integer`): Maximum number of HTTP redirects.
+
+          operation_timeout (:term:`number`): Asynchronous operation timeout in
+            seconds. This timeout applies when waiting for the completion of
+            asynchronous HMC operations. The special value 0 means that no
+            timeout is set.
+
+          status_timeout (:term:`number`): Resource status timeout in seconds.
+            This timeout applies when waiting for the transition of the status
+            of a resource to a desired status. The special value 0 means that
+            no timeout is set.
         """
         self.connect_timeout = connect_timeout
         self.connect_retries = connect_retries
         self.read_timeout = read_timeout
         self.read_retries = read_retries
         self.max_redirects = max_redirects
+        self.operation_timeout = operation_timeout
+        self.status_timeout = status_timeout
 
     _attrs = ('connect_timeout', 'connect_retries', 'read_timeout',
-              'read_retries', 'max_redirects')
+              'read_retries', 'max_redirects', 'operation_timeout',
+              'status_timeout')
 
     def override_with(self, override_config):
         """
@@ -192,6 +208,8 @@ class Session(object):
         read_timeout=DEFAULT_READ_TIMEOUT,
         read_retries=DEFAULT_READ_RETRIES,
         max_redirects=DEFAULT_MAX_REDIRECTS,
+        operation_timeout=DEFAULT_OPERATION_TIMEOUT,
+        status_timeout=DEFAULT_STATUS_TIMEOUT,
     )
 
     def __init__(self, host, userid=None, password=None, session_id=None,
@@ -573,11 +591,11 @@ class Session(object):
         stats = self.time_stats_keeper.get_stats('get ' + uri)
         stats.begin()
         req = self._session or requests
-        timeout = (self.retry_timeout_config.connect_timeout,
-                   self.retry_timeout_config.read_timeout)
+        req_timeout = (self.retry_timeout_config.connect_timeout,
+                       self.retry_timeout_config.read_timeout)
         try:
             result = req.get(url, headers=self.headers, verify=False,
-                             timeout=timeout)
+                             timeout=req_timeout)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             _handle_request_exc(exc)
@@ -603,8 +621,7 @@ class Session(object):
 
     @_log_call
     def post(self, uri, body=None, logon_required=True,
-             wait_for_completion=False,
-             timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
+             wait_for_completion=False, operation_timeout=None):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -665,12 +682,15 @@ class Session(object):
             it should still be set (or defaulted) to `False` in order to avoid
             the additional entry in the time statistics.
 
-          timeout (:term:`number`):
+          operation_timeout (:term:`number`):
             Timeout in seconds, when waiting for completion of an asynchronous
-            operation. `None` means that no timeout is set.
+            operation. The special value 0 means that no timeout is set. `None`
+            means that the default async operation timeout of the session is
+            used.
 
-            For `wait_for_completion=True`, a :exc:`~zhmcclient.TimeoutError`
-            is raised when the timeout expires.
+            For `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised when the timeout
+            expires.
 
             For `wait_for_completion=False`, this parameter has no effect.
 
@@ -708,16 +728,16 @@ class Session(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
-            for completion of the asynchronous operation.
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the asynchronous operation.
         """
         if logon_required:
             self.logon()
         url = self.base_url + uri
         self._log_http_method('POST', uri)
         req = self._session or requests
-        timeout = (self.retry_timeout_config.connect_timeout,
-                   self.retry_timeout_config.read_timeout)
+        req_timeout = (self.retry_timeout_config.connect_timeout,
+                       self.retry_timeout_config.read_timeout)
         if wait_for_completion:
             stats_total = self.time_stats_keeper.get_stats(
                 'post ' + uri + '+completion')
@@ -728,11 +748,11 @@ class Session(object):
             try:
                 if body is None:
                     result = req.post(url, headers=self.headers,
-                                      verify=False, timeout=timeout)
+                                      verify=False, timeout=req_timeout)
                 else:
                     data = json.dumps(body)
                     result = req.post(url, data=data, headers=self.headers,
-                                      verify=False, timeout=timeout)
+                                      verify=False, timeout=req_timeout)
                 self._log_hmc_request_id(result)
             except requests.exceptions.RequestException as exc:
                 _handle_request_exc(exc)
@@ -749,7 +769,7 @@ class Session(object):
                 job_uri = result_object['job-uri']
                 job = Job(self, job_uri)
                 if wait_for_completion:
-                    return job.wait_for_completion(timeout)
+                    return job.wait_for_completion(operation_timeout)
                 else:
                     return job
             elif result.status_code == 403:
@@ -809,11 +829,11 @@ class Session(object):
         stats = self.time_stats_keeper.get_stats('delete ' + uri)
         stats.begin()
         req = self._session or requests
-        timeout = (self.retry_timeout_config.connect_timeout,
-                   self.retry_timeout_config.read_timeout)
+        req_timeout = (self.retry_timeout_config.connect_timeout,
+                       self.retry_timeout_config.read_timeout)
         try:
             result = req.delete(url, headers=self.headers, verify=False,
-                                timeout=timeout)
+                                timeout=req_timeout)
             self._log_hmc_request_id(result)
         except requests.exceptions.RequestException as exc:
             _handle_request_exc(exc)
@@ -968,7 +988,7 @@ class Job(object):
         return job_status, oper_result_obj
 
     @_log_call
-    def wait_for_completion(self, timeout=DEFAULT_ASYNC_OPERATION_TIMEOUT):
+    def wait_for_completion(self, operation_timeout=None):
         """
         Wait for completion of the job, then delete the job on the HMC and
         return the result of the original asynchronous HMC operation, if it
@@ -979,10 +999,13 @@ class Job(object):
 
         Parameters:
 
-          timeout (:term:`number`):
-            Timeout in seconds, for waiting for completion of the job. `None`
-            means that no timeout is set. If the timeout expires, a
-            :exc:`~zhmcclient.TimeoutError` is raised.
+          operation_timeout (:term:`number`):
+            Timeout in seconds, when waiting for completion of the job. The
+            special value 0 means that no timeout is set. `None` means that the
+            default async operation timeout of the session is used.
+
+            If the timeout expires, a :exc:`~zhmcclient.OperationTimeout`
+            is raised.
 
             This method gives completion of the job priority over strictly
             achieving the timeout. This may cause a slightly longer duration of
@@ -1004,11 +1027,14 @@ class Job(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.TimeoutError`: The timeout expired while waiting
-            for completion.
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for job completion.
         """
 
-        if timeout is not None:
+        if operation_timeout is None:
+            operation_timeout = \
+                self.session.retry_timeout_config.operation_timeout
+        if operation_timeout > 0:
             start_time = time.time()
 
         while True:
@@ -1020,13 +1046,14 @@ class Job(object):
             if job_status == 'complete':
                 return oper_result_obj
 
-            if timeout is not None:
+            if operation_timeout > 0:
                 current_time = time.time()
-                if current_time > start_time + timeout:
-                    raise AsyncOperationTimeout(
+                if current_time > start_time + operation_timeout:
+                    raise OperationTimeout(
                         "Waiting for completion of job {} timed out after "
-                        "{} s (timeout: {} s)".
-                        format(self.uri, current_time - start_time, timeout))
+                        "{} s (operation timeout: {} s)".
+                        format(self.uri, current_time - start_time,
+                               operation_timeout))
 
             time.sleep(1)  # Avoid hot spin loop
 
