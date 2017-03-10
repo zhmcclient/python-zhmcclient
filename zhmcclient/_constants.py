@@ -29,7 +29,9 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_READ_RETRIES',
            'DEFAULT_MAX_REDIRECTS',
            'DEFAULT_OPERATION_TIMEOUT',
-           'DEFAULT_STATUS_TIMEOUT']
+           'DEFAULT_STATUS_TIMEOUT',
+           'HMC_LOGGER_NAME',
+           'API_LOGGER_NAME']
 
 
 #: Default HTTP connect timeout in seconds,
@@ -69,3 +71,9 @@ DEFAULT_OPERATION_TIMEOUT = 3600
 #: of the :class:`~zhmcclient.Lpar` class that change its status (e.g.
 #: :meth:`zhmcclient.Lpar.activate`)).
 DEFAULT_STATUS_TIMEOUT = 60
+
+#: Name of the Python logger that logs HMC operations.
+HMC_LOGGER_NAME = 'zhmcclient.hmc'
+
+#: Name of the Python logger that logs zhmcclient API calls made by the user.
+API_LOGGER_NAME = 'zhmcclient.api'

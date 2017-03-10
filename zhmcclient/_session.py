@@ -34,13 +34,13 @@ from ._timestats import TimeStatsKeeper
 from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
-    DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT
+    DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
+    HMC_LOGGER_NAME
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig']
 
 LOG = get_logger(__name__)
 
-HMC_LOGGER_NAME = 'zhmcclient.hmc'
 HMC_LOG = get_logger(HMC_LOGGER_NAME)
 
 _HMC_PORT = 6794

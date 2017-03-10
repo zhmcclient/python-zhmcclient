@@ -75,6 +75,8 @@ import logging
 import inspect
 from decorator import decorate
 
+from ._constants import API_LOGGER_NAME
+
 
 def get_logger(name):
     """
@@ -125,8 +127,6 @@ def logged_api_call(func):
         raise TypeError("The @logged_api_call decorator must be used on a "
                         "function or method ")
 
-    loggername = 'zhmcclient.api'
-
     try:
         # We avoid the use of inspect.getouterframes() because it is slow,
         # and use the pointers up the stack frame, instead.
@@ -151,7 +151,7 @@ def logged_api_call(func):
         apifunc_str = '{owner}.{func}()'.format(owner=apifunc_owner,
                                                 func=func.__name__)
 
-    logger = get_logger(loggername)
+    logger = get_logger(API_LOGGER_NAME)
 
     def log_api_call(func, *args, **kwargs):
         """
