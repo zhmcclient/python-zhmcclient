@@ -52,7 +52,6 @@ from ._virtual_switch import VirtualSwitchManager
 from ._logging import _log_call
 from ._exceptions import HTTPError
 
-
 __all__ = ['CpcManager', 'Cpc']
 
 
@@ -334,7 +333,7 @@ class Cpc(BaseResource):
             else:
                 raise
 
-    def start(self, wait_for_completion=True):
+    def start(self, wait_for_completion=True, operation_timeout=None):
         """
         Start this CPC, using the HMC operation "Start CPC".
 
@@ -355,6 +354,14 @@ class Cpc(BaseResource):
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
 
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -371,13 +378,16 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         result = self.manager.session.post(
             self.uri + '/operations/start',
-            wait_for_completion=wait_for_completion)
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
         return result
 
-    def stop(self, wait_for_completion=True):
+    def stop(self, wait_for_completion=True, operation_timeout=None):
         """
         Stop this CPC, using the HMC operation "Stop CPC".
 
@@ -398,6 +408,14 @@ class Cpc(BaseResource):
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
 
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -414,14 +432,18 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         result = self.manager.session.post(
             self.uri + '/operations/stop',
-            wait_for_completion=wait_for_completion)
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
         return result
 
     @_log_call
-    def import_profiles(self, profile_area, wait_for_completion=True):
+    def import_profiles(self, profile_area, wait_for_completion=True,
+                        operation_timeout=None):
         """
         Import activation profiles and/or system activity profiles for this CPC
         from the SE hard drive into the CPC using the HMC operation
@@ -450,6 +472,14 @@ class Cpc(BaseResource):
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
 
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -466,15 +496,20 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            self.uri + '/operations/import-profiles', body,
-            wait_for_completion=wait_for_completion)
+            self.uri + '/operations/import-profiles',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
         return result
 
     @_log_call
-    def export_profiles(self, profile_area, wait_for_completion=True):
+    def export_profiles(self, profile_area, wait_for_completion=True,
+                        operation_timeout=None):
         """
         Export activation profiles and/or system activity profiles from this
         CPC to the SE hard drive using the HMC operation "Export Profiles".
@@ -502,6 +537,14 @@ class Cpc(BaseResource):
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
 
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -518,11 +561,15 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
         """
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            self.uri + '/operations/export-profiles', body,
-            wait_for_completion=wait_for_completion)
+            self.uri + '/operations/export-profiles',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
         return result
 
     def get_wwpns(self, partitions):

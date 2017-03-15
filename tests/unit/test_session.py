@@ -22,8 +22,10 @@ from __future__ import absolute_import, print_function
 import unittest
 import requests
 import requests_mock
+import time
+import json
 
-from zhmcclient import Session, ParseError, Job, HTTPError
+from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout
 
 
 class SessionTests(unittest.TestCase):
@@ -380,6 +382,110 @@ class JobTests(unittest.TestCase):
             self.assertEqual(cm.exception.http_status, 500)
             self.assertEqual(cm.exception.reason, 42)
             self.assertEqual(cm.exception.message, 'bla')
+
+    def test_wait_complete1_success_result(self):
+        """Test wait_for_completion() with successful complete job with a
+        result."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            job = Job(session, self.job_uri)
+            exp_oper_result = {
+                'foo': 'bar',
+            }
+            query_job_status_result = {
+                'status': 'complete',
+                'job-status-code': 200,
+                # 'job-reason-code' omitted because HTTP status good
+                'job-results': exp_oper_result,
+            }
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            oper_result = job.wait_for_completion()
+
+            self.assertEqual(oper_result, exp_oper_result)
+
+    def test_wait_complete3_success_result(self):
+        """Test wait_for_completion() with successful complete job with a
+        result."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            job = Job(session, self.job_uri)
+            exp_oper_result = {
+                'foo': 'bar',
+            }
+            m.get(self.job_uri,
+                  [
+                      {'text': result_running_callback},
+                      {'text': result_complete_callback},
+                  ])
+            m.delete(self.job_uri)
+
+            oper_result = job.wait_for_completion()
+
+            self.assertEqual(oper_result, exp_oper_result)
+
+    def test_wait_complete3_timeout(self):
+        """Test wait_for_completion() with timeout."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            job = Job(session, self.job_uri)
+            m.get(self.job_uri,
+                  [
+                      {'text': result_running_callback},
+                      {'text': result_running_callback},
+                      {'text': result_complete_callback},
+                  ])
+            m.delete(self.job_uri)
+
+            # Here we provoke a timeout, by setting the timeout to less than
+            # the time it would take to return the completed job status.
+            # The time it would take is the sum of the following:
+            # - 2 * 1 s (1 s is the sleep time in Job.wait_for_completion(),
+            #   and this happens before each repeated status retrieval)
+            # - 3 * 1 s (1 s is the sleep time in result_*_callback() in this
+            #   module, and this happens in each mocked status retrieval)
+            # Because status completion is given priority over achieving the
+            # timeout duration, the timeout value needed to provoke the
+            # timeout exception needs to be shorter by the last status
+            # retrieval (the one that completes the job), so 3 s is the
+            # boundary for the timeout value.
+            operation_timeout = 2.9
+            try:
+                start_time = time.time()
+                job.wait_for_completion(operation_timeout=operation_timeout)
+                duration = time.time() - start_time
+                self.fail("No OperationTimeout raised. Actual duration: %s s, "
+                          "timeout: %s s" % (duration, operation_timeout))
+            except OperationTimeout as exc:
+                msg = exc.args[0]
+                self.assertTrue(msg.startswith(
+                    "Waiting for completion of job"))
+
+
+def result_running_callback(request, context):
+    job_result_running = {
+        'status': 'running',
+    }
+    time.sleep(1)
+    return json.dumps(job_result_running)
+
+
+def result_complete_callback(request, context):
+    exp_oper_result = {
+        'foo': 'bar',
+    }
+    job_result_complete = {
+        'status': 'complete',
+        'job-status-code': 200,
+        # 'job-reason-code' omitted because HTTP status good
+        'job-results': exp_oper_result,
+    }
+    time.sleep(1)
+    return json.dumps(job_result_complete)
 
 
 if __name__ == '__main__':

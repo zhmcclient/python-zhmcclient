@@ -35,6 +35,16 @@ Session
    :special-members: __str__
 
 
+.. _`Retry-timeout configuration`:
+
+Retry / timeout configuration
+-----------------------------
+
+.. autoclass:: zhmcclient.RetryTimeoutConfig
+   :members:
+   :special-members: __str__
+
+
 .. _`Client`:
 
 Client
@@ -84,6 +94,18 @@ Exceptions
    :members:
    :special-members: __str__
 
+.. autoclass:: zhmcclient.ConnectTimeout
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.ReadTimeout
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.RetriesExceeded
+   :members:
+   :special-members: __str__
+
 .. autoclass:: zhmcclient.AuthError
    :members:
    :special-members: __str__
@@ -100,6 +122,14 @@ Exceptions
    :members:
    :special-members: __str__
 
+.. autoclass:: zhmcclient.OperationTimeout
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StatusTimeout
+   :members:
+   :special-members: __str__
+
 .. autoclass:: zhmcclient.NotFound
    :members:
    :special-members: __str__
@@ -107,6 +137,15 @@ Exceptions
 .. autoclass:: zhmcclient.NoUniqueMatch
    :members:
    :special-members: __str__
+
+
+.. _`Constants`:
+
+Constants
+---------
+
+.. automodule:: zhmcclient._constants
+   :members:
 
 
 .. _`Filtering`:
