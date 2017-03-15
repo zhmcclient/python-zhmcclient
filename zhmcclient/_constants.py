@@ -45,7 +45,7 @@ DEFAULT_CONNECT_RETRIES = 3
 #: Default HTTP read timeout in seconds,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
-DEFAULT_READ_TIMEOUT = 30
+DEFAULT_READ_TIMEOUT = 300
 
 #: Default number of HTTP read retries,
 #: if not specified in the ``retry_timeout_config`` init argument to
