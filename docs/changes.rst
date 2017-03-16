@@ -23,7 +23,7 @@ Change log
 Version 0.11.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-03-16
 
 **Incompatible changes:**
 
