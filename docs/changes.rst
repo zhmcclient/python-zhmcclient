@@ -31,6 +31,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Added WWPN support in mocking framework (issue #212).
+
 **Enhancements:**
 
 **Known Issues:**

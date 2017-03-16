@@ -774,6 +774,9 @@ class FakedHbaManager(FakedBaseManager):
         if 'device-number' not in new_hba.properties:
             devno = partition.devno_alloc()
             new_hba.properties['device-number'] = devno
+        if 'wwpn' not in new_hba.properties:
+            wwpn = partition.wwpn_alloc()
+            new_hba.properties['wwpn'] = wwpn
         return new_hba
 
     def remove(self, oid):
@@ -793,6 +796,9 @@ class FakedHbaManager(FakedBaseManager):
         devno = hba.properties.get('device-number', None)
         if devno:
             partition.devno_free_if_allocated(devno)
+        wwpn = hba.properties.get('wwpn', None)
+        if wwpn:
+            partition.wwpn_free_if_allocated(wwpn)
         assert 'hba-uris' in partition.properties
         hba_uris = partition.properties['hba-uris']
         hba_uris.remove(hba.uri)
@@ -1049,6 +1055,7 @@ class FakedPartition(FakedBaseResource):
         self._virtual_functions = FakedVirtualFunctionManager(
             hmc=manager.hmc, partition=self)
         self._devno_pool = IdPool(0x8000, 0xFFFF)
+        self._wwpn_pool = IdPool(0x8000, 0xFFFF)
 
     @property
     def nics(self):
@@ -1117,6 +1124,51 @@ class FakedPartition(FakedBaseResource):
         """
         devno_int = int(devno, 16)
         self._devno_pool.free_if_allocated(devno_int)
+
+    def wwpn_alloc(self):
+        """
+        Allocates a WWPN unique to this partition, in the range of
+        0xAFFEAFFE00008000 to 0xAFFEAFFE0000FFFF.
+
+        Returns:
+          string: The WWPN as 16 hexadecimal digits in upper case.
+
+        Raises:
+          ValueError: No more WWPNs available in that range.
+        """
+        wwpn_int = self._wwpn_pool.alloc()
+        wwpn = "AFFEAFFE0000" + "{:04X}".format(wwpn_int)
+        return wwpn
+
+    def wwpn_free(self, wwpn):
+        """
+        Free a WWPN allocated with :meth:`wwpn_alloc`.
+
+        The WWPN must be allocated.
+
+        Parameters:
+          WWPN (string): The WWPN as 16 hexadecimal digits.
+
+        Raises:
+          ValueError: WWPN not in pool range or not currently
+            allocated.
+        """
+        wwpn_int = int(wwpn[-4:], 16)
+        self._wwpn_pool.free(wwpn_int)
+
+    def wwpn_free_if_allocated(self, wwpn):
+
+        """
+        Free a WWPN allocated with :meth:`wwpn_alloc`.
+
+        If the WWPN is not currently allocated or not in the pool
+        range, nothing happens.
+
+        Parameters:
+          WWPN (string): The WWPN as 16 hexadecimal digits.
+        """
+        wwpn_int = int(wwpn[-4:], 16)
+        self._wwpn_pool.free_if_allocated(wwpn_int)
 
 
 class FakedPortManager(FakedBaseManager):
