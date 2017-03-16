@@ -20,6 +20,26 @@ Change log
 ----------
 
 
+Version 0.12.0
+^^^^^^^^^^^^^^
+
+Released: not yet
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known Issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
 Version 0.11.0
 ^^^^^^^^^^^^^^
 
@@ -131,12 +151,6 @@ Released: 2017-03-16
 
 * Experimental: In the CLI, added more supported table formats (plain,
   simple, psql, rst, mediawiki, html, LaTeX).
-
-**Known Issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.10.0
