@@ -129,6 +129,9 @@ Released: not yet
 * Added a new module that defines public constants, and that defines
   default timeout and retry values.
 
+* Experimental: In the CLI, added more supported table formats (plain,
+  simple, psql, rst, mediawiki, html, LaTeX).
+
 **Known Issues:**
 
 * See `list of open issues`_.

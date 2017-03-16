@@ -119,7 +119,8 @@ commands::
                                       ZHMC_HOST environment variable).
       -u, --userid TEXT               Username for the HMC (Default: ZHMC_USERID
                                       environment variable).
-      -o, --output-format [table|json]
+      -o, --output-format [[table|plain|simple|psql|rst|mediawiki|html|latex|
+                          json]]
                                       Output format (Default: table).
       -t, --timestats                 Show time statistics of HMC operations.
       --version                       Show the version of this command and exit.
@@ -296,3 +297,41 @@ options (listed by ``zhmc COMMAND --help``) must be specified after the
 (sub-)command, like shown here::
 
       $ zhmc [GENERAL-OPTIONS] COMMAND [ARGS...] [COMMAND-OPTIONS]
+
+.. _`Output formats`:
+
+Output formats
+--------------
+
+There are different output formats for the command results.
+This output format can be selected by the ``-o`` or
+``--output-format`` option. For example::
+
+      $ zhmc -o plain cpc list
+      /name      status
+      P0004711  operating
+      P0000815  operating
+
+* table: Maps to output format 'psql'. This is the default.
+
+* plain: Results in tables without borders.
+
+* simple: Corresponds to ``simple_tables`` in `Pandoc Markdown extensions`_.
+
+* psql: Results in tables formatted like Postgres' psql cli tables.
+
+* rst: Formats data like a simple table of the `reStructuredText`_ format .
+
+* mediawiki: Results in table markup used in `Wikipedia`_.
+
+* html: Results in tables formatted in standard HTML markup.
+
+* latex: Results in tables formatted in LaTeX markup.
+
+* json: Results in `JSON`_ format.
+
+.. _`Pandoc Markdown extensions`: http://johnmacfarlane.net/pandoc/README.html#tables
+.. _`reStructuredText`: http://docutils.sourceforge.net/docs/user/rst/quickref.html#tables
+.. _`Wikipedia`: http://www.mediawiki.org/wiki/Help:Tables
+.. _`JSON`: http://json.org/example.html
+

@@ -20,7 +20,7 @@ import click_repl
 from prompt_toolkit.history import FileHistory
 
 from ._helper import CmdContext, GENERAL_OPTIONS_METAVAR, REPL_HISTORY_FILE, \
-    REPL_PROMPT
+    REPL_PROMPT, TABLE_FORMATS
 
 requests.packages.urllib3.disable_warnings()
 
@@ -38,7 +38,8 @@ DEFAULT_TIMESTATS = False
 @click.option('-u', '--userid', type=str, envvar='ZHMC_USERID',
               help="Username for the HMC "
                    "(Default: ZHMC_USERID environment variable).")
-@click.option('-o', '--output-format', type=click.Choice(['table', 'json']),
+@click.option('-o', '--output-format', type=click.Choice(TABLE_FORMATS +
+              ['json']),
               help='Output format (Default: {of}).'
               .format(of=DEFAULT_OUTPUT_FORMAT))
 @click.option('-t', '--timestats', type=str, is_flag=True,

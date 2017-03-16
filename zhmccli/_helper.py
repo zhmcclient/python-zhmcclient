@@ -33,6 +33,9 @@ REPL_HISTORY_FILE = '~/.zhmc_history'
 
 REPL_PROMPT = u'zhmc> '  # Must be Unicode
 
+TABLE_FORMATS = ['table', 'plain', 'simple', 'psql', 'rst', 'mediawiki',
+                 'html', 'latex']
+
 
 def abort_if_false(ctx, param, value):
     # pylint: disable=unused-argument
@@ -217,8 +220,10 @@ def print_properties(properties, output_format, skip_list=None):
     """
     Print properties in the desired output format.
     """
-    if output_format == 'table':
-        print_properties_as_table(properties, skip_list)
+    if output_format in TABLE_FORMATS:
+        if output_format == 'table':
+            output_format = 'psql'
+        print_properties_as_table(properties, output_format, skip_list)
     elif output_format == 'json':
         print_properties_as_json(properties)
     else:
@@ -229,15 +234,17 @@ def print_resources(resources, output_format, show_list=None):
     """
     Print the properties of a list of resources in the desired output format.
     """
-    if output_format == 'table':
-        print_resources_as_table(resources, show_list)
+    if output_format in TABLE_FORMATS:
+        if output_format == 'table':
+            output_format = 'psql'
+        print_resources_as_table(resources, output_format, show_list)
     elif output_format == 'json':
         print_resources_as_json(resources, show_list)
     else:
         raise InvalidOutputFormatError(output_format)
 
 
-def print_properties_as_table(properties, skip_list=None):
+def print_properties_as_table(properties, table_format, skip_list=None):
     """
     Print properties in tabular output format.
 
@@ -246,6 +253,16 @@ def print_properties_as_table(properties, skip_list=None):
     Parameters:
 
       properties (dict): The properties.
+
+      table_format: Supported table formats are:
+         - "table" -> same like "psql"
+         - "plain"
+         - "simple"
+         - "psql"
+         - "rst"
+         - "mediawiki"
+         - "html"
+         - "latex"
 
       skip_list (iterable of string): The property names to be skipped.
         If `None`, all properties are shown.
@@ -261,10 +278,10 @@ def print_properties_as_table(properties, skip_list=None):
         value = properties[field]
         table.append((field, value))
     headers = ['Field Name', 'Value']
-    click.echo(tabulate(table, headers, tablefmt="psql"))
+    click.echo(tabulate(table, headers, tablefmt=table_format))
 
 
-def print_resources_as_table(resources, show_list=None):
+def print_resources_as_table(resources, table_format, show_list=None):
     """
     Print resources in tabular output format.
 
@@ -272,6 +289,16 @@ def print_resources_as_table(resources, show_list=None):
 
       resources (iterable of BaseResource):
         The resources.
+
+      table_format: Supported table formats are:
+         - "table" -> same like "psql"
+         - "plain"
+         - "simple"
+         - "psql"
+         - "rst"
+         - "mediawiki"
+         - "html"
+         - "latex"
 
       show_list (iterable of string):
         The property names to be shown. If a property is not in the resource
@@ -302,7 +329,7 @@ def print_resources_as_table(resources, show_list=None):
         click.echo("No resources.")
     else:
         sorted_table = sorted(table, key=lambda row: row[0])
-        click.echo(tabulate(sorted_table, headers, tablefmt="psql"))
+        click.echo(tabulate(sorted_table, headers, tablefmt=table_format))
 
 
 def print_properties_as_json(properties):
