@@ -453,7 +453,7 @@ def standard_test_hmc():
                                     'description': 'HBA #1 in Partition #1',
                                     'adapter-port-uri':
                                         '/api/adapters/2/storage-ports/1',
-                                    'wwpn': 'wwpn_1',
+                                    'wwpn': 'CFFEAFFE00008001',
                                     'device-number': '1001',
                                 },
                             },
@@ -782,7 +782,7 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
             ]
         }
         exp_wwpn_list = [
-            'partition_1,2,1001,wwpn_1',
+            'partition_1,2,1001,CFFEAFFE00008001',
         ]
 
         # the function to be tested:
@@ -1108,7 +1108,7 @@ class HbaHandlerTests(unittest.TestCase):
             'name': 'hba_1',
             'description': 'HBA #1 in Partition #1',
             'adapter-port-uri': '/api/adapters/2/storage-ports/1',
-            'wwpn': 'wwpn_1',
+            'wwpn': 'CFFEAFFE00008001',
             'device-number': '1001',
         }
         self.assertEqual(hba1, exp_hba1)
@@ -1138,6 +1138,7 @@ class HbaHandlerTests(unittest.TestCase):
             'name': 'hba_2',
             'adapter-port-uri': '/api/adapters/2/storage-ports/1',
             'device-number': hba2['device-number'],  # auto-generated
+            'wwpn': hba2['wwpn'],  # auto-generated
         }
 
         self.assertEqual(hba2, exp_hba2)
