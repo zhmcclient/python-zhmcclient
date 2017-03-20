@@ -29,9 +29,12 @@ from __future__ import absolute_import
 
 from requests.utils import quote
 
+from ._logging import get_logger, logged_api_call
 from ._exceptions import NotFound, NoUniqueMatch
 
 __all__ = ['BaseManager']
+
+LOG = get_logger(__name__)
 
 
 class BaseManager(object):
@@ -270,6 +273,7 @@ class BaseManager(object):
         """
         raise NotImplementedError
 
+    @logged_api_call
     def find(self, **filter_args):
         """
         Find exactly one resource that is managed by this manager, by matching
@@ -333,6 +337,7 @@ class BaseManager(object):
         else:
             return obj_list[0]
 
+    @logged_api_call
     def findall(self, **filter_args):
         """
         Find zero or more resources that are managed by this manager, by
@@ -390,6 +395,7 @@ class BaseManager(object):
             obj_list = self.list(filter_args=filter_args)
             return obj_list
 
+    @logged_api_call
     def find_by_name(self, name):
         """
         Find a resource by name (i.e. value of its 'name' resource property)
@@ -438,6 +444,7 @@ class BaseManager(object):
             properties=None)
         return obj
 
+    @logged_api_call
     def flush(self):
         """
         Flush the cached name-to-URI mapping.

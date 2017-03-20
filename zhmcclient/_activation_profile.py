@@ -48,10 +48,11 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._logging import _log_call
-
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['ActivationProfileManager', 'ActivationProfile']
+
+LOG = get_logger(__name__)
 
 
 class ActivationProfileManager(BaseManager):
@@ -125,7 +126,7 @@ class ActivationProfileManager(BaseManager):
         """
         return self._profile_type
 
-    @_log_call
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the Activation Profiles of this CPC, of the profile type
@@ -215,6 +216,7 @@ class ActivationProfile(BaseResource):
                                  (ActivationProfileManager, type(manager)))
         super(ActivationProfile, self).__init__(manager, uri, name, properties)
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Activation Profile.

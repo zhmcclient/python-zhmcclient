@@ -31,12 +31,12 @@ import time
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._logging import _log_call, _get_logger
 from ._exceptions import StatusTimeout
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['LparManager', 'Lpar']
 
-LOG = _get_logger(__name__)
+LOG = get_logger(__name__)
 
 
 class LparManager(BaseManager):
@@ -83,7 +83,7 @@ class LparManager(BaseManager):
         """
         return self._parent
 
-    @_log_call
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the LPARs in this CPC.
@@ -173,7 +173,7 @@ class Lpar(BaseResource):
                                  (LparManager, type(manager)))
         super(Lpar, self).__init__(manager, uri, name, properties)
 
-    @_log_call
+    @logged_api_call
     def activate(self, wait_for_completion=True,
                  operation_timeout=None, status_timeout=None):
         """
@@ -254,7 +254,7 @@ class Lpar(BaseResource):
             self._wait_for_status("not-operating", status_timeout)
         return result
 
-    @_log_call
+    @logged_api_call
     def deactivate(self, wait_for_completion=True,
                    operation_timeout=None, status_timeout=None):
         """
@@ -334,7 +334,7 @@ class Lpar(BaseResource):
             self._wait_for_status("not-activated", status_timeout)
         return result
 
-    @_log_call
+    @logged_api_call
     def load(self, load_address, load_parameter="", wait_for_completion=True,
              operation_timeout=None, status_timeout=None):
         """
@@ -420,6 +420,7 @@ class Lpar(BaseResource):
             self._wait_for_status("operating", status_timeout)
         return result
 
+    @logged_api_call
     def open_os_message_channel(self, include_refresh_messages=True):
         """
         Open a JMS message channel to this LPAR's operating system, returning
@@ -457,6 +458,7 @@ class Lpar(BaseResource):
             self.uri + '/operations/open-os-message-channel', body)
         return result['topic-name']
 
+    @logged_api_call
     def send_os_command(self, os_command_text, is_priority=False):
         """
         Send a command to the operating system running in this LPAR.

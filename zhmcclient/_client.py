@@ -19,8 +19,11 @@ Client class: A client to an HMC.
 from __future__ import absolute_import
 
 from ._cpc import CpcManager
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['Client']
+
+LOG = get_logger(__name__)
 
 
 class Client(object):
@@ -58,6 +61,7 @@ class Client(object):
         """
         return self._cpcs
 
+    @logged_api_call
     def version_info(self):
         """
         Returns API version information for the HMC.
@@ -79,6 +83,7 @@ class Client(object):
         return self._api_version['api-major-version'],\
             self._api_version['api-minor-version']
 
+    @logged_api_call
     def query_api_version(self):
         """
         The Query API Version operation returns information about

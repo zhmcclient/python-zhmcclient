@@ -26,8 +26,11 @@ from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._logging import get_logger, logged_api_call
 
 __all__ = ['VirtualFunctionManager', 'VirtualFunction']
+
+LOG = get_logger(__name__)
 
 
 class VirtualFunctionManager(BaseManager):
@@ -66,6 +69,7 @@ class VirtualFunctionManager(BaseManager):
         """
         return self._parent
 
+    @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
         List the Virtual Functions of this Partition.
@@ -117,6 +121,7 @@ class VirtualFunctionManager(BaseManager):
                         resource_obj.pull_full_properties()
         return resource_obj_list
 
+    @logged_api_call
     def create(self, properties):
         """
         Create a Virtual Function in this Partition.
@@ -189,6 +194,7 @@ class VirtualFunction(BaseResource):
                                  (VirtualFunctionManager, type(manager)))
         super(VirtualFunction, self).__init__(manager, uri, name, properties)
 
+    @logged_api_call
     def delete(self):
         """
         Delete this Virtual Function.
@@ -207,6 +213,7 @@ class VirtualFunction(BaseResource):
         """
         self.manager.session.delete(self._uri)
 
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this Virtual Function.

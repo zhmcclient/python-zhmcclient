@@ -22,27 +22,246 @@ import logging
 import unittest
 from testfixtures import log_capture
 
-from zhmcclient._logging import _log_call
+from zhmcclient._logging import logged_api_call
 
 
-class TestLogging(unittest.TestCase):
-    """All test cases for the _log_call decorator."""
+#
+# Various uses of the @logged_api_call decorator
+#
 
-    @log_capture(level=logging.DEBUG)
-    def test_logging_decorator(self, capture):
-        """Simple test for the _log_call decorator."""
+@logged_api_call
+def decorated_global_function():
+    """A decorated function at the global (module) level."""
+    pass
 
-        @_log_call
-        def do_something():
-            """A decorated function that is called."""
+
+def global1_function():
+
+    @logged_api_call
+    def decorated_inner1_function():
+        """A decorated inner function defined in a global function."""
+        pass
+
+    return decorated_inner1_function
+
+
+def get_decorated_inner1_function():
+    return global1_function()
+
+
+def global2_function():
+
+    def inner1_function():
+
+        @logged_api_call
+        def decorated_inner2_function():
+            """A decorated inner function defined in another inner function
+            that is defined in a global function."""
             pass
 
-        do_something()
-        capture.check(('tests.unit.test_logging',
-                       'DEBUG',
-                       'Entering test_logging_decorator.do_something()'),
-                      ('tests.unit.test_logging',
-                       'DEBUG',
-                       'Leaving test_logging_decorator.do_something()'))
+        return decorated_inner2_function
+
+    return inner1_function()
+
+
+def get_decorated_inner2_function():
+    return global2_function()
+
+
+class Decorator1Class(object):
+
+    @logged_api_call
+    def decorated_method(self):
+        """A decorated method of a class."""
+        pass
+
+
+class Decorator2Class(object):
+
+    @staticmethod
+    def method():
+
+        @logged_api_call
+        def decorated_inner_function():
+            """A decorated inner function defined in a method of a class."""
+            pass
+
+        return decorated_inner_function
+
+    @staticmethod
+    def get_decorated_inner_function():
+        return Decorator2Class.method()
+
+
+#
+# Supporting definitions
+#
+
+class CallerClass(object):
+
+    @staticmethod
+    def call_from_method(func, *args, **kwargs):
+        """
+        A supporting method that calls the specified function with the
+        specified arguments and keyword arguments. This is used by the test
+        cases so that this function acts as a caller for the decorated API
+        function.
+        """
+        return func(*args, **kwargs)
+
+
+def call_from_global(func, *args, **kwargs):
+    """
+    A supporting global function that calls the specified function with the
+    specified arguments and keyword arguments. This is used by the test cases
+    so that this function acts as a caller for the decorated API function.
+    """
+    return func(*args, **kwargs)
+
+
+# Some expected values that are constant
+_EXP_LOGGER_NAME = 'zhmcclient.api'
+_EXP_LOG_LEVEL = 'DEBUG'
+_EXP_LOG_MSG_ENTER = "==> %s, args: %.500r, kwargs: %.500r"
+_EXP_LOG_MSG_LEAVE = "<== %s, result: %.1000r"
+
+
+#
+# Test cases
+#
+
+class TestLogging(unittest.TestCase):
+    """All test cases for the @logged_api_call decorator."""
+
+    def assert_log_capture(self, log_capture, exp_apifunc):
+
+        self.assertEqual(len(log_capture.records), 2)
+
+        enter_record = log_capture.records[0]
+        self.assertEqual(enter_record.name, _EXP_LOGGER_NAME)
+        self.assertEqual(enter_record.levelname, _EXP_LOG_LEVEL)
+        self.assertEqual(enter_record.msg, _EXP_LOG_MSG_ENTER)
+        self.assertEqual(enter_record.args[0], exp_apifunc)
+        # We don't check the positional args and keyword args
+
+        leave_record = log_capture.records[1]
+        self.assertEqual(leave_record.name, _EXP_LOGGER_NAME)
+        self.assertEqual(leave_record.levelname, _EXP_LOG_LEVEL)
+        self.assertEqual(leave_record.msg, _EXP_LOG_MSG_LEAVE)
+        self.assertEqual(leave_record.args[0], exp_apifunc)
+        # We don't check the positional args and keyword args
+
+    @log_capture(level=logging.DEBUG)
+    def test_1a_global_from_global(self, capture):
+        """Simple test calling a decorated global function from a global
+        function."""
+
+        call_from_global(decorated_global_function)
+
+        self.assert_log_capture(capture, 'decorated_global_function()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_1b_global_from_method(self, capture):
+        """Simple test calling a decorated global function from a method."""
+
+        CallerClass().call_from_method(decorated_global_function)
+
+        self.assert_log_capture(capture, 'decorated_global_function()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_2a_global_inner1_from_global(self, capture):
+        """Simple test calling a decorated inner function defined in a global
+        function from a global function."""
+
+        decorated_inner1_function = get_decorated_inner1_function()
+
+        call_from_global(decorated_inner1_function)
+
+        self.assert_log_capture(capture,
+                                'global1_function.decorated_inner1_function()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_2b_global_inner1_from_method(self, capture):
+        """Simple test calling a decorated inner function defined in a global
+        function from a method."""
+
+        decorated_inner1_function = get_decorated_inner1_function()
+
+        CallerClass().call_from_method(decorated_inner1_function)
+
+        self.assert_log_capture(capture,
+                                'global1_function.decorated_inner1_function()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_3a_global_inner2_from_global(self, capture):
+        """Simple test calling a decorated inner function defined in an inner
+        function defined in a global function from a global function."""
+
+        decorated_inner2_function = get_decorated_inner2_function()
+
+        call_from_global(decorated_inner2_function)
+
+        self.assert_log_capture(capture,
+                                'inner1_function.decorated_inner2_function()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_3b_global_inner1_from_method(self, capture):
+        """Simple test calling a decorated inner function defined in an inner
+        function defined in a global function from a method."""
+
+        decorated_inner2_function = get_decorated_inner2_function()
+
+        CallerClass().call_from_method(decorated_inner2_function)
+
+        self.assert_log_capture(capture,
+                                'inner1_function.decorated_inner2_function()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_4a_method_from_global(self, capture):
+        """Simple test calling a decorated method from a global function."""
+
+        decorated_method = Decorator1Class.decorated_method
+        d = Decorator1Class()
+
+        call_from_global(decorated_method, d)
+
+        self.assert_log_capture(capture, 'Decorator1Class.decorated_method()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_4b_method_from_method(self, capture):
+        """Simple test calling a decorated method from a method."""
+
+        decorated_method = Decorator1Class.decorated_method
+        d = Decorator1Class()
+
+        CallerClass().call_from_method(decorated_method, d)
+
+        self.assert_log_capture(capture, 'Decorator1Class.decorated_method()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_5a_method_from_global(self, capture):
+        """Simple test calling a decorated inner function defined in a method
+        from a global function."""
+
+        decorated_inner_function = \
+            Decorator2Class.get_decorated_inner_function()
+
+        call_from_global(decorated_inner_function)
+
+        self.assert_log_capture(capture,
+                                'method.decorated_inner_function()')
+
+    @log_capture(level=logging.DEBUG)
+    def test_5b_method_from_method(self, capture):
+        """Simple test calling a decorated inner function defined in a method
+        from a method."""
+
+        decorated_inner_function = \
+            Decorator2Class.get_decorated_inner_function()
+
+        CallerClass().call_from_method(decorated_inner_function)
+
+        self.assert_log_capture(capture,
+                                'method.decorated_inner_function()')
 
 # TODO: Add test cases for _get_logger(), specifically for null-handler

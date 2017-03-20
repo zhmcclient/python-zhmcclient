@@ -13,23 +13,29 @@
 # limitations under the License.
 
 """
-This package logs calls to most of its public API and to some internal
-functions using the standard Python :mod:`py:logging` module, but doesn't
-output the log records by default.
+This package supports logging using the standard Python :mod:`py:logging`
+module. The logging support provides two :class:`~py:logging.Logger` objects:
 
-It uses one :class:`~py:logging.Logger` object for each module. The name of
-each such logger is the dotted module name (e.g. ``'zhmcclient._cpc'``).
-Because the module names of this package are internal, it is recommended to
-use the logger for the package (``'zhmcclient'``) in order to set up logging.
+* 'zhmcclient.api' for user-issued calls to zhmcclient API functions, at the
+  debug level. Internal calls to API functions are not logged.
 
-These loggers have a null-handler (see :class:`~py:logging.NullHandler`)
+* 'zhmcclient.hmc' for interactions between zhmcclient and the HMC, at the
+  debug level.
+
+In addition, there are loggers for each module with the module name, for
+situations like errors or warnings.
+
+For HMC operations and API calls that contain the HMC password, the password
+is hidden in the log message by replacing it with a few '*' characters.
+
+All these loggers have a null-handler (see :class:`~py:logging.NullHandler`)
 and have no log formatter (see :class:`~py:logging.Formatter`).
 
-If you want to turn on logging, add a log handler (see
-:meth:`~py:logging.Logger.addHandler`, and :mod:`py:logging.handlers` for the
-handlers included with Python) and set the log level (see
-:meth:`~py:logging.Logger.setLevel`, and :ref:`py:levels` for the defined
-levels).
+As a result, the loggers are silent by default. If you want to turn on logging,
+add a log handler (see :meth:`~py:logging.Logger.addHandler`, and
+:mod:`py:logging.handlers` for the handlers included with Python) and set the
+log level (see :meth:`~py:logging.Logger.setLevel`, and :ref:`py:levels` for
+the defined levels).
 
 If you want to change the default log message format, use
 :meth:`~py:logging.Handler.setFormatter`. Its ``form`` parameter is a format
@@ -38,8 +44,8 @@ section :ref:`py:logrecord-attributes`).
 
 Examples:
 
-* To output all log records of warning level or higher that are issued by this
-  package to ``stdout`` in a particular format, do this:
+* To output the log records for all HMC operations to ``stdout`` in a
+  particular format, do this:
 
   ::
 
@@ -48,9 +54,9 @@ Examples:
       handler = logging.StreamHandler()
       format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
       handler.setFormatter(logging.Formatter(format_string))
-      logger = getLogger('zhmcclient')
+      logger = getLogger('zhmcclient.hmc')
       logger.addHandler(handler)
-      logger.setLevel(logging.WARNING)
+      logger.setLevel(logging.DEBUG)
 
 * This example uses the :func:`~py:logging.basicConfig` convenience function
   that sets the same format and level as in the previous example, but for the
@@ -62,62 +68,92 @@ Examples:
       import logging
 
       format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-      logging.basicConfig(format=format_string, level=logging.WARNING)
+      logging.basicConfig(format=format_string, level=logging.DEBUG)
 """
 
 import logging
 import inspect
-
 from decorator import decorate
 
+from ._constants import API_LOGGER_NAME
 
-def _get_logger(name):
+
+def get_logger(name):
     """
     Return a :class:`~py:logging.Logger` object with the specified name.
 
-    A :class:`~py:logging.NullHandler` is added to the logger (if it does not
-    have one yet) in order for this library to be silent by default, and to
-    leave the definition of 'real' logging handlers to the user of this
-    library.
+    A :class:`~py:logging.NullHandler` handler is added to the logger if it
+    does not have any handlers yet. This prevents the propagation of log
+    requests up the Python logger hierarchy, and therefore causes this package
+    to be silent by default.
     """
     logger = logging.getLogger(name)
-    if not any([isinstance(h, logging.NullHandler) for h in logger.handlers]):
+    if not logger.handlers:
         logger.addHandler(logging.NullHandler())
-    # NOTE(markus_z): In case you want to test it locally, just replace the
-    # NullHandler with the StreamHandler and set the loglevel to INFO.
     return logger
 
 
-def _log_call(func):
+def logged_api_call(func):
     """
-    Function decorator that causes the decorated function to log calls to
-    itself to a logger.
+    Function decorator that causes the decorated API function or method to log
+    calls to itself to a logger.
 
     The logger's name is the dotted module name of the module defining the
     decorated function (e.g. 'zhmcclient._cpc').
-    """
-    mod = inspect.getmodule(func)
-    try:
-        modname = mod.__name__
-    except AttributeError:
-        raise TypeError("The _log_call decorator must be used on a function "
-                        "(and not on top of the property decorator)")
-    logger = _get_logger(modname)
-    if inspect.isfunction(func):
-        frames = inspect.getouterframes(inspect.currentframe())
-        callername = frames[1][3]
-        # At the time the decorator code gets control, the module has been
-        # loaded, but class definitions of decorated methods are not complete
-        # yet. Also, methods of the class are still functions at this point.
-        if callername == '<module>':
-            where = '{func}()'.format(func=func.__name__)
-        else:  # it is a class name or outer function name
-            where = '{caller}.{func}()'.format(caller=callername,
-                                               func=func.__name__)
-    else:
-        raise TypeError("The _log_call decorator must be used on a function")
 
-    def wrapper(func, *args, **kwargs):
+    Parameters:
+
+      func (function object): The original function being decorated.
+
+    Returns:
+
+      function object: The function wrappering the original function being
+        decorated.
+    """
+
+    # Note that in this decorator function, we are in a module loading context,
+    # where the decorated functions are being defined. When this decorator
+    # function is called, its call stack represents the definition of the
+    # decorated functions. Not all global definitions in the module have been
+    # defined yet, and methods of classes that are decorated with this
+    # decorator are still functions at this point (and not yet methods).
+
+    module = inspect.getmodule(func)
+    if not getattr(module, '__name__', None):
+        raise TypeError("The @logged_api_call decorator must be used on a "
+                        "function or method (and not on top of the @property "
+                        "decorator)")
+    if not inspect.isfunction(func):
+        raise TypeError("The @logged_api_call decorator must be used on a "
+                        "function or method ")
+
+    try:
+        # We avoid the use of inspect.getouterframes() because it is slow,
+        # and use the pointers up the stack frame, instead.
+
+        this_frame = inspect.currentframe()  # this decorator function here
+        apifunc_frame = this_frame.f_back  # the decorated API function
+
+        apifunc_owner = inspect.getframeinfo(apifunc_frame)[2]
+
+    finally:
+        # Recommended way to deal with frame objects to avoid ref cycles
+        del this_frame
+        del apifunc_frame
+
+    # TODO: For inner functions, show all outer levels instead of just one.
+
+    if apifunc_owner == '<module>':
+        # The decorated API function is defined globally (at module level)
+        apifunc_str = '{func}()'.format(func=func.__name__)
+    else:
+        # The decorated API function is defined in a class or in a function
+        apifunc_str = '{owner}.{func}()'.format(owner=apifunc_owner,
+                                                func=func.__name__)
+
+    logger = get_logger(API_LOGGER_NAME)
+
+    def log_api_call(func, *args, **kwargs):
         """
         Log entry to and exit from the decorated function, at the debug level.
 
@@ -127,10 +163,45 @@ def _log_call(func):
         turned on. Therefore, we do as much as possible in the decorator
         function, plus we use %-formatting and lazy interpolation provided by
         the log functions, in order to save resources in this function here.
+
+        Parameters:
+
+          func (function object): The decorated function.
+
+          *args: Any positional arguments for the decorated function.
+
+          **kwargs: Any keyword arguments for the decorated function.
         """
-        logger.debug("Entering %s", where)
+
+        # Note that in this function, we are in the context where the
+        # decorated function is actually called.
+
+        try:
+            # We avoid the use of inspect.getouterframes() because it is slow,
+            # and use the pointers up the stack frame, instead.
+
+            this_frame = inspect.currentframe()  # this function here
+            apifunc_frame = this_frame.f_back  # the decorated API function
+            apicaller_frame = apifunc_frame.f_back  # caller of API function
+
+            apicaller_module = inspect.getmodule(apicaller_frame)
+            apicaller_module_name = apicaller_module.__name__
+        finally:
+            # Recommended way to deal with frame objects to avoid ref cycles
+            del this_frame
+            del apifunc_frame
+            del apicaller_frame
+            del apicaller_module
+
+        # Log only if the caller is not from our package
+        log_it = (apicaller_module_name.split('.')[0] != 'zhmcclient')
+
+        if log_it:
+            logger.debug("==> %s, args: %.500r, kwargs: %.500r",
+                         apifunc_str, args, kwargs)
         result = func(*args, **kwargs)
-        logger.debug("Leaving %s", where)
+        if log_it:
+            logger.debug("<== %s, result: %.1000r", apifunc_str, result)
         return result
 
-    return decorate(func, wrapper)
+    return decorate(func, log_api_call)

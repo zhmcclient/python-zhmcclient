@@ -22,7 +22,11 @@ by the HMC.
 from __future__ import absolute_import
 import time
 
+from ._logging import get_logger, logged_api_call
+
 __all__ = ['BaseResource']
+
+LOG = get_logger(__name__)
 
 
 class BaseResource(object):
@@ -185,6 +189,7 @@ class BaseResource(object):
         """
         return self._properties_timestamp
 
+    @logged_api_call
     def pull_full_properties(self):
         """
         Retrieve the full set of resource properties and cache them in this
@@ -206,6 +211,7 @@ class BaseResource(object):
         self._properties_timestamp = int(time.time())
         self._full_properties = True
 
+    @logged_api_call
     def get_property(self, name):
         """
         Return the value of a resource property.
@@ -245,6 +251,7 @@ class BaseResource(object):
             self.pull_full_properties()
             return self._properties[name]
 
+    @logged_api_call
     def prop(self, name, default=None):
         """
         Return the value of a resource property, applying a default if it
