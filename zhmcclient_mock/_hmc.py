@@ -25,6 +25,7 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 import six
+import pprint
 
 from ._idpool import IdPool
 
@@ -48,18 +49,47 @@ class FakedBaseResource(object):
     """
 
     def __init__(self, manager, properties):
-        self._manager = manager
-        self._properties = properties
+        self._manager = manager  # May be None
+        self._properties = properties.copy() if properties is not None \
+            else None
 
-        if self.manager.oid_prop not in self.properties:
-            new_oid = self.manager._new_oid()
-            self.properties[self.manager.oid_prop] = new_oid
-        self._oid = self.properties[self.manager.oid_prop]
+        if self.manager and self.properties:
 
-        if self.manager.uri_prop not in self.properties:
-            new_uri = self.manager.base_uri + '/' + self.oid
-            self.properties[self.manager.uri_prop] = new_uri
-        self._uri = self.properties[self.manager.uri_prop]
+            if self.manager.oid_prop not in self.properties:
+                new_oid = self.manager._new_oid()
+                self.properties[self.manager.oid_prop] = new_oid
+            self._oid = self.properties[self.manager.oid_prop]
+
+            if self.manager.uri_prop not in self.properties:
+                new_uri = self.manager.base_uri + '/' + self.oid
+                self.properties[self.manager.uri_prop] = new_uri
+            self._uri = self.properties[self.manager.uri_prop]
+
+        else:
+            self._oid = None
+            self._uri = None
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked resource, for debug
+        purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=pprint.pformat(self.properties, indent=4),
+            ))
+        return ret
 
     @property
     def manager(self):
@@ -121,6 +151,35 @@ class FakedBaseManager(object):
         self._oid_prop = oid_prop
         self._uri_prop = uri_prop
         self._resources = OrderedDict()  # Resource objects, by object ID
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked manager, for debug
+        purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _hmc = {hmc_classname} at 0x{hmc_id:08x}\n"
+            "  _parent = {parent_classname} at 0x{parent_id:08x}\n"
+            "  _resource_class = {_resource_class!r}\n"
+            "  _base_uri = {_base_uri!r}\n"
+            "  _oid_prop = {_oid_prop!r}\n"
+            "  _uri_prop = {_uri_prop!r}\n"
+            "  _resources = {_resources}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                hmc_classname=self._hmc.__class__.__name__,
+                hmc_id=id(self._hmc),
+                parent_classname=self._parent.__class__.__name__,
+                parent_id=id(self._parent),
+                _resource_class=self._resource_class,
+                _base_uri=self._base_uri,
+                _oid_prop=self._oid_prop,
+                _uri_prop=self._uri_prop,
+                _resources=pprint.pformat(self._resources, indent=4),
+            ))
+        return ret
 
     @property
     def hmc(self):
@@ -260,11 +319,33 @@ class FakedHmc(FakedBaseResource):
     """
 
     def __init__(self, hmc_name, hmc_version, api_version):
+        super(FakedHmc, self).__init__(manager=None, properties=None)
         self.hmc_name = hmc_name
         self.hmc_version = hmc_version
         self.api_version = api_version
         self.cpcs = FakedCpcManager(hmc=self, client=self)
         self._resources = {}  # by URI
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked HMC, for debug purposes.
+        """
+        ret = (
+            "FakedHmc at 0x{id:08x} (\n"
+            "  hmc_name = {hmc_name!r}\n"
+            "  hmc_version = {hmc_version!r}\n"
+            "  api_version = {api_version!r}\n"
+            "  cpcs = {cpcs!r}\n"
+            "  _resources = {_resources!r}\n"
+            ")".format(
+                id=id(self),
+                hmc_name=self.hmc_name,
+                hmc_version=self.hmc_version,
+                api_version=self.api_version,
+                cpcs=self.cpcs,
+                _resources=self._resources,
+            ))
+        return ret
 
     def add_resources(self, resources):
         """
@@ -482,13 +563,14 @@ class FakedAdapterManager(FakedBaseManager):
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
               if not specified.
+            * 'status' is auto-set to 'active', if not specified.
             * 'adapter-family' or 'type' is required to be specified, in order
               to determine whether the adapter is a network or storage adapter.
             * 'adapter-family' is auto-set based upon 'type', if not specified.
-            * 'network-port-uris' is auto-set to an empty list, if not set,
-              for network adapters.
-            * 'storage-port-uris' is auto-set to an empty list, if not set,
-              for storage adapters.
+            * For network adapters, 'network-port-uris' is auto-set to an empty
+              list, if not specified.
+            * For storage adapters, 'storage-port-uris' is auto-set to an empty
+              list, if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedAdapter`: The faked Adapter resource.
@@ -509,35 +591,35 @@ class FakedAdapter(FakedBaseResource):
         super(FakedAdapter, self).__init__(
             manager=manager,
             properties=properties)
-        if 'adapter-family' in properties:
-            family = properties['adapter-family']
+        if 'adapter-family' in self.properties:
+            family = self.properties['adapter-family']
             if family in ('osa', 'roce', 'hipersockets'):
                 self._adapter_kind = 'network'
             elif family in ('ficon',):
                 self._adapter_kind = 'storage'
             else:
                 self._adapter_kind = 'other'
-        elif 'type' in properties:
+        elif 'type' in self.properties:
             # because 'type' is more specific than 'adapter-family', we can
             # auto-set 'adapter-family' from 'type'.
-            type_ = properties['type']
+            type_ = self.properties['type']
             if type_ in ('osd', 'osm'):
-                self._properties['adapter-family'] = 'osa'
+                self.properties['adapter-family'] = 'osa'
                 self._adapter_kind = 'network'
             elif type_ == 'roce':
-                self._properties['adapter-family'] = 'roce'
+                self.properties['adapter-family'] = 'roce'
                 self._adapter_kind = 'network'
             elif type_ == 'hipersockets':
-                self._properties['adapter-family'] = 'hipersockets'
+                self.properties['adapter-family'] = 'hipersockets'
                 self._adapter_kind = 'network'
             elif type_ == 'fcp':
-                self._properties['adapter-family'] = 'ficon'
+                self.properties['adapter-family'] = 'ficon'
                 self._adapter_kind = 'storage'
             elif type_ == 'crypto':
-                self._properties['adapter-family'] = 'crypto'
+                self.properties['adapter-family'] = 'crypto'
                 self._adapter_kind = 'other'
             elif type_ == 'zedc':
-                self._properties['adapter-family'] = 'accelerator'
+                self.properties['adapter-family'] = 'accelerator'
                 self._adapter_kind = 'other'
             else:
                 raise ValueError("FakedAdapter with object-id=%s has an "
@@ -549,14 +631,16 @@ class FakedAdapter(FakedBaseResource):
                              self.oid)
         if self.adapter_kind == 'network':
             if 'network-port-uris' not in self.properties:
-                self._properties['network-port-uris'] = []
+                self.properties['network-port-uris'] = []
             self._ports = FakedPortManager(hmc=manager.hmc, adapter=self)
         elif self.adapter_kind == 'storage':
             if 'storage-port-uris' not in self.properties:
-                self._properties['storage-port-uris'] = []
+                self.properties['storage-port-uris'] = []
             self._ports = FakedPortManager(hmc=manager.hmc, adapter=self)
         else:
             self._ports = None
+        if 'status' not in self.properties:
+            self.properties['status'] = 'active'
 
     @property
     def ports(self):
@@ -616,6 +700,11 @@ class FakedCpcManager(FakedBaseManager):
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
               if not specified.
+            * 'dpm-enabled' is auto-set to `False`, if not specified.
+            * 'is-ensemble-member' is auto-set to `False`, if not specified.
+            * 'status' is auto-set, if not specified, as follows: If the
+              'dpm-enabled' property is `True`, it is set to 'active';
+              otherwise it is set to 'operating'.
 
         Returns:
           :class:`~zhmcclient_mock.FakedCpc`: The faked CPC resource.
@@ -647,15 +736,24 @@ class FakedCpc(FakedBaseResource):
             hmc=manager.hmc, cpc=self, profile_type='image')
         self._load_activation_profiles = FakedActivationProfileManager(
             hmc=manager.hmc, cpc=self, profile_type='load')
+        if 'dpm-enabled' not in self.properties:
+            self.properties['dpm-enabled'] = False
+        if 'is-ensemble-member' not in self.properties:
+            self.properties['is-ensemble-member'] = False
+        if 'status' not in self.properties:
+            if self.dpm_enabled:
+                self.properties['status'] = 'active'
+            else:
+                self.properties['status'] = 'operating'
 
     @property
     def dpm_enabled(self):
         """
         bool: Indicates whether this CPC is in DPM mode.
 
-        This is based upon the 'dpm-enabled' property and defaults to `False`.
+        This returns the value of the 'dpm-enabled' property.
         """
-        return self.properties.get('dpm-enabled', False)
+        return self.properties['dpm-enabled']
 
     @property
     def lpars(self):
@@ -853,6 +951,7 @@ class FakedLparManager(FakedBaseManager):
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
               if not specified.
+            * 'status' is auto-set to 'not-activated', if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedLpar`: The faked LPAR resource.
@@ -873,6 +972,8 @@ class FakedLpar(FakedBaseResource):
         super(FakedLpar, self).__init__(
             manager=manager,
             properties=properties)
+        if 'status' not in self.properties:
+            self.properties['status'] = 'not-activated'
 
 
 class FakedNicManager(FakedBaseManager):
@@ -1018,6 +1119,7 @@ class FakedPartitionManager(FakedBaseManager):
               specified.
             * 'virtual-function-uris' will be auto-generated as an empty array,
               if not specified.
+            * 'status' is auto-set to 'stopped', if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedPartition`: The faked Partition
@@ -1050,6 +1152,8 @@ class FakedPartition(FakedBaseResource):
             self.properties['nic-uris'] = []
         if 'virtual-function-uris' not in self.properties:
             self.properties['virtual-function-uris'] = []
+        if 'status' not in self.properties:
+            self.properties['status'] = 'stopped'
         self._nics = FakedNicManager(hmc=manager.hmc, partition=self)
         self._hbas = FakedHbaManager(hmc=manager.hmc, partition=self)
         self._virtual_functions = FakedVirtualFunctionManager(
