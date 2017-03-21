@@ -205,6 +205,8 @@ def cmd_nic_list(cmd_ctx, cpc_name, partition_name, options):
         show_list.extend([
             'element-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(nics, cmd_ctx.output_format, show_list)
 
 
@@ -218,6 +220,7 @@ def cmd_nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     print_properties(nic.properties, cmd_ctx.output_format)
 
 
@@ -280,6 +283,7 @@ def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo("New NIC %s has been created." %
                new_nic.properties['name'])
 
@@ -340,6 +344,7 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
         pass
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating NIC %s." % nic_name)
         return
 
@@ -348,6 +353,7 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != nic_name:
         click.echo("NIC %s has been renamed to %s and was updated." %
                    (nic_name, properties['name']))
@@ -365,4 +371,5 @@ def cmd_nic_delete(cmd_ctx, cpc_name, partition_name, nic_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('NIC %s has been deleted.' % nic_name)

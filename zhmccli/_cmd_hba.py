@@ -174,6 +174,8 @@ def cmd_hba_list(cmd_ctx, cpc_name, partition_name, options):
         show_list.extend([
             'element-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(hbas, cmd_ctx.output_format, show_list)
 
 
@@ -187,6 +189,7 @@ def cmd_hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     print_properties(hba.properties, cmd_ctx.output_format)
 
 
@@ -223,6 +226,7 @@ def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo("New HBA %s has been created." %
                new_hba.properties['name'])
 
@@ -236,6 +240,7 @@ def cmd_hba_update(cmd_ctx, cpc_name, partition_name, hba_name, options):
     properties = options_to_properties(options)
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating HBA %s." % hba_name)
         return
 
@@ -244,6 +249,7 @@ def cmd_hba_update(cmd_ctx, cpc_name, partition_name, hba_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != hba_name:
         click.echo("HBA %s has been renamed to %s and was updated." %
                    (hba_name, properties['name']))
@@ -261,4 +267,5 @@ def cmd_hba_delete(cmd_ctx, cpc_name, partition_name, hba_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('HBA %s has been deleted.' % hba_name)

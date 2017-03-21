@@ -126,6 +126,8 @@ def cmd_port_list(cmd_ctx, cpc_name, adapter_name, options):
         show_list.extend([
             'element-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(ports, cmd_ctx.output_format, show_list)
 
 
@@ -139,6 +141,7 @@ def cmd_port_show(cmd_ctx, cpc_name, adapter_name, port_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     print_properties(port.properties, cmd_ctx.output_format)
 
 
@@ -151,6 +154,7 @@ def cmd_port_update(cmd_ctx, cpc_name, adapter_name, port_name, options):
     properties = options_to_properties(options)
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating port %s." % port_name)
         return
 
@@ -159,5 +163,6 @@ def cmd_port_update(cmd_ctx, cpc_name, adapter_name, port_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     # Adapter ports cannot be renamed.
     click.echo("Port %s has been updated." % port_name)

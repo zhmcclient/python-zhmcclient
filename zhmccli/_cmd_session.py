@@ -64,6 +64,8 @@ def cmd_session_create(cmd_ctx):
         session.logon(verify=True)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+    cmd_ctx.spinner.stop()
     click.echo("export ZHMC_HOST=%s" % session.host)
     click.echo("export ZHMC_USERID=%s" % session.userid)
     click.echo("export ZHMC_SESSION_ID=%s" % session.session_id)
@@ -76,4 +78,6 @@ def cmd_session_delete(cmd_ctx):
         session.logoff()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+    cmd_ctx.spinner.stop()
     click.echo("unset ZHMC_SESSION_ID")

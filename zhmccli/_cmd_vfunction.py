@@ -184,6 +184,8 @@ def cmd_vfunction_list(cmd_ctx, cpc_name, partition_name, options):
         show_list.extend([
             'element-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(vfunctions, cmd_ctx.output_format, show_list)
 
 
@@ -198,6 +200,7 @@ def cmd_vfunction_show(cmd_ctx, cpc_name, partition_name, vfunction_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     print_properties(vfunction.properties, cmd_ctx.output_format)
 
 
@@ -226,6 +229,7 @@ def cmd_vfunction_create(cmd_ctx, cpc_name, partition_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo("New virtual function %s has been created." %
                new_vfunction.properties['name'])
 
@@ -255,6 +259,7 @@ def cmd_vfunction_update(cmd_ctx, cpc_name, partition_name, vfunction_name,
         properties['adapter-uri'] = adapter.uri
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating virtual function "
                    "%s." % vfunction_name)
         return
@@ -264,6 +269,7 @@ def cmd_vfunction_update(cmd_ctx, cpc_name, partition_name, vfunction_name,
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != vfunction_name:
         click.echo("Virtual function %s has been renamed to %s and was "
                    "updated." % (vfunction_name, properties['name']))
@@ -282,4 +288,5 @@ def cmd_vfunction_delete(cmd_ctx, cpc_name, partition_name, vfunction_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('Virtual function %s has been deleted.' % vfunction_name)

@@ -206,6 +206,8 @@ def cmd_adapter_list(cmd_ctx, cpc_name, options):
         show_list.extend([
             'object-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(adapters, cmd_ctx.output_format, show_list)
 
 
@@ -219,6 +221,7 @@ def cmd_adapter_show(cmd_ctx, cpc_name, adapter_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     print_properties(adapter.properties, cmd_ctx.output_format)
 
 
@@ -236,6 +239,7 @@ def cmd_adapter_update(cmd_ctx, cpc_name, adapter_name, options):
     properties = options_to_properties(options, name_map)
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating adapter %s." %
                    adapter_name)
         return
@@ -245,6 +249,7 @@ def cmd_adapter_update(cmd_ctx, cpc_name, adapter_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != adapter_name:
         click.echo("Adapter %s has been renamed to %s and was updated." %
                    (adapter_name, properties['name']))
@@ -268,6 +273,7 @@ def cmd_adapter_create_hipersocket(cmd_ctx, cpc_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo("New HiperSockets adapter %s has been created." %
                new_adapter.properties['name'])
 
@@ -282,4 +288,5 @@ def cmd_adapter_delete_hipersocket(cmd_ctx, cpc_name, adapter_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('HiperSockets adapter %s has been deleted.' % adapter_name)
