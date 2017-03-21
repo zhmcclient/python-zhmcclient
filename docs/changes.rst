@@ -51,14 +51,19 @@ Released: not yet
 
 * In the mock support, the following resource properties are now auto-set if
   not specified in the input properties:
+
   - Cpc:
+
     - 'dpm-enabled' is auto-set to `False`, if not specified.
     - 'is-ensemble-member' is auto-set to `False`, if not specified.
     - 'status' is auto-set, if not specified, as follows: If the
       'dpm-enabled' property is `True`, it is set to 'active';
       otherwise it is set to 'operating'.
+
   - Partition: 'status' is auto-set to 'stopped', if not specified.
+
   - Lpar: 'status' is auto-set to 'not-activated', if not specified.
+
   - Adapter: 'status' is auto-set to 'active', if not specified.
 
 * In the CLI, added ``-y`` as a shorter alternative to the existing ``--yes``
@@ -155,7 +160,7 @@ Released: 2017-03-16
 * In the CLI, added support for command history. The history is stored in
   the file `~/.zhmc_history`.
 
-* In the CLI, changed the prompt of the interactive mode to `zhmc> `.
+* In the CLI, changed the prompt of the interactive mode to ``zhmc>``.
 
 * Added support for tolerating HTML content in the response, instead of JSON.
   An HTML formatted error message may be in the response for some 4xx and

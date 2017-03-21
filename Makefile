@@ -78,13 +78,9 @@ doc_build_dir := build_doc
 # Directory where Sphinx conf.py is located
 doc_conf_dir := docs
 
-# Paper format for the Sphinx LaTex/PDF builder.
-# Valid values: a4, letter
-doc_paper_format := a4
-
 # Documentation generator command
 doc_cmd := sphinx-build
-doc_opts := -v -d $(doc_build_dir)/doctrees -c $(doc_conf_dir) -D latex_paper_size=$(doc_paper_format) .
+doc_opts := -v -d $(doc_build_dir)/doctrees -c $(doc_conf_dir) .
 
 # Dependents for Sphinx documentation build
 doc_dependent_files := \
