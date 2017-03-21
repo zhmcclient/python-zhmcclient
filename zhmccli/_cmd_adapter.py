@@ -164,7 +164,7 @@ def adapter_create_hipersocket(cmd_ctx, cpc, **options):
 @adapter_group.command('delete', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('ADAPTER', type=str, metavar='ADAPTER')
-@click.option('--yes', is_flag=True, callback=abort_if_false,
+@click.option('-y', '--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deletion of the adapter.',
               prompt='Are you sure you want to delete this adapter ?')

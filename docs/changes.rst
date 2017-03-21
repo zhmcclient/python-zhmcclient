@@ -59,6 +59,9 @@ Released: not yet
   - Lpar: 'status' is auto-set to 'not-activated', if not specified.
   - Adapter: 'status' is auto-set to 'active', if not specified.
 
+* In the CLI, added ``-y`` as a shorter alternative to the existing ``--yes``
+  options, that allow skipping confirmation prompts.
+
 **Known Issues:**
 
 * See `list of open issues`_.
