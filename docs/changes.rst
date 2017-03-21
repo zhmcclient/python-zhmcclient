@@ -33,7 +33,31 @@ Released: not yet
 
 * Added WWPN support in mocking framework (issue #212).
 
+* Fixed error in mock support where the `operation_timeout` argument to
+  `FakedSession.post()` was missing.
+
+* Fixed a bug in the unit test for the mock support, that caused incomplete
+  expected results not to be surfaced, and fixed the incomplete testcases.
+
 **Enhancements:**
+
+* Improved the mock support by adding the typical attributes of its superclass
+  `FakedBaseResource` to the `FakedHmc` class.
+
+* Improved the mock support by adding `__repr__()` methods to all `Faked*`
+  classes that return an object representation suitable for debugging.
+
+* In the mock support, the following resource properties are now auto-set if
+  not specified in the input properties:
+  - Cpc:
+    - 'dpm-enabled' is auto-set to `False`, if not specified.
+    - 'is-ensemble-member' is auto-set to `False`, if not specified.
+    - 'status' is auto-set, if not specified, as follows: If the
+      'dpm-enabled' property is `True`, it is set to 'active';
+      otherwise it is set to 'operating'.
+  - Partition: 'status' is auto-set to 'stopped', if not specified.
+  - Lpar: 'status' is auto-set to 'not-activated', if not specified.
+  - Adapter: 'status' is auto-set to 'active', if not specified.
 
 **Known Issues:**
 

@@ -126,7 +126,7 @@ class FakedSession(zhmcclient.Session):
             raise zhmcclient.HTTPError(exc.response())
 
     def post(self, uri, body=None, logon_required=True,
-             wait_for_completion=True):
+             wait_for_completion=True, operation_timeout=None):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body, on the faked HMC.
@@ -188,6 +188,18 @@ class FakedSession(zhmcclient.Session):
             * If `False`, this method will immediately return the result of the
               HTTP POST method, regardless of whether the operation is
               synchronous or asynchronous.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, when waiting for completion of an asynchronous
+            operation. The special value 0 means that no timeout is set. `None`
+            means that the default async operation timeout of the session is
+            used.
+
+            For `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised when the timeout
+            expires.
+
+            For `wait_for_completion=False`, this parameter has no effect.
 
         Returns:
 

@@ -20,6 +20,7 @@ Unit tests for _hmc module of the zhmcclient_mock package.
 from __future__ import absolute_import, print_function
 
 import unittest
+import re
 
 from zhmcclient_mock._hmc import FakedHmc, \
     FakedActivationProfileManager, FakedActivationProfile, \
@@ -31,7 +32,8 @@ from zhmcclient_mock._hmc import FakedHmc, \
     FakedPartitionManager, FakedPartition, \
     FakedPortManager, FakedPort, \
     FakedVirtualFunctionManager, FakedVirtualFunction, \
-    FakedVirtualSwitchManager, FakedVirtualSwitch
+    FakedVirtualSwitchManager, FakedVirtualSwitch, \
+    FakedBaseManager, FakedBaseResource
 
 
 class FakedHmcTests(unittest.TestCase):
@@ -39,6 +41,45 @@ class FakedHmcTests(unittest.TestCase):
 
     def setUp(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+
+    def test_repr(self):
+
+        # The test approach is to check the repr() result for each attribute
+        # that is shown in the result, but leaving some flexibility in how that
+        # is formatted.
+
+        # Bring everything into one line, because regexp is line-oriented.
+        act_repr = repr(self.hmc).replace('\n', '\\n')
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*FakedHmc\s+at\s+0x{id:08x}\s+\(\\n.*'.
+            format(id=id(self.hmc)))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\shmc_name\s*=\s*{hmc_name!r}\\n.*'.
+            format(hmc_name=self.hmc.hmc_name))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\shmc_version\s*=\s*{hmc_version!r}\\n.*'.
+            format(hmc_version=self.hmc.hmc_version))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\sapi_version\s*=\s*{api_version!r}\\n.*'.
+            format(api_version=self.hmc.api_version))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\scpcs\s*=\s*FakedCpcManager\s.*')
+        # TODO: Check content of `cpcs`
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_resources\s*=\s.*')
+        # TODO: Check content of `_resources`
 
     def test_hmc(self):
         self.assertEqual(self.hmc.hmc_name, 'fake-hmc')
@@ -55,12 +96,15 @@ class FakedHmcTests(unittest.TestCase):
         cpc1_in_props = {'name': 'cpc1'}
 
         # the function to be tested:
-        cpc1 = self.hmc.cpcs.add({'name': 'cpc1'})
+        cpc1 = self.hmc.cpcs.add(cpc1_in_props)
 
         cpc1_out_props = cpc1_in_props.copy()
         cpc1_out_props.update({
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'status': 'operating',
         })
 
         # the function to be tested:
@@ -83,6 +127,9 @@ class FakedHmcTests(unittest.TestCase):
         cpc1_out_props.update({
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'status': 'operating',
         })
 
         cpc2_in_props = {'name': 'cpc2'}
@@ -94,6 +141,9 @@ class FakedHmcTests(unittest.TestCase):
         cpc2_out_props.update({
             'object-id': cpc2.oid,
             'object-uri': cpc2.uri,
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'status': 'operating',
         })
 
         # the function to be tested:
@@ -145,6 +195,9 @@ class FakedHmcTests(unittest.TestCase):
         cpc1_out_props.update({
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'status': 'operating',
         })
         self.assertIsInstance(cpc1, FakedCpc)
         self.assertEqual(cpc1.properties, cpc1_out_props)
@@ -153,22 +206,24 @@ class FakedHmcTests(unittest.TestCase):
         cpc1_adapters = cpc1.adapters.list()
 
         self.assertEqual(len(cpc1_adapters), 1)
-
         adapter1 = cpc1_adapters[0]
+
+        adapter1_ports = adapter1.ports.list()
+
+        self.assertEqual(len(adapter1_ports), 1)
+        port1 = adapter1_ports[0]
+
         adapter1_out_props = adapter1_in_props.copy()
         adapter1_out_props.update({
             'object-id': adapter1.oid,
             'object-uri': adapter1.uri,
+            'status': 'active',
+            'network-port-uris': [port1.uri],
         })
         self.assertIsInstance(adapter1, FakedAdapter)
         self.assertEqual(adapter1.properties, adapter1_out_props)
         self.assertEqual(adapter1.manager, cpc1.adapters)
 
-        adapter1_ports = adapter1.ports.list()
-
-        self.assertEqual(len(adapter1_ports), 1)
-
-        port1 = adapter1_ports[0]
         port1_out_props = port1_in_props.copy()
         port1_out_props.update({
             'element-id': port1.oid,
@@ -177,6 +232,151 @@ class FakedHmcTests(unittest.TestCase):
         self.assertIsInstance(port1, FakedPort)
         self.assertEqual(port1.properties, port1_out_props)
         self.assertEqual(port1.manager, adapter1.ports)
+
+
+class FakedBaseTests(unittest.TestCase):
+    """All tests for the FakedBaseManager and FakedBaseResource classes."""
+
+    def setUp(self):
+        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        self.cpc1_in_props = {
+            # All properties that are otherwise defaulted (but with non-default
+            # values), plus 'name'.
+            'object-id': '42',
+            'object-uri': '/api/cpcs/42',
+            'dpm-enabled': True,
+            'is-ensemble-member': False,
+            'status': 'service',
+            'name': 'cpc1',
+        }
+        rd = {
+            'cpcs': [
+                {
+                    'properties': self.cpc1_in_props,
+                },
+            ]
+        }
+        self.hmc.add_resources(rd)
+        self.cpc_manager = self.hmc.cpcs
+        self.cpc_resource = self.hmc.cpcs.list()[0]
+        self.cpc1_out_props = self.cpc1_in_props.copy()
+
+    def test_manager_attr(self):
+        """Test FakedBaseManager attributes."""
+
+        self.assertIsInstance(self.cpc_manager, FakedBaseManager)
+
+        self.assertEqual(self.cpc_manager.hmc, self.hmc)
+        self.assertEqual(self.cpc_manager.parent, self.hmc)
+        self.assertEqual(self.cpc_manager.resource_class, FakedCpc)
+        self.assertEqual(self.cpc_manager.base_uri, '/api/cpcs')
+        self.assertEqual(self.cpc_manager.oid_prop, 'object-id')
+        self.assertEqual(self.cpc_manager.uri_prop, 'object-uri')
+
+    def test_resource_attr(self):
+        """Test FakedBaseResource attributes."""
+
+        self.assertIsInstance(self.cpc_resource, FakedBaseResource)
+
+        self.assertEqual(self.cpc_resource.manager, self.cpc_manager)
+        self.assertEqual(self.cpc_resource.properties, self.cpc1_out_props)
+        self.assertEqual(self.cpc_resource.oid,
+                         self.cpc1_out_props['object-id'])
+        self.assertEqual(self.cpc_resource.uri,
+                         self.cpc1_out_props['object-uri'])
+
+    def test_manager_repr(self):
+        """Test FakedBaseManager.__repr__()."""
+
+        # The test approach is to check the repr() result for each attribute
+        # that is shown in the result, but leaving some flexibility in how that
+        # is formatted.
+
+        # Bring everything into one line, because regexp is line-oriented.
+        act_repr = repr(self.cpc_manager).replace('\n', '\\n')
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+            format(classname=self.cpc_manager.__class__.__name__,
+                   id=id(self.cpc_manager)))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_hmc\s*=\s*{hmc_classname}\s+at\s+0x{hmc_id:08x}\\n.*'.
+            format(hmc_classname=self.cpc_manager.hmc.__class__.__name__,
+                   hmc_id=id(self.cpc_manager.hmc)))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_parent\s*=\s*{p_classname}\s+at\s+0x{p_id:08x}\\n.*'.
+            format(p_classname=self.cpc_manager.parent.__class__.__name__,
+                   p_id=id(self.cpc_manager.parent)))
+
+        m = re.match(r'.*\s_resource_class\s*=\s*([^\\]+)\\n.*', act_repr)
+        if not m:
+            raise AssertionError("'_resource_class = ...' did not match "
+                                 "in: {!r}".format(act_repr))
+        act_resource_class = m.group(1)
+        self.assertEqual(act_resource_class,
+                         repr(self.cpc_manager.resource_class))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_base_uri\s*=\s*{_base_uri!r}\\n.*'.
+            format(_base_uri=self.cpc_manager.base_uri))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_oid_prop\s*=\s*{_oid_prop!r}\\n.*'.
+            format(_oid_prop=self.cpc_manager.oid_prop))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_uri_prop\s*=\s*{_uri_prop!r}\\n.*'.
+            format(_uri_prop=self.cpc_manager.uri_prop))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_resources\s*=\s.*')
+        # TODO: Check content of `_resources`
+
+    def test_resource_repr(self):
+        """Test FakedBaseResource.__repr__()."""
+
+        # The test approach is to check the repr() result for each attribute
+        # that is shown in the result, but leaving some flexibility in how that
+        # is formatted.
+
+        # Bring everything into one line, because regexp is line-oriented.
+        act_repr = repr(self.cpc_resource).replace('\n', '\\n')
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+            format(classname=self.cpc_resource.__class__.__name__,
+                   id=id(self.cpc_resource)))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_manager\s*=\s*{m_classname}\s+at\s+0x{m_id:08x}\\n.*'.
+            format(m_classname=self.cpc_resource.manager.__class__.__name__,
+                   m_id=id(self.cpc_resource.manager)))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_manager._parent._uri\s*=\s*{p_uri!r}\\n.*'.
+            format(p_uri=self.cpc_resource.manager.parent.uri))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_uri\s*=\s*{_uri!r}\\n.*'.
+            format(_uri=self.cpc_resource.uri))
+
+        self.assertRegexpMatches(
+            act_repr,
+            r'.*\s_properties\s*=\s.*')
+        # TODO: Check content of `_properties`
 
 
 class FakedActivationProfileTests(unittest.TestCase):
@@ -382,6 +582,9 @@ class FakedAdapterTests(unittest.TestCase):
         adapter1_out_props.update({
             'object-id': adapter1.oid,
             'object-uri': adapter1.uri,
+            'status': 'active',
+            'adapter-family': 'roce',
+            'network-port-uris': [],
         })
         self.assertIsInstance(adapter1, FakedAdapter)
         self.assertEqual(adapter1.properties, adapter1_out_props)
@@ -416,6 +619,8 @@ class FakedAdapterTests(unittest.TestCase):
         adapter2_out_props.update({
             'object-id': adapter2.oid,
             'object-uri': adapter2.uri,
+            'status': 'active',
+            'storage-port-uris': [],
         })
         self.assertIsInstance(adapter2, FakedAdapter)
         self.assertEqual(adapter2.properties, adapter2_out_props)
@@ -468,6 +673,9 @@ class FakedCpcTests(unittest.TestCase):
         cpc1_out_props.update({
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'status': 'operating',
         })
         self.assertIsInstance(cpc1, FakedCpc)
         self.assertEqual(cpc1.properties, cpc1_out_props)
@@ -508,6 +716,9 @@ class FakedCpcTests(unittest.TestCase):
         cpc2_out_props.update({
             'object-id': cpc2.oid,
             'object-uri': cpc2.uri,
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'status': 'operating',
         })
         self.assertIsInstance(cpc2, FakedCpc)
         self.assertEqual(cpc2.properties, cpc2_out_props)
@@ -599,6 +810,8 @@ class FakedHbaTests(unittest.TestCase):
         hba1_out_props.update({
             'element-id': hba1.oid,
             'element-uri': hba1.uri,
+            'device-number': hba1.properties['device-number'],
+            'wwpn': hba1.properties['wwpn'],
         })
         self.assertIsInstance(hba1, FakedHba)
         self.assertEqual(hba1.properties, hba1_out_props)
@@ -617,6 +830,8 @@ class FakedHbaTests(unittest.TestCase):
             'element-id': '2',
             'name': 'hba2',
             'adapter-port-uri': '/api/adapters/1/storage-ports/1',
+            'device-number': '8001',
+            'wwpn': 'AFFEAFFE00008001',
         }
 
         # the function to be tested:
@@ -703,6 +918,7 @@ class FakedLparTests(unittest.TestCase):
         lpar1_out_props.update({
             'object-id': lpar1.oid,
             'object-uri': lpar1.uri,
+            'status': 'not-activated',
         })
         self.assertIsInstance(lpar1, FakedLpar)
         self.assertEqual(lpar1.properties, lpar1_out_props)
@@ -734,6 +950,7 @@ class FakedLparTests(unittest.TestCase):
         lpar2_out_props.update({
             'object-id': lpar2.oid,
             'object-uri': lpar2.uri,
+            'status': 'not-activated',
         })
         self.assertIsInstance(lpar2, FakedLpar)
         self.assertEqual(lpar2.properties, lpar2_out_props)
@@ -827,6 +1044,7 @@ class FakedNicTests(unittest.TestCase):
         nic1_out_props.update({
             'element-id': nic1.oid,
             'element-uri': nic1.uri,
+            'device-number': nic1.properties['device-number'],
         })
         self.assertIsInstance(nic1, FakedNic)
         self.assertEqual(nic1.properties, nic1_out_props)
@@ -863,6 +1081,7 @@ class FakedNicTests(unittest.TestCase):
         nic2_out_props.update({
             'element-id': nic2.oid,
             'element-uri': nic2.uri,
+            'device-number': nic2.properties['device-number'],
         })
         self.assertIsInstance(nic2, FakedNic)
         self.assertEqual(nic2.properties, nic2_out_props)
@@ -929,6 +1148,10 @@ class FakedPartitionTests(unittest.TestCase):
         partition1_out_props.update({
             'object-id': partition1.oid,
             'object-uri': partition1.uri,
+            'status': 'stopped',
+            'hba-uris': [],
+            'nic-uris': [],
+            'virtual-function-uris': [],
         })
         self.assertIsInstance(partition1, FakedPartition)
         self.assertEqual(partition1.properties, partition1_out_props)
@@ -961,6 +1184,10 @@ class FakedPartitionTests(unittest.TestCase):
         partition2_out_props.update({
             'object-id': partition2.oid,
             'object-uri': partition2.uri,
+            'status': 'stopped',
+            'hba-uris': [],
+            'nic-uris': [],
+            'virtual-function-uris': [],
         })
         self.assertIsInstance(partition2, FakedPartition)
         self.assertEqual(partition2.properties, partition2_out_props)
@@ -1148,6 +1375,7 @@ class FakedVirtualFunctionTests(unittest.TestCase):
         virtual_function1_out_props.update({
             'element-id': virtual_function1.oid,
             'element-uri': virtual_function1.uri,
+            'device-number': virtual_function1.properties['device-number'],
         })
         self.assertIsInstance(virtual_function1, FakedVirtualFunction)
         self.assertEqual(virtual_function1.properties,
@@ -1186,6 +1414,7 @@ class FakedVirtualFunctionTests(unittest.TestCase):
         virtual_function2_out_props.update({
             'element-id': virtual_function2.oid,
             'element-uri': virtual_function2.uri,
+            'device-number': virtual_function2.properties['device-number'],
         })
         self.assertIsInstance(virtual_function2, FakedVirtualFunction)
         self.assertEqual(virtual_function2.properties,

@@ -576,6 +576,7 @@ class GenericGetPropertiesHandlerTests(unittest.TestCase):
             'object-uri': '/api/cpcs/1',
             'name': 'cpc_1',
             'dpm-enabled': False,
+            'is-ensemble-member': False,
             'description': 'CPC #1 (classic mode)',
             'status': 'operating',
         }
@@ -678,6 +679,7 @@ class CpcHandlersTests(unittest.TestCase):
             'object-uri': '/api/cpcs/1',
             'name': 'cpc_1',
             'dpm-enabled': False,
+            'is-ensemble-member': False,
             'description': 'CPC #1 (classic mode)',
             'status': 'operating',
         }
@@ -822,12 +824,12 @@ class AdapterHandlersTests(unittest.TestCase):
                 {
                     'object-uri': '/api/adapters/2',
                     'name': 'fcp_2',
-                    # status not set in resource -> not in response
+                    'status': 'active',
                 },
                 {
                     'object-uri': '/api/adapters/3',
                     'name': 'roce_3',
-                    # status not set in resource -> not in response
+                    'status': 'active',
                 },
             ]
         }
@@ -1004,6 +1006,7 @@ class PartitionHandlersTests(unittest.TestCase):
             'object-id': '2',
             'object-uri': '/api/partitions/2',
             'name': 'partition_2',
+            'status': 'stopped',
             'hba-uris': [],
             'nic-uris': [],
             'virtual-function-uris': [],
