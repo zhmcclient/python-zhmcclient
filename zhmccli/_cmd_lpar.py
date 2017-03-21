@@ -164,7 +164,7 @@ def lpar_activate(cmd_ctx, cpc, lpar):
 @lpar_group.command('deactivate', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('LPAR', type=str, metavar='LPAR')
-@click.option('--yes', is_flag=True, callback=abort_if_false,
+@click.option('-y', '--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deactivation of the LPAR.',
               prompt='Are you sure you want to deactivate the LPAR ?')

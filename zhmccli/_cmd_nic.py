@@ -168,7 +168,7 @@ def nic_update(cmd_ctx, cpc, partition, nic, **options):
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.argument('NIC', type=str, metavar='NIC')
-@click.option('--yes', is_flag=True, callback=abort_if_false,
+@click.option('-y', '--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deletion of the NIC.',
               prompt='Are you sure you want to delete this NIC ?')

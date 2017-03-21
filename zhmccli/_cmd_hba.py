@@ -141,7 +141,7 @@ def hba_update(cmd_ctx, cpc, partition, hba, **options):
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('PARTITION', type=str, metavar='PARTITION')
 @click.argument('HBA', type=str, metavar='HBA')
-@click.option('--yes', is_flag=True, callback=abort_if_false,
+@click.option('-y', '--yes', is_flag=True, callback=abort_if_false,
               expose_value=False,
               help='Skip prompt to confirm deletion of the HBA.',
               prompt='Are you sure you want to delete this HBA ?')
