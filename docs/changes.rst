@@ -81,6 +81,8 @@ Released: not yet
 * In the CLI, added a ``-p`` / ``--password`` option for specifying the HMC
   password (issue #225).
 
+* Added logging support to the zhmc CLI (issue #113).
+
 **Known Issues:**
 
 * See `list of open issues`_.

@@ -14,13 +14,19 @@
 from __future__ import absolute_import
 
 import os
+import sys
 import requests.packages.urllib3
 import click
 import click_repl
 from prompt_toolkit.history import FileHistory
+import logging
+from logging.handlers import SysLogHandler
+from logging import StreamHandler
+import platform
 
 from ._helper import CmdContext, GENERAL_OPTIONS_METAVAR, REPL_HISTORY_FILE, \
-    REPL_PROMPT, TABLE_FORMATS
+    REPL_PROMPT, TABLE_FORMATS, LOG_LEVELS, LOG_COMPONENTS, LOG_DESTINATIONS, \
+    SYSLOG_FACILITIES
 
 requests.packages.urllib3.disable_warnings()
 
@@ -28,6 +34,16 @@ requests.packages.urllib3.disable_warnings()
 # Default values for some options
 DEFAULT_OUTPUT_FORMAT = 'table'
 DEFAULT_TIMESTATS = False
+DEFAULT_LOG_LEVEL = 'warning'
+DEFAULT_LOG_COMPONENT = 'all'
+DEFAULT_LOG_DESTINATION = 'none'
+DEFAULT_SYSLOG_FACILITY = 'user'
+
+SYSLOG_ADDRESSES = {
+    'Linux': '/dev/log',
+    'Darwin': '/var/run/syslog',  # OS-X
+    'Windows': ('localhost', 514),
+}
 
 
 @click.group(invoke_without_command=True,
@@ -47,9 +63,24 @@ DEFAULT_TIMESTATS = False
               .format(of=DEFAULT_OUTPUT_FORMAT))
 @click.option('-t', '--timestats', type=str, is_flag=True,
               help='Show time statistics of HMC operations.')
+@click.option('--log-dest', type=click.Choice(LOG_DESTINATIONS),
+              help="Log destination for this command (Default: {ld})."
+              .format(ld=DEFAULT_LOG_DESTINATION))
+@click.option('--log-level', type=click.Choice(LOG_LEVELS),
+              help="Log level for this command (Default: {ll})."
+              .format(ll=DEFAULT_LOG_LEVEL))
+@click.option('--log-comp', multiple=True, type=click.Choice(LOG_COMPONENTS),
+              help="Logged components for this command. May be specified "
+              "multiple times (Default: {lc})."
+              .format(lc=DEFAULT_LOG_COMPONENT))
+@click.option('--syslog-facility', type=click.Choice(SYSLOG_FACILITIES),
+              help="Syslog facility when logging to the syslog "
+              "(Default: {slf})."
+              .format(slf=DEFAULT_SYSLOG_FACILITY))
 @click.version_option(help="Show the version of this command and exit.")
 @click.pass_context
-def cli(ctx, host, userid, password, output_format, timestats):
+def cli(ctx, host, userid, password, output_format, timestats, log_level,
+        log_comp, log_dest, syslog_facility):
     """
     Command line interface for the z Systems HMC.
 
@@ -86,8 +117,55 @@ def cli(ctx, host, userid, password, output_format, timestats):
         if timestats is None:
             timestats = ctx.obj.timestats
 
+    # TODO: Add context support for the following options:
+    if log_level is None:
+        log_level = DEFAULT_LOG_LEVEL
+    if not log_comp:
+        log_comp = (DEFAULT_LOG_COMPONENT,)
+    if log_dest is None:
+        log_dest = DEFAULT_LOG_DESTINATION
+    if syslog_facility is None:
+        syslog_facility = DEFAULT_SYSLOG_FACILITY
+
     # Now we have the effective values for the options as they should be used
     # by the current command, regardless of the mode.
+
+    # Set up logging
+    if log_dest != 'none':
+        level = getattr(logging, log_level.upper(), None)
+        # The choices in LOG_LEVELS ensure that we have a valid log level:
+        assert level is not None
+        if log_dest == 'syslog':
+            # The choices in SYSLOG_FACILITIES ensure that they are valid:
+            facility = SysLogHandler.facility_names[syslog_facility]
+            system = platform.system()
+            try:
+                address = SYSLOG_ADDRESSES[system]
+            except KeyError:
+                raise NotImplementedError(
+                    "Logging to syslog is not supported on this platform: {}".
+                    format(system))
+            handler = SysLogHandler(address=address, facility=facility)
+            format_string = '%(levelname)s %(name)s: %(message)s'
+        elif log_dest == 'stderr':
+            handler = StreamHandler(stream=sys.stderr)
+            format_string = '%(levelname)s %(name)s: %(message)s'
+        else:
+            # The choices in LOG_DESTINATIONS ensure that we cannot get here.
+            raise AssertionError("Unexpected log_dest: %r" % log_dest)
+        handler.setFormatter(logging.Formatter(format_string))
+        if 'api' in log_comp:
+            logger = logging.getLogger('zhmcclient.api')
+            logger.addHandler(handler)
+            logger.setLevel(level)
+        if 'hmc' in log_comp:
+            logger = logging.getLogger('zhmcclient.hmc')
+            logger.addHandler(handler)
+            logger.setLevel(level)
+        if 'all' in log_comp:
+            logger = logging.getLogger('')
+            logger.addHandler(handler)
+            logger.setLevel(level)
 
     session_id = os.environ.get('ZHMC_SESSION_ID', None)
 

@@ -36,6 +36,15 @@ REPL_PROMPT = u'zhmc> '  # Must be Unicode
 TABLE_FORMATS = ['table', 'plain', 'simple', 'psql', 'rst', 'mediawiki',
                  'html', 'latex']
 
+LOG_DESTINATIONS = ['stderr', 'syslog', 'none']
+
+LOG_LEVELS = ['error', 'warning', 'info', 'debug']
+
+LOG_COMPONENTS = ['api', 'hmc', 'all']
+
+SYSLOG_FACILITIES = ['user', 'local0', 'local1', 'local2', 'local3', 'local4',
+                     'local5', 'local6', 'local7']
+
 
 def abort_if_false(ctx, param, value):
     # pylint: disable=unused-argument
