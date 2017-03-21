@@ -39,6 +39,8 @@ Released: not yet
 * Fixed a bug in the unit test for the mock support, that caused incomplete
   expected results not to be surfaced, and fixed the incomplete testcases.
 
+* Fixed in the CLI that the spinner character was part of the output.
+
 **Enhancements:**
 
 * Improved the mock support by adding the typical attributes of its superclass

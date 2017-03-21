@@ -266,6 +266,8 @@ def cmd_partition_list(cmd_ctx, cpc_name, options):
         show_list.extend([
             'object-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(partitions, cmd_ctx.output_format, show_list)
 
 
@@ -279,6 +281,7 @@ def cmd_partition_show(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     print_properties(partition.properties, cmd_ctx.output_format)
 
 
@@ -292,6 +295,7 @@ def cmd_partition_start(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('Partition %s has been started.' % partition_name)
 
 
@@ -305,6 +309,7 @@ def cmd_partition_stop(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('Partition %s has been stopped.' % partition_name)
 
 
@@ -353,6 +358,7 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo("New partition %s has been created." %
                new_partition.properties['name'])
 
@@ -437,6 +443,7 @@ def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
         pass
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating partition %s." %
                    partition_name)
         return
@@ -446,6 +453,7 @@ def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != partition_name:
         click.echo("Partition %s has been renamed to %s and was updated." %
                    (partition_name, properties['name']))
@@ -463,4 +471,5 @@ def cmd_partition_delete(cmd_ctx, cpc_name, partition_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('Partition %s has been deleted.' % partition_name)

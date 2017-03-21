@@ -129,6 +129,8 @@ def cmd_vswitch_list(cmd_ctx, cpc_name, options):
         show_list.extend([
             'object-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(vswitches, cmd_ctx.output_format, show_list)
 
 
@@ -142,6 +144,7 @@ def cmd_vswitch_show(cmd_ctx, cpc_name, vswitch_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     print_properties(vswitch.properties, cmd_ctx.output_format)
 
 
@@ -154,6 +157,7 @@ def cmd_vswitch_update(cmd_ctx, cpc_name, vswitch_name, options):
     properties = options_to_properties(options)
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating virtual switch %s." %
                    vswitch_name)
         return
@@ -163,6 +167,7 @@ def cmd_vswitch_update(cmd_ctx, cpc_name, vswitch_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != vswitch_name:
         click.echo("Virtual switch %s has been renamed to %s and was "
                    "updated." % (vswitch_name, properties['name']))

@@ -221,6 +221,8 @@ def cmd_lpar_list(cmd_ctx, cpc_name, options):
         show_list.extend([
             'object-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(lpars, cmd_ctx.output_format, show_list)
 
 
@@ -237,6 +239,8 @@ def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):
     skip_list = (
         'program-status-word-information',
     )
+
+    cmd_ctx.spinner.stop()
     print_properties(lpar.properties, cmd_ctx.output_format, skip_list)
 
 
@@ -252,6 +256,7 @@ def cmd_lpar_update(cmd_ctx, cpc_name, lpar_name, options):
     properties = options_to_properties(options, name_map)
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating LPAR %s." % lpar_name)
         return
 
@@ -260,6 +265,7 @@ def cmd_lpar_update(cmd_ctx, cpc_name, lpar_name, options):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     # LPARs cannot be renamed.
     click.echo("LPAR %s has been updated." % lpar_name)
 
@@ -274,6 +280,7 @@ def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('Activation of LPAR %s is complete.' % lpar_name)
 
 
@@ -287,6 +294,7 @@ def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('Deactivation of LPAR %s is complete.' % lpar_name)
 
 
@@ -300,4 +308,5 @@ def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
+    cmd_ctx.spinner.stop()
     click.echo('Loading of LPAR %s is complete.' % lpar_name)

@@ -159,6 +159,8 @@ def cmd_cpc_list(cmd_ctx, options):
         show_list.extend([
             'object-uri',
         ])
+
+    cmd_ctx.spinner.stop()
     print_resources(cpcs, cmd_ctx.output_format, show_list)
 
 
@@ -179,6 +181,8 @@ def cmd_cpc_show(cmd_ctx, cpc_name):
         'network1-ipv6-info',
         'auto-start-list',
     )
+
+    cmd_ctx.spinner.stop()
     print_properties(cpc.properties, cmd_ctx.output_format, skip_list)
 
 
@@ -214,6 +218,7 @@ def cmd_cpc_update(cmd_ctx, cpc_name, options):
             options['wait-ends-slice']
 
     if not properties:
+        cmd_ctx.spinner.stop()
         click.echo("No properties specified for updating CPC %s." % cpc_name)
         return
 
@@ -221,6 +226,8 @@ def cmd_cpc_update(cmd_ctx, cpc_name, options):
         cpc.update_properties(properties)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+    cmd_ctx.spinner.stop()
 
     # Name changes are not supported for CPCs.
     click.echo("CPC %s has been updated." % cpc_name)

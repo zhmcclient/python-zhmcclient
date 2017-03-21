@@ -43,4 +43,6 @@ def cmd_info(cmd_ctx):
         api_version = client.query_api_version()
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+    cmd_ctx.spinner.stop()
     print_properties(api_version, cmd_ctx.output_format)
