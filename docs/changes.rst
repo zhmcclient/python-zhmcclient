@@ -69,6 +69,8 @@ Released: not yet
 * In the CLI, added ``-y`` as a shorter alternative to the existing ``--yes``
   options, that allow skipping confirmation prompts.
 
+* Added OS-X as a test environment to the Travis CI setup.
+
 **Known Issues:**
 
 * See `list of open issues`_.

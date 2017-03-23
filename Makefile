@@ -9,16 +9,27 @@
 #   These commands on all OS platforms:
 #     make (GNU make)
 #     bash
-#     rm, mv, find, xargs, tee
-#     python (This Makefile uses the active Python environment, virtual Python
-#        environments are supported)
-#     pip (in the active Python environment)
-#     twine (in the active Python environment)
+#     rm, mv, find, tee, which
+#   These commands on all OS platforms in the active Python environment:
+#     python (or python3 on OS-X)
+#     pip (or pip3 on OS-X)
+#     twine
 #   These commands on Linux and OS-X:
 #     uname
+# Environment variables:
+#   PYTHON_CMD: Python command to use (OS-X needs to distinguish Python 2/3)
+#   PIP_CMD: Pip command to use (OS-X needs to distinguish Python 2/3)
 # Additional prerequisites for running this Makefile are installed by running:
 #   make develop
 # ------------------------------------------------------------------------------
+
+# Python / Pip commands
+ifndef PYTHON_CMD
+  PYTHON_CMD := python
+endif
+ifndef PIP_CMD
+  PIP_CMD := pip
+endif
 
 # Package level
 ifndef PACKAGE_LEVEL
@@ -51,13 +62,13 @@ package_name := zhmcclient
 cli_package_name := zhmccli
 
 # Package version (full version, including any pre-release suffixes, e.g. "0.1.0-alpha1")
-package_version := $(shell python -c "import sys, $(package_name); sys.stdout.write($(package_name).__version__)")
+package_version := $(shell $(PYTHON_CMD) -c "import sys, $(package_name); sys.stdout.write($(package_name).__version__)")
 
 # Python major version
-python_major_version := $(shell python -c "import sys; sys.stdout.write('%s'%sys.version_info[0])")
+python_major_version := $(shell $(PYTHON_CMD) -c "import sys; sys.stdout.write('%s'%sys.version_info[0])")
 
 # Python major+minor version for use in file names
-python_version_fn := $(shell python -c "import sys; sys.stdout.write('%s%s'%(sys.version_info[0],sys.version_info[1]))")
+python_version_fn := $(shell $(PYTHON_CMD) -c "import sys; sys.stdout.write('%s%s'%(sys.version_info[0],sys.version_info[1]))")
 
 # Directory for the generated distribution files
 dist_dir := dist
@@ -148,20 +159,23 @@ help:
 	@echo '  upload     - Upload the distribution files to PyPI (includes uninstall+build)'
 	@echo '  clean      - Remove any temporary files'
 	@echo '  clobber    - Remove any build products (includes uninstall+clean)'
+	@echo '  pyshow     - Show location and version of the python and pip commands'
 	@echo 'Environment variables:'
 	@echo '  PACKAGE_LEVEL="minimum" - Install minimum version of dependent Python packages'
 	@echo '  PACKAGE_LEVEL="latest" - Default: Install latest version of dependent Python packages'
+	@echo '  PYTHON_CMD=... - Name of python command. Default: python'
+	@echo '  PIP_CMD=... - Name of pip command. Default: pip'
 
 .PHONY: _pip
 _pip:
 	@echo 'Installing/upgrading pip and setuptools with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	pip install $(pip_upgrade_opts)
-	pip install $(pip_constraint_opts) setuptools
+	$(PIP_CMD) install $(pip_upgrade_opts)
+	$(PIP_CMD) install $(pip_constraint_opts) setuptools
 
 .PHONY: develop
 develop: _pip
 	@echo 'Installing runtime and development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	pip install $(pip_constraint_opts) --upgrade -r dev-requirements.txt
+	$(PIP_CMD) install $(pip_constraint_opts) --upgrade -r dev-requirements.txt
 	@echo '$@ done.'
 
 .PHONY: build
@@ -221,6 +235,14 @@ doccoverage:
 	@echo "Done: Created the doc coverage results in: $(doc_build_dir)/coverage/python.txt"
 	@echo '$@ done.'
 
+.PHONY: pyshow
+pyshow:
+	which $(PYTHON_CMD)
+	$(PYTHON_CMD) --version
+	which $(PIP_CMD)
+	$(PIP_CMD) --version
+	@echo '$@ done.'
+
 .PHONY: check
 check: pylint.log flake8.log
 	@echo '$@ done.'
@@ -228,14 +250,14 @@ check: pylint.log flake8.log
 .PHONY: install
 install: _pip
 	@echo 'Installing runtime requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	pip install $(pip_constraint_opts) --upgrade .
-	python -c "import zhmcclient; print('Import: ok')"
+	$(PIP_CMD) install $(pip_constraint_opts) --upgrade .
+	$(PYTHON_CMD) -c "import zhmcclient; print('Import: ok')"
 	@echo 'Done: Installed $(package_name) into current Python environment.'
 	@echo '$@ done.'
 
 .PHONY: uninstall
 uninstall:
-	bash -c 'pip show $(package_name) >/dev/null; rc=$$?; if [[ $$rc == 0 ]]; then pip uninstall -y $(package_name); fi'
+	bash -c '$(PIP_CMD) show $(package_name) >/dev/null; rc=$$?; if [[ $$rc == 0 ]]; then $(PIP_CMD) uninstall -y $(package_name); fi'
 	@echo '$@ done.'
 
 .PHONY: test
@@ -244,8 +266,8 @@ test: $(test_log_file)
 
 .PHONY: clobber
 clobber: uninstall clean
+	rm -Rf $(doc_build_dir) htmlcov .tox
 	rm -fv pylint.log flake8.log test_*.log
-	rm -Rfv $(doc_build_dir) htmlcov .tox
 	rm -fv $(bdist_file) $(sdist_file) $(win64_dist_file)
 	@echo 'Done: Removed all build products to get to a fresh state.'
 	@echo '$@ done.'
@@ -253,9 +275,9 @@ clobber: uninstall clean
 # Also remove any build products that are dependent on the Python version
 .PHONY: clean
 clean:
-	bash -c 'find . -path ./.tox -prune -o -name "*.pyc" -print -o -name "__pycache__" -print -o -name "*.tmp" -print -o -name "tmp_*" -print |xargs -r rm -Rfv'
-	rm -fv MANIFEST MANIFEST.in AUTHORS ChangeLog .coverage
-	rm -Rfv build .cache $(package_name).egg-info .eggs
+	rm -Rf build .cache $(package_name).egg-info .eggs
+	rm -f MANIFEST MANIFEST.in AUTHORS ChangeLog .coverage
+	find . -name "*.pyc" -delete -o -name "__pycache__" -delete -o -name "*.tmp" -delete -o -name "tmp_*" -delete
 	@echo 'Done: Cleaned out all temporary files.'
 	@echo '$@ done.'
 
@@ -281,7 +303,7 @@ endif
 $(bdist_file) $(sdist_file): Makefile setup.py $(dist_dependent_files)
 ifneq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs
-	python setup.py sdist -d $(dist_dir) bdist_wheel -d $(dist_dir) --universal
+	$(PYTHON_CMD) setup.py sdist -d $(dist_dir) bdist_wheel -d $(dist_dir) --universal
 	@echo 'Done: Created distribution files: $@'
 else
 	@echo 'Error: Creating distribution archives requires to run on Linux or OSX'
@@ -291,7 +313,7 @@ endif
 $(win64_dist_file): Makefile setup.py $(dist_dependent_files)
 ifeq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs
-	python setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
+	$(PYTHON_CMD) setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
 	@echo 'Done: Created Windows installable: $@'
 else
 	@echo 'Error: Creating Windows installable requires to run on Windows'

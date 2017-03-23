@@ -5,27 +5,82 @@
 notifications:
   email: false
 
-#sudo: required
 language: python
+
+# For Linux, we let Travis build the job matrix from these dimensions:
 python:
   - "2.7"
   - "3.4"
   - "3.5"
   - "3.6"
   - "pypy"
+os:
+  - linux
 env:
   - PACKAGE_LEVEL=minimum
   - PACKAGE_LEVEL=latest
 
+# For OS-X, we define the job matrix explicitly. These combinations
+# are added to the automatically built job matrix for Linux.
+# Reason is that Travis has half-baked support for Python that does not work,
+# so it needs to be invoked with language=generic and empty python in order to
+# prevent that Travis attempts to install Python.
+# TODO: Figure out how specific versions of Python 3.x can be used with OS-X
+matrix:
+  include:
+    - os: osx
+      sudo: required
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=minimum
+        - PYTHON=2
+    - os: osx
+      sudo: required
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=latest
+        - PYTHON=2
+    - os: osx
+      sudo: required
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=minimum
+        - PYTHON=3
+    - os: osx
+      sudo: required
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=latest
+        - PYTHON=3
+
 # commands to install dependencies
 install:
-  - pip list
+  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      if [[ ${PYTHON:0:1} == '2' ]]; then
+        OSX_PYTHON_PKG=python;
+        export PYTHON_CMD=python;
+        export PIP_CMD=pip;
+      else
+        OSX_PYTHON_PKG=python3;
+        export PYTHON_CMD=python3;
+        export PIP_CMD=pip3;
+      fi;
+      brew update;
+      brew ls --versions $OSX_PYTHON_PKG && brew upgrade $OSX_PYTHON_PKG || brew install $OSX_PYTHON_PKG;
+    else
+      export PYTHON_CMD=python;
+      export PIP_CMD=pip;
+    fi
+  - $PIP_CMD list
   - make install
-  - pip list
+  - $PIP_CMD list
   - make develop
-  - pip install python-coveralls
-  - pip list
-  - make clean
+  - $PIP_CMD install python-coveralls
+  - $PIP_CMD list
 
 # commands to run builds & tests
 script:
@@ -33,6 +88,7 @@ script:
   - make build
   - make builddoc
   - make test
+  - make pyshow
 
 after_success:
   - if [[ $TRAVIS_PYTHON_VERSION == 2.7 && $PACKAGE_LEVEL == latest ]]; then coveralls; fi
