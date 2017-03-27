@@ -99,7 +99,6 @@ install:
   - rm --version
   - mv --version
   - find --version
-  - xargs --version
   - tee --version
   - pip --version
   - python --version
