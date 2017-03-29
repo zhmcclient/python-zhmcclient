@@ -93,6 +93,12 @@ However, the zhmc shell will prompt for a password only once during its
 invocation, while the standalone command will prompt for a password every time.
 See also `Environment variables and avoiding password prompts`_.
 
+In interactive mode, there is only one set of general options. Therefore,
+any general options specified on an interactively typed subcommand modify
+that one set of options, and they are available as defaults to the next
+subcommand. Changing host, userid or password on a subcommand resets the
+session with the HMC and drives a new session creation.
+
 The internal commands ``:?``, ``:h``, or ``:help`` display general help
 information for external and internal commands:
 
@@ -336,7 +342,6 @@ command line. This can be done in either of two ways:
 
 The ZHMC_HOST, ZHMC_USERID, and ZHMC_PASSWORD environment variables act as
 defaults for the corresponding command line options.
-
 
 .. _`CLI commands`:
 

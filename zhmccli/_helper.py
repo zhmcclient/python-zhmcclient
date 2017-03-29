@@ -198,6 +198,7 @@ class CmdContext(object):
         return self._spinner
 
     def execute_cmd(self, cmd):
+
         if self._session is None:
             if self._host is None:
                 raise_click_exception("No HMC host provided",
