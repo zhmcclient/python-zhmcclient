@@ -119,6 +119,8 @@ commands::
                                       ZHMC_HOST environment variable).
       -u, --userid TEXT               Username for the HMC (Default: ZHMC_USERID
                                       environment variable).
+      -p, --password TEXT             Password for the HMC (Default: ZHMC_PASSWORD
+                                      environment variable).
       -o, --output-format [[table|plain|simple|psql|rst|mediawiki|html|latex|
                           json]]
                                       Output format (Default: table).
@@ -160,6 +162,7 @@ examples, an underscore ``_`` is shown as the cursor::
     > --_
         --host           Hostname or IP address of the HMC (Default: ZHMC_HOST environment variable).
         --userid         Username for the HMC (Default: ZHMC_USERID environment variable).
+        --password       Password for the HMC (Default: ZHMC_PASSWORD environment variable).
         --output-format  Output format (Default: table).
         --timestats      Show time statistics of HMC operations.
         --version        Show the version of this command and exit.
@@ -213,12 +216,12 @@ Bash tab completion for zhmc is used like any other bash tab completion::
 Environment variables and avoiding password prompts
 ---------------------------------------------------
 
-The zhmc CLI has command line options for specifying the HMC host and the HMC
-userid to be used. For security reasons, it does not have a command line option
-for specifying the password of the HMC userid.
+The zhmc CLI has command line options for specifying the HMC host, userid and
+password to be used.
 
 If the HMC operations performed by a particular zhmc command require a
-password, the password is prompted for (in both modes of operation)::
+password, and the password is not specified otherwise, the password is prompted
+for (in both modes of operation)::
 
       $ zhmc -h zhmc.example.com -u hmcuser cpc list
       Enter password: <password>
@@ -231,11 +234,14 @@ password, no password is prompted for::
       . . . <information about this HMC>
 
 For script integration, it is important to have a way to avoid the interactive
-password prompt. This can be done by storing the session-id string returned by
-the HMC when logging on, in an environment variable.
+password prompt, and still not being forced to specify the password on the
+command line. This can be done in either of two ways:
 
-The ``zhmc`` command supports a ``session create`` (sub-)command that outputs
-the (bash) shell commands to set all needed environment variables::
+* by storing the session-id string returned by the HMC when logging on, in an
+  environment variable.
+
+  The ``zhmc`` command supports a ``session create`` (sub-)command that outputs
+  the (bash) shell commands to set all needed environment variables::
 
       $ zhmc -h zhmc.example.com -u hmcuser session create
       Enter password: <password>
@@ -243,9 +249,9 @@ the (bash) shell commands to set all needed environment variables::
       export ZHMC_USERID=hmcuser
       export ZHMC_SESSION_ID=<session-id>
 
-This ability can be used to set those environment variables and thus to persist
-the session-id in the shell environment, from where it will be used in
-any subsequent zhmc commands::
+  This ability can be used to set those environment variables and thus to
+  persist the session-id in the shell environment, from where it will be used
+  in any subsequent zhmc commands::
 
       $ eval $(zhmc -h zhmc.example.com -u hmcuser session create)
       Enter password: <password>
@@ -258,21 +264,18 @@ any subsequent zhmc commands::
       $ zhmc cpc list
       . . . <list of CPCs managed by this HMC>
 
-As you can see from this example, the password is only prompted for when
-creating the session, and the session-id stored in the shell environment is
-utilized in the ``zhmc cpc list`` command, avoiding another password prompt.
+  As you can see from this example, the password is only prompted for when
+  creating the session, and the session-id stored in the shell environment is
+  utilized in the ``zhmc cpc list`` command, avoiding another password prompt.
 
-Using the session-id from the environment is also a performance improvement,
-because it avoids the HMC Logon operation that otherwise would take place.
+  Using the session-id from the environment is also a performance improvement,
+  because it avoids the HMC Logon operation that otherwise would take place.
 
-We believe that storing passwords in shell scripting environments should be
-avoided for security reasons, and using the session-id from the ZHMC_SESSION_ID
-environment variable should be a reasonable compromise between security
-and convenience.
+* by storing the HMC password in the ZHMC_PASSWORD environment variable.
 
-The ZHMC_HOST and ZHMC_USERID environment variables act as defaults for the
-corresponding command line options.
-
+The ZHMC_HOST, ZHMC_USERID, and ZHMC_PASSWORD environment variables act as
+defaults for the corresponding command line options.
+ 
 .. _`CLI commands`:
 
 CLI commands

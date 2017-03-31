@@ -38,6 +38,9 @@ DEFAULT_TIMESTATS = False
 @click.option('-u', '--userid', type=str, envvar='ZHMC_USERID',
               help="Username for the HMC "
                    "(Default: ZHMC_USERID environment variable).")
+@click.option('-p', '--password', type=str, envvar='ZHMC_PASSWORD',
+              help="Password for the HMC "
+                   "(Default: ZHMC_PASSWORD environment variable).")
 @click.option('-o', '--output-format', type=click.Choice(TABLE_FORMATS +
               ['json']),
               help='Output format (Default: {of}).'
@@ -46,7 +49,7 @@ DEFAULT_TIMESTATS = False
               help='Show time statistics of HMC operations.')
 @click.version_option(help="Show the version of this command and exit.")
 @click.pass_context
-def cli(ctx, host, userid, output_format, timestats):
+def cli(ctx, host, userid, password, output_format, timestats):
     """
     Command line interface for the z Systems HMC.
 
@@ -76,6 +79,8 @@ def cli(ctx, host, userid, output_format, timestats):
             host = ctx.obj.host
         if userid is None:
             userid = ctx.obj.userid
+        if password is None:
+            password = ctx.obj._password
         if output_format is None:
             output_format = ctx.obj.output_format
         if timestats is None:
@@ -86,7 +91,14 @@ def cli(ctx, host, userid, output_format, timestats):
 
     session_id = os.environ.get('ZHMC_SESSION_ID', None)
 
-    def password_prompt():
+    def get_password_via_prompt(host, userid):
+        """
+        Password retrieval function that prompts for the password.
+
+        It follows the interface defined in
+        :func:`~zhmcclient.get_password_interface` and needs access to the
+        click context (ctx).
+        """
         if userid is not None and host is not None:
             ctx.obj.spinner.stop()
             password = click.prompt(
@@ -103,8 +115,8 @@ def cli(ctx, host, userid, output_format, timestats):
     # We create a command context for each command: An interactive command has
     # its own command context different from the command context for the
     # command line.
-    ctx.obj = CmdContext(host, userid, output_format, timestats, session_id,
-                         password_prompt)
+    ctx.obj = CmdContext(host, userid, password, output_format, timestats,
+                         session_id, get_password_via_prompt)
 
     # Invoke default command
     if ctx.invoked_subcommand is None:
