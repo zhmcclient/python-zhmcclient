@@ -824,7 +824,7 @@ class Session(object):
             elif result.status_code == 202:
                 result_object = _result_object(result)
                 job_uri = result_object['job-uri']
-                job = Job(self, job_uri)
+                job = Job(self, job_uri, 'POST', uri)
                 if wait_for_completion:
                     return job.wait_for_completion(operation_timeout)
                 else:
@@ -954,7 +954,7 @@ class Job(object):
     completion.
     """
 
-    def __init__(self, session, uri):
+    def __init__(self, session, uri, op_method, op_uri):
         """
         Parameters:
 
@@ -967,9 +967,25 @@ class Job(object):
             Must not be `None`.
 
             Example: ``"/api/jobs/{job-id}"``
+
+          op_method (:term:`string`):
+            Name of the HTTP method of the operation that is executing
+            asynchronously on the HMC.
+            Must not be `None`.
+
+            Example: ``"POST"``
+
+          op_uri (:term:`string`):
+            Canonical URI of the operation that is executing asynchronously on
+            the HMC.
+            Must not be `None`.
+
+            Example: ``"/api/partitions/{partition-id}/stop"``
         """
         self._session = session
         self._uri = uri
+        self._op_method = op_method
+        self._op_uri = op_uri
 
     @property
     def session(self):
@@ -986,6 +1002,26 @@ class Job(object):
         Example: ``"/api/jobs/{job-id}"``
         """
         return self._uri
+
+    @property
+    def op_method(self):
+        """
+        :term:`string`: Name of the HTTP method of the operation that is
+        executing asynchronously on the HMC.
+
+        Example: ``"POST"``
+        """
+        return self._op_method
+
+    @property
+    def op_uri(self):
+        """
+        :term:`string`: Canonical URI of the operation that is executing
+        asynchronously on the HMC.
+
+        Example: ``"/api/partitions/{partition-id}/stop"``
+        """
+        return self._op_uri
 
     @logged_api_call
     def check_for_completion(self):
@@ -1027,25 +1063,33 @@ class Job(object):
         job_status = job_result_obj['status']
         if job_status == 'complete':
             self.session.delete(self.uri)
-            oper_status_code = job_result_obj['job-status-code']
-            if oper_status_code in (200, 201):
-                oper_result_obj = job_result_obj.get('job-results', None)
-            elif oper_status_code == 204:
+            op_status_code = job_result_obj['job-status-code']
+            if op_status_code in (200, 201):
+                op_result_obj = job_result_obj.get('job-results', None)
+            elif op_status_code == 204:
                 # No content
-                oper_result_obj = None
+                op_result_obj = None
             else:
                 error_result_obj = job_result_obj.get('job-results', None)
-                message = error_result_obj.get('message', None) \
-                    if error_result_obj else None
+                if not error_result_obj:
+                    message = None
+                elif 'message' in error_result_obj:
+                    message = error_result_obj['message']
+                elif 'error' in error_result_obj:
+                    message = error_result_obj['error']
+                else:
+                    message = None
                 error_obj = {
-                    'http-status': oper_status_code,
+                    'http-status': op_status_code,
                     'reason': job_result_obj['job-reason-code'],
                     'message': message,
+                    'request-method': self.op_method,
+                    'request-uri': self.op_uri,
                 }
                 raise HTTPError(error_obj)
         else:
-            oper_result_obj = None
-        return job_status, oper_result_obj
+            op_result_obj = None
+        return job_status, op_result_obj
 
     @logged_api_call
     def wait_for_completion(self, operation_timeout=None):
@@ -1098,13 +1142,13 @@ class Job(object):
             start_time = time.time()
 
         while True:
-            job_status, oper_result_obj = self.check_for_completion()
+            job_status, op_result_obj = self.check_for_completion()
 
             # We give completion of status priority over strictly achieving
             # the timeout, so we check status first. This may cause a longer
             # duration of the method than prescribed by the timeout.
             if job_status == 'complete':
-                return oper_result_obj
+                return op_result_obj
 
             if operation_timeout > 0:
                 current_time = time.time()

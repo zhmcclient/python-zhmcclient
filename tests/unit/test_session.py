@@ -291,27 +291,37 @@ class JobTests(unittest.TestCase):
         """Test initialization of Job object."""
         session = Session('fake-host', 'fake-user', 'fake-pw')
 
-        job = Job(session, self.job_uri)
+        # Jobs exist only for POST, but we want to test that the specified HTTP
+        # method comes back regardless:
+        op_method = 'GET'
+
+        op_uri = '/api/bla'
+
+        job = Job(session, self.job_uri, op_method, op_uri)
 
         self.assertEqual(job.uri, self.job_uri)
         self.assertEqual(job.session, session)
+        self.assertEqual(job.op_method, op_method)
+        self.assertEqual(job.op_uri, op_uri)
 
     def test_check_incomplete(self):
         """Test check_for_completion() with incomplete job."""
         with requests_mock.mock() as m:
             self.mock_server_1(m)
             session = Session('fake-host', 'fake-user', 'fake-pw')
-            job = Job(session, self.job_uri)
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
             query_job_status_result = {
                 'status': 'running',
             }
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri)
 
-            job_status, oper_result = job.check_for_completion()
+            job_status, op_result = job.check_for_completion()
 
             self.assertEqual(job_status, 'running')
-            self.assertIsNone(oper_result)
+            self.assertIsNone(op_result)
 
     def test_check_complete_success_noresult(self):
         """Test check_for_completion() with successful complete job without
@@ -319,7 +329,9 @@ class JobTests(unittest.TestCase):
         with requests_mock.mock() as m:
             self.mock_server_1(m)
             session = Session('fake-host', 'fake-user', 'fake-pw')
-            job = Job(session, self.job_uri)
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
             query_job_status_result = {
                 'status': 'complete',
                 'job-status-code': 200,
@@ -329,10 +341,10 @@ class JobTests(unittest.TestCase):
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri)
 
-            job_status, oper_result = job.check_for_completion()
+            job_status, op_result = job.check_for_completion()
 
             self.assertEqual(job_status, 'complete')
-            self.assertIsNone(oper_result)
+            self.assertIsNone(op_result)
 
     def test_check_complete_success_result(self):
         """Test check_for_completion() with successful complete job with a
@@ -340,48 +352,133 @@ class JobTests(unittest.TestCase):
         with requests_mock.mock() as m:
             self.mock_server_1(m)
             session = Session('fake-host', 'fake-user', 'fake-pw')
-            job = Job(session, self.job_uri)
-            exp_oper_result = {
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
+            exp_op_result = {
                 'foo': 'bar',
             }
             query_job_status_result = {
                 'status': 'complete',
                 'job-status-code': 200,
                 # 'job-reason-code' omitted because HTTP status good
-                'job-results': exp_oper_result,
+                'job-results': exp_op_result,
             }
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri)
 
-            job_status, oper_result = job.check_for_completion()
+            job_status, op_result = job.check_for_completion()
 
             self.assertEqual(job_status, 'complete')
-            self.assertEqual(oper_result, exp_oper_result)
+            self.assertEqual(op_result, exp_op_result)
 
-    def test_check_complete_error(self):
-        """Test check_for_completion() with complete job in error."""
+    def test_check_complete_error1(self):
+        """Test check_for_completion() with complete job in error (1)."""
         with requests_mock.mock() as m:
             self.mock_server_1(m)
             session = Session('fake-host', 'fake-user', 'fake-pw')
-            job = Job(session, self.job_uri)
-            error_result = {
-                'message': 'bla',
-            }
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
             query_job_status_result = {
                 'status': 'complete',
                 'job-status-code': 500,
                 'job-reason-code': 42,
-                'job-results': error_result,
+                # no 'job-results' field (it is not guaranteed to be there)
             }
+
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri)
 
             with self.assertRaises(HTTPError) as cm:
-                job_status, oper_result = job.check_for_completion()
+                job_status, op_result = job.check_for_completion()
 
             self.assertEqual(cm.exception.http_status, 500)
             self.assertEqual(cm.exception.reason, 42)
-            self.assertEqual(cm.exception.message, 'bla')
+            self.assertEqual(cm.exception.message, None)
+
+    def test_check_complete_error2(self):
+        """Test check_for_completion() with complete job in error (2)."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
+            query_job_status_result = {
+                'status': 'complete',
+                'job-status-code': 500,
+                'job-reason-code': 42,
+                'job-results': {},  # it is not guaranteed to have any content
+            }
+
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            with self.assertRaises(HTTPError) as cm:
+                job_status, op_result = job.check_for_completion()
+
+            self.assertEqual(cm.exception.http_status, 500)
+            self.assertEqual(cm.exception.reason, 42)
+            self.assertEqual(cm.exception.message, None)
+
+    def test_check_complete_error3(self):
+        """Test check_for_completion() with complete job in error (3)."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
+            query_job_status_result = {
+                'status': 'complete',
+                'job-status-code': 500,
+                'job-reason-code': 42,
+                'job-results': {
+                    # Content is not documented for the error case.
+                    # Some failures result in an 'error' field.
+                    'error': 'bla message',
+                },
+            }
+
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            with self.assertRaises(HTTPError) as cm:
+                job_status, op_result = job.check_for_completion()
+
+            self.assertEqual(cm.exception.http_status, 500)
+            self.assertEqual(cm.exception.reason, 42)
+            self.assertEqual(cm.exception.message, 'bla message')
+
+    def test_check_complete_error4(self):
+        """Test check_for_completion() with complete job in error (4)."""
+        with requests_mock.mock() as m:
+            self.mock_server_1(m)
+            session = Session('fake-host', 'fake-user', 'fake-pw')
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
+            query_job_status_result = {
+                'status': 'complete',
+                'job-status-code': 500,
+                'job-reason-code': 42,
+                'job-results': {
+                    # Content is not documented for the error case.
+                    # Some failures result in an 'message' field.
+                    'message': 'bla message',
+                },
+            }
+
+            m.get(self.job_uri, json=query_job_status_result)
+            m.delete(self.job_uri)
+
+            with self.assertRaises(HTTPError) as cm:
+                job_status, op_result = job.check_for_completion()
+
+            self.assertEqual(cm.exception.http_status, 500)
+            self.assertEqual(cm.exception.reason, 42)
+            self.assertEqual(cm.exception.message, 'bla message')
 
     def test_wait_complete1_success_result(self):
         """Test wait_for_completion() with successful complete job with a
@@ -389,22 +486,24 @@ class JobTests(unittest.TestCase):
         with requests_mock.mock() as m:
             self.mock_server_1(m)
             session = Session('fake-host', 'fake-user', 'fake-pw')
-            job = Job(session, self.job_uri)
-            exp_oper_result = {
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
+            exp_op_result = {
                 'foo': 'bar',
             }
             query_job_status_result = {
                 'status': 'complete',
                 'job-status-code': 200,
                 # 'job-reason-code' omitted because HTTP status good
-                'job-results': exp_oper_result,
+                'job-results': exp_op_result,
             }
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri)
 
-            oper_result = job.wait_for_completion()
+            op_result = job.wait_for_completion()
 
-            self.assertEqual(oper_result, exp_oper_result)
+            self.assertEqual(op_result, exp_op_result)
 
     def test_wait_complete3_success_result(self):
         """Test wait_for_completion() with successful complete job with a
@@ -412,8 +511,10 @@ class JobTests(unittest.TestCase):
         with requests_mock.mock() as m:
             self.mock_server_1(m)
             session = Session('fake-host', 'fake-user', 'fake-pw')
-            job = Job(session, self.job_uri)
-            exp_oper_result = {
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
+            exp_op_result = {
                 'foo': 'bar',
             }
             m.get(self.job_uri,
@@ -423,16 +524,18 @@ class JobTests(unittest.TestCase):
                   ])
             m.delete(self.job_uri)
 
-            oper_result = job.wait_for_completion()
+            op_result = job.wait_for_completion()
 
-            self.assertEqual(oper_result, exp_oper_result)
+            self.assertEqual(op_result, exp_op_result)
 
     def test_wait_complete3_timeout(self):
         """Test wait_for_completion() with timeout."""
         with requests_mock.mock() as m:
             self.mock_server_1(m)
             session = Session('fake-host', 'fake-user', 'fake-pw')
-            job = Job(session, self.job_uri)
+            op_method = 'POST'
+            op_uri = '/api/foo'
+            job = Job(session, self.job_uri, op_method, op_uri)
             m.get(self.job_uri,
                   [
                       {'text': result_running_callback},
@@ -475,14 +578,14 @@ def result_running_callback(request, context):
 
 
 def result_complete_callback(request, context):
-    exp_oper_result = {
+    exp_op_result = {
         'foo': 'bar',
     }
     job_result_complete = {
         'status': 'complete',
         'job-status-code': 200,
         # 'job-reason-code' omitted because HTTP status good
-        'job-results': exp_oper_result,
+        'job-results': exp_op_result,
     }
     time.sleep(1)
     return json.dumps(job_result_complete)
