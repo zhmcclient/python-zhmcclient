@@ -125,14 +125,13 @@ commands::
                           json]]
                                       Output format (Default: table).
       -t, --timestats                 Show time statistics of HMC operations.
+      --log COMP=LEVEL,...            Set a component to a log level
+                                      (COMP: [api|hmc|all],
+                                       LEVEL: [error|warning|info|debug],
+                                       Default: all=warning).
       --log-dest [stderr|syslog|none]
                                       Log destination for this command (Default:
-                                      none).
-      --log-level [error|warning|info|debug]
-                                      Log level for this command (Default:
-                                      warning).
-      --log-comp [api|hmc|all]        Logged components for this command. May be
-                                      specified multiple times (Default: all).
+                                      stderr).
       --syslog-facility [user|local0|local1|local2|local3|local4|local5|local6|local7]
                                       Syslog facility when logging to the syslog
                                       (Default: user).
@@ -176,9 +175,8 @@ examples, an underscore ``_`` is shown as the cursor::
         --password        Password for the HMC (Default: ZHMC_PASSWORD environment variable).
         --output-format   Output format (Default: table).
         --timestats       Show time statistics of HMC operations.
-        --log-dest        Log destination for this command (Default: none).
-        --log-level       Log level for this command (Default: warning).
-        --log-comp        Logged components for this command. May be specified multiple times (Default: all).
+        --log             Set a component to a log level (COMP: [api|hmc|all], LEVEL: [error|warning|info|debug], Default: all=warning).
+        --log-dest        Log destination for this command (Default: stderr).
         --syslog-facility Syslog facility when logging to the syslog (Default: user).
         --version         Show the version of this command and exit.
 
@@ -362,20 +360,25 @@ CLI logging
 The zhmc CLI supports logging to the standard error stream, and to the
 system log.
 
-By default, logging is turned off. It can be turned on via the global option
-``--log-dest`` which specifies the log destination:
+By default, the zhmc CLI logs to the standard error stream. This can be changed
+via the global option ``--log-dest`` which specifies the log destination:
 
 * ``stderr`` - Standard error stream of the zhmc command.
 * ``syslog`` - System log of the local system.
+* ``none`` - No logging.
 
-The global option ``--log-level`` allows specifying the log level, which can be
-one of: ``error``, ``warning``, ``info``, ``debug``. This sets the
-corresponding log level for all Python loggers, and in case of logging to the
-system log will also set the syslog priorities accordingly.
+The global option ``--log`` allows specifying one or more combinations of log
+component and log level. For example, the command::
 
-The Python loggers are selected via the global option ``--log-comp``, which can
-be specified multiple times and specifies a component (= Python logger) to be
-enabled for logging:
+    $ zhmc --log hmc=debug,api=info ...
+
+sets log level ``debug`` for the ``hmc`` component, and log level ``info`` for
+the ``api`` component.
+
+Valid log levels are: ``error``, ``warning``, ``info``, ``debug``. In case of
+logging to the system log, this will also set the syslog priority accordingly.
+
+Valid log components are:
 
 * ``api`` - Enable the ``zhmcclient.api`` Python logger, which logs any API
   calls into the zhmcclient library that are made from the zhmc CLI.
@@ -383,7 +386,7 @@ enabled for logging:
   interactions with the HMC.
 * ``all`` - Enable the root Python logger, which logs anything that is
   propagated up to it. In case of the zhmc CLI, this will mostly be the
-  ``requests`` package.
+  ``requests`` package, plus the ``api`` and ``hmc`` components.
 
 Logging to the system log
 ~~~~~~~~~~~~~~~~~~~~~~~~~

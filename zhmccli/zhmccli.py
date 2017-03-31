@@ -34,9 +34,8 @@ requests.packages.urllib3.disable_warnings()
 # Default values for some options
 DEFAULT_OUTPUT_FORMAT = 'table'
 DEFAULT_TIMESTATS = False
-DEFAULT_LOG_LEVEL = 'warning'
-DEFAULT_LOG_COMPONENT = 'all'
-DEFAULT_LOG_DESTINATION = 'none'
+DEFAULT_LOG = 'all=warning'
+DEFAULT_LOG_DESTINATION = 'stderr'
 DEFAULT_SYSLOG_FACILITY = 'user'
 
 SYSLOG_ADDRESSES = {
@@ -63,24 +62,23 @@ SYSLOG_ADDRESSES = {
               .format(of=DEFAULT_OUTPUT_FORMAT))
 @click.option('-t', '--timestats', type=str, is_flag=True,
               help='Show time statistics of HMC operations.')
+@click.option('--log', type=str, metavar='COMP=LEVEL,...',
+              help="Set a component to a log level (COMP: [{c}], "
+              "LEVEL: [{l}], Default: {d})."
+              .format(c='|'.join(LOG_COMPONENTS),
+                      l='|'.join(LOG_LEVELS),
+                      d=DEFAULT_LOG))
 @click.option('--log-dest', type=click.Choice(LOG_DESTINATIONS),
               help="Log destination for this command (Default: {ld})."
               .format(ld=DEFAULT_LOG_DESTINATION))
-@click.option('--log-level', type=click.Choice(LOG_LEVELS),
-              help="Log level for this command (Default: {ll})."
-              .format(ll=DEFAULT_LOG_LEVEL))
-@click.option('--log-comp', multiple=True, type=click.Choice(LOG_COMPONENTS),
-              help="Logged components for this command. May be specified "
-              "multiple times (Default: {lc})."
-              .format(lc=DEFAULT_LOG_COMPONENT))
 @click.option('--syslog-facility', type=click.Choice(SYSLOG_FACILITIES),
               help="Syslog facility when logging to the syslog "
               "(Default: {slf})."
               .format(slf=DEFAULT_SYSLOG_FACILITY))
 @click.version_option(help="Show the version of this command and exit.")
 @click.pass_context
-def cli(ctx, host, userid, password, output_format, timestats, log_level,
-        log_comp, log_dest, syslog_facility):
+def cli(ctx, host, userid, password, output_format, timestats, log, log_dest,
+        syslog_facility):
     """
     Command line interface for the z Systems HMC.
 
@@ -118,10 +116,8 @@ def cli(ctx, host, userid, password, output_format, timestats, log_level,
             timestats = ctx.obj.timestats
 
     # TODO: Add context support for the following options:
-    if log_level is None:
-        log_level = DEFAULT_LOG_LEVEL
-    if not log_comp:
-        log_comp = (DEFAULT_LOG_COMPONENT,)
+    if log is None:
+        log = DEFAULT_LOG
     if log_dest is None:
         log_dest = DEFAULT_LOG_DESTINATION
     if syslog_facility is None:
@@ -131,41 +127,71 @@ def cli(ctx, host, userid, password, output_format, timestats, log_level,
     # by the current command, regardless of the mode.
 
     # Set up logging
-    if log_dest != 'none':
+    if log_dest == 'syslog':
+        # The choices in SYSLOG_FACILITIES have been validated by click
+        # so we don't need to further check them.
+        facility = SysLogHandler.facility_names[syslog_facility]
+        system = platform.system()
+        try:
+            address = SYSLOG_ADDRESSES[system]
+        except KeyError:
+            raise NotImplementedError(
+                "Logging to syslog is not supported on this platform: {}".
+                format(system))
+        handler = SysLogHandler(address=address, facility=facility)
+        format_string = '%(levelname)s %(name)s: %(message)s'
+    elif log_dest == 'stderr':
+        handler = StreamHandler(stream=sys.stderr)
+        format_string = '%(levelname)s %(name)s: %(message)s'
+    else:
+        # The choices in LOG_DESTINATIONS have been validated by click
+        assert log_dest == 'none'
+        handler = None
+        format_string = None
+
+    log_specs = log.split(',')
+    for log_spec in log_specs:
+
+        # ignore extra ',' at begin, end or in between
+        if log_spec == '':
+            continue
+
+        try:
+            log_comp, log_level = log_spec.split('=', 1)
+        except ValueError:
+            raise click.ClickException(
+                "Missing '=' "
+                "in COMP=LEVEL specification in --log option: {ls}"
+                .format(ls=log_spec))
+
         level = getattr(logging, log_level.upper(), None)
-        # The choices in LOG_LEVELS ensure that we have a valid log level:
-        assert level is not None
-        if log_dest == 'syslog':
-            # The choices in SYSLOG_FACILITIES ensure that they are valid:
-            facility = SysLogHandler.facility_names[syslog_facility]
-            system = platform.system()
-            try:
-                address = SYSLOG_ADDRESSES[system]
-            except KeyError:
-                raise NotImplementedError(
-                    "Logging to syslog is not supported on this platform: {}".
-                    format(system))
-            handler = SysLogHandler(address=address, facility=facility)
-            format_string = '%(levelname)s %(name)s: %(message)s'
-        elif log_dest == 'stderr':
-            handler = StreamHandler(stream=sys.stderr)
-            format_string = '%(levelname)s %(name)s: %(message)s'
-        else:
-            # The choices in LOG_DESTINATIONS ensure that we cannot get here.
-            raise AssertionError("Unexpected log_dest: %r" % log_dest)
-        handler.setFormatter(logging.Formatter(format_string))
-        if 'api' in log_comp:
-            logger = logging.getLogger('zhmcclient.api')
-            logger.addHandler(handler)
-            logger.setLevel(level)
-        if 'hmc' in log_comp:
-            logger = logging.getLogger('zhmcclient.hmc')
-            logger.addHandler(handler)
-            logger.setLevel(level)
-        if 'all' in log_comp:
-            logger = logging.getLogger('')
-            logger.addHandler(handler)
-            logger.setLevel(level)
+        if level is None:
+            raise click.ClickException(
+                "Invalid log level "
+                "in COMP=LEVEL specification in --log option: {ls}"
+                .format(ls=log_spec))
+
+        if log_comp not in LOG_COMPONENTS:
+            raise click.ClickException(
+                "Invalid log component "
+                "in COMP=LEVEL specification in --log option: {ls}"
+                .format(ls=log_spec))
+
+        if handler:
+            handler.setFormatter(logging.Formatter(format_string))
+            if log_comp == 'all':
+                logger = logging.getLogger('')
+                logger.addHandler(handler)
+                logger.setLevel(level)
+            else:
+                if log_comp == 'api':
+                    logger = logging.getLogger('zhmcclient.api')
+                    logger.addHandler(handler)
+                    logger.setLevel(level)
+                if log_comp == 'hmc':
+                    logger = logging.getLogger('zhmcclient.hmc')
+                    logger.addHandler(handler)
+                    logger.setLevel(level)
 
     session_id = os.environ.get('ZHMC_SESSION_ID', None)
 
