@@ -184,8 +184,11 @@ def lpar_deactivate(cmd_ctx, cpc, lpar):
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('LPAR', type=str, metavar='LPAR')
 @click.argument('LOAD-ADDRESS', type=str, metavar='LOAD-ADDRESS')
+@click.option('--load-parameter', type=str, required=False,
+              help='Provides additional control over the outcome of a '
+              'Load operation.')
 @click.pass_obj
-def lpar_load(cmd_ctx, cpc, lpar, load_address):
+def lpar_load(cmd_ctx, cpc, lpar, load_address, **options):
     """
     Load (Boot, IML) an LPAR.
 
@@ -194,7 +197,7 @@ def lpar_load(cmd_ctx, cpc, lpar, load_address):
     'zhmc' command name.
     """
     cmd_ctx.execute_cmd(lambda: cmd_lpar_load(cmd_ctx, cpc, lpar,
-                                              load_address))
+                                              load_address, options))
 
 
 def cmd_lpar_list(cmd_ctx, cpc_name, options):
@@ -298,13 +301,15 @@ def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
     click.echo('Deactivation of LPAR %s is complete.' % lpar_name)
 
 
-def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address):
+def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     lpar = find_lpar(client, cpc_name, lpar_name)
 
+    options = original_options(options)
+
     try:
-        lpar.load(load_address, wait_for_completion=True)
+        lpar.load(load_address, wait_for_completion=True, **options)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 

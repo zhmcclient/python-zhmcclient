@@ -47,7 +47,7 @@ Released: not yet
 
 * Improved robustness of timestats tests by measuring the actual sleep time
   instead of going by the requested sleep time.
-  
+
 * Added support for 'error' field in 'job-results' (fixes issue #228).
 
 * Fixed version mismatches in CI test environment when testing with
@@ -89,6 +89,8 @@ Released: not yet
   password (issue #225).
 
 * Added logging support to the zhmc CLI (issue #113).
+
+* Added 'load-parameter' option to 'zhmc lpar load' (issue #226).
 
 **Known Issues:**
 
