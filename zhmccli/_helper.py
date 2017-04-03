@@ -55,16 +55,25 @@ class InvalidOutputFormatError(click.ClickException):
 
 class CmdContext(object):
 
-    def __init__(self, host, userid, output_format, timestats, session_id,
-                 get_password):
+    def __init__(self, host, userid, password, output_format, timestats,
+                 session_id, get_password):
         self._host = host
         self._userid = userid
+        self._password = password
         self._output_format = output_format
         self._timestats = timestats
         self._session_id = session_id
         self._get_password = get_password
         self._session = None
         self._spinner = click_spinner.Spinner()
+
+    def __repr__(self):
+        ret = "CmdContext(at 0x%08x, host=%r, userid=%r, password=%r, " \
+            "output_format=%r, session_id=%r, session=%r, ...)" % \
+            (id(self), self._host, self._userid,
+             '...' if self._password else None, self._output_format,
+             self._session_id, self._session)
+        return ret
 
     @property
     def host(self):
@@ -130,13 +139,9 @@ class CmdContext(object):
         if self._session is None:
             if self._host is None:
                 raise click.ClickException("No HMC host provided")
-            if self._session_id is not None:
-                self._session = zhmcclient.Session(
-                    self._host, self._userid, session_id=self._session_id,
-                    get_password=self._get_password)
-            else:
-                self._session = zhmcclient.Session(
-                    self._host, self._userid, get_password=self._get_password)
+            self._session = zhmcclient.Session(
+                self._host, self._userid, self._password,
+                session_id=self._session_id, get_password=self._get_password)
         if self.timestats:
             self._session.time_stats_keeper.enable()
         self.spinner.start()

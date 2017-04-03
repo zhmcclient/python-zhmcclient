@@ -37,7 +37,7 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
     HMC_LOGGER_NAME
 
-__all__ = ['Session', 'Job', 'RetryTimeoutConfig']
+__all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
 
 LOG = get_logger(__name__)
 
@@ -192,6 +192,21 @@ class RetryTimeoutConfig(object):
         return ret
 
 
+def get_password_interface(host, userid):
+    """
+    Interface to the password retrieval function that is invoked by
+    :class:`~zhmcclient.Session` if no password is provided.
+
+    Parameters:
+      host (string): Hostname or IP address of the HMC
+      userid (string): Userid on the HMC
+
+    Returns:
+      string: Password of the userid on the HMC
+    """
+    raise NotImplemented
+
+
 class Session(object):
     """
     A session to the HMC, optionally in context of an HMC user.
@@ -267,13 +282,14 @@ class Session(object):
             Session-id to be used for this session, or `None`.
 
           get_password (:term:`callable`):
-            A function that returns the password as a string, or `None`.
+            A password retrieval function, or `None`.
 
             If provided, this function will be called if a password is needed
-            but not provided.
+            but not provided. This mechanism can be used for example by command
+            line interfaces for prompting for the password.
 
-            This mechanism can be used for example by command line interfaces
-            for prompting for the password.
+            The password retrieval function must follow the interface
+            defined in :func:`~zhmcclient.get_password_interface`.
 
           retry_timeout_config (:class:`~zhmcclient.RetryTimeoutConfig`):
             The retry/timeout configuration for this session for use by any of
@@ -337,7 +353,10 @@ class Session(object):
     @property
     def get_password(self):
         """
-        bool: The function that returns the password as a string, or `None`.
+        The password retrieval function, or `None`.
+
+        The password retrieval function must follow the interface defined in
+        :func:`~zhmcclient.get_password_interface`.
         """
         return self._get_password
 
@@ -490,7 +509,7 @@ class Session(object):
             raise AuthError("Userid is not provided.")
         if self._password is None:
             if self._get_password:
-                self._password = self._get_password()
+                self._password = self._get_password(self._host, self._userid)
             else:
                 raise AuthError("Password is not provided.")
         logon_uri = '/api/sessions'

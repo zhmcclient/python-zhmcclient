@@ -34,6 +34,8 @@ Session
    :members:
    :special-members: __str__
 
+.. autofunction:: zhmcclient.get_password_interface
+
 
 .. _`Retry-timeout configuration`:
 

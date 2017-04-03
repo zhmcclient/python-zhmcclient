@@ -27,6 +27,10 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The password retrieval function that can optionally be passed to
+  ``Session()`` has changed its interface; it is now being called with host and
+  userid. Related to issue #225.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -73,6 +77,9 @@ Released: not yet
   options, that allow skipping confirmation prompts.
 
 * Added OS-X as a test environment to the Travis CI setup.
+
+* In the CLI, added a ``-p`` / ``--password`` option for specifying the HMC
+  password (issue #225).
 
 **Known Issues:**
 
