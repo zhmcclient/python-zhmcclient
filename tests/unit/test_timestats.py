@@ -41,6 +41,21 @@ def time_abs_delta(t1, t2):
     return abs(t1 - t2)
 
 
+def measure(stats, duration):
+    """
+    Return the measured duration of one begin/end cycle of a TimeStats object
+    of a given intended duration.  The runtime behavior may be that the actual
+    duration is larger than the intended duration, therefore we need to measure
+    the actual duration.
+    """
+    begin = time.time()
+    stats.begin()
+    time.sleep(duration)
+    stats.end()
+    end = time.time()
+    return end - begin
+
+
 class TimeStatsTests(unittest.TestCase):
     """All tests for TimeStatsKeeper and TimeStats."""
 
@@ -120,20 +135,24 @@ class TimeStatsTests(unittest.TestCase):
         keeper = TimeStatsKeeper()
         keeper.enable()
 
-        duration = 0.4
-        # TimeStatsKeeper on Windows has only a precision of 1/60 sec:
-        delta = 0.04
+        # TimeStatsKeeper on Windows has only a precision of 1/60 sec
+        duration = 1.6
+        delta = duration / 10.0
 
         stats = keeper.get_stats('foo')
-        stats.begin()
-        time.sleep(duration)
-        stats.end()
+        dur = measure(stats, duration)
 
         for _, stats in keeper.snapshot():
             self.assertEqual(stats.count, 1)
-            self.assertLess(time_abs_delta(stats.avg_time, duration), delta)
-            self.assertLess(time_abs_delta(stats.min_time, duration), delta)
-            self.assertLess(time_abs_delta(stats.max_time, duration), delta)
+            self.assertLess(time_abs_delta(stats.avg_time, dur), delta,
+                            "avg time: actual: %f, expected: %f, delta: %f" %
+                            (stats.avg_time, dur, delta))
+            self.assertLess(time_abs_delta(stats.min_time, dur), delta,
+                            "min time: actual: %f, expected: %f, delta: %f" %
+                            (stats.min_time, dur, delta))
+            self.assertLess(time_abs_delta(stats.max_time, dur), delta,
+                            "max time: actual: %f, expected: %f, delta: %f" %
+                            (stats.max_time, dur, delta))
 
         stats.reset()
         self.assertEqual(stats.count, 0)
@@ -167,11 +186,11 @@ class TimeStatsTests(unittest.TestCase):
         keeper = TimeStatsKeeper()
         keeper.enable()
 
-        duration = 0.4
-        # TimeStatsKeeper on Windows has only a precision of 1/60 sec:
-        delta = 0.04
+        duration = 0.2
 
         stats = keeper.get_stats('foo')
+
+        # produce a first data item
         stats.begin()
         time.sleep(duration)
         stats.end()
@@ -179,17 +198,49 @@ class TimeStatsTests(unittest.TestCase):
         # take the snapshot
         snapshot = keeper.snapshot()
 
-        # keep producing statistics data
+        # produce a second data item
         stats.begin()
         time.sleep(duration)
         stats.end()
 
-        # verify that only the first set of data is in the snapshot
-        for _, stats in snapshot:
-            self.assertEqual(stats.count, 1)
-            self.assertLess(time_abs_delta(stats.avg_time, duration), delta)
-            self.assertLess(time_abs_delta(stats.min_time, duration), delta)
-            self.assertLess(time_abs_delta(stats.max_time, duration), delta)
+        # verify that only the first data item is in the snapshot
+        for _, snap_stats in snapshot:
+            self.assertEqual(snap_stats.count, 1)
+
+        # verify that both data items are in the original stats object
+        self.assertEqual(stats.count, 2)
+
+    def test_measure_avg_min_max(self):
+        """Test measuring avg min max values."""
+
+        keeper = TimeStatsKeeper()
+        keeper.enable()
+
+        # TimeStatsKeeper on Windows has only a precision of 1/60 sec
+        durations = (0.6, 1.2, 1.5)
+        delta = 0.08
+        count = len(durations)
+
+        stats = keeper.get_stats('foo')
+        m_durations = []
+        for duration in durations:
+            m_durations.append(measure(stats, duration))
+
+        min_dur = min(m_durations)
+        max_dur = max(m_durations)
+        avg_dur = sum(m_durations) / float(count)
+
+        for _, stats in keeper.snapshot():
+            self.assertEqual(stats.count, 3)
+            self.assertLess(time_abs_delta(stats.avg_time, avg_dur), delta,
+                            "avg time: actual: %f, expected: %f, delta: %f" %
+                            (stats.avg_time, avg_dur, delta))
+            self.assertLess(time_abs_delta(stats.min_time, min_dur), delta,
+                            "min time: actual: %f, expected: %f, delta: %f" %
+                            (stats.min_time, min_dur, delta))
+            self.assertLess(time_abs_delta(stats.max_time, max_dur), delta,
+                            "max time: actual: %f, expected: %f, delta: %f" %
+                            (stats.max_time, max_dur, delta))
 
     def test_str_empty(self):
         """Test str() for an empty enabled keeper."""

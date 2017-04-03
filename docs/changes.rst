@@ -41,6 +41,9 @@ Released: not yet
 
 * Fixed in the CLI that the spinner character was part of the output.
 
+* Improved robustness of timestats tests by measuring the actual sleep time
+  instead of going by the requested sleep time.
+  
 **Enhancements:**
 
 * Improved the mock support by adding the typical attributes of its superclass
