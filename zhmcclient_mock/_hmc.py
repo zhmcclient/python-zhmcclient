@@ -303,7 +303,7 @@ class FakedHmc(FakedBaseResource):
     A faked HMC.
 
     Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
-    common metrhods and attributes.
+    common methods and attributes.
 
     An object of this class represents a faked HMC that can have all faked
     resources that are relevant for the zhmcclient package.
