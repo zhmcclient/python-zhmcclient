@@ -84,28 +84,78 @@ HMC version  HMC API version  HMC API book            Machine generations
 Installation
 ------------
 
-The easiest way to install the zhmcclient package is by using Pip:
+.. _virtual Python environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+.. _Pypi: http://pypi.python.org/
+
+The easiest way to install the zhmcclient package is by using Pip. Pip ensures
+that any dependent Python packages also get installed.
+
+Pip will install the packages into your currently active Python environment
+(that is, your system Python or a virtual Python environment you have set up).
+
+Particularly if you intend to use the zhmcclient API, it is beneficial to set
+up a `virtual Python environment`_ for your project, because that leaves your
+system Python installation unchanged, it does not require ``sudo`` rights,
+and last but not least it gives you better control about the installed
+packages and their versions.
+
+If you are only interested in the zhmcclient CLI (the ``zhmc`` command), you
+may as well install the package into the system Python.
+
+Installation of latest released version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following command installs the latest released version of the zhmcclient
+package from `Pypi`_ into the currently active Python environment:
 
 ::
 
     $ pip install zhmcclient
 
-This will download and install the latest released version of zhmcclient and
-its dependent packages into your current Python environment (e.g. into your
-system Python or into a virtual Python environment).
+Installation of latest development version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is beneficial to set up a `virtual Python environment`_, because that leaves
-your system Python installation unchanged.
+If you want to install the latest development level of the zhmcclient package
+instead for some reason, you can install directly from the ``master`` branch
+of its Git repository.
 
-.. _virtual Python environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
-
-As an alternative, if you want to install the latest development level of the
-zhmcclient package for some reason, install directly from the ``master`` branch
-of the Git repository of the package:
+The following command installs the latest development level of the zhmcclient
+package into the currently active Python environment:
 
 ::
 
     $ pip install git+https://github.com/zhmcclient/python-zhmcclient.git@master
+
+Verification of the installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In both cases described above, Internet access is needed to access these
+repositories.
+
+If you want to install the zhmcclient package on a system that does not have
+Internet access, you can do this by first downloading the zhmcclient package
+and its dependent packages on a download system that does have Internet access,
+making these packages available to the target system, and installing on the
+target system from the downloaded packages.
+
+For simplicity, the following example uses a shared file system between the
+download and target systems (but that is not a requirement; you can also copy
+the downloaded files to the target system):
+
+::
+
+    [download]$ pip download zhmcclient
+
+    [download]$ ls zhmcclient*
+    zhmcclient-0.11.0-py2.py3-none-any.whl
+
+    [target]$ ls zhmcclient*
+    zhmcclient-0.11.0-py2.py3-none-any.whl
+
+    [target]$ pip install -f . --no-index zhmcclient-0.11.0-py2.py3-none-any.whl
+
+Verification of the installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can verify that the zhmcclient package and its dependent packages are
 installed correctly by importing the package into Python:
