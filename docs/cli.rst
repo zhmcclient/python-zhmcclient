@@ -125,6 +125,16 @@ commands::
                           json]]
                                       Output format (Default: table).
       -t, --timestats                 Show time statistics of HMC operations.
+      --log COMP=LEVEL,...            Set a component to a log level
+                                      (COMP: [api|hmc|all],
+                                       LEVEL: [error|warning|info|debug],
+                                       Default: all=warning).
+      --log-dest [stderr|syslog|none]
+                                      Log destination for this command (Default:
+                                      stderr).
+      --syslog-facility [user|local0|local1|local2|local3|local4|local5|local6|local7]
+                                      Syslog facility when logging to the syslog
+                                      (Default: user).
       --version                       Show the version of this command and exit.
       --help                          Show this message and exit.
 
@@ -160,12 +170,15 @@ list can be picked with <TAB> or with the cursor keys. In the following
 examples, an underscore ``_`` is shown as the cursor::
 
     > --_
-        --host           Hostname or IP address of the HMC (Default: ZHMC_HOST environment variable).
-        --userid         Username for the HMC (Default: ZHMC_USERID environment variable).
-        --password       Password for the HMC (Default: ZHMC_PASSWORD environment variable).
-        --output-format  Output format (Default: table).
-        --timestats      Show time statistics of HMC operations.
-        --version        Show the version of this command and exit.
+        --host            Hostname or IP address of the HMC (Default: ZHMC_HOST environment variable).
+        --userid          Username for the HMC (Default: ZHMC_USERID environment variable).
+        --password        Password for the HMC (Default: ZHMC_PASSWORD environment variable).
+        --output-format   Output format (Default: table).
+        --timestats       Show time statistics of HMC operations.
+        --log             Set a component to a log level (COMP: [api|hmc|all], LEVEL: [error|warning|info|debug], Default: all=warning).
+        --log-dest        Log destination for this command (Default: stderr).
+        --syslog-facility Syslog facility when logging to the syslog (Default: user).
+        --version         Show the version of this command and exit.
 
     > c_
        cpc    Command group for managing CPCs.
@@ -338,3 +351,84 @@ This output format can be selected by the ``-o`` or
 .. _`Wikipedia`: http://www.mediawiki.org/wiki/Help:Tables
 .. _`JSON`: http://json.org/example.html
 
+
+.. _`CLI logging`:
+
+CLI logging
+-----------
+
+The zhmc CLI supports logging to the standard error stream, and to the
+system log.
+
+By default, the zhmc CLI logs to the standard error stream. This can be changed
+via the global option ``--log-dest`` which specifies the log destination:
+
+* ``stderr`` - Standard error stream of the zhmc command.
+* ``syslog`` - System log of the local system.
+* ``none`` - No logging.
+
+The global option ``--log`` allows specifying one or more combinations of log
+component and log level. For example, the command::
+
+    $ zhmc --log hmc=debug,api=info ...
+
+sets log level ``debug`` for the ``hmc`` component, and log level ``info`` for
+the ``api`` component.
+
+Valid log levels are: ``error``, ``warning``, ``info``, ``debug``. In case of
+logging to the system log, this will also set the syslog priority accordingly.
+
+Valid log components are:
+
+* ``api`` - Enable the ``zhmcclient.api`` Python logger, which logs any API
+  calls into the zhmcclient library that are made from the zhmc CLI.
+* ``hmc`` - Enable the ``zhmcclient.hmc`` Python logger, which logs the
+  interactions with the HMC.
+* ``all`` - Enable the root Python logger, which logs anything that is
+  propagated up to it. In case of the zhmc CLI, this will mostly be the
+  ``requests`` package, plus the ``api`` and ``hmc`` components.
+
+Logging to the system log
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When specifying the ``syslog`` log destination, the enabled Python loggers
+log to the system log of the local system.
+
+In order to see something in the system log, one has to understand how the
+log records are marked in terms of `facility` and `priority` and the
+corresponding matching of these markers in the syslog demon, and the
+mechanism that is used to write a record to the syslog needs to be enabled.
+
+The write mechanism used by the zhmc CLI depends on the platform, as follows:
+
+* On Linux: Via a Unix socket to ``/dev/log``
+* On OS-X: Via a Unix socket to ``/var/run/syslog``
+* On Windows: Via a UDP socket to ``localhost`` port 514
+
+The respective mechanism must be enabled on the platform for logging to work.
+If the required mechanism is not enabled on a system, the log record will
+simply be dropped silently.
+
+The `facility` used for each log record can be specified with the global option
+``--syslog-facility``, to be one of: ``user`` (default), ``local<N>`` with
+N=[0..7].
+
+This facility marker can be used in the configuration of the syslog demon on
+the local system to direct log records into different files.
+
+For example, on RHEL 7 and CentOS 7, the syslog demon's config file is
+``/etc/rsyslog.conf`` and may contain this::
+
+    #### RULES ####
+    *.info;mail.none;authpriv.none;cron.none                /var/log/messages
+
+The first string is a semicolon-separated list of ``<facility>.<priority>``
+markers, where ``*`` can be used for wildcarding. The first list item
+``*.info`` means that any facility with priority ``info`` or higher will match
+this line and will thus go into the ``/var/log/messages`` file.
+
+Because the zhmc CLI uses the ``debug`` log level, one can see that only
+if its corresponding priority is enabled in the syslog configuration::
+
+    #### RULES ####
+    *.debug;mail.none;authpriv.none;cron.none                /var/log/messages
