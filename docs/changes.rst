@@ -48,6 +48,8 @@ Released: not yet
 * Improved robustness of timestats tests by measuring the actual sleep time
   instead of going by the requested sleep time.
   
+* Added support for 'error' field in 'job-results' (fixes issue #228).
+
 **Enhancements:**
 
 * Improved the mock support by adding the typical attributes of its superclass
