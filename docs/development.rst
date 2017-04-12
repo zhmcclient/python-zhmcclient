@@ -220,41 +220,52 @@ sign-off line by using a commit template file:
 Releasing a version to PyPI
 ---------------------------
 
-This section shows the steps to release a version to PyPI, and to start a new
-version. The description applies to pre-1.0.0 versions of zhmcclient, and
-therefore does not include creating a stable branch for fixing an existing
-release.
+This section shows the steps for releasing a version to PyPI.
 
-A shell variable `$MNU` is used in the description to refer to the `M.N.U`
-version (e.g. `0.5.0`) that is to be released.
+Switch to your work directory of the python-zhmcclient Git repo (this is where
+the ``Makefile`` is), and perform the following steps in that directory:
 
-Switch to your work directory of the `python-zhmcclient` repo (this is where
-the `Makefile` is), and perform the following steps in that directory:
+1.  Set a shell variable for the version to be released, e.g.::
 
-1.  Set a shell variable for the version to be released::
+        MNU='0.11.0'
 
-        MNU='0.5.0'
-
-2.  Verify that your working directory is in a git-wise clean state::
+2.  Verify that your working directory is in a Git-wise clean state::
 
         git status
 
-3.  Check out the `master` branch, and update it from upstream::
+3.  Check out the ``master`` branch, and update it from upstream::
 
         git checkout master
         git pull
 
-4.  Edit the change log (`docs/changes.rst`) and perform the following changes:
+4.  Edit the change log (``docs/changes.rst``) and perform the following
+    changes in the top-most section (that is the section for the version to be
+    released):
 
-    * Insert a heading and release date for the version that is now released,
-      below the "in development" heading and release date.
+    * If needed, change the version in the section heading to the version to be
+      released, e.g.::
 
-    * Make sure that the change log entries for the new release reflect all
-      changes since the previous version. Make sure the changes listed there are
-      relevant and understandable for users.
+          Version 0.11.0
+          ^^^^^^^^^^^^^^
 
-5.  Commit your changes to the change log to the `master` branch and push them
-    upstream (without using a topic branch)::
+    * Change the release date to today's date, e.g.::
+
+          Released: 2017-03-16
+
+    * Make sure that the change log entries reflect all changes since the
+      previous version, and make sure they are relevant for and
+      understandable by users.
+
+    * In the "Known issues" section, remove the link to the issue tracker
+      and add any known issues you want users to know about. Just linking
+      to the issue tracker quickly becomes incorrect for released versions::
+
+          **Known issues:**
+
+          * ....
+
+5.  Commit your changes and push them upstream (directly on the ``master``
+    branch, without using a topic branch)::
 
         git add docs/changes.rst
         git commit -sm "Updated change log for $MNU release."
@@ -268,49 +279,112 @@ the `Makefile` is), and perform the following steps in that directory:
     Travis CI. However, run it for additional safety before the release.
 
     * If this test fails, fix any issues until the test succeeds. Commit the
-      changes to the `master` branch and push them upstream::
+      changes and push them upstream::
 
           git add <changed-files>
           git commit -sm "<change description with details>"
           git push
 
-      Wait for the Travis CI to show success for this change.
+      Wait for the automatic tests to show success for this change.
 
-7.  Tag the head of the master branch with the release label::
+7.  Tag the master branch with the release label and push the tag upstream::
 
         git tag $MNU
-
-8.  Push the tag upstream::
-
         git push --tags
 
-9.  On GitHub, edit the new tag, and create a release description on it. This
+8.  On GitHub, edit the new tag, and create a release description on it. This
     will cause it to appear in the Release tab.
 
-10. Upload the package to PyPI::
+    You can see the tags in GitHub via Code -> Releases -> Tags.
+
+9.  Upload the package to PyPI::
 
         make upload
 
     This will show the package version and will ask for confirmation.
 
     **Attention!!** This only works once for each version. You cannot
-    re-release the same version to PyPI.
+    release the same version twice to PyPI.
     
-11. Verify that the released version is shown on PyPI:
+10. Verify that the released version is shown on PyPI:
 
     https://pypi.python.org/pypi/zhmcclient/
 
-12. Verify that RTD shows the released version as its stable version:
+11. Verify that RTD shows the released version as its stable version:
 
     https://python-zhmcclient.readthedocs.io/en/stable/intro.html#versioning
 
-    Note: The pushing of the tag to GitHub should be sufficient for RTD to
-    rebuild the stable documentation, but it may take a while to build it.
+    Note: RTD builds the documentation automatically, but it may take a few
+    minutes to do so.
 
-13. On GitHub, close milestone `M.N.U`.
+12. On GitHub, close milestone `M.N.U`.
 
-14. On GitHub, create a new milestone for development of the next release,
-    e.g. `M.N+1.0`.
 
-15. On GitHub, re-assign any open issues and pull request that still have
-    milestone `M.N.U` set, to the next milestone, or remove the milestone.
+Starting a new release
+----------------------
+
+This section shows the steps for starting development of a new version.
+
+These steps may be performed right after the steps for releasing to PyPI,
+or independently.
+
+This description works for releases that are direct successors of the previous
+release. It does not cover starting a new version that is a fix release to a
+version that was released earlier.
+
+Switch to your work directory of the python-zhmcclient Git repo (this is where
+the ``Makefile`` is), and perform the following steps in that directory:
+
+1.  Set a shell variable for the new version to be started::
+
+        MNU='0.12.0'
+
+2.  Verify that your working directory is in a git-wise clean state::
+
+        git status
+
+3.  Check out the ``master`` branch, and update it from upstream::
+
+        git checkout master
+        git pull
+
+4.  Edit the change log (``docs/changes.rst``) and insert the following section
+    before the top-most section (which is the section about the latest released
+    version)::
+
+        Version 0.12.0
+        ^^^^^^^^^^^^^^
+
+        Released: not yet
+
+        **Incompatible changes:**
+
+        **Deprecations:**
+
+        **Bug fixes:**
+
+        **Enhancements:**
+
+        **Known issues:**
+
+        * See `list of open issues`_.
+
+        .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+5.  Commit your changes and push them upstream (directly on the ``master``
+    branch, without using a topic branch)::
+
+        git add docs/changes.rst
+        git commit -sm "Started $MNU release."
+        git push
+
+6.  On GitHub, create a new milestone for development of the next release,
+    e.g. `M.N.U`.
+
+    You can create a milestone in GitHub via Issues -> Milestones -> New
+    Milestone.
+
+7.  On GitHub, go through all open issues and pull requests that still have
+    milestones for previous releases set, and either set them to the new
+    milestone, or to have no milestone.
+
