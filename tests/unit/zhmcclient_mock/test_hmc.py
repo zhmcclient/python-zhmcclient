@@ -239,11 +239,15 @@ class FakedBaseTests(unittest.TestCase):
 
     def setUp(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+
+        self.cpc1_oid = '42-abc-543'
+        self.cpc1_uri = '/api/cpcs/%s' % self.cpc1_oid
+
         self.cpc1_in_props = {
             # All properties that are otherwise defaulted (but with non-default
             # values), plus 'name'.
-            'object-id': '42',
-            'object-uri': '/api/cpcs/42',
+            'object-id': self.cpc1_oid,
+            'object-uri': self.cpc1_uri,
             'dpm-enabled': True,
             'is-ensemble-member': False,
             'status': 'service',
@@ -742,20 +746,29 @@ class FakedHbaTests(unittest.TestCase):
 
     def setUp(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+
+        self.adapter1_oid = '747-abc-12345'
+        self.adapter1_uri = '/api/adapters/%s' % self.adapter1_oid
+        self.port1_oid = '23'
+        self.port1_uri = '/api/adapters/%s/storage-ports/%s' % \
+            (self.adapter1_oid, self.port1_oid)
+        self.hba1_oid = '999-123-xyz'
+
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
         self.adapter1_in_props = {
-            'object-id': '1',
+            'object-id': self.adapter1_oid,
             'name': 'fcp1',
             'type': 'fcp',
         }
         self.port1_in_props = {
-            'element-id': '1',
+            'element-id': self.port1_oid,
             'name': 'port1',
         }
         self.hba1_in_props = {
+            'element-id': self.hba1_oid,
             'name': 'hba1',
-            'adapter-port-uri': '/api/adapters/1/storage-ports/1',
+            'adapter-port-uri': self.port1_uri,
         }
         rd = {
             'cpcs': [
@@ -808,7 +821,7 @@ class FakedHbaTests(unittest.TestCase):
         hba1 = hbas[0]
         hba1_out_props = self.hba1_in_props.copy()
         hba1_out_props.update({
-            'element-id': hba1.oid,
+            'element-id': self.hba1_oid,
             'element-uri': hba1.uri,
             'device-number': hba1.properties['device-number'],
             'wwpn': hba1.properties['wwpn'],
@@ -826,10 +839,13 @@ class FakedHbaTests(unittest.TestCase):
         hbas = partition1.hbas.list()
         self.assertEqual(len(hbas), 1)
 
+        hba2_oid = '22-55-xy'
+        port_uri = '/api/adapters/abc-123/storage-ports/42'
+
         hba2_in_props = {
-            'element-id': '2',
+            'element-id': hba2_oid,
             'name': 'hba2',
-            'adapter-port-uri': '/api/adapters/1/storage-ports/1',
+            'adapter-port-uri': port_uri,
             'device-number': '8001',
             'wwpn': 'AFFEAFFE00008001',
         }
@@ -849,7 +865,7 @@ class FakedHbaTests(unittest.TestCase):
 
         hba2_out_props = hba2_in_props.copy()
         hba2_out_props.update({
-            'element-id': hba2.oid,
+            'element-id': hba2_oid,
             'element-uri': hba2.uri,
         })
         self.assertIsInstance(hba2, FakedHba)
@@ -976,19 +992,28 @@ class FakedNicTests(unittest.TestCase):
 
     def setUp(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+
+        self.adapter1_oid = '380-xyz-12345'
+        self.adapter1_uri = '/api/adapters/%s' % self.adapter1_oid
+        self.port1_oid = '32'
+        self.port1_uri = '/api/adapters/%s/network-ports/%s' % \
+            (self.adapter1_oid, self.port1_oid)
+        self.nic1_oid = 'ddd-999-123'
+
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
         self.nic1_in_props = {
+            'element-id': self.nic1_oid,
             'name': 'nic1',
-            'network-adapter-port-uri': '/api/adapters/1/network-ports/1',
+            'network-adapter-port-uri': self.port1_uri,
         }
         self.adapter1_in_props = {
-            'object-id': '1',
+            'object-id': self.adapter1_oid,
             'name': 'roce1',
             'type': 'roce',
         }
         self.port1_in_props = {
-            'element-id': '1',
+            'element-id': self.port1_oid,
             'name': 'port1',
         }
         rd = {
@@ -1042,7 +1067,7 @@ class FakedNicTests(unittest.TestCase):
         nic1 = nics[0]
         nic1_out_props = self.nic1_in_props.copy()
         nic1_out_props.update({
-            'element-id': nic1.oid,
+            'element-id': self.nic1_oid,
             'element-uri': nic1.uri,
             'device-number': nic1.properties['device-number'],
         })
@@ -1059,9 +1084,13 @@ class FakedNicTests(unittest.TestCase):
         nics = partition1.nics.list()
         self.assertEqual(len(nics), 1)
 
+        nic2_oid = '77-55-ab'
+        port_uri = '/api/adapters/abc-123/network-ports/42'
+
         nic2_in_props = {
+            'element-id': nic2_oid,
             'name': 'nic2',
-            'network-adapter-port-uri': '/api/adapters/1/network-ports/1',
+            'network-adapter-port-uri': port_uri,
         }
 
         # the function to be tested:
@@ -1079,7 +1108,7 @@ class FakedNicTests(unittest.TestCase):
 
         nic2_out_props = nic2_in_props.copy()
         nic2_out_props.update({
-            'element-id': nic2.oid,
+            'element-id': nic2_oid,
             'element-uri': nic2.uri,
             'device-number': nic2.properties['device-number'],
         })
