@@ -23,7 +23,7 @@ Change log
 Version 0.12.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-04-13
 
 **Incompatible changes:**
 
@@ -93,10 +93,6 @@ Released: not yet
 * Added 'load-parameter' option to 'zhmc lpar load' (issue #226).
 
 **Known Issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.11.0
