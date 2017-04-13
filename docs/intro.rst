@@ -126,8 +126,8 @@ package into the currently active Python environment:
 
     $ pip install git+https://github.com/zhmcclient/python-zhmcclient.git@master
 
-Verification of the installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Installation on a system without Internet access
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In both cases described above, Internet access is needed to access these
 repositories.
