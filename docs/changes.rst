@@ -227,10 +227,6 @@ Released: 2017-03-16
 
 **Known Issues:**
 
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
-
 
 Version 0.10.0
 ^^^^^^^^^^^^^^
