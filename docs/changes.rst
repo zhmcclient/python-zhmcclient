@@ -50,6 +50,11 @@ Released: not yet
   
 * Added support for 'error' field in 'job-results' (fixes issue #228).
 
+* Fixed version mismatches in CI test environment when testing with
+  the minimum package level by consistently using the latest released
+  packages as of zhmcclient v0.9.0 (2016-12-27). This caused an increase
+  in versions of packages needed for the runtime.
+
 **Enhancements:**
 
 * Improved the mock support by adding the typical attributes of its superclass

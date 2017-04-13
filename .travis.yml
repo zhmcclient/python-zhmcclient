@@ -13,7 +13,12 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "pypy"
+#  - "pypy"        # PyPy 2.5.0, Python 2.7.8
+  - "pypy-5.3.1"  # PyPy 5.3.1, Python 2.7.10
+#  - "pypy3"       # PyPy 2.4.0, Python 3.2.5 -> pip not supported
+# TODO: Find out which pypy3 string will work:
+#  - "pypy3-5.3.1" # PyPy 5.3.1, Python 3.3.?
+#  - "pypy3.3-5.3.1" # PyPy 5.3.1, Python 3.3.?
 os:
   - linux
 env:

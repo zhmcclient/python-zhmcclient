@@ -19,6 +19,7 @@
 # Environment variables:
 #   PYTHON_CMD: Python command to use (OS-X needs to distinguish Python 2/3)
 #   PIP_CMD: Pip command to use (OS-X needs to distinguish Python 2/3)
+#   PACKAGE_LEVEL: minimum/latest - Level of Python dependent packages to use
 # Additional prerequisites for running this Makefile are installed by running:
 #   make develop
 # ------------------------------------------------------------------------------
@@ -36,12 +37,10 @@ ifndef PACKAGE_LEVEL
   PACKAGE_LEVEL := latest
 endif
 ifeq ($(PACKAGE_LEVEL),minimum)
-  pip_constraint_opts := -c minimum-constraints.txt
-  pip_upgrade_opts := "pip >=8.0.0"
+  pip_level_opts := -c minimum-constraints.txt
 else
   ifeq ($(PACKAGE_LEVEL),latest)
-    pip_constraint_opts :=
-    pip_upgrade_opts := pip --upgrade
+    pip_level_opts := --upgrade
   else
     $(error Error: Invalid value for PACKAGE_LEVEL variable: $(PACKAGE_LEVEL))
   endif
@@ -168,14 +167,16 @@ help:
 
 .PHONY: _pip
 _pip:
-	@echo 'Installing/upgrading pip and setuptools with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_upgrade_opts)
-	$(PIP_CMD) install $(pip_constraint_opts) setuptools
+	@echo 'Installing/upgrading pip, setuptools and wheel with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
+	$(PIP_CMD) install --upgrade pip
+	$(PIP_CMD) install $(pip_level_opts) pip
+	$(PIP_CMD) install $(pip_level_opts) setuptools
+	$(PIP_CMD) install $(pip_level_opts) wheel
 
 .PHONY: develop
 develop: _pip
 	@echo 'Installing runtime and development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_constraint_opts) --upgrade -r dev-requirements.txt
+	$(PIP_CMD) install $(pip_level_opts) -r dev-requirements.txt
 	@echo '$@ done.'
 
 .PHONY: build
@@ -250,7 +251,7 @@ check: pylint.log flake8.log
 .PHONY: install
 install: _pip
 	@echo 'Installing runtime requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_constraint_opts) --upgrade .
+	$(PIP_CMD) install $(pip_level_opts) .
 	$(PYTHON_CMD) -c "import zhmcclient; print('Import: ok')"
 	@echo 'Done: Installed $(package_name) into current Python environment.'
 	@echo '$@ done.'
