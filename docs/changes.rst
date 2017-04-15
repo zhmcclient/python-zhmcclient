@@ -33,6 +33,8 @@ Released: not yet
 
 **Enhancements:**
 
+* Added content to the "Concepts" chapter in the documentation.
+
 **Known issues:**
 
 * See `list of open issues`_.

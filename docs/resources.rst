@@ -18,6 +18,38 @@
 Reference: Resources
 ====================
 
+This section describes the resource model supported by the zhmcclient package.
+
+Note that the zhmcclient package supports only a subset of the resources
+described in the :term:`HMC API` book. We will grow the implemented subset
+over time, and if you find that a particular resource you need is missing,
+please open an issue in the `zhmcclient issue tracker`_.
+
+.. _zhmcclient issue tracker: https://github.com/zhmcclient/python-zhmcclient/issues
+
+See :ref:`Resource model concepts` for a description of the concepts used
+in representing the resource model.
+
+The resource descriptions in this section do not detail the resource
+properties. The description of the resource properties of a particular HMC
+resource type can be found in its "Data model" section in the :term:`HMC API`
+book. Each Python resource class mentions the corresponding HMC resource type.
+
+The data types used in these "Data model" sections are represented in Python
+data types according to the mapping shown in the following table:
+
+===========================  =====================
+HMC API data type            Python data type
+===========================  =====================
+Boolean                      :class:`py:bool`
+Byte, Integer, Long, Short   :term:`integer`
+Float                        :class:`py:float`
+String, String Enum          :term:`unicode string`
+Timestamp                    :term:`integer`
+Array                        :class:`py:list`
+Object                       :class:`py:dict`
+===========================  =====================
+
 
 .. _`CPCs`:
 
