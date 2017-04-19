@@ -1,0 +1,58 @@
+zhmcsh - a command line tool for the zHMC
+=========================================
+
+zhcmsh.py is a command line tool on top of the
+python zhmcclient class library and can be used
+for simple HMC management tasks and does not require
+programming skills.
+
+It can simply be invoked in one of the following ways
+
+python zhmcsh.py [object] command [arguments]
+
+./zhmcsh.py [object] command [arguments]
+
+<zhmcobj> command [arguments]
+
+where <zhmcobj> is the name of a symlink to zhmcsh.py
+The source directory contains sample symlinks.
+
+Invoking with -h will give a short overview of the
+required and optional parameters.
+
+Initially supported objects are
+hmc
+cpc
+lpar
+partition
+
+Initially supported operations are
+hmc: (no extra object)
+ version
+ exit
+
+cpc:
+ list
+ show
+
+lpar:
+ list
+ show
+ activate
+ deactivate
+ load
+
+partition:
+  list
+  show
+  start
+  stop
+
+Notes:
+1. zhmcsh tries to use the system keyring to store credentials
+   needed for HMC logins. If this leads to problems or is 
+   unwanted, use the -K option to suppress keyring usage.
+   If you want to change the password in the keyring, use -p to
+   force a password prompt.
+2. zhmcsh is currently not working with python 3 because of
+   function raw_input being used.
