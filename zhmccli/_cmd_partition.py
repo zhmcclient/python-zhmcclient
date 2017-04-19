@@ -23,6 +23,14 @@ from ._helper import print_properties, print_resources, abort_if_false, \
 from ._cmd_cpc import find_cpc
 
 
+# Defaults for partition creation
+DEFAULT_IFL_PROCESSORS = 1
+DEFAULT_CP_PROCESSORS = 0
+DEFAULT_INITIAL_MEMORY_MB = 1024
+DEFAULT_MAXIMUM_MEMORY_MB = 1024
+DEFAULT_PROCESSOR_MODE = 'shared'
+
+
 def find_partition(client, cpc_name, partition_name):
     """
     Find a partition by name and return its resource object.
@@ -122,23 +130,27 @@ def partition_stop(cmd_ctx, cpc, partition):
 @click.option('--description', type=str, required=False,
               help='The description of the new partition.')
 @click.option('--cp-processors', type=int, required=False,
+              default=DEFAULT_CP_PROCESSORS,
               help='The number of general purpose (CP) processors. '
-              'Default: 0')
+              'Default: {}'.format(DEFAULT_CP_PROCESSORS))
 @click.option('--ifl-processors', type=int, required=False,
+              default=DEFAULT_IFL_PROCESSORS,
               help='The number of IFL processors. '
-              'Default: 0')
+              'Default: {}'.format(DEFAULT_IFL_PROCESSORS))
 @click.option('--processor-mode', type=click.Choice(['dedicated', 'shared']),
-              required=False,
+              required=False, default=DEFAULT_PROCESSOR_MODE,
               help='The sharing mode for processors. '
-              'Default: shared')
+              'Default: {}'.format(DEFAULT_PROCESSOR_MODE))
 @click.option('--initial-memory', type=int, required=False,
+              default=DEFAULT_INITIAL_MEMORY_MB,
               help='The initial amount of memory (in MiB) when the partition '
               'is started. '
-              'Default: 1024 MiB')
+              'Default: {} MiB'.format(DEFAULT_INITIAL_MEMORY_MB))
 @click.option('--maximum-memory', type=int, required=False,
+              default=DEFAULT_MAXIMUM_MEMORY_MB,
               help='The maximum amount of memory (in MiB) while the partition '
               'is running. '
-              'Default: 1024 MiB')
+              'Default: {} MiB'.format(DEFAULT_MAXIMUM_MEMORY_MB))
 @click.option('--boot-ftp-host', type=str, required=False,
               help='Boot from an FTP server: The hostname or IP address of '
               'the FTP server.')
@@ -352,6 +364,12 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
     else:
         # boot-device="none" is the default
         pass
+
+    # Handle that the HMC rejects CPs=0 if IFLs>0 and vice versa
+    if properties['ifl-processors'] == 0:
+        del properties['ifl-processors']
+    if properties['cp-processors'] == 0:
+        del properties['cp-processors']
 
     try:
         new_partition = cpc.partitions.create(properties)
