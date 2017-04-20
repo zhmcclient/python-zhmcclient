@@ -38,6 +38,12 @@ Released: not yet
 * Fixed that the defaults for memory for the ``zhmc partition create`` command
   were ignored (issue #246).
 
+* The default values for the retra / timeout configuration for a session has
+  been changed to disable read retries and to set the read timeout to 1 hour.
+  This has been done in order to mitigate the behavior of the 'requests' module
+  to retry HTTP methods even if they are not idempotent (e.g. DELETE).
+  This is a short term mitigation for issue #249.
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.
