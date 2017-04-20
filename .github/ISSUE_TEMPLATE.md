@@ -8,3 +8,5 @@
 
 * zhmcclient version:
 * Operating system (type+version):
+* HMC version:
+* CPC version:
