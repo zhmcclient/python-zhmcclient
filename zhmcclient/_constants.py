@@ -47,12 +47,24 @@ DEFAULT_CONNECT_RETRIES = 3
 #: Default HTTP read timeout in seconds,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
-DEFAULT_READ_TIMEOUT = 300
+#:
+#: Note: The default value for this parameter has been increased to a large
+#: value in order to mitigate the behavior of the 'requests' module to
+#: retry HTTP methods even if they are not idempotent (e.g. DELETE).
+#: See zhmcclient `issue #249
+#: <https://github.com/zhmcclient/python-zhmcclient/issues/249>`_.
+DEFAULT_READ_TIMEOUT = 3600
 
 #: Default number of HTTP read retries,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
-DEFAULT_READ_RETRIES = 3
+#:
+#: Note: The default value for this parameter has been set to 0 in order to
+#: mitigate the behavior of the 'requests' module to retry HTTP methods even if
+#: they are not idempotent (e.g. DELETE).
+#: See zhmcclient `issue #249
+#: <https://github.com/zhmcclient/python-zhmcclient/issues/249>`_.
+DEFAULT_READ_RETRIES = 0
 
 #: Default max. number of HTTP redirects,
 #: if not specified in the ``retry_timeout_config`` init argument to
