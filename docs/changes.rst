@@ -27,9 +27,16 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Changed the default for number of IFL processors for the
+  ``zhmc partition create`` command from 0 to 1, so that now a partition can
+  be created with the defaults for any partition property options.
+
 **Deprecations:**
 
 **Bug fixes:**
+
+* Fixed that the defaults for memory for the ``zhmc partition create`` command
+  were ignored (issue #246).
 
 **Enhancements:**
 
