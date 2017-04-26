@@ -140,6 +140,9 @@ class RetryTimeoutConfig(object):
           read_retries (:term:`integer`): Number of retries (after the
             initial attempt) for read-related issues. These retries are
             performed for failed socket reads and socket read timeouts.
+            A retry consists of resending the original HTTP request. The
+            zhmcclient restricts these retries to just the HTTP GET method.
+            For other HTTP methods, no retry will be performed.
 
           max_redirects (:term:`integer`): Maximum number of HTTP redirects.
 
@@ -161,9 +164,12 @@ class RetryTimeoutConfig(object):
         self.operation_timeout = operation_timeout
         self.status_timeout = status_timeout
 
+        # Read retries only for these HTTP methods:
+        self.method_whitelist = {'GET'}
+
     _attrs = ('connect_timeout', 'connect_retries', 'read_timeout',
               'read_retries', 'max_redirects', 'operation_timeout',
-              'status_timeout')
+              'status_timeout', 'method_whitelist')
 
     def override_with(self, override_config):
         """
@@ -532,12 +538,8 @@ class Session(object):
             total=None,
             connect=retry_timeout_config.connect_retries,
             read=retry_timeout_config.read_retries,
+            method_whitelist=retry_timeout_config.method_whitelist,
             redirect=retry_timeout_config.max_redirects)
-        # TODO: Pass method_whitelist=False to Retry()?
-        # This would cause retry for POST in addition to the default of GET and
-        # DELETE (the idempotent HTTP methods we use). The uncertainty is
-        # whether unintended duplicate execution of the POST can happen.
-
         session = requests.Session()
         session.mount('https://',
                       requests.adapters.HTTPAdapter(max_retries=retry))
