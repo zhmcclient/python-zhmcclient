@@ -198,12 +198,9 @@ class PortTests(unittest.TestCase):
         ports = port_mgr.list(full_properties=False)
         port = ports[0]
         with requests_mock.mock() as m:
-            result = {}
-            m.post(
-                '/api/adapters/fake-adapter-id-1/storage-ports/0',
-                json=result)
-            status = port.update_properties(properties={})
-            self.assertEqual(status, None)
+            m.post('/api/adapters/fake-adapter-id-1/storage-ports/0',
+                   status_code=204)
+            port.update_properties(properties={})
 
 
 if __name__ == '__main__':

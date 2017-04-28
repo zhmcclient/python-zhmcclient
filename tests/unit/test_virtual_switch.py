@@ -183,11 +183,8 @@ class VirtualSwitchTests(unittest.TestCase):
 
             vswitches = vswitch_mgr.list(full_properties=False)
             vswitch = vswitches[0]
-            m.post(
-                "/api/virtual-switches/fake-vswitch-id1",
-                json=result)
-            status = vswitch.update_properties(properties={})
-            self.assertEqual(status, None)
+            m.post("/api/virtual-switches/fake-vswitch-id1", status_code=204)
+            vswitch.update_properties(properties={})
 
     def test_get_connected_nics(self):
         """

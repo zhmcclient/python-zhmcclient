@@ -195,12 +195,9 @@ class ActivationProfileTests(unittest.TestCase):
                   json=result)
             profiles = image_mgr.list(full_properties=False)
             profile = profiles[0]
-            m.post(
-                '/api/cpcs/fake-element-uri-id-1/image-activation-profiles/'
-                'LPAR1',
-                json=result)
-            status = profile.update_properties(properties={})
-            self.assertEqual(status, None)
+            m.post('/api/cpcs/fake-element-uri-id-1/image-activation-profiles/'
+                   'LPAR1', status_code=204)
+            profile.update_properties(properties={})
 
 
 if __name__ == '__main__':

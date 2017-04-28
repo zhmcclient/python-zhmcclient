@@ -208,12 +208,9 @@ class NicTests(unittest.TestCase):
         nics = nic_mgr.list(full_properties=False)
         nic = nics[0]
         with requests_mock.mock() as m:
-            result = {}
-            m.delete(
-                '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
-                json=result)
-            status = nic.delete()
-            self.assertEqual(status, None)
+            m.delete('/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                     status_code=204)
+            nic.delete()
 
     def test_update_properties(self):
         """
@@ -223,12 +220,9 @@ class NicTests(unittest.TestCase):
         nics = nic_mgr.list(full_properties=False)
         nic = nics[0]
         with requests_mock.mock() as m:
-            result = {}
-            m.post(
-                '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
-                json=result)
-            status = nic.update_properties(properties={})
-            self.assertEqual(status, None)
+            m.post('/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                   status_code=204)
+            nic.update_properties(properties={})
 
     def test_nic_object(self):
         """

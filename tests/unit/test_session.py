@@ -316,7 +316,7 @@ class JobTests(unittest.TestCase):
                 'status': 'running',
             }
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             job_status, op_result = job.check_for_completion()
 
@@ -339,7 +339,7 @@ class JobTests(unittest.TestCase):
                 # 'job-results' is optional and is omitted
             }
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             job_status, op_result = job.check_for_completion()
 
@@ -365,7 +365,7 @@ class JobTests(unittest.TestCase):
                 'job-results': exp_op_result,
             }
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             job_status, op_result = job.check_for_completion()
 
@@ -388,7 +388,7 @@ class JobTests(unittest.TestCase):
             }
 
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             with self.assertRaises(HTTPError) as cm:
                 job_status, op_result = job.check_for_completion()
@@ -413,7 +413,7 @@ class JobTests(unittest.TestCase):
             }
 
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             with self.assertRaises(HTTPError) as cm:
                 job_status, op_result = job.check_for_completion()
@@ -442,7 +442,7 @@ class JobTests(unittest.TestCase):
             }
 
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             with self.assertRaises(HTTPError) as cm:
                 job_status, op_result = job.check_for_completion()
@@ -471,7 +471,7 @@ class JobTests(unittest.TestCase):
             }
 
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             with self.assertRaises(HTTPError) as cm:
                 job_status, op_result = job.check_for_completion()
@@ -499,7 +499,7 @@ class JobTests(unittest.TestCase):
                 'job-results': exp_op_result,
             }
             m.get(self.job_uri, json=query_job_status_result)
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             op_result = job.wait_for_completion()
 
@@ -522,7 +522,7 @@ class JobTests(unittest.TestCase):
                       {'text': result_running_callback},
                       {'text': result_complete_callback},
                   ])
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             op_result = job.wait_for_completion()
 
@@ -542,7 +542,7 @@ class JobTests(unittest.TestCase):
                       {'text': result_running_callback},
                       {'text': result_complete_callback},
                   ])
-            m.delete(self.job_uri)
+            m.delete(self.job_uri, status_code=204)
 
             # Here we provoke a timeout, by setting the timeout to less than
             # the time it would take to return the completed job status.
