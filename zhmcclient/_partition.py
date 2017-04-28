@@ -75,6 +75,7 @@ class PartitionManager(BaseManager):
 
         super(PartitionManager, self).__init__(
             resource_class=Partition,
+            session=cpc.manager.session,
             parent=cpc,
             uri_prop='object-uri',
             name_prop='name',
@@ -147,6 +148,7 @@ class PartitionManager(BaseManager):
                     if full_properties:
                         resource_obj.pull_full_properties()
 
+        self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
 
     @logged_api_call
@@ -185,7 +187,11 @@ class PartitionManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return Partition(self, props['object-uri'], None, props)
+        name = props.get(self._name_prop, None)
+        uri = props[self._uri_prop]
+        part = Partition(self, uri, name, props)
+        self._name_uri_cache.update(name, uri)
+        return part
 
     @logged_api_call
     def partition_object(self, part_id):
@@ -422,6 +428,8 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.delete(self.uri)
+        self.manager._name_uri_cache.delete(
+            self.properties.get(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties):
@@ -449,6 +457,9 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(self.uri, body=properties)
+        self.properties.update(properties.copy())
+        if self.manager._name_prop in properties:
+            self.manager._name_uri_cache.update(self.name, self.uri)
 
     @logged_api_call
     def dump_partition(self, parameters, wait_for_completion=True,

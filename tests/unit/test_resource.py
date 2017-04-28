@@ -23,7 +23,7 @@ import unittest
 import time
 from collections import OrderedDict
 
-from zhmcclient import BaseResource, BaseManager
+from zhmcclient import BaseResource, BaseManager, Session
 
 
 class MyResource(BaseResource):
@@ -47,10 +47,11 @@ class MyManager(BaseManager):
 
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
-    def __init__(self, parent=None):
+    def __init__(self, session):
         super(MyManager, self).__init__(
             resource_class=MyResource,
-            parent=parent,
+            session=session,
+            parent=None,  # a top-level resource
             uri_prop='fake-uri-prop',
             name_prop='fake-name-prop',
             query_props=['qp1', 'qp2'])
@@ -68,7 +69,8 @@ class ResourceTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.mgr = MyManager()
+        self.session = Session(host='fake-host')
+        self.mgr = MyManager(self.session)
         self.uri = "/api/resource/deadbeef-beef-beef-beef-deadbeefbeef"
         self.name = "fake-name"
         self.uri_prop = 'fake-uri-prop'  # same as in MyManager

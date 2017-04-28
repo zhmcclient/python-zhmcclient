@@ -86,12 +86,11 @@ class CpcManager(BaseManager):
 
         super(CpcManager, self).__init__(
             resource_class=Cpc,
+            session=client.session,
             parent=None,
             uri_prop='object-uri',
             name_prop='name',
             query_props=query_props)
-
-        self._session = client.session
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None):
@@ -150,6 +149,7 @@ class CpcManager(BaseManager):
                     if full_properties:
                         resource_obj.pull_full_properties()
 
+        self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
 
 

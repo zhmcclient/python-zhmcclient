@@ -58,6 +58,7 @@ class NicManager(BaseManager):
 
         super(NicManager, self).__init__(
             resource_class=Nic,
+            session=partition.manager.session,
             parent=partition,
             uri_prop='element-uri',
             name_prop='name',
@@ -121,6 +122,8 @@ class NicManager(BaseManager):
                     resource_obj_list.append(resource_obj)
                     if full_properties:
                         resource_obj.pull_full_properties()
+
+        self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
 
     @logged_api_call
@@ -168,7 +171,11 @@ class NicManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return Nic(self, props['element-uri'], None, props)
+        name = props.get(self._name_prop, None)
+        uri = props[self._uri_prop]
+        nic = Nic(self, uri, name, props)
+        self._name_uri_cache.update(name, uri)
+        return nic
 
     @logged_api_call
     def nic_object(self, nic_id):
@@ -256,6 +263,8 @@ class Nic(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.delete(self._uri)
+        self.manager._name_uri_cache.delete(
+            self.properties.get(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties):
@@ -283,4 +292,7 @@ class Nic(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self.manager.session.post(self._uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)
+        self.properties.update(properties.copy())
+        if self.manager._name_prop in properties:
+            self.manager._name_uri_cache.update(self.name, self.uri)

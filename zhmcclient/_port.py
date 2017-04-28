@@ -52,6 +52,7 @@ class PortManager(BaseManager):
 
         super(PortManager, self).__init__(
             resource_class=Port,
+            session=adapter.manager.session,
             parent=adapter,
             uri_prop='element-uri',
             name_prop='name',
@@ -122,6 +123,8 @@ class PortManager(BaseManager):
                     resource_obj_list.append(resource_obj)
                     if full_properties:
                         resource_obj.pull_full_properties()
+
+        self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
 
 
@@ -183,4 +186,7 @@ class Port(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self.manager.session.post(self._uri, body=properties)
+        self.manager.session.post(self.uri, body=properties)
+        self.properties.update(properties.copy())
+        if self.manager._name_prop in properties:
+            self.manager._name_uri_cache.update(self.name, self.uri)

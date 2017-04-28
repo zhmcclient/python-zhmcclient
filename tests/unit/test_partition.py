@@ -37,19 +37,21 @@ class PartitionTests(unittest.TestCase):
             m.post('/api/sessions', json={'api-session': 'test-session-id'})
             self.session.logon()
 
+        self.cpc_id = 'fake-cpc-id-1'
+        self.cpc_name = 'CPC1'
+
         self.cpc_mgr = self.client.cpcs
         with requests_mock.mock() as m:
             result = {
                 'cpcs': [
                     {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'CPC1',
+                        'object-uri': '/api/cpcs/%s' % self.cpc_id,
+                        'name': self.cpc_name,
                         'status': '',
                     }
                 ]
             }
             m.get('/api/cpcs', json=result)
-#            self.cpc = self.cpc_mgr.find(name="CPC1", full_properties=False)
             cpcs = self.cpc_mgr.list()
             self.cpc = cpcs[0]
 
@@ -84,8 +86,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             partitions = partition_mgr.list(full_properties=False)
 
@@ -121,7 +122,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             mock_result_part1 = {
                 'status': 'active',
@@ -154,22 +155,78 @@ class PartitionTests(unittest.TestCase):
                 self.assertTrue(partition.full_properties)
                 self.assertEqual(partition.manager, partition_mgr)
 
-    def test_create(self):
+    def test_create_empty_input(self):
         """
-        This tests the 'Create' operation.
+        This tests the 'Create' operation, with no input properties.
         """
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'object-uri': '/api/partitions/fake-part-id-1'
-            }
-            m.post('/api/cpcs/fake-cpc-id-1/partitions', json=result)
 
-            partition = partition_mgr.create(properties={})
+        part_id = 'fake-part-id-1'  # created by faked HMC
+        part_uri = '/api/partitions/%s' % part_id
+        part_name = 'fake-part-name-1'
+
+        with requests_mock.mock() as m:
+            input_props = {
+            }
+            mock_create_result = {
+                'object-uri': part_uri
+            }
+            # this test implements a mocked HMC that creates a default name:
+            mock_get_result = {
+                'object-uri': part_uri,
+                'name': part_name
+            }
+            m.post('/api/cpcs/%s/partitions' % self.cpc_id,
+                   json=mock_create_result)
+
+            partition = partition_mgr.create(properties=input_props)
+
+            props = input_props.copy()
+            props.update(mock_create_result)
 
             self.assertTrue(isinstance(partition, Partition))
-            self.assertEqual(partition.properties, result)
-            self.assertEqual(partition.uri, result['object-uri'])
+            self.assertEqual(partition.properties, props)
+            self.assertEqual(partition.uri, part_uri)
+
+            # Check the name property (accessing it will cause a get)
+            m.get(part_uri, json=mock_get_result)
+            self.assertEqual(partition.name, part_name)
+
+    def test_create_name_input(self):
+        """
+        This tests the 'Create' operation, with partition name as input
+        properties.
+        """
+        partition_mgr = self.cpc.partitions
+
+        part_id = 'fake-part-id-1'  # created by faked HMC
+        part_uri = '/api/partitions/%s' % part_id
+        part_name = 'fake-part-name-1'
+
+        with requests_mock.mock() as m:
+            input_props = {
+                'name': part_name
+            }
+            mock_create_result = {
+                'object-uri': part_uri
+            }
+            m.post('/api/cpcs/%s/partitions' % self.cpc_id,
+                   json=mock_create_result)
+
+            partition = partition_mgr.create(properties=input_props)
+
+            props = input_props.copy()
+            props.update(mock_create_result)
+
+            self.assertTrue(isinstance(partition, Partition))
+            self.assertEqual(partition.properties, props)
+            self.assertEqual(partition.uri, part_uri)
+
+            # Check the name property (accessing it will not cause a get,
+            # because the create() method is supposed to also update the
+            # properties of the Python resource object, so the property
+            # is already available).
+            self.assertEqual(partition.name, part_name)
 
     def test_start(self):
         """
@@ -191,7 +248,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
@@ -226,7 +283,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
@@ -247,7 +304,7 @@ class PartitionTests(unittest.TestCase):
         """
         partition_mgr = self.cpc.partitions
         with requests_mock.mock() as m:
-            result = {
+            initial_partitions = {
                 'partitions': [
                     {
                         'status': 'active',
@@ -261,45 +318,111 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id,
+                  json=initial_partitions)
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
-            m.delete(
-                "/api/partitions/fake-part-id-1",
-                json=result)
+            m.delete("/api/partitions/fake-part-id-1")
             status = partition.delete()
             self.assertEqual(status, None)
 
-    def test_update_properties(self):
+    def test_delete_create_same_name(self):
         """
-        This tests the 'Update Partition Properties' operation.
+        This tests a partition deletion followed by a creation of a partition
+        with the same name.
         """
         partition_mgr = self.cpc.partitions
         with requests_mock.mock() as m:
-            result = {
+            partition1_uri = '/api/partitions/fake-part-id-1#1'
+            list_partitions_result = {
                 'partitions': [
                     {
                         'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
+                        'object-uri': partition1_uri,
+                        'name': 'PART1',
+                        'description': 'PART1 #1'
                     },
                     {
                         'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
+                        'object-uri': '/api/partitions/fake-part-id-2#1',
+                        'name': 'PART2',
+                        'description': 'PART2 #1'
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id,
+                  json=list_partitions_result)
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            m.post(
-                "/api/partitions/fake-part-id-1",
-                json=result)
-            status = partition.update_properties(properties={})
+            # Find the partition.
+            partition1 = partition_mgr.find(name='PART1')
+
+            # Delete the partition.
+            m.delete(partition1_uri)
+            status = partition1.delete()
             self.assertEqual(status, None)
+
+            # Create a new partition with the same name.
+            partition1_new_uri = '/api/partitions/fake-part-id-1#2'
+            partition1_new_props = {
+                'name': 'PART1',
+                'description': 'PART1 #2'
+            }
+            create_partition1_new_result = {
+                'object-uri': partition1_new_uri
+            }
+            m.post('/api/cpcs/%s/partitions' % self.cpc_id,
+                   json=create_partition1_new_result)
+            partition1_new_created = partition_mgr.create(partition1_new_props)
+            self.assertNotEqual(partition1_new_created.uri, partition1_uri)
+            self.assertEqual(partition1_new_created.uri, partition1_new_uri)
+
+            # Find the new partition.
+            partition1_new_found = partition_mgr.find(name='PART1')
+            self.assertEqual(partition1_new_found.uri, partition1_new_uri)
+
+    def test_update_properties_all(self):
+        """
+        This tests the `update_properties()` method with a number of different
+        new properties.
+        """
+
+        # Each list item is a separate test.
+        # TODO: Use fixtures instead of loop, for better diagnostics
+        update_props_tests = [
+            {},
+            {'name': 'PART1-updated'},
+            {'description': 'new description added'},
+        ]
+
+        partition_mgr = self.cpc.partitions
+
+        for update_props in update_props_tests:
+            with requests_mock.mock() as m:
+                list_partitions_result = {
+                    'partitions': [
+                        {
+                            'status': 'active',
+                            'object-uri': '/api/partitions/fake-part-id-1',
+                            'name': 'PART1'
+                        }
+                    ]
+                }
+                m.get('/api/cpcs/%s/partitions' % self.cpc_id,
+                      json=list_partitions_result)
+                partition = partition_mgr.list(full_properties=False)[0]
+                partition_props = partition.properties.copy()
+
+                m.post("/api/partitions/fake-part-id-1", status_code=204)
+                partition.update_properties(properties=update_props)
+
+                list_partitions_result['partitions'][0].update(update_props)
+                partition_upd = partition_mgr.list(full_properties=False)[0]
+                partition_upd_props = partition_upd.properties.copy()
+
+                exp_partition_upd_props = partition_props.copy()
+                exp_partition_upd_props.update(update_props)
+                self.assertEqual(partition_upd_props, exp_partition_upd_props)
 
     def test_dump_partition(self):
         """
@@ -321,7 +444,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
@@ -355,7 +478,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
@@ -388,7 +511,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
@@ -421,7 +544,7 @@ class PartitionTests(unittest.TestCase):
                     }
                 ]
             }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
