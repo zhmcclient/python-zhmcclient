@@ -27,9 +27,12 @@ Released: not yet
 
 **Incompatible changes:**
 
-* Changed the default for number of IFL processors for the
-  ``zhmc partition create`` command from 0 to 1, so that now a partition can
-  be created with the defaults for any partition property options.
+* In the CLI, changed the default for number of processors for the
+  ``zhmc partition create`` command to create 1 IFL by default, if neither
+  IFLs nor CPs had been specified. Also, a specified number of 0 processors
+  is now passed on to the HMC (and rejected there) instead of being removed
+  by the CLI. This keeps the logic simpler and more understandable. See
+  also issue #258.
 
 **Deprecations:**
 
