@@ -84,6 +84,10 @@ Released: not yet
   (besides the current zhmcclient instance) change resources on the HMC.
   This came up as part of issue #253.
 
+* Improved the documentation of the lookup methods (list(), find(), findall())
+  and of the resource filtering concept in section 'Filtering'. Related to
+  issue #261.
+
 **Known issues:**
 
 * See `list of open issues`_.

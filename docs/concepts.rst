@@ -227,41 +227,49 @@ section :ref:`Exceptions`.
 Filtering
 ---------
 
-Some methods (e.g. :meth:`~zhmcclient.BaseManager.list` or
-:meth:`~zhmcclient.BaseManager.find`) support the concept of resource
+The resource lookup methods on manager objects support the concept of resource
 filtering. This concept allows narrowing the set of returned resources based
-upon matching their resource properties against filter arguments.
+upon the matching of filter arguments.
 
-The filter arguments are used to construct filter query parameters in the
-HMC operations, so that they are processed on the server side by the HMC.
+The methods that support resource filtering, are:
 
-The methods that support resource filtering either have keyword arguments
-``**filter_args``, or have a parameter ``filter_args`` that can be `None` for
-no filtering or a dictionary to enable filtering. In both cases,
-``filter_args`` is a dictionary.
+* :meth:`~zhmcclient.BaseManager.findall`
+* :meth:`~zhmcclient.BaseManager.find`
+* :meth:`~zhmcclient.BaseManager.list`
 
-The dictionary keys specify the names of the resource properties that need to
-match for the resource to be included in the result. A resource is included
-in the result only if all resource properties specified in the dictionary
-match.
+A resource is included in the result only if it matches all filter arguments
+(i.e. this is a logical AND between the filter arguments).
 
-The dictionary value specifies how the corresponding resource property matches:
+A filter argument specifies a property name and a match value.
+
+Any resource property may be specified in a filter argument. The zhmcclient
+implementation handles them in an optimized way: Properties that can be
+filtered on the HMC are actually filtered there (this varies by resource type),
+and the remaining properties are filtered on the client side.
+
+For the :meth:`~zhmcclient.BaseManager.findall` and
+:meth:`~zhmcclient.BaseManager.find` methods, an additional optimization is
+implemented: If the "name" property is specified as the only filter argument,
+an optimized lookup is performed that uses a name-to-URI cache in this manager
+object.
+
+The match value specifies how the corresponding resource property matches:
 
 * For resource properties of type String (as per the resource's data model in
-  the :term:`HMC API`), the dictionary value is interpreted as a regular
+  the :term:`HMC API`), the match value is interpreted as a regular
   expression that must match the actual resource property value. The regular
   expression syntax used is the same as that used by the Java programming
   language, as specified for the ``java.util.regex.Pattern`` class (see
   http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html).
 
-* For resource properties of type String Enum, the dictionary value is
-  interpreted as an exact string that must be equal to the actual resource
-  property value.
+* For resource properties of type String Enum, the match value is interpreted
+  as an exact string that must be equal to the actual resource property value.
 
-* TBD: What happens for other types of resource properties?
+* For resource properties of other types, the match value is interpreted
+  as an exact value that must be equal to the actual resource property value.
 
-* If the dictionary value is a list or a tuple, the resource matches if any
-  item in the list or tuple matches.
+* If the match value is a list or a tuple, a resource matches if any item in
+  the list or tuple matches (i.e. this is a logical OR between the list items).
 
 Examples:
 
@@ -278,9 +286,24 @@ Examples:
 
   The returned resource objects will have only a minimal set of properties.
 
-* This example uses the :meth:`~zhmcclient.BaseManager.list` method to return
-  the same set of OSA adapters as the previous example, but the returned
+* This example uses the :meth:`~zhmcclient.AdapterManager.list` method to
+  return the same set of OSA adapters as the previous example, but the returned
   resource objects have the full set of properties::
 
       osa_adapters = cpc.adapters.list(full_properties=True,
                                        filter_args=filter_args)
+
+* This example uses the :meth:`~zhmcclient.BaseManager.find` method to
+  return the adapter with a given adapter name::
+
+      adapter1 = cpc.adapters.find(name='OSA-1')
+
+  The returned resource object will have only a minimal set of properties.
+
+* This example uses the :meth:`~zhmcclient.BaseManager.find` method to
+  return the adapter with a given object ID::
+
+      oid = '12345-abc...-def-67890'
+      adapter1 = cpc.adapters.find(**{'object-id':oid})
+
+  The returned resource object will have only a minimal set of properties.
