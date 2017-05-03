@@ -182,9 +182,8 @@ class LparTests(unittest.TestCase):
                 "job-status-code": 204,
                 "status": "complete"
             }
-            m.post(
-                "/api/logical-partitions/fake-lpar-id-1/operations/activate",
-                json=result)
+            m.post("/api/logical-partitions/fake-lpar-id-1/operations/"
+                   "activate", json=result)
             status = lpar.activate(wait_for_completion=False)
             self.assertEqual(status, result)
 
@@ -217,9 +216,8 @@ class LparTests(unittest.TestCase):
                 "job-status-code": 204,
                 "status": "complete"
             }
-            m.post(
-                "/api/logical-partitions/fake-lpar-id-1/operations/deactivate",
-                json=result)
+            m.post("/api/logical-partitions/fake-lpar-id-1/operations/"
+                   "deactivate", json=result)
             status = lpar.deactivate(wait_for_completion=False)
             self.assertEqual(status, result)
 

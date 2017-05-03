@@ -220,13 +220,9 @@ class VirtualFunctionTests(unittest.TestCase):
         vfs = vf_mgr.list(full_properties=False)
         vf = vfs[0]
         with requests_mock.mock() as m:
-            result = {}
-            m.delete(
-                '/api/partitions/fake-part-id-1/virtual-functions/'
-                'fake-vf-id-1',
-                json=result)
-            status = vf.delete()
-            self.assertEqual(status, None)
+            m.delete('/api/partitions/fake-part-id-1/virtual-functions/'
+                     'fake-vf-id-1', status_code=204)
+            vf.delete()
 
     def test_update_properties(self):
         """
@@ -236,13 +232,9 @@ class VirtualFunctionTests(unittest.TestCase):
         vfs = vf_mgr.list(full_properties=False)
         vf = vfs[0]
         with requests_mock.mock() as m:
-            result = {}
-            m.post(
-                '/api/partitions/fake-part-id-1/virtual-functions/'
-                'fake-vf-id-1',
-                json=result)
-            status = vf.update_properties(properties={})
-            self.assertEqual(status, None)
+            m.post('/api/partitions/fake-part-id-1/virtual-functions/'
+                   'fake-vf-id-1', status_code=204)
+            vf.update_properties(properties={})
 
 
 if __name__ == '__main__':

@@ -53,6 +53,15 @@ Released: not yet
   creation of manager objects is not part of the external API, this should not
   affect users. See issue #253.
 
+* In the unit testcases for the `update_properties()` and `delete()` methods of
+  resource classes, fixed incorrect assumptions about their method return
+  values. See issue #256.
+
+* In the unit testcases for the `update_properties()` and `delete()` methods of
+  resource classes, fixed incorrectly returned response bodies for mocked
+  DELETE and POST (for update), and replaced that with status 204 (no content).
+  This came up as part of fixing issue #256.
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.

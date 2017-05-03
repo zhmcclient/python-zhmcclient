@@ -220,11 +220,8 @@ class AdapterTests(unittest.TestCase):
 
             adapters = adapter_mgr.list(full_properties=False)
             adapter = adapters[0]
-            m.delete(
-                "/api/adapters/fake-adapter-id-1",
-                json=result)
-            status = adapter.delete()
-            self.assertEqual(status, None)
+            m.delete("/api/adapters/fake-adapter-id-1", status_code=204)
+            adapter.delete()
 
     def test_update_properties(self):
         """
@@ -256,11 +253,8 @@ class AdapterTests(unittest.TestCase):
 
             adapters = adapter_mgr.list(full_properties=False)
             adapter = adapters[0]
-            m.post(
-                "/api/adapters/fake-adapter-id-1",
-                json=result)
-            status = adapter.update_properties(properties={})
-            self.assertEqual(status, None)
+            m.post("/api/adapters/fake-adapter-id-1", status_code=204)
+            adapter.update_properties(properties={})
 
 
 if __name__ == '__main__':

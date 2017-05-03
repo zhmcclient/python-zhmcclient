@@ -208,12 +208,9 @@ class HbaTests(unittest.TestCase):
         hbas = hba_mgr.list(full_properties=False)
         hba = hbas[0]
         with requests_mock.mock() as m:
-            result = {}
-            m.delete(
-                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
-                json=result)
-            status = hba.delete()
-            self.assertEqual(status, None)
+            m.delete('/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                     status_code=204)
+            hba.delete()
 
     def test_update_properties(self):
         """
@@ -223,12 +220,9 @@ class HbaTests(unittest.TestCase):
         hbas = hba_mgr.list(full_properties=False)
         hba = hbas[0]
         with requests_mock.mock() as m:
-            result = {}
-            m.post(
-                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
-                json=result)
-            status = hba.update_properties(properties={})
-            self.assertEqual(status, None)
+            m.post('/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                   status_code=204)
+            hba.update_properties(properties={})
 
     def test_reassign_port(self):
         """

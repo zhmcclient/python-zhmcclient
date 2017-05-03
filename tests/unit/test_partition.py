@@ -257,9 +257,8 @@ class PartitionTests(unittest.TestCase):
                 "job-status-code": 204,
                 "status": "complete"
             }
-            m.post(
-                "/api/partitions/fake-part-id-1/operations/start",
-                json=result)
+            m.post("/api/partitions/fake-part-id-1/operations/start",
+                   json=result)
             status = partition.start(wait_for_completion=False)
             self.assertEqual(status, result)
 
@@ -292,9 +291,8 @@ class PartitionTests(unittest.TestCase):
                 "job-status-code": 204,
                 "status": "complete"
             }
-            m.post(
-                "/api/partitions/fake-part-id-1/operations/stop",
-                json=result)
+            m.post("/api/partitions/fake-part-id-1/operations/stop",
+                   json=result)
             status = partition.stop(wait_for_completion=False)
             self.assertEqual(status, result)
 
@@ -323,9 +321,8 @@ class PartitionTests(unittest.TestCase):
 
             partitions = partition_mgr.list(full_properties=False)
             partition = partitions[0]
-            m.delete("/api/partitions/fake-part-id-1")
-            status = partition.delete()
-            self.assertEqual(status, None)
+            m.delete("/api/partitions/fake-part-id-1", status_code=204)
+            partition.delete()
 
     def test_delete_create_same_name(self):
         """
@@ -451,9 +448,8 @@ class PartitionTests(unittest.TestCase):
             result = {
                 'job-uri': '/api/jobs/fake-job-id-1'
             }
-            m.post(
-                "/api/partitions/fake-part-id-1/operations/scsi-dump",
-                json=result)
+            m.post("/api/partitions/fake-part-id-1/operations/scsi-dump",
+                   json=result)
             status = partition.dump_partition(
                 wait_for_completion=False, parameters={})
             self.assertEqual(status, result)
@@ -485,9 +481,8 @@ class PartitionTests(unittest.TestCase):
             result = {
                 'job-uri': '/api/jobs/fake-job-id-1'
             }
-            m.post(
-                "/api/partitions/fake-part-id-1/operations/psw-restart",
-                json=result)
+            m.post("/api/partitions/fake-part-id-1/operations/psw-restart",
+                   json=result)
             status = partition.psw_restart(wait_for_completion=False)
             self.assertEqual(status, result)
 
@@ -518,9 +513,8 @@ class PartitionTests(unittest.TestCase):
             result = {
                 'job-uri': '/api/jobs/fake-job-id-1'
             }
-            m.post(
-                "/api/partitions/fake-part-id-1/operations/mount-iso-image",
-                json=result)
+            m.post("/api/partitions/fake-part-id-1/operations/mount-iso-image",
+                   json=result)
             status = partition.mount_iso_image(properties={})
             self.assertEqual(status, None)
 
@@ -551,9 +545,8 @@ class PartitionTests(unittest.TestCase):
             result = {
                 'job-uri': '/api/jobs/fake-job-id-1'
             }
-            m.post(
-                "/api/partitions/fake-part-id-1/operations/unmount-iso-image",
-                json=result)
+            m.post("/api/partitions/fake-part-id-1/operations/"
+                   "unmount-iso-image", json=result)
             status = partition.unmount_iso_image()
             self.assertEqual(status, None)
 
