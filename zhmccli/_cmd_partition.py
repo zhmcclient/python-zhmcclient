@@ -25,7 +25,6 @@ from ._cmd_cpc import find_cpc
 
 # Defaults for partition creation
 DEFAULT_IFL_PROCESSORS = 1
-DEFAULT_CP_PROCESSORS = 0
 DEFAULT_INITIAL_MEMORY_MB = 1024
 DEFAULT_MAXIMUM_MEMORY_MB = 1024
 DEFAULT_PROCESSOR_MODE = 'shared'
@@ -130,13 +129,12 @@ def partition_stop(cmd_ctx, cpc, partition):
 @click.option('--description', type=str, required=False,
               help='The description of the new partition.')
 @click.option('--cp-processors', type=int, required=False,
-              default=DEFAULT_CP_PROCESSORS,
               help='The number of general purpose (CP) processors. '
-              'Default: {}'.format(DEFAULT_CP_PROCESSORS))
+              'Default: No CP processors')
 @click.option('--ifl-processors', type=int, required=False,
-              default=DEFAULT_IFL_PROCESSORS,
               help='The number of IFL processors. '
-              'Default: {}'.format(DEFAULT_IFL_PROCESSORS))
+              'Default: {}, if no CP processors have been specified'.
+              format(DEFAULT_IFL_PROCESSORS))
 @click.option('--processor-mode', type=click.Choice(['dedicated', 'shared']),
               required=False, default=DEFAULT_PROCESSOR_MODE,
               help='The sharing mode for processors. '
@@ -365,11 +363,10 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
         # boot-device="none" is the default
         pass
 
-    # Handle that the HMC rejects CPs=0 if IFLs>0 and vice versa
-    if properties['ifl-processors'] == 0:
-        del properties['ifl-processors']
-    if properties['cp-processors'] == 0:
-        del properties['cp-processors']
+    # Default for the number of processors
+    if 'ifl-processors' not in properties and \
+            'cp-processors' not in properties:
+        properties['ifl-processors'] = DEFAULT_IFL_PROCESSORS
 
     try:
         new_partition = cpc.partitions.create(properties)
