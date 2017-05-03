@@ -35,7 +35,7 @@ from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
-    HMC_LOGGER_NAME
+    DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
 
@@ -111,7 +111,8 @@ class RetryTimeoutConfig(object):
 
     def __init__(self, connect_timeout=None, connect_retries=None,
                  read_timeout=None, read_retries=None, max_redirects=None,
-                 operation_timeout=None, status_timeout=None):
+                 operation_timeout=None, status_timeout=None,
+                 name_uri_cache_timetolive=None):
         """
         For all parameters, `None` means that this object does not specify a
         value for the parameter, and that a default value should be used
@@ -155,6 +156,12 @@ class RetryTimeoutConfig(object):
             This timeout applies when waiting for the transition of the status
             of a resource to a desired status. The special value 0 means that
             no timeout is set.
+
+          name_uri_cache_timetolive (:term:`number`): Time to the next
+            automatic invalidation of the Name-URI cache of manager objects, in
+            seconds since the last invalidation. The special value 0 means
+            that no Name-URI cache is maintained (i.e. the caching is
+            disabled).
         """
         self.connect_timeout = connect_timeout
         self.connect_retries = connect_retries
@@ -163,13 +170,15 @@ class RetryTimeoutConfig(object):
         self.max_redirects = max_redirects
         self.operation_timeout = operation_timeout
         self.status_timeout = status_timeout
+        self.name_uri_cache_timetolive = name_uri_cache_timetolive
 
         # Read retries only for these HTTP methods:
         self.method_whitelist = {'GET'}
 
     _attrs = ('connect_timeout', 'connect_retries', 'read_timeout',
               'read_retries', 'max_redirects', 'operation_timeout',
-              'status_timeout', 'method_whitelist')
+              'status_timeout', 'name_uri_cache_timetolive',
+              'method_whitelist')
 
     def override_with(self, override_config):
         """
@@ -234,6 +243,7 @@ class Session(object):
         max_redirects=DEFAULT_MAX_REDIRECTS,
         operation_timeout=DEFAULT_OPERATION_TIMEOUT,
         status_timeout=DEFAULT_STATUS_TIMEOUT,
+        name_uri_cache_timetolive=DEFAULT_NAME_URI_CACHE_TIMETOLIVE,
     )
 
     def __init__(self, host, userid=None, password=None, session_id=None,

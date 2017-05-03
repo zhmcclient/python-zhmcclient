@@ -107,6 +107,7 @@ class AdapterManager(BaseManager):
 
         super(AdapterManager, self).__init__(
             resource_class=Adapter,
+            session=cpc.manager.session,
             parent=cpc,
             uri_prop='object-uri',
             name_prop='name',
@@ -178,6 +179,7 @@ class AdapterManager(BaseManager):
                     if full_properties:
                         resource_obj.pull_full_properties()
 
+        self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
 
     @logged_api_call
@@ -215,7 +217,11 @@ class AdapterManager(BaseManager):
         # returned props should overwrite the input props:
         props = properties.copy()
         props.update(result)
-        return Adapter(self, props['object-uri'], None, props)
+        name = props.get(self._name_prop, None)
+        uri = props[self._uri_prop]
+        adapter = Adapter(self, uri, name, props)
+        self._name_uri_cache.update(name, uri)
+        return adapter
 
 
 class Adapter(BaseResource):
@@ -283,6 +289,8 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.delete(self.uri)
+        self.manager._name_uri_cache.delete(
+            self.properties.get(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties):
@@ -310,3 +318,6 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(self.uri, body=properties)
+        self.properties.update(properties.copy())
+        if self.manager._name_prop in properties:
+            self.manager._name_uri_cache.update(self.name, self.uri)

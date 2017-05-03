@@ -30,6 +30,7 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_MAX_REDIRECTS',
            'DEFAULT_OPERATION_TIMEOUT',
            'DEFAULT_STATUS_TIMEOUT',
+           'DEFAULT_NAME_URI_CACHE_TIMETOLIVE',
            'HMC_LOGGER_NAME',
            'API_LOGGER_NAME']
 
@@ -72,17 +73,34 @@ DEFAULT_READ_RETRIES = 0
 DEFAULT_MAX_REDIRECTS = 30
 
 #: Default timeout in seconds for waiting for completion of an asynchronous
-#: HMC operation. This is used as a default value in asynchronous methods on
+#: HMC operation,
+#: if not specified in the ``retry_timeout_config`` init argument to
+#: :class:`~zhmcclient.Session`.
+#:
+#: This is used as a default value in asynchronous methods on
 #: resource objects (e.g. :meth:`zhmcclient.Partition.start`), in the
 #: :meth:`zhmcclient.Job.wait_for_completion` method, and in the
 #: low level method :meth:`zhmcclient.Session.post`.
 DEFAULT_OPERATION_TIMEOUT = 3600
 
 #: Default timeout in seconds for waiting for completion of deferred status
-#: changes for LPARs. This is used as a default value in asynchronous methods
+#: changes for LPARs,
+#: if not specified in the ``retry_timeout_config`` init argument to
+#: :class:`~zhmcclient.Session`.
+#:
+#: This is used as a default value in asynchronous methods
 #: of the :class:`~zhmcclient.Lpar` class that change its status (e.g.
 #: :meth:`zhmcclient.Lpar.activate`)).
 DEFAULT_STATUS_TIMEOUT = 60
+
+#: Default time to the next automatic invalidation of the Name-URI cache of
+#: manager objects, in seconds since the last invalidation,
+#: if not specified in the ``retry_timeout_config`` init argument to
+#: :class:`~zhmcclient.Session`.
+#:
+#: The special value 0 means that no Name-URI cache is maintained (i.e. the
+#: caching is disabled).
+DEFAULT_NAME_URI_CACHE_TIMETOLIVE = 300
 
 #: Name of the Python logger that logs HMC operations.
 HMC_LOGGER_NAME = 'zhmcclient.hmc'

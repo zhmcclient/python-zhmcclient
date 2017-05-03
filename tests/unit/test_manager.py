@@ -20,61 +20,449 @@ Unit tests for _manager module.
 from __future__ import absolute_import, print_function
 
 import unittest
+from datetime import datetime
+import time
 
-from zhmcclient._manager import BaseManager
-from zhmcclient._resource import BaseResource
+from zhmcclient import BaseResource, BaseManager, Session, NotFound
+from zhmcclient._manager import _NameUriCache
 
 
 class MyResource(BaseResource):
+    """
+    A derived resource for testing purposes.
+
+    It is only needed because BaseManager needs it; it is not subject
+    of test in this unit test module.
+    """
+
+    # This init method is not part of the external API, so this testcase may
+    # need to be updated if the API changes.
     def __init__(self, manager, uri, name=None, properties=None):
         super(MyResource, self).__init__(manager, uri, name, properties)
 
 
 class MyManager(BaseManager):
-    def __init__(self, parent=None):
+    """
+    A derived resource manager for testing the (abstract) BaseManager class.
+    """
+
+    # This init method is not part of the external API, so this testcase may
+    # need to be updated if the API changes.
+    def __init__(self, session):
         super(MyManager, self).__init__(
             resource_class=MyResource,
-            parent=parent,
-            uri_prop='object-uri',
-            name_prop='name',
+            session=session,
+            parent=None,  # a top-level resource
+            uri_prop='fake_uri_prop',
+            name_prop='fake_name_prop',
             query_props=[])
-        self._list_items = []
+        self._list_resources = []  # resources to return in list()
+        self._list_called = 0  # number of calls to list()
 
     def list(self, full_properties=False, filter_args=None):
-        # We need to have a quick way to mock this method. This mocked
-        # implementation basically uses the _list_items instance variable,
-        # and then applies the client-side filtering on top of it.
+        # This mocked implementation does its work based upon the
+        # _list_resources instance variable, and then applies client-side
+        # filtering on top of it.
         result_list = []
-        for obj in self._list_items:
-            if not filter_args or self._matches_filters(obj, filter_args):
-                result_list.append(obj)
+        for res in self._list_resources:
+            if not filter_args or self._matches_filters(res, filter_args):
+                result_list.append(res)
+        self._list_called += 1
         return result_list
 
 
 class ManagerTests(unittest.TestCase):
-    def setUp(self):
-        self.manager = MyManager()
+    """
+    All tests for the BaseManager class, without taking care of the Name-URI
+    cache.
+    """
 
-        self.resource = MyResource(self.manager, "foo-uri",
-                                   properties={"name": "foo-name",
-                                               "other": "foo-other"})
-        self.manager._list_items = [self.resource]
+    def setUp(self):
+        self.session = Session(host='fake-host', userid='fake-user',
+                               password='fake-pw')
+        self.manager = MyManager(self.session)
+        self.resource_uri = "/api/fake-uri-1"
+        self.resource_name = "fake-name-1"
+        self.resource = MyResource(
+            self.manager, uri=self.resource_uri,
+            properties={
+                self.manager._name_prop: self.resource_name,
+                "other": "fake-other-1"
+            })
+        self.manager._list_resources = [self.resource]
 
     def test_findall_attribute(self):
-        items = self.manager.findall(other="foo-other")
+
+        items = self.manager.findall(other="fake-other-1")
+
         self.assertIn(self.resource, items)
 
     def test_findall_attribute_no_result(self):
+
         items = self.manager.findall(other="not-exists")
-        self.assertEqual([], items)
+
+        self.assertEqual(items, [])
 
     def test_findall_name(self):
-        items = self.manager.findall(name="foo-name")
-        self.assertEqual(1, len(items))
+        filter_args = {self.manager._name_prop: self.resource_name}
+
+        items = self.manager.findall(**filter_args)
+
+        self.assertEqual(len(items), 1)
         item = items[0]
-        self.assertEqual("foo-name", item.properties['name'])
-        self.assertEqual("foo-uri", item.properties['object-uri'])
+        self.assertEqual(item.properties[self.manager._name_prop],
+                         self.resource_name)
+        self.assertEqual(item.properties[self.manager._uri_prop],
+                         self.resource_uri)
 
     def test_findall_name_no_result(self):
-        items = self.manager.findall(name="not-exists")
-        self.assertEqual([], items)
+        filter_args = {self.manager._name_prop: "not-exists"}
+
+        items = self.manager.findall(**filter_args)
+
+        self.assertEqual(items, [])
+
+# TODO: Add more tests for BaseManager
+
+
+class NameUriCacheTests(unittest.TestCase):
+    """
+    All tests for the _NameUriCache class, in context of its use in the
+    BaseManager class.
+    """
+
+    def assertDatetimeNear(self, dt1, dt2, max_delta=0.1):
+        delta = abs(dt2 - dt1).total_seconds()
+        if delta > max_delta:
+            self.fail(
+                "Datetime values are %s s apart, maximum is %s s" %
+                (delta, max_delta))
+
+    def setUp(self):
+        self.session = Session(host='fake-host', userid='fake-user',
+                               password='fake-pw')
+        self.manager = MyManager(self.session)
+        self.resource1_uri = "/api/fake-uri-1"
+        self.resource1_name = "fake-name-1"
+        self.resource1 = MyResource(
+            self.manager, uri=self.resource1_uri,
+            properties={
+                self.manager._name_prop: self.resource1_name,
+                "other": "fake-other-1"
+            })
+        self.resource2_uri = "/api/fake-uri-2"
+        self.resource2_name = "fake-name-2"
+        self.resource2 = MyResource(
+            self.manager, uri=self.resource2_uri,
+            properties={
+                self.manager._name_prop: self.resource2_name,
+                "other": "fake-other-2"
+            })
+        self.all_names = {self.resource1_name, self.resource2_name}
+        self.manager._list_resources = [self.resource1, self.resource2]
+
+        self.timetolive = 1.0  # seconds
+        self.cache = _NameUriCache(self.manager, self.timetolive)
+        self.created = datetime.now()
+
+    def test_initial(self):
+        """Test initial cache state."""
+
+        self.assertEqual(self.cache._manager, self.manager)
+        self.assertEqual(self.cache._timetolive, self.timetolive)
+        self.assertEqual(self.cache._uris, {})
+        self.assertDatetimeNear(self.cache._invalidated, self.created)
+
+    def test_get_no_invalidate(self):
+        """Tests for get() without auto-invalidating the cache."""
+
+        # Check that accessing an existing resource name that is not yet in the
+        # cache brings all resources into the cache and causes list() to be
+        # called once.
+        resource1_uri = self.cache.get(self.resource1_name)
+        self.assertEqual(resource1_uri, self.resource1.uri)
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        self.assertEqual(self.manager._list_called, 1)
+
+        # Check that on the second access of the same name, list() is not
+        # called again.
+        resource1_uri = self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+
+    def test_get_non_existing(self):
+        """Tests for get() of a non-existing entry."""
+
+        # Check that accessing a non-existing resource name raises an
+        # exception, but has populated the cache.
+        with self.assertRaises(NotFound):
+            self.cache.get('non-existing')
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        self.assertEqual(self.manager._list_called, 1)
+
+    def test_get_auto_invalidate(self):
+        """Tests for get() with auto-invalidating the cache."""
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertDatetimeNear(self.cache._invalidated, self.created)
+
+        # Check that on the second access of the same name, list() is not
+        # called again.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+
+        # Wait until the time-to-live has safely passed.
+        time.sleep(self.timetolive + 0.2)
+
+        # Check that on the third access of the same name, list() is called
+        # again, because the cache now has auto-invalidated.
+        self.cache.get(self.resource1_name)
+        invalidated = datetime.now()
+        self.assertEqual(self.manager._list_called, 2)
+        self.assertDatetimeNear(self.cache._invalidated, invalidated)
+
+    def test_get_manual_invalidate(self):
+        """Tests for get() and manual invalidate()."""
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertDatetimeNear(self.cache._invalidated, self.created)
+
+        # Check that on the second access of the same name, list() is not
+        # called again.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+
+        # Manually invalidate the cache.
+        self.cache.invalidate()
+        invalidated = datetime.now()
+        self.assertDatetimeNear(self.cache._invalidated, invalidated)
+        self.assertEqual(self.cache._uris, {})
+
+        # Check that on the third access of the same name, list() is called
+        # again, because the cache has been invalidated.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 2)
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+
+    def test_refresh_empty(self):
+        """Test refresh() on an empty cache."""
+
+        # Refresh the cache and check that this invalidates it and
+        # re-populates it.
+        self.cache.refresh()
+        refreshed = datetime.now()
+        self.assertDatetimeNear(self.cache._invalidated, refreshed)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+
+    def test_refresh_populated(self):
+        """Test refresh() on a fully populated cache."""
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertDatetimeNear(self.cache._invalidated, self.created)
+
+        # Refresh the cache and check that this invalidates it and
+        # re-populates it.
+        self.cache.refresh()
+        refreshed = datetime.now()
+        self.assertDatetimeNear(self.cache._invalidated, refreshed)
+        self.assertEqual(self.manager._list_called, 2)
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+
+    def test_delete_existing(self):
+        """Test delete() of an existing cache entry, and re-accessing it."""
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertDatetimeNear(self.cache._invalidated, self.created)
+
+        # Delete an existing cache entry and check that the entry is now gone.
+        self.cache.delete(self.resource1_name)
+        self.assertEqual(set(self.cache._uris.keys()), {self.resource2_name})
+
+        # Re-access the deleted entry, and check that list() is called again
+        # to get that entry into the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 2)
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+
+    def test_delete_non_existing(self):
+        """Test delete() of a non-existing cache entry."""
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertDatetimeNear(self.cache._invalidated, self.created)
+
+        # Delete a non-existing cache entry and check that no exception is
+        # raised and that the cache still contains the same entries.
+        self.cache.delete('non-existing')
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+
+    def test_delete_none(self):
+        """Test delete() of `None`."""
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertDatetimeNear(self.cache._invalidated, self.created)
+
+        # Delete `None` and check that no exception is raised and that the
+        # cache still contains the same entries.
+        self.cache.delete(None)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+
+    def test_update_from_empty(self):
+        """Test update_from() on an empty cache."""
+
+        resource3_uri = "/api/fake-uri-3"
+        resource3_name = "fake-name-3"
+        resource3 = MyResource(
+            self.manager, uri=resource3_uri,
+            properties={
+                self.manager._name_prop: resource3_name,
+            })
+        resource4_uri = "/api/fake-uri-4"
+        resource4_name = "fake-name-4"
+        resource4 = MyResource(
+            self.manager, uri=resource4_uri,
+            properties={
+                self.manager._name_prop: resource4_name,
+            })
+
+        # Update the cache from these two resources check that they are now in
+        # the cache (and that list() has not been called)
+        self.cache.update_from([resource3, resource4])
+        self.assertEqual(self.manager._list_called, 0)
+        self.assertEqual(set(self.cache._uris.keys()),
+                         {resource3_name, resource4_name})
+
+    def test_update_from_populated_modify_name(self):
+        """Test update_from() on a populated cache and modify the URI of one
+        existing entry."""
+
+        resource3_uri = "/api/fake-uri-3"
+        resource3_name = "fake-name-3"
+        resource3 = MyResource(
+            self.manager, uri=resource3_uri,
+            properties={
+                self.manager._name_prop: resource3_name,
+            })
+        resource2_new_uri = "/api/fake-new-uri-2"
+        resource2_new = MyResource(
+            self.manager, uri=resource2_new_uri,
+            properties={
+                self.manager._name_prop: self.resource2_name,
+            })
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(set(self.cache._uris.keys()),
+                         {self.resource1_name, self.resource2_name})
+
+        # Update the cache from these two resources check that they are now in
+        # the cache (and that list() has not been called again).
+        self.cache.update_from([resource3, resource2_new])
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(
+            set(self.cache._uris.keys()),
+            {self.resource1_name, self.resource2_name, resource3_name})
+
+        # Access the modified entry, and check that the entry has changed
+        # (and that list() has not been called again).
+        resource2_uri = self.cache.get(self.resource2_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(resource2_uri, resource2_new_uri)
+
+    def test_update_empty(self):
+        """Test update() on an empty cache."""
+
+        resource3_uri = "/api/fake-uri-3"
+        resource3_name = "fake-name-3"
+
+        # Update the cache, to get the entry added.
+        self.cache.update(resource3_name, resource3_uri)
+        self.assertEqual(self.manager._list_called, 0)
+
+        # Access the new entry, and check the entry (and that list() has not
+        # been called).
+        act_resource3_uri = self.cache.get(resource3_name)
+        self.assertEqual(self.manager._list_called, 0)
+        self.assertEqual(act_resource3_uri, resource3_uri)
+
+    def test_update_empty_empty(self):
+        """Test update() on an empty cache with an empty resource name."""
+
+        resource3_uri = "/api/fake-uri-3"
+        resource3_name = ""
+
+        # Update the cache with the empty resource name, and check that no
+        # exception is raised and that the cache is still empty.
+        self.cache.update(resource3_name, resource3_uri)
+        self.assertEqual(self.cache._uris, {})
+        self.assertEqual(self.manager._list_called, 0)
+
+    def test_update_empty_none(self):
+        """Test update() on an empty cache with a `None` resource name."""
+
+        resource3_uri = "/api/fake-uri-3"
+        resource3_name = None
+
+        # Update the cache with the empty resource name, and check that no
+        # exception is raised and that the cache is still empty.
+        self.cache.update(resource3_name, resource3_uri)
+        self.assertEqual(self.cache._uris, {})
+        self.assertEqual(self.manager._list_called, 0)
+
+    def test_update_populated_new(self):
+        """Test update() on a populated cache with a new entry."""
+
+        resource3_uri = "/api/fake-uri-3"
+        resource3_name = "fake-name-3"
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(set(self.cache._uris.keys()),
+                         {self.resource1_name, self.resource2_name})
+
+        # Update the cache, to get the new entry added.
+        self.cache.update(resource3_name, resource3_uri)
+        self.assertEqual(self.manager._list_called, 1)
+
+        # Access the new entry, and check the entry (and that list() has not
+        # been called).
+        act_resource3_uri = self.cache.get(resource3_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(act_resource3_uri, resource3_uri)
+
+    def test_update_populated_modify(self):
+        """Test update() on a populated cache by modifying an existing
+        entry."""
+
+        resource2_new_uri = "/api/fake-new-uri-2"
+
+        # Populate the cache.
+        self.cache.get(self.resource1_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(set(self.cache._uris.keys()),
+                         {self.resource1_name, self.resource2_name})
+
+        # Update the cache, to get the existing entry modified.
+        self.cache.update(self.resource2_name, resource2_new_uri)
+        self.assertEqual(self.manager._list_called, 1)
+
+        # Access the new entry, and check the entry (and that list() has not
+        # been called again).
+        act_resource2_uri = self.cache.get(self.resource2_name)
+        self.assertEqual(self.manager._list_called, 1)
+        self.assertEqual(act_resource2_uri, resource2_new_uri)

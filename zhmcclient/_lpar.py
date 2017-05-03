@@ -70,6 +70,7 @@ class LparManager(BaseManager):
 
         super(LparManager, self).__init__(
             resource_class=Lpar,
+            session=cpc.manager.session,
             parent=cpc,
             uri_prop='object-uri',
             name_prop='name',
@@ -141,6 +142,7 @@ class LparManager(BaseManager):
                     if full_properties:
                         resource_obj.pull_full_properties()
 
+        self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
 
 

@@ -27,6 +27,7 @@ CPC.
 
 from __future__ import absolute_import
 
+from datetime import datetime, timedelta
 from requests.utils import quote
 
 from ._logging import get_logger, logged_api_call
@@ -35,6 +36,128 @@ from ._exceptions import NotFound, NoUniqueMatch
 __all__ = ['BaseManager']
 
 LOG = get_logger(__name__)
+
+
+class _NameUriCache(object):
+    """
+    A Name-URI cache, that caches the mapping between resource names and
+    resource URIs. It supports looking up resource URIs by resource names.
+
+    This class is used by the implementation of manager classes, and is not
+    part of the external API.
+    """
+
+    def __init__(self, manager, timetolive):
+        """
+        Parameters:
+
+          manager (BaseManager): Manager that holds this Name-URI cache. The
+            manager object is expected to have a ``list()`` method, which
+            is used to list the resources of that manager, in order to
+            fill this cache.
+
+          timetolive (number): Time in seconds until the cache will invalidate
+            itself automatically, since it was last invalidated.
+        """
+        self._manager = manager
+        self._timetolive = timetolive
+
+        # The cached data, as a dictionary with:
+        # Key (string): Name of a resource (unique within its parent resource)
+        # Value (string): URI of that resource
+        self._uris = {}
+
+        # Point in time when the cache was last invalidated
+        self._invalidated = datetime.now()
+
+    def get(self, name):
+        """
+        Get the resource URI for a specified resource name.
+
+        If an entry for the specified resource name does not exist in the
+        Name-URI cache, the cache is refreshed from the HMC with all resources
+        of the manager holding this cache.
+
+        If an entry for the specified resource name still does not exist after
+        that, ``NotFound`` is raised.
+        """
+        self.auto_invalidate()
+        try:
+            return self._uris[name]
+        except KeyError:
+            self.refresh()
+            try:
+                return self._uris[name]
+            except KeyError:
+                raise NotFound
+
+    def auto_invalidate(self):
+        """
+        Invalidate the cache if the current time is past the time to live.
+        """
+        current = datetime.now()
+        if current > self._invalidated + timedelta(seconds=self._timetolive):
+            self.invalidate()
+
+    def invalidate(self):
+        """
+        Invalidate the cache.
+
+        This empties the cache and sets the time of last invalidation to the
+        current time.
+        """
+        self._uris = {}
+        self._invalidated = datetime.now()
+
+    def refresh(self):
+        """
+        Refresh the Name-URI cache from the HMC.
+
+        This is done by invalidating the cache, listing the resources of this
+        manager from the HMC, and populating the cache with that information.
+        """
+        self.invalidate()
+        res_list = self._manager.list()
+        self.update_from(res_list)
+
+    def update_from(self, res_list):
+        """
+        Update the Name-URI cache from the provided resource list.
+
+        This is done by going through the resource list and updating any cache
+        entries for non-empty resource names in that list. Other cache entries
+        remain unchanged.
+        """
+        for res in res_list:
+            # We access the properties dictionary, in order to make sure
+            # we don't drive additional HMC interactions.
+            name = res.properties.get(self._manager._name_prop, None)
+            uri = res.properties.get(self._manager._uri_prop, None)
+            self.update(name, uri)
+
+    def update(self, name, uri):
+        """
+        Update or create the entry for the specified resource name in the
+        Name-URI cache, and set it to the specified URI.
+
+        If the specified name is `None` or the empty string, do nothing.
+        """
+        if name:
+            self._uris[name] = uri
+
+    def delete(self, name):
+        """
+        Delete the entry for the specified resource name from the Name-URI
+        cache.
+
+        If the specified name is `None` or the empty string, or if an entry for
+        the specified name does not exist, do nothing.
+        """
+        if name:
+            try:
+                del self._uris[name]
+            except KeyError:
+                pass
 
 
 class BaseManager(object):
@@ -54,13 +177,16 @@ class BaseManager(object):
     documented and may change incompatibly.
     """
 
-    def __init__(self, resource_class, parent, uri_prop, name_prop,
+    def __init__(self, resource_class, session, parent, uri_prop, name_prop,
                  query_props):
         # This method intentionally has no docstring, because it is internal.
         #
         # Parameters:
         #   resource_class (class):
         #     Python class for the resources of this manager.
+        #     Must not be `None`.
+        #   session (:class:`~zhmcclient.Session`):
+        #     Session for this manager.
         #     Must not be `None`.
         #   parent (subclass of :class:`~zhmcclient.BaseResource`):
         #     Parent resource defining the scope for this manager.
@@ -86,37 +212,52 @@ class BaseManager(object):
         # We want to surface precondition violations as early as possible,
         # so we test those that are not surfaced through the init code:
         assert resource_class is not None
+        assert session is not None
         assert uri_prop is not None
         assert name_prop is not None
         assert query_props is not None
 
         self._resource_class = resource_class
+        self._session = session
         self._parent = parent
         self._uri_prop = uri_prop
         self._name_prop = name_prop
         self._query_props = query_props
 
-        self._uris = {}
+        self._name_uri_cache = _NameUriCache(
+            self, session.retry_timeout_config.name_uri_cache_timetolive)
 
-        # Note: Managers of top-level resources must update the following
-        # instance variables in their init:
-        self._session = parent.manager.session if parent else None
+    def invalidate_name_uri_cache(self):
+        """
+        Invalidate the Name-URI cache of this manager.
 
-    def _get_uri(self, name):
+        The zhmcclient maintains a Name-URI cache in each manager object, which
+        caches the mappings between resource URIs and resource names, to speed
+        up certain zhmcclient methods.
+
+        The Name-URI cache is properly updated during changes on the resource
+        name (e.g. via ``update_properties()``) or changes on the resource URI
+        (e.g. via resource creation or deletion), if these changes are
+        performed through the same manager object.
+
+        However, changes performed through a different manager object (e.g.
+        because a different session, client or parent resource object was
+        used), or changes performed in a different Python process, or changes
+        performed via other means than the zhmcclient library (e.g. directly on
+        the HMC) will not automatically update the Name-URI cache of this
+        manager.
+
+        In cases where the resource name or resource URI are effected by such
+        changes, the Name-URI cache can be manually invalidated by the user,
+        using this method.
+
+        Note that the Name-URI cache automatically invalidates itself after a
+        certain time since the last invalidation. That auto invalidation time
+        can be configured using the
+        :attr:`~zhmcclient.RetryTimeoutConfig.name_uri_cache_timetolive``
+        attribute of the :class:`~zhmcclient.RetryTimeoutConfig` class.
         """
-        Look up a resource of this manager by name, using and possibly
-        refreshing the cached name-to-URI mapping.
-        """
-        try:
-            return self._uris[name]
-        except KeyError:
-            res_list = self.list()
-            for res in res_list:
-                self._uris[res.name] = res.uri
-            try:
-                return self._uris[name]
-            except KeyError:
-                raise NotFound
+        self._name_uri_cache.invalidate()
 
     def _divide_filter_args(self, filter_args):
         """
@@ -436,7 +577,7 @@ class BaseManager(object):
 
               cpc = client.cpcs.find_by_name('CPC001')
         """
-        uri = self._get_uri(name)
+        uri = self._name_uri_cache.get(name)
         obj = self.resource_class(
             manager=self,
             uri=uri,

@@ -43,9 +43,34 @@ Released: not yet
   In addition, read retries are now restricted to HTTP GET methods, in case
   the user enabled read retries. See issue #249.
 
+* Fixed that resource creation, deletion, and resource property updating now
+  properly updates the resource name-to-URI cache in the zhmcclient that is
+  maintained in the `*Manager` objects. As part of that, the `BaseManager`
+  init function got an additional required argument `session`, but because
+  creation of manager objects is not part of the external API, this should not
+  affect users. See issue #253.
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.
+
+* The `update_properties()` method of all Python resource objects now also
+  updates the properties of that Python resource object with the properties
+  provided by the user (in addition to issuing the corresponding Update
+  Properties HMC operation. This was done because that is likely the
+  expectation of users, and we already store user-provided properties in Python
+  resource objects when creating resources so it is now consistent with that.
+  This came up as part of issue #253.
+
+* As part of fixing the name-to-URI cache, a new attribute
+  `name_uri_cache_timetolive` was added to class `RetryTimeoutConfig`, which
+  allows controlling after what time the name-to-URI cache is automatically
+  invalidated. The default for that is set in a new
+  `DEFAULT_NAME_URI_CACHE_TIMETOLIVE` constant. Also, the `*Manager` classes
+  now have a new method `invalidate_name_uri_cache()` which can be used to
+  manually invalidate the name-to-URI cache, for cases where multiple parties
+  (besides the current zhmcclient instance) change resources on the HMC.
+  This came up as part of issue #253.
 
 **Known issues:**
 
