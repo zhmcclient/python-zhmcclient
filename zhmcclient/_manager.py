@@ -117,7 +117,8 @@ class _NameUriCache(object):
         manager from the HMC, and populating the cache with that information.
         """
         self.invalidate()
-        res_list = self._manager.list()
+        full = not self._manager._list_has_name
+        res_list = self._manager.list(full_properties=full)
         self.update_from(res_list)
 
     def update_from(self, res_list):
@@ -178,7 +179,7 @@ class BaseManager(object):
     """
 
     def __init__(self, resource_class, session, parent, uri_prop, name_prop,
-                 query_props):
+                 query_props, list_has_name=True):
         # This method intentionally has no docstring, because it is internal.
         #
         # Parameters:
@@ -208,6 +209,10 @@ class BaseManager(object):
         #     If the support for a resource property changes within the set of
         #     HMC versions that support this type of resource, this list must
         #     represent the version of the HMC this session is connected to.
+        #   list_has_name (bool):
+        #     Indicates whether the list() method for the resource populates
+        #     the name property (i.e. name_prop). For example, for NICs the
+        #     list() method returns minimalistic Nic objects without name.
 
         # We want to surface precondition violations as early as possible,
         # so we test those that are not surfaced through the init code:
@@ -223,6 +228,7 @@ class BaseManager(object):
         self._uri_prop = uri_prop
         self._name_prop = name_prop
         self._query_props = query_props
+        self._list_has_name = list_has_name
 
         self._name_uri_cache = _NameUriCache(
             self, session.retry_timeout_config.name_uri_cache_timetolive)

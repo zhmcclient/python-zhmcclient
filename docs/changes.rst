@@ -62,6 +62,9 @@ Released: not yet
   DELETE and POST (for update), and replaced that with status 204 (no content).
   This came up as part of fixing issue #256.
 
+* Fixed that ``find(name)`` raised ``NotFound`` for existing resources, for
+  resource types that are elements (i.e. NICs, HBAs, VFs, Ports) (issue #264).
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.

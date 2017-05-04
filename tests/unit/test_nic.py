@@ -182,6 +182,104 @@ class NicTests(unittest.TestCase):
                 self.assertTrue(nic.full_properties)
                 self.assertEqual(nic.manager, nic_mgr)
 
+    def test_list_filter_name_ok(self):
+        """
+        Test successful list() with filter arguments using the 'name' property
+        on a NicManager instance in a partition.
+        """
+        nic_mgr = self.partition.nics
+
+        with requests_mock.mock() as m:
+
+            mock_result_nic1 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'nic1',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                'class': 'nic',
+                'element-id': 'fake-nic-id-1',
+                'type': 'osd',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                  json=mock_result_nic1)
+            mock_result_nic2 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'nic2',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
+                'class': 'nic',
+                'element-id': 'fake-nic-id-2',
+                'type': 'osd',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
+                  json=mock_result_nic2)
+
+            filter_args = {'name': 'nic2'}
+            nics = nic_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(nics), 1)
+            nic = nics[0]
+            self.assertEqual(nic.name, 'nic2')
+            self.assertEqual(
+                nic.uri,
+                '/api/partitions/fake-part-id-1/nics/fake-nic-id-2')
+            self.assertEqual(nic.properties['name'], 'nic2')
+            self.assertEqual(nic.properties['element-id'], 'fake-nic-id-2')
+            self.assertEqual(nic.manager, nic_mgr)
+
+    def test_list_filter_elementid_ok(self):
+        """
+        Test successful list() with filter arguments using the 'element-id'
+        property on a NicManager instance in a partition.
+        """
+        nic_mgr = self.partition.nics
+
+        with requests_mock.mock() as m:
+
+            mock_result_nic1 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'nic1',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                'class': 'nic',
+                'element-id': 'fake-nic-id-1',
+                'type': 'osd',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-1',
+                  json=mock_result_nic1)
+            mock_result_nic2 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'nic2',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
+                'class': 'nic',
+                'element-id': 'fake-nic-id-2',
+                'type': 'osd',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/nics/fake-nic-id-2',
+                  json=mock_result_nic2)
+
+            filter_args = {'element-id': 'fake-nic-id-2'}
+            nics = nic_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(nics), 1)
+            nic = nics[0]
+            self.assertEqual(nic.name, 'nic2')
+            self.assertEqual(
+                nic.uri,
+                '/api/partitions/fake-part-id-1/nics/fake-nic-id-2')
+            self.assertEqual(nic.properties['name'], 'nic2')
+            self.assertEqual(nic.properties['element-id'], 'fake-nic-id-2')
+            self.assertEqual(nic.manager, nic_mgr)
+
     def test_create(self):
         """
         This tests the 'Create NIC' operation.
