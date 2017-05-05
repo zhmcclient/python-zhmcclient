@@ -27,6 +27,8 @@ CPC.
 
 from __future__ import absolute_import
 
+import six
+import re
 from datetime import datetime, timedelta
 from requests.utils import quote
 
@@ -344,14 +346,33 @@ class BaseManager(object):
 
     def _matches_prop(self, obj, prop_name, prop_match):
         if isinstance(prop_match, (list, tuple)):
+            # List items are logically ORed, so one matching item suffices.
             for pm in prop_match:
-                if not self._matches_prop(obj, prop_name, pm):
-                    return False
+                if self._matches_prop(obj, prop_name, pm):
+                    return True
         else:
-            # TODO: Use regexp matching for non-enum string properties.
-            if obj.get_property(prop_name) != prop_match:
-                return False
-        return True
+            prop_value = obj.get_property(prop_name)
+            if isinstance(prop_value, six.string_types):
+                # HMC resource property is Enum String or (non-enum) String,
+                # and is both matched by regexp matching. Ideally, regexp
+                # matching should only be done for non-enum strings, but
+                # distinguishing them is not possible given that the client
+                # has no knowledge about the properties.
+
+                # The regexp matching implemented in the HMC requires begin and
+                # end of the string value to match, even if the '^' for begin
+                # and '$' for end are not specified in the pattern. The code
+                # here is consistent with that: We add end matching to the
+                # pattern, and begin matching is done by re.match()
+                # automatically.
+                re_match = prop_match + '$'
+                m = re.match(re_match, prop_value)
+                if m:
+                    return True
+            else:
+                if prop_value == prop_match:
+                    return True
+        return False
 
     @property
     def resource_class(self):

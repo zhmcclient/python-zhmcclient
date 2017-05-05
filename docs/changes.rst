@@ -65,6 +65,17 @@ Released: not yet
 * Fixed that ``find(name)`` raised ``NotFound`` for existing resources, for
   resource types that are elements (i.e. NICs, HBAs, VFs, Ports) (issue #264).
 
+* Fixed that the filter arguments for ``find()``, ``findall()``, and ``list()``
+  for string properties when matched on the client side are matched using
+  regular expressions instead of exact matching, consistent with the
+  zhmcclient documentation, and with server-side matching on the HMC. See
+  issue #263.
+
+* Fixed that the filter arguments for ``find()``, ``findall()``, and ``list()``
+  when used with lists of match values incorrectly applied ANDing between the
+  list items. They now apply ORing, consistent with the zhmcclient
+  documentation, and with server-side matching on the HMC. See issue #267.
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.
