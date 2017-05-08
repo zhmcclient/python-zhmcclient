@@ -342,7 +342,7 @@ class BaseManager(object):
                 if not self._matches_prop(obj, prop_name, pm):
                     return False
         else:
-            # TODO: Here, we could match by regexp.
+            # TODO: Use regexp matching for non-enum string properties.
             if obj.get_property(prop_name) != prop_match:
                 return False
         return True
@@ -377,10 +377,183 @@ class BaseManager(object):
         """
         return self._parent
 
+    @logged_api_call
+    def findall(self, **filter_args):
+        """
+        Find zero or more resources in scope of this manager, by matching
+        resource properties against the specified filter arguments, and return
+        a list of their Python resource objects (e.g. for CPCs, a list of
+        :class:`~zhmcclient.Cpc` objects is returned).
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The zhmcclient implementation handles the specified properties in an
+        optimized way: Properties that can be filtered on the HMC are actually
+        filtered there (this varies by resource type), and the remaining
+        properties are filtered on the client side.
+
+        If the "name" property is specified as the only filter argument, an
+        optimized lookup is performed that uses a name-to-URI cache in this
+        manager object. This this optimized lookup uses the specified match
+        value for exact matching and is not interpreted as a regular
+        expression.
+
+        Authorization requirements:
+
+        * see the `list()` method in the derived classes.
+
+        Parameters:
+
+          \**filter_args:
+            All keyword arguments are used as filter arguments. Specifying no
+            keyword arguments causes no filtering to happen. See the examples
+            for usage details.
+
+        Returns:
+
+          List of resource objects in scope of this manager object that match
+          the filter arguments. These resource objects have a minimal set of
+          properties.
+
+        Raises:
+
+          : Exceptions raised by the `list()` methods in derived resource
+            manager classes (see :ref:`Resources`).
+
+        Examples:
+
+        * The following example finds partitions in a CPC by status. Because
+          the 'status' resource property is also a valid Python variable name,
+          there are two ways for the caller to specify the filter arguments for
+          this method:
+
+          As named parameters::
+
+              run_states = ['active', 'degraded']
+              run_parts = cpc.partitions.find(status=run_states)
+
+          As a parameter dictionary::
+
+              run_parts = cpc.partitions.find(**{'status': run_states})
+
+        * The following example finds adapters of the OSA family in a CPC
+          with an active status. Because the resource property for the adapter
+          family is named 'adapter-family', it is not suitable as a Python
+          variable name. Therefore, the caller can specify the filter argument
+          only as a parameter dictionary::
+
+              filter_args = {'adapter-family': 'osa', 'status': 'active'}
+              active_osa_adapters = cpc.adapters.findall(**filter_args)
+        """
+        if len(filter_args) == 1 and self._name_prop in filter_args:
+            try:
+                obj = self.find_by_name(filter_args[self._name_prop])
+            except NotFound:
+                return []
+            return [obj]
+        else:
+            obj_list = self.list(filter_args=filter_args)
+            return obj_list
+
+    @logged_api_call
+    def find(self, **filter_args):
+        """
+        Find exactly one resource in scope of this manager, by matching
+        resource properties against the specified filter arguments, and return
+        its Python resource object (e.g. for a CPC, a :class:`~zhmcclient.Cpc`
+        object is returned).
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The zhmcclient implementation handles the specified properties in an
+        optimized way: Properties that can be filtered on the HMC are actually
+        filtered there (this varies by resource type), and the remaining
+        properties are filtered on the client side.
+
+        If the "name" property is specified as the only filter argument, an
+        optimized lookup is performed that uses a name-to-URI cache in this
+        manager object. This this optimized lookup uses the specified match
+        value for exact matching and is not interpreted as a regular
+        expression.
+
+        Authorization requirements:
+
+        * see the `list()` method in the derived classes.
+
+        Parameters:
+
+          \**filter_args:
+            All keyword arguments are used as filter arguments. Specifying no
+            keyword arguments causes no filtering to happen. See the examples
+            for usage details.
+
+        Returns:
+
+          Resource object in scope of this manager object that matches the
+          filter arguments. This resource object has a minimal set of
+          properties.
+
+        Raises:
+
+          :exc:`~zhmcclient.NotFound`: No matching resource found.
+          :exc:`~zhmcclient.NoUniqueMatch`: More than one matching resource
+            found.
+          : Exceptions raised by the `list()` methods in derived resource
+            manager classes (see :ref:`Resources`).
+
+        Examples:
+
+        * The following example finds a CPC by its name. Because the 'name'
+          resource property is also a valid Python variable name, there are
+          two ways for the caller to specify the filter arguments for this
+          method:
+
+          As named parameters::
+
+              cpc = client.cpcs.find(name='CPC001')
+
+          As a parameter dictionary::
+
+              filter_args = {'name': 'CPC0001'}
+              cpc = client.cpcs.find(**filter_args)
+
+        * The following example finds a CPC by its object ID. Because the
+          'object-id' resource property is not a valid Python variable name,
+          the caller can specify the filter argument only as a parameter
+          dictionary::
+
+              filter_args = {'object-id': '12345-abc...de-12345'}
+              cpc = client.cpcs.find(**filter_args)
+        """
+        obj_list = self.findall(**filter_args)
+        num_objs = len(obj_list)
+        if num_objs == 0:
+            raise NotFound
+        elif num_objs > 1:
+            raise NoUniqueMatch
+        else:
+            return obj_list[0]
+
     def list(self, full_properties=False, filter_args=None):
         """
-        Interface for a method that lists resources, and that needs to be
-        implemented by resource manager classes derived from this base class.
+        Find zero or more resources in scope of this manager, by matching
+        resource properties against the specified filter arguments, and return
+        a list of their Python resource objects (e.g. for CPCs, a list of
+        :class:`~zhmcclient.Cpc` objects is returned).
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The zhmcclient implementation handles the specified properties in an
+        optimized way: Properties that can be filtered on the HMC are actually
+        filtered there (this varies by resource type), and the remaining
+        properties are filtered on the client side.
+
+        At the level of the :class:`~zhmcclient.BaseManager` class, this method
+        defines the interface for the `list()` methods implemented in the
+        derived resource classes.
 
         Authorization requirements:
 
@@ -394,147 +567,36 @@ class BaseManager(object):
             operation.
 
           filter_args (dict):
-            Filter arguments that narrow the list of returned resources to
-            those that match the specified filter arguments. For details, see
-            :ref:`Filtering`.
-
-            `None` causes no filtering to happen, i.e. all resources are
-            returned.
+            Filter arguments. `None` causes no filtering to happen. See the
+            examples for usage details.
 
         Returns:
 
-          List of resource objects managed by this manager. The resource
-          objects have a set of properties according to the `full_properties`
-          parameter.
+          List of resource objects in scope of this manager object that match
+          the filter arguments. These resource objects have a set of properties
+          according to the `full_properties` parameter.
 
         Raises:
 
           : Exceptions raised by the `list()` methods in derived resource
             manager classes (see :ref:`Resources`).
+
+        Examples:
+
+        * The following example finds those OSA adapters in cage '1234' of a
+          given CPC, whose state is 'stand-by', 'reserved', or 'unknown'::
+
+              filter_args = {
+                  'adapter-family': 'osa',
+                  'card-location': '1234-.*',
+                  'state': ['stand-by', 'reserved', 'unknown'],
+              }
+              osa_adapters = cpc.adapters.list(full_properties=True,
+                                               filter_args=filter_args)
+
+          The returned resource objects will have the full set of properties.
         """
         raise NotImplementedError
-
-    @logged_api_call
-    def find(self, **filter_args):
-        """
-        Find exactly one resource that is managed by this manager, by matching
-        their resource properties against the specified filter arguments, and
-        return its Python resource object (e.g. for a CPC,
-        :class:`~zhmcclient.Cpc` object is returned).
-
-        If only the 'name' resource property is specified, an optimized lookup
-        is performed that uses a name-to-URI mapping cached in this manager
-        object.
-
-        Authorization requirements:
-
-        * see the `list()` method in the derived classes.
-
-        Keyword Arguments:
-
-          : The keyword arguments are used as filter arguments that narrow the
-            list of returned resources to those that match the specified filter
-            arguments. For details, see :ref:`Filtering`.
-
-            Note that some resource property names are not valid as Python
-            parameter names (e.g. "adapter-family"). Such resource properties
-            can still be used for filtering, but must be specified by the
-            caller via a parameter dictionary (see the example for details).
-
-        Returns:
-
-          Resource object, if found. The resource object has a minimal set of
-          properties.
-
-        Raises:
-
-          :exc:`~zhmcclient.NotFound`: No matching resource found.
-          :exc:`~zhmcclient.NoUniqueMatch`: More than one matching resource
-            found.
-          : Exceptions raised by the `list()` methods in derived resource
-            manager classes (see :ref:`Resources`).
-
-        Example:
-
-          The following example finds a CPC by its name. Because the 'name'
-          resource property is also a valid Python variable name, there are two
-          ways for the caller to specify the filter arguments for this method:
-
-          * As named parameters::
-
-              cpc = client.cpcs.find(name='CPC001')
-
-          * As a parameter dictionary::
-
-              filter_args = {'name': 'CPC0001'}
-              cpc = client.cpcs.find(**filter_args)
-        """
-        obj_list = self.findall(**filter_args)
-        num_objs = len(obj_list)
-        if num_objs == 0:
-            raise NotFound
-        elif num_objs > 1:
-            raise NoUniqueMatch
-        else:
-            return obj_list[0]
-
-    @logged_api_call
-    def findall(self, **filter_args):
-        """
-        Find zero or more resources that are managed by this manager, by
-        matching their resource properties against the specified filter
-        arguments, and return a list of their Python resource objects (e.g. for
-        CPCs, a list of :class:`~zhmcclient.Cpc` objects is returned).
-
-        If only the 'name' resource property is specified, an optimized lookup
-        is performed that uses a name-to-URI mapping cached in this manager
-        object.
-
-        Authorization requirements:
-
-        * see the `list()` method in the derived classes.
-
-        Keyword Arguments:
-
-          : The keyword arguments are used as filter arguments that narrow the
-            list of returned resources to those that match the specified filter
-            arguments. For details, see :ref:`Filtering`.
-
-            Note that some resource property names are not valid as Python
-            parameter names (e.g. "adapter-family"). Such resource properties
-            can still be used for this method, but must be specified via a
-            parameter dictionary (see the example for details).
-
-        Returns:
-
-          A list of zero or more resource objects that were found. The resource
-          objects have a minimal set of properties.
-
-        Raises:
-
-          : Exceptions raised by the `list()` methods in derived resource
-            manager classes (see :ref:`Resources`).
-
-        Example:
-
-          The following example finds adapters of the OSA family in a CPC.
-          Because the resource property for the adapter family is named
-          'adapter-family', it is not suitable as a Python variable name.
-          Therefore, the only way for the caller to specify it is via a
-          parameter dictionary::
-
-              filter_args = {'adapter-family': 'osa'}
-              osa_adapters = cpc.adapters.findall(**filter_args)
-        """
-        if len(filter_args) == 1 and self._name_prop in filter_args:
-            try:
-                obj = self.find_by_name(filter_args[self._name_prop])
-            except NotFound:
-                return []
-            return [obj]
-        else:
-            obj_list = self.list(filter_args=filter_args)
-            return obj_list
 
     @logged_api_call
     def find_by_name(self, name):
@@ -559,10 +621,13 @@ class BaseManager(object):
 
           name (string):
             Name of the resource (value of its 'name' resource property).
+            Regular expression matching is not supported for the name for this
+            optimized lookup.
 
         Returns:
 
-          Resource object, if found. The resource object has a minimal set of
+          Resource object in scope of this manager object that matches the
+          filter arguments. This resource object has a minimal set of
           properties.
 
         Raises:
@@ -571,9 +636,9 @@ class BaseManager(object):
           : Exceptions raised by the `list()` methods in derived resource
             manager classes (see :ref:`Resources`).
 
-        Example:
+        Examples:
 
-          The following example finds a CPC by its name::
+        * The following example finds a CPC by its name::
 
               cpc = client.cpcs.find_by_name('CPC001')
         """
