@@ -156,6 +156,8 @@ class PortTests(unittest.TestCase):
         """
         adapters = self.adapters
         adapter = adapters[0]
+        port_mgr = adapter.ports
+
         with requests_mock.mock() as m:
 
             mock_result_port1 = {
@@ -169,11 +171,9 @@ class PortTests(unittest.TestCase):
                 'class': 'storage-port',
                 'name': 'Port 0'
             }
-
             m.get('/api/adapters/fake-adapter-id-1/storage-ports/0',
                   json=mock_result_port1)
 
-            port_mgr = adapter.ports
             ports = port_mgr.list(full_properties=True)
             if len(ports) != 0:
                 storage_uris = self.result['adapters'][0]['storage-port-uris']
@@ -189,6 +189,82 @@ class PortTests(unittest.TestCase):
                     storage_uris[idx])
                 self.assertTrue(port.full_properties)
                 self.assertEqual(port.manager, port_mgr)
+
+    def test_list_filter_name_ok(self):
+        """
+        Test successful list() with filter arguments using the 'name' property
+        on a PortManager instance in a partition.
+        """
+        adapters = self.adapters
+        adapter = adapters[0]
+        port_mgr = adapter.ports
+
+        with requests_mock.mock() as m:
+
+            mock_result_port1 = {
+                'parent': '/api/adapters/fake-adapter-id-1',
+                'index': 0,
+                'fabric-id': '',
+                'description': '',
+                'element-uri':
+                    '/api/adapters/fake-adapter-id-1/storage-ports/0',
+                'element-id': '0',
+                'class': 'storage-port',
+                'name': 'Port 0'
+            }
+            m.get('/api/adapters/fake-adapter-id-1/storage-ports/0',
+                  json=mock_result_port1)
+
+            filter_args = {'name': 'Port 0'}
+            ports = port_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(ports), 1)
+            port = ports[0]
+            self.assertEqual(port.name, 'Port 0')
+            self.assertEqual(
+                port.uri,
+                '/api/adapters/fake-adapter-id-1/storage-ports/0')
+            self.assertEqual(port.properties['name'], 'Port 0')
+            self.assertEqual(port.properties['element-id'], '0')
+            self.assertEqual(port.manager, port_mgr)
+
+    def test_list_filter_elementid_ok(self):
+        """
+        Test successful list() with filter arguments using the 'element-id'
+        property on a PortManager instance in a partition.
+        """
+        adapters = self.adapters
+        adapter = adapters[0]
+        port_mgr = adapter.ports
+
+        with requests_mock.mock() as m:
+
+            mock_result_port1 = {
+                'parent': '/api/adapters/fake-adapter-id-1',
+                'index': 0,
+                'fabric-id': '',
+                'description': '',
+                'element-uri':
+                    '/api/adapters/fake-adapter-id-1/storage-ports/0',
+                'element-id': '0',
+                'class': 'storage-port',
+                'name': 'Port 0'
+            }
+            m.get('/api/adapters/fake-adapter-id-1/storage-ports/0',
+                  json=mock_result_port1)
+
+            filter_args = {'element-id': '0'}
+            ports = port_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(ports), 1)
+            port = ports[0]
+            self.assertEqual(port.name, 'Port 0')
+            self.assertEqual(
+                port.uri,
+                '/api/adapters/fake-adapter-id-1/storage-ports/0')
+            self.assertEqual(port.properties['name'], 'Port 0')
+            self.assertEqual(port.properties['element-id'], '0')
+            self.assertEqual(port.manager, port_mgr)
 
     def test_update_properties(self):
         """

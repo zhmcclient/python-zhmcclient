@@ -192,6 +192,110 @@ class VirtualFunctionTests(unittest.TestCase):
                 self.assertTrue(vf.full_properties)
                 self.assertEqual(vf.manager, vf_mgr)
 
+    def test_list_filter_name_ok(self):
+        """
+        Test successful list() with filter arguments using the 'name' property
+        on a VirtualFunctionManager instance in a partition.
+        """
+        vf_mgr = self.partition.virtual_functions
+
+        with requests_mock.mock() as m:
+
+            mock_result_vf1 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'vf1',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-1',
+                'class': 'virtual-function',
+                'element-id': 'fake-vf-id-1',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
+                  'fake-vf-id-1',
+                  json=mock_result_vf1)
+            mock_result_vf2 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'vf2',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-2',
+                'class': 'virtual-function',
+                'element-id': 'fake-vf-id-2',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
+                  'fake-vf-id-2',
+                  json=mock_result_vf2)
+
+            filter_args = {'name': 'vf2'}
+            vfs = vf_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(vfs), 1)
+            vf = vfs[0]
+            self.assertEqual(vf.name, 'vf2')
+            self.assertEqual(
+                vf.uri,
+                '/api/partitions/fake-part-id-1/virtual-functions/'
+                'fake-vf-id-2')
+            self.assertEqual(vf.properties['name'], 'vf2')
+            self.assertEqual(vf.properties['element-id'], 'fake-vf-id-2')
+            self.assertEqual(vf.manager, vf_mgr)
+
+    def test_list_filter_elementid_ok(self):
+        """
+        Test successful list() with filter arguments using the 'element-id'
+        property on a VirtualFunctionManager instance in a partition.
+        """
+        vf_mgr = self.partition.virtual_functions
+
+        with requests_mock.mock() as m:
+
+            mock_result_vf1 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'vf1',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-1',
+                'class': 'virtual-function',
+                'element-id': 'fake-vf-id-1',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
+                  'fake-vf-id-1',
+                  json=mock_result_vf1)
+            mock_result_vf2 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'vf2',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/virtual-functions/'
+                    'fake-vf-id-2',
+                'class': 'virtual-function',
+                'element-id': 'fake-vf-id-2',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/virtual-functions/'
+                  'fake-vf-id-2',
+                  json=mock_result_vf2)
+
+            filter_args = {'element-id': 'fake-vf-id-2'}
+            vfs = vf_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(vfs), 1)
+            vf = vfs[0]
+            self.assertEqual(vf.name, 'vf2')
+            self.assertEqual(
+                vf.uri,
+                '/api/partitions/fake-part-id-1/virtual-functions/'
+                'fake-vf-id-2')
+            self.assertEqual(vf.properties['name'], 'vf2')
+            self.assertEqual(vf.properties['element-id'], 'fake-vf-id-2')
+            self.assertEqual(vf.manager, vf_mgr)
+
     def test_create(self):
         """
         This tests the 'Create Virtual Function' operation.

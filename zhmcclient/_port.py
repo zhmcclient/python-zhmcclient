@@ -56,7 +56,8 @@ class PortManager(BaseManager):
             parent=adapter,
             uri_prop='element-uri',
             name_prop='name',
-            query_props=[])
+            query_props=[],
+            list_has_name=False)
 
     @property
     def adapter(self):

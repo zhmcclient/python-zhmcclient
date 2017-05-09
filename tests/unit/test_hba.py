@@ -182,6 +182,104 @@ class HbaTests(unittest.TestCase):
                 self.assertTrue(hba.full_properties)
                 self.assertEqual(hba.manager, hba_mgr)
 
+    def test_list_filter_name_ok(self):
+        """
+        Test successful list() with filter arguments using the 'name' property
+        on a HbaManager instance in a partition.
+        """
+        hba_mgr = self.partition.hbas
+
+        with requests_mock.mock() as m:
+
+            mock_result_hba1 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'hba1',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                'class': 'hba',
+                'element-id': 'fake-hba-id-1',
+                'wwpn': 'AABBCCDDEC000082',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                  json=mock_result_hba1)
+            mock_result_hba2 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'hba2',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
+                'class': 'hba',
+                'element-id': 'fake-hba-id-2',
+                'wwpn': 'AABBCCDDEC000083',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
+                  json=mock_result_hba2)
+
+            filter_args = {'name': 'hba2'}
+            hbas = hba_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(hbas), 1)
+            hba = hbas[0]
+            self.assertEqual(hba.name, 'hba2')
+            self.assertEqual(
+                hba.uri,
+                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2')
+            self.assertEqual(hba.properties['name'], 'hba2')
+            self.assertEqual(hba.properties['element-id'], 'fake-hba-id-2')
+            self.assertEqual(hba.manager, hba_mgr)
+
+    def test_list_filter_elementid_ok(self):
+        """
+        Test successful list() with filter arguments using the 'element-id'
+        property on a HbaManager instance in a partition.
+        """
+        hba_mgr = self.partition.hbas
+
+        with requests_mock.mock() as m:
+
+            mock_result_hba1 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'hba1',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                'class': 'hba',
+                'element-id': 'fake-hba-id-1',
+                'wwpn': 'AABBCCDDEC000082',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-1',
+                  json=mock_result_hba1)
+            mock_result_hba2 = {
+                'parent': '/api/partitions/fake-part-id-1',
+                'name': 'hba2',
+                'element-uri':
+                    '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
+                'class': 'hba',
+                'element-id': 'fake-hba-id-2',
+                'wwpn': 'AABBCCDDEC000083',
+                'description': '',
+                'more_properties': 'bliblablub'
+            }
+            m.get('/api/partitions/fake-part-id-1/hbas/fake-hba-id-2',
+                  json=mock_result_hba2)
+
+            filter_args = {'element-id': 'fake-hba-id-2'}
+            hbas = hba_mgr.list(filter_args=filter_args)
+
+            self.assertEqual(len(hbas), 1)
+            hba = hbas[0]
+            self.assertEqual(hba.name, 'hba2')
+            self.assertEqual(
+                hba.uri,
+                '/api/partitions/fake-part-id-1/hbas/fake-hba-id-2')
+            self.assertEqual(hba.properties['name'], 'hba2')
+            self.assertEqual(hba.properties['element-id'], 'fake-hba-id-2')
+            self.assertEqual(hba.manager, hba_mgr)
+
     def test_create(self):
         """
         This tests the 'Create HBA' operation.
