@@ -84,6 +84,13 @@ Released: not yet
 
 * Fixed errors in zhmcclient mock support related to DPM mode checking.
 
+* Fixed that filter arguments specifying properties that are not on each
+  resource, resulted in raising KeyError. An example was when the
+  "card-location" property was specified when finding adapters; that property
+  does not exist for Hipersocket adapters, but for all other types. This
+  situation is now handled by treating such resources as non-matching.
+  See issue #271.
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.

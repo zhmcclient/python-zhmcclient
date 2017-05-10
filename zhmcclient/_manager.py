@@ -346,13 +346,52 @@ class BaseManager(object):
         return True
 
     def _matches_prop(self, obj, prop_name, prop_match):
+        """
+        Return a boolean indicating whether a resource object matches with
+        a single property against a property match value.
+        This is used for client-side filtering.
+
+        Depending on the specified property, this method retrieves the resource
+        properties from the HMC.
+
+        Parameters:
+
+          obj (BaseResource):
+            Resource object.
+
+          prop_match:
+            Property match value that is used to match the actual value of
+            the specified property against, as follows:
+
+            - If the match value is a list or tuple, this method is invoked
+              recursively to find whether one or more match values inthe list
+              match.
+
+            - Else if the property is of string type, its value is matched by
+              interpreting the match value as a regular expression.
+
+            - Else the property value is matched by exact value comparison
+              with the match value.
+
+        Returns:
+
+          bool: Boolean indicating whether the resource object matches w.r.t.
+            the specified property and the match value.
+        """
         if isinstance(prop_match, (list, tuple)):
             # List items are logically ORed, so one matching item suffices.
             for pm in prop_match:
                 if self._matches_prop(obj, prop_name, pm):
                     return True
         else:
-            prop_value = obj.get_property(prop_name)
+            # Some lists of resources do not have all properties, for example
+            # Hipersocket adapters do not have a "card-location" property.
+            # If a filter property does not exist on a resource, the resource
+            # does not match.
+            try:
+                prop_value = obj.get_property(prop_name)
+            except KeyError:
+                return False
             if isinstance(prop_value, six.string_types):
                 # HMC resource property is Enum String or (non-enum) String,
                 # and is both matched by regexp matching. Ideally, regexp
