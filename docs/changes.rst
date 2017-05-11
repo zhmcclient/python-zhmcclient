@@ -76,6 +76,9 @@ Released: not yet
   list items. They now apply ORing, consistent with the zhmcclient
   documentation, and with server-side matching on the HMC. See issue #267.
 
+* Fixed that the ``Cpc.dpm_enabled`` property incorrectly returned ``True`` on
+  a z13 in classic mode. See issue #277.
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.

@@ -50,7 +50,6 @@ from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
 from ._logging import get_logger, logged_api_call
-from ._exceptions import HTTPError
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -294,10 +293,6 @@ class Cpc(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this CPC.
-        * Object-access permission to all Partitions of this CPC, when the
-          CPC is in DPM mode.
-        * Object-access permission to all LPARs of this CPC, when the
-          CPC is in classic (or ensemble) mode.
 
         Raises:
 
@@ -306,27 +301,7 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        # This is an optimized implementation that is faster than the
-        # "Get CPC Properties" operation (which would return the information
-        # directly in its "dpm-enabled" property).
-        try:
-            # We perform a test operation that only succeeds when the CPC is in
-            # DPM mode:
-            self.partitions.list()
-            return True
-        except HTTPError as exc:
-            if exc.http_status == 404 and exc.reason == 1:
-                # Description of this error: The request URI does not designate
-                # an existing resource of the expected type, or designates a
-                # resource for which the API user does not have object-access
-                # permission.
-                # Because this error response does not distinguish between
-                # these two cases, we need to perform the opposite test
-                # operation as well:
-                self.lpars.list()
-                return False
-            else:
-                raise
+        return self.prop('dpm-enabled', False)
 
     @logged_api_call
     def start(self, wait_for_completion=True, operation_timeout=None):
