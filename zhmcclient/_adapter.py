@@ -66,6 +66,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._port import PortManager
 from ._logging import get_logger, logged_api_call
+from ._utils import repr_dict, repr_manager, repr_timestamp
 
 __all__ = ['AdapterManager', 'Adapter']
 
@@ -321,3 +322,29 @@ class Adapter(BaseResource):
         self.properties.update(properties.copy())
         if self.manager._name_prop in properties:
             self.manager._name_uri_cache.update(self.name, self.uri)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this Adapter, for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {_manager_classname} at 0x{_manager_id:08x},\n"
+            "  _uri = {_uri!r},\n"
+            "  _full_properties = {_full_properties!r},\n"
+            "  _properties_timestamp = {_properties_timestamp},\n"
+            "  _properties = {_properties}\n"
+            "  _ports(lazy) = {_ports}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                _manager_classname=self._manager.__class__.__name__,
+                _manager_id=id(self._manager),
+                _uri=self._uri,
+                _full_properties=self._full_properties,
+                _properties_timestamp=repr_timestamp(
+                    self._properties_timestamp),
+                _properties=repr_dict(self._properties, indent=4),
+                _ports=repr_manager(self._ports, indent=2),
+            ))
+        return ret

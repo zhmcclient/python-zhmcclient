@@ -20,7 +20,6 @@ Unit tests for _hmc module of the zhmcclient_mock package.
 from __future__ import absolute_import, print_function
 
 import unittest
-import re
 
 from zhmcclient_mock._hmc import FakedHmc, \
     FakedActivationProfileManager, FakedActivationProfile, \
@@ -43,43 +42,18 @@ class FakedHmcTests(unittest.TestCase):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
     def test_repr(self):
+        """Test FakedHmc.__repr__()."""
+        hmc = self.hmc
 
-        # The test approach is to check the repr() result for each attribute
-        # that is shown in the result, but leaving some flexibility in how that
-        # is formatted.
+        repr_str = repr(hmc)
 
-        # Bring everything into one line, because regexp is line-oriented.
-        act_repr = repr(self.hmc).replace('\n', '\\n')
-
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
         self.assertRegexpMatches(
-            act_repr,
-            r'.*FakedHmc\s+at\s+0x{id:08x}\s+\(\\n.*'.
-            format(id=id(self.hmc)))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\shmc_name\s*=\s*{hmc_name!r}\\n.*'.
-            format(hmc_name=self.hmc.hmc_name))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\shmc_version\s*=\s*{hmc_version!r}\\n.*'.
-            format(hmc_version=self.hmc.hmc_version))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\sapi_version\s*=\s*{api_version!r}\\n.*'.
-            format(api_version=self.hmc.api_version))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\scpcs\s*=\s*FakedCpcManager\s.*')
-        # TODO: Check content of `cpcs`
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_resources\s*=\s.*')
-        # TODO: Check content of `_resources`
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=hmc.__class__.__name__,
+                id=id(hmc)))
 
     def test_hmc(self):
         self.assertEqual(self.hmc.hmc_name, 'fake-hmc')
@@ -265,6 +239,34 @@ class FakedBaseTests(unittest.TestCase):
         self.cpc_resource = self.hmc.cpcs.list()[0]
         self.cpc1_out_props = self.cpc1_in_props.copy()
 
+    def test_resource_repr(self):
+        """Test FakedBaseResource.__repr__()."""
+        resource = self.cpc_resource
+
+        repr_str = repr(resource)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=resource.__class__.__name__,
+                id=id(resource)))
+
+    def test_manager_repr(self):
+        """Test FakedBaseManager.__repr__()."""
+        manager = self.cpc_manager
+
+        repr_str = repr(manager)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=manager.__class__.__name__,
+                id=id(manager)))
+
     def test_manager_attr(self):
         """Test FakedBaseManager attributes."""
 
@@ -288,99 +290,6 @@ class FakedBaseTests(unittest.TestCase):
                          self.cpc1_out_props['object-id'])
         self.assertEqual(self.cpc_resource.uri,
                          self.cpc1_out_props['object-uri'])
-
-    def test_manager_repr(self):
-        """Test FakedBaseManager.__repr__()."""
-
-        # The test approach is to check the repr() result for each attribute
-        # that is shown in the result, but leaving some flexibility in how that
-        # is formatted.
-
-        # Bring everything into one line, because regexp is line-oriented.
-        act_repr = repr(self.cpc_manager).replace('\n', '\\n')
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-            format(classname=self.cpc_manager.__class__.__name__,
-                   id=id(self.cpc_manager)))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_hmc\s*=\s*{hmc_classname}\s+at\s+0x{hmc_id:08x}\\n.*'.
-            format(hmc_classname=self.cpc_manager.hmc.__class__.__name__,
-                   hmc_id=id(self.cpc_manager.hmc)))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_parent\s*=\s*{p_classname}\s+at\s+0x{p_id:08x}\\n.*'.
-            format(p_classname=self.cpc_manager.parent.__class__.__name__,
-                   p_id=id(self.cpc_manager.parent)))
-
-        m = re.match(r'.*\s_resource_class\s*=\s*([^\\]+)\\n.*', act_repr)
-        if not m:
-            raise AssertionError("'_resource_class = ...' did not match "
-                                 "in: {!r}".format(act_repr))
-        act_resource_class = m.group(1)
-        self.assertEqual(act_resource_class,
-                         repr(self.cpc_manager.resource_class))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_base_uri\s*=\s*{_base_uri!r}\\n.*'.
-            format(_base_uri=self.cpc_manager.base_uri))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_oid_prop\s*=\s*{_oid_prop!r}\\n.*'.
-            format(_oid_prop=self.cpc_manager.oid_prop))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_uri_prop\s*=\s*{_uri_prop!r}\\n.*'.
-            format(_uri_prop=self.cpc_manager.uri_prop))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_resources\s*=\s.*')
-        # TODO: Check content of `_resources`
-
-    def test_resource_repr(self):
-        """Test FakedBaseResource.__repr__()."""
-
-        # The test approach is to check the repr() result for each attribute
-        # that is shown in the result, but leaving some flexibility in how that
-        # is formatted.
-
-        # Bring everything into one line, because regexp is line-oriented.
-        act_repr = repr(self.cpc_resource).replace('\n', '\\n')
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-            format(classname=self.cpc_resource.__class__.__name__,
-                   id=id(self.cpc_resource)))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_manager\s*=\s*{m_classname}\s+at\s+0x{m_id:08x}\\n.*'.
-            format(m_classname=self.cpc_resource.manager.__class__.__name__,
-                   m_id=id(self.cpc_resource.manager)))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_manager._parent._uri\s*=\s*{p_uri!r}\\n.*'.
-            format(p_uri=self.cpc_resource.manager.parent.uri))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_uri\s*=\s*{_uri!r}\\n.*'.
-            format(_uri=self.cpc_resource.uri))
-
-        self.assertRegexpMatches(
-            act_repr,
-            r'.*\s_properties\s*=\s.*')
-        # TODO: Check content of `_properties`
 
 
 class FakedActivationProfileTests(unittest.TestCase):
@@ -564,6 +473,23 @@ class FakedAdapterTests(unittest.TestCase):
         # This already uses add() of FakedAdapterManager:
         self.hmc.add_resources(rd)
 
+    def test_adapter_repr(self):
+        """Test FakedAdapter.__repr__()."""
+        cpcs = self.hmc.cpcs.list()
+        cpc1 = cpcs[0]
+        adapters = cpc1.adapters.list()
+        adapter = adapters[0]
+
+        repr_str = repr(adapter)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=adapter.__class__.__name__,
+                id=id(adapter)))
+
     def test_adapters_attr(self):
         """Test CPC 'adapters' attribute."""
         cpcs = self.hmc.cpcs.list()
@@ -660,6 +586,21 @@ class FakedCpcTests(unittest.TestCase):
         }
         # This already uses add() of FakedCpcManager:
         self.hmc.add_resources(rd)
+
+    def test_cpc_repr(self):
+        """Test FakedCpc.__repr__()."""
+        cpcs = self.hmc.cpcs.list()
+        cpc = cpcs[0]
+
+        repr_str = repr(cpc)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=cpc.__class__.__name__,
+                id=id(cpc)))
 
     def test_cpcs_attr(self):
         """Test HMC 'cpcs' attribute."""
@@ -1154,6 +1095,23 @@ class FakedPartitionTests(unittest.TestCase):
         }
         # This already uses add() of FakedPartitionManager:
         self.hmc.add_resources(rd)
+
+    def test_partition_repr(self):
+        """Test FakedPartition.__repr__()."""
+        cpcs = self.hmc.cpcs.list()
+        cpc1 = cpcs[0]
+        partitions = cpc1.partitions.list()
+        partition = partitions[0]
+
+        repr_str = repr(partition)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=partition.__class__.__name__,
+                id=id(partition)))
 
     def test_partitions_attr(self):
         """Test CPC 'partitions' attribute."""

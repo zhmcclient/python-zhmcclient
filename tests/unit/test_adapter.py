@@ -143,6 +143,20 @@ class AdapterTests(unittest.TestCase):
             'description': 'Hipersocket #2 Port #1',
         })
 
+    def test_repr(self):
+        """Test Adapter.__repr__()."""
+        adapter = Adapter(self.cpc.adapters, '/adapters/1', 'osa1')
+
+        repr_str = repr(adapter)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=adapter.__class__.__name__,
+                id=id(adapter)))
+
     def test_init(self):
         """Test AdapterManager.__init__()."""
         self.add_standard_osa()
