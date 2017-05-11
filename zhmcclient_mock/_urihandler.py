@@ -33,6 +33,7 @@ have not been implemented yet::
 from __future__ import absolute_import
 
 import re
+from requests.utils import unquote
 
 __all__ = ['UriHandler', 'HTTPError', 'URIS']
 
@@ -86,6 +87,19 @@ class InvalidMethodError(HTTPError):
 
 
 class CpcNotInDpmError(HTTPError):
+    """
+    Indicates that the operation requires DPM mode but the CPC is not in DPM
+    mode.
+
+    Out of the set of operations that only work in DPM mode, this error is used
+    only for the following subset:
+
+    - Create Partition
+    - Create Hipersocket
+    - Start CPC
+    - Stop CPC
+    - Set Auto-Start List
+    """
 
     def __init__(self, method, uri, cpc):
         super(CpcNotInDpmError, self).__init__(
@@ -96,6 +110,18 @@ class CpcNotInDpmError(HTTPError):
 
 
 class CpcInDpmError(HTTPError):
+    """
+    Indicates that the operation requires to be not in DPM mode, but the CPC is
+    in DPM mode.
+
+    Out of the set of operations that do not work in DPM mode, this error is
+    used only for the following subset:
+
+    - Activate CPC (not yet implemented in zhmcclient)
+    - Deactivate CPC (not yet implemented in zhmcclient)
+    - Import Profiles (not yet implemented in this URI handler)
+    - Export Profiles (not yet implemented in this URI handler)
+    """
 
     def __init__(self, method, uri, cpc):
         super(CpcInDpmError, self).__init__(
@@ -103,6 +129,36 @@ class CpcInDpmError(HTTPError):
             http_status=409,
             reason=4,
             message="CPC is in DPM mode: %s" % cpc.uri)
+
+
+def parse_query_parms(query_str):
+    """
+    Parse the specified query parms string and return a dictionary of
+    filter arguments that will match what is specified for the filter_args
+    argument in BaseResource.list().
+
+    query_str is the query string from the URL, everything after the '?'. If
+    it is empty or None, None is returned.
+    """
+    if not query_str:
+        return None
+    filter_args = {}
+    for query_item in query_str.split('&'):
+        # Example for these items: 'name=a%20b'
+        if query_item == '':
+            continue
+        prop, match_value = query_item.split('=')
+        prop = unquote(prop)
+        match_value = unquote(match_value)
+        if prop in filter_args:
+            existing_value = filter_args[prop]
+            if not isinstance(existing_value, list):
+                filter_args[prop] = list()
+                filter_args[prop].append(existing_value)
+            filter_args[prop].append(match_value)
+        else:
+            filter_args[prop] = match_value
+    return filter_args
 
 
 class UriHandler(object):
@@ -189,8 +245,10 @@ class CpcsHandler(object):
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
         """Operation: List CPCs."""
+        query_str = uri_parms[0]
         result_cpcs = []
-        for cpc in hmc.cpcs.list():
+        filter_args = parse_query_parms(query_str)
+        for cpc in hmc.cpcs.list(filter_args):
             result_cpc = {}
             for prop in cpc.properties:
                 if prop in ('object-uri', 'name', 'status'):
@@ -247,9 +305,7 @@ class CpcExportPortNamesListHandler(object):
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('POST', uri)
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('POST', uri, cpc)
-
+        assert cpc.dpm_enabled
         if body is None or 'partitions' not in body:
             raise HTTPError('POST', uri, 400,
                             149,  # TODO: Maybe use different reason?
@@ -290,27 +346,61 @@ class AdaptersHandler(object):
 
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
-        """Operation: List Adapters of a CPC."""
+        """Operation: List Adapters of a CPC (empty result if not in DPM
+        mode)."""
         cpc_oid = uri_parms[0]
+        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('GET', uri)
-        if not cpc.dpm_enabled:
-            raise InvalidResourceError('GET', uri)  # in List: not found
         result_adapters = []
-        for adapter in cpc.adapters.list():
-            result_adapter = {}
-            for prop in adapter.properties:
-                if prop in ('object-uri', 'name', 'status'):
-                    result_adapter[prop] = adapter.properties[prop]
-            result_adapters.append(result_adapter)
+        if cpc.dpm_enabled:
+            filter_args = parse_query_parms(query_str)
+            for adapter in cpc.adapters.list(filter_args):
+                result_adapter = {}
+                for prop in adapter.properties:
+                    if prop in ('object-uri', 'name', 'status'):
+                        result_adapter[prop] = adapter.properties[prop]
+                result_adapters.append(result_adapter)
         return {'adapters': result_adapters}
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Create Hipersocket (requires DPM mode)."""
+        assert wait_for_completion is True
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError('POST', uri, cpc)
+        # We need to emulate the behavior of this POST to always create a
+        # hipersocket, but the add() method is used for adding all kinds of
+        # faked adapters to the faked HMC. So we need to specify the adapter
+        # type, but because the behavior of the Adapter resource object is
+        # that it only has its input properties set, we add the 'type'
+        # property on a copy of the input properties.
+        body2 = body.copy()
+        body2['type'] = 'hipersockets'
+        new_adapter = cpc.adapters.add(body2)
+        return {'object-uri': new_adapter.uri}
 
 
 class AdapterHandler(GenericGetPropertiesHandler,
                      GenericUpdatePropertiesHandler):
-    pass
+
+    @staticmethod
+    def delete(hmc, uri, uri_parms, logon_required):
+        """Operation: Delete Hipersocket (requires DPM mode)."""
+        try:
+            adapter = hmc.lookup_by_uri(uri)
+        except KeyError:
+            raise InvalidResourceError('DELETE', uri)
+        cpc = adapter.manager.parent
+        assert cpc.dpm_enabled
+        adapter.manager.remove(adapter.oid)
 
 
 class NetworkPortHandler(GenericGetPropertiesHandler,
@@ -327,26 +417,28 @@ class PartitionsHandler(object):
 
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
-        """Operation: List Partitions of a CPC."""
+        """Operation: List Partitions of a CPC (empty result if not in DPM
+        mode)."""
         cpc_oid = uri_parms[0]
+        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('GET', uri)
-        if not cpc.dpm_enabled:
-            raise InvalidResourceError('GET', uri)  # in List: not found
         result_partitions = []
-        for partition in cpc.partitions.list():
-            result_partition = {}
-            for prop in partition.properties:
-                if prop in ('object-uri', 'name', 'status'):
-                    result_partition[prop] = partition.properties[prop]
-            result_partitions.append(result_partition)
+        if cpc.dpm_enabled:
+            filter_args = parse_query_parms(query_str)
+            for partition in cpc.partitions.list(filter_args):
+                result_partition = {}
+                for prop in partition.properties:
+                    if prop in ('object-uri', 'name', 'status'):
+                        result_partition[prop] = partition.properties[prop]
+                result_partitions.append(result_partition)
         return {'partitions': result_partitions}
 
     @staticmethod
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
-        """Operation: Create Partition."""
+        """Operation: Create Partition (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
         try:
@@ -370,8 +462,7 @@ class PartitionHandler(GenericGetPropertiesHandler,
         except KeyError:
             raise InvalidResourceError('DELETE', uri)
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('DELETE', uri, cpc)
+        assert cpc.dpm_enabled
         partition.manager.remove(partition.oid)
 
 
@@ -387,8 +478,7 @@ class PartitionStartHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('POST', uri, cpc)
+        assert cpc.dpm_enabled
         partition.properties['status'] = 'active'
 
 
@@ -404,8 +494,7 @@ class PartitionStopHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('POST', uri, cpc)
+        assert cpc.dpm_enabled
         partition.properties['status'] = 'stopped'
 
 
@@ -413,7 +502,7 @@ class HbasHandler(object):
 
     @staticmethod
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
-        """Operation: Create HBA."""
+        """Operation: Create HBA (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_uri = re.sub('/hbas$', '', uri)
         try:
@@ -421,8 +510,7 @@ class HbasHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('POST', uri, cpc)
+        assert cpc.dpm_enabled
         new_hba = partition.hbas.add(body)
         return {'element-uri': new_hba.uri}
 
@@ -432,15 +520,14 @@ class HbaHandler(GenericGetPropertiesHandler,
 
     @staticmethod
     def delete(hmc, uri, uri_parms, logon_required):
-        """Operation: Delete HBA."""
+        """Operation: Delete HBA (requires DPM mode)."""
         try:
             hba = hmc.lookup_by_uri(uri)
         except KeyError:
             raise InvalidResourceError('DELETE', uri)
         partition = hba.manager.parent
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('DELETE', uri, cpc)
+        assert cpc.dpm_enabled
         partition.hbas.remove(hba.oid)
 
 
@@ -448,7 +535,7 @@ class NicsHandler(object):
 
     @staticmethod
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
-        """Operation: Create NIC."""
+        """Operation: Create NIC (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_uri = re.sub('/nics$', '', uri)
         try:
@@ -456,8 +543,7 @@ class NicsHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('POST', uri, cpc)
+        assert cpc.dpm_enabled
         new_nic = partition.nics.add(body)
         return {'element-uri': new_nic.uri}
 
@@ -467,15 +553,14 @@ class NicHandler(GenericGetPropertiesHandler,
 
     @staticmethod
     def delete(hmc, uri, uri_parms, logon_required):
-        """Operation: Delete NIC."""
+        """Operation: Delete NIC (requires DPM mode)."""
         try:
             nic = hmc.lookup_by_uri(uri)
         except KeyError:
             raise InvalidResourceError('DELETE', uri)
         partition = nic.manager.parent
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('DELETE', uri, cpc)
+        assert cpc.dpm_enabled
         partition.nics.remove(nic.oid)
 
 
@@ -483,7 +568,7 @@ class VirtualFunctionsHandler(object):
 
     @staticmethod
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
-        """Operation: Create Virtual Function"""
+        """Operation: Create Virtual Function (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_uri = re.sub('/virtual-functions$', '', uri)
         try:
@@ -491,8 +576,7 @@ class VirtualFunctionsHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('POST', uri, cpc)
+        assert cpc.dpm_enabled
         new_vf = partition.virtual_functions.add(body)
         return {'element-uri': new_vf.uri}
 
@@ -502,15 +586,14 @@ class VirtualFunctionHandler(GenericGetPropertiesHandler,
 
     @staticmethod
     def delete(hmc, uri, uri_parms, logon_required):
-        """Operation: Delete Virtual Function."""
+        """Operation: Delete Virtual Function (requires DPM mode)."""
         try:
             vf = hmc.lookup_by_uri(uri)
         except KeyError:
             raise InvalidResourceError('DELETE', uri)
         partition = vf.manager.parent
         cpc = partition.manager.parent
-        if not cpc.dpm_enabled:
-            raise CpcNotInDpmError('DELETE', uri, cpc)
+        assert cpc.dpm_enabled
         partition.virtual_functions.remove(vf.oid)
 
 
@@ -518,21 +601,23 @@ class VirtualSwitchesHandler(object):
 
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
-        """Operation: List Virtual Switches of a CPC."""
+        """Operation: List Virtual Switches of a CPC (empty result if not in
+        DPM mode)."""
         cpc_oid = uri_parms[0]
+        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('GET', uri)
-        if not cpc.dpm_enabled:
-            raise InvalidResourceError('GET', uri)  # in List: not found
         result_vswitches = []
-        for vswitch in cpc.virtual_switches.list():
-            result_vswitch = {}
-            for prop in vswitch.properties:
-                if prop in ('object-uri', 'name', 'type'):
-                    result_vswitch[prop] = vswitch.properties[prop]
-            result_vswitches.append(result_vswitch)
+        if cpc.dpm_enabled:
+            filter_args = parse_query_parms(query_str)
+            for vswitch in cpc.virtual_switches.list(filter_args):
+                result_vswitch = {}
+                for prop in vswitch.properties:
+                    if prop in ('object-uri', 'name', 'type'):
+                        result_vswitch[prop] = vswitch.properties[prop]
+                result_vswitches.append(result_vswitch)
         return {'virtual-switches': result_vswitches}
 
 
@@ -545,21 +630,23 @@ class LparsHandler(object):
 
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
-        """Operation: List Logical Partitions of CPC."""
+        """Operation: List Logical Partitions of CPC (empty result in DPM
+        mode."""
         cpc_oid = uri_parms[0]
+        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('GET', uri)
-        if cpc.dpm_enabled:
-            raise InvalidResourceError('GET', uri)  # in List: not found
         result_lpars = []
-        for lpar in cpc.lpars.list():
-            result_lpar = {}
-            for prop in lpar.properties:
-                if prop in ('object-uri', 'name', 'status'):
-                    result_lpar[prop] = lpar.properties[prop]
-            result_lpars.append(result_lpar)
+        if not cpc.dpm_enabled:
+            filter_args = parse_query_parms(query_str)
+            for lpar in cpc.lpars.list(filter_args):
+                result_lpar = {}
+                for prop in lpar.properties:
+                    if prop in ('object-uri', 'name', 'status'):
+                        result_lpar[prop] = lpar.properties[prop]
+                result_lpars.append(result_lpar)
         return {'logical-partitions': result_lpars}
 
 
@@ -580,8 +667,7 @@ class LparActivateHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = lpar.manager.parent
-        if cpc.dpm_enabled:
-            raise CpcInDpmError('POST', uri, cpc)
+        assert not cpc.dpm_enabled
         lpar.properties['status'] = 'not-operating'
 
 
@@ -597,8 +683,7 @@ class LparDeactivateHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = lpar.manager.parent
-        if cpc.dpm_enabled:
-            raise CpcInDpmError('POST', uri, cpc)
+        assert not cpc.dpm_enabled
         lpar.properties['status'] = 'not-activated'
 
 
@@ -614,8 +699,7 @@ class LparLoadHandler(object):
         except KeyError:
             raise InvalidResourceError('POST', uri)
         cpc = lpar.manager.parent
-        if cpc.dpm_enabled:
-            raise CpcInDpmError('POST', uri, cpc)
+        assert not cpc.dpm_enabled
         lpar.properties['status'] = 'operating'
 
 
@@ -623,16 +707,18 @@ class ResetActProfilesHandler(object):
 
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
-        """Operation: List Reset Activation Profiles."""
+        """Operation: List Reset Activation Profiles (requires classic
+        mode)."""
         cpc_oid = uri_parms[0]
+        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('GET', uri)
-        if cpc.dpm_enabled:
-            raise InvalidResourceError('GET', uri)  # in List: not found
+        assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        for profile in cpc.reset_activation_profiles.list():
+        filter_args = parse_query_parms(query_str)
+        for profile in cpc.reset_activation_profiles.list(filter_args):
             result_profile = {}
             for prop in profile.properties:
                 if prop in ('element-uri', 'name'):
@@ -650,16 +736,18 @@ class ImageActProfilesHandler(object):
 
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
-        """Operation: List Image Activation Profiles."""
+        """Operation: List Image Activation Profiles (requires classic
+        mode)."""
         cpc_oid = uri_parms[0]
+        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('GET', uri)
-        if cpc.dpm_enabled:
-            raise InvalidResourceError('GET', uri)  # in List: not found
+        assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        for profile in cpc.image_activation_profiles.list():
+        filter_args = parse_query_parms(query_str)
+        for profile in cpc.image_activation_profiles.list(filter_args):
             result_profile = {}
             for prop in profile.properties:
                 if prop in ('element-uri', 'name'):
@@ -677,16 +765,17 @@ class LoadActProfilesHandler(object):
 
     @staticmethod
     def get(hmc, uri, uri_parms, logon_required):
-        """Operation: List Load Activation Profiles."""
+        """Operation: List Load Activation Profiles (requires classic mode)."""
         cpc_oid = uri_parms[0]
+        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('GET', uri)
-        if cpc.dpm_enabled:
-            raise InvalidResourceError('GET', uri)  # in List: not found
+        assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        for profile in cpc.load_activation_profiles.list():
+        filter_args = parse_query_parms(query_str)
+        for profile in cpc.load_activation_profiles.list(filter_args):
             result_profile = {}
             for prop in profile.properties:
                 if prop in ('element-uri', 'name'):
@@ -701,13 +790,15 @@ class LoadActProfileHandler(GenericGetPropertiesHandler,
 
 
 # URIs to be handled
+# Note: This list covers only the HMC operations implemented in the zhmcclient.
+# The HMC supports several more operations.
 URIS = (
 
     # In all modes:
 
     ('/api/version', VersionHandler),
 
-    ('/api/cpcs', CpcsHandler),
+    ('/api/cpcs(?:\?(.*))?', CpcsHandler),
     ('/api/cpcs/([^/]+)', CpcHandler),
 
     # Only in DPM mode:
@@ -717,14 +808,14 @@ URIS = (
     ('/api/cpcs/([^/]+)/operations/export-port-names-list',
      CpcExportPortNamesListHandler),
 
-    ('/api/cpcs/([^/]+)/adapters', AdaptersHandler),
+    ('/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
     ('/api/adapters/([^/]+)', AdapterHandler),
 
     ('/api/adapters/([^/]+)/network-ports/([^/]+)', NetworkPortHandler),
 
     ('/api/adapters/([^/]+)/storage-ports/([^/]+)', StoragePortHandler),
 
-    ('/api/cpcs/([^/]+)/partitions', PartitionsHandler),
+    ('/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
     ('/api/partitions/([^/]+)', PartitionHandler),
     ('/api/partitions/([^/]+)/operations/start', PartitionStartHandler),
     ('/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
@@ -737,19 +828,20 @@ URIS = (
     # ('/api/partitions/([^/]+)/operations/unmount-iso-image',
     #  PartitionUnmountIsoImageHandler),
 
-    ('/api/partitions/([^/]+)/hbas', HbasHandler),
+    ('/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
     ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
     # ('/api/partitions/([^/]+)/hbas/([^/]+)/operations/'\
     #  'reassign-storage-adapter-port', HbaReassignPortHandler),
 
-    ('/api/partitions/([^/]+)/nics', NicsHandler),
+    ('/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
     ('/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
 
-    ('/api/partitions/([^/]+)/virtual-functions', VirtualFunctionsHandler),
+    ('/api/partitions/([^/]+)/virtual-functions(?:\?(.*))?',
+     VirtualFunctionsHandler),
     ('/api/partitions/([^/]+)/virtual-functions/([^/]+)',
      VirtualFunctionHandler),
 
-    ('/api/cpcs/([^/]+)/virtual-switches', VirtualSwitchesHandler),
+    ('/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?', VirtualSwitchesHandler),
     ('/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
     # ('/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
     #  VirtualSwitchGetVnicsHandler),
@@ -761,7 +853,7 @@ URIS = (
     # ('/api/cpcs/([^/]+)/operations/export-profiles',
     #  CpcExportProfilesHandler),
 
-    ('/api/cpcs/([^/]+)/logical-partitions', LparsHandler),
+    ('/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
     ('/api/logical-partitions/([^/]+)', LparHandler),
     ('/api/logical-partitions/([^/]+)/operations/activate',
      LparActivateHandler),
@@ -769,15 +861,18 @@ URIS = (
      LparDeactivateHandler),
     ('/api/logical-partitions/([^/]+)/operations/load', LparLoadHandler),
 
-    ('/api/cpcs/([^/]+)/reset-activation-profiles', ResetActProfilesHandler),
+    ('/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
+     ResetActProfilesHandler),
     ('/api/cpcs/([^/]+)/reset-activation-profiles/([^/]+)',
      ResetActProfileHandler),
 
-    ('/api/cpcs/([^/]+)/image-activation-profiles', ImageActProfilesHandler),
+    ('/api/cpcs/([^/]+)/image-activation-profiles(?:\?(.*))?',
+     ImageActProfilesHandler),
     ('/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
      ImageActProfileHandler),
 
-    ('/api/cpcs/([^/]+)/load-activation-profiles', LoadActProfilesHandler),
+    ('/api/cpcs/([^/]+)/load-activation-profiles(?:\?(.*))?',
+     LoadActProfilesHandler),
     ('/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
      LoadActProfileHandler),
 )

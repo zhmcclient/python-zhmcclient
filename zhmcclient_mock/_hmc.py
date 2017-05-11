@@ -26,6 +26,7 @@ except ImportError:
     from ordereddict import OrderedDict
 import six
 import pprint
+import re
 
 from ._idpool import IdPool
 
@@ -181,6 +182,98 @@ class FakedBaseManager(object):
             ))
         return ret
 
+    def _matches_filters(self, obj, filter_args):
+        """
+        Return a boolean indicating whether a faked resource object matches a
+        set of filter arguments.
+        This is used for implementing filtering in the faked resource managers.
+
+        Parameters:
+
+          obj (FakedBaseResource):
+            Resource object.
+
+          filter_args (dict):
+            Filter arguments. For details, see :ref:`Filtering`.
+            `None` causes the resource to always match.
+
+        Returns:
+
+          bool: Boolean indicating whether the resource object matches the
+            filter arguments.
+        """
+        if filter_args is not None:
+            for prop_name in filter_args:
+                prop_match = filter_args[prop_name]
+                if not self._matches_prop(obj, prop_name, prop_match):
+                    return False
+        return True
+
+    def _matches_prop(self, obj, prop_name, prop_match):
+        """
+        Return a boolean indicating whether a faked resource object matches
+        with a single property against a property match value.
+        This is used for implementing filtering in the faked resource managers.
+
+        Parameters:
+
+          obj (FakedBaseResource):
+            Resource object.
+
+          prop_match:
+            Property match value that is used to match the actual value of
+            the specified property against, as follows:
+
+            - If the match value is a list or tuple, this method is invoked
+              recursively to find whether one or more match values in the list
+              match.
+
+            - Else if the property is of string type, its value is matched by
+              interpreting the match value as a regular expression.
+
+            - Else the property value is matched by exact value comparison
+              with the match value.
+
+        Returns:
+
+          bool: Boolean indicating whether the resource object matches w.r.t.
+            the specified property and the match value.
+        """
+        if isinstance(prop_match, (list, tuple)):
+            # List items are logically ORed, so one matching item suffices.
+            for pm in prop_match:
+                if self._matches_prop(obj, prop_name, pm):
+                    return True
+        else:
+            # Some lists of resources do not have all properties, for example
+            # Hipersocket adapters do not have a "card-location" property.
+            # If a filter property does not exist on a resource, the resource
+            # does not match.
+            if prop_name not in obj.properties:
+                return False
+            prop_value = obj.properties[prop_name]
+            if isinstance(prop_value, six.string_types):
+                # HMC resource property is Enum String or (non-enum) String,
+                # and is both matched by regexp matching. Ideally, regexp
+                # matching should only be done for non-enum strings, but
+                # distinguishing them is not possible given that the client
+                # has no knowledge about the properties.
+
+                # The regexp matching implemented in the HMC requires begin and
+                # end of the string value to match, even if the '^' for begin
+                # and '$' for end are not specified in the pattern. The code
+                # here is consistent with that: We add end matching to the
+                # pattern, and begin matching is done by re.match()
+                # automatically.
+                re_match = prop_match + '$'
+                m = re.match(re_match, prop_value)
+                if m:
+                    return True
+            else:
+                if prop_value == prop_match:
+                    return True
+        return False
+
     @property
     def hmc(self):
         """
@@ -268,15 +361,26 @@ class FakedBaseManager(object):
         del self._resources[oid]
         del self._hmc._resources[uri]
 
-    def list(self):
+    def list(self, filter_args=None):
         """
         List the faked resources of this manager.
+
+        Parameters:
+
+          filter_args (dict):
+            Filter arguments. `None` causes no filtering to happen. See
+            :meth:`~zhmcclient.BaseManager.list()` for details.
 
         Returns:
           list of FakedBaseResource: The faked resource objects of this
             manager.
         """
-        return list(six.itervalues(self._resources))
+        res = list()
+        for oid in self._resources:
+            resource = self._resources[oid]
+            if self._matches_filters(resource, filter_args):
+                res.append(resource)
+        return res
 
     def lookup_by_oid(self, oid):
         """

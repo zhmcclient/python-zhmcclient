@@ -26,7 +26,7 @@ from mock import MagicMock
 from zhmcclient_mock._hmc import FakedHmc
 from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     InvalidMethodError, CpcNotInDpmError, CpcInDpmError, \
-    UriHandler, \
+    parse_query_parms, UriHandler, \
     GenericGetPropertiesHandler, GenericUpdatePropertiesHandler, \
     VersionHandler, \
     CpcsHandler, CpcHandler, CpcStartHandler, CpcStopHandler, \
@@ -197,6 +197,82 @@ class CpcInDpmErrorTests(unittest.TestCase):
         self.assertEqual(exc.uri, uri)
         self.assertEqual(exc.http_status, exp_http_status)
         self.assertEqual(exc.reason, exp_reason)
+
+
+class ParseQueryParmsTests(unittest.TestCase):
+    """All tests for parse_query_parms()."""
+
+    def test_none(self):
+        filter_args = parse_query_parms(None)
+        self.assertIsNone(filter_args)
+
+    def test_empty(self):
+        filter_args = parse_query_parms('')
+        self.assertIsNone(filter_args)
+
+    def test_one_normal(self):
+        filter_args = parse_query_parms('a=b')
+        self.assertEqual(filter_args, {'a': 'b'})
+
+    def test_two_normal(self):
+        filter_args = parse_query_parms('a=b&c=d')
+        self.assertEqual(filter_args, {'a': 'b', 'c': 'd'})
+
+    def test_one_trailing_amp(self):
+        filter_args = parse_query_parms('a=b&')
+        self.assertEqual(filter_args, {'a': 'b'})
+
+    def test_one_leading_amp(self):
+        filter_args = parse_query_parms('&a=b')
+        self.assertEqual(filter_args, {'a': 'b'})
+
+    def test_one_missing_value(self):
+        filter_args = parse_query_parms('a=')
+        self.assertEqual(filter_args, {'a': ''})
+
+    def test_one_missing_name(self):
+        filter_args = parse_query_parms('=b')
+        self.assertEqual(filter_args, {'': 'b'})
+
+    def test_two_same_normal(self):
+        filter_args = parse_query_parms('a=b&a=c')
+        self.assertEqual(filter_args, {'a': ['b', 'c']})
+
+    def test_two_same_one_normal(self):
+        filter_args = parse_query_parms('a=b&d=e&a=c')
+        self.assertEqual(filter_args, {'a': ['b', 'c'], 'd': 'e'})
+
+    def test_space_value_1(self):
+        filter_args = parse_query_parms('a=b%20c')
+        self.assertEqual(filter_args, {'a': 'b c'})
+
+    def test_space_value_2(self):
+        filter_args = parse_query_parms('a=%20c')
+        self.assertEqual(filter_args, {'a': ' c'})
+
+    def test_space_value_3(self):
+        filter_args = parse_query_parms('a=b%20')
+        self.assertEqual(filter_args, {'a': 'b '})
+
+    def test_space_value_4(self):
+        filter_args = parse_query_parms('a=%20')
+        self.assertEqual(filter_args, {'a': ' '})
+
+    def test_space_name_1(self):
+        filter_args = parse_query_parms('a%20b=c')
+        self.assertEqual(filter_args, {'a b': 'c'})
+
+    def test_space_name_2(self):
+        filter_args = parse_query_parms('%20b=c')
+        self.assertEqual(filter_args, {' b': 'c'})
+
+    def test_space_name_3(self):
+        filter_args = parse_query_parms('a%20=c')
+        self.assertEqual(filter_args, {'a ': 'c'})
+
+    def test_space_name_4(self):
+        filter_args = parse_query_parms('%20=c')
+        self.assertEqual(filter_args, {' ': 'c'})
 
 
 class UriHandlerHandlerEmptyTests(unittest.TestCase):
@@ -643,7 +719,7 @@ class CpcHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs', CpcsHandler),
+            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
             ('/api/cpcs/([^/]+)', CpcHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -762,7 +838,7 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs', CpcsHandler),
+            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
             ('/api/cpcs/([^/]+)', CpcHandler),
             ('/api/cpcs/([^/]+)/operations/export-port-names-list',
              CpcExportPortNamesListHandler),
@@ -804,7 +880,7 @@ class AdapterHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/adapters', AdaptersHandler),
+            ('/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
             ('/api/adapters/([^/]+)', AdapterHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -948,7 +1024,7 @@ class PartitionHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/partitions', PartitionsHandler),
+            ('/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
             ('/api/partitions/([^/]+)', PartitionHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1080,7 +1156,7 @@ class HbaHandlerTests(unittest.TestCase):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/hbas', HbasHandler),
+            ('/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
             ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1176,7 +1252,7 @@ class NicHandlerTests(unittest.TestCase):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/nics', NicsHandler),
+            ('/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
             ('/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1271,7 +1347,7 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/virtual-functions',
+            ('/api/partitions/([^/]+)/virtual-functions(?:\?(.*))?',
              VirtualFunctionsHandler),
             ('/api/partitions/([^/]+)/virtual-functions/([^/]+)',
              VirtualFunctionHandler),
@@ -1372,7 +1448,8 @@ class VirtualSwitchHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/virtual-switches', VirtualSwitchesHandler),
+            ('/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?',
+             VirtualSwitchesHandler),
             ('/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1415,7 +1492,7 @@ class LparHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/logical-partitions', LparsHandler),
+            ('/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
             ('/api/logical-partitions/([^/]+)', LparHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1512,7 +1589,7 @@ class ResetActProfileHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/reset-activation-profiles',
+            ('/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
              ResetActProfilesHandler),
             ('/api/cpcs/([^/]+)/reset-activation-profiles/([^/]+)',
              ResetActProfileHandler),
@@ -1561,7 +1638,7 @@ class ImageActProfileHandlersTests(unittest.TestCase):
         self.uris = (
             ('/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
              ImageActProfileHandler),
-            ('/api/cpcs/([^/]+)/image-activation-profiles',
+            ('/api/cpcs/([^/]+)/image-activation-profiles(?:\?(.*))?',
              ImageActProfilesHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1608,7 +1685,7 @@ class LoadActProfileHandlersTests(unittest.TestCase):
         self.uris = (
             ('/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
              LoadActProfileHandler),
-            ('/api/cpcs/([^/]+)/load-activation-profiles',
+            ('/api/cpcs/([^/]+)/load-activation-profiles(?:\?(.*))?',
              LoadActProfilesHandler),
         )
         self.urihandler = UriHandler(self.uris)
