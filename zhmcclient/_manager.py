@@ -30,6 +30,7 @@ from __future__ import absolute_import
 import six
 import re
 from datetime import datetime, timedelta
+import warnings
 from requests.utils import quote
 
 from ._logging import get_logger, logged_api_call
@@ -235,7 +236,7 @@ class BaseManager(object):
         self._name_uri_cache = _NameUriCache(
             self, session.retry_timeout_config.name_uri_cache_timetolive)
 
-    def invalidate_name_uri_cache(self):
+    def invalidate_cache(self):
         """
         Invalidate the Name-URI cache of this manager.
 
@@ -244,9 +245,9 @@ class BaseManager(object):
         up certain zhmcclient methods.
 
         The Name-URI cache is properly updated during changes on the resource
-        name (e.g. via ``update_properties()``) or changes on the resource URI
-        (e.g. via resource creation or deletion), if these changes are
-        performed through the same manager object.
+        name (e.g. via :meth:`~zhmcclient.Partition.update_properties`) or
+        changes on the resource URI (e.g. via resource creation or deletion),
+        if these changes are performed through the same Python manager object.
 
         However, changes performed through a different manager object (e.g.
         because a different session, client or parent resource object was
@@ -262,7 +263,7 @@ class BaseManager(object):
         Note that the Name-URI cache automatically invalidates itself after a
         certain time since the last invalidation. That auto invalidation time
         can be configured using the
-        :attr:`~zhmcclient.RetryTimeoutConfig.name_uri_cache_timetolive``
+        :attr:`~zhmcclient.RetryTimeoutConfig.name_uri_cache_timetolive`
         attribute of the :class:`~zhmcclient.RetryTimeoutConfig` class.
         """
         self._name_uri_cache.invalidate()
@@ -680,8 +681,13 @@ class BaseManager(object):
     @logged_api_call
     def flush(self):
         """
-        Flush the cached name-to-URI mapping.
+        Invalidate the Name-URI cache of this manager.
 
-        This only needs to be done after renaming a resource.
+        **Deprecated:** This method is deprecated and using it will cause a
+        :exc:`~py:exceptions.DeprecationWarning` to be issued. Use
+        :meth:`~zhmcclient.BaseManager.invalidate_cache` instead.
         """
-        self._uris.clear()
+        warnings.warn(
+            "Use of flush() on zhmcclient manager objects is deprecated; "
+            "use invalidate_cache() instead", DeprecationWarning)
+        self.invalidate_cache()
