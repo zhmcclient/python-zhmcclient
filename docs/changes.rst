@@ -79,6 +79,8 @@ Released: not yet
 * Fixed that the ``Cpc.dpm_enabled`` property incorrectly returned ``True`` on
   a z13 in classic mode. See issue #277.
 
+* Fixed errors in zhmcclient mock support related to DPM mode checking.
+
 **Enhancements:**
 
 * Added content to the "Concepts" chapter in the documentation.
@@ -104,6 +106,11 @@ Released: not yet
 * Improved the documentation of the lookup methods (list(), find(), findall())
   and of the resource filtering concept in section 'Filtering'. Related to
   issue #261.
+
+* Added zhmcclient mock support for the Create Hipersocket and Delete
+  Hipersocket operations.
+
+* Added support for filtering in the zhmcclient mock support.
 
 **Known issues:**
 

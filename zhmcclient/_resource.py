@@ -76,7 +76,6 @@ class BaseResource(object):
 
         self._manager = manager
         self._uri = uri
-        self._name = name  # Will be retrieved once needed, if None
 
         self._properties = dict(properties) if properties else {}
         if name is not None:
@@ -153,12 +152,9 @@ class BaseResource(object):
         object to be updated from the HMC, if it does not yet contain the
         property for the resource name.
         """
-        # The name property of the actual resource in the HMC will never
-        # be None, so we can use `None` for indicating that it is not yet
-        # initialized.
-        if self._name is None:
-            self._name = self.get_property(self.manager._name_prop)
-        return self._name
+        # We avoid storing the name in an instance variable, because it can
+        # be modified via update_properties().
+        return self.get_property(self.manager._name_prop)
 
     @property
     def manager(self):
