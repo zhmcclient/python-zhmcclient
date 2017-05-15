@@ -36,6 +36,9 @@ Released: not yet
 
 **Deprecations:**
 
+* Deprecated the ``BaseManager.flush()`` method in favor of the new
+  ``BaseManager.invalidate_cache()`` method.
+
 **Bug fixes:**
 
 * Fixed that the defaults for memory for the ``zhmc partition create`` command
@@ -98,7 +101,7 @@ Released: not yet
   allows controlling after what time the name-to-URI cache is automatically
   invalidated. The default for that is set in a new
   `DEFAULT_NAME_URI_CACHE_TIMETOLIVE` constant. Also, the `*Manager` classes
-  now have a new method `invalidate_name_uri_cache()` which can be used to
+  now have a new method `invalidate_cache()` which can be used to
   manually invalidate the name-to-URI cache, for cases where multiple parties
   (besides the current zhmcclient instance) change resources on the HMC.
   This came up as part of issue #253.

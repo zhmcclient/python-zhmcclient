@@ -42,6 +42,8 @@ indicated in the description of the functionality.
 
 from __future__ import absolute_import
 
+import warnings
+
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._lpar import LparManager
@@ -236,9 +238,17 @@ class Cpc(BaseResource):
     @property
     def vswitches(self):
         """
-        Deprecated: Use :attr:`~zhmcclient.Cpc.virtual_switches` instead.
+        :class:`~zhmcclient.VirtualSwitchManager`: Access to the
+        :term:`Virtual Switches <Virtual Switch>` in this CPC.
+
+        **Deprecated:** This attribute is deprecated and using it will cause a
+        :exc:`~py:exceptions.DeprecationWarning` to be issued. Use
+        :attr:`~zhmcclient.Cpc.virtual_switches` instead.
         """
-        # TODO: Issue a deprecation warning
+        warnings.warn(
+            "Use of the vswitches attribute on zhmcclient.Cpc objects is "
+            "deprecated; use the virtual_switches attribute instead",
+            DeprecationWarning)
         return self.virtual_switches
 
     @property
