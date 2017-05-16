@@ -271,6 +271,12 @@ The match value specifies how the corresponding resource property matches:
 * If the match value is a list or a tuple, a resource matches if any item in
   the list or tuple matches (i.e. this is a logical OR between the list items).
 
+If a property that is specified in filter arguments does not exist on all
+resources that are subject to be searched, those resources that do not have the
+property are treated as non-matching. An example for this situation is the
+"card-location" property of the Adapter resource which does not exist for
+Hipersocket adapters.
+
 Examples:
 
 * This example uses the :meth:`~zhmcclient.BaseManager.findall` method to
