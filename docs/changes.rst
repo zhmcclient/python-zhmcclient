@@ -129,6 +129,8 @@ Released: not yet
   interesting, all unit test cases that tested the result of ``__repr()__``
   methods have been removed.
 
+* Add basic Secure Service Container support to the CLI.
+
 **Known issues:**
 
 * See `list of open issues`_.

@@ -28,6 +28,9 @@ DEFAULT_IFL_PROCESSORS = 1
 DEFAULT_INITIAL_MEMORY_MB = 1024
 DEFAULT_MAXIMUM_MEMORY_MB = 1024
 DEFAULT_PROCESSOR_MODE = 'shared'
+PARTITION_TYPES = ['ssc', 'linux', 'zvm']
+DEFAULT_PARTITION_TYPE = 'linux'
+DEFAULT_SSC_BOOT = 'installer'
 
 
 def find_partition(client, cpc_name, partition_name):
@@ -162,6 +165,24 @@ def partition_stop(cmd_ctx, cpc, partition):
 @click.option('--boot-media-file', type=str, required=False,
               help='Boot from removable media on the HMC: The path to the '
               'image file on the HMC.')
+@click.option('--type', type=click.Choice(PARTITION_TYPES), required=False,
+              help='Defines the type of the partition (Default: {pd}).'
+              .format(pd=DEFAULT_PARTITION_TYPE))
+@click.option('--ssc-host-name', type=str, required=False,
+              help='Secure Service Container host name. '
+              'Only applicable to and required for ssc type partitions.')
+@click.option('--ssc-ipv4-gateway', type=str, required=False,
+              help='Default IPv4 Gateway to be used. '
+              'Only applicable to ssc type partitions.')
+@click.option('--ssc-dns-servers', type=str, required=False,
+              help='DNS IP address information. '
+              'Only applicable to ssc type partitions.')
+@click.option('--ssc-master-userid', type=str, required=False,
+              help='Secure Service Container master user ID. '
+              'Only applicable to and required for ssc type partitions.')
+@click.option('--ssc-master-pw', type=str, required=False,
+              help='Secure Service Container master user password. '
+              'Only applicable to and required for ssc type partitions.')
 @click.pass_obj
 def partition_create(cmd_ctx, cpc, **options):
     """
@@ -218,6 +239,26 @@ def partition_create(cmd_ctx, cpc, **options):
               'image file on the HMC.')
 @click.option('--boot-iso', type=str, required=False,
               help='Boot from an ISO image mounted to this partition.')
+@click.option('--ssc-host-name', type=str, required=False,
+              help='Secure Service Container host name.')
+@click.option('--ssc-boot-selection',
+              type=click.Choice(['installer']), required=False,
+              help='Set the boot mode of the Secure Service Container '
+              'to run the SSC Appliance Installer again upon next '
+              'partition start. Only applicable to ssc type partitions. '
+              'Default: No change')
+@click.option('--ssc-ipv4-gateway', type=str, required=False,
+              help='Default IPv4 Gateway to be used. '
+              'Only applicable to ssc type partitions.')
+@click.option('--ssc-dns-servers', type=str, required=False,
+              help='DNS IP address information. '
+              'Only applicable to ssc type partitions.')
+@click.option('--ssc-master-userid', type=str, required=False,
+              help='Secure Service Container master user ID. '
+              'Only applicable to ssc type partitions.')
+@click.option('--ssc-master-pw', type=str, required=False,
+              help='Secure Service Container master user password. '
+              'Only applicable to ssc type partitions.')
 @click.pass_obj
 def partition_update(cmd_ctx, cpc, partition, **options):
     """

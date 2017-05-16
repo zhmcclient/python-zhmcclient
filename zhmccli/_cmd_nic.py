@@ -23,6 +23,10 @@ from ._helper import print_properties, print_resources, abort_if_false, \
 from ._cmd_partition import find_partition
 
 
+# Defaults for NIC creation
+SSC_IP_ADDRESS_TYPES = ['ipv4', 'ipv6', 'linklocal', 'dhcp']
+
+
 def find_nic(client, cpc_name, partition_name, nic_name):
     """
     Find a NIC by name and return its resource object.
@@ -107,6 +111,28 @@ def nic_show(cmd_ctx, cpc, partition, nic):
 @click.option('--device-number', type=str, required=False,
               help='The device number to be used for the new NIC. '
               'Default: auto-generated')
+@click.option('--ssc-management-nic', type=bool, required=False,
+              help='Indicates that this NIC should be used as a management '
+              'NIC for Secure Service Container to access the web interface. '
+              'Only applicable to NICs of ssc type partitions. '
+              'Default: False.')
+@click.option('--ssc-ip-address-type', type=click.Choice(SSC_IP_ADDRESS_TYPES),
+              required=False,
+              help='Secure Service Container IP address type. '
+              'Only applicable to and required for NICs of '
+              'ssc type partitions.')
+@click.option('--ssc-ip-address', type=str, required=False,
+              help='IP Address of the SSC management web interface. '
+              'Only applicable to and required for NICs of ssc type '
+              'partitions when ssc-ip-address-type is ipv4 or ipv6.')
+@click.option('--ssc-mask-prefix', type=str, required=False,
+              help='Network Mask of the SSC management NIC. '
+              'Only applicable to and required for NICs of ssc type '
+              'partitions when ssc-ip-address-type is ipv4 or ipv6.')
+@click.option('--vlan-id', type=str, required=False,
+              help='VLAN ID of the SSC management NIC '
+              'Only applicable to NICs of ssc type partitions. '
+              'Default: No VLAN is used.')
 @click.pass_obj
 def nic_create(cmd_ctx, cpc, partition, **options):
     """
@@ -148,6 +174,23 @@ def nic_create(cmd_ctx, cpc, partition, **options):
               'Only for OSA and HiperSocket adapters.')
 @click.option('--device-number', type=str, required=False,
               help='The new device number to be used for the NIC.')
+@click.option('--ssc-management-nic', type=bool, required=False,
+              help='Indicates that this NIC should be used as a management '
+              'NIC for Secure Service Container to access the web interface. '
+              'Only applicable to NICs of ssc type partitions. ')
+@click.option('--ssc-ip-address-type', type=click.Choice(SSC_IP_ADDRESS_TYPES),
+              required=False,
+              help='Secure Service Container IP address type. '
+              'Only applicable to NICs of ssc type partitions.')
+@click.option('--ssc-ip-address', type=str, required=False,
+              help='IP Address of the SSC management web interface. '
+              'Only applicable to NICs of ssc type partitions.')
+@click.option('--ssc-mask-prefix', type=str, required=False,
+              help='Network Mask of the SSC management NIC. '
+              'Only applicable to NICs of ssc type partitions.')
+@click.option('--vlan-id', type=str, required=False,
+              help='VLAN ID of the SSC management NIC '
+              'Only applicable to NICs of ssc type partitions.')
 @click.pass_obj
 def nic_update(cmd_ctx, cpc, partition, nic, **options):
     """
