@@ -122,6 +122,13 @@ Released: not yet
 
 * Added support for filtering in the zhmcclient mock support.
 
+* In order to improve the ability to debug the resource and manager objects at
+  the API and the faked resource and manager objects of the mock support,
+  the ``__repr()__`` methods ahave been improved. Because these functions now
+  display a lot of data, and because testing their string layout is not very
+  interesting, all unit test cases that tested the result of ``__repr()__``
+  methods have been removed.
+
 **Known issues:**
 
 * See `list of open issues`_.

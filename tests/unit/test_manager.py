@@ -91,6 +91,20 @@ class ManagerTests(unittest.TestCase):
             })
         self.manager._list_resources = [self.resource]
 
+    def test_repr(self):
+        """Test BaseManager.__repr__()."""
+        manager = self.manager
+
+        repr_str = repr(manager)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=manager.__class__.__name__,
+                id=id(manager)))
+
     def test_findall_attribute(self):
 
         items = self.manager.findall(other="fake-other-1")

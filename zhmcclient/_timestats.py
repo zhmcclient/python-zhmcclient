@@ -194,9 +194,7 @@ class TimeStats(object):
         Return a human readable string with the time statistics for this
         operation.
 
-        Example result:
-
-        ::
+        Example result::
 
             TimeStats: count=1 avg=1.000s min=1.000s max=1.000s get /api/cpcs
         """
@@ -295,9 +293,7 @@ class TimeStatsKeeper(object):
         Return a human readable string with the time statistics for this
         keeper. The operations are sorted by decreasing average time.
 
-        Example result, if keeper is enabled:
-
-        ::
+        Example result, if keeper is enabled::
 
             Time statistics (times in seconds):
             Count  Average  Minimum  Maximum  Operation name

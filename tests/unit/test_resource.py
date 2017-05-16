@@ -109,7 +109,6 @@ class InitTests(ResourceTestCase):
         self.assert_properties(res, res_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
-        self.assertTrue(repr(res).startswith(res.__class__.__name__ + '('))
 
     def test_empty_no_name(self):
         """Test with an empty set of input properties, without 'name'."""
@@ -125,7 +124,6 @@ class InitTests(ResourceTestCase):
         self.assert_properties(res, res_props)
         self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
         self.assertEqual(res.full_properties, False)
-        self.assertTrue(repr(res).startswith(res.__class__.__name__ + '('))
 
     def test_simple(self):
         """Test with a simple set of input properties."""
@@ -179,6 +177,41 @@ class InitTests(ResourceTestCase):
         else:
             self.fail("TypeError was not raised when initializing resource "
                       "with invalid properties: %r" % init_props)
+
+    def test_str(self):
+        """Test BaseResource.__str__()."""
+        init_props = {
+            'prop1': 'abc',
+            'Prop1': 100042,
+        }
+        resource = MyResource(self.mgr, self.uri, None, init_props)
+
+        str_str = str(resource)
+
+        str_str = str_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            str_str,
+            r'^{classname}\s*\(.*'.format(
+                classname=resource.__class__.__name__))
+
+    def test_repr(self):
+        """Test BaseResource.__repr__()."""
+        init_props = {
+            'prop1': 'abc',
+            'Prop1': 100042,
+        }
+        resource = MyResource(self.mgr, self.uri, None, init_props)
+
+        repr_str = repr(resource)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=resource.__class__.__name__,
+                id=id(resource)))
 
 
 class PropertySetTests(ResourceTestCase):

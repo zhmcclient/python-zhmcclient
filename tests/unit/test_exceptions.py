@@ -290,12 +290,6 @@ class TestHTTPError(unittest.TestCase):
                   "{request-uri}]".format(**resp_body)
         self.assertEqual(str(exc), exp_str)
 
-        # Check repr()
-        exp_repr = "HTTPError(http_status={http-status}, reason={reason}, "\
-                   "message={message}, request_method={request-method}, "\
-                   "request_uri={request-uri}, ...)".format(**resp_body)
-        self.assertEqual(repr(exc), exp_repr)
-
 
 if __name__ == '__main__':
     unittest.main()

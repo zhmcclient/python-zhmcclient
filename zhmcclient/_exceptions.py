@@ -430,11 +430,18 @@ class HTTPError(Error):
         return self._body.get('error-details', None)
 
     def __str__(self):
+        """
+        Return a human readable string representation of this exception object.
+        """
         return "{},{}: {} [{} {}]".\
                format(self.http_status, self.reason, self.message,
                       self.request_method, self.request_uri)
 
     def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
         return "HTTPError(http_status={}, reason={}, message={}, "\
                "request_method={}, request_uri={}, ...)".\
                format(self.http_status, self.reason, self.message,

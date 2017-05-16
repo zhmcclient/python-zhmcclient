@@ -25,10 +25,10 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 import six
-import pprint
 import re
 
 from ._idpool import IdPool
+from zhmcclient._utils import repr_dict, repr_manager
 
 __all__ = ['FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedActivationProfileManager', 'FakedActivationProfile',
@@ -74,21 +74,23 @@ class FakedBaseResource(object):
         """
         Return a string with the state of this faked resource, for debug
         purposes.
+
+        Note that the derived faked resource classes that have child resources
+        have their own __repr__() methods, because only they know which child
+        resources they have.
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _manager = {_manager_classname} at 0x{_manager_id:08x}\n"
             "  _uri = {_uri!r}\n"
             "  _properties = {_properties}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
+                _manager_classname=self._manager.__class__.__name__,
+                _manager_id=id(self._manager),
                 _uri=self._uri,
-                _properties=pprint.pformat(self.properties, indent=4),
+                _properties=repr_dict(self.properties, indent=4),
             ))
         return ret
 
@@ -151,7 +153,9 @@ class FakedBaseManager(object):
         self._base_uri = base_uri  # Base URI for resources of this type
         self._oid_prop = oid_prop
         self._uri_prop = uri_prop
-        self._resources = OrderedDict()  # Resource objects, by object ID
+
+        # List of Faked{Resource} objects in this faked manager, by object ID
+        self._resources = OrderedDict()
 
     def __repr__(self):
         """
@@ -160,8 +164,8 @@ class FakedBaseManager(object):
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
-            "  _hmc = {hmc_classname} at 0x{hmc_id:08x}\n"
-            "  _parent = {parent_classname} at 0x{parent_id:08x}\n"
+            "  _hmc = {_hmc_classname} at 0x{_hmc_id:08x}\n"
+            "  _parent = {_parent_classname} at 0x{_parent_id:08x}\n"
             "  _resource_class = {_resource_class!r}\n"
             "  _base_uri = {_base_uri!r}\n"
             "  _oid_prop = {_oid_prop!r}\n"
@@ -170,15 +174,15 @@ class FakedBaseManager(object):
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
-                hmc_classname=self._hmc.__class__.__name__,
-                hmc_id=id(self._hmc),
-                parent_classname=self._parent.__class__.__name__,
-                parent_id=id(self._parent),
+                _hmc_classname=self._hmc.__class__.__name__,
+                _hmc_id=id(self._hmc),
+                _parent_classname=self._parent.__class__.__name__,
+                _parent_id=id(self._parent),
                 _resource_class=self._resource_class,
                 _base_uri=self._base_uri,
                 _oid_prop=self._oid_prop,
                 _uri_prop=self._uri_prop,
-                _resources=pprint.pformat(self._resources, indent=4),
+                _resources=repr_dict(self._resources, indent=2),
             ))
         return ret
 
@@ -344,7 +348,7 @@ class FakedBaseManager(object):
         """
         resource = self.resource_class(self, properties)
         self._resources[resource.oid] = resource
-        self._hmc._resources[resource.uri] = resource
+        self._hmc.all_resources[resource.uri] = resource
         return resource
 
     def remove(self, oid):
@@ -359,7 +363,7 @@ class FakedBaseManager(object):
         """
         uri = self._resources[oid].uri
         del self._resources[oid]
-        del self._hmc._resources[uri]
+        del self._hmc.all_resources[uri]
 
     def list(self, filter_args=None):
         """
@@ -428,26 +432,30 @@ class FakedHmc(FakedBaseResource):
         self.hmc_version = hmc_version
         self.api_version = api_version
         self.cpcs = FakedCpcManager(hmc=self, client=self)
-        self._resources = {}  # by URI
+
+        # Flat list of all Faked{Resource} objs in this faked HMC, by URI:
+        self.all_resources = {}
 
     def __repr__(self):
         """
         Return a string with the state of this faked HMC, for debug purposes.
         """
         ret = (
-            "FakedHmc at 0x{id:08x} (\n"
+            "{classname} at 0x{id:08x} (\n"
             "  hmc_name = {hmc_name!r}\n"
             "  hmc_version = {hmc_version!r}\n"
             "  api_version = {api_version!r}\n"
             "  cpcs = {cpcs!r}\n"
-            "  _resources = {_resources!r}\n"
+            "  all_resources(keys) = {all_resource_keys}\n"
             ")".format(
+                classname=self.__class__.__name__,
                 id=id(self),
                 hmc_name=self.hmc_name,
                 hmc_version=self.hmc_version,
                 api_version=self.api_version,
                 cpcs=self.cpcs,
-                _resources=self._resources,
+                all_resource_keys=repr_dict(self.all_resources.keys(),
+                                            indent=4),
             ))
         return ret
 
@@ -566,7 +574,7 @@ class FakedHmc(FakedBaseResource):
         Raises:
           KeyError: No resource found for this object ID.
         """
-        return self._resources[uri]
+        return self.all_resources[uri]
 
 
 class FakedActivationProfileManager(FakedBaseManager):
@@ -746,6 +754,30 @@ class FakedAdapter(FakedBaseResource):
         if 'status' not in self.properties:
             self.properties['status'] = 'active'
 
+    def __repr__(self):
+        """
+        Return a string with the state of this faked Adapter resource, for
+        debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            "  _ports ={_ports}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=4),
+                _ports=repr_manager(self.ports, indent=2),
+            ))
+        return ret
+
     @property
     def ports(self):
         """
@@ -849,6 +881,46 @@ class FakedCpc(FakedBaseResource):
                 self.properties['status'] = 'active'
             else:
                 self.properties['status'] = 'operating'
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked Cpc resource, for debug
+        purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            "  _lpars ={_lpars}\n"
+            "  _partitions ={_partitions}\n"
+            "  _adapters ={_adapters}\n"
+            "  _virtual_switches ={_virtual_switches}\n"
+            "  _reset_activation_profiles ={_reset_activation_profiles}\n"
+            "  _image_activation_profiles ={_image_activation_profiles}\n"
+            "  _load_activation_profiles ={_load_activation_profiles}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=4),
+                _lpars=repr_manager(repr(self.lpars), indent=2),
+                _partitions=repr_manager(repr(self.partitions), indent=2),
+                _adapters=repr_manager(repr(self.adapters), indent=2),
+                _virtual_switches=repr_manager(
+                    repr(self.virtual_switches), indent=2),
+                _reset_activation_profiles=repr_manager(
+                    repr(self.reset_activation_profiles), indent=2),
+                _image_activation_profiles=repr_manager(
+                    repr(self.image_activation_profiles), indent=2),
+                _load_activation_profiles=repr_manager(
+                    repr(self.load_activation_profiles), indent=2),
+            ))
+        return ret
 
     @property
     def dpm_enabled(self):
@@ -1264,6 +1336,35 @@ class FakedPartition(FakedBaseResource):
             hmc=manager.hmc, partition=self)
         self._devno_pool = IdPool(0x8000, 0xFFFF)
         self._wwpn_pool = IdPool(0x8000, 0xFFFF)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked Partition resource, for
+        debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            "  _nics ={_nics}\n"
+            "  _hbas ={_hbas}\n"
+            "  _virtual_functions ={_virtual_functions}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=4),
+                _nics=repr_manager(repr(self.nics), indent=2),
+                _hbas=repr_manager(repr(self.hbas), indent=2),
+                _virtual_functions=repr_manager(
+                    repr(self.virtual_functions), indent=2),
+            ))
+        return ret
 
     @property
     def nics(self):

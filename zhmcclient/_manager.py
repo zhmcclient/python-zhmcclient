@@ -35,6 +35,7 @@ from requests.utils import quote
 
 from ._logging import get_logger, logged_api_call
 from ._exceptions import NotFound, NoUniqueMatch
+from ._utils import repr_list
 
 __all__ = ['BaseManager']
 
@@ -235,6 +236,37 @@ class BaseManager(object):
 
         self._name_uri_cache = _NameUriCache(
             self, session.retry_timeout_config.name_uri_cache_timetolive)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this manager object, for debug
+        purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _resource_class = {_resource_class!r}\n"
+            "  _session = {_session_classname} at 0x{_session_id:08x}\n"
+            "  _parent = {_parent_classname} at 0x{_parent_id:08x}\n"
+            "  _uri_prop = {_uri_prop!r}\n"
+            "  _name_prop = {_name_prop!r}\n"
+            "  _query_props = {_query_props}\n"
+            "  _list_has_name = {_list_has_name!r}\n"
+            "  _name_uri_cache ={_name_uri_cache!r}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                _resource_class=self._resource_class,
+                _session_classname=self._session.__class__.__name__,
+                _session_id=id(self._session),
+                _parent_classname=self._parent.__class__.__name__,
+                _parent_id=id(self._parent),
+                _uri_prop=self._uri_prop,
+                _name_prop=self._name_prop,
+                _query_props=repr_list(self._query_props, indent=2),
+                _list_has_name=self._list_has_name,
+                _name_uri_cache=self._name_uri_cache,
+            ))
+        return ret
 
     def invalidate_cache(self):
         """

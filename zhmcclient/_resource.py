@@ -23,6 +23,7 @@ from __future__ import absolute_import
 import time
 
 from ._logging import get_logger, logged_api_call
+from ._utils import repr_dict, repr_timestamp
 
 __all__ = ['BaseResource']
 
@@ -288,13 +289,9 @@ class BaseResource(object):
 
     def __str__(self):
         """
-        Return a human readable representation of this resource.
+        Return a human readable string representation of this resource.
 
-        Authorization requirements:
-
-        * Object-access permission to this resource.
-
-        Example::
+        Example result::
 
             Cpc(name=P0000S12,
                 object-uri=/api/cpcs/f1bc49af-f71a-3467-8def-3c186b5d9352,
@@ -304,17 +301,34 @@ class BaseResource(object):
         search_keys = ['status', 'object-uri', 'element-uri', 'name',
                        'type', 'class']
         sorted_keys = sorted([k for k in properties_keys if k in search_keys])
-        info = ", ".join("%s=%s" % (k, self._properties[k])
+        info = ", ".join("%s=%r" % (k, self._properties[k])
                          for k in sorted_keys)
         return "%s(%s)" % (self.__class__.__name__, info)
 
     def __repr__(self):
         """
-        Return a representation of this resource suitable for debugging its
-        state.
+        Return a string with the state of this resource, for debug purposes.
 
-        Authorization requirements:
-
-        * Object-access permission to this resource.
+        Note that the derived resource classes that have child resources
+        have their own ``__repr__()`` methods, because only they know which
+        child resources they have.
         """
-        return self.__str__()
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {_manager_classname} at 0x{_manager_id:08x},\n"
+            "  _uri = {_uri!r},\n"
+            "  _full_properties = {_full_properties!r},\n"
+            "  _properties_timestamp = {_properties_timestamp},\n"
+            "  _properties = {_properties}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                _manager_classname=self._manager.__class__.__name__,
+                _manager_id=id(self._manager),
+                _uri=self._uri,
+                _full_properties=self._full_properties,
+                _properties_timestamp=repr_timestamp(
+                    self._properties_timestamp),
+                _properties=repr_dict(self._properties, indent=4),
+            ))
+        return ret
