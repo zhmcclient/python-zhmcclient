@@ -306,10 +306,13 @@ def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address, options):
     client = zhmcclient.Client(cmd_ctx.session)
     lpar = find_lpar(client, cpc_name, lpar_name)
 
-    options = original_options(options)
+    load_parameter = ""
+    if options['load_parameter']:
+        load_parameter = options['load_parameter']
 
     try:
-        lpar.load(load_address, wait_for_completion=True, **options)
+        lpar.load(load_address, load_parameter=load_parameter,
+                  wait_for_completion=True)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
