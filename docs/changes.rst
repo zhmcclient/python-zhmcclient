@@ -23,7 +23,7 @@ Change log
 Version 0.13.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-05-18
 
 **Incompatible changes:**
 
@@ -90,6 +90,8 @@ Released: not yet
   does not exist for Hipersocket adapters, but for all other types. This
   situation is now handled by treating such resources as non-matching.
   See issue #271.
+
+* Fix when providing 'load-parameter' option. See issue #273
 
 **Enhancements:**
 
