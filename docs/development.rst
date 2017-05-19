@@ -238,7 +238,12 @@ the ``Makefile`` is), and perform the following steps in that directory:
         git checkout master
         git pull
 
-4.  Edit the change log (``docs/changes.rst``) and perform the following
+4.  Create a topic branch for the release::
+
+        git checkout -b release-$MNU
+        git branch --set-upstream-to origin/release-$MNU release-$MNU
+
+5.  Edit the change log (``docs/changes.rst``) and perform the following
     changes in the top-most section (that is the section for the version to be
     released):
 
@@ -266,14 +271,15 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
     * Remove all empty list items in the change log section for this release.
 
-5.  Commit your changes and push them upstream (directly on the ``master``
-    branch, without using a topic branch)::
+6.  Commit your changes and push them upstream::
 
         git add docs/changes.rst
         git commit -sm "Updated change log for $MNU release."
         git push
 
-6.  Perform a complete test::
+7.  On GitHub, create a pull request for branch release-$MNU.
+
+8.  Perform a complete test::
 
         tox
 
@@ -289,17 +295,25 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
       Wait for the automatic tests to show success for this change.
 
-7.  Tag the master branch with the release label and push the tag upstream::
+9.  Once the CI tests on GitHub are complete, merge the pull request.
+
+10. Update your local ``master`` branch::
+
+        git checkout master
+        git pull
+
+11. Tag the ``master`` branch with the release label and push the tag
+    upstream::
 
         git tag $MNU
         git push --tags
 
-8.  On GitHub, edit the new tag, and create a release description on it. This
+12. On GitHub, edit the new tag, and create a release description on it. This
     will cause it to appear in the Release tab.
 
     You can see the tags in GitHub via Code -> Releases -> Tags.
 
-9.  Upload the package to PyPI::
+13. Upload the package to PyPI::
 
         make upload
 
@@ -308,18 +322,18 @@ the ``Makefile`` is), and perform the following steps in that directory:
     **Attention!!** This only works once for each version. You cannot
     release the same version twice to PyPI.
     
-10. Verify that the released version is shown on PyPI:
+14. Verify that the released version is shown on PyPI:
 
     https://pypi.python.org/pypi/zhmcclient/
 
-11. Verify that RTD shows the released version as its stable version:
+15. Verify that RTD shows the released version as its stable version:
 
     https://python-zhmcclient.readthedocs.io/en/stable/intro.html#versioning
 
     Note: RTD builds the documentation automatically, but it may take a few
     minutes to do so.
 
-12. On GitHub, close milestone `M.N.U`.
+16. On GitHub, close milestone `M.N.U`.
 
 
 Starting a new release
@@ -350,7 +364,12 @@ the ``Makefile`` is), and perform the following steps in that directory:
         git checkout master
         git pull
 
-4.  Edit the change log (``docs/changes.rst``) and insert the following section
+4.  Create a topic branch for the release::
+
+        git checkout -b start-$MNU
+        git branch --set-upstream-to origin/start-$MNU start-$MNU
+
+5.  Edit the change log (``docs/changes.rst``) and insert the following section
     before the top-most section (which is the section about the latest released
     version)::
 
@@ -373,20 +392,28 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
         .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
-5.  Commit your changes and push them upstream (directly on the ``master``
-    branch, without using a topic branch)::
+6.  Commit your changes and push them upstream::
 
         git add docs/changes.rst
         git commit -sm "Started $MNU release."
         git push
 
-6.  On GitHub, create a new milestone for development of the next release,
+7.  On GitHub, create a pull request for branch start-$MNU.
+
+8.  On GitHub, create a new milestone for development of the next release,
     e.g. `M.N.U`.
 
     You can create a milestone in GitHub via Issues -> Milestones -> New
     Milestone.
 
-7.  On GitHub, go through all open issues and pull requests that still have
+9.  On GitHub, go through all open issues and pull requests that still have
     milestones for previous releases set, and either set them to the new
     milestone, or to have no milestone.
+
+10. Once the CI tests on GitHub are complete, merge the pull request.
+
+11. Update your local ``master`` branch::
+
+        git checkout master
+        git pull
 
