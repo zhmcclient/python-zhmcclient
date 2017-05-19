@@ -31,6 +31,17 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed the documentation of several asynchronous ``Partition`` methods that
+  incorrectly documented returning ``None`` in case of synchronous invocation,
+  to now document returning an empty dictionary:
+
+  - ``Partition.start()``
+  - ``Partition.stop()``
+  - ``Partition.dump_partition()``
+  - ``Partition.psw_restart()``
+
+  All other asynchronous methods did not have this issue. See issue #248.
+
 **Enhancements:**
 
 **Known issues:**
