@@ -20,6 +20,26 @@ Change log
 ----------
 
 
+Version 0.14.0
+^^^^^^^^^^^^^^
+
+Released: not yet
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
 Version 0.13.0
 ^^^^^^^^^^^^^^
 
@@ -134,10 +154,6 @@ Released: 2017-05-18
 * Add basic Secure Service Container support to the CLI.
 
 **Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.12.0
