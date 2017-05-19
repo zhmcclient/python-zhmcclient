@@ -153,8 +153,6 @@ Released: 2017-05-18
 
 * Add basic Secure Service Container support to the CLI.
 
-**Known issues:**
-
 
 Version 0.12.0
 ^^^^^^^^^^^^^^
@@ -166,8 +164,6 @@ Released: 2017-04-13
 * The password retrieval function that can optionally be passed to
   ``Session()`` has changed its interface; it is now being called with host and
   userid. Related to issue #225.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -228,8 +224,6 @@ Released: 2017-04-13
 
 * Added 'load-parameter' option to 'zhmc lpar load' (issue #226).
 
-**Known Issues:**
-
 
 Version 0.11.0
 ^^^^^^^^^^^^^^
@@ -272,8 +266,6 @@ Released: 2017-03-16
      changed from INFO to DEBUG.
 
 * Removed the log calls for the HMC request ID.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -359,8 +351,6 @@ Released: 2017-03-16
   For HMC operations and API calls that contain the HMC password, the password
   is hidden in the log message by replacing it with a few '*' characters.
 
-**Known Issues:**
-
 
 Version 0.10.0
 ^^^^^^^^^^^^^^
@@ -382,8 +372,6 @@ Released: 2017-02-02
   If users have made themselves dependent on these parameters (e.g. by writing
   a mock layer), they will need to adjust to the new parameter signature. See
   the code for details.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -420,10 +408,6 @@ Version 0.9.0
 
 Released: 2017-01-11
 
-**Incompatible changes:**
-
-**Deprecations:**
-
 **Bug fixes:**
 
 * Fixed a bug where accessing the 'name' property via the `properties`
@@ -452,12 +436,6 @@ Version 0.8.0
 ^^^^^^^^^^^^^
 
 Released: 2016-12-27
-
-**Incompatible changes:**
-
-**Deprecations:**
-
-**Bug fixes:**
 
 **Enhancements:**
 
@@ -532,8 +510,6 @@ Released: 2016-10-04
 * In ``VirtualSwitch.get_connected_vnics()``, renamed the method to
   :meth:`~zhmcclient.VirtualSwitch.get_connected_nics` and changed its return value
   to return :class:`~zhmcclient.Nic` objects instead of their URIs.
-
-**Deprecations:**
 
 **Bug fixes:**
 

@@ -256,13 +256,15 @@ the ``Makefile`` is), and perform the following steps in that directory:
       previous version, and make sure they are relevant for and
       understandable by users.
 
-    * In the "Known issues" section, remove the link to the issue tracker
+    * In the "Known issues" list item, remove the link to the issue tracker
       and add any known issues you want users to know about. Just linking
       to the issue tracker quickly becomes incorrect for released versions::
 
           **Known issues:**
 
           * ....
+
+    * Remove all empty list items in the change log section for this release.
 
 5.  Commit your changes and push them upstream (directly on the ``master``
     branch, without using a topic branch)::
