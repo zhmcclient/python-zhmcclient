@@ -27,6 +27,10 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Changed the return value of ``TimeStatsKeeper.snapshot()`` from a list of
+  key/value tuples to a dictionary. This is more flexible and reduces the
+  number of data structure conversions in different scenarios. See issue #269.
+
 **Deprecations:**
 
 **Bug fixes:**

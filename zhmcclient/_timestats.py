@@ -280,13 +280,13 @@ class TimeStatsKeeper(object):
 
         Returns:
 
-          : A list of tuples (name, stats) with:
+         dict: A dictionary of the time statistics by operation, where:
 
-          - name (:term:`string`): Name of the operation
-          - stats (:class:`~zhmcclient.TimeStats`): Time statistics for the
+          - key (:term:`string`): Name of the operation
+          - value (:class:`~zhmcclient.TimeStats`): Time statistics for the
             operation
         """
-        return copy.deepcopy(self._time_stats).items()
+        return copy.deepcopy(self._time_stats)
 
     def __str__(self):
         """
@@ -303,7 +303,8 @@ class TimeStatsKeeper(object):
         ret = "Time statistics (times in seconds):\n"
         if self.enabled:
             ret += "Count  Average  Minimum  Maximum  Operation name\n"
-            snapshot_by_avg = sorted(self.snapshot(),
+            stats_dict = self.snapshot()
+            snapshot_by_avg = sorted(stats_dict.items(),
                                      key=lambda item: item[1].avg_time,
                                      reverse=True)
             for name, stats in snapshot_by_avg:
