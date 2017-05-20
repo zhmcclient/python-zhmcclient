@@ -156,10 +156,9 @@ class Port(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        if not isinstance(manager, PortManager):
-            raise AssertionError("Port init: Expected manager type %s, "
-                                 "got %s" %
-                                 (PortManager, type(manager)))
+        assert isinstance(manager, PortManager), \
+            "Port init: Expected manager type %s, got %s" % \
+            (PortManager, type(manager))
         super(Port, self).__init__(manager, uri, name, properties)
 
     @logged_api_call

@@ -252,10 +252,9 @@ class Partition(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        if not isinstance(manager, PartitionManager):
-            raise AssertionError("Partition init: Expected manager type %s, "
-                                 "got %s" %
-                                 (PartitionManager, type(manager)))
+        assert isinstance(manager, PartitionManager), \
+            "Partition init: Expected manager type %s, got %s" % \
+            (PartitionManager, type(manager))
         super(Partition, self).__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._nics = None

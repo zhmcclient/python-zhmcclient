@@ -177,9 +177,9 @@ class Cpc(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        if not isinstance(manager, CpcManager):
-            raise AssertionError("Cpc init: Expected manager type %s, got %s" %
-                                 (CpcManager, type(manager)))
+        assert isinstance(manager, CpcManager), \
+            "Cpc init: Expected manager type %s, got %s" % \
+            (CpcManager, type(manager))
         super(Cpc, self).__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):

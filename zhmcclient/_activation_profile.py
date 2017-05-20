@@ -212,10 +212,9 @@ class ActivationProfile(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        if not isinstance(manager, ActivationProfileManager):
-            raise AssertionError("ActivationProfile init: Expected manager "
-                                 "type %s, got %s" %
-                                 (ActivationProfileManager, type(manager)))
+        assert isinstance(manager, ActivationProfileManager), \
+            "ActivationProfile init: Expected manager type %s, got %s" % \
+            (ActivationProfileManager, type(manager))
         super(ActivationProfile, self).__init__(manager, uri, name, properties)
 
     @logged_api_call
