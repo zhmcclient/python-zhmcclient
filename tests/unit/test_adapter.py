@@ -20,6 +20,7 @@ Unit tests for _adapter module, using the zhmcclient mock support.
 from __future__ import absolute_import, print_function
 
 import unittest
+import copy
 
 from zhmcclient import Client, Adapter, NotFound, HTTPError
 from zhmcclient_mock import FakedSession
@@ -143,7 +144,7 @@ class AdapterTests(unittest.TestCase):
             'description': 'Hipersocket #2 Port #1',
         })
 
-    def test_repr(self):
+    def test_resource_repr(self):
         """Test Adapter.__repr__()."""
         adapter = Adapter(self.cpc.adapters, '/adapters/1', 'osa1')
 
@@ -157,8 +158,8 @@ class AdapterTests(unittest.TestCase):
                 classname=adapter.__class__.__name__,
                 id=id(adapter)))
 
-    def test_init(self):
-        """Test AdapterManager.__init__()."""
+    def test_manager_initial_attrs(self):
+        """Test initial attributes of AdapterManager."""
         self.add_standard_osa()
 
         manager = self.cpc.adapters
@@ -169,7 +170,7 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(manager.parent, self.cpc)
         self.assertEqual(manager.cpc, self.cpc)
 
-    def test_list_default(self):
+    def test_manager_list_default(self):
         """Test AdapterManager.list() with default for full_properties."""
         self.add_standard_osa()
         self.add_standard_hipersocket()
@@ -192,7 +193,7 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(hs2.properties['name'], self.hs2_name)
         self.assertEqual(hs2.properties['status'], 'active')
 
-    def test_list_short(self):
+    def test_manager_list_short(self):
         """Test AdapterManager.list() with full_properties=False."""
         self.add_standard_osa()
 
@@ -206,7 +207,7 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(osa1.properties['name'], self.osa1_name)
         self.assertEqual(osa1.properties['status'], 'active')
 
-    def test_list_full(self):
+    def test_manager_list_full(self):
         """Test AdapterManager.list() with full_properties=True."""
         self.add_standard_osa()
 
@@ -239,7 +240,7 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(osa1.properties['physical-channel-status'],
                          'operating')
 
-    def test_list_filter_name_found1(self):
+    def test_manager_list_filter_name_found1(self):
         """Test AdapterManager.list() with filtering on existing name
         (filtered on faked HMC server), matching on first one."""
         self.add_standard_osa()
@@ -254,7 +255,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name_found2(self):
+    def test_manager_list_filter_name_found2(self):
         """Test AdapterManager.list() with filtering on existing name
         (filtered on faked HMC server), matching on second one."""
         self.add_standard_osa()
@@ -269,7 +270,7 @@ class AdapterTests(unittest.TestCase):
         hs2 = adapters[0]
         self.assertEqual(hs2.name, self.hs2_name)
 
-    def test_list_filter_name_notfound(self):
+    def test_manager_list_filter_name_notfound(self):
         """Test AdapterManager.list() with filtering on non-existing name
         (filtered on faked HMC server)."""
         self.add_standard_osa()
@@ -282,7 +283,7 @@ class AdapterTests(unittest.TestCase):
 
         self.assertEqual(len(adapters), 0)
 
-    def test_list_filter_oid_found(self):
+    def test_manager_list_filter_oid_found(self):
         """Test AdapterManager.list() with filtering on existing object-id
         (filtered on client)."""
         self.add_standard_osa()
@@ -297,7 +298,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_oid_notfound(self):
+    def test_manager_list_filter_oid_notfound(self):
         """Test AdapterManager.list() with filtering on non-existing
         object-id (filtered on client)."""
         self.add_standard_osa()
@@ -310,7 +311,7 @@ class AdapterTests(unittest.TestCase):
 
         self.assertEqual(len(adapters), 0)
 
-    def test_list_filter_name_id_found(self):
+    def test_manager_list_filter_name_id_found(self):
         """Test AdapterManager.list() with filtering on existing name
         (filtered on faked HMC server) and existing object-id (filtered on
         client)."""
@@ -327,7 +328,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name_id_notfound1(self):
+    def test_manager_list_filter_name_id_notfound1(self):
         """Test AdapterManager.list() with filtering on existing name
         (filtered on faked HMC server) and non-existing object-id (filtered on
         client)."""
@@ -342,7 +343,7 @@ class AdapterTests(unittest.TestCase):
 
         self.assertEqual(len(adapters), 0)
 
-    def test_list_filter_name_id_notfound2(self):
+    def test_manager_list_filter_name_id_notfound2(self):
         """Test AdapterManager.list() with filtering on non-existing name
         (filtered on faked HMC server) and existing object-id (filtered on
         client)."""
@@ -357,7 +358,7 @@ class AdapterTests(unittest.TestCase):
 
         self.assertEqual(len(adapters), 0)
 
-    def test_list_filter_name_id_notfound3(self):
+    def test_manager_list_filter_name_id_notfound3(self):
         """Test AdapterManager.list() with filtering on non-existing name
         (filtered on faked HMC server) and non-existing object-id (filtered on
         client)."""
@@ -372,7 +373,7 @@ class AdapterTests(unittest.TestCase):
 
         self.assertEqual(len(adapters), 0)
 
-    def test_list_filter_name2_found1(self):
+    def test_manager_list_filter_name2_found1(self):
         """Test AdapterManager.list() with filtering on two names (first
         existing second non-existing)."""
         self.add_standard_osa()
@@ -389,7 +390,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name2_found2(self):
+    def test_manager_list_filter_name2_found2(self):
         """Test AdapterManager.list() with filtering on two names (first
         non-existing second existing)."""
         self.add_standard_osa()
@@ -404,7 +405,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name2_found3(self):
+    def test_manager_list_filter_name2_found3(self):
         """Test AdapterManager.list() with filtering on the same existing name
         twice."""
         self.add_standard_osa()
@@ -419,7 +420,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name_reg1_found(self):
+    def test_manager_list_filter_name_reg1_found(self):
         """Test AdapterManager.list() with filtering on the an existing name
         with regexp 1"""
         self.add_standard_osa()
@@ -434,7 +435,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name_reg2_found(self):
+    def test_manager_list_filter_name_reg2_found(self):
         """Test AdapterManager.list() with filtering on the an existing name
         with regexp 2"""
         self.add_standard_osa()
@@ -449,7 +450,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name_reg3_found(self):
+    def test_manager_list_filter_name_reg3_found(self):
         """Test AdapterManager.list() with filtering on the an existing name
         with regexp 2"""
         self.add_standard_osa()
@@ -464,7 +465,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name_reg4_found(self):
+    def test_manager_list_filter_name_reg4_found(self):
         """Test AdapterManager.list() with filtering on the an existing name
         with regexp 4"""
         self.add_standard_osa()
@@ -479,7 +480,7 @@ class AdapterTests(unittest.TestCase):
         osa1 = adapters[0]
         self.assertEqual(osa1.name, self.osa1_name)
 
-    def test_list_filter_name_reg5_found(self):
+    def test_manager_list_filter_name_reg5_found(self):
         """Test AdapterManager.list() with filtering on the an existing names
         with regexp 5"""
         self.add_standard_osa()
@@ -494,7 +495,7 @@ class AdapterTests(unittest.TestCase):
         names = [ad.name for ad in adapters]
         self.assertEqual(names, [self.osa1_name, self.hs2_name])
 
-    def test_create_hipersocket(self):
+    def test_manager_create_hipersocket(self):
         """Test AdapterManager.create_hipersocket()."""
         hs_properties = {
             'name': 'hs 1',
@@ -518,7 +519,7 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(adapter.properties['maximum-transmission-unit-size'],
                          56)
 
-    def test_delete(self):
+    def test_resource_delete(self):
         """Test Adapter.delete() (for Hipersocket adapter)."""
         self.add_standard_osa()
         self.add_standard_hipersocket()
@@ -540,22 +541,78 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(cm.exception.http_status, 404)
         self.assertEqual(cm.exception.reason, 1)
 
-    def test_update_properties(self):
-        """Test Adapter.update_properties()."""
+    def test_resource_update_nothing(self):
+        """Test Adapter.update_properties() with no properties."""
         self.add_standard_osa()
         self.add_standard_hipersocket()
-        new_properties = {
-            'name': 'hs 2.new',
-            'description': 'Hipersocket #2.new',
-        }
-        adapter = self.cpc.adapters.find(type='hipersockets')
+        adapters = self.cpc.adapters.list(filter_args={'name': self.hs2_name})
+        self.assertEqual(len(adapters), 1)
+        adapter = adapters[0]
 
-        adapter.update_properties(properties=new_properties)
+        saved_properties = copy.deepcopy(adapter.properties)
 
-        self.assertEqual(adapter.name, new_properties['name'])
-        self.assertEqual(adapter.properties['name'], new_properties['name'])
-        self.assertEqual(adapter.properties['description'],
-                         new_properties['description'])
+        # Method to be tested
+        adapter.update_properties(properties={})
+
+        # Verify that the properties of the local resource object have not
+        # changed
+        self.assertEqual(adapter.properties, saved_properties)
+
+    def test_resource_update_name(self):
+        """
+        Test Adapter.update_properties() with 'name' property.
+        """
+        self.add_standard_osa()
+        self.add_standard_hipersocket()
+        adapters = self.cpc.adapters.list(filter_args={'name': self.hs2_name})
+        self.assertEqual(len(adapters), 1)
+        adapter = adapters[0]
+
+        new_name = "new hs2"
+
+        # Method to be tested
+        adapter.update_properties(properties={'name': new_name})
+
+        # Verify that the local resource object reflects the update
+        self.assertEqual(adapter.properties['name'], new_name)
+
+        # Update the properties of the resource object and verify that the
+        # resource object reflects the update
+        adapter.pull_full_properties()
+        self.assertEqual(adapter.properties['name'], new_name)
+
+        # List the resource by its new name and verify that it was found
+        adapters = self.cpc.adapters.list(filter_args={'name': new_name})
+        self.assertEqual(len(adapters), 1)
+        adapter = adapters[0]
+        self.assertEqual(adapter.properties['name'], new_name)
+
+    def test_resource_update_not_fetched(self):
+        """Test Adapter.update_properties() with no properties with an existing
+        property that has not been fetched into the local resource object."""
+        self.add_standard_osa()
+        self.add_standard_hipersocket()
+        adapters = self.cpc.adapters.list(filter_args={'name': self.hs2_name})
+        self.assertEqual(len(adapters), 1)
+        adapter = adapters[0]
+
+        # A property that is not in the result of list():
+        update_prop_name = 'description'
+        update_prop_value = 'Hipersocket #2.new'
+
+        # Method to be tested
+        adapter.update_properties(
+            properties={update_prop_name: update_prop_value})
+
+        # Verify that the local resource object reflects the update
+        self.assertEqual(adapter.properties[update_prop_name],
+                         update_prop_value)
+
+        # Update the properties of the resource object and verify that the
+        # resource object reflects the update
+        adapter.pull_full_properties()
+        self.assertEqual(adapter.properties[update_prop_name],
+                         update_prop_value)
 
 
 if __name__ == '__main__':
