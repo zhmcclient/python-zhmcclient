@@ -22,8 +22,10 @@ from __future__ import absolute_import, print_function
 import unittest
 from datetime import datetime
 import time
+import warnings
 
-from zhmcclient import BaseResource, BaseManager, Session, NotFound
+from zhmcclient import BaseResource, BaseManager, Session, NotFound, \
+    NoUniqueMatch
 from zhmcclient._manager import _NameUriCache
 
 
@@ -71,10 +73,9 @@ class MyManager(BaseManager):
         return result_list
 
 
-class ManagerTests(unittest.TestCase):
+class Manager1Tests(unittest.TestCase):
     """
-    All tests for the BaseManager class, without taking care of the Name-URI
-    cache.
+    Tests for the BaseManager class with one resource.
     """
 
     def setUp(self):
@@ -87,7 +88,7 @@ class ManagerTests(unittest.TestCase):
             self.manager, uri=self.resource_uri,
             properties={
                 self.manager._name_prop: self.resource_name,
-                "other": "fake-other-1"
+                "other": "fake-other-1",
             })
         self.manager._list_resources = [self.resource]
 
@@ -105,45 +106,286 @@ class ManagerTests(unittest.TestCase):
                 classname=manager.__class__.__name__,
                 id=id(manager)))
 
-    def test_findall_attribute(self):
+    def test_init_properties(self):
+        """Test BaseManager properties after initialization."""
 
-        items = self.manager.findall(other="fake-other-1")
+        self.assertEqual(self.manager.resource_class, MyResource)
+        self.assertEqual(self.manager.session, self.session)
+        self.assertEqual(self.manager.parent, None)
 
-        self.assertIn(self.resource, items)
-
-    def test_findall_attribute_no_result(self):
-
-        items = self.manager.findall(other="not-exists")
-
-        self.assertEqual(items, [])
-
-    def test_findall_name(self):
+    def test_invalidate_cache(self):
+        """Test invalidate_cache()."""
         filter_args = {self.manager._name_prop: self.resource_name}
 
-        items = self.manager.findall(**filter_args)
+        # Populate the cache by finding a resource by name.
+        self.manager.find(**filter_args)
+        self.assertEqual(self.manager._list_called, 1)
 
-        self.assertEqual(len(items), 1)
-        item = items[0]
-        self.assertEqual(item.properties[self.manager._name_prop],
-                         self.resource_name)
-        self.assertEqual(item.properties[self.manager._uri_prop],
-                         self.resource_uri)
+        # Check that on the second find by name, list() is not called again.
+        self.manager.find(**filter_args)
+        self.assertEqual(self.manager._list_called, 1)
 
-    def test_findall_name_no_result(self):
+        # Invalidate the cache via invalidate_cache().
+        self.manager.invalidate_cache()
+
+        # Check that on the third find by name, list() is called again, because
+        # the cache had been invalidated.
+        self.manager.find(**filter_args)
+        self.assertEqual(self.manager._list_called, 2)
+
+    def test_flush(self):
+        """Test flush() and verify that it raises a DeprecationWarning."""
+        filter_args = {self.manager._name_prop: self.resource_name}
+
+        # Populate the cache by finding a resource by name.
+        self.manager.find(**filter_args)
+        self.assertEqual(self.manager._list_called, 1)
+
+        # Check that on the second find by name, list() is not called again.
+        self.manager.find(**filter_args)
+        self.assertEqual(self.manager._list_called, 1)
+
+        # Invalidate the cache via flush().
+        with warnings.catch_warnings(record=True) as wngs:
+            warnings.simplefilter("always")
+            self.manager.flush()
+        self.assertEqual(len(wngs), 1)
+        wng = wngs[0]
+        self.assertTrue(issubclass(wng.category, DeprecationWarning),
+                        "Unexpected warnings class: %s" % wng.category)
+
+        # Check that on the third find by name, list() is called again, because
+        # the cache had been invalidated.
+        self.manager.find(**filter_args)
+        self.assertEqual(self.manager._list_called, 2)
+
+    def test_list_not_implemented(self):
+        """Test that BaseManager.list() raises NotImplementedError."""
+        manager = BaseManager(
+            resource_class=MyResource,
+            session=self.session,
+            parent=None,  # a top-level resource
+            uri_prop='fake_uri_prop',
+            name_prop='fake_name_prop',
+            query_props=[])
+
+        with self.assertRaises(NotImplementedError):
+            manager.list()
+
+
+class Manager2Tests(unittest.TestCase):
+    """
+    Tests for the BaseManager class with two resources.
+    """
+
+    def setUp(self):
+        self.session = Session(host='fake-host', userid='fake-user',
+                               password='fake-pw')
+        self.manager = MyManager(self.session)
+        self.resource1 = MyResource(
+            self.manager,
+            uri="/api/fake-uri-1",
+            properties={
+                self.manager._name_prop: "fake-name-1",
+                "other": "fake-other-1",
+                "same": "fake-same",
+                "int_other": 23,
+                "int_same": 42,
+            })
+        self.resource2 = MyResource(
+            self.manager,
+            uri="/api/fake-uri-2",
+            properties={
+                self.manager._name_prop: "fake-name-2",
+                "other": "fake-other-2",
+                "same": "fake-same",
+                "int_other": 24,
+                "int_same": 42,
+            })
+        self.manager._list_resources = [self.resource1, self.resource2]
+
+    def test_findall_name_none(self):
+        """Test BaseManager.findall() with no resource matching by the name
+        resource property."""
         filter_args = {self.manager._name_prop: "not-exists"}
 
-        items = self.manager.findall(**filter_args)
+        resources = self.manager.findall(**filter_args)
 
-        self.assertEqual(items, [])
+        self.assertEqual(len(resources), 0)
 
-# TODO: Add more tests for BaseManager
+    def test_findall_name_one(self):
+        """Test BaseManager.findall() with one resource matching by the name
+        resource property."""
+        filter_args = {self.manager._name_prop: self.resource2.name}
+
+        resources = self.manager.findall(**filter_args)
+
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0].uri, self.resource2.uri)
+        self.assertEqual(resources[0].name, self.resource2.name)
+
+    def test_findall_str_none(self):
+        """Test BaseManager.findall() with no resource matching by a
+        string-typed (non-name) resource property."""
+
+        resources = self.manager.findall(other="not-exists")
+
+        self.assertEqual(len(resources), 0)
+
+    def test_findall_str_one(self):
+        """Test BaseManager.findall() with one resource matching by a
+        string-typed (non-name) resource property."""
+
+        resources = self.manager.findall(other="fake-other-2")
+
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0].uri, self.resource2.uri)
+        self.assertEqual(resources[0].name, self.resource2.name)
+
+    def test_findall_str_one_and(self):
+        """Test BaseManager.findall() with one resource matching by two
+        string-typed (non-name) resource properties (which get ANDed)."""
+
+        resources = self.manager.findall(same="fake-same",
+                                         other="fake-other-2")
+
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0].uri, self.resource2.uri)
+        self.assertEqual(resources[0].name, self.resource2.name)
+
+    def test_findall_str_two(self):
+        """Test BaseManager.findall() with two resources matching by a
+        string-typed (non-name) resource property."""
+
+        resources = self.manager.findall(same="fake-same")
+
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(set([res.uri for res in resources]),
+                         set([self.resource1.uri, self.resource2.uri]))
+
+    def test_findall_str_two_or(self):
+        """Test BaseManager.findall() with two resources matching by a
+        list of string-typed (non-name) resource properties (which get
+        ORed)."""
+
+        resources = self.manager.findall(other=["fake-other-1",
+                                                "fake-other-2"])
+
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(set([res.uri for res in resources]),
+                         set([self.resource1.uri, self.resource2.uri]))
+
+    def test_findall_int_none(self):
+        """Test BaseManager.findall() with no resource matching by a
+        integer-typed resource property."""
+
+        resources = self.manager.findall(int_other=815)
+
+        self.assertEqual(len(resources), 0)
+
+    def test_findall_int_one(self):
+        """Test BaseManager.findall() with one resource matching by a
+        integer-typed resource property."""
+
+        resources = self.manager.findall(int_other=24)
+
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0].uri, self.resource2.uri)
+        self.assertEqual(resources[0].name, self.resource2.name)
+
+    def test_findall_int_two(self):
+        """Test BaseManager.findall() with two resources matching by a
+        integer-typed resource property."""
+
+        resources = self.manager.findall(int_same=42)
+
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(set([res.uri for res in resources]),
+                         set([self.resource1.uri, self.resource2.uri]))
+
+    def test_find_name_none(self):
+        """Test BaseManager.find() with no resource matching by the name
+        resource property."""
+        filter_args = {self.manager._name_prop: "not-exists"}
+
+        with self.assertRaises(NotFound):
+            self.manager.find(**filter_args)
+
+    def test_find_name_one(self):
+        """Test BaseManager.find() with one resource matching by the name
+        resource property."""
+        filter_args = {self.manager._name_prop: self.resource2.name}
+
+        resource = self.manager.find(**filter_args)
+
+        self.assertEqual(resource.uri, self.resource2.uri)
+        self.assertEqual(resource.name, self.resource2.name)
+
+    def test_find_str_none(self):
+        """Test BaseManager.find() with no resource matching by a
+        string-typed (non-name) resource property."""
+        with self.assertRaises(NotFound):
+
+            self.manager.find(other="not-exists")
+
+    def test_find_str_one(self):
+        """Test BaseManager.find() with one resource matching by a
+        string-typed (non-name) resource property."""
+
+        resource = self.manager.find(other="fake-other-2")
+
+        self.assertEqual(resource.uri, self.resource2.uri)
+        self.assertEqual(resource.name, self.resource2.name)
+
+    def test_find_str_two(self):
+        """Test BaseManager.find() with two resources matching by a
+        string-typed (non-name) resource property."""
+        with self.assertRaises(NoUniqueMatch):
+
+            self.manager.find(same="fake-same")
+
+    def test_find_int_none(self):
+        """Test BaseManager.find() with no resource matching by a
+        string-typed (non-name) resource property."""
+        with self.assertRaises(NotFound):
+
+            self.manager.find(int_other=815)
+
+    def test_find_int_one(self):
+        """Test BaseManager.find() with one resource matching by a
+        string-typed (non-name) resource property."""
+
+        resource = self.manager.find(int_other=24)
+
+        self.assertEqual(resource.uri, self.resource2.uri)
+        self.assertEqual(resource.name, self.resource2.name)
+
+    def test_find_int_two(self):
+        """Test BaseManager.find() with two resources matching by a
+        string-typed (non-name) resource property."""
+        with self.assertRaises(NoUniqueMatch):
+
+            self.manager.find(int_same=42)
+
+    def test_find_by_name_none(self):
+        """Test BaseManager.find_by_name() with no resource matching by the
+        name resource property."""
+
+        with self.assertRaises(NotFound):
+            self.manager.find_by_name("not-exists")
+
+    def test_find_by_name_one(self):
+        """Test BaseManager.find_by_name() with one resource matching by the
+        name resource property."""
+
+        resource = self.manager.find_by_name(self.resource2.name)
+
+        self.assertEqual(resource.uri, self.resource2.uri)
+        self.assertEqual(resource.name, self.resource2.name)
 
 
 class NameUriCacheTests(unittest.TestCase):
-    """
-    All tests for the _NameUriCache class, in context of its use in the
-    BaseManager class.
-    """
+    """All tests for the _NameUriCache class."""
 
     def assertDatetimeNear(self, dt1, dt2, max_delta=0.1):
         delta = abs(dt2 - dt1).total_seconds()
