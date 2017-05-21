@@ -172,10 +172,9 @@ class VirtualSwitch(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        if not isinstance(manager, VirtualSwitchManager):
-            raise AssertionError("VirtualSwitch init: Expected manager "
-                                 "type %s, got %s" %
-                                 (VirtualSwitchManager, type(manager)))
+        assert isinstance(manager, VirtualSwitchManager), \
+            "VirtualSwitch init: Expected manager type %s, got %s" % \
+            (VirtualSwitchManager, type(manager))
         super(VirtualSwitch, self).__init__(manager, uri, name, properties)
 
     @logged_api_call

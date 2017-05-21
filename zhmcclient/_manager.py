@@ -459,10 +459,9 @@ class BaseManager(object):
         :class:`~zhmcclient.Session`:
           Session with the HMC.
         """
-        if self._session is None:
-            raise AssertionError("%s.session: No session set (in top-level "
-                                 "resource manager class?)" %
-                                 self.__class__.__name__)
+        assert self._session is not None, \
+            "%s.session: No session set (in top-level resource manager " \
+            "class?)" % self.__class__.__name__
         return self._session
 
     @property
