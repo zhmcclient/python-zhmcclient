@@ -20,45 +20,117 @@ Unit tests for _activation_profile module.
 from __future__ import absolute_import, print_function
 
 import unittest
-import requests_mock
+import copy
 
-from zhmcclient import Session, Client
+from zhmcclient import Client, ActivationProfile
+from zhmcclient_mock import FakedSession
 
 
 class ActivationProfileTests(unittest.TestCase):
-    """All tests for ActivationProfile and ActvationProfileManager classes."""
+    """All tests for ActivationProfile and ActivationProfileManager classes."""
+
+    def assertProfiles(self, profiles, exp_profiles, prop_names):
+        self.assertEqual(set([profile.uri for profile in profiles]),
+                         set([profile.uri for profile in exp_profiles]))
+        for profile in profiles:
+            uri = profile.uri
+            for exp_profile in exp_profiles:
+                if exp_profile.uri == uri:
+                    break
+            for prop_name in prop_names:
+                self.assertEqual(profile.properties[prop_name],
+                                 exp_profile.properties[prop_name])
 
     def setUp(self):
-        self.session = Session('ap-test-host', 'ap-test-user', 'ap-test-id')
+        """
+        Set up a CPC with two of each type of activation profiles.
+
+        Because activation profiles cannot be dynamically added, we work
+        with a CPC that is initially set up and satisfies the need for all
+        tests.
+        """
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
-        with requests_mock.mock() as m:
-            # Because logon is deferred until needed, we perform it
-            # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'ap-test-session-id'})
-            self.session.logon()
 
-        self.cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/ap-test-cpc-id-1',
-                        'name': 'APCPC1',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
-            cpcs = self.cpc_mgr.list()
-            self.cpc = cpcs[0]
+        self.faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'faked-cpc1',
+            'parent': None,
+            'class': 'cpc',
+            'name': 'cpc_1',
+            'description': 'CPC #1',
+            'status': 'active',
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'iml-mode': 'TBD',
+        })
+        self.faked_reset_ap_1 = self.faked_cpc.reset_activation_profiles.add({
+            'element-id': 'faked-rap1',
+            'parent': self.faked_cpc,
+            'class': 'reset-activation-profile',
+            'name': 'rap_1',
+            'description': 'RAP #1',
+        })
+        self.faked_reset_ap_2 = self.faked_cpc.reset_activation_profiles.add({
+            'element-id': 'faked-rap2',
+            'parent': self.faked_cpc,
+            'class': 'reset-activation-profile',
+            'name': 'rap_2',
+            'description': 'RAP #2',
+        })
+        self.faked_image_ap_1 = self.faked_cpc.image_activation_profiles.add({
+            'element-id': 'faked-iap1',
+            'parent': self.faked_cpc,
+            'class': 'image-activation-profile',
+            'name': 'iap_1',
+            'description': 'IAP #1',
+        })
+        self.faked_image_ap_2 = self.faked_cpc.image_activation_profiles.add({
+            'element-id': 'faked-iap2',
+            'parent': self.faked_cpc,
+            'class': 'image-activation-profile',
+            'name': 'iap_2',
+            'description': 'IAP #2',
+        })
+        self.faked_load_ap_1 = self.faked_cpc.load_activation_profiles.add({
+            'element-id': 'faked-lap1',
+            'parent': self.faked_cpc,
+            'class': 'load-activation-profile',
+            'name': 'lap_1',
+            'description': 'LAP #1',
+        })
+        self.faked_load_ap_2 = self.faked_cpc.load_activation_profiles.add({
+            'element-id': 'faked-lap2',
+            'parent': self.faked_cpc,
+            'class': 'load-activation-profile',
+            'name': 'lap_2',
+            'description': 'LAP #2',
+        })
+        self.cpc = self.client.cpcs.list()[0]
 
-    def tearDown(self):
-        with requests_mock.mock() as m:
-            m.delete('/api/sessions/this-session', status_code=204)
-            self.session.logoff()
+    def test_resource_repr(self):
+        """Test ActivationProfile.__repr__()."""
+        # We test just for reset activation profiles, because the class is the
+        # same for all profile types and we know that the __repr__() method
+        # does not depend on the profile type either.
 
-    def test_init(self):
-        """Test __init__() on ActivationManager instance in CPC."""
+        reset_ap = ActivationProfile(
+            self.cpc.reset_activation_profiles,
+            uri=self.cpc.uri + '/reset-activation-profiles/rap-1',
+            name='rap #1')
+
+        repr_str = repr(reset_ap)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=reset_ap.__class__.__name__,
+                id=id(reset_ap)))
+
+    def test_manager_initial_attrs(self):
+        """Test initial attributes of ActivationProfileManager."""
+
         reset_ap_mgr = self.cpc.reset_activation_profiles
         self.assertEqual(reset_ap_mgr.cpc, self.cpc)
         self.assertEqual(reset_ap_mgr.profile_type, "reset")
@@ -71,133 +143,168 @@ class ActivationProfileTests(unittest.TestCase):
         self.assertEqual(load_ap_mgr.cpc, self.cpc)
         self.assertEqual(load_ap_mgr.profile_type, "load")
 
-    def test_list_short_ok(self):
+    def test_manager_list_short(self):
         """
-        Test successful list() with short set of properties
-        on ActivationProfileManager instance in CPC.
+        Test ActivationProfileManager.list() with short set of properties.
         """
-        image_mgr = self.cpc.image_activation_profiles
-        with requests_mock.mock() as m:
-            result = {
-                'image-activation-profiles': [
-                    {
-                        'name': 'LPAR1',
-                        'element-uri': '/api/cpcs/fake-element-uri-id-1/'
-                                       'image-activation-profiles/LPAR1'
-                    },
-                    {
-                        'name': 'LPAR2',
-                        'element-uri': '/api/cpcs/fake-element-uri-id-2/'
-                                       'image-activation-profiles/LPAR2'
-                    }
-                ]
-            }
+        # The faked resources are used to define the expected resources and
+        # their properties.
+        exp_profiles = [self.faked_image_ap_1, self.faked_image_ap_2]
+        profile_mgr = self.cpc.image_activation_profiles
 
-            m.get('/api/cpcs/ap-test-cpc-id-1/image-activation-profiles',
-                  json=result)
+        profiles = profile_mgr.list(full_properties=False)
 
-            profiles = image_mgr.list(full_properties=False)
+        self.assertProfiles(profiles, exp_profiles,
+                            ['name', 'element-uri'])
 
-            self.assertEqual(len(profiles),
-                             len(result['image-activation-profiles']))
-            for idx, profile in enumerate(profiles):
-                self.assertEqual(
-                    profile.properties,
-                    result['image-activation-profiles'][idx])
-                self.assertEqual(
-                    profile.uri,
-                    result['image-activation-profiles'][idx]['element-uri'])
-                self.assertFalse(profile.full_properties)
-                self.assertEqual(profile.manager, image_mgr)
-
-    def test_list_full_ok(self):
+    def test_manager_list_full(self):
         """
-        Test successful list() with full set of properties
-        on ActivationProfileManager instance in CPC.
+        Test ActivationProfileManager.list() with full set of properties.
         """
-        image_mgr = self.cpc.image_activation_profiles
-        with requests_mock.mock() as m:
-            result = {
-                'image-activation-profiles': [
-                    {
-                        'name': 'LPAR1',
-                        'element-uri': '/api/cpcs/fake-element-uri-id-1/'
-                                       'image-activation-profiles/LPAR1'
-                    },
-                    {
-                        'name': 'LPAR2',
-                        'element-uri': '/api/cpcs/fake-element-uri-id-2/'
-                                       'image-activation-profiles/LPAR2'
-                    }
-                ]
-            }
+        # The faked resources are used to define the expected resources and
+        # their properties.
+        exp_profiles = [self.faked_reset_ap_1, self.faked_reset_ap_2]
+        profile_mgr = self.cpc.reset_activation_profiles
 
-            m.get('/api/cpcs/ap-test-cpc-id-1/image-activation-profiles',
-                  json=result)
+        profiles = profile_mgr.list(full_properties=True)
 
-            mock_result_part1 = {
-                'element-uri': '/api/cpcs/fake-element-uri-id-1/'
-                               'image-activation-profiles/LPAR1',
-                'name': 'LPAR1',
-                'description': 'Image Activation Profile',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/cpcs/fake-element-uri-id-1/image-activation-profiles/'
-                  'LPAR1',
-                  json=mock_result_part1)
-            mock_result_part2 = {
-                'element-uri': '/api/cpcs/fake-element-uri-id-2/'
-                               'image-activation-profiles/LPAR2',
-                'name': 'LPAR2',
-                'description': 'Image Activation Profile',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/cpcs/fake-element-uri-id-2/image-activation-profiles/'
-                  'LPAR2',
-                  json=mock_result_part2)
+        self.assertProfiles(profiles, exp_profiles,
+                            ['name', 'element-uri', 'element-id', 'class',
+                             'description'])
 
-            profiles = image_mgr.list(full_properties=True)
-
-            self.assertEqual(len(profiles),
-                             len(result['image-activation-profiles']))
-            for idx, profile in enumerate(profiles):
-                self.assertEqual(
-                    profile.properties['name'],
-                    result['image-activation-profiles'][idx]['name'])
-                self.assertEqual(
-                    profile.uri,
-                    result['image-activation-profiles'][idx]['element-uri'])
-                self.assertTrue(profile.full_properties)
-                self.assertEqual(profile.manager, image_mgr)
-
-    def test_update_properties(self):
+    def test_manager_list_filter_name(self):
         """
-        This tests the 'Update Activation Profile Properties' operation.
+        Test ActivationProfileManager.list() with filtering by name.
         """
-        image_mgr = self.cpc.image_activation_profiles
-        with requests_mock.mock() as m:
-            result = {
-                'image-activation-profiles': [
-                    {
-                        'name': 'LPAR1',
-                        'element-uri': '/api/cpcs/fake-element-uri-id-1/'
-                                       'image-activation-profiles/LPAR1'
-                    },
-                    {
-                        'name': 'LPAR2',
-                        'element-uri': '/api/cpcs/fake-element-uri-id-2/'
-                                       'image-activation-profiles/LPAR2'
-                    }
-                ]
-            }
+        # The faked resources are used to define the expected resources and
+        # their properties.
+        exp_profiles = [self.faked_reset_ap_2]
+        profile_mgr = self.cpc.reset_activation_profiles
 
-            m.get('/api/cpcs/ap-test-cpc-id-1/image-activation-profiles',
-                  json=result)
-            profiles = image_mgr.list(full_properties=False)
-            profile = profiles[0]
-            m.post('/api/cpcs/fake-element-uri-id-1/image-activation-profiles/'
-                   'LPAR1', status_code=204)
-            profile.update_properties(properties={})
+        profiles = profile_mgr.list(filter_args={'name': 'rap_2'})
+
+        self.assertProfiles(profiles, exp_profiles,
+                            ['name', 'element-uri'])
+
+    def test_manager_list_filter_id(self):
+        """
+        Test ActivationProfileManager.list() with filtering by element.id.
+        """
+        # The faked resources are used to define the expected resources and
+        # their properties.
+        exp_profiles = [self.faked_reset_ap_2]
+        profile_mgr = self.cpc.reset_activation_profiles
+
+        profiles = profile_mgr.list(filter_args={'element-id': 'faked-rap2'})
+
+        self.assertProfiles(profiles, exp_profiles,
+                            ['name', 'element-uri'])
+
+    def test_manager_list_filter_same(self):
+        """
+        Test ActivationProfileManager.list() with filtering by a property
+        where more than one resource has the same value.
+        """
+        # The faked resources are used to define the expected resources and
+        # their properties.
+        exp_profiles = [self.faked_reset_ap_1, self.faked_reset_ap_2]
+        profile_mgr = self.cpc.reset_activation_profiles
+
+        profiles = profile_mgr.list(
+            filter_args={'class': 'reset-activation-profile'})
+
+        self.assertProfiles(profiles, exp_profiles,
+                            ['name', 'element-uri'])
+
+    def test_manager_list_filter_two(self):
+        """
+        Test ActivationProfileManager.list() with filtering by two properties.
+        """
+        # The faked resources are used to define the expected resources and
+        # their properties.
+        exp_profiles = [self.faked_reset_ap_2]
+        profile_mgr = self.cpc.reset_activation_profiles
+
+        profiles = profile_mgr.list(
+            filter_args={'class': 'reset-activation-profile',
+                         'description': 'RAP #2'})
+
+        self.assertProfiles(profiles, exp_profiles,
+                            ['name', 'element-uri'])
+
+    def test_resource_update_nothing(self):
+        """
+        Test ActivationProfile.update_properties() with no properties.
+        """
+        profile_mgr = self.cpc.load_activation_profiles
+        profiles = profile_mgr.list(filter_args={'name': 'lap_1'})
+        self.assertEqual(len(profiles), 1)
+        profile = profiles[0]
+
+        saved_properties = copy.deepcopy(profile.properties)
+
+        # Method to be tested
+        profile.update_properties(properties={})
+
+        # Verify that the properties of the local resource object have not
+        # changed
+        self.assertEqual(profile.properties, saved_properties)
+
+    def test_resource_update_name(self):
+        """
+        Test ActivationProfile.update_properties() with 'name' property.
+        """
+        profile_mgr = self.cpc.load_activation_profiles
+        profiles = profile_mgr.list(filter_args={'name': 'lap_1'})
+        self.assertEqual(len(profiles), 1)
+        profile = profiles[0]
+
+        new_name = "new lap_1"
+
+        # Method to be tested
+        profile.update_properties(properties={'name': new_name})
+
+        # Verify that the local resource object reflects the update
+        self.assertEqual(profile.properties['name'], new_name)
+
+        # Update the properties of the resource object and verify that the
+        # resource object reflects the update
+        profile.pull_full_properties()
+        self.assertEqual(profile.properties['name'], new_name)
+
+        # List the resource by its new name and verify that it was found
+        profiles = profile_mgr.list(filter_args={'name': new_name})
+        self.assertEqual(len(profiles), 1)
+        profile = profiles[0]
+        self.assertEqual(profile.properties['name'], new_name)
+
+    def test_resource_update_not_fetched(self):
+        """
+        Test ActivationProfile.update_properties() with an existing
+        property that has not been fetched into the local resource object.
+        """
+        profile_mgr = self.cpc.load_activation_profiles
+        profiles = profile_mgr.list(filter_args={'name': 'lap_1'})
+        self.assertEqual(len(profiles), 1)
+        profile = profiles[0]
+
+        # A property that is not in the result of list():
+        update_prop_name = 'description'
+        update_prop_value = "new description for lap_1"
+
+        # Method to be tested
+        profile.update_properties(
+            properties={update_prop_name: update_prop_value})
+
+        # Verify that the local resource object reflects the update
+        self.assertEqual(profile.properties[update_prop_name],
+                         update_prop_value)
+
+        # Update the properties of the resource object and verify that the
+        # resource object reflects the update
+        profile.pull_full_properties()
+        self.assertEqual(profile.properties[update_prop_name],
+                         update_prop_value)
 
 
 if __name__ == '__main__':
