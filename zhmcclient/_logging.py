@@ -109,6 +109,11 @@ def logged_api_call(func):
 
       function object: The function wrappering the original function being
         decorated.
+
+    Raises:
+
+      TypeError: The @logged_api_call decorator must be used on a function or
+        method (and not on top of the @property decorator).
     """
 
     # Note that in this decorator function, we are in a module loading context,
@@ -119,13 +124,10 @@ def logged_api_call(func):
     # decorator are still functions at this point (and not yet methods).
 
     module = inspect.getmodule(func)
-    if not getattr(module, '__name__', None):
+    if not inspect.isfunction(func) or not hasattr(module, '__name__'):
         raise TypeError("The @logged_api_call decorator must be used on a "
                         "function or method (and not on top of the @property "
                         "decorator)")
-    if not inspect.isfunction(func):
-        raise TypeError("The @logged_api_call decorator must be used on a "
-                        "function or method ")
 
     try:
         # We avoid the use of inspect.getouterframes() because it is slow,
