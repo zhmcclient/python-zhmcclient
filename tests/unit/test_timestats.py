@@ -22,7 +22,7 @@ from __future__ import absolute_import, print_function
 import time
 import unittest
 
-from zhmcclient import TimeStatsKeeper
+from zhmcclient import TimeStatsKeeper, TimeStats
 
 
 PRINT_HEADER = \
@@ -242,8 +242,34 @@ class TimeStatsTests(unittest.TestCase):
                             "max time: actual: %f, expected: %f, delta: %f" %
                             (stats.max_time, max_dur, delta))
 
+    def test_only_end(self):
+        """Test that invoking end() before begin() has ever been called raises
+        a RuntimeError exception."""
+
+        keeper = TimeStatsKeeper()
+        keeper.enable()
+        stats = keeper.get_stats('foo')
+
+        with self.assertRaises(RuntimeError):
+            stats.end()
+
+    def test_end_after_end(self):
+        """Test that invoking end() after a begin/end sequence raises
+        a RuntimeError exception."""
+
+        keeper = TimeStatsKeeper()
+        keeper.enable()
+        stats = keeper.get_stats('foo')
+
+        stats.begin()
+        time.sleep(0.01)
+        stats.end()
+
+        with self.assertRaises(RuntimeError):
+            stats.end()
+
     def test_str_empty(self):
-        """Test str() for an empty enabled keeper."""
+        """Test TimestatsKeeper.__str__() for an empty enabled keeper."""
 
         keeper = TimeStatsKeeper()
         keeper.enable()
@@ -251,11 +277,47 @@ class TimeStatsTests(unittest.TestCase):
         self.assertEqual(s, PRINT_HEADER)
 
     def test_str_disabled(self):
-        """Test str() for a disabled keeper."""
+        """Test TimestatsKeeper.__str__() for a disabled keeper."""
 
         keeper = TimeStatsKeeper()
         s = str(keeper)
         self.assertEqual(s, PRINT_HEADER_DISABLED)
+
+    def test_str_one(self):
+        """Test TimestatsKeeper.__str__() for an enabled keeper with one data
+        item."""
+
+        keeper = TimeStatsKeeper()
+        keeper.enable()
+
+        duration = 0.1
+
+        stats = keeper.get_stats('foo')
+
+        # produce a data item
+        stats.begin()
+        time.sleep(duration)
+        stats.end()
+
+        s = str(keeper)
+        self.assertTrue(s.startswith(PRINT_HEADER),
+                        "Unexpected str(keeper): %r" % s)
+        num_lines = len(s.split('\n'))
+        self.assertEqual(num_lines, 3,
+                         "Unexpected str(keeper): %r" % s)
+
+    def test_ts_str(self):
+        """Test Timestats.__str__()."""
+
+        keeper = TimeStatsKeeper()
+        timestats = TimeStats(keeper, "foo")
+
+        s = str(timestats)
+        self.assertTrue(s.startswith("TimeStats:"),
+                        "Unexpected str(timestats): %r" % s)
+        num_lines = len(s.split('\n'))
+        self.assertEqual(num_lines, 1,
+                         "Unexpected str(timestats): %r" % s)
 
 
 if __name__ == '__main__':

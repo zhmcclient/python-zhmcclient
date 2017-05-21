@@ -176,6 +176,13 @@ class TimeStats(object):
 
         If the statistics keeper holding this time statistics is disabled,
         this method does nothing, in order to save resources.
+
+        If this method is called without a preceding call to
+        :meth:`~zhmcclient.TimeStats.begin`, a :exc:`py:RuntimeError` is
+        raised.
+
+        Raises:
+          RuntimeError
         """
         if self.keeper.enabled:
             if self._begin_time is None:
