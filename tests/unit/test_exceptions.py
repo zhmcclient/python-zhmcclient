@@ -290,6 +290,11 @@ class TestHTTPError(unittest.TestCase):
                   "{request-uri}]".format(**resp_body)
         self.assertEqual(str(exc), exp_str)
 
+        # Check repr()
+        repr_str = repr(exc)
+        repr_pattern = r'^HTTPError\(.*\)$'
+        self.assertRegexpMatches(repr_str, repr_pattern)
+
 
 if __name__ == '__main__':
     unittest.main()
