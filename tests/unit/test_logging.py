@@ -22,7 +22,7 @@ import logging
 import unittest
 from testfixtures import log_capture
 
-from zhmcclient._logging import logged_api_call
+from zhmcclient._logging import logged_api_call, get_logger
 
 
 #
@@ -130,7 +130,7 @@ _EXP_LOG_MSG_LEAVE = "<== %s, result: %.1000r"
 # Test cases
 #
 
-class TestLogging(unittest.TestCase):
+class TestLoggingDecorator(unittest.TestCase):
     """All test cases for the @logged_api_call decorator."""
 
     def assert_log_capture(self, log_capture, exp_apifunc):
@@ -264,4 +264,53 @@ class TestLogging(unittest.TestCase):
         self.assert_log_capture(capture,
                                 'method.decorated_inner_function()')
 
-# TODO: Add test cases for _get_logger(), specifically for null-handler
+    def test_decorated_class(self):
+        """Test that using the decorator on a class raises TypeError."""
+
+        with self.assertRaises(TypeError):
+
+            @logged_api_call
+            class DecoratedClass(object):
+                pass
+
+    def test_decorated_property(self):
+        """Test that using the decorator on a property raises TypeError."""
+
+        with self.assertRaises(TypeError):
+
+            class Class(object):
+
+                @logged_api_call
+                @property
+                def decorated_property(self):
+                    return self
+
+
+class TestGetLogger(unittest.TestCase):
+    """All test cases for get_logger()."""
+
+    def test_root_logger(self):
+        """Test that get_logger('') returns the Python root logger and has at
+        least one handler."""
+        py_logger = logging.getLogger()
+
+        zhmc_logger = get_logger('')
+
+        self.assertTrue(isinstance(zhmc_logger, logging.Logger))
+        self.assertEqual(zhmc_logger, py_logger)
+        self.assertTrue(len(zhmc_logger.handlers) >= 1,
+                        "Unexpected list of logging handlers: %r" %
+                        zhmc_logger.handlers)
+
+    def test_foo_logger(self):
+        """Test that get_logger('foo') returns the Python logger 'foo'
+        and has at least one handler."""
+        py_logger = logging.getLogger('foo')
+
+        zhmc_logger = get_logger('foo')
+
+        self.assertTrue(isinstance(zhmc_logger, logging.Logger))
+        self.assertEqual(zhmc_logger, py_logger)
+        self.assertTrue(len(zhmc_logger.handlers) >= 1,
+                        "Unexpected list of logging handlers: %r" %
+                        zhmc_logger.handlers)
