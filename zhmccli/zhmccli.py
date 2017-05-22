@@ -24,6 +24,7 @@ from logging.handlers import SysLogHandler
 from logging import StreamHandler
 import platform
 
+import zhmcclient
 from ._helper import CmdContext, GENERAL_OPTIONS_METAVAR, REPL_HISTORY_FILE, \
     REPL_PROMPT, TABLE_FORMATS, LOG_LEVELS, LOG_COMPONENTS, LOG_DESTINATIONS, \
     SYSLOG_FACILITIES
@@ -185,11 +186,15 @@ def cli(ctx, host, userid, password, output_format, timestats, log, log_dest,
                 logger.setLevel(level)
             else:
                 if log_comp == 'api':
-                    logger = logging.getLogger('zhmcclient.api')
+                    logger = logging.getLogger(zhmcclient.API_LOGGER_NAME)
                     logger.addHandler(handler)
                     logger.setLevel(level)
                 if log_comp == 'hmc':
-                    logger = logging.getLogger('zhmcclient.hmc')
+                    logger = logging.getLogger(zhmcclient.HMC_LOGGER_NAME)
+                    logger.addHandler(handler)
+                    logger.setLevel(level)
+                if log_comp == 'console':
+                    logger = logging.getLogger(zhmcclient.CONSOLE_LOGGER_NAME)
                     logger.addHandler(handler)
                     logger.setLevel(level)
 

@@ -16,6 +16,11 @@ from __future__ import absolute_import
 
 import json
 from collections import OrderedDict
+import sys
+import threading
+import readline  # noqa: F401
+import re
+import six
 import click
 import click_spinner
 from tabulate import tabulate
@@ -40,7 +45,7 @@ LOG_DESTINATIONS = ['stderr', 'syslog', 'none']
 
 LOG_LEVELS = ['error', 'warning', 'info', 'debug']
 
-LOG_COMPONENTS = ['api', 'hmc', 'all']
+LOG_COMPONENTS = ['api', 'hmc', 'console', 'all']
 
 SYSLOG_FACILITIES = ['user', 'local0', 'local1', 'local2', 'local3', 'local4',
                      'local5', 'local6', 'local7']
@@ -387,3 +392,193 @@ def print_resources_as_json(resources, show_list=None):
         json_obj.append(properties)
     json_str = json.dumps(json_obj)
     click.echo(json_str)
+
+
+class ExceptionThread(threading.Thread):
+    """
+    A thread class derived from :class:`py:threading.Thread` that handles
+    exceptions that are raised in the started thread, by re-raising them in
+    the thread that joins the started thread.
+
+    The thread function needs to be specified with the 'target' init argument.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(ExceptionThread, self).__init__(*args, **kwargs)
+        self.exc_info = None
+
+    def run(self):
+        try:
+            super(ExceptionThread, self).run()
+        except:
+            self.exc_info = sys.exc_info()
+
+    def join(self):
+        super(ExceptionThread, self).join()
+        if self.exc_info:
+            six.reraise(*self.exc_info)
+
+
+def console_log(logger, prefix, message, *args, **kwargs):
+    """
+    Log a message after prepending it with a prefix, to the specified logger
+    using the debug log level.
+    """
+    message = prefix + message
+    logger.debug(message, *args, **kwargs)
+
+
+def display_messages(receiver, logger, prefix):
+    """
+    Receive the OS message notifications in the specified receiver and
+    print them to stdout. The function returns when the receiver is
+    exhausted (which happens when it is closed).
+
+    Due to inconsistencies in the message text w.r.t. newline, some processing
+    is performed regarding trailing newlines.
+    """
+    console_log(logger, prefix, "Message display thread has started")
+    for headers, message in receiver.notifications():
+        console_log(logger, prefix,
+                    "Received OS message notification "
+                    "session-sequence-nr=%s", headers['session-sequence-nr'])
+        for msg_info in message['os-messages']:
+            msg_txt = msg_info['message-text']
+            console_log(logger, prefix,
+                        "Message id=%s, os=%r, refresh=%r, prompt=%r: %r",
+                        msg_info['message-id'], msg_info['os-name'],
+                        msg_info['is-refresh'], msg_info['prompt-text'],
+                        msg_txt)
+            is_prompt = re.match(r'^.*[\$#] ?$', msg_txt)
+            is_login = re.match(r'^.*[Ll]ogin: ?$', msg_txt)
+            is_password = re.match(r'^[Pp]assword: *$', msg_txt)
+            if is_prompt or is_login or is_password:
+                msg_txt = msg_txt.rstrip('\n')
+            else:
+                if not msg_txt.endswith('\n'):
+                    msg_txt += '\n'
+            click.echo(msg_txt, nl=False)
+    console_log(logger, prefix, "Message display thread is ending")
+
+
+def part_console(session, part, refresh, logger):
+    """
+    Establish an interactive shell to the console of the operating system
+    running in a partition or LPAR.
+
+    Any incoming OS messages of the console are printed concurrently with
+    waiting for and sending the next command.
+
+    The shell ends and this function returns if one of the exit commands
+    is entered.
+
+    Parameters:
+
+      session (Session): HMC session supplying the credentials.
+
+      part (Partition or Lpar): Resource object for the partition or LPAR.
+
+      refresh (bool): Include refresh messages.
+
+      logger (Logger): Python logger for any log messages.
+
+    Raises:
+
+      Exceptions derived from zhmcclient.Error
+
+      AssertionError
+    """
+
+    if isinstance(part, zhmcclient.Partition):
+        part_term = 'partition'
+    else:
+        part_term = 'LPAR'
+    cpc = part.manager.parent
+
+    prefix = "%s %s " % (cpc.name, part.name)
+
+    console_log(logger, prefix, "Operating system console session opened")
+    console_log(logger, prefix, "Include refresh messages: %s", refresh)
+
+    try:
+        topic = part.open_os_message_channel(include_refresh_messages=refresh)
+        console_log(logger, prefix, "Using new notification topic: %s", topic)
+    except zhmcclient.HTTPError as exc:
+        if exc.http_status == 409 and exc.reason == 331:
+            # Notification topic for this partition already exists, use it
+            topic_dicts = session.get_notification_topics()
+            topic = None
+            for topic_dict in topic_dicts:
+                if topic_dict['topic-type'] != 'os-message-notification':
+                    continue
+                obj_uri = topic_dict['object-uri']
+                if obj_uri == part.uri \
+                        or '/api/partitions/' + obj_uri == part.uri:
+                    topic = topic_dict['topic-name']
+                    console_log(logger, prefix,
+                                "Using existing notification topic: %s "
+                                "(object-uri: %s)", topic, obj_uri)
+                    break
+            assert topic, \
+                "An OS message notification topic for %s %s (uri=%s) " \
+                "supposedly exists, but cannot be found in the existing " \
+                "topics: %r)" % \
+                (part_term, part.name, part.uri, topic_dicts)
+        else:
+            raise
+
+    if not session._password:
+        session._password = click.prompt(
+            "Enter password (for user {s.userid} at HMC {s.host})"
+            .format(s=session),
+            hide_input=True, confirmation_prompt=False, type=str, err=True)
+
+    receiver = zhmcclient.NotificationReceiver(
+        topic, session.host, session.userid, session._password)
+
+    msg_thread = ExceptionThread(
+        target=display_messages, args=(receiver, logger, prefix))
+
+    click.echo("Connected to operating system console for %s %s" %
+               (part_term, part.name))
+    click.echo("Enter ':exit' or press <CTRL-C> or <CTRL-D> to exit.")
+
+    console_log(logger, prefix, "Starting message display thread")
+    msg_thread.start()
+
+    while True:
+        try:
+            # This has history/ editing support when readline is imported
+            line = six.moves.input()
+        except EOFError:
+            # CTRL-D was pressed
+            reason = "CTRL-D"
+            break
+        except KeyboardInterrupt:
+            # CTRL-C was pressed
+            reason = "CTRL-C"
+            break
+        if line == ':exit':
+            reason = "%s command" % line
+            break
+        if line == '':
+            # Enter was pressed without other input.
+            # The HMC requires at least one character in the command, otherwise
+            # it returns an error.
+            line = ' '
+        part.send_os_command(line, is_priority=False)
+
+    console_log(logger, prefix,
+                "User requested to exit the console session via %s", reason)
+
+    console_log(logger, prefix, "Closing notification receiver")
+    # This causes the notification receiver to be exhausted, and in turn causes
+    # the message display thread to end.
+    receiver.close()
+
+    console_log(logger, prefix, "Waiting for message display thread to end")
+    msg_thread.join()
+
+    console_log(logger, prefix, "Operating system console session closed")
+
+    click.echo("\nConsole session closed.")

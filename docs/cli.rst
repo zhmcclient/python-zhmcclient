@@ -126,7 +126,7 @@ commands::
                                       Output format (Default: table).
       -t, --timestats                 Show time statistics of HMC operations.
       --log COMP=LEVEL,...            Set a component to a log level
-                                      (COMP: [api|hmc|all],
+                                      (COMP: [api|hmc|console|all],
                                        LEVEL: [error|warning|info|debug],
                                        Default: all=warning).
       --log-dest [stderr|syslog|none]
@@ -182,7 +182,7 @@ examples, an underscore ``_`` is shown as the cursor::
         --password        Password for the HMC (Default: ZHMC_PASSWORD environment variable).
         --output-format   Output format (Default: table).
         --timestats       Show time statistics of HMC operations.
-        --log             Set a component to a log level (COMP: [api|hmc|all], LEVEL: [error|warning|info|debug], Default: all=warning).
+        --log             Set a component to a log level (COMP: [api|hmc|console|all], LEVEL: [error|warning|info|debug], Default: all=warning).
         --log-dest        Log destination for this command (Default: stderr).
         --syslog-facility Syslog facility when logging to the syslog (Default: user).
         --version         Show the version of this command and exit.
@@ -452,6 +452,9 @@ Valid log components are:
   calls into the zhmcclient library that are made from the zhmc CLI.
 * ``hmc`` - Enable the ``zhmcclient.hmc`` Python logger, which logs the
   interactions with the HMC.
+* ``console`` - Enable the ``zhmccli.console`` Python logger, which logs the
+  interactions with the console of the operating system running in a partition
+  or LPAR.
 * ``all`` - Enable the root Python logger, which logs anything that is
   propagated up to it. In case of the zhmc CLI, this will mostly be the
   ``requests`` package, plus the ``api`` and ``hmc`` components.

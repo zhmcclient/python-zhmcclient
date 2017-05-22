@@ -32,7 +32,8 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_STATUS_TIMEOUT',
            'DEFAULT_NAME_URI_CACHE_TIMETOLIVE',
            'HMC_LOGGER_NAME',
-           'API_LOGGER_NAME']
+           'API_LOGGER_NAME',
+           'CONSOLE_LOGGER_NAME']
 
 
 #: Default HTTP connect timeout in seconds,
@@ -107,3 +108,6 @@ HMC_LOGGER_NAME = 'zhmcclient.hmc'
 
 #: Name of the Python logger that logs zhmcclient API calls made by the user.
 API_LOGGER_NAME = 'zhmcclient.api'
+
+#: Name of the Python logger that logs zhmccli console calls made by the user.
+CONSOLE_LOGGER_NAME = 'zhmccli.console'

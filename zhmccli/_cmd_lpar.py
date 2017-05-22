@@ -14,12 +14,14 @@
 
 from __future__ import absolute_import
 
+import logging
 import click
 
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    part_console
 from ._cmd_cpc import find_cpc
 
 
@@ -207,6 +209,24 @@ def lpar_load(cmd_ctx, cpc, lpar, load_address, **options):
                                               load_address, options))
 
 
+@lpar_group.command('console', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('LPAR', type=str, metavar='LPAR')
+@click.option('--refresh', is_flag=True, required=False,
+              help='Include refresh messages.')
+@click.pass_obj
+def lpar_console(cmd_ctx, cpc, lpar, **options):
+    """
+    Establish an interactive session with the console of the operating system
+    running in an LPAR.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_console(cmd_ctx, cpc, lpar, options))
+
+
 def cmd_lpar_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
@@ -320,3 +340,20 @@ def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address, options):
 
     cmd_ctx.spinner.stop()
     click.echo('Loading of LPAR %s is complete.' % lpar_name)
+
+
+def cmd_lpar_console(cmd_ctx, cpc_name, lpar_name, options):
+
+    logger = logging.getLogger(zhmcclient.CONSOLE_LOGGER_NAME)
+
+    client = zhmcclient.Client(cmd_ctx.session)
+    lpar = find_lpar(client, cpc_name, lpar_name)
+
+    refresh = options['refresh']
+
+    cmd_ctx.spinner.stop()
+
+    try:
+        part_console(cmd_ctx.session, lpar, refresh, logger)
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))

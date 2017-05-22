@@ -114,12 +114,17 @@ print("Showing OS messages (including refresh messages) ...")
 
 try:
     for headers, message in receiver.notifications():
-        print("HMC notification #%s:" % headers['session-sequence-nr'])
+        print("# HMC notification #%s:" % headers['session-sequence-nr'])
         os_msg_list = message['os-messages']
         for os_msg in os_msg_list:
-            msg_txt = os_msg['message-text'].strip('\n')
             msg_id = os_msg['message-id']
-            print("OS message #%s:\n%s" % (msg_id, msg_txt))
+            held = os_msg['is-held']
+            priority = os_msg['is-priority']
+            prompt = os_msg.get('prompt-text', None)
+            print("# OS message %s (held: %s, priority: %s, prompt: %r):" %
+                  (msg_id, held, priority, prompt))
+            msg_txt = os_msg['message-text'].strip('\n')
+            print(msg_txt)
 except KeyboardInterrupt:
     print("Keyboard interrupt: Closing OS message channel...")
     receiver.close()
