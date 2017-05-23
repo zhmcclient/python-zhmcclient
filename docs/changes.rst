@@ -33,6 +33,11 @@ Released: not yet
 
 **Enhancements:**
 
+* Increased the default status timeout from 60 sec to 15 min, in order to
+  accomodate for some large environments. The status timeout applies to
+  waiting for reaching the desired LPAR status after the HMC operation
+  'Activate LPAR' or 'Deactivate LPAR' has completed.
+
 **Known issues:**
 
 * See `list of open issues`_.

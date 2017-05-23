@@ -91,7 +91,7 @@ DEFAULT_OPERATION_TIMEOUT = 3600
 #: This is used as a default value in asynchronous methods
 #: of the :class:`~zhmcclient.Lpar` class that change its status (e.g.
 #: :meth:`zhmcclient.Lpar.activate`)).
-DEFAULT_STATUS_TIMEOUT = 60
+DEFAULT_STATUS_TIMEOUT = 900
 
 #: Default time to the next automatic invalidation of the Name-URI cache of
 #: manager objects, in seconds since the last invalidation,
