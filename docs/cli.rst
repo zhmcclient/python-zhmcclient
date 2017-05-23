@@ -139,12 +139,19 @@ commands::
       --help                          Show this message and exit.
 
     Commands:
+      adapter    Command group for managing adapters.
       cpc        Command group for managing CPCs.
+      hba        Command group for managing HBAs.
+      help       Show help message for interactive mode.
       info       Show information about the HMC.
       lpar       Command group for managing LPARs.
+      nic        Command group for managing NICs.
       partition  Command group for managing partitions.
-      repl       Start an interactive shell.
+      port       Command group for managing adapter ports.
+      repl       Enter interactive (REPL) mode (default).
       session    Command group for managing sessions.
+      vfunction  Command group for managing virtual functions.
+      vswitch    Command group for managing virtual switches.
 
 The usage line in this help text show the standalone command use. Within the
 zhmc shell, the ``zhmc`` word is ommitted and the remainder is typed in.
