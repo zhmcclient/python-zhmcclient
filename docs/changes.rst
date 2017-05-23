@@ -33,6 +33,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Improved content of ``zhmcclient.ParseError`` message for better problem
+  analysis.
+
 **Known issues:**
 
 * See `list of open issues`_.

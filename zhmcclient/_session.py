@@ -1174,9 +1174,26 @@ class Job(object):
             time.sleep(1)  # Avoid hot spin loop
 
 
+def _text_repr(text, max_len=1000):
+    """
+    Return the input text as a Python string representation (i.e. using repr())
+    that is limited to a maximum length.
+    """
+    if text is None:
+        text_repr = 'None'
+    elif len(text) > max_len:
+        text_repr = repr(text[0:max_len]) + '...'
+    else:
+        text_repr = repr(text)
+    return text_repr
+
+
 def _result_object(result):
     """
     Return the JSON payload in the HTTP response as a Python dict.
+
+    Parameters:
+        result (requests.Response): HTTP response object.
 
     Raises:
         zhmcclient.ParseError: Error parsing the returned JSON.
@@ -1184,11 +1201,19 @@ def _result_object(result):
     content_type = result.headers.get('content-type', None)
 
     if content_type is None or content_type.startswith('application/json'):
+        # This function is only called when there is content expected.
+        # Therefore, a response without content will result in a ParseError.
         try:
             return result.json(object_pairs_hook=OrderedDict)
         except ValueError as exc:
-            raise ParseError("Parse error in returned JSON: {}".
-                             format(exc.args[0]))
+            raise ParseError(
+                "JSON parse error in HTTP response: {}. "
+                "HTTP request: {} {}. "
+                "Response status {}, content (max.1000, decoded using {}): {}".
+                format(exc.args[0],
+                       result.request.method, result.request.url,
+                       result.status_code, result.encoding,
+                       _text_repr(result.text, 1000)))
     elif content_type.startswith('text/html'):
         # We are in some error situation. The HMC returns HTML content
         # for some 5xx status codes. We try to deal with it somehow,
@@ -1225,5 +1250,11 @@ def _result_object(result):
         }
         return result_obj
     else:
-        raise ParseError("Unknown content type response: {}, data(0..200): {}".
-                         format(content_type), result.content[0:200])
+        raise ParseError(
+            "Unknown content type in HTTP response: {}. "
+            "HTTP request: {} {}. "
+            "Response status {}, content (max.1000, decoded using {}): {}".
+            format(content_type,
+                   result.request.method, result.request.url,
+                   result.status_code, result.encoding,
+                   _text_repr(result.text, 1000)))
