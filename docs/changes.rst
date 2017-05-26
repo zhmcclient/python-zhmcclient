@@ -56,6 +56,18 @@ Released: not yet
   waiting for reaching the desired LPAR status after the HMC operation
   'Activate LPAR' or 'Deactivate LPAR' has completed.
 
+* Allow ``None`` as a value for the ``load_parameter`` argument of
+  ``Lpar.load()``, and changed the default to be ``None`` (the latter change
+  does not change the behavior).
+
+* Added actual status, desired statuses and status timeout as attributes to
+  the ``StatusTimeout`` exception, for programmatic processing by callers.
+
+* In the zhmc CLI, added a ``--allow-status-exceptions`` option for the
+  ``lpar activate/deactivate/load`` commands. Setting this option causes the
+  LPAR status "exceptions" to be considered an additional valid end status when
+  waiting for completion of the operation.
+
 **Known issues:**
 
 * See `list of open issues`_.

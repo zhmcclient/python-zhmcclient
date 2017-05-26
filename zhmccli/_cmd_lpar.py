@@ -149,8 +149,10 @@ def lpar_update(cmd_ctx, cpc, lpar, **options):
 @lpar_group.command('activate', options_metavar=COMMAND_OPTIONS_METAVAR)
 @click.argument('CPC', type=str, metavar='CPC')
 @click.argument('LPAR', type=str, metavar='LPAR')
+@click.option('--allow-status-exceptions', is_flag=True, required=False,
+              help='Allow status "exceptions" as a valid end status.')
 @click.pass_obj
-def lpar_activate(cmd_ctx, cpc, lpar):
+def lpar_activate(cmd_ctx, cpc, lpar, **options):
     """
     Activate an LPAR.
 
@@ -158,7 +160,7 @@ def lpar_activate(cmd_ctx, cpc, lpar):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_activate(cmd_ctx, cpc, lpar))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_activate(cmd_ctx, cpc, lpar, options))
 
 
 @lpar_group.command('deactivate', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -168,8 +170,10 @@ def lpar_activate(cmd_ctx, cpc, lpar):
               expose_value=False,
               help='Skip prompt to confirm deactivation of the LPAR.',
               prompt='Are you sure you want to deactivate the LPAR ?')
+@click.option('--allow-status-exceptions', is_flag=True, required=False,
+              help='Allow status "exceptions" as a valid end status.')
 @click.pass_obj
-def lpar_deactivate(cmd_ctx, cpc, lpar):
+def lpar_deactivate(cmd_ctx, cpc, lpar, **options):
     """
     Deactivate an LPAR.
 
@@ -177,7 +181,8 @@ def lpar_deactivate(cmd_ctx, cpc, lpar):
     general options (see 'zhmc --help') can also be specified right after the
     'zhmc' command name.
     """
-    cmd_ctx.execute_cmd(lambda: cmd_lpar_deactivate(cmd_ctx, cpc, lpar))
+    cmd_ctx.execute_cmd(lambda: cmd_lpar_deactivate(cmd_ctx, cpc, lpar,
+                                                    options))
 
 
 @lpar_group.command('load', options_metavar=COMMAND_OPTIONS_METAVAR)
@@ -187,6 +192,8 @@ def lpar_deactivate(cmd_ctx, cpc, lpar):
 @click.option('--load-parameter', type=str, required=False,
               help='Provides additional control over the outcome of a '
               'Load operation.')
+@click.option('--allow-status-exceptions', is_flag=True, required=False,
+              help='Allow status "exceptions" as a valid end status.')
 @click.pass_obj
 def lpar_load(cmd_ctx, cpc, lpar, load_address, **options):
     """
@@ -273,13 +280,13 @@ def cmd_lpar_update(cmd_ctx, cpc_name, lpar_name, options):
     click.echo("LPAR %s has been updated." % lpar_name)
 
 
-def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name):
+def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     lpar = find_lpar(client, cpc_name, lpar_name)
 
     try:
-        lpar.activate(wait_for_completion=True)
+        lpar.activate(wait_for_completion=True, **options)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
@@ -287,13 +294,13 @@ def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name):
     click.echo('Activation of LPAR %s is complete.' % lpar_name)
 
 
-def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name):
+def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
     lpar = find_lpar(client, cpc_name, lpar_name)
 
     try:
-        lpar.deactivate(wait_for_completion=True)
+        lpar.deactivate(wait_for_completion=True, **options)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
@@ -306,13 +313,8 @@ def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address, options):
     client = zhmcclient.Client(cmd_ctx.session)
     lpar = find_lpar(client, cpc_name, lpar_name)
 
-    load_parameter = ""
-    if options['load_parameter']:
-        load_parameter = options['load_parameter']
-
     try:
-        lpar.load(load_address, load_parameter=load_parameter,
-                  wait_for_completion=True)
+        lpar.load(load_address, wait_for_completion=True, **options)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
 
