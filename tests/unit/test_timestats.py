@@ -142,7 +142,9 @@ class TimeStatsTests(unittest.TestCase):
         stats = keeper.get_stats('foo')
         dur = measure(stats, duration)
 
-        for _, stats in keeper.snapshot():
+        stats_dict = keeper.snapshot()
+        for op_name in stats_dict:
+            stats = stats_dict[op_name]
             self.assertEqual(stats.count, 1)
             self.assertLess(time_abs_delta(stats.avg_time, dur), delta,
                             "avg time: actual: %f, expected: %f, delta: %f" %
@@ -174,7 +176,9 @@ class TimeStatsTests(unittest.TestCase):
         time.sleep(duration)
         stats.end()
 
-        for _, stats in keeper.snapshot():
+        stats_dict = keeper.snapshot()
+        for op_name in stats_dict:
+            stats = stats_dict[op_name]
             self.assertEqual(stats.count, 0)
             self.assertEqual(stats.avg_time, 0)
             self.assertEqual(stats.min_time, float('inf'))
@@ -196,7 +200,7 @@ class TimeStatsTests(unittest.TestCase):
         stats.end()
 
         # take the snapshot
-        snapshot = keeper.snapshot()
+        snap_stats_dict = keeper.snapshot()
 
         # produce a second data item
         stats.begin()
@@ -204,7 +208,8 @@ class TimeStatsTests(unittest.TestCase):
         stats.end()
 
         # verify that only the first data item is in the snapshot
-        for _, snap_stats in snapshot:
+        for op_name in snap_stats_dict:
+            snap_stats = snap_stats_dict[op_name]
             self.assertEqual(snap_stats.count, 1)
 
         # verify that both data items are in the original stats object
@@ -230,7 +235,9 @@ class TimeStatsTests(unittest.TestCase):
         max_dur = max(m_durations)
         avg_dur = sum(m_durations) / float(count)
 
-        for _, stats in keeper.snapshot():
+        stats_dict = keeper.snapshot()
+        for op_name in stats_dict:
+            stats = stats_dict[op_name]
             self.assertEqual(stats.count, 3)
             self.assertLess(time_abs_delta(stats.avg_time, avg_dur), delta,
                             "avg time: actual: %f, expected: %f, delta: %f" %
