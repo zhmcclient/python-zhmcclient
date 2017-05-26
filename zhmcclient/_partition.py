@@ -330,9 +330,10 @@ class Partition(BaseResource):
 
         Returns:
 
-          `None` or :class:`~zhmcclient.Job`:
+          :class:`py:dict` or :class:`~zhmcclient.Job`:
 
-            If `wait_for_completion` is `True`, returns `None`.
+            If `wait_for_completion` is `True`, returns an empty
+            :class:`py:dict` object.
 
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
@@ -386,9 +387,10 @@ class Partition(BaseResource):
 
         Returns:
 
-          `None` or :class:`~zhmcclient.Job`:
+          :class:`py:dict` or :class:`~zhmcclient.Job`:
 
-            If `wait_for_completion` is `True`, returns `None`.
+            If `wait_for_completion` is `True`, returns an empty
+            :class:`py:dict` object.
 
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
@@ -500,9 +502,10 @@ class Partition(BaseResource):
 
         Returns:
 
-          `None` or :class:`~zhmcclient.Job`:
+          :class:`py:dict` or :class:`~zhmcclient.Job`:
 
-            If `wait_for_completion` is `True`, returns `None`.
+            If `wait_for_completion` is `True`, returns an empty
+            :class:`py:dict` object.
 
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
@@ -557,9 +560,10 @@ class Partition(BaseResource):
 
         Returns:
 
-          `None` or :class:`~zhmcclient.Job`:
+          :class:`py:dict` or :class:`~zhmcclient.Job`:
 
-            If `wait_for_completion` is `True`, returns `None`.
+            If `wait_for_completion` is `True`, returns an empty
+            :class:`py:dict` object.
 
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
