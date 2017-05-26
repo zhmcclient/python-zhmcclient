@@ -119,7 +119,11 @@ class SessionTests(unittest.TestCase):
 
         session = Session('fake-host', 'fake-user', 'fake-pw')
 
-        exp_pe_pattern = r"Parse error in returned JSON: %s" % exp_msg_pattern
+        exp_pe_pattern = \
+            r"^JSON parse error in HTTP response: %s\. " \
+            r"HTTP request: [^ ]+ [^ ]+\. " \
+            r"Response status .*" % \
+            exp_msg_pattern
 
         with self.assertRaisesRegexp(ParseError, exp_pe_pattern) as cm:
             session.logon()
@@ -132,7 +136,7 @@ class SessionTests(unittest.TestCase):
         Logon with invalid JSON response that has an invalid delimiter.
         """
         json_content = b'{\n"api-session"; "fake-session-id"\n}'
-        exp_msg_pattern = r"Expecting ':' delimiter"
+        exp_msg_pattern = r"Expecting ':' delimiter: .*"
         exp_line = 2
         exp_col = 14
         self._do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line,
@@ -144,7 +148,8 @@ class SessionTests(unittest.TestCase):
         Logon with invalid JSON response that incorrectly uses single quotes.
         """
         json_content = b'{\'api-session\': \'fake-session-id\'}'
-        exp_msg_pattern = r"Expecting property name enclosed in double quotes"
+        exp_msg_pattern = r"Expecting property name enclosed in double " \
+            "quotes: .*"
         exp_line = 1
         exp_col = 2
         self._do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line,
@@ -156,7 +161,7 @@ class SessionTests(unittest.TestCase):
         Logon with invalid JSON response that has an extra closing brace.
         """
         json_content = b'{"api-session": "fake-session-id"}}'
-        exp_msg_pattern = r"Extra data"
+        exp_msg_pattern = r"Extra data: .*"
         exp_line = 1
         exp_col = 35
         self._do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line,

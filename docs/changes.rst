@@ -48,6 +48,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Improved content of ``zhmcclient.ParseError`` message for better problem
+  analysis.
+
 * Increased the default status timeout from 60 sec to 15 min, in order to
   accomodate for some large environments. The status timeout applies to
   waiting for reaching the desired LPAR status after the HMC operation
