@@ -295,7 +295,7 @@ command line. This can be done in either of two ways:
 
 The ZHMC_HOST, ZHMC_USERID, and ZHMC_PASSWORD environment variables act as
 defaults for the corresponding command line options.
- 
+
 .. _`CLI commands`:
 
 CLI commands
@@ -326,36 +326,97 @@ options (listed by ``zhmc COMMAND --help``) must be specified after the
 Output formats
 --------------
 
-There are different output formats for the command results.
-This output format can be selected by the ``-o`` or
-``--output-format`` option. For example::
+The zhmc CLI supports various output formats for the results. The output format
+can be selected with the ``-o`` or ``--output-format`` option. The following
+output formats are supported:
 
-      $ zhmc -o plain cpc list
-      /name      status
-      P0004711  operating
-      P0000815  operating
+* ``-o table``: Tables with a single-line border. This is the default::
 
-* table: Maps to output format 'psql'. This is the default.
+    +----------+------------------+
+    | name     | status           |
+    |----------+------------------|
+    | P0000P27 | operating        |
+    | P0000P28 | service-required |
+    | P0ZGMR12 | no-power         |
+    +----------+------------------+
 
-* plain: Results in tables without borders.
+* ``-o psql``: Same as 'table'.
 
-* simple: Corresponds to ``simple_tables`` in `Pandoc Markdown extensions`_.
+* ``-o simple``: Tables with a line between header row and data rows, but
+  otherwise without borders::
 
-* psql: Results in tables formatted like Postgres' psql cli tables.
+    name      status
+    --------  ----------------
+    P0000P27  operating
+    P0000P28  service-required
+    P0ZGMR12  no-power
 
-* rst: Formats data like a simple table of the `reStructuredText`_ format .
+* ``-o plain``: Tables without borders::
 
-* mediawiki: Results in table markup used in `Wikipedia`_.
+    name      status
+    P0000P27  operating
+    P0000P28  service-required
+    P0ZGMR12  no-power
 
-* html: Results in tables formatted in standard HTML markup.
+* ``-o rst``: Simple tables in `reStructuredText`_ markup::
 
-* latex: Results in tables formatted in LaTeX markup.
+    ========  ================
+    name      status
+    ========  ================
+    P0000P27  operating
+    P0000P28  service-required
+    P0ZGMR12  no-power
+    ========  ================
 
-* json: Results in `JSON`_ format.
+* ``-o mediawiki``: Tables in `Mediawiki`_ markup::
 
-.. _`Pandoc Markdown extensions`: http://johnmacfarlane.net/pandoc/README.html#tables
+    {| class="wikitable" style="text-align: left;"
+    |+ <!-- caption -->
+    |-
+    ! name     !! status
+    |-
+    | P0000P27 || operating
+    |-
+    | P0000P28 || service-required
+    |-
+    | P0ZGMR12 || no-power
+    |}
+
+* ``-o html``: Tables in `HTML`_ markup::
+
+    <table>
+    <thead>
+    <tr><th>name    </th><th>status          </th></tr>
+    </thead>
+    <tbody>
+    <tr><td>P0000P27</td><td>operating       </td></tr>
+    <tr><td>P0000P28</td><td>service-required</td></tr>
+    <tr><td>P0ZGMR12</td><td>no-power        </td></tr>
+    </tbody>
+    </table>
+
+* ``-o latex``: Tables in `LaTeX`_ markup::
+
+    \begin{tabular}{ll}
+    \hline
+     name     & status           \\
+    \hline
+     P0000P27 & operating        \\
+     P0000P28 & service-required \\
+     P0ZGMR12 & no-power         \\
+    \hline
+    \end{tabular}
+
+* ``-o json``: `JSON`_ objects::
+
+    [{"name": "P0000P28", "status": "service-required"},
+     {"name": "P0ZGMR12", "status": "no-power"},
+     {"name": "P0000P27", "status": "operating"}]
+
 .. _`reStructuredText`: http://docutils.sourceforge.net/docs/user/rst/quickref.html#tables
-.. _`Wikipedia`: http://www.mediawiki.org/wiki/Help:Tables
+.. _`Mediawiki`: http://www.mediawiki.org/wiki/Help:Tables
+.. _`HTML`: https://www.w3.org/TR/html401/struct/tables.html
+.. _`LaTeX`: https://en.wikibooks.org/wiki/LaTeX/Tables
 .. _`JSON`: http://json.org/example.html
 
 
