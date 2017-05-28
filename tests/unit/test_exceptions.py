@@ -105,6 +105,11 @@ class TestConnectionError(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ConnectionError'), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -120,6 +125,11 @@ class TestConnectionError(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ConnectionError'), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestConnectTimeout(unittest.TestCase):
@@ -153,6 +163,15 @@ class TestConnectTimeout(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ConnectTimeout'), str_def)
+        self.assertIn('connect_timeout={!r};'.
+                      format(exc.connect_timeout), str_def)
+        self.assertIn('connect_retries={!r};'.
+                      format(exc.connect_retries), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -173,6 +192,15 @@ class TestConnectTimeout(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ConnectTimeout'), str_def)
+        self.assertIn('connect_timeout={!r};'.
+                      format(exc.connect_timeout), str_def)
+        self.assertIn('connect_retries={!r};'.
+                      format(exc.connect_retries), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestReadTimeout(unittest.TestCase):
@@ -206,6 +234,15 @@ class TestReadTimeout(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ReadTimeout'), str_def)
+        self.assertIn('read_timeout={!r};'.
+                      format(exc.read_timeout), str_def)
+        self.assertIn('read_retries={!r};'.
+                      format(exc.read_retries), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -226,6 +263,15 @@ class TestReadTimeout(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ReadTimeout'), str_def)
+        self.assertIn('read_timeout={!r};'.
+                      format(exc.read_timeout), str_def)
+        self.assertIn('read_retries={!r};'.
+                      format(exc.read_retries), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestRetriesExceeded(unittest.TestCase):
@@ -257,6 +303,13 @@ class TestRetriesExceeded(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('RetriesExceeded'), str_def)
+        self.assertIn('connect_retries={!r};'.
+                      format(exc.connect_retries), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -275,6 +328,13 @@ class TestRetriesExceeded(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('RetriesExceeded'), str_def)
+        self.assertIn('connect_retries={!r};'.
+                      format(exc.connect_retries), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestClientAuthError(unittest.TestCase):
@@ -299,6 +359,11 @@ class TestClientAuthError(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ClientAuthError'), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -312,6 +377,11 @@ class TestClientAuthError(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ClientAuthError'), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestServerAuthError(unittest.TestCase):
@@ -356,6 +426,19 @@ class TestServerAuthError(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ServerAuthError'), str_def)
+        self.assertIn('request_method={!r};'.
+                      format(exc.details.request_method), str_def)
+        self.assertIn('request_uri={!r};'.
+                      format(exc.details.request_uri), str_def)
+        self.assertIn('http_status={!r};'.
+                      format(exc.details.http_status), str_def)
+        self.assertIn('reason={!r};'.
+                      format(exc.details.reason), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -371,6 +454,19 @@ class TestServerAuthError(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ServerAuthError'), str_def)
+        self.assertIn('request_method={!r};'.
+                      format(exc.details.request_method), str_def)
+        self.assertIn('request_uri={!r};'.
+                      format(exc.details.request_uri), str_def)
+        self.assertIn('http_status={!r};'.
+                      format(exc.details.http_status), str_def)
+        self.assertIn('reason={!r};'.
+                      format(exc.details.reason), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestParseError(unittest.TestCase):
@@ -399,6 +495,13 @@ class TestParseError(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ParseError'), str_def)
+        self.assertIn('line={!r};'.format(exc.line), str_def)
+        self.assertIn('column={!r};'.format(exc.column), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_line_column_2(self):
         """A minimally matching message string."""
         message = ": line 7 column 42 "
@@ -416,6 +519,13 @@ class TestParseError(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ParseError'), str_def)
+        self.assertIn('line={!r};'.format(exc.line), str_def)
+        self.assertIn('column={!r};'.format(exc.column), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
     def test_line_column_3(self):
         """A message string that does not match (because of the 'x' in the
@@ -435,6 +545,13 @@ class TestParseError(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('ParseError'), str_def)
+        self.assertIn('line={!r};'.format(exc.line), str_def)
+        self.assertIn('column={!r};'.format(exc.column), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestVersionError(unittest.TestCase):
@@ -461,6 +578,14 @@ class TestVersionError(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('VersionError'), str_def)
+        self.assertIn('min_api_version={!r};'.
+                      format(exc.min_api_version), str_def)
+        self.assertIn('api_version={!r};'.format(exc.api_version), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestHTTPError(unittest.TestCase):
@@ -525,6 +650,19 @@ class TestHTTPError(unittest.TestCase):
                   "{request-uri}]".format(**resp_body)
         self.assertEqual(str(exc), exp_str)
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('HTTPError'), str_def)
+        self.assertIn('request_method={!r};'.
+                      format(exc.request_method), str_def)
+        self.assertIn('request_uri={!r};'.
+                      format(exc.request_uri), str_def)
+        self.assertIn('http_status={!r};'.
+                      format(exc.http_status), str_def)
+        self.assertIn('reason={!r};'.
+                      format(exc.reason), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
 
 class TestOperationTimeout(unittest.TestCase):
     """
@@ -549,6 +687,13 @@ class TestOperationTimeout(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('OperationTimeout'), str_def)
+        self.assertIn('operation_timeout={!r};'.
+                      format(exc.operation_timeout), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -565,6 +710,13 @@ class TestOperationTimeout(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('OperationTimeout'), str_def)
+        self.assertIn('operation_timeout={!r};'.
+                      format(exc.operation_timeout), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestStatusTimeout(unittest.TestCase):
@@ -598,6 +750,17 @@ class TestStatusTimeout(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('StatusTimeout'), str_def)
+        self.assertIn('actual_status={!r};'.
+                      format(exc.actual_status), str_def)
+        self.assertIn('desired_statuses={!r};'.
+                      format(exc.desired_statuses), str_def)
+        self.assertIn('status_timeout={!r};'.
+                      format(exc.status_timeout), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
     def test_msg_named(self):
         """Test exception created with named arguments."""
 
@@ -618,6 +781,17 @@ class TestStatusTimeout(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('StatusTimeout'), str_def)
+        self.assertIn('actual_status={!r};'.
+                      format(exc.actual_status), str_def)
+        self.assertIn('desired_statuses={!r};'.
+                      format(exc.desired_statuses), str_def)
+        self.assertIn('status_timeout={!r};'.
+                      format(exc.status_timeout), str_def)
+        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
 
 class TestNoUniqueMatch(unittest.TestCase):
@@ -669,6 +843,15 @@ class TestNoUniqueMatch(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('NoUniqueMatch'), str_def)
+        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
+        self.assertIn('filter_args={!r};'.
+                      format(exc.filter_args), str_def)
+        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
+        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
+
     def test_named(self):
         """Test exception created with named arguments."""
         filter_args = {'type': 'osa', 'status': 'active'}
@@ -686,6 +869,15 @@ class TestNoUniqueMatch(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('NoUniqueMatch'), str_def)
+        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
+        self.assertIn('filter_args={!r};'.
+                      format(exc.filter_args), str_def)
+        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
+        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
 
 
 class TestNotFound(unittest.TestCase):
@@ -737,6 +929,15 @@ class TestNotFound(unittest.TestCase):
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
 
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('NotFound'), str_def)
+        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
+        self.assertIn('filter_args={!r};'.
+                      format(exc.filter_args), str_def)
+        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
+        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
+
     def test_named(self):
         """Test exception created with named arguments."""
         filter_args = {'type': 'osa', 'status': 'active'}
@@ -754,6 +955,15 @@ class TestNotFound(unittest.TestCase):
 
         # Check str()
         self.assertEqual(str(exc), exc.args[0])
+
+        # Check str_def()
+        str_def = exc.str_def()
+        self.assertIn('classname={!r};'.format('NotFound'), str_def)
+        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
+        self.assertIn('filter_args={!r};'.
+                      format(exc.filter_args), str_def)
+        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
+        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
 
 
 if __name__ == '__main__':

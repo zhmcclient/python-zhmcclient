@@ -18,7 +18,7 @@ import click
 
 import zhmcclient
 from .zhmccli import cli
-from ._helper import print_properties
+from ._helper import print_properties, raise_click_exception
 
 
 @cli.command('info')
@@ -42,7 +42,7 @@ def cmd_info(cmd_ctx):
     try:
         api_version = client.query_api_version()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     print_properties(api_version, cmd_ctx.output_format)

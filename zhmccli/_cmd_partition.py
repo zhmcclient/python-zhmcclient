@@ -22,7 +22,7 @@ import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
     options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
-    part_console
+    part_console, raise_click_exception
 from ._cmd_cpc import find_cpc
 
 
@@ -36,20 +36,17 @@ DEFAULT_PARTITION_TYPE = 'linux'
 DEFAULT_SSC_BOOT = 'installer'
 
 
-def find_partition(client, cpc_name, partition_name):
+def find_partition(cmd_ctx, client, cpc_name, partition_name):
     """
     Find a partition by name and return its resource object.
     """
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
     # The CPC must be in DPM mode. We don't check that because it would
     # cause a GET to the CPC resource that we otherwise don't need.
     try:
         partition = cpc.partitions.find(name=partition_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find partition %s in CPC %s." %
-                                   (partition_name, cpc_name))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return partition
 
 
@@ -169,8 +166,8 @@ def partition_stop(cmd_ctx, cpc, partition):
               help='Boot from removable media on the HMC: The path to the '
               'image file on the HMC.')
 @click.option('--type', type=click.Choice(PARTITION_TYPES), required=False,
-              help='Defines the type of the partition (Default: {pd}).'
-              .format(pd=DEFAULT_PARTITION_TYPE))
+              help='Defines the type of the partition (Default: {pd}).'.
+              format(pd=DEFAULT_PARTITION_TYPE))
 @click.option('--ssc-host-name', type=str, required=False,
               help='Secure Service Container host name. '
               'Only applicable to and required for ssc type partitions.')
@@ -319,12 +316,13 @@ def partition_console(cmd_ctx, cpc, partition, **options):
 def cmd_partition_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     try:
         partitions = cpc.partitions.list()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -347,12 +345,12 @@ def cmd_partition_list(cmd_ctx, cpc_name, options):
 def cmd_partition_show(cmd_ctx, cpc_name, partition_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     try:
         partition.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     print_properties(partition.properties, cmd_ctx.output_format)
@@ -361,12 +359,12 @@ def cmd_partition_show(cmd_ctx, cpc_name, partition_name):
 def cmd_partition_start(cmd_ctx, cpc_name, partition_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     try:
         partition.start(wait_for_completion=True)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('Partition %s has been started.' % partition_name)
@@ -375,12 +373,12 @@ def cmd_partition_start(cmd_ctx, cpc_name, partition_name):
 def cmd_partition_stop(cmd_ctx, cpc_name, partition_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     try:
         partition.stop(wait_for_completion=True)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('Partition %s has been stopped.' % partition_name)
@@ -389,7 +387,7 @@ def cmd_partition_stop(cmd_ctx, cpc_name, partition_name):
 def cmd_partition_create(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     name_map = {
         # The following options are handled in this function:
@@ -411,9 +409,10 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
         missing_option_names = [name for name in required_ftp_option_names
                                 if options[name] is None]
         if missing_option_names:
-            raise click.ClickException("Boot from FTP server specified, but "
-                                       "misses the following options: %s" %
-                                       ', '.join(missing_option_names))
+            raise_click_exception("Boot from FTP server specified, but misses "
+                                  "the following options: %s" %
+                                  ', '.join(missing_option_names),
+                                  cmd_ctx.error_format)
         properties['boot-device'] = 'ftp'
         properties['boot-ftp-host'] = options['boot-ftp-host']
         properties['boot-ftp-username'] = options['boot-ftp-username']
@@ -434,7 +433,7 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
     try:
         new_partition = cpc.partitions.create(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo("New partition %s has been created." %
@@ -444,7 +443,7 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
 def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     name_map = {
         # The following options are handled in this function:
@@ -475,16 +474,18 @@ def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
         missing_option_names = [name for name in required_storage_option_names
                                 if options[name] is None]
         if missing_option_names:
-            raise click.ClickException("Boot from FCP LUN specified, but "
-                                       "misses the following options: %s" %
-                                       ', '.join(missing_option_names))
+            raise_click_exception("Boot from FCP LUN specified, but misses "
+                                  "the following options: %s" %
+                                  ', '.join(missing_option_names),
+                                  cmd_ctx.error_format)
         hba_name = options['boot-storage-hba']
         try:
             hba = partition.hbas.find(name=hba_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find HBA %s in partition "
-                                       "%s in CPC %s." %
-                                       (hba_name, partition_name, cpc_name))
+            raise_click_exception("Could not find HBA %s in partition %s in "
+                                  "CPC %s." %
+                                  (hba_name, partition_name, cpc_name),
+                                  cmd_ctx.error_format)
         properties['boot-device'] = 'storage-adapter'
         properties['boot-storage-device'] = hba.uri
         properties['boot-logical-unit-number'] = options['boot-storage-lun']
@@ -494,18 +495,20 @@ def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
         try:
             nic = partition.nics.find(name=nic_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find NIC %s in partition "
-                                       "%s in CPC %s." %
-                                       (nic_name, partition_name, cpc_name))
+            raise_click_exception("Could not find NIC %s in partition %s in "
+                                  "CPC %s." %
+                                  (nic_name, partition_name, cpc_name),
+                                  cmd_ctx.error_format)
         properties['boot-device'] = 'network-adapter'
         properties['boot-network-device'] = nic.uri
     elif any([options[name] for name in required_ftp_option_names]):
         missing_option_names = [name for name in required_ftp_option_names
                                 if options[name] is None]
         if missing_option_names:
-            raise click.ClickException("Boot from FTP server specified, but "
-                                       "misses the following options: %s" %
-                                       ', '.join(missing_option_names))
+            raise_click_exception("Boot from FTP server specified, but misses "
+                                  "the following options: %s" %
+                                  ', '.join(missing_option_names),
+                                  cmd_ctx.error_format)
         properties['boot-device'] = 'ftp'
         properties['boot-ftp-host'] = options['boot-ftp-host']
         properties['boot-ftp-username'] = options['boot-ftp-username']
@@ -529,7 +532,7 @@ def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
     try:
         partition.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != partition_name:
@@ -542,12 +545,12 @@ def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
 def cmd_partition_delete(cmd_ctx, cpc_name, partition_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     try:
         partition.delete()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('Partition %s has been deleted.' % partition_name)

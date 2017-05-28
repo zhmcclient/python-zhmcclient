@@ -138,6 +138,7 @@ commands:
       -o, --output-format [[table|plain|simple|psql|rst|mediawiki|html|latex|
                           json]]
                                       Output format (Default: table).
+      -e, --error-format [msg|def]    Error message format (Default: msg).
       -t, --timestats                 Show time statistics of HMC operations.
       --log COMP=LEVEL,...            Set a component to a log level
                                       (COMP: [api|hmc|console|all],
@@ -199,6 +200,7 @@ examples, an underscore ``_`` is shown as the cursor:
         --userid          Username for the HMC (Default: ZHMC_USERID environment variable).
         --password        Password for the HMC (Default: ZHMC_PASSWORD environment variable).
         --output-format   Output format (Default: table).
+        --error-format    Error message format (Default: msg).
         --timestats       Show time statistics of HMC operations.
         --log             Set a component to a log level (COMP: [api|hmc|console|all], LEVEL: [error|warning|info|debug], Default: all=warning).
         --log-dest        Log destination for this command (Default: stderr).
@@ -476,6 +478,81 @@ output formats are supported:
 .. _`HTML`: https://www.w3.org/TR/html401/struct/tables.html
 .. _`LaTeX`: https://en.wikibooks.org/wiki/LaTeX/Tables
 .. _`JSON`: http://json.org/example.html
+
+
+.. _`Error message formats`:
+
+Error message formats
+---------------------
+
+In order to be able to programmatically process errors, the zhmc CLI supports
+multiple formats for its error messages.
+
+Error messages are always printed to stderr, and the zhmc command always ends
+with a non-zero return code in case of errors.
+
+The format of error messages can be selected with the ``-e`` or
+``--error-format`` option. The following error message formats are supported:
+
+* ``-e msg``: Human-readable message. This is the default. This format should
+  not be parsed by scripts, because it may change. Example:
+
+  .. code-block:: text
+
+      Error: ConnectTimeout: Connection to 9.152.150.86 timed out. (connect timeout=30)
+
+* ``-e def``: Definition-style (e.g. "name: value"). In this format, the
+  instance variables of the exception object causing the error are shown as
+  variables. This format is meant for parsing by scripts that invoke the zhmc
+  CLI and that need to handle specific error situations.
+
+  The format of each error message is:
+
+  .. code-block:: text
+
+      Error: {str-def-result}
+
+  where ``{str-def-result}`` is the return value of the
+  :meth:`~zhmcclient.Error.str_def` method of the exception causing the error
+  message (or rather its implementations in derived exception classes).
+  Example:
+
+  .. code-block:: text
+
+      Error: classname='ConnectTimeout'; connect_timeout=30; connect_retries=3; message=u'Connection to 9.152.150.86 timed out. (connect timeout=30)';
+
+  The variables for any particular exception is documented in the ``str_def()``
+  method of the exception class, in this case
+  :meth:`zhmcclient.ConnectTimeout.str_def`:
+
+  .. code-block:: text
+
+      classname={}; connect_timeout={}; connect_retries={}; message={};
+
+  The ``{}`` sequences contain the Python representations for the values
+  (using ``repr()``).
+
+  With the exception of the initial "Error:", this is in fact Python syntax
+  for setting variables. Therefore, it is best to use Python for parsing it
+  from within a shell script that invokes the zhmc CLI, for example as follows:
+
+  .. code-block:: bash
+
+      err_file=$(mktemp)
+      cpc_list=$(zhmc -o json -e def cpc list 2>$err_file)
+      rc=$?
+      err=$(tail -n 1 <$err_file | sed -e 's/^Error: //')
+      rm $err_file
+      if [[ $rc != 0 ]]; then
+          if [[ "$err" =~ "classname='ConnectTimeout';" ]]; then
+              ct=$(python -c "$err print(connect_timeout)")
+              echo "connect-timeout: $ct"
+          fi
+          msg=$(python -c "$err print(message)")
+          echo "message: $msg"
+          exit 1
+      fi
+      echo "$cpc_list"
 
 
 .. _`CLI logging`:

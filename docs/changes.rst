@@ -91,6 +91,14 @@ Released: not yet
   of the operating system running in a
   partition (``zhmc partition console``) or LPAR (``zhmc lpar console``).
 
+* Added ``str_def()`` method to all exception classes, which returns a
+  definition-style string for parsing by scripts.
+
+* In the zhmc CLI, added options ``-e``, ``--error-format`` for controlling
+  the format of error messages. The ``-e def`` option selects the format
+  returned by the new ``str_def()`` methods. This format provides for easier
+  parsing of details of error messages by invoking scripts.
+
 **Known issues:**
 
 * See `list of open issues`_.

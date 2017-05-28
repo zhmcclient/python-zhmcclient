@@ -19,24 +19,22 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    raise_click_exception
 from ._cmd_cpc import find_cpc
 
 
-def find_adapter(client, cpc_name, adapter_name):
+def find_adapter(cmd_ctx, client, cpc_name, adapter_name):
     """
     Find an adapter by name and return its resource object.
     """
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
     # The CPC must be in DPM mode. We don't check that because it would
     # cause a GET to the CPC resource that we otherwise don't need.
     try:
         adapter = cpc.adapters.find(name=adapter_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find adapter %s in CPC %s." %
-                                   (adapter_name, cpc_name))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return adapter
 
 
@@ -184,12 +182,12 @@ def adapter_delete_hipersocket(cmd_ctx, cpc, adapter):
 def cmd_adapter_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     try:
         adapters = cpc.adapters.list()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -214,12 +212,12 @@ def cmd_adapter_list(cmd_ctx, cpc_name, options):
 def cmd_adapter_show(cmd_ctx, cpc_name, adapter_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    adapter = find_adapter(client, cpc_name, adapter_name)
+    adapter = find_adapter(cmd_ctx, client, cpc_name, adapter_name)
 
     try:
         adapter.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     print_properties(adapter.properties, cmd_ctx.output_format)
@@ -228,7 +226,7 @@ def cmd_adapter_show(cmd_ctx, cpc_name, adapter_name):
 def cmd_adapter_update(cmd_ctx, cpc_name, adapter_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    adapter = find_adapter(client, cpc_name, adapter_name)
+    adapter = find_adapter(cmd_ctx, client, cpc_name, adapter_name)
 
     name_map = {
         'mtu-size': 'maximum-transmission-unit-size',
@@ -247,7 +245,7 @@ def cmd_adapter_update(cmd_ctx, cpc_name, adapter_name, options):
     try:
         adapter.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != adapter_name:
@@ -260,7 +258,7 @@ def cmd_adapter_update(cmd_ctx, cpc_name, adapter_name, options):
 def cmd_adapter_create_hipersocket(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     name_map = {
         'mtu-size': 'maximum-transmission-unit-size',
@@ -271,7 +269,7 @@ def cmd_adapter_create_hipersocket(cmd_ctx, cpc_name, options):
     try:
         new_adapter = cpc.adapters.create_hipersocket(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo("New HiperSockets adapter %s has been created." %
@@ -281,12 +279,12 @@ def cmd_adapter_create_hipersocket(cmd_ctx, cpc_name, options):
 def cmd_adapter_delete_hipersocket(cmd_ctx, cpc_name, adapter_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    adapter = find_adapter(client, cpc_name, adapter_name)
+    adapter = find_adapter(cmd_ctx, client, cpc_name, adapter_name)
 
     try:
         adapter.delete()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('HiperSockets adapter %s has been deleted.' % adapter_name)

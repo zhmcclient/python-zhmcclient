@@ -27,17 +27,20 @@ import platform
 import zhmcclient
 from ._helper import CmdContext, GENERAL_OPTIONS_METAVAR, REPL_HISTORY_FILE, \
     REPL_PROMPT, TABLE_FORMATS, LOG_LEVELS, LOG_COMPONENTS, LOG_DESTINATIONS, \
-    SYSLOG_FACILITIES
+    SYSLOG_FACILITIES, raise_click_exception
 
 requests.packages.urllib3.disable_warnings()
 
 
 # Default values for some options
 DEFAULT_OUTPUT_FORMAT = 'table'
+DEFAULT_ERROR_FORMAT = 'msg'
 DEFAULT_TIMESTATS = False
 DEFAULT_LOG = 'all=warning'
 DEFAULT_LOG_DESTINATION = 'stderr'
 DEFAULT_SYSLOG_FACILITY = 'user'
+
+ERROR_FORMATS = ['msg', 'def']
 
 SYSLOG_ADDRESSES = {
     'Linux': '/dev/log',
@@ -59,27 +62,30 @@ SYSLOG_ADDRESSES = {
                    "(Default: ZHMC_PASSWORD environment variable).")
 @click.option('-o', '--output-format', type=click.Choice(TABLE_FORMATS +
               ['json']),
-              help='Output format (Default: {of}).'
-              .format(of=DEFAULT_OUTPUT_FORMAT))
+              help='Output format (Default: {of}).'.
+              format(of=DEFAULT_OUTPUT_FORMAT))
+@click.option('-e', '--error-format', type=click.Choice(ERROR_FORMATS),
+              help='Error message format (Default: {ef}).'.
+              format(ef=DEFAULT_ERROR_FORMAT))
 @click.option('-t', '--timestats', type=str, is_flag=True,
               help='Show time statistics of HMC operations.')
 @click.option('--log', type=str, metavar='COMP=LEVEL,...',
               help="Set a component to a log level (COMP: [{c}], "
-              "LEVEL: [{l}], Default: {d})."
-              .format(c='|'.join(LOG_COMPONENTS),
-                      l='|'.join(LOG_LEVELS),
-                      d=DEFAULT_LOG))
+              "LEVEL: [{l}], Default: {d}).".
+              format(c='|'.join(LOG_COMPONENTS),
+                     l='|'.join(LOG_LEVELS),
+                     d=DEFAULT_LOG))
 @click.option('--log-dest', type=click.Choice(LOG_DESTINATIONS),
-              help="Log destination for this command (Default: {ld})."
-              .format(ld=DEFAULT_LOG_DESTINATION))
+              help="Log destination for this command (Default: {ld}).".
+              format(ld=DEFAULT_LOG_DESTINATION))
 @click.option('--syslog-facility', type=click.Choice(SYSLOG_FACILITIES),
               help="Syslog facility when logging to the syslog "
-              "(Default: {slf})."
-              .format(slf=DEFAULT_SYSLOG_FACILITY))
+              "(Default: {slf}).".
+              format(slf=DEFAULT_SYSLOG_FACILITY))
 @click.version_option(help="Show the version of this command and exit.")
 @click.pass_context
-def cli(ctx, host, userid, password, output_format, timestats, log, log_dest,
-        syslog_facility):
+def cli(ctx, host, userid, password, output_format, error_format, timestats,
+        log, log_dest, syslog_facility):
     """
     Command line interface for the z Systems HMC.
 
@@ -100,6 +106,8 @@ def cli(ctx, host, userid, password, output_format, timestats, log, log_dest,
         # We apply the documented option defaults.
         if output_format is None:
             output_format = DEFAULT_OUTPUT_FORMAT
+        if error_format is None:
+            error_format = DEFAULT_ERROR_FORMAT
         if timestats is None:
             timestats = DEFAULT_TIMESTATS
     else:
@@ -113,6 +121,8 @@ def cli(ctx, host, userid, password, output_format, timestats, log, log_dest,
             password = ctx.obj._password
         if output_format is None:
             output_format = ctx.obj.output_format
+        if error_format is None:
+            error_format = ctx.obj.error_format
         if timestats is None:
             timestats = ctx.obj.timestats
 
@@ -160,23 +170,21 @@ def cli(ctx, host, userid, password, output_format, timestats, log, log_dest,
         try:
             log_comp, log_level = log_spec.split('=', 1)
         except ValueError:
-            raise click.ClickException(
-                "Missing '=' "
-                "in COMP=LEVEL specification in --log option: {ls}"
-                .format(ls=log_spec))
+            raise_click_exception("Missing '=' in COMP=LEVEL specification in "
+                                  "--log option: {ls}".format(ls=log_spec),
+                                  error_format)
 
         level = getattr(logging, log_level.upper(), None)
         if level is None:
-            raise click.ClickException(
-                "Invalid log level "
-                "in COMP=LEVEL specification in --log option: {ls}"
-                .format(ls=log_spec))
+            raise_click_exception("Invalid log level in COMP=LEVEL "
+                                  "specification in --log option: {ls}".
+                                  format(ls=log_spec),
+                                  error_format)
 
         if log_comp not in LOG_COMPONENTS:
-            raise click.ClickException(
-                "Invalid log component "
-                "in COMP=LEVEL specification in --log option: {ls}"
-                .format(ls=log_spec))
+            raise_click_exception("Invalid log component in COMP=LEVEL "
+                                  "specification in --log option: {ls}".
+                                  format(ls=log_spec), error_format)
 
         if handler:
             handler.setFormatter(logging.Formatter(format_string))
@@ -211,21 +219,22 @@ def cli(ctx, host, userid, password, output_format, timestats, log, log_dest,
         if userid is not None and host is not None:
             ctx.obj.spinner.stop()
             password = click.prompt(
-                "Enter password (for user {userid} at HMC {host})"
-                .format(userid=userid, host=host), hide_input=True,
+                "Enter password (for user {userid} at HMC {host})".
+                format(userid=userid, host=host), hide_input=True,
                 confirmation_prompt=False, type=str, err=True)
             ctx.obj.spinner.start()
             return password
         else:
-            raise click.ClickException("{cmd} command requires logon, but "
-                                       "no session-id or userid provided."
-                                       .format(cmd=ctx.invoked_subcommand))
+            raise raise_click_exception("{cmd} command requires logon, but no "
+                                        "session-id or userid provided.".
+                                        format(cmd=ctx.invoked_subcommand),
+                                        error_format)
 
     # We create a command context for each command: An interactive command has
     # its own command context different from the command context for the
     # command line.
-    ctx.obj = CmdContext(host, userid, password, output_format, timestats,
-                         session_id, get_password_via_prompt)
+    ctx.obj = CmdContext(host, userid, password, output_format, error_format,
+                         timestats, session_id, get_password_via_prompt)
 
     # Invoke default command
     if ctx.invoked_subcommand is None:

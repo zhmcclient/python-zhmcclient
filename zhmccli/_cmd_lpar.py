@@ -21,24 +21,21 @@ import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
     options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
-    part_console
+    part_console, raise_click_exception
 from ._cmd_cpc import find_cpc
 
 
-def find_lpar(client, cpc_name, lpar_name):
+def find_lpar(cmd_ctx, client, cpc_name, lpar_name):
     """
     Find an LPAR by name and return its resource object.
     """
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
     # The CPC must not be in DPM mode. We don't check that because it would
     # cause a GET to the CPC resource that we otherwise don't need.
     try:
         lpar = cpc.lpars.find(name=lpar_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find LPAR %s in CPC %s." %
-                                   (lpar_name, cpc_name))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return lpar
 
 
@@ -230,12 +227,12 @@ def lpar_console(cmd_ctx, cpc, lpar, **options):
 def cmd_lpar_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     try:
         lpars = cpc.lpars.list()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -259,12 +256,12 @@ def cmd_lpar_list(cmd_ctx, cpc_name, options):
 def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(cmd_ctx, client, cpc_name, lpar_name)
 
     try:
         lpar.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     skip_list = (
         'program-status-word-information',
@@ -277,7 +274,7 @@ def cmd_lpar_show(cmd_ctx, cpc_name, lpar_name):
 def cmd_lpar_update(cmd_ctx, cpc_name, lpar_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(cmd_ctx, client, cpc_name, lpar_name)
 
     name_map = {
         'next-activation-profile': 'next-activation-profile-name',
@@ -293,7 +290,7 @@ def cmd_lpar_update(cmd_ctx, cpc_name, lpar_name, options):
     try:
         lpar.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     # LPARs cannot be renamed.
@@ -303,12 +300,12 @@ def cmd_lpar_update(cmd_ctx, cpc_name, lpar_name, options):
 def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(cmd_ctx, client, cpc_name, lpar_name)
 
     try:
         lpar.activate(wait_for_completion=True, **options)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('Activation of LPAR %s is complete.' % lpar_name)
@@ -317,12 +314,12 @@ def cmd_lpar_activate(cmd_ctx, cpc_name, lpar_name, options):
 def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(cmd_ctx, client, cpc_name, lpar_name)
 
     try:
         lpar.deactivate(wait_for_completion=True, **options)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('Deactivation of LPAR %s is complete.' % lpar_name)
@@ -331,12 +328,12 @@ def cmd_lpar_deactivate(cmd_ctx, cpc_name, lpar_name, options):
 def cmd_lpar_load(cmd_ctx, cpc_name, lpar_name, load_address, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(cmd_ctx, client, cpc_name, lpar_name)
 
     try:
         lpar.load(load_address, wait_for_completion=True, **options)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('Loading of LPAR %s is complete.' % lpar_name)

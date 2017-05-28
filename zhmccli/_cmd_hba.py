@@ -19,23 +19,20 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    raise_click_exception
 from ._cmd_partition import find_partition
 
 
-def find_hba(client, cpc_name, partition_name, hba_name):
+def find_hba(cmd_ctx, client, cpc_name, partition_name, hba_name):
     """
     Find an HBA by name and return its resource object.
     """
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
     try:
         hba = partition.hbas.find(name=hba_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find HBA %s in partition %s in "
-                                   "CPC %s." %
-                                   (hba_name, partition_name, cpc_name))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return hba
 
 
@@ -160,12 +157,12 @@ def hba_delete(cmd_ctx, cpc, partition, hba):
 def cmd_hba_list(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     try:
         hbas = partition.hbas.list()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -182,12 +179,12 @@ def cmd_hba_list(cmd_ctx, cpc_name, partition_name, options):
 def cmd_hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    hba = find_hba(client, cpc_name, partition_name, hba_name)
+    hba = find_hba(cmd_ctx, client, cpc_name, partition_name, hba_name)
 
     try:
         hba.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     print_properties(hba.properties, cmd_ctx.output_format)
@@ -196,7 +193,7 @@ def cmd_hba_show(cmd_ctx, cpc_name, partition_name, hba_name):
 def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     name_map = {
         # The following options are handled in this function:
@@ -210,21 +207,23 @@ def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
     try:
         adapter = partition.manager.cpc.adapters.find(name=adapter_name)
     except zhmcclient.NotFound:
-        raise click.ClickException("Could not find adapter %s in CPC %s." %
-                                   (adapter_name, cpc_name))
+        raise_click_exception("Could not find adapter %s in CPC %s." %
+                              (adapter_name, cpc_name), cmd_ctx.error_format)
+
     port_name = options['port']
     try:
         port = adapter.ports.find(name=port_name)
     except zhmcclient.NotFound:
-        raise click.ClickException("Could not find port %s on adapter %s "
-                                   "in CPC %s." %
-                                   (port_name, adapter_name, cpc_name))
+        raise_click_exception("Could not find port %s on adapter %s in "
+                              "CPC %s." % (port_name, adapter_name, cpc_name),
+                              cmd_ctx.error_format)
+
     properties['adapter-port-uri'] = port.uri
 
     try:
         new_hba = partition.hbas.create(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo("New HBA %s has been created." %
@@ -234,7 +233,7 @@ def cmd_hba_create(cmd_ctx, cpc_name, partition_name, options):
 def cmd_hba_update(cmd_ctx, cpc_name, partition_name, hba_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    hba = find_hba(client, cpc_name, partition_name, hba_name)
+    hba = find_hba(cmd_ctx, client, cpc_name, partition_name, hba_name)
 
     options = original_options(options)
     properties = options_to_properties(options)
@@ -247,7 +246,7 @@ def cmd_hba_update(cmd_ctx, cpc_name, partition_name, hba_name, options):
     try:
         hba.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != hba_name:
@@ -260,12 +259,12 @@ def cmd_hba_update(cmd_ctx, cpc_name, partition_name, hba_name, options):
 def cmd_hba_delete(cmd_ctx, cpc_name, partition_name, hba_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    hba = find_hba(client, cpc_name, partition_name, hba_name)
+    hba = find_hba(cmd_ctx, client, cpc_name, partition_name, hba_name)
 
     try:
         hba.delete()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('HBA %s has been deleted.' % hba_name)
