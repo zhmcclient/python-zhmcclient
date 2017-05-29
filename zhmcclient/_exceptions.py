@@ -460,12 +460,66 @@ class OperationTimeout(Error):
 
 class StatusTimeout(Error):
     """
-    This exception indicates that the waiting for reaching a desired resource
+    This exception indicates that the waiting for reaching a desired LPAR
     status has timed out.
+
+    The possible status values for an LPAR are:
+
+    * ``"not-activated"`` - The LPAR is not active.
+    * ``"not-operating" - The LPAR is active but no operating system is
+      running in the LPAR.
+    * ``"operating"`` - The LPAR is active and an operating system is
+      running in the LPAR.
+    * ``"exceptions"`` - The LPAR or its CPC has one or more unusual
+      conditions.
 
     Derived from :exc:`~zhmcclient.Error`.
     """
-    pass
+
+    def __init__(self, msg, actual_status, desired_statuses, status_timeout):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          actual_status (:term:`string`):
+            The actual status (at the point in time when the status timeout
+            expired).
+
+          desired_statuses (iterable of :term:`string`):
+            The desired status values that were supposed to be reached.
+
+          status_timeout (:term:`number`):
+            The status timeout (in seconds) that has expired.
+        """
+        super(StatusTimeout, self).__init__(msg)
+        self._actual_status = actual_status
+        self._desired_statuses = desired_statuses
+        self._status_timeout = status_timeout
+
+    @property
+    def actual_status(self):
+        """
+        :term:`string`: The actual status (at the point in time when the
+        status timeout expired).
+        """
+        return self._actual_status
+
+    @property
+    def desired_statuses(self):
+        """
+        iterable of :term:`string`: The desired status values that were
+        supposed to be reached.
+        """
+        return self._desired_statuses
+
+    @property
+    def status_timeout(self):
+        """
+        :term:`number`: The status timeout (in seconds) that has expired.
+        """
+        return self._status_timeout
 
 
 class NoUniqueMatch(Error):
