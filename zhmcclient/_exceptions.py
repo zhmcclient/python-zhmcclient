@@ -20,30 +20,28 @@ import re
 
 
 __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
-           'RetriesExceeded', 'AuthError', 'ParseError', 'VersionError',
-           'HTTPError', 'OperationTimeout', 'StatusTimeout',
-           'NoUniqueMatch', 'NotFound']
+           'RetriesExceeded', 'AuthError', 'ClientAuthError',
+           'ServerAuthError', 'ParseError', 'VersionError', 'HTTPError',
+           'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound']
 
 
 class Error(Exception):
     """
     Abstract base class for exceptions specific to this package.
 
+    Exceptions of this class are not raised; only derived exceptions are
+    raised.
+
     Derived from :exc:`~py:exceptions.Exception`.
     """
 
     def __init__(self, *args):
-        """
-        Parameters:
-
-          *args:
-            A list of input arguments for the exception object.
-
-            The derived classes define more specific parameters.
-
-            These input arguments will be available as tuple items in the
-            ``args`` instance variable of the exception object.
-        """
+        # Parameters:
+        #   *args:
+        #     A list of input arguments for the exception object.
+        #     The derived classes define more specific parameters.
+        #     These input arguments will be available as tuple items in the
+        #     ``args`` instance variable of the exception object.
         super(Error, self).__init__(*args)
 
 
@@ -56,10 +54,14 @@ class ConnectionError(Error):
     read retries had been disabled when creating the session (see
     :class:`~zhmcclient.Session`).
 
+    Even though this class has exceptions derived from it, exceptions of this
+    class may also be raised (if no other derived class matches the
+    circumstances).
+
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, msg, details=None):
+    def __init__(self, msg, details):
         """
         Parameters:
 
@@ -76,15 +78,22 @@ class ConnectionError(Error):
     def details(self):
         """
         The original exception caught by this package, providing more
-        information about the problem, if there was such an original exception.
-        `None`, otherwise.
+        information about the problem.
 
-        This may be one of the following exceptions:
+        This will be one of the following exceptions:
 
         * Any exception derived from
           :exc:`requests.exceptions.RequestException`.
         """
         return self._details
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r})". \
+               format(self.__class__.__name__, self.args[0])
 
 
 class ConnectTimeout(ConnectionError):
@@ -100,6 +109,50 @@ class ConnectTimeout(ConnectionError):
     Derived from :exc:`~zhmcclient.ConnectionError`.
     """
 
+    def __init__(self, msg, details, connect_timeout, connect_retries):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          details (Exception):
+            The original exception describing details about the error.
+
+          connect_timeout (:term:`integer`):
+            The connect timeout in seconds.
+
+          connect_retries (:term:`integer`):
+            The number of connect retries.
+        """
+        super(ConnectTimeout, self).__init__(msg, details)
+        self._connect_timeout = connect_timeout
+        self._connect_retries = connect_retries
+
+    @property
+    def connect_timeout(self):
+        """
+        :term:`integer`: The connect timeout in seconds.
+        """
+        return self._connect_timeout
+
+    @property
+    def connect_retries(self):
+        """
+        :term:`integer`: The number of connect retries.
+        """
+        return self._connect_retries
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, connect_timeout={!r}, " \
+               "connect_retries={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.connect_timeout, self.connect_retries)
+
 
 class ReadTimeout(ConnectionError):
     """
@@ -113,6 +166,49 @@ class ReadTimeout(ConnectionError):
 
     Derived from :exc:`~zhmcclient.ConnectionError`.
     """
+
+    def __init__(self, msg, details, read_timeout, read_retries):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          details (Exception):
+            The original exception describing details about the error.
+
+          read_timeout (:term:`integer`):
+            The read timeout in seconds.
+
+          read_retries (:term:`integer`):
+            The number of read retries.
+        """
+        super(ReadTimeout, self).__init__(msg, details)
+        self._read_timeout = read_timeout
+        self._read_retries = read_retries
+
+    @property
+    def read_timeout(self):
+        """
+        :term:`integer`: The read timeout in seconds.
+        """
+        return self._read_timeout
+
+    @property
+    def read_retries(self):
+        """
+        :term:`integer`: The number of read retries.
+        """
+        return self._read_retries
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, read_timeout={!r}, read_retries={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.read_timeout, self.read_retries)
 
 
 class RetriesExceeded(ConnectionError):
@@ -130,17 +226,7 @@ class RetriesExceeded(ConnectionError):
     Derived from :exc:`~zhmcclient.ConnectionError`.
     """
 
-
-class AuthError(Error):
-    """
-    This exception indicates an authentication error with the HMC, either at
-    the TLS/SSL handshake level (e.g. with CA certificates), or at the HTTP
-    level.
-
-    Derived from :exc:`~zhmcclient.Error`.
-    """
-
-    def __init__(self, msg, details=None):
+    def __init__(self, msg, details, connect_retries):
         """
         Parameters:
 
@@ -149,21 +235,120 @@ class AuthError(Error):
 
           details (Exception):
             The original exception describing details about the error.
+
+          connect_retries (:term:`integer`):
+            The number of connect retries.
         """
-        super(AuthError, self).__init__(msg)
+        super(RetriesExceeded, self).__init__(msg, details)
+        self._connect_retries = connect_retries
+
+    @property
+    def connect_retries(self):
+        """
+        :term:`integer`: The number of connect retries.
+        """
+        return self._connect_retries
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, connect_retries={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.connect_retries)
+
+
+class AuthError(Error):
+    """
+    This exception indicates erors related to authentication.
+
+    Exceptions of this class are not raised; only derived exceptions are
+    raised.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, *args):
+        # Parameters:
+        #   *args:
+        #     A list of input arguments for the exception object.
+        #     The derived classes define more specific parameters.
+        #     These input arguments will be available as tuple items in the
+        #     ``args`` instance variable of the exception object.
+        super(AuthError, self).__init__(*args)
+
+
+class ClientAuthError(AuthError):
+    """
+    This exception indicates an authentication related problem detected on
+    the cient side.
+
+    Derived from :exc:`~zhmcclient.AuthError`.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+        """
+        super(ClientAuthError, self).__init__(msg)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r})". \
+               format(self.__class__.__name__, self.args[0])
+
+
+class ServerAuthError(AuthError):
+    """
+    This exception indicates an authentication error with the HMC.
+
+    Derived from :exc:`~zhmcclient.AuthError`.
+    """
+
+    def __init__(self, msg, details):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          details (Exception):
+            The :exc:`~zhmcclient.HTTPError` exception describing the
+            error returned by the HMC.
+        """
+        super(ServerAuthError, self).__init__(msg)
+        assert isinstance(details, HTTPError)
         self._details = details
 
     @property
     def details(self):
         """
-        The original exception describing details about the error, if there
-        was such an original exception. `None`, otherwise.
+        The original exception describing details about the error.
 
         This may be one of the following exceptions:
 
         * :exc:`~zhmcclient.HTTPError`
         """
         return self._details
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, details.request_method={!r}, " \
+            "details.request_uri={!r}, details.http_status={!r}, " \
+            "details.reason={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.details.request_method, self.details.request_uri,
+                      self.details.http_status, self.details.reason)
 
 
 class ParseError(Error):
@@ -201,8 +386,8 @@ class ParseError(Error):
     @property
     def line(self):
         """
-        The 1-based line number of the error location within the JSON payload,
-        as an integer.
+        :term:`integer`: The 1-based line number of the error location within
+        the JSON payload.
 
         `None` indicates that the error location is not available.
         """
@@ -211,12 +396,21 @@ class ParseError(Error):
     @property
     def column(self):
         """
-        The 1-based column number of the error location within the JSON
-        payload, as an integer.
+        :term:`integer`: The 1-based column number of the error location within
+        the JSON payload.
 
         `None` indicates that the error location is not available.
         """
         return self._column
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, line={!r}, column={!r})". \
+               format(self.__class__.__name__, self.args[0], self.line,
+                      self.column)
 
 
 class VersionError(Error):
@@ -260,6 +454,15 @@ class VersionError(Error):
         HMC.
         """
         return self._api_version
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, min_api_version={!r}, api_version={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.min_api_version, self.api_version)
 
 
 class HTTPError(Error):
@@ -442,10 +645,10 @@ class HTTPError(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "HTTPError(http_status={}, reason={}, message={}, "\
-               "request_method={}, request_uri={}, ...)".\
-               format(self.http_status, self.reason, self.message,
-                      self.request_method, self.request_uri)
+        return "{}(http_status={!r}, reason={!r}, message={!r}, " \
+               "request_method={!r}, request_uri={!r}, ...)". \
+               format(self.__class__.__name__, self.http_status, self.reason,
+                      self.message, self.request_method, self.request_uri)
 
 
 class OperationTimeout(Error):
@@ -455,7 +658,35 @@ class OperationTimeout(Error):
 
     Derived from :exc:`~zhmcclient.Error`.
     """
-    pass
+
+    def __init__(self, msg, operation_timeout):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          operation_timeout (:term:`integer`):
+            The operation timeout in seconds.
+        """
+        super(OperationTimeout, self).__init__(msg)
+        self._operation_timeout = operation_timeout
+
+    @property
+    def operation_timeout(self):
+        """
+        :term:`integer`: The operation timeout in seconds.
+        """
+        return self._operation_timeout
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, operation_timeout={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.operation_timeout)
 
 
 class StatusTimeout(Error):
@@ -466,7 +697,7 @@ class StatusTimeout(Error):
     The possible status values for an LPAR are:
 
     * ``"not-activated"`` - The LPAR is not active.
-    * ``"not-operating" - The LPAR is active but no operating system is
+    * ``"not-operating"`` - The LPAR is active but no operating system is
       running in the LPAR.
     * ``"operating"`` - The LPAR is active and an operating system is
       running in the LPAR.
@@ -521,20 +752,152 @@ class StatusTimeout(Error):
         """
         return self._status_timeout
 
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, actual_status={!r}, desired_statuses={!r}, " \
+            "status_timeout={!r})". \
+            format(self.__class__.__name__, self.args[0], self.actual_status,
+                   self.desired_statuses, self.status_timeout)
+
 
 class NoUniqueMatch(Error):
     """
-    This exception indicates that a find function has found more than one item.
+    This exception indicates that more than one resource matched the filter
+    arguments.
 
     Derived from :exc:`~zhmcclient.Error`.
     """
-    pass
+
+    def __init__(self, filter_args, manager):
+        """
+        The exception message is automatically constructed from the input
+        arguments.
+
+        Parameters:
+
+          filter_args (dict):
+            Dictionary of filter arguments by which the resource was attempted
+            to be found. Keys are the resource property names, values are
+            the match values for that property.
+
+          manager (:class:`~zhmcclient.BaseManager`):
+            The manager of the resource, in whose scope the resource was
+            attempted to be found.
+        """
+        parent = manager.parent
+        if parent:
+            in_str = " in {} {!r}". \
+                format(parent.__class__.__name__, parent.name)
+        else:
+            in_str = ""
+        msg = "Found more than one {} using filter arguments {!r}{}". \
+            format(manager.resource_class.__name__, filter_args, in_str)
+        super(NoUniqueMatch, self).__init__(msg)
+        self._filter_args = filter_args
+        self._manager = manager
+
+    @property
+    def filter_args(self):
+        """
+        dict: Dictionary of filter arguments by which the resource was
+        attempted to be found. Keys are the resource property names, values
+        are the match values for that property.
+        """
+        return self._filter_args
+
+    @property
+    def manager(self):
+        """
+        :class:`~zhmcclient.BaseManager`: The manager of the resource, in whose
+        scope the resource was attempted to be found.
+        """
+        return self._manager
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        parent = self.manager.parent
+        return "{}(message={!r}, resource_classname={!r}, filter_args={!r}, " \
+               "parent_classname={!r}, parent_name={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.manager.resource_class.__name__,
+                      self.filter_args,
+                      parent.__class__.__name__ if parent else None,
+                      parent.name if parent else None)
 
 
 class NotFound(Error):
     """
-    This exception indicates that a find function did not find an item.
+    This exception indicates that a resource was not found.
 
     Derived from :exc:`~zhmcclient.Error`.
     """
-    pass
+
+    def __init__(self, filter_args, manager):
+        """
+        The exception message is automatically constructed from the input
+        arguments.
+
+        Parameters:
+
+          filter_args (dict):
+            Dictionary of filter arguments by which the resource was attempted
+            to be found. Keys are the resource property names, values are
+            the match values for that property.
+
+          manager (:class:`~zhmcclient.BaseManager`):
+            The manager of the resource, in whose scope the resource was
+            attempted to be found.
+        """
+        parent = manager.parent
+        if parent:
+            in_str = " in {} {!r}". \
+                format(parent.__class__.__name__, parent.name)
+        else:
+            in_str = ""
+        if len(filter_args) == 1 and manager._name_prop in filter_args:
+            msg = "Could not find {} {!r}{}.". \
+                format(manager.resource_class.__name__,
+                       filter_args[manager._name_prop], in_str)
+        else:
+            msg = "Could not find {} using filter arguments {!r}{}.".\
+                format(manager.resource_class.__name__, filter_args, in_str)
+        super(NotFound, self).__init__(msg)
+        self._filter_args = filter_args
+        self._manager = manager
+
+    @property
+    def filter_args(self):
+        """
+        dict: Dictionary of filter arguments by which the resource was
+        attempted to be found. Keys are the resource property names, values
+        are the match values for that property.
+        """
+        return self._filter_args
+
+    @property
+    def manager(self):
+        """
+        :class:`~zhmcclient.BaseManager`: The manager of the resource, in whose
+        scope the resource was attempted to be found.
+        """
+        return self._manager
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        parent = self.manager.parent
+        return "{}(message={!r}, resource_classname={!r}, filter_args={!r}, " \
+               "parent_classname={!r}, parent_name={!r})". \
+               format(self.__class__.__name__, self.args[0],
+                      self.manager.resource_class.__name__,
+                      self.filter_args,
+                      parent.__class__.__name__ if parent else None,
+                      parent.name if parent else None)

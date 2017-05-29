@@ -112,6 +112,14 @@ Exceptions
    :members:
    :special-members: __str__
 
+.. autoclass:: zhmcclient.ClientAuthError
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.ServerAuthError
+   :members:
+   :special-members: __str__
+
 .. autoclass:: zhmcclient.ParseError
    :members:
    :special-members: __str__

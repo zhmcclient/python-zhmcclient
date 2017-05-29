@@ -21,11 +21,11 @@ from __future__ import absolute_import, print_function
 
 import unittest
 
-from zhmcclient import Error, ConnectionError, AuthError, ParseError,\
-    VersionError, HTTPError
-
-# TODO: Add tests for NoUniqueMatch
-# TODO: Add tests for NotFound
+from zhmcclient import Error, ConnectionError, ConnectTimeout, ReadTimeout, \
+    RetriesExceeded, ClientAuthError, ServerAuthError, ParseError, \
+    VersionError, HTTPError, OperationTimeout, StatusTimeout, NoUniqueMatch, \
+    NotFound, Client
+from zhmcclient_mock import FakedSession
 
 
 class MyError(Error):
@@ -80,158 +80,387 @@ class TestError(unittest.TestCase):
         self.assertEqual(exc.args[0], ('zaphod', 42))
 
 
-class NumberArgsTestMixin(object):
+class TestConnectionError(unittest.TestCase):
     """
-    Mixin to test exception classes with the allowable numbers of input
-    arguments.
-    """
-
-    # Derived classes set these class variables as instance variables:
-
-    # Exception class to be tested
-    exc_class = None
-
-    # Minimum number of input arguments to ctor
-    min_args = None
-
-    # Maximum number of input arguments to ctor
-    max_args = None
-
-    def test_good(self):
-        """Test exception class with the allowable number of input arguments,
-        where the first argument is always a string.
-        Verify that the first argument is put into exc.args[0] and that no
-        other arguments are put there."""
-
-        for nargs in range(self.min_args, self.max_args + 1):
-            args = ['zaphod']
-            args.extend((nargs - 1) * [42])
-
-            exc = self.exc_class(*args)
-
-            self.assertTrue(isinstance(exc, Error))
-            self.assertTrue(isinstance(exc.args, tuple))
-            self.assertEqual(len(exc.args), 1,
-                             "Expected exc.args[] to have 1 item, got: %r" %
-                             exc.args)
-            self.assertEqual(exc.args[0], args[0],
-                             "For exc.args[0], expected %r, "
-                             "got: %r" % (args[0], exc.args[0]))
-
-
-class DetailsTestMixin(object):
-    """
-    Mixin to test exception classes with a `details` property.
-    """
-
-    # Derived classes set these class variables as instance variables:
-
-    # Exception class to be tested
-    exc_class = None
-
-    def test_details_none(self):
-        """Test details property with None."""
-
-        exc = self.exc_class("Bla bla", None)
-
-        self.assertIsNone(exc.details)
-
-    def test_details_default(self):
-        """Test details property with default."""
-
-        exc = self.exc_class("Bla bla")
-
-        self.assertIsNone(exc.details)
-
-    def test_details_valueerror(self):
-        """Test details property with a ValueError."""
-
-        details_exc = ValueError("value error")
-
-        exc = self.exc_class("Bla bla", details_exc)
-
-        self.assertEqual(exc.details, details_exc)
-
-
-class TestConnectionError(unittest.TestCase, NumberArgsTestMixin,
-                          DetailsTestMixin):
-    """
-    Test the simple exception class ``ConnectionError``.
+    Test exception class ``ConnectionError``.
     """
 
     def setUp(self):
-        self.exc_class = ConnectionError
-        self.min_args = 1
-        self.max_args = 1
+        self.message = "bla bla connection error"
+        self.details_exc = ValueError("value error")
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = ConnectionError(self.message, self.details_exc)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ConnectionError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = ConnectionError(msg=self.message, details=self.details_exc)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ConnectionError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
 
 
-class TestAuthError(unittest.TestCase, NumberArgsTestMixin, DetailsTestMixin):
+class TestConnectTimeout(unittest.TestCase):
     """
-    Test the simple exception class ``AuthError``.
+    Test exception class ``ConnectTimeout``.
     """
 
     def setUp(self):
-        self.exc_class = AuthError
-        self.min_args = 1
-        self.max_args = 1
+        self.message = "bla bla connection timeout"
+        self.details_exc = ValueError("value error")
+        self.connect_timeout = 30
+        self.connect_retries = 3
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = ConnectTimeout(self.message, self.details_exc,
+                             self.connect_timeout, self.connect_retries)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        self.assertEqual(exc.connect_timeout, self.connect_timeout)
+        self.assertEqual(exc.connect_retries, self.connect_retries)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ConnectTimeout\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = ConnectTimeout(msg=self.message, details=self.details_exc,
+                             connect_timeout=self.connect_timeout,
+                             connect_retries=self.connect_retries)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        self.assertEqual(exc.connect_timeout, self.connect_timeout)
+        self.assertEqual(exc.connect_retries, self.connect_retries)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ConnectTimeout\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
 
 
-class TestParseError(unittest.TestCase, NumberArgsTestMixin):
+class TestReadTimeout(unittest.TestCase):
     """
-    Test the simple exception class ``ParseError``.
+    Test exception class ``ReadTimeout``.
+    """
+
+    def setUp(self):
+        self.message = "bla bla read timeout"
+        self.details_exc = ValueError("value error")
+        self.read_timeout = 30
+        self.read_retries = 3
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = ReadTimeout(self.message, self.details_exc,
+                          self.read_timeout, self.read_retries)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        self.assertEqual(exc.read_timeout, self.read_timeout)
+        self.assertEqual(exc.read_retries, self.read_retries)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ReadTimeout\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = ReadTimeout(msg=self.message, details=self.details_exc,
+                          read_timeout=self.read_timeout,
+                          read_retries=self.read_retries)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        self.assertEqual(exc.read_timeout, self.read_timeout)
+        self.assertEqual(exc.read_retries, self.read_retries)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ReadTimeout\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+
+class TestRetriesExceeded(unittest.TestCase):
+    """
+    Test exception class ``RetriesExceeded``.
+    """
+
+    def setUp(self):
+        self.message = "bla bla retries exceeded"
+        self.details_exc = ValueError("value error")
+        self.connect_retries = 3
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = RetriesExceeded(self.message, self.details_exc,
+                              self.connect_retries)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        self.assertEqual(exc.connect_retries, self.connect_retries)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^RetriesExceeded\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = RetriesExceeded(msg=self.message, details=self.details_exc,
+                              connect_retries=self.connect_retries)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        self.assertEqual(exc.connect_retries, self.connect_retries)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^RetriesExceeded\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+
+class TestClientAuthError(unittest.TestCase):
+    """
+    Test exception class ``ClientAuthError``.
+    """
+
+    def setUp(self):
+        self.message = "bla bla client auth error"
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = ClientAuthError(self.message)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ClientAuthError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = ClientAuthError(msg=self.message)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ClientAuthError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+
+class TestServerAuthError(unittest.TestCase):
+    """
+    Test exception class ``ServerAuthError``.
+    """
+
+    def setUp(self):
+        resp_body = {
+            'http-status': 404,
+            'reason': 42,
+            'message': 'abc def',
+            'request-method': 'POST',
+            'request-uri': '/api/cpcs/cpc1',
+            'request-query-parms': [],
+            'request-headers': {
+                'content-type': 'application/json',
+            },
+            'request-authenticated-as': None,
+            'request-body': None,
+            'request-body-as-string': None,
+            'request-body-as-string-partial': None,
+            'stack': None,
+            'error-details': None,
+        }
+        self.details_exc = HTTPError(resp_body)
+        self.message = "bla bla server auth error"
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = ServerAuthError(self.message, self.details_exc)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ServerAuthError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = ServerAuthError(msg=self.message, details=self.details_exc)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.details, self.details_exc)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ServerAuthError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+
+class TestParseError(unittest.TestCase):
+    """
+    Test exception class ``ParseError``.
     """
 
     def setUp(self):
         self.exc_class = ParseError
-        self.min_args = 1
-        self.max_args = 1
 
     def test_line_column_1(self):
         """A simple message string that matches the line/col parsing."""
+        message = "Bla: line 42 column 7 (char 6)"
 
-        exc = self.exc_class("Bla: line 42 column 7 (char 6)")
+        exc = ParseError(message)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], message)
 
         self.assertEqual(exc.line, 42)
         self.assertEqual(exc.column, 7)
 
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ParseError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
     def test_line_column_2(self):
         """A minimally matching message string."""
+        message = ": line 7 column 42 "
 
-        exc = self.exc_class(": line 7 column 42 ")
+        exc = ParseError(message)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], message)
 
         self.assertEqual(exc.line, 7)
         self.assertEqual(exc.column, 42)
 
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ParseError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
     def test_line_column_3(self):
         """A message string that does not match (because of the 'x' in the
         line)."""
+        message = ": line 7x column 42 "
 
-        exc = self.exc_class(": line 7x column 42 ")
+        exc = ParseError(message)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], message)
 
         self.assertEqual(exc.line, None)
         self.assertEqual(exc.column, None)
 
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^ParseError\(.*\)$')
 
-class TestVersionError(unittest.TestCase, NumberArgsTestMixin):
-    """
-    Test the simple exception class ``VersionError``.
-    """
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
 
-    def setUp(self):
-        self.exc_class = VersionError
-        self.min_args = 3
-        self.max_args = 3
+
+class TestVersionError(unittest.TestCase):
+    """
+    Test exception class ``VersionError``.
+    """
 
     def test_api_version(self):
         """Test that the minimum and actual API version can be retrieved."""
-
         min_api_version = (2, 3)
         api_version = (1, 4)
+        message = "invalid version"
 
-        exc = self.exc_class("Bla", min_api_version, api_version)
+        exc = VersionError(message, min_api_version, api_version)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], message)
 
         self.assertEqual(exc.min_api_version, min_api_version)
         self.assertEqual(exc.api_version, api_version)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^VersionError\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
 
 
 class TestHTTPError(unittest.TestCase):
@@ -263,6 +492,7 @@ class TestHTTPError(unittest.TestCase):
         exc = HTTPError(resp_body)
 
         self.assertTrue(isinstance(exc, Error))
+
         self.assertEqual(len(exc.args), 1)
         self.assertTrue(isinstance(exc.args[0], dict))
 
@@ -285,15 +515,245 @@ class TestHTTPError(unittest.TestCase):
         self.assertEqual(exc.stack, resp_body['stack'])
         self.assertEqual(exc.error_details, resp_body['error-details'])
 
+        # Check repr()
+        repr_str = repr(exc)
+        repr_pattern = r'^HTTPError\(.*\)$'
+        self.assertRegexpMatches(repr_str, repr_pattern)
+
         # Check str()
         exp_str = "{http-status},{reason}: {message} [{request-method} "\
                   "{request-uri}]".format(**resp_body)
         self.assertEqual(str(exc), exp_str)
 
+
+class TestOperationTimeout(unittest.TestCase):
+    """
+    Test exception class ``OperationTimeout``.
+    """
+
+    def setUp(self):
+        self.message = "bla bla operation timeout"
+        self.details_exc = ValueError("value error")
+        self.operation_timeout = 200
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = OperationTimeout(self.message, self.operation_timeout)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.operation_timeout, self.operation_timeout)
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = OperationTimeout(msg=self.message,
+                               operation_timeout=self.operation_timeout)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.operation_timeout, self.operation_timeout)
+
         # Check repr()
-        repr_str = repr(exc)
-        repr_pattern = r'^HTTPError\(.*\)$'
-        self.assertRegexpMatches(repr_str, repr_pattern)
+        self.assertRegexpMatches(repr(exc), r'^OperationTimeout\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+
+class TestStatusTimeout(unittest.TestCase):
+    """
+    Test exception class ``StatusTimeout``.
+    """
+
+    def setUp(self):
+        self.message = "bla bla operation timeout"
+        self.details_exc = ValueError("value error")
+        self.status_timeout = 90
+        self.desired_statuses = ['foo on']
+        self.actual_status = 'foo off'
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+
+        exc = StatusTimeout(self.message, self.actual_status,
+                            self.desired_statuses, self.status_timeout)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.actual_status, self.actual_status)
+        self.assertEqual(exc.desired_statuses, self.desired_statuses)
+        self.assertEqual(exc.status_timeout, self.status_timeout)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^StatusTimeout\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_msg_named(self):
+        """Test exception created with named arguments."""
+
+        exc = StatusTimeout(msg=self.message,
+                            actual_status=self.actual_status,
+                            desired_statuses=self.desired_statuses,
+                            status_timeout=self.status_timeout)
+
+        self.assertEqual(len(exc.args), 1)
+        self.assertEqual(exc.args[0], self.message)
+
+        self.assertEqual(exc.actual_status, self.actual_status)
+        self.assertEqual(exc.desired_statuses, self.desired_statuses)
+        self.assertEqual(exc.status_timeout, self.status_timeout)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^StatusTimeout\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+
+class TestNoUniqueMatch(unittest.TestCase):
+    """
+    Test exception class ``NoUniqueMatch``.
+    """
+
+    def setUp(self):
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'faked-cpc1',
+            'parent': None,
+            'class': 'cpc',
+            'name': 'cpc_1',
+            'description': 'CPC #1',
+            'status': 'active',
+            'dpm-enabled': True,
+            'is-ensemble-member': False,
+            'iml-mode': 'dpm',
+        })
+        self.faked_osa1 = self.faked_cpc.adapters.add({
+            'object-id': 'fake-osa1',
+            'parent': self.faked_cpc.uri,
+            'class': 'adapter',
+            'name': 'osa 1',
+            'description': 'OSA #1',
+            'status': 'active',
+            'type': 'osd',
+        })
+        self.client = Client(self.session)
+        self.cpc = self.client.cpcs.list()[0]
+        self.adapter = self.cpc.adapters.list()[0]
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+        filter_args = {'type': 'osa', 'status': 'active'}
+
+        exc = NoUniqueMatch(filter_args, self.cpc.adapters)
+
+        self.assertEqual(len(exc.args), 1)
+        # auto-generated message, we don't expect a particular value
+
+        self.assertEqual(exc.filter_args, filter_args)
+        self.assertEqual(exc.manager, self.cpc.adapters)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^NoUniqueMatch\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_named(self):
+        """Test exception created with named arguments."""
+        filter_args = {'type': 'osa', 'status': 'active'}
+
+        exc = NoUniqueMatch(filter_args=filter_args, manager=self.cpc.adapters)
+
+        self.assertEqual(len(exc.args), 1)
+        # auto-generated message, we don't expect a particular value
+
+        self.assertEqual(exc.filter_args, filter_args)
+        self.assertEqual(exc.manager, self.cpc.adapters)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^NoUniqueMatch\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+
+class TestNotFound(unittest.TestCase):
+    """
+    Test exception class ``NotFound``.
+    """
+
+    def setUp(self):
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'faked-cpc1',
+            'parent': None,
+            'class': 'cpc',
+            'name': 'cpc_1',
+            'description': 'CPC #1',
+            'status': 'active',
+            'dpm-enabled': True,
+            'is-ensemble-member': False,
+            'iml-mode': 'dpm',
+        })
+        self.faked_osa1 = self.faked_cpc.adapters.add({
+            'object-id': 'fake-osa1',
+            'parent': self.faked_cpc.uri,
+            'class': 'adapter',
+            'name': 'osa 1',
+            'description': 'OSA #1',
+            'status': 'active',
+            'type': 'osd',
+        })
+        self.client = Client(self.session)
+        self.cpc = self.client.cpcs.list()[0]
+        self.adapter = self.cpc.adapters.list()[0]
+
+    def test_unnamed(self):
+        """Test exception created with unnamed arguments."""
+        filter_args = {'type': 'osa', 'status': 'active'}
+
+        exc = NotFound(filter_args, self.cpc.adapters)
+
+        self.assertEqual(len(exc.args), 1)
+        # auto-generated message, we don't expect a particular value
+
+        self.assertEqual(exc.filter_args, filter_args)
+        self.assertEqual(exc.manager, self.cpc.adapters)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^NotFound\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
+
+    def test_named(self):
+        """Test exception created with named arguments."""
+        filter_args = {'type': 'osa', 'status': 'active'}
+
+        exc = NotFound(filter_args=filter_args, manager=self.cpc.adapters)
+
+        self.assertEqual(len(exc.args), 1)
+        # auto-generated message, we don't expect a particular value
+
+        self.assertEqual(exc.filter_args, filter_args)
+        self.assertEqual(exc.manager, self.cpc.adapters)
+
+        # Check repr()
+        self.assertRegexpMatches(repr(exc), r'^NotFound\(.*\)$')
+
+        # Check str()
+        self.assertEqual(str(exc), exc.args[0])
 
 
 if __name__ == '__main__':

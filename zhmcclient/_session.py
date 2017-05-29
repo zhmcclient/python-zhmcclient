@@ -28,8 +28,9 @@ except ImportError:
 import requests
 from requests.packages import urllib3
 
-from ._exceptions import HTTPError, AuthError, ConnectionError, ParseError, \
-    ConnectTimeout, ReadTimeout, RetriesExceeded, OperationTimeout
+from ._exceptions import HTTPError, ServerAuthError, ClientAuthError, \
+    ConnectionError, ParseError, ConnectTimeout, ReadTimeout, \
+    RetriesExceeded, OperationTimeout
 from ._timestats import TimeStatsKeeper
 from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
@@ -51,17 +52,22 @@ _STD_HEADERS = {
 }
 
 
-def _handle_request_exc(exc):
+def _handle_request_exc(exc, retry_timeout_config):
     """
     Handle a :exc:`request.exceptions.RequestException` exception that was
     raised.
     """
     if isinstance(exc, requests.exceptions.ConnectTimeout):
-        raise ConnectTimeout(_request_exc_message(exc), exc)
+        raise ConnectTimeout(_request_exc_message(exc), exc,
+                             retry_timeout_config.connect_timeout,
+                             retry_timeout_config.connect_retries)
     elif isinstance(exc, requests.exceptions.ReadTimeout):
-        raise ReadTimeout(_request_exc_message(exc), exc)
+        raise ReadTimeout(_request_exc_message(exc), exc,
+                          retry_timeout_config.read_timeout,
+                          retry_timeout_config.read_retries)
     elif isinstance(exc, requests.exceptions.RetryError):
-        raise RetriesExceeded(_request_exc_message(exc), exc)
+        raise RetriesExceeded(_request_exc_message(exc), exc,
+                              retry_timeout_config.connect_retries)
     else:
         raise ConnectionError(_request_exc_message(exc), exc)
 
@@ -275,8 +281,9 @@ class Session(object):
           state. Subsequent operations that require logon will use the stored
           session-id. Once the HMC expires the session-id, subsequent
           operations that require logon will cause an
-          :exc:`~zhmcclient.AuthError` to be raised (because userid/password
-          have not been specified, so an automatic re-logon is not possible).
+          :exc:`~zhmcclient.ServerAuthError` to be raised (because
+          userid/password have not been specified, so an automatic re-logon is
+          not possible).
 
         * Neither `userid`/`password` nor `session_id`: Only operations that do
           not require logon, are possible.
@@ -467,7 +474,8 @@ class Session(object):
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
         if not self.is_logon(verify):
@@ -485,7 +493,7 @@ class Session(object):
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
         if self.is_logon():
@@ -512,7 +520,7 @@ class Session(object):
         if verify:
             try:
                 self.get('/api/console', logon_required=True)
-            except AuthError:
+            except ServerAuthError:
                 return False
         return True
 
@@ -520,14 +528,22 @@ class Session(object):
         """
         Log on, unconditionally. This can be used to re-logon.
         This requires credentials to be provided.
+
+        Raises:
+
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.HTTPError`
         """
         if self._userid is None:
-            raise AuthError("Userid is not provided.")
+            raise ClientAuthError("Userid is not provided.")
         if self._password is None:
             if self._get_password:
                 self._password = self._get_password(self._host, self._userid)
             else:
-                raise AuthError("Password is not provided.")
+                raise ClientAuthError("Password is not provided.")
         logon_uri = '/api/sessions'
         logon_body = {
             'userid': self._userid,
@@ -560,6 +576,13 @@ class Session(object):
     def _do_logoff(self):
         """
         Log off, unconditionally.
+
+        Raises:
+
+          :exc:`~zhmcclient.ServerAuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.HTTPError`
         """
         session_uri = '/api/sessions/this-session'
         self.delete(session_uri, logon_required=False)
@@ -644,7 +667,8 @@ class Session(object):
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
         if logon_required:
@@ -660,7 +684,7 @@ class Session(object):
             result = req.get(url, headers=self.headers, verify=False,
                              timeout=req_timeout)
         except requests.exceptions.RequestException as exc:
-            _handle_request_exc(exc)
+            _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
         self._log_http_response('GET', url,
@@ -679,8 +703,8 @@ class Session(object):
                 return self.get(uri, logon_required)
             else:
                 msg = result_object.get('message', None)
-                raise AuthError("HTTP authentication failed: {}".
-                                format(msg), HTTPError(result_object))
+                raise ServerAuthError("HTTP authentication failed: {}".
+                                      format(msg), HTTPError(result_object))
         else:
             result_object = _result_object(result)
             raise HTTPError(result_object)
@@ -792,7 +816,8 @@ class Session(object):
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the asynchronous operation.
@@ -820,7 +845,7 @@ class Session(object):
                     result = req.post(url, data=data, headers=self.headers,
                                       verify=False, timeout=req_timeout)
             except requests.exceptions.RequestException as exc:
-                _handle_request_exc(exc)
+                _handle_request_exc(exc, self.retry_timeout_config)
             finally:
                 stats.end()
             self._log_http_response('POST', url,
@@ -850,8 +875,9 @@ class Session(object):
                     return self.post(uri, body, logon_required)
                 else:
                     msg = result_object.get('message', None)
-                    raise AuthError("HTTP authentication failed: {}".
-                                    format(msg), HTTPError(result_object))
+                    raise ServerAuthError("HTTP authentication failed: {}".
+                                          format(msg),
+                                          HTTPError(result_object))
             else:
                 result_object = _result_object(result)
                 raise HTTPError(result_object)
@@ -888,7 +914,8 @@ class Session(object):
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
         if logon_required:
@@ -904,7 +931,7 @@ class Session(object):
             result = req.delete(url, headers=self.headers, verify=False,
                                 timeout=req_timeout)
         except requests.exceptions.RequestException as exc:
-            _handle_request_exc(exc)
+            _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
         self._log_http_response('DELETE', url,
@@ -924,8 +951,8 @@ class Session(object):
                 return
             else:
                 msg = result_object.get('message', None)
-                raise AuthError("HTTP authentication failed: {}".
-                                format(msg), HTTPError(result_object))
+                raise ServerAuthError("HTTP authentication failed: {}".
+                                      format(msg), HTTPError(result_object))
         else:
             result_object = _result_object(result)
             raise HTTPError(result_object)
@@ -1068,7 +1095,8 @@ class Job(object):
           :exc:`~zhmcclient.HTTPError`: The job completed in error, or the job
             status cannot be retrieved, or the job cannot be deleted.
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
         job_result_obj = self.session.get(self.uri)
@@ -1141,7 +1169,8 @@ class Job(object):
           :exc:`~zhmcclient.HTTPError`: The job completed in error, or the job
             status cannot be retrieved, or the job cannot be deleted.
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for job completion.
@@ -1166,10 +1195,10 @@ class Job(object):
                 current_time = time.time()
                 if current_time > start_time + operation_timeout:
                     raise OperationTimeout(
-                        "Waiting for completion of job {} timed out after "
-                        "{} s (operation timeout: {} s)".
-                        format(self.uri, current_time - start_time,
-                               operation_timeout))
+                        "Waiting for completion of job {} timed out "
+                        "(operation timeout: {} s)".
+                        format(self.uri, operation_timeout),
+                        operation_timeout)
 
             time.sleep(1)  # Avoid hot spin loop
 

@@ -46,6 +46,9 @@ Released: not yet
 
   All other asynchronous methods did not have this issue. See issue #248.
 
+* Clarified in the documentation of all exceptions that have a ``details``
+  instance variable, that it is never ``None``.
+
 **Enhancements:**
 
 * Improved content of ``zhmcclient.ParseError`` message for better problem
@@ -67,6 +70,23 @@ Released: not yet
   ``lpar activate/deactivate/load`` commands. Setting this option causes the
   LPAR status "exceptions" to be considered an additional valid end status when
   waiting for completion of the operation.
+
+* Improved documentation of CLI output formats.
+
+* Simplified the message of the ``OperationTimeout`` exception.
+
+* Split the ``AuthError`` exception into ``ClientAuthError`` and
+  ``ServerAuthError`` that are used depending on where the authentication issue
+  is detected. Reason for the split was that the two subclasses have different
+  instance variables. The ``AuthError`` exception class is now an abstract
+  base class that is never raised but can be used to catch exceptions.
+
+* Made error data available as instance variables of the following exceptions:
+  ``ConnectTimeout``, ``ReadTimeout``, ``RetriesExceeded``,
+  ``ClientAuthError``, ``ServerAuthError``, ``OperationTimeout``, and
+  ``StatusTimeout``, ``NotFound``, ``NoUniqueMatch``.
+
+* Improved unit test cases for ``zhmcclient._exceptions`` module.
 
 **Known issues:**
 
