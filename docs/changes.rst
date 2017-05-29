@@ -68,6 +68,8 @@ Released: not yet
   LPAR status "exceptions" to be considered an additional valid end status when
   waiting for completion of the operation.
 
+* Improved documentation of CLI output formats.
+
 **Known issues:**
 
 * See `list of open issues`_.
