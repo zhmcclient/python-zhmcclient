@@ -93,7 +93,7 @@ class _NameUriCache(object):
             try:
                 return self._uris[name]
             except KeyError:
-                raise NotFound
+                raise NotFound({self._manager._name_prop: name}, self._manager)
 
     def auto_invalidate(self):
         """
@@ -628,9 +628,9 @@ class BaseManager(object):
         obj_list = self.findall(**filter_args)
         num_objs = len(obj_list)
         if num_objs == 0:
-            raise NotFound
+            raise NotFound(filter_args, self)
         elif num_objs > 1:
-            raise NoUniqueMatch
+            raise NoUniqueMatch(filter_args, self)
         else:
             return obj_list[0]
 
