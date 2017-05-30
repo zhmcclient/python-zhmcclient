@@ -25,7 +25,9 @@ test case.
 
 The faked HMC environment is set up by creating an instance of the
 :class:`zhmcclient_mock.FakedSession` class instead of the
-:class:`zhmcclient.Session` class::
+:class:`zhmcclient.Session` class:
+
+.. code-block:: python
 
     import zhmcclient
     import zhmcclient_mock
@@ -52,7 +54,9 @@ resource environment for a test case.
 
 The following example of a unit test case shows how an initial set of resources
 that is defined as a dictionary and loaded into the faked HMC using the
-:meth:`~zhmcclient_mock.FakedHmc.add_resources` method::
+:meth:`~zhmcclient_mock.FakedHmc.add_resources` method:
+
+.. code-block:: python
 
     import unittest
     import zhmcclient
@@ -104,7 +108,9 @@ uses the zhmcclient package.
 
 As an alternative to bulk-loading resources via the input dictionary, it is
 also possible to add resources one by one using the ``add()`` methods of the
-faked resource manager classes, as shown in the following example::
+faked resource manager classes, as shown in the following example:
+
+.. code-block:: python
 
     class MyTests(unittest.TestCase):
 

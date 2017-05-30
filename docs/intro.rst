@@ -13,7 +13,6 @@
 .. limitations under the License.
 ..
 
-
 .. _`Introduction`:
 
 Introduction
@@ -108,7 +107,7 @@ Installation of latest released version
 The following command installs the latest released version of the zhmcclient
 package from `Pypi`_ into the currently active Python environment:
 
-::
+.. code-block:: text
 
     $ pip install zhmcclient
 
@@ -122,7 +121,7 @@ of its Git repository.
 The following command installs the latest development level of the zhmcclient
 package into the currently active Python environment:
 
-::
+.. code-block:: text
 
     $ pip install git+https://github.com/zhmcclient/python-zhmcclient.git@master
 
@@ -142,7 +141,7 @@ For simplicity, the following example uses a shared file system between the
 download and target systems (but that is not a requirement; you can also copy
 the downloaded files to the target system):
 
-::
+.. code-block:: text
 
     [download]$ pip download zhmcclient
 
@@ -160,7 +159,7 @@ Verification of the installation
 You can verify that the zhmcclient package and its dependent packages are
 installed correctly by importing the package into Python:
 
-::
+.. code-block:: text
 
     $ python -c "import zhmcclient; print('ok')"
     ok
@@ -268,7 +267,7 @@ Possible output when running the script:
 This example uses the zhmc CLI to list the CPCs managed by an HMC, and shows
 a possible output:
 
-.. code-block:: bash
+.. code-block:: text
 
     $ hmc_host="<IP address or hostname of the HMC>"
     $ hmc_userid="<userid on that HMC>"
@@ -359,9 +358,9 @@ suppressed by default. They can be shown for example in any of these ways:
 
   ``PYTHONWARNINGS=default``
 
-* by issuing in your program:
+* by issuing in your Python program:
 
-  ::
+  .. code-block:: python
 
       warnings.filterwarnings(action='default', category=DeprecationWarning)
 

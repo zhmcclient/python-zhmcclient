@@ -291,7 +291,9 @@ class BaseResource(object):
         """
         Return a human readable string representation of this resource.
 
-        Example result::
+        Example result:
+
+        .. code-block:: text
 
             Cpc(name=P0000S12,
                 object-uri=/api/cpcs/f1bc49af-f71a-3467-8def-3c186b5d9352,

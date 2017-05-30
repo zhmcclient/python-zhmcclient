@@ -32,7 +32,7 @@ Layering of components
 
 The following picture shows the layering of components w.r.t. networking:
 
-::
+.. code-block:: text
 
   +---------------------+
   |                     |
@@ -70,7 +70,9 @@ The following picture shows the layering of components w.r.t. networking:
   +---------------------+
 
 The following call flow for an HTTP GET request and response shows how these
-layers are used::
+layers are used:
+
+.. code-block:: text
 
     -> zhmcclient/_session.py(392): Session.get()
       -> requests/sessions.py(501): Session.get()
