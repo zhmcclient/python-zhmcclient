@@ -31,8 +31,11 @@ mode (or ensemble mode) have :term:`LPAR` resources, instead.
 
 from __future__ import absolute_import
 
+import time
+
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._exceptions import StatusTimeout
 from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
@@ -711,3 +714,62 @@ class Partition(BaseResource):
                 'operating-system-command-text': os_command_text}
         self.manager.session.post(
             self.uri + '/operations/send-os-cmd', body)
+
+    @logged_api_call
+    def wait_for_status(self, status, status_timeout=None):
+        """
+        Wait until the status of this partition has a desired value.
+
+        Parameters:
+
+          status (:term:`string` or iterable of :term:`string`):
+            Desired partition status or set of status values to reach; one or
+            more of the values defined for the 'status' property in the
+            data model for partitions in the :term:`HMC API` book.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the partition
+            has reached one of the desired status values. The special value 0
+            means that no timeout is set.
+            `None` means that the default status timeout will be used.
+            If the timeout expires, a :exc:`~zhmcclient.StatusTimeout` is
+            raised.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.StatusTimeout`: The status timeout expired while
+            waiting for the desired partition status.
+        """
+        if status_timeout is None:
+            status_timeout = \
+                self.manager.session.retry_timeout_config.status_timeout
+        if status_timeout > 0:
+            end_time = time.time() + status_timeout
+        if isinstance(status, (list, tuple)):
+            statuses = status
+        else:
+            statuses = [status]
+        while True:
+
+            # Fastest way to get actual status value:
+            parts = self.manager.cpc.partitions.list(
+                filter_args={'name': self.name})
+            assert len(parts) == 1
+            this_part = parts[0]
+            actual_status = this_part.get_property('status')
+
+            if actual_status in statuses:
+                return
+
+            if status_timeout > 0 and time.time() > end_time:
+                raise StatusTimeout(
+                    "Waiting for partition {} to reach status(es) '{}' timed "
+                    "out after {} s - current status is '{}'".
+                    format(self.name, statuses, status_timeout, actual_status),
+                    actual_status, statuses, status_timeout)
+
+            time.sleep(1)  # Avoid hot spin loop

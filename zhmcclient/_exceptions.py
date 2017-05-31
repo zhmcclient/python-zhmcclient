@@ -841,7 +841,7 @@ class OperationTimeout(Error):
 class StatusTimeout(Error):
     """
     This exception indicates that the waiting for reaching a desired LPAR
-    status has timed out.
+    or Partition status has timed out.
 
     The possible status values for an LPAR are:
 
@@ -852,6 +852,10 @@ class StatusTimeout(Error):
       running in the LPAR.
     * ``"exceptions"`` - The LPAR or its CPC has one or more unusual
       conditions.
+
+    The possible status values for a Partition are described in the
+    'status' property of the data model for the partition resource in the
+    :term:`HMC API` book.
 
     Derived from :exc:`~zhmcclient.Error`.
     """
