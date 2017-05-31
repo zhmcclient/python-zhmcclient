@@ -21,6 +21,7 @@ Concepts
 This section presents some concepts that are helpful to understand when using
 the zhmcclient package.
 
+
 .. _`Topology`:
 
 Topology
@@ -30,7 +31,7 @@ The following figure shows the topology of Python applications using the
 zhmcclient package with an :term:`HMC` and the :term:`CPCs <CPC>` managed by
 that HMC:
 
-::
+.. code-block:: text
 
   +----------------------------------------+  +--------------------+
   |                  Node 1                |  |       Node 2       |
@@ -79,6 +80,7 @@ receiver. For simplicity, the two sessions go to the same HMC in this example,
 but they could also go to different HMCs. Similarly, a Python app could
 receive notifications from more than one HMC.
 
+
 .. _`Multi-threading considerations`:
 
 Multi-threading considerations
@@ -96,6 +98,7 @@ and its own :class:`~zhmcclient.Client` object, and that each thread with a
 need to receive HMC notifications has its own
 :class:`~zhmcclient.NotificationReceiver` object. These different objects can
 very well target the same HMC.
+
 
 .. _`Resource model concepts`:
 
@@ -186,6 +189,7 @@ that CPC (but not the partitions of other CPCs managed by this HMC).
 See :ref:`Resources` for a description of the resource model supported by
 the zhmcclient package.
 
+
 .. _`Error handling`:
 
 Error handling
@@ -221,6 +225,7 @@ bodies" of the :term:`HMC API` book.
 
 The exception classes defined in the zhmcclient package are described in
 section :ref:`Exceptions`.
+
 
 .. _`Filtering`:
 
@@ -281,7 +286,9 @@ Examples:
 
 * This example uses the :meth:`~zhmcclient.BaseManager.findall` method to
   return those OSA adapters in cage '1234' of a given CPC, whose state is
-  'stand-by', 'reserved', or 'unknown'::
+  'stand-by', 'reserved', or 'unknown':
+
+  .. code-block:: python
 
       filter_args = {
           'adapter-family': 'osa',
@@ -294,20 +301,26 @@ Examples:
 
 * This example uses the :meth:`~zhmcclient.AdapterManager.list` method to
   return the same set of OSA adapters as the previous example, but the returned
-  resource objects have the full set of properties::
+  resource objects have the full set of properties:
+
+  .. code-block:: python
 
       osa_adapters = cpc.adapters.list(full_properties=True,
                                        filter_args=filter_args)
 
 * This example uses the :meth:`~zhmcclient.BaseManager.find` method to
-  return the adapter with a given adapter name::
+  return the adapter with a given adapter name:
+
+  .. code-block:: python
 
       adapter1 = cpc.adapters.find(name='OSA-1')
 
   The returned resource object will have only a minimal set of properties.
 
 * This example uses the :meth:`~zhmcclient.BaseManager.find` method to
-  return the adapter with a given object ID::
+  return the adapter with a given object ID:
+
+  .. code-block:: python
 
       oid = '12345-abc...-def-67890'
       adapter1 = cpc.adapters.find(**{'object-id':oid})

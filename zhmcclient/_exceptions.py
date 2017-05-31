@@ -359,9 +359,11 @@ class ParseError(Error):
     Derived from :exc:`~zhmcclient.Error`.
 
     The error location within the payload is automatically determined by
-    parsing the error message for the pattern::
+    parsing the error message for the pattern:
 
-      ``': line 1 column 2 '``
+    .. code-block:: text
+
+        : line {line} column {column}
     """
 
     def __init__(self, msg):

@@ -22,6 +22,7 @@ This package provides a command line interface (CLI) that utilizes the API of
 the zhmcclient package in order to support shell scripting or simply manual
 command use in a terminal session.
 
+
 .. _`Modes of operation`:
 
 Modes of operation
@@ -33,6 +34,7 @@ The zhmc CLI supports two modes of operation:
   sub-commands.
 * `Command mode`_: Using it as a standalone non-interactive command.
 
+
 .. _`Interactive mode`:
 
 Interactive mode
@@ -43,13 +45,17 @@ typing zhmc commands, internal commands (for operating the zhmc shell), and
 external commands (that are executed in the standard shell for the user).
 
 This zhmc shell is started when the ``zhmc`` command is invoked without
-specifying any (sub-)commands::
+specifying any (sub-)commands:
+
+.. code-block:: text
 
     $ zhmc [GENERAL-OPTIONS]
     > _
 
 Alternatively, the zhmc shell can also be started by specifying the ``repl``
-(sub-)command::
+(sub-)command:
+
+.. code-block:: text
 
     $ zhmc [GENERAL-OPTIONS] repl
     > _
@@ -62,7 +68,9 @@ defaults for the zhmc commands that can be typed in the zhmc shell.
 
 The zhmc commands that can be typed in the zhmc shell are simply the command
 line arguments that would follow the ``zhmc`` command when used in
-`command mode`_::
+`command mode`_:
+
+.. code-block:: text
 
     $ zhmc -h zhmc.example.com -u hmcuser
     Enter password: <password>
@@ -73,7 +81,9 @@ line arguments that would follow the ``zhmc`` command when used in
     > :q
 
 For example, the zhmc shell command ``cpc list`` in the example above has the
-same effect as the standalone command::
+same effect as the standalone command:
+
+.. code-block:: text
 
     $ zhmc -h zhmc.example.com -u hmcuser cpc list
     Enter password: <password>
@@ -84,7 +94,9 @@ invocation, while the standalone command will prompt for a password every time.
 See also `Environment variables and avoiding password prompts`_.
 
 The internal commands ``:?``, ``:h``, or ``:help`` display general help
-information for external and internal commands::
+information for external and internal commands:
+
+.. code-block:: text
 
     > :help
     REPL help:
@@ -106,7 +118,9 @@ above, you can also exit the zhmc shell by typing `Ctrl-D`.
 
 Typing ``--help`` in the zhmc shell displays general help information for the
 zhmc commands, which includes global options and a list of the supported
-commands::
+commands:
+
+.. code-block:: text
 
     > --help
     Usage: zhmc  [OPTIONS] COMMAND [ARGS]...
@@ -157,7 +171,9 @@ The usage line in this help text show the standalone command use. Within the
 zhmc shell, the ``zhmc`` word is ommitted and the remainder is typed in.
 
 Typing ``COMMAND --help`` in the zhmc shell displays help information for the
-specified zhmc command, for example::
+specified zhmc command, for example:
+
+.. code-block:: text
 
     > cpc --help
     Usage: zhmc  cpc [OPTIONS] COMMAND [ARGS]...
@@ -174,7 +190,9 @@ specified zhmc command, for example::
 The zhmc shell supports popup help text while typing, where the valid choices
 are shown based upon what was typed so far, and where an item from the popup
 list can be picked with <TAB> or with the cursor keys. In the following
-examples, an underscore ``_`` is shown as the cursor::
+examples, an underscore ``_`` is shown as the cursor:
+
+.. code-block:: text
 
     > --_
         --host            Hostname or IP address of the HMC (Default: ZHMC_HOST environment variable).
@@ -193,6 +211,7 @@ examples, an underscore ``_`` is shown as the cursor::
 The zhmc shell supports history (within one invocation of the shell, not
 persisted across zhmc shell invocations).
 
+
 .. _`Command mode`:
 
 Command mode
@@ -201,11 +220,15 @@ Command mode
 In command mode, the ``zhmc`` command performs its task and terminates, like any
 other standalone non-interactive command.
 
-This mode is used when the ``zhmc`` command is invoked with a (sub-)command::
+This mode is used when the ``zhmc`` command is invoked with a (sub-)command:
+
+.. code-block:: text
 
     $ zhmc [GENERAL-OPTIONS] COMMAND [ARGS...] [COMMAND-OPTIONS]
 
-Examples::
+Examples:
+
+.. code-block:: text
 
     $ zhmc -h zhmc.example.com -u hmcuser cpc list
     Enter password: <password>
@@ -216,11 +239,15 @@ Examples::
     . . . <information about this HMC>
 
 In command mode, bash tab completion is also supported, but must be enabled
-first as follows (in a bash shell)::
+first as follows (in a bash shell):
+
+.. code-block:: text
 
     $ eval "$(_ZHMC_COMPLETE=source zhmc)"
 
-Bash tab completion for zhmc is used like any other bash tab completion::
+Bash tab completion for zhmc is used like any other bash tab completion:
+
+.. code-block:: text
 
     $ zhmc --<TAB><TAB>
     ... <shows the global options to select from>
@@ -230,6 +257,7 @@ Bash tab completion for zhmc is used like any other bash tab completion::
 
     $ zhmc cpc <TAB><TAB>
     ... <shows the cpc sub-commands to select from>
+
 
 .. _`Environment variables and avoiding password prompts`:
 
@@ -241,17 +269,21 @@ password to be used.
 
 If the HMC operations performed by a particular zhmc command require a
 password, and the password is not specified otherwise, the password is prompted
-for (in both modes of operation)::
+for (in both modes of operation):
 
-      $ zhmc -h zhmc.example.com -u hmcuser cpc list
-      Enter password: <password>
-      . . . <list of CPCs managed by this HMC>
+.. code-block:: text
+
+    $ zhmc -h zhmc.example.com -u hmcuser cpc list
+    Enter password: <password>
+    . . . <list of CPCs managed by this HMC>
 
 If the HMC operations performed by a particular zhmc command do not require a
-password, no password is prompted for::
+password, no password is prompted for:
 
-      $ zhmc -h zhmc.example.com info
-      . . . <information about this HMC>
+.. code-block:: text
+
+    $ zhmc -h zhmc.example.com info
+    . . . <information about this HMC>
 
 For script integration, it is important to have a way to avoid the interactive
 password prompt, and still not being forced to specify the password on the
@@ -261,7 +293,9 @@ command line. This can be done in either of two ways:
   environment variable.
 
   The ``zhmc`` command supports a ``session create`` (sub-)command that outputs
-  the (bash) shell commands to set all needed environment variables::
+  the (bash) shell commands to set all needed environment variables:
+
+  .. code-block:: text
 
       $ zhmc -h zhmc.example.com -u hmcuser session create
       Enter password: <password>
@@ -271,7 +305,9 @@ command line. This can be done in either of two ways:
 
   This ability can be used to set those environment variables and thus to
   persist the session-id in the shell environment, from where it will be used
-  in any subsequent zhmc commands::
+  in any subsequent zhmc commands:
+
+  .. code-block:: text
 
       $ eval $(zhmc -h zhmc.example.com -u hmcuser session create)
       Enter password: <password>
@@ -296,19 +332,22 @@ command line. This can be done in either of two ways:
 The ZHMC_HOST, ZHMC_USERID, and ZHMC_PASSWORD environment variables act as
 defaults for the corresponding command line options.
 
+
 .. _`CLI commands`:
 
 CLI commands
 ------------
 
 For a description of the commands supported by the zhmc CLI, consult its
-help system. For example::
+help system. For example:
 
-      $ zhmc --help
-      . . . <general help, listing the general options and possible commands>
+.. code-block:: text
 
-      $ zhmc cpc --help
-      . . . <help for cpc command, listing its arguments and command-specific options>
+    $ zhmc --help
+    . . . <general help, listing the general options and possible commands>
+
+    $ zhmc cpc --help
+    . . . <help for cpc command, listing its arguments and command-specific options>
 
 Note that the help text for any zhmc (sub-)commands (such as ``cpc``) will
 not show the general options again. This is caused by flaws in the tooling
@@ -317,9 +356,12 @@ The general options (listed by ``zhmc --help``) can still be specified together
 with (sub-)commands even though they are not listed in their help text, but
 they must be specified before the (sub-)command, and any command-specific
 options (listed by ``zhmc COMMAND --help``) must be specified after the
-(sub-)command, like shown here::
+(sub-)command, like shown here:
+
+.. code-block:: text
 
       $ zhmc [GENERAL-OPTIONS] COMMAND [ARGS...] [COMMAND-OPTIONS]
+
 
 .. _`Output formats`:
 
@@ -330,88 +372,104 @@ The zhmc CLI supports various output formats for the results. The output format
 can be selected with the ``-o`` or ``--output-format`` option. The following
 output formats are supported:
 
-* ``-o table``: Tables with a single-line border. This is the default::
+* ``-o table``: Tables with a single-line border. This is the default:
 
-    +----------+------------------+
-    | name     | status           |
-    |----------+------------------|
-    | P0000P27 | operating        |
-    | P0000P28 | service-required |
-    | P0ZGMR12 | no-power         |
-    +----------+------------------+
+  .. code-block:: text
+
+      +----------+------------------+
+      | name     | status           |
+      |----------+------------------|
+      | P0000P27 | operating        |
+      | P0000P28 | service-required |
+      | P0ZGMR12 | no-power         |
+      +----------+------------------+
 
 * ``-o psql``: Same as 'table'.
 
 * ``-o simple``: Tables with a line between header row and data rows, but
-  otherwise without borders::
+  otherwise without borders:
 
-    name      status
-    --------  ----------------
-    P0000P27  operating
-    P0000P28  service-required
-    P0ZGMR12  no-power
+  .. code-block:: text
 
-* ``-o plain``: Tables without borders::
+      name      status
+      --------  ----------------
+      P0000P27  operating
+      P0000P28  service-required
+      P0ZGMR12  no-power
 
-    name      status
-    P0000P27  operating
-    P0000P28  service-required
-    P0ZGMR12  no-power
+* ``-o plain``: Tables without borders:
 
-* ``-o rst``: Simple tables in `reStructuredText`_ markup::
+  .. code-block:: text
 
-    ========  ================
-    name      status
-    ========  ================
-    P0000P27  operating
-    P0000P28  service-required
-    P0ZGMR12  no-power
-    ========  ================
+      name      status
+      P0000P27  operating
+      P0000P28  service-required
+      P0ZGMR12  no-power
 
-* ``-o mediawiki``: Tables in `Mediawiki`_ markup::
+* ``-o rst``: Simple tables in `reStructuredText`_ markup:
 
-    {| class="wikitable" style="text-align: left;"
-    |+ <!-- caption -->
-    |-
-    ! name     !! status
-    |-
-    | P0000P27 || operating
-    |-
-    | P0000P28 || service-required
-    |-
-    | P0ZGMR12 || no-power
-    |}
+  .. code-block:: text
 
-* ``-o html``: Tables in `HTML`_ markup::
+      ========  ================
+      name      status
+      ========  ================
+      P0000P27  operating
+      P0000P28  service-required
+      P0ZGMR12  no-power
+      ========  ================
 
-    <table>
-    <thead>
-    <tr><th>name    </th><th>status          </th></tr>
-    </thead>
-    <tbody>
-    <tr><td>P0000P27</td><td>operating       </td></tr>
-    <tr><td>P0000P28</td><td>service-required</td></tr>
-    <tr><td>P0ZGMR12</td><td>no-power        </td></tr>
-    </tbody>
-    </table>
+* ``-o mediawiki``: Tables in `Mediawiki`_ markup:
 
-* ``-o latex``: Tables in `LaTeX`_ markup::
+  .. code-block:: mediawiki
 
-    \begin{tabular}{ll}
-    \hline
-     name     & status           \\
-    \hline
-     P0000P27 & operating        \\
-     P0000P28 & service-required \\
-     P0ZGMR12 & no-power         \\
-    \hline
-    \end{tabular}
+      {| class="wikitable" style="text-align: left;"
+      |+ <!-- caption -->
+      |-
+      ! name     !! status
+      |-
+      | P0000P27 || operating
+      |-
+      | P0000P28 || service-required
+      |-
+      | P0ZGMR12 || no-power
+      |}
 
-* ``-o json``: `JSON`_ objects::
+* ``-o html``: Tables in `HTML`_ markup:
 
-    [{"name": "P0000P28", "status": "service-required"},
-     {"name": "P0ZGMR12", "status": "no-power"},
-     {"name": "P0000P27", "status": "operating"}]
+  .. code-block:: html
+
+      <table>
+      <thead>
+      <tr><th>name    </th><th>status          </th></tr>
+      </thead>
+      <tbody>
+      <tr><td>P0000P27</td><td>operating       </td></tr>
+      <tr><td>P0000P28</td><td>service-required</td></tr>
+      <tr><td>P0ZGMR12</td><td>no-power        </td></tr>
+      </tbody>
+      </table>
+
+* ``-o latex``: Tables in `LaTeX`_ markup:
+
+  .. code-block:: latex
+
+      \begin{tabular}{ll}
+      \hline
+       name     & status           \\
+      \hline
+       P0000P27 & operating        \\
+       P0000P28 & service-required \\
+       P0ZGMR12 & no-power         \\
+      \hline
+      \end{tabular}
+
+* ``-o json``: `JSON`_ objects:
+
+  .. code-block:: json
+
+      [{"name": "P0000P28", "status": "service-required"},
+       {"name": "P0ZGMR12", "status": "no-power"},
+       {"name": "P0000P27", "status": "operating"}]
 
 .. _`reStructuredText`: http://docutils.sourceforge.net/docs/user/rst/quickref.html#tables
 .. _`Mediawiki`: http://www.mediawiki.org/wiki/Help:Tables
@@ -436,7 +494,9 @@ via the global option ``--log-dest`` which specifies the log destination:
 * ``none`` - No logging.
 
 The global option ``--log`` allows specifying one or more combinations of log
-component and log level. For example, the command::
+component and log level. For example, the command:
+
+.. code-block:: text
 
     $ zhmc --log hmc=debug,api=info ...
 
@@ -485,7 +545,9 @@ This facility marker can be used in the configuration of the syslog demon on
 the local system to direct log records into different files.
 
 For example, on RHEL 7 and CentOS 7, the syslog demon's config file is
-``/etc/rsyslog.conf`` and may contain this::
+``/etc/rsyslog.conf`` and may contain this:
+
+.. code-block:: text
 
     #### RULES ####
     *.info;mail.none;authpriv.none;cron.none                /var/log/messages
@@ -496,7 +558,9 @@ markers, where ``*`` can be used for wildcarding. The first list item
 this line and will thus go into the ``/var/log/messages`` file.
 
 Because the zhmc CLI uses the ``debug`` log level, one can see that only
-if its corresponding priority is enabled in the syslog configuration::
+if its corresponding priority is enabled in the syslog configuration:
+
+.. code-block:: text
 
     #### RULES ####
     *.debug;mail.none;authpriv.none;cron.none                /var/log/messages

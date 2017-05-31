@@ -45,9 +45,7 @@ section :ref:`py:logrecord-attributes`).
 Examples:
 
 * To output the log records for all HMC operations to ``stdout`` in a
-  particular format, do this:
-
-  ::
+  particular format, do this::
 
       import logging
 
@@ -61,9 +59,7 @@ Examples:
 * This example uses the :func:`~py:logging.basicConfig` convenience function
   that sets the same format and level as in the previous example, but for the
   root logger. Therefore, it will output all log records, not just from this
-  package:
-
-  ::
+  package::
 
       import logging
 

@@ -13,7 +13,6 @@
 .. limitations under the License.
 ..
 
-
 .. _`Development`:
 
 Development
@@ -51,7 +50,7 @@ Besides having a supported operating system with a supported Python version
 Then, with a virtual Python environment active, clone the Git repo of this
 project and prepare the development environment with ``make develop``:
 
-::
+.. code-block:: text
 
     $ git clone git@github.com:zhmcclient/python-zhmcclient.git
     $ cd python-zhmcclient
@@ -78,7 +77,7 @@ Git repo for this package changes.
 
 In order to build the documentation locally from the Git work directory, issue:
 
-::
+.. code-block:: text
 
     $ make builddoc
 
@@ -94,7 +93,7 @@ Testing
 To run unit tests in the currently active Python environment, issue one of
 these example variants of ``make test``:
 
-::
+.. code-block:: text
 
     $ make test                                  # Run all unit tests
     $ TESTCASES=test_resource.py make test       # Run only this test source file
@@ -104,7 +103,7 @@ these example variants of ``make test``:
 To run the unit tests and some more commands that verify the project is in good
 shape in all supported Python environments, use Tox:
 
-::
+.. code-block:: text
 
     $ tox                              # Run all tests on all supported Python versions
     $ tox -e py27                      # Run all tests on Python 2.7
@@ -182,7 +181,7 @@ request with a description of what was wrong.
 
 Example commit message:
 
-::
+.. code-block:: text
 
     cookies: Add support for delivering cookies
 
@@ -203,7 +202,7 @@ sign-off line by using a commit template file:
 * Create a file outside of the repo (say, ``~/.git-signoff.template``)
   that contains, for example:
 
-  ::
+  .. code-block:: text
 
       <one-line subject>
 
@@ -213,7 +212,7 @@ sign-off line by using a commit template file:
 
 * Configure Git to use that file as a commit template for your repo:
 
-  ::
+  .. code-block:: text
 
       git config commit.template ~/.git-signoff.template
 
@@ -225,20 +224,28 @@ This section shows the steps for releasing a version to PyPI.
 Switch to your work directory of the python-zhmcclient Git repo (this is where
 the ``Makefile`` is), and perform the following steps in that directory:
 
-1.  Set a shell variable for the version to be released, e.g.::
+1.  Set a shell variable for the version to be released, e.g.:
+
+    .. code-block:: text
 
         MNU='0.11.0'
 
-2.  Verify that your working directory is in a Git-wise clean state::
+2.  Verify that your working directory is in a Git-wise clean state:
+
+    .. code-block:: text
 
         git status
 
-3.  Check out the ``master`` branch, and update it from upstream::
+3.  Check out the ``master`` branch, and update it from upstream:
+
+    .. code-block:: text
 
         git checkout master
         git pull
 
-4.  Create a topic branch for the release::
+4.  Create a topic branch for the release:
+
+    .. code-block:: text
 
         git checkout -b release-$MNU
         git branch --set-upstream-to origin/release-$MNU release-$MNU
@@ -248,12 +255,16 @@ the ``Makefile`` is), and perform the following steps in that directory:
     released):
 
     * If needed, change the version in the section heading to the version to be
-      released, e.g.::
+      released, e.g.:
+
+      .. code-block:: text
 
           Version 0.11.0
           ^^^^^^^^^^^^^^
 
-    * Change the release date to today's date, e.g.::
+    * Change the release date to today's date, e.g.:
+
+      .. code-block:: text
 
           Released: 2017-03-16
 
@@ -263,7 +274,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
     * In the "Known issues" list item, remove the link to the issue tracker
       and add any known issues you want users to know about. Just linking
-      to the issue tracker quickly becomes incorrect for released versions::
+      to the issue tracker quickly becomes incorrect for released versions:
+
+      .. code-block:: text
 
           **Known issues:**
 
@@ -271,7 +284,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
     * Remove all empty list items in the change log section for this release.
 
-6.  Commit your changes and push them upstream::
+6.  Commit your changes and push them upstream:
+
+    .. code-block:: text
 
         git add docs/changes.rst
         git commit -sm "Updated change log for $MNU release."
@@ -279,7 +294,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
 7.  On GitHub, create a pull request for branch release-$MNU.
 
-8.  Perform a complete test::
+8.  Perform a complete test:
+
+    .. code-block:: text
 
         tox
 
@@ -287,7 +304,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
     Travis CI. However, run it for additional safety before the release.
 
     * If this test fails, fix any issues until the test succeeds. Commit the
-      changes and push them upstream::
+      changes and push them upstream:
+
+      .. code-block:: text
 
           git add <changed-files>
           git commit -sm "<change description with details>"
@@ -297,13 +316,17 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
 9.  Once the CI tests on GitHub are complete, merge the pull request.
 
-10. Update your local ``master`` branch::
+10. Update your local ``master`` branch:
+
+    .. code-block:: text
 
         git checkout master
         git pull
 
 11. Tag the ``master`` branch with the release label and push the tag
-    upstream::
+    upstream:
+
+    .. code-block:: text
 
         git tag $MNU
         git push --tags
@@ -313,7 +336,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
     You can see the tags in GitHub via Code -> Releases -> Tags.
 
-13. Upload the package to PyPI::
+13. Upload the package to PyPI:
+
+    .. code-block:: text
 
         make upload
 
@@ -321,7 +346,7 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
     **Attention!!** This only works once for each version. You cannot
     release the same version twice to PyPI.
-    
+
 14. Verify that the released version is shown on PyPI:
 
     https://pypi.python.org/pypi/zhmcclient/
@@ -351,27 +376,37 @@ version that was released earlier.
 Switch to your work directory of the python-zhmcclient Git repo (this is where
 the ``Makefile`` is), and perform the following steps in that directory:
 
-1.  Set a shell variable for the new version to be started::
+1.  Set a shell variable for the new version to be started:
+
+    .. code-block:: text
 
         MNU='0.12.0'
 
-2.  Verify that your working directory is in a git-wise clean state::
+2.  Verify that your working directory is in a git-wise clean state:
+
+    .. code-block:: text
 
         git status
 
-3.  Check out the ``master`` branch, and update it from upstream::
+3.  Check out the ``master`` branch, and update it from upstream:
+
+    .. code-block:: text
 
         git checkout master
         git pull
 
-4.  Create a topic branch for the release::
+4.  Create a topic branch for the release:
+
+    .. code-block:: text
 
         git checkout -b start-$MNU
         git branch --set-upstream-to origin/start-$MNU start-$MNU
 
 5.  Edit the change log (``docs/changes.rst``) and insert the following section
     before the top-most section (which is the section about the latest released
-    version)::
+    version):
+
+    .. code-block:: text
 
         Version 0.12.0
         ^^^^^^^^^^^^^^
@@ -392,7 +427,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
         .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
-6.  Commit your changes and push them upstream::
+6.  Commit your changes and push them upstream:
+
+    .. code-block:: text
 
         git add docs/changes.rst
         git commit -sm "Started $MNU release."
@@ -412,8 +449,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
 10. Once the CI tests on GitHub are complete, merge the pull request.
 
-11. Update your local ``master`` branch::
+11. Update your local ``master`` branch:
+
+    .. code-block:: text
 
         git checkout master
         git pull
-

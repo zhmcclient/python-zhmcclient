@@ -399,7 +399,7 @@ class Session(object):
 
         Example:
 
-        ::
+        .. code-block:: text
 
             https://myhmc.acme.com:6794
         """
@@ -412,7 +412,7 @@ class Session(object):
 
         Initially, this is the following set of headers:
 
-        ::
+        .. code-block:: text
 
             Content-type: application/json
             Accept: */*
@@ -420,7 +420,7 @@ class Session(object):
         When the session is logged on to the HMC, the session token is added
         to these headers:
 
-        ::
+        .. code-block:: text
 
             X-API-Session: ...
         """

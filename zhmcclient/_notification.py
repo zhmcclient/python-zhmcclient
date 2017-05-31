@@ -57,10 +57,12 @@ for a DPM partition::
 When running this example code in one terminal, and stopping or starting
 the partition in another terminal, one can monitor the shutdown or boot
 messages issued by the operating system. The following commands use the
-CLI of the zhmcclient package to do that::
+CLI of the zhmcclient package to do that:
 
-    $ zhmc partition stop <cpc-name> <partition-name>
-    $ zhmc partition start <cpc-name> <partition-name>
+.. code-block:: text
+
+    $ zhmc partition stop {cpc-name} {partition-name}
+    $ zhmc partition start {cpc-name} {partition-name}
 """
 
 import threading

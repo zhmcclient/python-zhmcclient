@@ -52,7 +52,9 @@ There are two options on how to do that:
    directory ``docs/notebooks``.
 
    To start Jupyter Notebook with all tutorial notebooks, issue from the repo
-   work directory::
+   work directory:
+
+   .. code-block:: text
 
        $ jupyter notebook --notebook-dir=docs/notebooks
 
@@ -61,13 +63,17 @@ There are two options on how to do that:
    directory.
 
 2. Install Jupyter Notebook and the zhmcclient package into a Python
-   environment (preferrably virtual)::
+   environment (preferrably virtual):
+
+   .. code-block:: text
 
        $ pip install jupyter zhmcclient
 
    and download the tutorial notebooks using the download button in the Jupyter
    Notebook Viewer (following the links in the table above).
 
-   To start Jupyter Notebook with the downloaded tutorial notebooks, issue::
+   To start Jupyter Notebook with the downloaded tutorial notebooks, issue:
+
+   .. code-block:: text
 
        $ jupyter notebook --notebook-dir={your-notebook-dir}

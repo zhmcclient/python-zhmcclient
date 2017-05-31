@@ -24,9 +24,7 @@ The :class:`~zhmcclient.TimeStats` class is a helper class that contains the
 actual measurement data for all invocations of a particular HTTP request. Its
 objects are under control of the :class:`~zhmcclient.TimeStatsKeeper` class.
 
-Example:
-
-::
+Example::
 
     import zhmcclient
 
@@ -201,7 +199,9 @@ class TimeStats(object):
         Return a human readable string with the time statistics for this
         operation.
 
-        Example result::
+        Example result:
+
+        .. code-block:: text
 
             TimeStats: count=1 avg=1.000s min=1.000s max=1.000s get /api/cpcs
         """
@@ -300,7 +300,9 @@ class TimeStatsKeeper(object):
         Return a human readable string with the time statistics for this
         keeper. The operations are sorted by decreasing average time.
 
-        Example result, if keeper is enabled::
+        Example result, if keeper is enabled:
+
+        .. code-block:: text
 
             Time statistics (times in seconds):
             Count  Average  Minimum  Maximum  Operation name
