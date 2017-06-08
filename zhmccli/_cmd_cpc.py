@@ -19,20 +19,18 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    raise_click_exception
 
 
-def find_cpc(client, cpc_name):
+def find_cpc(cmd_ctx, client, cpc_name):
     """
     Find a CPC by name and return its resource object.
     """
     try:
         cpc = client.cpcs.find(name=cpc_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find CPC %s on HMC %s." %
-                                   (cpc_name, client.session.host))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return cpc
 
 
@@ -137,7 +135,7 @@ def cmd_cpc_list(cmd_ctx, options):
     try:
         cpcs = client.cpcs.list()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -167,12 +165,12 @@ def cmd_cpc_list(cmd_ctx, options):
 def cmd_cpc_show(cmd_ctx, cpc_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     try:
         cpc.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     skip_list = (
         'ec-mcl-description',
@@ -189,7 +187,7 @@ def cmd_cpc_show(cmd_ctx, cpc_name):
 def cmd_cpc_update(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     name_map = {
         'next-activation-profile': 'next-activation-profile-name',
@@ -205,8 +203,8 @@ def cmd_cpc_update(cmd_ctx, cpc_name, options):
         # 'processor-running-time*' properties not changed
         pass
     elif time_slice < 0:
-        raise click.ClickException("Value for processor-time-slice option "
-                                   "must be >= 0")
+        raise_click_exception("Value for processor-time-slice option must "
+                              "be >= 0", cmd_ctx.error_format)
     elif time_slice == 0:
         properties['processor-running-time-type'] = 'system-determined'
     else:  # time_slice > 0
@@ -225,7 +223,7 @@ def cmd_cpc_update(cmd_ctx, cpc_name, options):
     try:
         cpc.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
 

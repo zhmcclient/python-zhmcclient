@@ -19,23 +19,20 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    raise_click_exception
 from ._cmd_adapter import find_adapter
 
 
-def find_port(client, cpc_name, adapter_name, port_name):
+def find_port(cmd_ctx, client, cpc_name, adapter_name, port_name):
     """
     Find a port by name and return its resource object.
     """
-    adapter = find_adapter(client, cpc_name, adapter_name)
+    adapter = find_adapter(cmd_ctx, client, cpc_name, adapter_name)
     try:
         port = adapter.ports.find(name=port_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find port %s in adapter %s in "
-                                   "CPC %s." %
-                                   (port_name, adapter_name, cpc_name))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return port
 
 
@@ -111,12 +108,12 @@ def port_update(cmd_ctx, cpc, adapter, port, **options):
 def cmd_port_list(cmd_ctx, cpc_name, adapter_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    adapter = find_adapter(client, cpc_name, adapter_name)
+    adapter = find_adapter(cmd_ctx, client, cpc_name, adapter_name)
 
     try:
         ports = adapter.ports.list(full_properties=True)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -134,12 +131,12 @@ def cmd_port_list(cmd_ctx, cpc_name, adapter_name, options):
 def cmd_port_show(cmd_ctx, cpc_name, adapter_name, port_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    port = find_port(client, cpc_name, adapter_name, port_name)
+    port = find_port(cmd_ctx, client, cpc_name, adapter_name, port_name)
 
     try:
         port.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     print_properties(port.properties, cmd_ctx.output_format)
@@ -148,7 +145,7 @@ def cmd_port_show(cmd_ctx, cpc_name, adapter_name, port_name):
 def cmd_port_update(cmd_ctx, cpc_name, adapter_name, port_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    port = find_port(client, cpc_name, adapter_name, port_name)
+    port = find_port(cmd_ctx, client, cpc_name, adapter_name, port_name)
 
     options = original_options(options)
     properties = options_to_properties(options)
@@ -161,7 +158,7 @@ def cmd_port_update(cmd_ctx, cpc_name, adapter_name, port_name, options):
     try:
         port.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     # Adapter ports cannot be renamed.

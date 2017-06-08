@@ -44,6 +44,19 @@ class Error(Exception):
         #     ``args`` instance variable of the exception object.
         super(Error, self).__init__(*args)
 
+    def str_def(self):
+        """
+        Interface definition for the corresponding method derived exception
+        classes.
+
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts.
+
+        For the exact format returned by derived exception classes, see the
+        same-named methods there.
+        """
+        raise NotImplementedError
+
 
 class ConnectionError(Error):
     """
@@ -94,6 +107,18 @@ class ConnectionError(Error):
         """
         return "{}(message={!r})". \
                format(self.__class__.__name__, self.args[0])
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={};
+        """
+        return "classname={!r}; message={!r};". \
+            format(self.__class__.__name__, self.args[0])
 
 
 class ConnectTimeout(ConnectionError):
@@ -153,6 +178,20 @@ class ConnectTimeout(ConnectionError):
                format(self.__class__.__name__, self.args[0],
                       self.connect_timeout, self.connect_retries)
 
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; connect_timeout={}; connect_retries={}; message={};
+        """  # noqa: E501
+        return "classname={!r}; connect_timeout={!r}; connect_retries={!r}; " \
+            "message={!r};". \
+            format(self.__class__.__name__, self.connect_timeout,
+                   self.connect_retries, self.args[0])
+
 
 class ReadTimeout(ConnectionError):
     """
@@ -210,6 +249,20 @@ class ReadTimeout(ConnectionError):
                format(self.__class__.__name__, self.args[0],
                       self.read_timeout, self.read_retries)
 
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; read_timeout={}; read_retries={}; message={};
+        """
+        return "classname={!r}; read_timeout={!r}; read_retries={!r}; " \
+            "message={!r};". \
+            format(self.__class__.__name__, self.read_timeout,
+                   self.read_retries, self.args[0])
+
 
 class RetriesExceeded(ConnectionError):
     """
@@ -258,6 +311,18 @@ class RetriesExceeded(ConnectionError):
                format(self.__class__.__name__, self.args[0],
                       self.connect_retries)
 
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; connect_retries={}; message={};
+        """
+        return "classname={!r}; connect_retries={!r}; message={!r};". \
+            format(self.__class__.__name__, self.connect_retries, self.args[0])
+
 
 class AuthError(Error):
     """
@@ -304,6 +369,18 @@ class ClientAuthError(AuthError):
         return "{}(message={!r})". \
                format(self.__class__.__name__, self.args[0])
 
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={};
+        """
+        return "classname={!r}; message={!r};". \
+            format(self.__class__.__name__, self.args[0])
+
 
 class ServerAuthError(AuthError):
     """
@@ -349,6 +426,21 @@ class ServerAuthError(AuthError):
                format(self.__class__.__name__, self.args[0],
                       self.details.request_method, self.details.request_uri,
                       self.details.http_status, self.details.reason)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; request_method={}; request_uri={}; http_status={}; reason={}; message={};
+        """  # noqa: E501
+        return "classname={!r}; request_method={!r}; request_uri={!r}; " \
+            "http_status={!r}; reason={!r}; message={!r};". \
+            format(self.__class__.__name__, self.details.request_method,
+                   self.details.request_uri, self.details.http_status,
+                   self.details.reason, self.args[0])
 
 
 class ParseError(Error):
@@ -414,6 +506,19 @@ class ParseError(Error):
                format(self.__class__.__name__, self.args[0], self.line,
                       self.column)
 
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; line={}; column={}; message={};
+        """
+        return "classname={!r}; line={!r}; column={!r}; message={!r};". \
+            format(self.__class__.__name__, self.line, self.column,
+                   self.args[0])
+
 
 class VersionError(Error):
     """
@@ -465,6 +570,20 @@ class VersionError(Error):
         return "{}(message={!r}, min_api_version={!r}, api_version={!r})". \
                format(self.__class__.__name__, self.args[0],
                       self.min_api_version, self.api_version)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; min_api_version={}; api_version={}; message={};
+        """
+        return "classname={!r}; min_api_version={!r}; api_version={!r}; " \
+            "message={!r};". \
+            format(self.__class__.__name__, self.min_api_version,
+                   self.api_version, self.args[0])
 
 
 class HTTPError(Error):
@@ -652,6 +771,21 @@ class HTTPError(Error):
                format(self.__class__.__name__, self.http_status, self.reason,
                       self.message, self.request_method, self.request_uri)
 
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; request_method={}; request_uri={}; http_status={}; reason={}; message={};
+        """  # noqa: E501
+        return "classname={!r}; request_method={!r}; request_uri={!r}; " \
+            "http_status={!r}; reason={!r}; message={!r};". \
+            format(self.__class__.__name__, self.request_method,
+                   self.request_uri, self.http_status, self.reason,
+                   self.args[0])
+
 
 class OperationTimeout(Error):
     """
@@ -689,6 +823,19 @@ class OperationTimeout(Error):
         return "{}(message={!r}, operation_timeout={!r})". \
                format(self.__class__.__name__, self.args[0],
                       self.operation_timeout)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; operation_timeout={}; message={};
+        """
+        return "classname={!r}; operation_timeout={!r}; message={!r};". \
+            format(self.__class__.__name__, self.operation_timeout,
+                   self.args[0])
 
 
 class StatusTimeout(Error):
@@ -764,6 +911,20 @@ class StatusTimeout(Error):
             format(self.__class__.__name__, self.args[0], self.actual_status,
                    self.desired_statuses, self.status_timeout)
 
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; actual_status={}; desired_statuses={}; status_timeout={}; message={};
+        """  # noqa: E501
+        return "classname={!r}; actual_status={!r}; desired_statuses={!r}; " \
+            "status_timeout={!r}; message={!r};". \
+            format(self.__class__.__name__, self.actual_status,
+                   self.desired_statuses, self.status_timeout, self.args[0])
+
 
 class NoUniqueMatch(Error):
     """
@@ -831,6 +992,25 @@ class NoUniqueMatch(Error):
                       self.filter_args,
                       parent.__class__.__name__ if parent else None,
                       parent.name if parent else None)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; resource_classname={}; filter_args={}; parent_classname={}; manager_name={}; message={};
+        """  # noqa: E501
+        parent = self.manager.parent
+        return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
+               "parent_classname={!r}; parent_name={!r}; message={!r};". \
+               format(self.__class__.__name__,
+                      self.manager.resource_class.__name__,
+                      self.filter_args,
+                      parent.__class__.__name__ if parent else None,
+                      parent.name if parent else None,
+                      self.args[0])
 
 
 class NotFound(Error):
@@ -903,3 +1083,22 @@ class NotFound(Error):
                       self.filter_args,
                       parent.__class__.__name__ if parent else None,
                       parent.name if parent else None)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; resource_classname={}; filter_args={}; parent_classname={}; parent_name={}; message={};
+        """  # noqa: E501
+        parent = self.manager.parent
+        return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
+               "parent_classname={!r}; parent_name={!r}; message={!r};". \
+               format(self.__class__.__name__,
+                      self.manager.resource_class.__name__,
+                      self.filter_args,
+                      parent.__class__.__name__ if parent else None,
+                      parent.name if parent else None,
+                      self.args[0])

@@ -18,6 +18,7 @@ import click
 
 import zhmcclient
 from .zhmccli import cli
+from ._helper import raise_click_exception
 
 
 @cli.group('session')
@@ -63,7 +64,7 @@ def cmd_session_create(cmd_ctx):
     try:
         session.logon(verify=True)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo("export ZHMC_HOST=%s" % session.host)
@@ -77,7 +78,7 @@ def cmd_session_delete(cmd_ctx):
     try:
         session.logoff()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo("unset ZHMC_SESSION_ID")

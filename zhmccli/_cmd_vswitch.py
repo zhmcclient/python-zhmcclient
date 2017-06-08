@@ -19,24 +19,22 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    raise_click_exception
 from ._cmd_cpc import find_cpc
 
 
-def find_vswitch(client, cpc_name, vswitch_name):
+def find_vswitch(cmd_ctx, client, cpc_name, vswitch_name):
     """
     Find a virtual switch by name and return its resource object.
     """
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
     # The CPC must be in DPM mode. We don't check that because it would
     # cause a GET to the CPC resource that we otherwise don't need.
     try:
         vswitch = cpc.virtual_switches.find(name=vswitch_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find virtual switch %s in "
-                                   "CPC %s." % (vswitch_name, cpc_name))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return vswitch
 
 
@@ -110,12 +108,12 @@ def vswitch_update(cmd_ctx, cpc, vswitch, **options):
 def cmd_vswitch_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    cpc = find_cpc(client, cpc_name)
+    cpc = find_cpc(cmd_ctx, client, cpc_name)
 
     try:
         vswitches = cpc.virtual_switches.list()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -137,12 +135,12 @@ def cmd_vswitch_list(cmd_ctx, cpc_name, options):
 def cmd_vswitch_show(cmd_ctx, cpc_name, vswitch_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    vswitch = find_vswitch(client, cpc_name, vswitch_name)
+    vswitch = find_vswitch(cmd_ctx, client, cpc_name, vswitch_name)
 
     try:
         vswitch.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     print_properties(vswitch.properties, cmd_ctx.output_format)
@@ -151,7 +149,7 @@ def cmd_vswitch_show(cmd_ctx, cpc_name, vswitch_name):
 def cmd_vswitch_update(cmd_ctx, cpc_name, vswitch_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    vswitch = find_vswitch(client, cpc_name, vswitch_name)
+    vswitch = find_vswitch(cmd_ctx, client, cpc_name, vswitch_name)
 
     options = original_options(options)
     properties = options_to_properties(options)
@@ -165,7 +163,7 @@ def cmd_vswitch_update(cmd_ctx, cpc_name, vswitch_name, options):
     try:
         vswitch.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != vswitch_name:

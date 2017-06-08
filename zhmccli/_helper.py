@@ -54,7 +54,7 @@ SYSLOG_FACILITIES = ['user', 'local0', 'local1', 'local2', 'local3', 'local4',
 def abort_if_false(ctx, param, value):
     # pylint: disable=unused-argument
     if not value:
-        raise click.ClickException("Aborted.")
+        raise_click_exception("Aborted.", ctx.error_format)
 
 
 class InvalidOutputFormatError(click.ClickException):
@@ -69,12 +69,13 @@ class InvalidOutputFormatError(click.ClickException):
 
 class CmdContext(object):
 
-    def __init__(self, host, userid, password, output_format, timestats,
-                 session_id, get_password):
+    def __init__(self, host, userid, password, output_format, error_format,
+                 timestats, session_id, get_password):
         self._host = host
         self._userid = userid
         self._password = password
         self._output_format = output_format
+        self._error_format = error_format
         self._timestats = timestats
         self._session_id = session_id
         self._get_password = get_password
@@ -83,10 +84,11 @@ class CmdContext(object):
 
     def __repr__(self):
         ret = "CmdContext(at 0x%08x, host=%r, userid=%r, password=%r, " \
-            "output_format=%r, session_id=%r, session=%r, ...)" % \
+            "output_format=%r, error_format=%r, session_id=%r, " \
+            "session=%r, ...)" % \
             (id(self), self._host, self._userid,
              '...' if self._password else None, self._output_format,
-             self._session_id, self._session)
+             self._error_format, self._session_id, self._session)
         return ret
 
     @property
@@ -109,6 +111,13 @@ class CmdContext(object):
         :term:`string`: Output format to be used.
         """
         return self._output_format
+
+    @property
+    def error_format(self):
+        """
+        :term:`string`: Error message format to be used.
+        """
+        return self._error_format
 
     @property
     def timestats(self):
@@ -152,7 +161,8 @@ class CmdContext(object):
     def execute_cmd(self, cmd):
         if self._session is None:
             if self._host is None:
-                raise click.ClickException("No HMC host provided")
+                raise_click_exception("No HMC host provided",
+                                      self._error_format)
             self._session = zhmcclient.Session(
                 self._host, self._userid, self._password,
                 session_id=self._session_id, get_password=self._get_password)
@@ -582,3 +592,31 @@ def part_console(session, part, refresh, logger):
     console_log(logger, prefix, "Operating system console session closed")
 
     click.echo("\nConsole session closed.")
+
+
+def raise_click_exception(exc, error_format):
+    """
+    Raise a ClickException with the desired error message format.
+
+    Parameters:
+
+      exc (exception or string):
+        The exception or the message.
+
+      error_format (string):
+        The error format (see ``--error-format`` general option).
+    """
+    if error_format == 'def':
+        if isinstance(exc, zhmcclient.Error):
+            error_str = exc.str_def()
+        else:
+            assert isinstance(exc, six.string_types)
+            error_str = "classname: None, message: {}".format(exc)
+    else:
+        assert error_format == 'msg'
+        if isinstance(exc, zhmcclient.Error):
+            error_str = "{}: {}".format(exc.__class__.__name__, exc)
+        else:
+            assert isinstance(exc, six.string_types)
+            error_str = exc
+    raise click.ClickException(error_str)

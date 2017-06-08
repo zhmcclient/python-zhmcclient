@@ -19,7 +19,8 @@ import click
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    raise_click_exception
 from ._cmd_partition import find_partition
 
 
@@ -27,19 +28,15 @@ from ._cmd_partition import find_partition
 SSC_IP_ADDRESS_TYPES = ['ipv4', 'ipv6', 'linklocal', 'dhcp']
 
 
-def find_nic(client, cpc_name, partition_name, nic_name):
+def find_nic(cmd_ctx, client, cpc_name, partition_name, nic_name):
     """
     Find a NIC by name and return its resource object.
     """
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
     try:
         nic = partition.nics.find(name=nic_name)
-    except zhmcclient.NotFound:
-        raise click.ClickException("Could not find NIC %s in partition %s in "
-                                   "CPC %s." %
-                                   (nic_name, partition_name, cpc_name))
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
     return nic
 
 
@@ -230,12 +227,12 @@ def nic_delete(cmd_ctx, cpc, partition, nic):
 def cmd_nic_list(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     try:
         nics = partition.nics.list()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     show_list = [
         'name',
@@ -256,12 +253,12 @@ def cmd_nic_list(cmd_ctx, cpc_name, partition_name, options):
 def cmd_nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    nic = find_nic(client, cpc_name, partition_name, nic_name)
+    nic = find_nic(cmd_ctx, client, cpc_name, partition_name, nic_name)
 
     try:
         nic.pull_full_properties()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     print_properties(nic.properties, cmd_ctx.output_format)
@@ -270,7 +267,7 @@ def cmd_nic_show(cmd_ctx, cpc_name, partition_name, nic_name):
 def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     name_map = {
         # The following options are handled in this function:
@@ -288,23 +285,27 @@ def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
         missing_option_names = [name for name in required_roce_option_names
                                 if options[name] is None]
         if missing_option_names:
-            raise click.ClickException("ROCE adapter specified, but "
-                                       "misses the following options: %s" %
-                                       ', '.join(missing_option_names))
+            raise_click_exception("ROCE adapter specified, but misses the "
+                                  "following options: %s" %
+                                  ', '.join(missing_option_names),
+                                  cmd_ctx.error_format)
 
         adapter_name = options['adapter']
         try:
             adapter = partition.manager.cpc.adapters.find(name=adapter_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find adapter %s in CPC %s." %
-                                       (adapter_name, cpc_name))
+            raise_click_exception("Could not find adapter %s in CPC %s." %
+                                  (adapter_name, cpc_name),
+                                  cmd_ctx.error_format)
+
         port_name = options['port']
         try:
             port = adapter.ports.find(name=port_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find port %s on adapter %s "
-                                       "in CPC %s." %
-                                       (port_name, adapter_name, cpc_name))
+            raise_click_exception("Could not find port %s on adapter %s in "
+                                  "CPC %s." %
+                                  (port_name, adapter_name, cpc_name),
+                                  cmd_ctx.error_format)
         properties['network-adapter-port-uri'] = port.uri
 
     elif options['virtual-switch'] is not None:
@@ -313,18 +314,18 @@ def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
             vswitch = partition.manager.cpc.virtual_switches.find(
                 name=vswitch_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find virtual switch %s "
-                                       "in CPC %s." %
-                                       (vswitch_name, cpc_name))
+            raise_click_exception("Could not find virtual switch %s in "
+                                  "CPC %s." % (vswitch_name, cpc_name),
+                                  cmd_ctx.error_format)
         properties['virtual-switch-uri'] = vswitch.uri
     else:
-        raise click.ClickException("No backing adapter port or virtual switch "
-                                   "specified.")
+        raise_click_exception("No backing adapter port or virtual switch "
+                              "specified.", cmd_ctx.error_format)
 
     try:
         new_nic = partition.nics.create(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo("New NIC %s has been created." %
@@ -334,7 +335,7 @@ def cmd_nic_create(cmd_ctx, cpc_name, partition_name, options):
 def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    nic = find_nic(client, cpc_name, partition_name, nic_name)
+    nic = find_nic(cmd_ctx, client, cpc_name, partition_name, nic_name)
 
     name_map = {
         # The following options are handled in this function:
@@ -352,24 +353,28 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
         missing_option_names = [name for name in required_roce_option_names
                                 if options[name] is None]
         if missing_option_names:
-            raise click.ClickException("ROCE adapter specified, but "
-                                       "misses the following options: %s" %
-                                       ', '.join(missing_option_names))
+            raise_click_exception("ROCE adapter specified, but misses the "
+                                  "following options: %s" %
+                                  ', '.join(missing_option_names),
+                                  cmd_ctx.error_format)
 
         adapter_name = options['adapter']
         try:
             adapter = nic.partition.manager.cpc.adapters.find(
                 name=adapter_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find adapter %s in CPC %s." %
-                                       (adapter_name, cpc_name))
+            raise_click_exception("Could not find adapter %s in CPC %s." %
+                                  (adapter_name, cpc_name),
+                                  cmd_ctx.error_format)
+
         port_name = options['port']
         try:
             port = adapter.ports.find(name=port_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find port %s on adapter %s "
-                                       "in CPC %s." %
-                                       (port_name, adapter_name, cpc_name))
+            raise_click_exception("Could not find port %s on adapter %s in "
+                                  "CPC %s." %
+                                  (port_name, adapter_name, cpc_name),
+                                  cmd_ctx.error_format)
         properties['network-adapter-port-uri'] = port.uri
 
     elif options['virtual-switch'] is not None:
@@ -378,9 +383,10 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
             vswitch = nic.partition.manager.cpc.virtual_switches.find(
                 name=vswitch_name)
         except zhmcclient.NotFound:
-            raise click.ClickException("Could not find virtual switch %s "
-                                       "in CPC %s." %
-                                       (vswitch_name, cpc_name))
+            raise_click_exception("Could not find virtual switch %s in "
+                                  "CPC %s." %
+                                  (vswitch_name, cpc_name),
+                                  cmd_ctx.error_format)
         properties['virtual-switch-uri'] = vswitch.uri
     else:
         # The backing adapter port or virtual switch is not being updated.
@@ -394,7 +400,7 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
     try:
         nic.update_properties(properties)
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     if 'name' in properties and properties['name'] != nic_name:
@@ -407,12 +413,12 @@ def cmd_nic_update(cmd_ctx, cpc_name, partition_name, nic_name, options):
 def cmd_nic_delete(cmd_ctx, cpc_name, partition_name, nic_name):
 
     client = zhmcclient.Client(cmd_ctx.session)
-    nic = find_nic(client, cpc_name, partition_name, nic_name)
+    nic = find_nic(cmd_ctx, client, cpc_name, partition_name, nic_name)
 
     try:
         nic.delete()
     except zhmcclient.Error as exc:
-        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+        raise_click_exception(exc, cmd_ctx.error_format)
 
     cmd_ctx.spinner.stop()
     click.echo('NIC %s has been deleted.' % nic_name)

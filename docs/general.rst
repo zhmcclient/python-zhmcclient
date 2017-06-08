@@ -91,6 +91,8 @@ Exceptions
 .. automodule:: zhmcclient._exceptions
 
 .. autoclass:: zhmcclient.Error
+   :members:
+   :special-members: __str__
 
 .. autoclass:: zhmcclient.ConnectionError
    :members:
