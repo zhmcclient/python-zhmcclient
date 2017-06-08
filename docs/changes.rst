@@ -87,6 +87,10 @@ Released: not yet
 
 * Improved unit test cases for ``zhmcclient._exceptions`` module.
 
+* Added support to the zhmc CLI for an interactive session to the console
+  of the operating system running in a
+  partition (``zhmc partition console``) or LPAR (``zhmc lpar console``).
+
 **Known issues:**
 
 * See `list of open issues`_.

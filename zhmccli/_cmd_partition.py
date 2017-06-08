@@ -13,13 +13,16 @@
 # limitations under the License.
 
 from __future__ import absolute_import
+from __future__ import print_function
 
+import logging
 import click
 
 import zhmcclient
 from .zhmccli import cli
 from ._helper import print_properties, print_resources, abort_if_false, \
-    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR
+    options_to_properties, original_options, COMMAND_OPTIONS_METAVAR, \
+    part_console
 from ._cmd_cpc import find_cpc
 
 
@@ -294,6 +297,25 @@ def partition_delete(cmd_ctx, cpc, partition):
     cmd_ctx.execute_cmd(lambda: cmd_partition_delete(cmd_ctx, cpc, partition))
 
 
+@partition_group.command('console', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.option('--refresh', is_flag=True, required=False,
+              help='Include refresh messages.')
+@click.pass_obj
+def partition_console(cmd_ctx, cpc, partition, **options):
+    """
+    Establish an interactive session with the console of the operating system
+    running in a partition.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_partition_console(cmd_ctx, cpc, partition,
+                                                      options))
+
+
 def cmd_partition_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
@@ -529,3 +551,20 @@ def cmd_partition_delete(cmd_ctx, cpc_name, partition_name):
 
     cmd_ctx.spinner.stop()
     click.echo('Partition %s has been deleted.' % partition_name)
+
+
+def cmd_partition_console(cmd_ctx, cpc_name, partition_name, options):
+
+    logger = logging.getLogger(zhmcclient.CONSOLE_LOGGER_NAME)
+
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = find_partition(client, cpc_name, partition_name)
+
+    refresh = options['refresh']
+
+    cmd_ctx.spinner.stop()
+
+    try:
+        part_console(cmd_ctx.session, partition, refresh, logger)
+    except zhmcclient.Error as exc:
+        raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
