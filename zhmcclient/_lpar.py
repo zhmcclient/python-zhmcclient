@@ -263,7 +263,7 @@ class Lpar(BaseResource):
             statuses = ["not-operating"]
             if allow_status_exceptions:
                 statuses.append("exceptions")
-            self._wait_for_status(statuses, status_timeout)
+            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
@@ -354,7 +354,7 @@ class Lpar(BaseResource):
             statuses = ["not-activated"]
             if allow_status_exceptions:
                 statuses.append("exceptions")
-            self._wait_for_status(statuses, status_timeout)
+            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
@@ -452,7 +452,7 @@ class Lpar(BaseResource):
             statuses = ["operating"]
             if allow_status_exceptions:
                 statuses.append("exceptions")
-            self._wait_for_status(statuses, status_timeout)
+            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
@@ -528,7 +528,8 @@ class Lpar(BaseResource):
         self.manager.session.post(
             self.uri + '/operations/send-os-cmd', body)
 
-    def _wait_for_status(self, status, status_timeout=None):
+    @logged_api_call
+    def wait_for_status(self, status, status_timeout=None):
         """
         Wait until the status of this LPAR has a desired value.
 
@@ -553,8 +554,9 @@ class Lpar(BaseResource):
             Timeout in seconds, for waiting that the status of the LPAR has
             reached one of the desired status values. The special value 0 means
             that no timeout is set.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.StatusTimeout` is raised.
+            `None` means that the default status timeout will be used.
+            If the timeout expires , a :exc:`~zhmcclient.StatusTimeout` is
+            raised.
 
         Raises:
 

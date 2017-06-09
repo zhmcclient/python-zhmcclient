@@ -99,6 +99,10 @@ Released: not yet
   returned by the new ``str_def()`` methods. This format provides for easier
   parsing of details of error messages by invoking scripts.
 
+* Added ``wait_for_status()`` methods to the ``Lpar`` and ``Partition``
+  classes, in order to ease the work for users that need to ensure that a
+  particular LPAR or partition status is reached.
+
 **Known issues:**
 
 * See `list of open issues`_.
