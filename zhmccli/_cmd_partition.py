@@ -561,7 +561,7 @@ def cmd_partition_console(cmd_ctx, cpc_name, partition_name, options):
     logger = logging.getLogger(zhmcclient.CONSOLE_LOGGER_NAME)
 
     client = zhmcclient.Client(cmd_ctx.session)
-    partition = find_partition(client, cpc_name, partition_name)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
 
     refresh = options['refresh']
 

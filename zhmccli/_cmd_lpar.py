@@ -344,7 +344,7 @@ def cmd_lpar_console(cmd_ctx, cpc_name, lpar_name, options):
     logger = logging.getLogger(zhmcclient.CONSOLE_LOGGER_NAME)
 
     client = zhmcclient.Client(cmd_ctx.session)
-    lpar = find_lpar(client, cpc_name, lpar_name)
+    lpar = find_lpar(cmd_ctx, client, cpc_name, lpar_name)
 
     refresh = options['refresh']
 
