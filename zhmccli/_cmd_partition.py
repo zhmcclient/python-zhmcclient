@@ -430,6 +430,9 @@ def cmd_partition_create(cmd_ctx, cpc_name, options):
             'cp-processors' not in properties:
         properties['ifl-processors'] = DEFAULT_IFL_PROCESSORS
 
+    if options['ssc-dns-servers'] is not None:
+        properties['ssc-dns-servers'] = options['ssc-dns-servers'].split(',')
+
     try:
         new_partition = cpc.partitions.create(properties)
     except zhmcclient.Error as exc:
@@ -522,6 +525,9 @@ def cmd_partition_update(cmd_ctx, cpc_name, partition_name, options):
     else:
         # boot-device="none" is the default
         pass
+
+    if options['ssc-dns-servers'] is not None:
+        properties['ssc-dns-servers'] = options['ssc-dns-servers'].split(',')
 
     if not properties:
         cmd_ctx.spinner.stop()
