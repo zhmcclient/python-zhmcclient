@@ -774,3 +774,110 @@ class Partition(BaseResource):
                     actual_status, statuses, status_timeout)
 
             time.sleep(1)  # Avoid hot spin loop
+
+    @logged_api_call
+    def increase_crypto_config(self, crypto_adapters,
+                               crypto_domain_configurations):
+        """
+        Adds the specified adapters and/or domain configurations
+        to the crypto configuration of the corresponding partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Partition Details" task.
+
+        Parameters:
+
+          crypto_adapters (list): Crypto adapters that should be added
+            to the crypto configuration of this partition.
+
+          crypto_domain_configurations (list):
+            List of crypto-domain-configuration objects
+            that should be added to the crypto configuration
+            of this partition. See properties of crypto-domain-configuration
+            objects in section 'Data model' in section 'Partition object'
+            in the :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        crypto_adapter_uris = (a.uri for a in crypto_adapters)
+
+        body = {'crypto-adapter-uris': crypto_adapter_uris,
+                'crypto-domain-configurations': crypto_domain_configurations}
+        self.manager.session.post(
+            self.uri + '/operations/increase-crypto-configuration', body)
+
+    @logged_api_call
+    def decrease_crypto_config(self, crypto_adapters,
+                               crypto_domain_indexes):
+        """
+        Remove some elements or all elements of an existing (non-empty)
+        crypto configuration.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Partition Details" task.
+
+        Parameters:
+
+          crypto_adapters (list): Crypto adapters that should be removed
+            from the crypto configuration of this partition.
+
+          crypto_domain_indexes (list):
+            List of all crypto domain indexes that should be removed
+            from the crypto configuration of this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        crypto_adapter_uris = (a.uri for a in crypto_adapters)
+
+        body = {'crypto-adapter-uris': crypto_adapter_uris,
+                'crypto-domain-indexes': crypto_domain_indexes}
+        self.manager.session.post(
+            self.uri + '/operations/decrease-crypto-configuration', body)
+
+    @logged_api_call
+    def change_crypto_domain_config(self, domain_index, access_mode):
+        """
+        Change the access mode for a crypto domain configuration
+        that is currently included in the crypto configuration
+        of the partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Partition Details" task.
+
+        Parameters:
+
+          domain_index:
+            Index of the domain to be changed.
+
+          access_mode:
+            The new value ('control' or 'control-usage')
+            of the access-mode property of the crypto domain configuration
+            identified by the domain-index.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'domain_index': domain_index,
+                'access_mode': access_mode}
+        self.manager.session.post(
+            self.uri + '/operations/change-crypto-domain-configuration', body)

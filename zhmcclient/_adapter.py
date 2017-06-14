@@ -349,3 +349,44 @@ class Adapter(BaseResource):
                 _ports=repr_manager(self._ports, indent=2),
             ))
         return ret
+
+    @logged_api_call
+    def change_crypto_type(self, crypto_type, zeroize=None):
+        """
+        Reconfigures a cryptographic adapter to a different crypto type.
+        This operation is only supported for cryptographic adapters.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Partition Details" task.
+
+        Parameters:
+
+          crypto_type:
+            - 'accelerator':
+               Crypto Express4S Accelerator or
+               Crypto Express5S Accelerator.
+            - 'cca-coprocessor':
+               Crypto Express4S CCA Coprocessor or
+               Crypto Express5S Coprocessor.
+            - 'ep11-coprocessor':
+               Crypto Express4S EP11 Coprocessor or
+               Crypto Express5S EP11 Coprocessor.
+
+          zeroize:
+            Specifies whether the cryptographic adapter will be zeroized when
+            it is reconfigured to a crypto-type of "accelerator".
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'crypto-type': crypto_type}
+        if zeroize is not None:
+            body['zeroize'] = zeroize
+        self.manager.session.post(
+            self.uri + '/operations/change-crypto-type', body)
