@@ -48,6 +48,9 @@ Released: not yet
 * Clarified in the documentation of all exceptions that have a ``details``
   instance variable, that it is never ``None``.
 
+* Fixed using '--ssc-dns-servers' option for the CLI commands
+  'zhmc partition create/update'. See issue #310.
+
 **Enhancements:**
 
 * Improved content of ``zhmcclient.ParseError`` message for better problem
