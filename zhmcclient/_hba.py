@@ -25,6 +25,8 @@ HBAs only exist in :term:`CPCs <CPC>` that are in DPM mode.
 
 from __future__ import absolute_import
 
+import copy
+
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import get_logger, logged_api_call
@@ -165,7 +167,7 @@ class HbaManager(BaseManager):
                                    body=properties)
         # There should not be overlaps, but just in case there are, the
         # returned props should overwrite the input props:
-        props = properties.copy()
+        props = copy.deepcopy(properties)
         props.update(result)
         name = props.get(self._name_prop, None)
         uri = props[self._uri_prop]
@@ -256,7 +258,7 @@ class Hba(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(self.uri, body=properties)
-        self.properties.update(properties.copy())
+        self.properties.update(copy.deepcopy(properties))
         if self.manager._name_prop in properties:
             self.manager._name_uri_cache.update(self.name, self.uri)
 

@@ -27,6 +27,7 @@ Virtual Switches only exist in CPCs that are in DPM mode.
 from __future__ import absolute_import
 
 import re
+import copy
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -255,6 +256,6 @@ class VirtualSwitch(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(self.uri, body=properties)
-        self.properties.update(properties.copy())
+        self.properties.update(copy.deepcopy(properties))
         if self.manager._name_prop in properties:
             self.manager._name_uri_cache.update(self.name, self.uri)
