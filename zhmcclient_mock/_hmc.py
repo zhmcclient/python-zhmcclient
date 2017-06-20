@@ -26,6 +26,7 @@ except ImportError:
     from ordereddict import OrderedDict
 import six
 import re
+import copy
 
 from ._idpool import IdPool
 from zhmcclient._utils import repr_dict, repr_manager
@@ -51,8 +52,8 @@ class FakedBaseResource(object):
 
     def __init__(self, manager, properties):
         self._manager = manager  # May be None
-        self._properties = properties.copy() if properties is not None \
-            else None
+        self._properties = copy.deepcopy(properties) \
+            if properties is not None else None
 
         if self.manager and self.properties:
 
