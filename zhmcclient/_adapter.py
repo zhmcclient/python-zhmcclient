@@ -356,27 +356,26 @@ class Adapter(BaseResource):
         Reconfigures a cryptographic adapter to a different crypto type.
         This operation is only supported for cryptographic adapters.
 
+        The cryptographic adapter must be varied offline before its crypto
+        type can be reconfigured.
+
         Authorization requirements:
 
-        * Object-access permission to this Partition.
-        * Task permission to the "Partition Details" task.
+        * Object-access permission to this Adapter.
+        * Task permission to the "Adapter Details" task.
 
         Parameters:
 
-          crypto_type:
-            - 'accelerator':
-               Crypto Express4S Accelerator or
-               Crypto Express5S Accelerator.
-            - 'cca-coprocessor':
-               Crypto Express4S CCA Coprocessor or
-               Crypto Express5S Coprocessor.
-            - 'ep11-coprocessor':
-               Crypto Express4S EP11 Coprocessor or
-               Crypto Express5S EP11 Coprocessor.
+          crypto_type (:term:`string`):
+            - ``"accelerator"``: Crypto Express5S Accelerator
+            - ``"cca-coprocessor"``: Crypto Express5S CCA Coprocessor
+            - ``"ep11-coprocessor"``: Crypto Express5S EP11 Coprocessor
 
-          zeroize:
+          zeroize (bool):
             Specifies whether the cryptographic adapter will be zeroized when
-            it is reconfigured to a crypto-type of "accelerator".
+            it is reconfigured to a crypto type of ``"accelerator"``.
+            `None` means that the HMC-implemented default of `True` will be
+            used.
 
         Raises:
 

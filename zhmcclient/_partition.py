@@ -779,8 +779,21 @@ class Partition(BaseResource):
     def increase_crypto_config(self, crypto_adapters,
                                crypto_domain_configurations):
         """
-        Adds the specified adapters and/or domain configurations
-        to the crypto configuration of the corresponding partition.
+        Add crypto adapters and/or crypto domains to the crypto configuration
+        of this partition.
+
+        The general principle for maintaining crypto configurations of
+        partitions is as follows: Each adapter included in the crypto
+        configuration of a partition has all crypto domains included in the
+        crypto configuration. Each crypto domain included in the crypto
+        configuration has the same access mode on all adapters included in the
+        crypto configuration.
+
+        Example: Assume that the current crypto configuration of a partition
+        includes crypto adapter A and crypto domains 0 and 1. When this method
+        is called to add adapter B and domain configurations for domains 1 and
+        2, the resulting crypto configuration of the partition will include
+        domains 0, 1, and 2 on each of the adapters A and B.
 
         Authorization requirements:
 
@@ -789,15 +802,39 @@ class Partition(BaseResource):
 
         Parameters:
 
-          crypto_adapters (list): Crypto adapters that should be added
-            to the crypto configuration of this partition.
+          crypto_adapters (:term:`iterable` of :class:`~zhmcclient.Adapter`):
+            Crypto adapters that should be added to the crypto configuration of
+            this partition.
 
-          crypto_domain_configurations (list):
-            List of crypto-domain-configuration objects
-            that should be added to the crypto configuration
-            of this partition. See properties of crypto-domain-configuration
-            objects in section 'Data model' in section 'Partition object'
-            in the :term:`HMC API` book.
+          crypto_domain_configurations (:term:`iterable` of `domain_config`):
+            Crypto domain configurations that should be added to the crypto
+            configuration of this partition.
+
+            A crypto domain configuration (`domain_config`) is a dictionary
+            with the following keys:
+
+            * ``"domain-index"`` (:term:`integer`): Domain index of the crypto
+              domain.
+
+              The domain index is a number in the range of 0 to a maximum that
+              depends on the model of the crypto adapter and the CPC model. For
+              the Crypto Express 5S adapter in a z13, the maximum domain index
+              is 84.
+
+            * ``"access-mode"`` (:term:`string`): Access mode for the crypto
+              domain.
+
+              The access mode specifies the way the partition can use the
+              crypto domain on the crypto adapter(s), using one of the
+              following string values:
+
+              * ``"control"`` - The partition can load cryptographic keys into
+                the domain, but it may not use the domain to perform
+                cryptographic operations.
+
+              * ``"control-usage"`` - The partition can load cryptographic keys
+                into the domain, and it can use the domain to perform
+                cryptographic operations.
 
         Raises:
 
@@ -817,8 +854,17 @@ class Partition(BaseResource):
     def decrease_crypto_config(self, crypto_adapters,
                                crypto_domain_indexes):
         """
-        Remove some elements or all elements of an existing (non-empty)
-        crypto configuration.
+        Remove crypto adapters and/or crypto domains from the crypto
+        configuration of this partition.
+
+        For the general principle for maintaining crypto configurations of
+        partitions, see :meth:`~zhmcclient.Partition.increase_crypto_config`.
+
+        Example: Assume that the current crypto configuration of a partition
+        includes crypto adapters A, B and C and crypto domains 0, 1, and 2 (on
+        each of the adapters). When this method is called to remove adapter C
+        and domain 2, the resulting crypto configuration of the partition will
+        include domains 0 and 1 on each of the adapters A and B.
 
         Authorization requirements:
 
@@ -827,12 +873,14 @@ class Partition(BaseResource):
 
         Parameters:
 
-          crypto_adapters (list): Crypto adapters that should be removed
-            from the crypto configuration of this partition.
+          crypto_adapters (:term:`iterable` of :class:`~zhmcclient.Adapter`):
+            Crypto adapters that should be removed from the crypto
+            configuration of this partition.
 
-          crypto_domain_indexes (list):
-            List of all crypto domain indexes that should be removed
-            from the crypto configuration of this partition.
+          crypto_domain_indexes (:term:`iterable` of :term:`integer`):
+            Domain indexes of the crypto domains that should be removed from
+            the crypto configuration of this partition. For values, see
+            :meth:`~zhmcclient.Partition.increase_crypto_config`.
 
         Raises:
 
@@ -849,11 +897,17 @@ class Partition(BaseResource):
             self.uri + '/operations/decrease-crypto-configuration', body)
 
     @logged_api_call
-    def change_crypto_domain_config(self, domain_index, access_mode):
+    def change_crypto_domain_config(self, crypto_domain_index, access_mode):
         """
-        Change the access mode for a crypto domain configuration
-        that is currently included in the crypto configuration
-        of the partition.
+        Change the access mode for a crypto domain that is currently included
+        in the crypto configuration of this partition.
+
+        The access mode will be changed for the specified crypto domain on all
+        crypto adapters currently included in the crypto configuration of this
+        partition.
+
+        For the general principle for maintaining crypto configurations of
+        partitions, see :meth:`~zhmcclient.Partition.increase_crypto_config`.
 
         Authorization requirements:
 
@@ -862,13 +916,13 @@ class Partition(BaseResource):
 
         Parameters:
 
-          domain_index:
-            Index of the domain to be changed.
+          crypto_domain_index (:term:`integer`):
+            Domain index of the crypto domain to be changed. For values, see
+            :meth:`~zhmcclient.Partition.increase_crypto_config`.
 
-          access_mode:
-            The new value ('control' or 'control-usage')
-            of the access-mode property of the crypto domain configuration
-            identified by the domain-index.
+          access_mode (:term:`string`):
+            The new access mode for the crypto domain. For values, see
+            :meth:`~zhmcclient.Partition.increase_crypto_config`.
 
         Raises:
 
@@ -877,7 +931,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        body = {'domain_index': domain_index,
+        body = {'domain_index': crypto_domain_index,
                 'access_mode': access_mode}
         self.manager.session.post(
             self.uri + '/operations/change-crypto-domain-configuration', body)
