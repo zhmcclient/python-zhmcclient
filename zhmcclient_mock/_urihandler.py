@@ -498,6 +498,152 @@ class PartitionStopHandler(object):
         partition.properties['status'] = 'stopped'
 
 
+def ensure_crypto_config(partition):
+    """
+    Ensure that the 'crypto-configuration' property on the faked partition
+    is initialized.
+    """
+
+    if 'crypto-configuration' not in partition.properties or \
+            partition.properties['crypto-configuration'] is None:
+        partition.properties['crypto-configuration'] = {}
+    crypto_config = partition.properties['crypto-configuration']
+
+    if 'crypto-adapter-uris' not in crypto_config or \
+            crypto_config['crypto-adapter-uris'] is None:
+        crypto_config['crypto-adapter-uris'] = []
+    adapter_uris = crypto_config['crypto-adapter-uris']
+
+    if 'crypto-domain-configurations' not in crypto_config or \
+            crypto_config['crypto-domain-configurations'] is None:
+        crypto_config['crypto-domain-configurations'] = []
+    domain_configs = crypto_config['crypto-domain-configurations']
+
+    return adapter_uris, domain_configs
+
+
+class PartitionIncreaseCryptoConfigHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Increase Crypto Configuration (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_uri = uri.split('/operations/')[0]
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+
+        adapter_uris, domain_configs = ensure_crypto_config(partition)
+
+        try:
+            add_adapter_uris = body['crypto-adapter-uris']
+        except KeyError:
+            raise HTTPError('POST', uri, 400, 999,
+                            "Input field 'crypto-adapter-uris' not set in "
+                            "request body.")
+        try:
+            add_domain_configs = body['crypto-domain-configurations']
+        except KeyError:
+            raise HTTPError('POST', uri, 400, 999,
+                            "Input field 'crypto-domain-configurations' not "
+                            "set in request body.")
+
+        # We don't support finding errors in this simple-minded mock support,
+        # so we assume that the input is fine (e.g. no invalid adapters) and
+        # we just add it.
+
+        for uri in add_adapter_uris:
+            if uri not in adapter_uris:
+                adapter_uris.append(uri)
+        for dc in add_domain_configs:
+            if dc not in domain_configs:
+                domain_configs.append(dc)
+
+
+class PartitionDecreaseCryptoConfigHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Decrease Crypto Configuration (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_uri = uri.split('/operations/')[0]
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+
+        adapter_uris, domain_configs = ensure_crypto_config(partition)
+
+        try:
+            remove_adapter_uris = body['crypto-adapter-uris']
+        except KeyError:
+            raise HTTPError('POST', uri, 400, 999,
+                            "Input field 'crypto-adapter-uris' not set in "
+                            "request body.")
+        try:
+            remove_domain_indexes = body['crypto-domain-indexes']
+        except KeyError:
+            raise HTTPError('POST', uri, 400, 999,
+                            "Input field 'crypto-domain-indexes' not "
+                            "set in request body.")
+
+        # We don't support finding errors in this simple-minded mock support,
+        # so we assume that the input is fine (e.g. no invalid adapters) and
+        # we just remove it.
+
+        for uri in remove_adapter_uris:
+            if uri in adapter_uris:
+                adapter_uris.remove(uri)
+        for remove_di in remove_domain_indexes:
+            for i, dc in enumerate(domain_configs):
+                if dc['domain-index'] == remove_di:
+                    del domain_configs[i]
+
+
+class PartitionChangeCryptoConfigHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Change Crypto Configuration (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_uri = uri.split('/operations/')[0]
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+
+        adapter_uris, domain_configs = ensure_crypto_config(partition)
+
+        try:
+            change_domain_index = body['domain-index']
+        except KeyError:
+            raise HTTPError('POST', uri, 400, 999,
+                            "Input field 'domain-index' not set in request "
+                            "body.")
+
+        try:
+            change_access_mode = body['access-mode']
+        except KeyError:
+            raise HTTPError('POST', uri, 400, 999,
+                            "Input field 'access-mode' not set in request "
+                            "body.")
+
+        # We don't support finding errors in this simple-minded mock support,
+        # so we assume that the input is fine (e.g. no invalid domain indexes)
+        # and we just change it.
+
+        for i, dc in enumerate(domain_configs):
+            if dc['domain-index'] == change_domain_index:
+                dc['access-mode'] = change_access_mode
+
+
 class HbasHandler(object):
 
     @staticmethod
@@ -827,6 +973,12 @@ URIS = (
     #  PartitionMountIsoImageHandler),
     # ('/api/partitions/([^/]+)/operations/unmount-iso-image',
     #  PartitionUnmountIsoImageHandler),
+    ('/api/partitions/([^/]+)/operations/increase-crypto-configuration',
+     PartitionIncreaseCryptoConfigHandler),
+    ('/api/partitions/([^/]+)/operations/decrease-crypto-configuration',
+     PartitionDecreaseCryptoConfigHandler),
+    ('/api/partitions/([^/]+)/operations/change-crypto-domain-configuration',
+     PartitionChangeCryptoConfigHandler),
 
     ('/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
     ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
