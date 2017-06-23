@@ -931,7 +931,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        body = {'domain_index': crypto_domain_index,
-                'access_mode': access_mode}
+        body = {'domain-index': crypto_domain_index,
+                'access-mode': access_mode}
         self.manager.session.post(
             self.uri + '/operations/change-crypto-domain-configuration', body)
