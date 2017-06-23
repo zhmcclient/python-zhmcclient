@@ -106,6 +106,10 @@ Released: not yet
   classes, in order to ease the work for users that need to ensure that a
   particular LPAR or partition status is reached.
 
+* Added support for crypto-related methods on the ``Partition`` and
+  ``Adapter`` resource classes. Added zhmcclient mock support for
+  the faked partition (not yet for the faked adapter).
+
 **Known issues:**
 
 * See `list of open issues`_.

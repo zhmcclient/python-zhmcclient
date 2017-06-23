@@ -28,6 +28,7 @@ have not been implemented yet::
     POST     /api/virtual-switches/([^/]+)/operations/get-connected-vnics
     POST     /api/cpcs/([^/]+)/operations/import-profiles
     POST     /api/cpcs/([^/]+)/operations/export-profiles
+    POST     /api/adapters/([^/]+)/operations/change-crypto-type
 """
 
 from __future__ import absolute_import
@@ -960,6 +961,8 @@ URIS = (
     ('/api/adapters/([^/]+)/network-ports/([^/]+)', NetworkPortHandler),
 
     ('/api/adapters/([^/]+)/storage-ports/([^/]+)', StoragePortHandler),
+    # ('/api/adapters/([^/]+)/operations/change-crypto-type',
+    #  AdapterChangeCryptoTypeHandler),
 
     ('/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
     ('/api/partitions/([^/]+)', PartitionHandler),
