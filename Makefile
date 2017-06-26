@@ -149,7 +149,8 @@ help:
 	@echo '  build      - Build the distribution files in: $(dist_dir) (requires Linux or OSX)'
 	@echo '  buildwin   - Build the Windows installable in: $(dist_dir) (requires Windows 64-bit)'
 	@echo '  builddoc   - Build documentation in: $(doc_build_dir)'
-	@echo '  check      - Run PyLint and Flake8 on sources and save results in: pylint.log and flake8.log'
+	@echo '  check      - Run Flake8 on sources and save results in: flake8.log'
+	@echo '  pylint     - Run PyLint on sources and save results in: pylint.log'
 	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_log_file)'
 	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
 	@echo '  all        - Do all of the above (except buildwin when not on Windows)'
@@ -245,7 +246,11 @@ pyshow:
 	@echo '$@ done.'
 
 .PHONY: check
-check: pylint.log flake8.log
+check: flake8.log
+	@echo '$@ done.'
+
+.PHONY: pylint
+pylint: pylint.log
 	@echo '$@ done.'
 
 .PHONY: install
