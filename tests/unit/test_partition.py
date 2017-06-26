@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function
 
 import unittest
 import requests_mock
+from requests.utils import quote
 
 from zhmcclient import Session, Client, Partition
 
@@ -492,6 +493,11 @@ class PartitionTests(unittest.TestCase):
         """
         partition_mgr = self.cpc.partitions
         with requests_mock.mock() as m:
+
+            image_name = 'faked-image-name'
+            ins_file_name = 'faked-ins-file-name'
+            image = b'faked-image-data'
+
             result = {
                 'partitions': [
                     {
@@ -513,9 +519,15 @@ class PartitionTests(unittest.TestCase):
             result = {
                 'job-uri': '/api/jobs/fake-job-id-1'
             }
-            m.post("/api/partitions/fake-part-id-1/operations/mount-iso-image",
-                   json=result)
-            status = partition.mount_iso_image(properties={})
+            qp = '?image-name={}&ins-file-name={}'. \
+                format(quote(image_name, safe=''),
+                       quote(ins_file_name, safe=''))
+            m.post(
+                "/api/partitions/fake-part-id-1/operations/mount-iso-image" +
+                qp, json=result)
+            status = partition.mount_iso_image(
+                image=image, image_name=image_name,
+                ins_file_name=ins_file_name)
             self.assertEqual(status, None)
 
     def test_unmount_iso_image(self):

@@ -21,6 +21,8 @@ from __future__ import absolute_import
 import json
 import time
 import re
+import collections
+import six
 try:
     from collections import OrderedDict
 except ImportError:
@@ -821,12 +823,32 @@ class Session(object):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the asynchronous operation.
+          :exc:`TypeError`: Body has invalid type.
         """
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        data = json.dumps(body) if body is not None else None
-        self._log_http_request('POST', url, headers=self.headers, content=data)
+        headers = self.headers.copy()  # Standard headers
+
+        if body is None:
+            data = None
+        elif isinstance(body, dict):
+            data = json.dumps(body)
+            # Content-type is already set in standard headers.
+        elif isinstance(body, six.text_type):
+            data = body.encode('utf-8')
+            headers['Content-type'] = 'application/octet-stream'
+        elif isinstance(body, six.binary_type):
+            data = body
+            headers['Content-type'] = 'application/octet-stream'
+        elif isinstance(body, collections.Iterable):
+            # For example, open files: open(), io.open()
+            data = body
+            headers['Content-type'] = 'application/octet-stream'
+        else:
+            raise TypeError("Body has invalid type: {}".format(type(body)))
+
+        self._log_http_request('POST', url, headers=headers, content=data)
         req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
@@ -839,10 +861,10 @@ class Session(object):
             stats.begin()
             try:
                 if data is None:
-                    result = req.post(url, headers=self.headers,
+                    result = req.post(url, headers=headers,
                                       verify=False, timeout=req_timeout)
                 else:
-                    result = req.post(url, data=data, headers=self.headers,
+                    result = req.post(url, data=data, headers=headers,
                                       verify=False, timeout=req_timeout)
             except requests.exceptions.RequestException as exc:
                 _handle_request_exc(exc, self.retry_timeout_config)

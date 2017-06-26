@@ -33,6 +33,7 @@ from __future__ import absolute_import
 
 import time
 import copy
+from requests.utils import quote
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -613,15 +614,13 @@ class Partition(BaseResource):
         return result
 
     @logged_api_call
-    def mount_iso_image(self, properties):
+    def mount_iso_image(self, image, image_name, ins_file_name):
         """
         Upload an ISO image and associate it to this Partition
         using the HMC operation 'Mount ISO Image'.
 
         When the partition already has an ISO image associated,
         the newly uploaded image replaces the current one.
-
-        TODO: The interface of this method has issues, see issue #57.
 
         Authorization requirements:
 
@@ -630,10 +629,27 @@ class Partition(BaseResource):
 
         Parameters:
 
-          properties (dict): Properties for the dump operation.
-            See the section in the :term:`HMC API` about the specific HMC
-            operation and about the 'Mount ISO Image' description of the
-            members of the passed properties dict.
+          image (:term:`byte string` or file-like object):
+            The content of the ISO image.
+
+            Images larger than 2GB cannot be specified as a Byte string; they
+            must be specified as a file-like object.
+
+            File-like objects must have opened the file in binary mode.
+
+          image_name (:term:`string`): The displayable name of the image.
+
+            This value must be a valid Linux file name without directories,
+            must not contain blanks, and must end with '.iso' in lower case.
+
+            This value will be shown in the 'boot-iso-image-name' property of
+            this partition.
+
+          ins_file_name (:term:`string`): The path name of the INS file within
+            the file system of the ISO image.
+
+            This value will be shown in the 'boot-iso-ins-file' property of
+            this partition.
 
         Raises:
 
@@ -642,15 +658,18 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        query_parms_str = '?image-name={}&ins-file-name={}'. \
+            format(quote(image_name, safe=''), quote(ins_file_name, safe=''))
         self.manager.session.post(
-            self.uri + '/operations/mount-iso-image',
-            wait_for_completion=True, body=properties)
+            self.uri + '/operations/mount-iso-image' + query_parms_str,
+            body=image)
 
     @logged_api_call
     def unmount_iso_image(self):
         """
         Unmount the currently mounted ISO from this Partition using the HMC
-        operation 'Unmount ISO Image'.
+        operation 'Unmount ISO Image'. This operation sets the partition's
+        'boot-iso-image-name' and 'boot-iso-ins-file' properties to null.
 
         Authorization requirements:
 
