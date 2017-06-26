@@ -110,6 +110,10 @@ Released: not yet
   ``Adapter`` resource classes. Added zhmcclient mock support for
   the faked partition (not yet for the faked adapter).
 
+* Added that ``Partition.start()`` waits for reaching the desired status
+  'active' or 'degraded', because it transitions through status 'paused'
+  when starting a partition.
+
 **Known issues:**
 
 * See `list of open issues`_.
