@@ -630,7 +630,7 @@ class BaseManager(object):
         if num_objs == 0:
             raise NotFound(filter_args, self)
         elif num_objs > 1:
-            raise NoUniqueMatch(filter_args, self)
+            raise NoUniqueMatch(filter_args, self, obj_list)
         else:
             return obj_list[0]
 

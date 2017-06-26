@@ -821,21 +821,31 @@ class TestNoUniqueMatch(unittest.TestCase):
             'status': 'active',
             'type': 'osd',
         })
+        self.faked_osa2 = self.faked_cpc.adapters.add({
+            'object-id': 'fake-osa2',
+            'parent': self.faked_cpc.uri,
+            'class': 'adapter',
+            'name': 'osa 2',
+            'description': 'OSA #2',
+            'status': 'active',
+            'type': 'osd',
+        })
         self.client = Client(self.session)
         self.cpc = self.client.cpcs.list()[0]
-        self.adapter = self.cpc.adapters.list()[0]
+        self.adapters = self.cpc.adapters.list()
 
     def test_unnamed(self):
         """Test exception created with unnamed arguments."""
         filter_args = {'type': 'osa', 'status': 'active'}
 
-        exc = NoUniqueMatch(filter_args, self.cpc.adapters)
+        exc = NoUniqueMatch(filter_args, self.cpc.adapters, self.adapters)
 
         self.assertEqual(len(exc.args), 1)
         # auto-generated message, we don't expect a particular value
 
         self.assertEqual(exc.filter_args, filter_args)
         self.assertEqual(exc.manager, self.cpc.adapters)
+        self.assertEqual(exc.resources, self.adapters)
 
         # Check repr()
         self.assertRegexpMatches(repr(exc), r'^NoUniqueMatch\(.*\)$')
@@ -856,13 +866,15 @@ class TestNoUniqueMatch(unittest.TestCase):
         """Test exception created with named arguments."""
         filter_args = {'type': 'osa', 'status': 'active'}
 
-        exc = NoUniqueMatch(filter_args=filter_args, manager=self.cpc.adapters)
+        exc = NoUniqueMatch(filter_args=filter_args, manager=self.cpc.adapters,
+                            resources=tuple(self.adapters))
 
         self.assertEqual(len(exc.args), 1)
         # auto-generated message, we don't expect a particular value
 
         self.assertEqual(exc.filter_args, filter_args)
         self.assertEqual(exc.manager, self.cpc.adapters)
+        self.assertEqual(exc.resources, self.adapters)
 
         # Check repr()
         self.assertRegexpMatches(repr(exc), r'^NoUniqueMatch\(.*\)$')
