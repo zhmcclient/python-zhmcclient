@@ -938,7 +938,7 @@ class NoUniqueMatch(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, filter_args, manager):
+    def __init__(self, filter_args, manager, resources):
         """
         The exception message is automatically constructed from the input
         arguments.
@@ -953,6 +953,9 @@ class NoUniqueMatch(Error):
           manager (:class:`~zhmcclient.BaseManager`):
             The manager of the resource, in whose scope the resource was
             attempted to be found.
+
+          resources (:term:`iterable` of :class:`~zhmcclient.BaseResource`):
+            The resources that did match the filter.
         """
         parent = manager.parent
         if parent:
@@ -960,11 +963,16 @@ class NoUniqueMatch(Error):
                 format(parent.__class__.__name__, parent.name)
         else:
             in_str = ""
-        msg = "Found more than one {} using filter arguments {!r}{}". \
-            format(manager.resource_class.__name__, filter_args, in_str)
+        resource_uris = [r.uri for r in resources]
+        msg = "Found more than one {} using filter arguments {!r}{}, with " \
+            "URIs: {!r}". \
+            format(manager.resource_class.__name__, filter_args, in_str,
+                   resource_uris)
         super(NoUniqueMatch, self).__init__(msg)
         self._filter_args = filter_args
         self._manager = manager
+        self._resources = list(resources)
+        self._resource_uris = resource_uris
 
     @property
     def filter_args(self):
@@ -983,6 +991,21 @@ class NoUniqueMatch(Error):
         """
         return self._manager
 
+    @property
+    def resources(self):
+        """
+        List of :class:`~zhmcclient.BaseResource`: The resources that matched
+        the filter.
+        """
+        return self._resources
+
+    @property
+    def resource_uris(self):
+        """
+        List of URIs of the resources that matched the filter.
+        """
+        return self._resource_uris
+
     def __repr__(self):
         """
         Return a string with the state of this exception object, for debug
@@ -990,12 +1013,14 @@ class NoUniqueMatch(Error):
         """
         parent = self.manager.parent
         return "{}(message={!r}, resource_classname={!r}, filter_args={!r}, " \
-               "parent_classname={!r}, parent_name={!r})". \
+               "parent_classname={!r}, parent_name={!r}, " \
+               "resource_uris={!r})". \
                format(self.__class__.__name__, self.args[0],
                       self.manager.resource_class.__name__,
                       self.filter_args,
                       parent.__class__.__name__ if parent else None,
-                      parent.name if parent else None)
+                      parent.name if parent else None,
+                      self.resource_uris)
 
     def str_def(self):
         """
@@ -1004,17 +1029,19 @@ class NoUniqueMatch(Error):
 
         .. code-block:: text
 
-            classname={}; resource_classname={}; filter_args={}; parent_classname={}; manager_name={}; message={};
+            classname={}; resource_classname={}; filter_args={}; parent_classname={}; manager_name={}; message={}; resource_uris={}
         """  # noqa: E501
         parent = self.manager.parent
         return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
-               "parent_classname={!r}; parent_name={!r}; message={!r};". \
+               "parent_classname={!r}; parent_name={!r}; message={!r}; " \
+               "resource_uris={!r}". \
                format(self.__class__.__name__,
                       self.manager.resource_class.__name__,
                       self.filter_args,
                       parent.__class__.__name__ if parent else None,
                       parent.name if parent else None,
-                      self.args[0])
+                      self.args[0],
+                      self.resource_uris)
 
 
 class NotFound(Error):

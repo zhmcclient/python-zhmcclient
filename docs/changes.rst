@@ -114,6 +114,14 @@ Released: not yet
   'active' or 'degraded', because it transitions through status 'paused'
   when starting a partition.
 
+* Improved the ``NoUniqueMatch`` exception so that the list of resources that
+  did match the filter, are shown with their URIs in the error message, and
+  are available as new ``resources`` and ``resource_uris`` attributes. This
+  change adds a required argument ``resources`` to the constructor of
+  ``NoUniqueMatch``. However, since this exception is only supposed to be
+  raised by the zhmcclient implementation, this change is compatible to
+  zhmcclient users.
+
 **Known issues:**
 
 * See `list of open issues`_.
