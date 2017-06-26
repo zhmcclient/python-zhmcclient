@@ -141,7 +141,41 @@ class PartitionManager(BaseManager):
         if resource_obj:
             resource_obj_list.append(resource_obj)
             # It already has full properties
+
+        elif full_properties:
+            # Instead of performing a loop of Get Partition Properties
+            # operations, we perform one Get Inventory operation and
+            # process the result.
+
+            props_list = self.cpc.manager.client.get_inventory(
+                resources=['partition'])
+            if props_list:
+                for props in props_list:
+
+                    # Skip child resources of partitions
+                    if props['class'] != 'partition':
+                        continue
+
+                    # Skip partitions that are not in this CPC
+                    cpc_uri = props['parent']
+                    if cpc_uri != self.cpc.uri:
+                        continue
+
+                    resource_obj = self.resource_class(
+                        manager=self,
+                        uri=props[self._uri_prop],
+                        name=props.get(self._name_prop, None),
+                        properties=props)
+                    # pylint: disable=protected-access
+                    resource_obj._full_properties = True
+
+                    # All filters are processed as client filters
+                    if matches_filters(resource_obj, filter_args):
+                        resource_obj_list.append(resource_obj)
+
         else:
+            # full_properties not set
+
             query_parms, client_filters = divide_filter_args(
                 self._query_props, filter_args)
 
@@ -161,8 +195,6 @@ class PartitionManager(BaseManager):
 
                     if matches_filters(resource_obj, client_filters):
                         resource_obj_list.append(resource_obj)
-                        if full_properties:
-                            resource_obj.pull_full_properties()
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
