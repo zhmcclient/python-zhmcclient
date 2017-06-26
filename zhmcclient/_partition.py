@@ -299,10 +299,19 @@ class Partition(BaseResource):
         return self._virtual_functions
 
     @logged_api_call
-    def start(self, wait_for_completion=True, operation_timeout=None):
+    def start(self, wait_for_completion=True, operation_timeout=None,
+              status_timeout=None):
         """
         Start (activate) this Partition, using the HMC operation "Start
         Partition".
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the partition
+        status has reached the desired value (it still may show status
+        "paused"). If `wait_for_completion=True`, this method repeatedly checks
+        the status of the partition after the HMC operation has completed, and
+        waits until the status is in one of the desired states "active" or
+        "degraded".
 
         TODO: Describe what happens if the maximum number of active partitions
         is exceeded.
@@ -310,6 +319,7 @@ class Partition(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this Partition.
+        * Object-access permission to the CPC containing this Partition.
         * Task permission to the "Start Partition" task.
 
         Parameters:
@@ -332,6 +342,15 @@ class Partition(BaseResource):
             `wait_for_completion=True`, a
             :exc:`~zhmcclient.OperationTimeout` is raised.
 
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the partition
+            has reached the desired status, after the HMC operation has
+            completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.StatusTimeout` is raised.
+
         Returns:
 
           :class:`py:dict` or :class:`~zhmcclient.Job`:
@@ -351,11 +370,16 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
+            waiting for the desired partition status.
         """
         result = self.manager.session.post(
             self.uri + '/operations/start',
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
+        if wait_for_completion:
+            statuses = ["active", "degraded"]
+            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
