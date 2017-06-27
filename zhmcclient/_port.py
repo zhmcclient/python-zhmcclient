@@ -109,6 +109,13 @@ class PortManager(BaseManager):
         network_family = ('osa', 'roce', 'hipersockets')
         if self.adapter.get_property('adapter-family') in storage_family:
             uris = self.adapter.get_property('storage-port-uris')
+
+            # TODO: Remove the following circumvention once fixed.
+            # The following line circumvents a bug that sometimes causes
+            # duplicate URIs to show up in this property, by reducing the
+            # array to the unique URIs:
+            uris = list(set(uris))
+
         elif self.adapter.get_property('adapter-family') in network_family:
             uris = self.adapter.get_property('network-port-uris')
         else:
