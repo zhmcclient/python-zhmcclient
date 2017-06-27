@@ -122,6 +122,9 @@ Released: not yet
   raised by the zhmcclient implementation, this change is compatible to
   zhmcclient users.
 
+* Moved the invocation of PyLint from the "make check" target into its
+  own "make pylint" target, inorder to speed up the CI testing.
+
 **Known issues:**
 
 * See `list of open issues`_.
