@@ -143,9 +143,7 @@ class PortTests(unittest.TestCase):
 
             self.assertEqual(len(ports), len(uris))
             for idx, port in enumerate(ports):
-                self.assertEqual(
-                    port.properties['element-uri'],
-                    uris[idx])
+                self.assertTrue(port.properties['element-uri'] in uris)
                 self.assertFalse(port.full_properties)
                 self.assertEqual(port.manager, port_mgr)
 

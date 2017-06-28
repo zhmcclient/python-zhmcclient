@@ -112,6 +112,8 @@ class AdapterManager(BaseManager):
             resource_class=Adapter,
             session=cpc.manager.session,
             parent=cpc,
+            base_uri='/api/adapters',
+            oid_prop='object-id',
             uri_prop='object-uri',
             name_prop='name',
             query_props=query_props)
@@ -160,27 +162,32 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        query_parms, client_filters = self._divide_filter_args(filter_args)
-
-        resources_name = 'adapters'
-        uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
-
         resource_obj_list = []
-        result = self.session.get(uri)
-        if result:
-            props_list = result[resources_name]
-            for props in props_list:
+        resource_obj = self._try_optimized_lookup(filter_args)
+        if resource_obj:
+            resource_obj_list.append(resource_obj)
+            # It already has full properties
+        else:
+            query_parms, client_filters = self._divide_filter_args(filter_args)
 
-                resource_obj = self.resource_class(
-                    manager=self,
-                    uri=props[self._uri_prop],
-                    name=props.get(self._name_prop, None),
-                    properties=props)
+            resources_name = 'adapters'
+            uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
 
-                if self._matches_filters(resource_obj, client_filters):
-                    resource_obj_list.append(resource_obj)
-                    if full_properties:
-                        resource_obj.pull_full_properties()
+            result = self.session.get(uri)
+            if result:
+                props_list = result[resources_name]
+                for props in props_list:
+
+                    resource_obj = self.resource_class(
+                        manager=self,
+                        uri=props[self._uri_prop],
+                        name=props.get(self._name_prop, None),
+                        properties=props)
+
+                    if self._matches_filters(resource_obj, client_filters):
+                        resource_obj_list.append(resource_obj)
+                        if full_properties:
+                            resource_obj.pull_full_properties()
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
@@ -242,6 +249,22 @@ class Adapter(BaseResource):
     (in this case, :class:`~zhmcclient.AdapterManager`).
     """
 
+    # Name of property for port URIs, dependent on adapter family
+    port_uris_prop_by_family = {
+        'ficon': 'storage-port-uris',
+        'osa': 'network-port-uris',
+        'roce': 'network-port-uris',
+        'hipersockets': 'network-port-uris',
+    }
+
+    # URI segment for port URIs, dependent on adapter family
+    port_uri_segment_by_family = {
+        'ficon': 'storage-ports',
+        'osa': 'network-ports',
+        'roce': 'network-ports',
+        'hipersockets': 'network-ports',
+    }
+
     def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.AdapterManager`):
@@ -259,6 +282,8 @@ class Adapter(BaseResource):
         super(Adapter, self).__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._ports = None
+        self._port_uris_prop = None
+        self._port_uri_segment = None
 
     @property
     def ports(self):
@@ -270,6 +295,39 @@ class Adapter(BaseResource):
         if not self._ports:
             self._ports = PortManager(self)
         return self._ports
+
+    @property
+    def port_uris_prop(self):
+        """
+        :term:`string`: Name of adapter property that specifies the adapter
+        port URIs, or the empty string ('') for adapters without ports.
+
+        For example, 'network-port-uris' for a network adapter.
+        """
+        if self._port_uris_prop is None:
+            family = self.get_property('adapter-family')
+            try:
+                self._port_uris_prop = self.port_uris_prop_by_family[family]
+            except KeyError:
+                self._port_uris_prop = ''
+        return self._port_uris_prop
+
+    @property
+    def port_uri_segment(self):
+        """
+        :term:`string`: Adapter type specific URI segment for adapter port
+        URIs, or the empty string ('') for adapters without ports.
+
+        For example, 'network-ports' for a network adapter.
+        """
+        if self._port_uri_segment is None:
+            family = self.get_property('adapter-family')
+            try:
+                self._port_uri_segment = self.port_uri_segment_by_family[
+                    family]
+            except KeyError:
+                self._port_uri_segment = ''
+        return self._port_uri_segment
 
     @logged_api_call
     def delete(self):

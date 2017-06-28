@@ -55,6 +55,8 @@ class MyManager(BaseManager):
             resource_class=MyResource,
             session=session,
             parent=None,  # a top-level resource
+            base_uri='/api/myresources/',
+            oid_prop='fake_object_id',
             uri_prop='fake_uri_prop',
             name_prop='fake_name_prop',
             query_props=[])
@@ -165,6 +167,8 @@ class Manager1Tests(unittest.TestCase):
             resource_class=MyResource,
             session=self.session,
             parent=None,  # a top-level resource
+            base_uri='/api/myresources/',
+            oid_prop='fake_object_id',
             uri_prop='fake_uri_prop',
             name_prop='fake_name_prop',
             query_props=[])

@@ -56,6 +56,11 @@ class PortManager(BaseManager):
             resource_class=Port,
             session=adapter.manager.session,
             parent=adapter,
+            base_uri='',
+            # TODO: Re-enable the following when unit/test_hba.py has been
+            # converted to using the zhmcclient mock support:
+            # base_uri='{}/{}'.format(adapter.uri, adapter.port_uri_segment),
+            oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
             query_props=[],
@@ -73,6 +78,8 @@ class PortManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the Ports of this Adapter.
+
+        If the adapter does not have any ports, an empty list is returned.
 
         Authorization requirements:
 
@@ -104,35 +111,32 @@ class PortManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        uris_prop = self.adapter.port_uris_prop
+        if not uris_prop:
+            # Adapter does not have any ports
+            return []
+
+        uris = self.adapter.get_property(uris_prop)
+        assert uris is not None
+
+        # TODO: Remove the following circumvention once fixed.
+        # The following line circumvents a bug for FCP adapters that sometimes
+        # causes duplicate URIs to show up in this property:
+        uris = list(set(uris))
+
         resource_obj_list = []
-        storage_family = ('ficon')
-        network_family = ('osa', 'roce', 'hipersockets')
-        if self.adapter.get_property('adapter-family') in storage_family:
-            uris = self.adapter.get_property('storage-port-uris')
+        for uri in uris:
 
-            # TODO: Remove the following circumvention once fixed.
-            # The following line circumvents a bug that sometimes causes
-            # duplicate URIs to show up in this property, by reducing the
-            # array to the unique URIs:
-            uris = list(set(uris))
+            resource_obj = self.resource_class(
+                manager=self,
+                uri=uri,
+                name=None,
+                properties=None)
 
-        elif self.adapter.get_property('adapter-family') in network_family:
-            uris = self.adapter.get_property('network-port-uris')
-        else:
-            return resource_obj_list
-        if uris:
-            for uri in uris:
-
-                resource_obj = self.resource_class(
-                    manager=self,
-                    uri=uri,
-                    name=None,
-                    properties=None)
-
-                if self._matches_filters(resource_obj, filter_args):
-                    resource_obj_list.append(resource_obj)
-                    if full_properties:
-                        resource_obj.pull_full_properties()
+            if self._matches_filters(resource_obj, filter_args):
+                resource_obj_list.append(resource_obj)
+                if full_properties:
+                    resource_obj.pull_full_properties()
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list

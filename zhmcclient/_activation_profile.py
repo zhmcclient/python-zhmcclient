@@ -104,6 +104,8 @@ class ActivationProfileManager(BaseManager):
             resource_class=ActivationProfile,
             session=cpc.manager.session,
             parent=cpc,
+            base_uri='{}/{}-activation-profiles'.format(cpc.uri, profile_type),
+            oid_prop='name',  # This is an exception!
             uri_prop='element-uri',
             name_prop='name',
             query_props=query_props)
@@ -165,27 +167,32 @@ class ActivationProfileManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        query_parms, client_filters = self._divide_filter_args(filter_args)
-
-        resources_name = self._profile_type + '-activation-profiles'
-        uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
-
         resource_obj_list = []
-        result = self.session.get(uri)
-        if result:
-            props_list = result[resources_name]
-            for props in props_list:
+        resource_obj = self._try_optimized_lookup(filter_args)
+        if resource_obj:
+            resource_obj_list.append(resource_obj)
+            # It already has full properties
+        else:
+            query_parms, client_filters = self._divide_filter_args(filter_args)
 
-                resource_obj = self.resource_class(
-                    manager=self,
-                    uri=props[self._uri_prop],
-                    name=props.get(self._name_prop, None),
-                    properties=props)
+            resources_name = self._profile_type + '-activation-profiles'
+            uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
 
-                if self._matches_filters(resource_obj, client_filters):
-                    resource_obj_list.append(resource_obj)
-                    if full_properties:
-                        resource_obj.pull_full_properties()
+            result = self.session.get(uri)
+            if result:
+                props_list = result[resources_name]
+                for props in props_list:
+
+                    resource_obj = self.resource_class(
+                        manager=self,
+                        uri=props[self._uri_prop],
+                        name=props.get(self._name_prop, None),
+                        properties=props)
+
+                    if self._matches_filters(resource_obj, client_filters):
+                        resource_obj_list.append(resource_obj)
+                        if full_properties:
+                            resource_obj.pull_full_properties()
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
