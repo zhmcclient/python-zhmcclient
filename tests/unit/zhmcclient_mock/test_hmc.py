@@ -363,7 +363,7 @@ class FakedActivationProfileTests(unittest.TestCase):
         resetprofile1 = resetprofiles[0]
         resetprofile1_out_props = self.resetprofile1_in_props.copy()
         resetprofile1_out_props.update({
-            'element-id': resetprofile1.oid,
+            'name': resetprofile1.oid,
             'element-uri': resetprofile1.uri,
         })
         self.assertIsInstance(resetprofile1, FakedActivationProfile)
@@ -378,7 +378,7 @@ class FakedActivationProfileTests(unittest.TestCase):
         imageprofile1 = imageprofiles[0]
         imageprofile1_out_props = self.imageprofile1_in_props.copy()
         imageprofile1_out_props.update({
-            'element-id': imageprofile1.oid,
+            'name': imageprofile1.oid,
             'element-uri': imageprofile1.uri,
         })
         self.assertIsInstance(imageprofile1, FakedActivationProfile)
@@ -393,7 +393,7 @@ class FakedActivationProfileTests(unittest.TestCase):
         loadprofile1 = loadprofiles[0]
         loadprofile1_out_props = self.loadprofile1_in_props.copy()
         loadprofile1_out_props.update({
-            'element-id': loadprofile1.oid,
+            'name': loadprofile1.oid,
             'element-uri': loadprofile1.uri,
         })
         self.assertIsInstance(loadprofile1, FakedActivationProfile)
@@ -425,7 +425,7 @@ class FakedActivationProfileTests(unittest.TestCase):
 
         resetprofile2_out_props = resetprofile2_in_props.copy()
         resetprofile2_out_props.update({
-            'element-id': resetprofile2.oid,
+            'name': resetprofile2.oid,
             'element-uri': resetprofile2.uri,
         })
         self.assertIsInstance(resetprofile2, FakedActivationProfile)
