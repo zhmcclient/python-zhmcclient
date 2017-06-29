@@ -67,6 +67,14 @@ examples:
       #loglevel: debug
       #logmodule: zhmcclient._session
       #timestats: yes
+   get_inventory:
+      hmc: "192.168.111.5"
+      resources:
+        - cpc
+        - partition
+        - adapter
+      #loglevel: info
+      #timestats: yes
 
 "192.168.111.5":
    userid: ensadmin
