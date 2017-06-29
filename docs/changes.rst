@@ -30,6 +30,9 @@ Released: not yet
   key/value tuples to a dictionary. This is more flexible and reduces the
   number of data structure conversions in different scenarios. See issue #269.
 
+* Changed the arguments of ``Partition.mount_iso_image()`` incompatibly,
+  in order to fix issue #57.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -50,6 +53,9 @@ Released: not yet
 
 * Fixed using '--ssc-dns-servers' option for the CLI commands
   'zhmc partition create/update'. See issue #310.
+
+* Fixed the incorrect parameters of ``Partition.mount_iso_image()``. See
+  issue #57.
 
 **Enhancements:**
 
@@ -124,6 +130,11 @@ Released: not yet
 
 * Moved the invocation of PyLint from the "make check" target into its
   own "make pylint" target, inorder to speed up the CI testing.
+
+* Added the ability for ``Session.post()`` to support binary data as the
+  payload. The ``body`` argument may now be a dictionary which is represented
+  as a JSON string, a binary string which is used directly, or a unicode
+  string which is encoded using UTF-8. This was necessary to fix issue #57.
 
 **Known issues:**
 

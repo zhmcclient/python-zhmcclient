@@ -34,6 +34,15 @@ examples:
       partname: TestPart1
       # loglevel: debug
       # timestats: yes
+   mount_iso:
+      hmc: "192.168.133.140"
+      cpcname: JLSE1
+      partname: TestPart1
+      imagename: sles-12.iso
+      imageinsfile: /suse.ins
+      imagefile: images/sles-12.iso
+      # loglevel: debug
+      # timestats: yes
    activation_profiles:
       hmc: "192.168.111.5"
       cpcname: P0000P30
