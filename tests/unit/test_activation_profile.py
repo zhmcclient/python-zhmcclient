@@ -64,45 +64,39 @@ class ActivationProfileTests(unittest.TestCase):
             'iml-mode': 'TBD',
         })
         self.faked_reset_ap_1 = self.faked_cpc.reset_activation_profiles.add({
-            'element-id': 'faked-rap1',
-            'parent': self.faked_cpc,
-            'class': 'reset-activation-profile',
             'name': 'rap_1',
+            'parent': self.faked_cpc.uri,
+            'class': 'reset-activation-profile',
             'description': 'RAP #1',
         })
         self.faked_reset_ap_2 = self.faked_cpc.reset_activation_profiles.add({
-            'element-id': 'faked-rap2',
-            'parent': self.faked_cpc,
-            'class': 'reset-activation-profile',
             'name': 'rap_2',
+            'parent': self.faked_cpc.uri,
+            'class': 'reset-activation-profile',
             'description': 'RAP #2',
         })
         self.faked_image_ap_1 = self.faked_cpc.image_activation_profiles.add({
-            'element-id': 'faked-iap1',
-            'parent': self.faked_cpc,
-            'class': 'image-activation-profile',
             'name': 'iap_1',
+            'parent': self.faked_cpc.uri,
+            'class': 'image-activation-profile',
             'description': 'IAP #1',
         })
         self.faked_image_ap_2 = self.faked_cpc.image_activation_profiles.add({
-            'element-id': 'faked-iap2',
-            'parent': self.faked_cpc,
-            'class': 'image-activation-profile',
             'name': 'iap_2',
+            'parent': self.faked_cpc.uri,
+            'class': 'image-activation-profile',
             'description': 'IAP #2',
         })
         self.faked_load_ap_1 = self.faked_cpc.load_activation_profiles.add({
-            'element-id': 'faked-lap1',
-            'parent': self.faked_cpc,
-            'class': 'load-activation-profile',
             'name': 'lap_1',
+            'parent': self.faked_cpc.uri,
+            'class': 'load-activation-profile',
             'description': 'LAP #1',
         })
         self.faked_load_ap_2 = self.faked_cpc.load_activation_profiles.add({
-            'element-id': 'faked-lap2',
-            'parent': self.faked_cpc,
-            'class': 'load-activation-profile',
             'name': 'lap_2',
+            'parent': self.faked_cpc.uri,
+            'class': 'load-activation-profile',
             'description': 'LAP #2',
         })
         self.cpc = self.client.cpcs.list()[0]
@@ -169,8 +163,7 @@ class ActivationProfileTests(unittest.TestCase):
         profiles = profile_mgr.list(full_properties=True)
 
         self.assertProfiles(profiles, exp_profiles,
-                            ['name', 'element-uri', 'element-id', 'class',
-                             'description'])
+                            ['name', 'element-uri', 'class', 'description'])
 
     def test_manager_list_filter_name(self):
         """
@@ -182,20 +175,6 @@ class ActivationProfileTests(unittest.TestCase):
         profile_mgr = self.cpc.reset_activation_profiles
 
         profiles = profile_mgr.list(filter_args={'name': 'rap_2'})
-
-        self.assertProfiles(profiles, exp_profiles,
-                            ['name', 'element-uri'])
-
-    def test_manager_list_filter_id(self):
-        """
-        Test ActivationProfileManager.list() with filtering by element.id.
-        """
-        # The faked resources are used to define the expected resources and
-        # their properties.
-        exp_profiles = [self.faked_reset_ap_2]
-        profile_mgr = self.cpc.reset_activation_profiles
-
-        profiles = profile_mgr.list(filter_args={'element-id': 'faked-rap2'})
 
         self.assertProfiles(profiles, exp_profiles,
                             ['name', 'element-uri'])

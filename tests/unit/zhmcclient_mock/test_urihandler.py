@@ -477,8 +477,7 @@ def standard_test_hmc():
                 'reset_activation_profiles': [
                     {
                         'properties': {
-                            'element-id': '1',
-                            'name': 'rap_1',
+                            'name': 'r1',
                             'description': 'Reset profile #1 in CPC #1',
                         },
                     },
@@ -486,8 +485,7 @@ def standard_test_hmc():
                 'image_activation_profiles': [
                     {
                         'properties': {
-                            'element-id': '1',
-                            'name': 'iap_1',
+                            'name': 'i1',
                             'description': 'Image profile #1 in CPC #1',
                         },
                     },
@@ -495,8 +493,7 @@ def standard_test_hmc():
                 'load_activation_profiles': [
                     {
                         'properties': {
-                            'element-id': '1',
-                            'name': 'lap_1',
+                            'name': 'L1',
                             'description': 'Load profile #1 in CPC #1',
                         },
                     },
@@ -1606,8 +1603,8 @@ class ResetActProfileHandlersTests(unittest.TestCase):
         exp_raps = {  # properties reduced to those returned by List
             'reset-activation-profiles': [
                 {
-                    'element-uri': '/api/cpcs/1/reset-activation-profiles/1',
-                    'name': 'rap_1',
+                    'name': 'r1',
+                    'element-uri': '/api/cpcs/1/reset-activation-profiles/r1',
                 },
             ]
         }
@@ -1617,13 +1614,12 @@ class ResetActProfileHandlersTests(unittest.TestCase):
 
         # the function to be tested:
         rap1 = self.urihandler.get(self.hmc,
-                                   '/api/cpcs/1/reset-activation-profiles/1',
+                                   '/api/cpcs/1/reset-activation-profiles/r1',
                                    True)
 
         exp_rap1 = {
-            'element-id': '1',
-            'element-uri': '/api/cpcs/1/reset-activation-profiles/1',
-            'name': 'rap_1',
+            'name': 'r1',
+            'element-uri': '/api/cpcs/1/reset-activation-profiles/r1',
             'description': 'Reset profile #1 in CPC #1',
         }
         self.assertEqual(rap1, exp_rap1)
@@ -1653,8 +1649,8 @@ class ImageActProfileHandlersTests(unittest.TestCase):
         exp_iaps = {  # properties reduced to those returned by List
             'image-activation-profiles': [
                 {
-                    'element-uri': '/api/cpcs/1/image-activation-profiles/1',
-                    'name': 'iap_1',
+                    'name': 'i1',
+                    'element-uri': '/api/cpcs/1/image-activation-profiles/i1',
                 },
             ]
         }
@@ -1664,13 +1660,12 @@ class ImageActProfileHandlersTests(unittest.TestCase):
 
         # the function to be tested:
         iap1 = self.urihandler.get(self.hmc,
-                                   '/api/cpcs/1/image-activation-profiles/1',
+                                   '/api/cpcs/1/image-activation-profiles/i1',
                                    True)
 
         exp_iap1 = {
-            'element-id': '1',
-            'element-uri': '/api/cpcs/1/image-activation-profiles/1',
-            'name': 'iap_1',
+            'name': 'i1',
+            'element-uri': '/api/cpcs/1/image-activation-profiles/i1',
             'description': 'Image profile #1 in CPC #1',
         }
         self.assertEqual(iap1, exp_iap1)
@@ -1700,8 +1695,8 @@ class LoadActProfileHandlersTests(unittest.TestCase):
         exp_laps = {  # properties reduced to those returned by List
             'load-activation-profiles': [
                 {
-                    'element-uri': '/api/cpcs/1/load-activation-profiles/1',
-                    'name': 'lap_1',
+                    'name': 'L1',
+                    'element-uri': '/api/cpcs/1/load-activation-profiles/L1',
                 },
             ]
         }
@@ -1711,13 +1706,12 @@ class LoadActProfileHandlersTests(unittest.TestCase):
 
         # the function to be tested:
         lap1 = self.urihandler.get(self.hmc,
-                                   '/api/cpcs/1/load-activation-profiles/1',
+                                   '/api/cpcs/1/load-activation-profiles/L1',
                                    True)
 
         exp_lap1 = {
-            'element-id': '1',
-            'element-uri': '/api/cpcs/1/load-activation-profiles/1',
-            'name': 'lap_1',
+            'name': 'L1',
+            'element-uri': '/api/cpcs/1/load-activation-profiles/L1',
             'description': 'Load profile #1 in CPC #1',
         }
         self.assertEqual(lap1, exp_lap1)

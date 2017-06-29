@@ -83,6 +83,7 @@ class FakedBaseResource(object):
         ret = (
             "{classname} at 0x{id:08x} (\n"
             "  _manager = {_manager_classname} at 0x{_manager_id:08x}\n"
+            "  _oid = {_oid!r}\n"
             "  _uri = {_uri!r}\n"
             "  _properties = {_properties}\n"
             ")".format(
@@ -90,6 +91,7 @@ class FakedBaseResource(object):
                 id=id(self),
                 _manager_classname=self._manager.__class__.__name__,
                 _manager_id=id(self._manager),
+                _oid=self._oid,
                 _uri=self._uri,
                 _properties=repr_dict(self.properties, indent=4),
             ))
@@ -314,7 +316,7 @@ class FakedBaseManager(object):
     def oid_prop(self):
         """
         The name of the resource property for the object ID ('object-id' or
-        'element-id').
+        'element-id' or 'name').
         """
         return self._oid_prop
 
@@ -594,7 +596,7 @@ class FakedActivationProfileManager(FakedBaseManager):
             parent=cpc,
             resource_class=FakedActivationProfile,
             base_uri=cpc.uri + '/' + activation_profiles,
-            oid_prop='element-id',
+            oid_prop='name',  # This is an exception!
             uri_prop='element-uri')
         self._profile_type = profile_type
 
@@ -609,10 +611,11 @@ class FakedActivationProfileManager(FakedBaseManager):
 
             Special handling and requirements for certain properties:
 
-            * 'element-id' will be auto-generated with a unique value across
-              all instances of this resource type, if not specified.
-            * 'element-uri' will be auto-generated based upon the element ID,
-              if not specified.
+            * 'name' (the OID property for this resource type!) will be
+              auto-generated with a unique value across all instances of this
+              resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the OID ('name')
+              property, if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedActivationProfile`: The faked
