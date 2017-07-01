@@ -655,3 +655,80 @@ class Cpc(BaseResource):
             dict_values = wwpn_item.split(',')
             wwpn_list.append(dict(zip(dict_keys, dict_values)))
         return wwpn_list
+
+    @logged_api_call
+    def get_free_crypto_domains(self, crypto_adapters):
+        """
+        Return a list of free crypto domains for the specified crypto adapters.
+
+        Free crypto domains for a set of crypto adapters are those that are not
+        assigned to any partition of this CPC on any of these crypto adapters,
+        i.e. they are unassigned on all of these crypto adapters.
+
+        This method requires the CPC to be in DPM mode.
+
+        **Experimental:** This method has been added in v0.14.0 and is
+        currently considered experimental. Its interface may change
+        incompatibly. Once the interface remains stable, this experimental
+        marker will be removed.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to all of its Partitions.
+        * Object-access permission to all of its crypto Adapters.
+
+        Parameters:
+
+          crypto_adapters (:term:`iterable` of :class:`~zhmcclient.Adapter`):
+            The crypto :term:`Adapters <Adapter>` to be investigated.
+            `None` means to investigate all crypto adapters of this CPC.
+
+        Returns:
+
+          A list of domain index numbers (integers) of the free crypto domains.
+          Returns `None`, if no crypto adapters were specified or defaulted.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        max_domains = None  # maximum number of domains across all adapters
+        used_domains = set()
+
+        if crypto_adapters is None:
+            crypto_adapters = self.adapters.findall(type='crypto')
+
+        if not crypto_adapters:
+            # No crypto adapters were specified or defaulted.
+            return None
+
+        # We determine the maximum number of crypto domains independently
+        # of the partitions, because (1) it is possible that no partition
+        # has a crypto configuration and (2) further down we want the inner
+        # loop to be on the crypto adapters because accessing them multiple
+        # times does not drive additional HMC operations.
+        for ca in crypto_adapters:
+            if max_domains is None:
+                max_domains = ca.maximum_crypto_domains
+            else:
+                max_domains = min(ca.maximum_crypto_domains, max_domains)
+
+        partitions = self.partitions.list(full_properties=True)
+        for partition in partitions:
+            crypto_config = partition.get_property('crypto-configuration')
+            if crypto_config:
+                adapter_uris = crypto_config['crypto-adapter-uris']
+                domain_configs = crypto_config['crypto-domain-configurations']
+                for ca in crypto_adapters:
+                    if ca.uri in adapter_uris:
+                        used_adapter_domains = [dc['domain-index']
+                                                for dc in domain_configs]
+                        used_domains.update(used_adapter_domains)
+
+        all_domains = set(range(0, max_domains))
+        free_domains = all_domains - used_domains
+        return sorted(list(free_domains))

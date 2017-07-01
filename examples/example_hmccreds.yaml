@@ -75,6 +75,13 @@ examples:
         - adapter
       #loglevel: info
       #timestats: yes
+   list_free_crypto_domains:
+      hmc: "192.168.111.5"
+      cpcname: DPMSE2
+      crypto_adapter_names:
+        - "Crypto 0124 A13B-12"
+      #loglevel: info
+      #timestats: yes
 
 "192.168.111.5":
    userid: ensadmin
