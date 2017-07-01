@@ -136,6 +136,15 @@ Released: not yet
   as a JSON string, a binary string which is used directly, or a unicode
   string which is encoded using UTF-8. This was necessary to fix issue #57.
 
+* In the zhmcclient mock support, added a Python property ``name`` to all
+  faked resources, which returns the value of the 'name' resource property.
+
+* Added a Python property ``maximum_crypto_domains`` to the ``Adapter`` class,
+  which returns the maximum number of crypto domains of a crypto adapter.
+
+* Added a Python property ``maximum_active_partitions`` to the ``Cpc`` class,
+  which returns the maximum number of active LPARs or partitions of a CPC.
+
 **Known issues:**
 
 * See `list of open issues`_.

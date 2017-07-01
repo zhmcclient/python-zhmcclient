@@ -320,6 +320,52 @@ class Cpc(BaseResource):
         """
         return self.prop('dpm-enabled', False)
 
+    _MAX_PARTITIONS_BY_MACHINE_TYPE = {
+        '2817': 60,  # z196
+        '2818': 30,  # z114
+        '2827': 60,  # zEC12
+        '2828': 30,  # zBC12
+        '2964': 85,  # z13 / Emperor
+        '2965': 40,  # z13s / Rockhopper
+    }
+
+    @property
+    @logged_api_call
+    def maximum_active_partitions(self):
+        """
+        Integer: The maximum number of active logical partitions or partitions
+        of this CPC.
+
+        The following table shows the maximum number of active logical
+        partitions or partitions by machine generations supported at the HMC
+        API:
+
+        ==================  ==================
+        Machine generation  Maximum partitions
+        ==================  ==================
+        z196                                60
+        z114                                30
+        zEC12                               60
+        zBC12                               30
+        z13 / Emperor                       85
+        z13s / Rockhopper                   40
+        ==================  ==================
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`ValueError`: Unknown machine type
+        """
+        machine_type = self.get_property('machine-type')
+        try:
+            max_parts = self._MAX_PARTITIONS_BY_MACHINE_TYPE[machine_type]
+        except KeyError:
+            raise ValueError("Unknown machine type: {!r}".format(machine_type))
+        return max_parts
+
     @logged_api_call
     def start(self, wait_for_completion=True, operation_timeout=None):
         """

@@ -41,6 +41,7 @@ class AdapterTests(unittest.TestCase):
             'dpm-enabled': True,
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
+            'machine-type': '2964',  # z13
         })
         self.client = Client(self.session)
         self.cpc = self.client.cpcs.list()[0]
@@ -143,6 +144,51 @@ class AdapterTests(unittest.TestCase):
             'name': self.port21_name,
             'description': 'Hipersocket #2 Port #1',
         })
+
+    def add_crypto_ce5s(self, faked_cpc):
+        """Add a Crypto Express 5S adapter to a faked CPC."""
+
+        # Adapter properties that will be auto-set:
+        # - object-uri
+        # - adapter-family
+        faked_adapter = faked_cpc.adapters.add({
+            'object-id': 'fake-ce5s-oid',
+            'parent': faked_cpc.uri,
+            'class': 'adapter',
+            'name': 'fake-ce5s-name',
+            'description': 'Crypto Express 5S #1',
+            'status': 'active',
+            'type': 'crypto',
+            'adapter-id': '123',
+            'detected-card-type': 'Crypto Express-5S',
+            'card-location': 'vvvv-wwww',
+            'state': 'online',
+            'physical-channel-status': 'operating',
+            'crypto-number': 7,
+            'crypto-type': 'ep11-coprocessor',
+            'udx-loaded': False,
+            'tke-commands-enabled': False,
+        })
+        return faked_adapter
+
+    def add_cpc_z13s(self):
+        """Add a CPC #2 of type z13s to the faked HMC."""
+
+        # CPC properties that will be auto-set:
+        # - object-uri
+        faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'fake-cpc-2-oid',
+            'parent': None,
+            'class': 'cpc',
+            'name': 'fake-cpc-2-name',
+            'description': 'CPC z13s #2',
+            'status': 'active',
+            'dpm-enabled': True,
+            'is-ensemble-member': False,
+            'iml-mode': 'dpm',
+            'machine-type': '2965',  # z13s
+        })
+        return faked_cpc
 
     def test_resource_repr(self):
         """Test Adapter.__repr__()."""
@@ -611,6 +657,28 @@ class AdapterTests(unittest.TestCase):
         adapter.pull_full_properties()
         self.assertEqual(adapter.properties[update_prop_name],
                          update_prop_value)
+
+    def test_max_crypto_domains(self):
+        """Test Adapter.maximum_crypto_domains() on z13 and z13s."""
+
+        faked_cpc = self.faked_cpc
+        faked_crypto = self.add_crypto_ce5s(faked_cpc)
+        self._one_test_max_crypto_domains(faked_cpc, faked_crypto, 85)
+
+        faked_cpc = self.add_cpc_z13s()
+        faked_crypto = self.add_crypto_ce5s(faked_cpc)
+        self._one_test_max_crypto_domains(faked_cpc, faked_crypto, 40)
+
+    def _one_test_max_crypto_domains(
+            self, faked_cpc, faked_adapter, exp_max_domains):
+
+        cpc = self.client.cpcs.find(name=faked_cpc.name)
+        adapter = cpc.adapters.find(name=faked_adapter.name)
+
+        # Exercise code to be tested
+        max_domains = adapter.maximum_crypto_domains
+
+        self.assertEqual(max_domains, exp_max_domains)
 
 
 if __name__ == '__main__':

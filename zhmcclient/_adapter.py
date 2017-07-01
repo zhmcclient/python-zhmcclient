@@ -329,6 +329,45 @@ class Adapter(BaseResource):
                 self._port_uri_segment = ''
         return self._port_uri_segment
 
+    @property
+    @logged_api_call
+    def maximum_crypto_domains(self):
+        """
+        Integer: The maximum number of crypto domains on this crypto adapter.
+
+        The following table shows the maximum number of crypto domains for
+        crypto adapters supported on machines in DPM mode:
+
+        =================  ==================  ===============
+        Adapter type       Machine generation  Maximum domains
+        =================  ==================  ===============
+        Crypto Express 5S  z13 / Emperor                    85
+        Crypto Express 5S  z13s / Rockhopper                40
+        =================  ==================  ===============
+
+        If this adapter is not a crypto adapter, `None` is returned.
+
+        If the crypto adapter card type is not known, :exc:`ValueError` is
+        raised.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`ValueError`: Unknown crypto card type
+        """
+        if self.get_property('adapter-family') != 'crypto':
+            return None
+        card_type = self.get_property('detected-card-type')
+        if card_type == 'Crypto Express-5S':
+            max_domains = self.manager.cpc.maximum_active_partitions
+        else:
+            raise ValueError("Unknown crypto card type: {!r}".
+                             format(card_type))
+        return max_domains
+
     @logged_api_call
     def delete(self):
         """
