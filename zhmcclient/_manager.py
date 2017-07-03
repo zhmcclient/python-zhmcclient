@@ -34,7 +34,7 @@ import warnings
 from requests.utils import quote
 
 from ._logging import get_logger, logged_api_call
-from ._exceptions import NotFound, NoUniqueMatch
+from ._exceptions import NotFound, NoUniqueMatch, HTTPError
 from ._utils import repr_list
 
 __all__ = ['BaseManager']
@@ -182,8 +182,9 @@ class BaseManager(object):
     documented and may change incompatibly.
     """
 
-    def __init__(self, resource_class, session, parent, uri_prop, name_prop,
-                 query_props, list_has_name=True):
+    def __init__(self, resource_class, session, parent, base_uri,
+                 oid_prop, uri_prop, name_prop, query_props,
+                 list_has_name=True):
         # This method intentionally has no docstring, because it is internal.
         #
         # Parameters:
@@ -197,6 +198,16 @@ class BaseManager(object):
         #     Parent resource defining the scope for this manager.
         #     `None`, if the manager has no parent, i.e. when it manages
         #     top-level resources (e.g. CPC).
+        #   base_uri (string):
+        #     Base URI of the resources of this manager. The base URI has no
+        #     trailing slash and becomes the resource URI by appending '/' and
+        #     the value of the property specified in 'oid_prop'.
+        #     Must not be `None`.
+        #   oid_prop (string):
+        #     Name of the resource property whose value is appended to the
+        #     base URI to form the resource URI (e.g. 'object-id' or
+        #     'element-id').
+        #     Must not be `None`.
         #   uri_prop (string):
         #     Name of the resource property that is the canonical URI path of
         #     the resource (e.g. 'object-uri' or 'element-uri').
@@ -222,6 +233,8 @@ class BaseManager(object):
         # so we test those that are not surfaced through the init code:
         assert resource_class is not None
         assert session is not None
+        assert base_uri is not None
+        assert oid_prop is not None
         assert uri_prop is not None
         assert name_prop is not None
         assert query_props is not None
@@ -229,6 +242,8 @@ class BaseManager(object):
         self._resource_class = resource_class
         self._session = session
         self._parent = parent
+        self._base_uri = base_uri
+        self._oid_prop = oid_prop
         self._uri_prop = uri_prop
         self._name_prop = name_prop
         self._query_props = query_props
@@ -247,6 +262,8 @@ class BaseManager(object):
             "  _resource_class = {_resource_class!r}\n"
             "  _session = {_session_classname} at 0x{_session_id:08x}\n"
             "  _parent = {_parent_classname} at 0x{_parent_id:08x}\n"
+            "  _base_uri = {_base_uri!r}\n"
+            "  _oid_prop = {_oid_prop!r}\n"
             "  _uri_prop = {_uri_prop!r}\n"
             "  _name_prop = {_name_prop!r}\n"
             "  _query_props = {_query_props}\n"
@@ -260,6 +277,8 @@ class BaseManager(object):
                 _session_id=id(self._session),
                 _parent_classname=self._parent.__class__.__name__,
                 _parent_id=id(self._parent),
+                _base_uri=self._base_uri,
+                _oid_prop=self._oid_prop,
                 _uri_prop=self._uri_prop,
                 _name_prop=self._name_prop,
                 _query_props=repr_list(self._query_props, indent=2),
@@ -299,6 +318,59 @@ class BaseManager(object):
         attribute of the :class:`~zhmcclient.RetryTimeoutConfig` class.
         """
         self._name_uri_cache.invalidate()
+
+    def _try_optimized_lookup(self, filter_args):
+        """
+        Try to optimize the lookup by checking whether the filter arguments
+        specify the property that is used as the last segment in the resource
+        URI, with a plain string as match value (i.e. not using regular
+        expression matching).
+
+        If so, the lookup is performed by constructing the resource URI from
+        the specified filter argument, and by issuing a Get Properties
+        operation on that URI, returning a single resource object.
+
+        Parameters:
+
+          filter_args (dict):
+            Filter arguments. For details, see :ref:`Filtering`.
+
+        Returns:
+
+          resource object, or `None` if the optimization was not possible.
+        """
+        if filter_args is not None and \
+                len(filter_args) == 1 and \
+                self._oid_prop in filter_args:
+
+            oid_match = filter_args[self._oid_prop]
+            if re.match(r'^[a-zA-Z0-9_\-]+$', oid_match):
+                # The match string is a plain string (not a reg.expression)
+
+                # Construct the resource URI from the filter property
+                # and issue a Get <Resource> Properties on that URI
+
+                uri = self._base_uri + '/' + oid_match
+
+                try:
+                    props = self.session.get(uri)
+                except HTTPError as exc:
+                    if exc.http_status == 404 and exc.reason == 1:
+                        # No such resource
+                        return None
+                    raise
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=props[self._uri_prop],
+                    name=props.get(self._name_prop, None),
+                    properties=props)
+
+                resource_obj._full_properties = True
+
+                return resource_obj
+
+        return None
 
     def _divide_filter_args(self, filter_args):
         """

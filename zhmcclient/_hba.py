@@ -61,6 +61,8 @@ class HbaManager(BaseManager):
             resource_class=Hba,
             session=partition.manager.session,
             parent=partition,
+            base_uri='{}/hbas'.format(partition.uri),
+            oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
             query_props=[],

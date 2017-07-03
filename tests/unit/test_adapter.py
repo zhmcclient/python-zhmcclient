@@ -276,7 +276,7 @@ class AdapterTests(unittest.TestCase):
         self.add_standard_osa()
         self.add_standard_hipersocket()
         filter_args = {
-            'name': self.osa1_name + 'foo',
+            'name': self.osa1_name + '_notfound',
         }
 
         adapters = self.cpc.adapters.list(filter_args=filter_args)
@@ -304,7 +304,7 @@ class AdapterTests(unittest.TestCase):
         self.add_standard_osa()
         self.add_standard_hipersocket()
         filter_args = {
-            'object-id': self.osa1_id + 'foo',
+            'object-id': self.osa1_id + '_notfound',
         }
 
         adapters = self.cpc.adapters.list(filter_args=filter_args)
@@ -336,7 +336,7 @@ class AdapterTests(unittest.TestCase):
         self.add_standard_hipersocket()
         filter_args = {
             'name': self.osa1_name,
-            'object-id': self.osa1_id + 'foo',
+            'object-id': self.osa1_id + '_notfound',
         }
 
         adapters = self.cpc.adapters.list(filter_args=filter_args)
@@ -350,7 +350,7 @@ class AdapterTests(unittest.TestCase):
         self.add_standard_osa()
         self.add_standard_hipersocket()
         filter_args = {
-            'name': self.osa1_name + 'foo',
+            'name': self.osa1_name + '_notfound',
             'object-id': self.osa1_id,
         }
 
@@ -365,8 +365,8 @@ class AdapterTests(unittest.TestCase):
         self.add_standard_osa()
         self.add_standard_hipersocket()
         filter_args = {
-            'name': self.osa1_name + 'foo',
-            'object-id': self.osa1_id + 'foo',
+            'name': self.osa1_name + '_notfound',
+            'object-id': self.osa1_id + '_notfound',
         }
 
         adapters = self.cpc.adapters.list(filter_args=filter_args)
@@ -379,10 +379,8 @@ class AdapterTests(unittest.TestCase):
         self.add_standard_osa()
         self.add_standard_hipersocket()
         filter_args = {
-            'name': [self.osa1_name, self.hs2_name + 'foo'],
+            'name': [self.osa1_name, self.hs2_name + '_notfound'],
         }
-
-        # import pdb; pdb.set_trace()
 
         adapters = self.cpc.adapters.list(filter_args=filter_args)
 
@@ -396,7 +394,7 @@ class AdapterTests(unittest.TestCase):
         self.add_standard_osa()
         self.add_standard_hipersocket()
         filter_args = {
-            'name': [self.hs2_name + 'foo', self.osa1_name],
+            'name': [self.hs2_name + '_notfound', self.osa1_name],
         }
 
         adapters = self.cpc.adapters.list(filter_args=filter_args)

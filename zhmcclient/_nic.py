@@ -62,6 +62,8 @@ class NicManager(BaseManager):
             resource_class=Nic,
             session=partition.manager.session,
             parent=partition,
+            base_uri='{}/nics'.format(partition.uri),
+            oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
             query_props=[],

@@ -52,6 +52,8 @@ class MyManager(BaseManager):
             resource_class=MyResource,
             session=session,
             parent=None,  # a top-level resource
+            base_uri='/api/myresources/',
+            oid_prop='fake_object_id',
             uri_prop='fake-uri-prop',
             name_prop='fake-name-prop',
             query_props=['qp1', 'qp2'])
