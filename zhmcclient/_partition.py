@@ -886,8 +886,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        crypto_adapter_uris = (a.uri for a in crypto_adapters)
-
+        crypto_adapter_uris = [a.uri for a in crypto_adapters]
         body = {'crypto-adapter-uris': crypto_adapter_uris,
                 'crypto-domain-configurations': crypto_domain_configurations}
         self.manager.session.post(
@@ -932,8 +931,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        crypto_adapter_uris = (a.uri for a in crypto_adapters)
-
+        crypto_adapter_uris = [a.uri for a in crypto_adapters]
         body = {'crypto-adapter-uris': crypto_adapter_uris,
                 'crypto-domain-indexes': crypto_domain_indexes}
         self.manager.session.post(
