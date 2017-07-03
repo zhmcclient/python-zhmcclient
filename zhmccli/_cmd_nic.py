@@ -126,7 +126,7 @@ def nic_show(cmd_ctx, cpc, partition, nic):
               help='Network Mask of the SSC management NIC. '
               'Only applicable to and required for NICs of ssc type '
               'partitions when ssc-ip-address-type is ipv4 or ipv6.')
-@click.option('--vlan-id', type=str, required=False,
+@click.option('--vlan-id', type=int, required=False,
               help='VLAN ID of the SSC management NIC '
               'Only applicable to NICs of ssc type partitions. '
               'Default: No VLAN is used.')
@@ -185,7 +185,7 @@ def nic_create(cmd_ctx, cpc, partition, **options):
 @click.option('--ssc-mask-prefix', type=str, required=False,
               help='Network Mask of the SSC management NIC. '
               'Only applicable to NICs of ssc type partitions.')
-@click.option('--vlan-id', type=str, required=False,
+@click.option('--vlan-id', type=int, required=False,
               help='VLAN ID of the SSC management NIC '
               'Only applicable to NICs of ssc type partitions.')
 @click.pass_obj
