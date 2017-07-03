@@ -110,3 +110,47 @@ class Client(object):
                                          logon_required=False)
         self._api_version = version_resp
         return self._api_version
+
+    @logged_api_call
+    def get_inventory(self, resources):
+        """
+        Returns a JSON object with the requested resources and their
+        properties, that are managed by the HMC.
+
+        This method performs the 'Get Inventory' HMC operation.
+
+        Parameters:
+
+          resources (:term:`iterable` of :term:`string`):
+            Resource classes and/or resource classifiers specifying the types
+            of resources that should be included in the result. For valid
+            values, see the 'Get Inventory' operation in the :term:`HMC API`
+            book.
+
+            Element resources of the specified resource types are automatically
+            included as children (for example, requesting 'partition' includes
+            all of its 'hba', 'nic' and 'virtual-function' element resources).
+
+            Must not be `None`.
+
+        Returns:
+
+          :term:`JSON object`:
+            The resources with their properties, for the requested resource
+            classes and resource classifiers.
+
+        Example:
+
+            resource_classes = ['partition', 'adapter']
+            result_dict = client.get_inventory(resource_classes)
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        uri = '/api/services/inventory'
+        body = {'resources': resources}
+        result = self.session.post(uri, body=body)
+        return result
