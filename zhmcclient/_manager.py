@@ -339,38 +339,38 @@ class BaseManager(object):
 
           resource object, or `None` if the optimization was not possible.
         """
-        if filter_args is not None and \
-                len(filter_args) == 1 and \
-                self._oid_prop in filter_args:
+        if filter_args is None or len(filter_args) != 1 or \
+                self._oid_prop not in filter_args:
+            return None
 
-            oid_match = filter_args[self._oid_prop]
-            if re.match(r'^[a-zA-Z0-9_\-]+$', oid_match):
-                # The match string is a plain string (not a reg.expression)
+        oid_match = filter_args[self._oid_prop]
+        if not isinstance(oid_match, six.string_types) or \
+                not re.match(r'^[a-zA-Z0-9_\-]+$', oid_match):
+            return None
 
-                # Construct the resource URI from the filter property
-                # and issue a Get <Resource> Properties on that URI
+        # The match string is a plain string (not a reg.expression)
 
-                uri = self._base_uri + '/' + oid_match
+        # Construct the resource URI from the filter property
+        # and issue a Get <Resource> Properties on that URI
+        uri = self._base_uri + '/' + oid_match
 
-                try:
-                    props = self.session.get(uri)
-                except HTTPError as exc:
-                    if exc.http_status == 404 and exc.reason == 1:
-                        # No such resource
-                        return None
-                    raise
+        try:
+            props = self.session.get(uri)
+        except HTTPError as exc:
+            if exc.http_status == 404 and exc.reason == 1:
+                # No such resource
+                return None
+            raise
 
-                resource_obj = self.resource_class(
-                    manager=self,
-                    uri=props[self._uri_prop],
-                    name=props.get(self._name_prop, None),
-                    properties=props)
+        resource_obj = self.resource_class(
+            manager=self,
+            uri=props[self._uri_prop],
+            name=props.get(self._name_prop, None),
+            properties=props)
 
-                resource_obj._full_properties = True
+        resource_obj._full_properties = True
 
-                return resource_obj
-
-        return None
+        return resource_obj
 
     def _divide_filter_args(self, filter_args):
         """
