@@ -53,9 +53,9 @@ class FakedBaseResource(object):
     def __init__(self, manager, properties):
         self._manager = manager  # May be None
         self._properties = copy.deepcopy(properties) \
-            if properties is not None else None
+            if properties is not None else {}
 
-        if self.manager and self.properties:
+        if self.manager:
 
             if self.manager.oid_prop not in self.properties:
                 new_oid = self.manager._new_oid()
