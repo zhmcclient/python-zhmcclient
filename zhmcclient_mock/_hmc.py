@@ -127,6 +127,17 @@ class FakedBaseResource(object):
         """
         return self._uri
 
+    @property
+    def name(self):
+        """
+        The name (property 'name') of this resource.
+
+        Raises:
+
+          :exc:`KeyError`: Resource does not have a 'name' property.
+        """
+        return self._properties['name']
+
     def update(self, properties):
         """
         update the properties of this resource.
