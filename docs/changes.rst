@@ -57,6 +57,9 @@ Released: not yet
 * Fixed the incorrect parameters of ``Partition.mount_iso_image()``. See
   issue #57.
 
+* Reads the vlan-id as a integer instead as a string for
+  the 'zhmc nic create/update' cli command. See issue #337.
+
 **Enhancements:**
 
 * Improved content of ``zhmcclient.ParseError`` message for better problem
