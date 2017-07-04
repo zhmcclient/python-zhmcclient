@@ -5,34 +5,52 @@
 notifications:
   email: false
 
-language: python
-
-# For Linux, we let Travis build the job matrix from these dimensions:
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-#  - "pypy"        # PyPy 2.5.0, Python 2.7.8
-  - "pypy-5.3.1"  # PyPy 5.3.1, Python 2.7.10
-#  - "pypy3"       # PyPy 2.4.0, Python 3.2.5 -> pip not supported
-# TODO: Find out which pypy3 string will work:
-#  - "pypy3-5.3.1" # PyPy 5.3.1, Python 3.3.?
-#  - "pypy3.3-5.3.1" # PyPy 5.3.1, Python 3.3.?
-os:
-  - linux
-env:
-  - PACKAGE_LEVEL=minimum
-  - PACKAGE_LEVEL=latest
-
-# For OS-X, we define the job matrix explicitly. These combinations
-# are added to the automatically built job matrix for Linux.
-# Reason is that Travis has half-baked support for Python that does not work,
-# so it needs to be invoked with language=generic and empty python in order to
-# prevent that Travis attempts to install Python.
+# We define the job matrix explicitly, in order to minimize the
+# combinations.
+# For OS-X, using an explicit matrix is required, because Travis at
+# this point only has half-baked support for Python on OS-X that does
+# not work. Also, on OS-X, it needs to be invoked with language=generic
+# and an empty 'python' variable in order to prevent that Travis attempts
+# to install Python.
 # TODO: Figure out how specific versions of Python 3.x can be used with OS-X
 matrix:
   include:
+    - os: linux
+      sudo: required
+      language: python
+      python: "2.7"
+      env:
+        - PACKAGE_LEVEL=minimum
+    - os: linux
+      sudo: required
+      language: python
+      python: "2.7"
+      env:
+        - PACKAGE_LEVEL=latest
+    - os: linux
+      sudo: required
+      language: python
+      python: "3.4"
+      env:
+        - PACKAGE_LEVEL=minimum
+#    - os: linux
+#      sudo: required
+#      language: python
+#      python: "3.5"
+#      env:
+#        - PACKAGE_LEVEL=minimum
+    - os: linux
+      sudo: required
+      language: python
+      python: "3.6"
+      env:
+        - PACKAGE_LEVEL=latest
+#    - os: linux
+#      sudo: required
+#      language: python
+#      python: "pypy-5.3.1"  # Python 2.7.10
+#      env:
+#        - PACKAGE_LEVEL=minimum
     - os: osx
       sudo: required
       language: generic
