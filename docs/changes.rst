@@ -153,6 +153,9 @@ Released: not yet
   crypto adapters. Note: This method is considered experimental in this
   version.
 
+* Added an ``update_properties()`` method to the ``Lpar`` and ``Cpc``
+  resource classes.
+
 **Known issues:**
 
 * See `list of open issues`_.
