@@ -148,6 +148,11 @@ Released: not yet
 * Added a Python property ``maximum_active_partitions`` to the ``Cpc`` class,
   which returns the maximum number of active LPARs or partitions of a CPC.
 
+* Added ``get_free_crypto_domains()`` method to the ``Cpc`` class,
+  in order to find out free domain index numbers for a given set of
+  crypto adapters. Note: This method is considered experimental in this
+  version.
+
 **Known issues:**
 
 * See `list of open issues`_.
