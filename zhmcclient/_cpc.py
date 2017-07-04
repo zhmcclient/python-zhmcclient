@@ -43,6 +43,7 @@ indicated in the description of the functionality.
 from __future__ import absolute_import
 
 import warnings
+import copy
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -365,6 +366,36 @@ class Cpc(BaseResource):
         except KeyError:
             raise ValueError("Unknown machine type: {!r}".format(machine_type))
         return max_parts
+
+    @logged_api_call
+    def update_properties(self, properties):
+        """
+        Update writeable properties of this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "CPC Details" task.
+
+        Parameters:
+
+          properties (dict): New values for the properties to be updated.
+            Properties not to be updated are omitted.
+            Allowable properties are the properties with qualifier (w) in
+            section 'Data model' in section 'CPC' in the :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self.manager.session.post(self.uri, body=properties)
+        # Attempts to change the 'name' property will be rejected by the HMC,
+        # so we don't need to update the name-to-URI cache.
+        assert self.manager._name_prop not in properties
+        self.properties.update(copy.deepcopy(properties))
 
     @logged_api_call
     def start(self, wait_for_completion=True, operation_timeout=None):
