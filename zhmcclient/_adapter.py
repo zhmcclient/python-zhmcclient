@@ -361,7 +361,7 @@ class Adapter(BaseResource):
         if self.get_property('adapter-family') != 'crypto':
             return None
         card_type = self.get_property('detected-card-type')
-        if card_type == 'Crypto Express-5S':
+        if card_type == 'crypto-express-5s':
             max_domains = self.manager.cpc.maximum_active_partitions
         else:
             raise ValueError("Unknown crypto card type: {!r}".

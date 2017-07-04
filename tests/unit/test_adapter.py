@@ -160,7 +160,7 @@ class AdapterTests(unittest.TestCase):
             'status': 'active',
             'type': 'crypto',
             'adapter-id': '123',
-            'detected-card-type': 'Crypto Express-5S',
+            'detected-card-type': 'crypto-express-5s',
             'card-location': 'vvvv-wwww',
             'state': 'online',
             'physical-channel-status': 'operating',
