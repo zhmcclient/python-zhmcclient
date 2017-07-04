@@ -229,34 +229,6 @@ class ActivationProfileTests(unittest.TestCase):
         # changed
         self.assertEqual(profile.properties, saved_properties)
 
-    def test_resource_update_name(self):
-        """
-        Test ActivationProfile.update_properties() with 'name' property.
-        """
-        profile_mgr = self.cpc.load_activation_profiles
-        profiles = profile_mgr.list(filter_args={'name': 'lap_1'})
-        self.assertEqual(len(profiles), 1)
-        profile = profiles[0]
-
-        new_name = "new lap_1"
-
-        # Method to be tested
-        profile.update_properties(properties={'name': new_name})
-
-        # Verify that the local resource object reflects the update
-        self.assertEqual(profile.properties['name'], new_name)
-
-        # Update the properties of the resource object and verify that the
-        # resource object reflects the update
-        profile.pull_full_properties()
-        self.assertEqual(profile.properties['name'], new_name)
-
-        # List the resource by its new name and verify that it was found
-        profiles = profile_mgr.list(filter_args={'name': new_name})
-        self.assertEqual(len(profiles), 1)
-        profile = profiles[0]
-        self.assertEqual(profile.properties['name'], new_name)
-
     def test_resource_update_not_fetched(self):
         """
         Test ActivationProfile.update_properties() with an existing
