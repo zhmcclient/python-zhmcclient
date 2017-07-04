@@ -1064,6 +1064,8 @@ class PartitionHandlersTests(unittest.TestCase):
         new_partition2 = {
             'object-id': '2',
             'name': 'partition_2',
+            'initial-memory': 1024,
+            'maximum-memory': 2048,
         }
 
         # the function to be tested:
@@ -1083,6 +1085,8 @@ class PartitionHandlersTests(unittest.TestCase):
             'hba-uris': [],
             'nic-uris': [],
             'virtual-function-uris': [],
+            'initial-memory': 1024,
+            'maximum-memory': 2048,
         }
 
         # the function to be tested:

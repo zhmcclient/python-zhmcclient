@@ -87,6 +87,16 @@ class InvalidMethodError(HTTPError):
             (method, uri, handler_txt))
 
 
+class BadRequestError(HTTPError):
+
+    def __init__(self, method, uri, reason, message):
+        super(BadRequestError, self).__init__(
+            method, uri,
+            http_status=400,
+            reason=reason,
+            message=message)
+
+
 class CpcNotInDpmError(HTTPError):
     """
     Indicates that the operation requires DPM mode but the CPC is not in DPM
@@ -377,6 +387,13 @@ class AdaptersHandler(object):
             raise InvalidResourceError('POST', uri)
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError('POST', uri, cpc)
+        # Check required input properties
+        required_props = ['name']
+        for prop_name in required_props:
+            if prop_name not in body:
+                raise BadRequestError(
+                    'POST', uri, reason=5,
+                    message="Missing input property: %s" % prop_name)
         # We need to emulate the behavior of this POST to always create a
         # hipersocket, but the add() method is used for adding all kinds of
         # faked adapters to the faked HMC. So we need to specify the adapter
@@ -448,6 +465,15 @@ class PartitionsHandler(object):
             raise InvalidResourceError('POST', uri)
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError('POST', uri, cpc)
+        # Check required input properties
+        required_props = ['name', 'initial-memory', 'maximum-memory']
+        for prop_name in required_props:
+            if prop_name not in body:
+                raise BadRequestError(
+                    'POST', uri, reason=5,
+                    message="Missing input property: %s" % prop_name)
+        # TODO: There are some more input properties that are required under
+        # certain conditions.
         new_partition = cpc.partitions.add(body)
         return {'object-uri': new_partition.uri}
 
@@ -658,6 +684,13 @@ class HbasHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
+        # Check required input properties
+        required_props = ['name']
+        for prop_name in required_props:
+            if prop_name not in body:
+                raise BadRequestError(
+                    'POST', uri, reason=5,
+                    message="Missing input property: %s" % prop_name)
         new_hba = partition.hbas.add(body)
         return {'element-uri': new_hba.uri}
 
@@ -691,6 +724,13 @@ class NicsHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
+        # Check required input properties
+        required_props = ['name']
+        for prop_name in required_props:
+            if prop_name not in body:
+                raise BadRequestError(
+                    'POST', uri, reason=5,
+                    message="Missing input property: %s" % prop_name)
         new_nic = partition.nics.add(body)
         return {'element-uri': new_nic.uri}
 
@@ -724,6 +764,13 @@ class VirtualFunctionsHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
+        # Check required input properties
+        required_props = ['name']
+        for prop_name in required_props:
+            if prop_name not in body:
+                raise BadRequestError(
+                    'POST', uri, reason=5,
+                    message="Missing input property: %s" % prop_name)
         new_vf = partition.virtual_functions.add(body)
         return {'element-uri': new_vf.uri}
 
