@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,58 +13,66 @@
 # limitations under the License.
 
 """
-Unit tests for _adapter module, using the zhmcclient mock support.
+Unit tests for _adapter module.
 """
 
 from __future__ import absolute_import, print_function
 
-import unittest
+import pytest
 import copy
+import re
 
 from zhmcclient import Client, Adapter, NotFound, HTTPError
 from zhmcclient_mock import FakedSession
+from .utils import assert_resources
 
 
-class AdapterTests(unittest.TestCase):
-    """All tests for Adapter and AdapterManager classes."""
+# Object IDs and names of our faked adapters:
+OSA1_OID = 'osa1-oid'
+OSA1_NAME = 'osa 1'
+HS2_OID = 'hs2-oid'
+HS2_NAME = 'hs 2'
 
-    def setUp(self):
+
+class TestAdapter(object):
+    """All tests for the Adapter and AdapterManager classes."""
+
+    def setup_method(self):
+        """
+        Set up a faked session, and add a faked CPC in DPM mode without any
+        child resources.
+        """
+
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.client = Client(self.session)
+
         self.faked_cpc = self.session.hmc.cpcs.add({
-            'object-id': 'faked-cpc1',
+            'object-id': 'fake-cpc1-oid',
+            # object-uri is set up automatically
             'parent': None,
             'class': 'cpc',
-            'name': 'cpc_1',
-            'description': 'CPC #1',
+            'name': 'fake-cpc1-name',
+            'description': 'CPC #1 (DPM mode)',
             'status': 'active',
             'dpm-enabled': True,
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'machine-type': '2964',  # z13
         })
-        self.client = Client(self.session)
-        self.cpc = self.client.cpcs.list()[0]
+        self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
 
     def add_standard_osa(self):
         """Add a standard OSA adapter with one port to the faked HMC."""
-
-        self.osa1_id = 'fake-osa1'
-        self.osa1_name = 'osa 1'
-        self.osa1_uri = '/api/adapters/' + self.osa1_id
-
-        self.port11_id = 'fake-port11'
-        self.port11_name = 'osa 1 port 1'
-        self.port11_uri = self.osa1_uri + '/network-ports/' + self.port11_id
 
         # Adapter properties that will be auto-set:
         # - object-uri
         # - adapter-family
         # - network-port-uris (to empty array)
         faked_osa1 = self.faked_cpc.adapters.add({
-            'object-id': self.osa1_id,
+            'object-id': OSA1_OID,
             'parent': self.faked_cpc.uri,
             'class': 'adapter',
-            'name': self.osa1_name,
+            'name': OSA1_NAME,
             'description': 'OSA #1',
             'status': 'active',
             'type': 'osd',
@@ -87,35 +94,28 @@ class AdapterTests(unittest.TestCase):
         # Properties in parent adapter that will be auto-set:
         # - network-port-uris
         faked_osa1.ports.add({
-            'element-id': self.port11_id,
+            'element-id': 'fake-port11-oid',
             'parent': faked_osa1.uri,
             'class': 'network-port',
             'index': 0,
-            'name': self.port11_name,
+            'name': 'fake-port11-name',
             'description': 'OSA #1 Port #1',
         })
+        return faked_osa1
 
     def add_standard_hipersocket(self):
         """Add a standard Hipersocket adapter with one port to the faked
         HMC."""
-
-        self.hs2_id = 'fake-hs2'
-        self.hs2_name = 'hs 2'
-        self.hs2_uri = '/api/adapters/' + self.hs2_id
-
-        self.port21_id = 'fake-port21'
-        self.port21_name = 'hs 2 port 1'
-        self.port21_uri = self.hs2_uri + '/network-ports/' + self.port21_id
 
         # Adapter properties that will be auto-set:
         # - object-uri
         # - adapter-family
         # - network-port-uris (to empty array)
         faked_hs2 = self.faked_cpc.adapters.add({
-            'object-id': self.hs2_id,
+            'object-id': HS2_OID,
             'parent': self.faked_cpc.uri,
             'class': 'adapter',
-            'name': self.hs2_name,
+            'name': HS2_NAME,
             'description': 'Hipersocket #2',
             'status': 'active',
             'type': 'hipersockets',
@@ -137,13 +137,14 @@ class AdapterTests(unittest.TestCase):
         # Properties in parent adapter that will be auto-set:
         # - network-port-uris
         faked_hs2.ports.add({
-            'element-id': self.port21_id,
+            'element-id': 'fake-port21-oid',
             'parent': faked_hs2.uri,
             'class': 'network-port',
             'index': 0,
-            'name': self.port21_name,
+            'name': 'fake-port21-name',
             'description': 'Hipersocket #2 Port #1',
         })
+        return faked_hs2
 
     def add_crypto_ce5s(self, faked_cpc):
         """Add a Crypto Express 5S adapter to a faked CPC."""
@@ -190,476 +191,169 @@ class AdapterTests(unittest.TestCase):
         })
         return faked_cpc
 
-    def test_resource_repr(self):
-        """Test Adapter.__repr__()."""
-        adapter = Adapter(self.cpc.adapters, '/adapters/1', 'osa1')
+    def test_adaptermanager_initial_attrs(self):
+        """Test initial attributes of AdapterManager."""
 
+        adapter_mgr = self.cpc.adapters
+
+        # Verify all public properties of the manager object
+        assert adapter_mgr.resource_class == Adapter
+        assert adapter_mgr.session == self.session
+        assert adapter_mgr.parent == self.cpc
+        assert adapter_mgr.cpc == self.cpc
+
+    # TODO: Test for AdapterManager.__repr__()
+
+    @pytest.mark.parametrize(
+        "full_properties_kwargs, prop_names", [
+            (dict(),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=False),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=True),
+             None),
+        ]
+    )
+    def test_adaptermanager_list_full_properties(
+            self, full_properties_kwargs, prop_names):
+        """Test AdapterManager.list() with full_properties."""
+
+        # Add two faked adapters
+        faked_osa1 = self.add_standard_osa()
+        faked_hs2 = self.add_standard_hipersocket()
+
+        exp_faked_adapters = [faked_osa1, faked_hs2]
+        adapter_mgr = self.cpc.adapters
+
+        # Execute the code to be tested
+        adapters = adapter_mgr.list(**full_properties_kwargs)
+
+        assert_resources(adapters, exp_faked_adapters, prop_names)
+
+    @pytest.mark.parametrize(
+        "filter_args, exp_names", [
+            ({'object-id': OSA1_OID},
+             [OSA1_NAME]),
+            ({'object-id': HS2_OID},
+             [HS2_NAME]),
+            ({'object-id': [OSA1_OID, HS2_OID]},
+             [OSA1_NAME, HS2_NAME]),
+            ({'object-id': [OSA1_OID, OSA1_OID]},
+             [OSA1_NAME]),
+            ({'object-id': OSA1_OID + 'foo'},
+             []),
+            ({'object-id': [OSA1_OID, HS2_OID + 'foo']},
+             [OSA1_NAME]),
+            ({'object-id': [HS2_OID + 'foo', OSA1_OID]},
+             [OSA1_NAME]),
+            ({'name': OSA1_NAME},
+             [OSA1_NAME]),
+            ({'name': HS2_NAME},
+             [HS2_NAME]),
+            ({'name': [OSA1_NAME, HS2_NAME]},
+             [OSA1_NAME, HS2_NAME]),
+            ({'name': OSA1_NAME + 'foo'},
+             []),
+            ({'name': [OSA1_NAME, HS2_NAME + 'foo']},
+             [OSA1_NAME]),
+            ({'name': [HS2_NAME + 'foo', OSA1_NAME]},
+             [OSA1_NAME]),
+            ({'name': [OSA1_NAME, OSA1_NAME]},
+             [OSA1_NAME]),
+            ({'name': '.*osa 1'},
+             [OSA1_NAME]),
+            ({'name': 'osa 1.*'},
+             [OSA1_NAME]),
+            ({'name': 'osa .'},
+             [OSA1_NAME]),
+            ({'name': '.sa 1'},
+             [OSA1_NAME]),
+            ({'name': '.+'},
+             [OSA1_NAME, HS2_NAME]),
+            ({'name': 'osa 1.+'},
+             []),
+            ({'name': '.+osa 1'},
+             []),
+            ({'name': OSA1_NAME,
+              'object-id': OSA1_OID},
+             [OSA1_NAME]),
+            ({'name': OSA1_NAME,
+              'object-id': OSA1_OID + 'foo'},
+             []),
+            ({'name': OSA1_NAME + 'foo',
+              'object-id': OSA1_OID},
+             []),
+            ({'name': OSA1_NAME + 'foo',
+              'object-id': OSA1_OID + 'foo'},
+             []),
+        ]
+    )
+    def test_adaptermanager_list_filter_args(self, filter_args, exp_names):
+        """Test AdapterManager.list() with filter_args."""
+
+        # Add two faked adapters
+        self.add_standard_osa()
+        self.add_standard_hipersocket()
+
+        adapter_mgr = self.cpc.adapters
+
+        # Execute the code to be tested
+        adapters = adapter_mgr.list(filter_args=filter_args)
+
+        assert len(adapters) == len(exp_names)
+        if exp_names:
+            names = [ad.properties['name'] for ad in adapters]
+            assert set(names) == set(exp_names)
+
+    def test_adaptermanager_create_hipersocket(self):
+        """Test AdapterManager.create_hipersocket()."""
+
+        hs_properties = {
+            'name': 'hs 3',
+            'description': 'Hipersocket #3',
+            'port-description': 'Hipersocket #3 Port',
+            'maximum-transmission-unit-size': 56,
+        }
+
+        adapter_mgr = self.cpc.adapters
+
+        # Execute the code to be tested
+        adapter = adapter_mgr.create_hipersocket(properties=hs_properties)
+
+        assert isinstance(adapter, Adapter)
+        assert adapter.name == adapter.properties['name']
+        assert adapter.uri == adapter.properties['object-uri']
+
+        # We expect the input properties to be in the resource object
+        assert adapter.properties['name'] == 'hs 3'
+        assert adapter.properties['description'] == 'Hipersocket #3'
+        assert adapter.properties['port-description'] == 'Hipersocket #3 Port'
+        assert adapter.properties['maximum-transmission-unit-size'] == 56
+
+    # TODO: Test for initial Adapter attributes (ports, port_uris_prop,
+    #       port_uri_segment)
+
+    def test_adapter_repr(self):
+        """Test Adapter.__repr__()."""
+
+        # Add a faked adapter
+        faked_osa = self.add_standard_osa()
+
+        adapter_mgr = self.cpc.adapters
+        adapter = adapter_mgr.find(name=faked_osa.name)
+
+        # Execute the code to be tested
         repr_str = repr(adapter)
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=adapter.__class__.__name__,
-                id=id(adapter)))
-
-    def test_manager_initial_attrs(self):
-        """Test initial attributes of AdapterManager."""
-        self.add_standard_osa()
-
-        manager = self.cpc.adapters
-
-        # Verify all public properties of the manager object
-        self.assertEqual(manager.resource_class, Adapter)
-        self.assertEqual(manager.session, self.session)
-        self.assertEqual(manager.parent, self.cpc)
-        self.assertEqual(manager.cpc, self.cpc)
-
-    def test_manager_list_default(self):
-        """Test AdapterManager.list() with default for full_properties."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-
-        adapters = self.cpc.adapters.list()
-
-        self.assertEqual(len(adapters), 2)
-
-        osa1 = adapters[0]
-        self.assertEqual(osa1.uri, self.osa1_uri)
-        self.assertEqual(osa1.name, self.osa1_name)
-        self.assertEqual(osa1.properties['object-uri'], self.osa1_uri)
-        self.assertEqual(osa1.properties['name'], self.osa1_name)
-        self.assertEqual(osa1.properties['status'], 'active')
-
-        hs2 = adapters[1]
-        self.assertEqual(hs2.uri, self.hs2_uri)
-        self.assertEqual(hs2.name, self.hs2_name)
-        self.assertEqual(hs2.properties['object-uri'], self.hs2_uri)
-        self.assertEqual(hs2.properties['name'], self.hs2_name)
-        self.assertEqual(hs2.properties['status'], 'active')
-
-    def test_manager_list_short(self):
-        """Test AdapterManager.list() with full_properties=False."""
-        self.add_standard_osa()
-
-        adapters = self.cpc.adapters.list(full_properties=False)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.uri, self.osa1_uri)
-        self.assertEqual(osa1.name, self.osa1_name)
-        self.assertEqual(osa1.properties['object-uri'], self.osa1_uri)
-        self.assertEqual(osa1.properties['name'], self.osa1_name)
-        self.assertEqual(osa1.properties['status'], 'active')
-
-    def test_manager_list_full(self):
-        """Test AdapterManager.list() with full_properties=True."""
-        self.add_standard_osa()
-
-        adapters = self.cpc.adapters.list(full_properties=True)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.uri, self.osa1_uri)
-        self.assertEqual(osa1.name, self.osa1_name)
-        self.assertEqual(osa1.properties['object-uri'], self.osa1_uri)
-        self.assertEqual(osa1.properties['object-id'], self.osa1_id)
-        self.assertEqual(osa1.properties['parent'], self.cpc.uri)
-        self.assertEqual(osa1.properties['class'], 'adapter')
-        self.assertEqual(osa1.properties['name'], self.osa1_name)
-        self.assertEqual(osa1.properties['description'], 'OSA #1')
-        self.assertEqual(osa1.properties['status'], 'active')
-        self.assertEqual(osa1.properties['type'], 'osd')
-        self.assertEqual(osa1.properties['adapter-id'], '123')
-        self.assertEqual(osa1.properties['detected-card-type'],
-                         'osa-express-5s-10gb')
-        self.assertEqual(osa1.properties['card-location'], '1234-5678-J.01')
-        self.assertEqual(osa1.properties['port-count'], 1)
-        self.assertEqual(osa1.properties['network-port-uris'],
-                         [self.port11_uri])
-        self.assertEqual(osa1.properties['state'], 'online')
-        self.assertEqual(osa1.properties['configured-capacity'], 80)
-        self.assertEqual(osa1.properties['used-capacity'], 0)
-        self.assertEqual(osa1.properties['allowed-capacity'], 80)
-        self.assertEqual(osa1.properties['maximum-total-capacity'], 80)
-        self.assertEqual(osa1.properties['physical-channel-status'],
-                         'operating')
-
-    def test_manager_list_filter_name_found1(self):
-        """Test AdapterManager.list() with filtering on existing name
-        (filtered on faked HMC server), matching on first one."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': self.osa1_name,
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name_found2(self):
-        """Test AdapterManager.list() with filtering on existing name
-        (filtered on faked HMC server), matching on second one."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': self.hs2_name,
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        hs2 = adapters[0]
-        self.assertEqual(hs2.name, self.hs2_name)
-
-    def test_manager_list_filter_name_notfound(self):
-        """Test AdapterManager.list() with filtering on non-existing name
-        (filtered on faked HMC server)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': self.osa1_name + '_notfound',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 0)
-
-    def test_manager_list_filter_oid_found(self):
-        """Test AdapterManager.list() with filtering on existing object-id
-        (filtered on client)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'object-id': self.osa1_id,
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_oid_notfound(self):
-        """Test AdapterManager.list() with filtering on non-existing
-        object-id (filtered on client)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'object-id': self.osa1_id + '_notfound',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 0)
-
-    def test_manager_list_filter_name_id_found(self):
-        """Test AdapterManager.list() with filtering on existing name
-        (filtered on faked HMC server) and existing object-id (filtered on
-        client)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': self.osa1_name,
-            'object-id': self.osa1_id,
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name_id_notfound1(self):
-        """Test AdapterManager.list() with filtering on existing name
-        (filtered on faked HMC server) and non-existing object-id (filtered on
-        client)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': self.osa1_name,
-            'object-id': self.osa1_id + '_notfound',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 0)
-
-    def test_manager_list_filter_name_id_notfound2(self):
-        """Test AdapterManager.list() with filtering on non-existing name
-        (filtered on faked HMC server) and existing object-id (filtered on
-        client)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': self.osa1_name + '_notfound',
-            'object-id': self.osa1_id,
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 0)
-
-    def test_manager_list_filter_name_id_notfound3(self):
-        """Test AdapterManager.list() with filtering on non-existing name
-        (filtered on faked HMC server) and non-existing object-id (filtered on
-        client)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': self.osa1_name + '_notfound',
-            'object-id': self.osa1_id + '_notfound',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 0)
-
-    def test_manager_list_filter_name2_found1(self):
-        """Test AdapterManager.list() with filtering on two names (first
-        existing second non-existing)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': [self.osa1_name, self.hs2_name + '_notfound'],
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name2_found2(self):
-        """Test AdapterManager.list() with filtering on two names (first
-        non-existing second existing)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': [self.hs2_name + '_notfound', self.osa1_name],
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name2_found3(self):
-        """Test AdapterManager.list() with filtering on the same existing name
-        twice."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': [self.osa1_name, self.osa1_name],
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name_reg1_found(self):
-        """Test AdapterManager.list() with filtering on the an existing name
-        with regexp 1"""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': '.*osa 1',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name_reg2_found(self):
-        """Test AdapterManager.list() with filtering on the an existing name
-        with regexp 2"""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': 'osa 1.*',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name_reg3_found(self):
-        """Test AdapterManager.list() with filtering on the an existing name
-        with regexp 2"""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': 'osa .',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name_reg4_found(self):
-        """Test AdapterManager.list() with filtering on the an existing name
-        with regexp 4"""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': '.sa 1',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 1)
-        osa1 = adapters[0]
-        self.assertEqual(osa1.name, self.osa1_name)
-
-    def test_manager_list_filter_name_reg5_found(self):
-        """Test AdapterManager.list() with filtering on the an existing names
-        with regexp 5"""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        filter_args = {
-            'name': '.+',
-        }
-
-        adapters = self.cpc.adapters.list(filter_args=filter_args)
-
-        self.assertEqual(len(adapters), 2)
-        names = [ad.name for ad in adapters]
-        self.assertEqual(names, [self.osa1_name, self.hs2_name])
-
-    def test_manager_create_hipersocket(self):
-        """Test AdapterManager.create_hipersocket()."""
-        hs_properties = {
-            'name': 'hs 1',
-            'description': 'Hipersocket #1',
-            'port-description': 'Hipersocket #1 Port',
-            'maximum-transmission-unit-size': 56,
-        }
-
-        adapter = self.cpc.adapters.create_hipersocket(
-            properties=hs_properties)
-
-        self.assertTrue(isinstance(adapter, Adapter))
-        self.assertEqual(adapter.name, adapter.properties['name'])
-        self.assertEqual(adapter.uri, adapter.properties['object-uri'])
-
-        # We expect the input properties to be in the resource object
-        self.assertEqual(adapter.properties['name'], 'hs 1')
-        self.assertEqual(adapter.properties['description'], 'Hipersocket #1')
-        self.assertEqual(adapter.properties['port-description'],
-                         'Hipersocket #1 Port')
-        self.assertEqual(adapter.properties['maximum-transmission-unit-size'],
-                         56)
-
-    def test_resource_delete(self):
-        """Test Adapter.delete() (for Hipersocket adapter)."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        hs_adapter = self.cpc.adapters.find(type='hipersockets')
-
-        hs_adapter.delete()
-
-        with self.assertRaises(NotFound):
-            hs_adapter = self.cpc.adapters.find(type='hipersockets')
-
-        with self.assertRaises(NotFound):
-            hs_adapter = self.cpc.adapters.find(name='hs 2')
-
-        adapters = self.cpc.adapters.list()
-        self.assertEqual(len(adapters), 1)
-
-        with self.assertRaises(HTTPError) as cm:
-            hs_adapter.pull_full_properties()
-        self.assertEqual(cm.exception.http_status, 404)
-        self.assertEqual(cm.exception.reason, 1)
-
-    def test_resource_update_nothing(self):
-        """Test Adapter.update_properties() with no properties."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        adapters = self.cpc.adapters.list(filter_args={'name': self.hs2_name})
-        self.assertEqual(len(adapters), 1)
-        adapter = adapters[0]
-
-        saved_properties = copy.deepcopy(adapter.properties)
-
-        # Method to be tested
-        adapter.update_properties(properties={})
-
-        # Verify that the properties of the local resource object have not
-        # changed
-        self.assertEqual(adapter.properties, saved_properties)
-
-    def test_resource_update_name(self):
-        """
-        Test Adapter.update_properties() with 'name' property.
-        """
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        adapters = self.cpc.adapters.list(filter_args={'name': self.hs2_name})
-        self.assertEqual(len(adapters), 1)
-        adapter = adapters[0]
-
-        new_name = "new hs2"
-
-        # Method to be tested
-        adapter.update_properties(properties={'name': new_name})
-
-        # Verify that the local resource object reflects the update
-        self.assertEqual(adapter.properties['name'], new_name)
-
-        # Update the properties of the resource object and verify that the
-        # resource object reflects the update
-        adapter.pull_full_properties()
-        self.assertEqual(adapter.properties['name'], new_name)
-
-        # List the resource by its new name and verify that it was found
-        adapters = self.cpc.adapters.list(filter_args={'name': new_name})
-        self.assertEqual(len(adapters), 1)
-        adapter = adapters[0]
-        self.assertEqual(adapter.properties['name'], new_name)
-
-    def test_resource_update_not_fetched(self):
-        """Test Adapter.update_properties() with no properties with an existing
-        property that has not been fetched into the local resource object."""
-        self.add_standard_osa()
-        self.add_standard_hipersocket()
-        adapters = self.cpc.adapters.list(filter_args={'name': self.hs2_name})
-        self.assertEqual(len(adapters), 1)
-        adapter = adapters[0]
-
-        # A property that is not in the result of list():
-        update_prop_name = 'description'
-        update_prop_value = 'Hipersocket #2.new'
-
-        # Method to be tested
-        adapter.update_properties(
-            properties={update_prop_name: update_prop_value})
-
-        # Verify that the local resource object reflects the update
-        self.assertEqual(adapter.properties[update_prop_name],
-                         update_prop_value)
-
-        # Update the properties of the resource object and verify that the
-        # resource object reflects the update
-        adapter.pull_full_properties()
-        self.assertEqual(adapter.properties[update_prop_name],
-                         update_prop_value)
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=adapter.__class__.__name__,
+                               id=id(adapter)),
+                        repr_str)
 
     def test_max_crypto_domains(self):
-        """Test Adapter.maximum_crypto_domains() on z13 and z13s."""
+        """Test Adapter.maximum_crypto_domains on z13 and z13s."""
 
         faked_cpc = self.faked_cpc
         faked_crypto = self.add_crypto_ce5s(faked_cpc)
@@ -669,8 +363,8 @@ class AdapterTests(unittest.TestCase):
         faked_crypto = self.add_crypto_ce5s(faked_cpc)
         self._one_test_max_crypto_domains(faked_cpc, faked_crypto, 40)
 
-    def _one_test_max_crypto_domains(
-            self, faked_cpc, faked_adapter, exp_max_domains):
+    def _one_test_max_crypto_domains(self, faked_cpc, faked_adapter,
+                                     exp_max_domains):
 
         cpc = self.client.cpcs.find(name=faked_cpc.name)
         adapter = cpc.adapters.find(name=faked_adapter.name)
@@ -678,8 +372,127 @@ class AdapterTests(unittest.TestCase):
         # Exercise code to be tested
         max_domains = adapter.maximum_crypto_domains
 
-        self.assertEqual(max_domains, exp_max_domains)
+        assert max_domains == exp_max_domains
 
+    def test_adapter_delete(self):
+        """Test Adapter.delete() for Hipersocket adapter."""
 
-if __name__ == '__main__':
-    unittest.main()
+        # Add two faked adapters
+        self.add_standard_osa()
+        faked_hs = self.add_standard_hipersocket()
+
+        adapter_mgr = self.cpc.adapters
+        hs_adapter = adapter_mgr.find(name=faked_hs.name)
+
+        # Execute the code to be tested
+        hs_adapter.delete()
+
+        with pytest.raises(NotFound):
+            hs_adapter = adapter_mgr.find(type='hipersockets')
+
+        with pytest.raises(NotFound):
+            hs_adapter = adapter_mgr.find(name=faked_hs.name)
+
+        adapters = adapter_mgr.list()
+        assert len(adapters) == 1
+
+        with pytest.raises(HTTPError) as exc_info:
+            hs_adapter.pull_full_properties()
+        exc = exc_info.value
+        assert exc.http_status == 404
+        assert exc.reason == 1
+
+    @pytest.mark.parametrize(
+        "input_props", [
+            {},
+            {'description': 'New adapter description'},
+            {'channel-path-id': '1A',
+             'description': 'New adapter description'},
+        ]
+    )
+    def test_adapter_update_properties(self, input_props):
+        """Test Adapter.update_properties()."""
+
+        # Add a faked adapter
+        faked_adapter = self.add_standard_osa()
+
+        adapter_mgr = self.cpc.adapters
+        adapter = adapter_mgr.find(name=faked_adapter.name)
+
+        adapter.pull_full_properties()
+        saved_properties = copy.deepcopy(adapter.properties)
+
+        # Execute the code to be tested
+        adapter.update_properties(properties=input_props)
+
+        # Verify that the resource object already reflects the property
+        # updates.
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in adapter.properties
+            prop_value = adapter.properties[prop_name]
+            assert prop_value == exp_prop_value
+
+        # Refresh the resource object and verify that the resource object
+        # still reflects the property updates.
+        adapter.pull_full_properties()
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in adapter.properties
+            prop_value = adapter.properties[prop_name]
+            assert prop_value == exp_prop_value
+
+    def test_adapter_update_name(self):
+        """
+        Test Adapter.update_properties() with 'name' property.
+        """
+
+        # Add a faked adapter
+        faked_adapter = self.add_standard_osa()
+        adapter_name = faked_adapter.name
+
+        adapter_mgr = self.cpc.adapters
+        adapter = adapter_mgr.find(name=adapter_name)
+
+        new_adapter_name = "new-" + adapter_name
+
+        # Execute the code to be tested
+        adapter.update_properties(properties={'name': new_adapter_name})
+
+        # Verify that the resource is no longer found by its old name, using
+        # list() (this does not use the name-to-URI cache).
+        adapters_list = adapter_mgr.list(filter_args=dict(name=adapter_name))
+        assert len(adapters_list) == 0
+
+        # Verify that the resource is no longer found by its old name, using
+        # find() (this uses the name-to-URI cache).
+        with pytest.raises(NotFound):
+            adapter_mgr.find(name=adapter_name)
+
+        # Verify that the resource object already reflects the update, even
+        # though it has not been refreshed yet.
+        assert adapter.properties['name'] == new_adapter_name
+
+        # Refresh the resource object and verify that it still reflects the
+        # update.
+        adapter.pull_full_properties()
+        assert adapter.properties['name'] == new_adapter_name
+
+        # Verify that the resource can be found by its new name, using find()
+        new_adapter_find = adapter_mgr.find(name=new_adapter_name)
+        assert new_adapter_find.properties['name'] == new_adapter_name
+
+        # Verify that the resource can be found by its new name, using list()
+        new_adapters_list = adapter_mgr.list(
+            filter_args=dict(name=new_adapter_name))
+        assert len(new_adapters_list) == 1
+        new_adapter_list = new_adapters_list[0]
+        assert new_adapter_list.properties['name'] == new_adapter_name
+
+    # TODO: Test for Adapter.change_crypto_type()

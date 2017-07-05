@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,418 +18,590 @@ Unit tests for _cpc module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
-import requests_mock
+import pytest
+import re
+import copy
 
-from zhmcclient import Session, Client, LparManager, PartitionManager
+from zhmcclient import Client, Cpc, HTTPError
+from zhmcclient_mock import FakedSession
+from .utils import assert_resources
 
 
-class CpcTests(unittest.TestCase):
-    """All tests for Cpc and CpcManager classes."""
+# Object IDs and names of our faked CPCs:
+CPC1_OID = 'cpc1-oid'
+CPC1_NAME = 'cpc 1'
+CPC2_OID = 'cpc2-oid'
+CPC2_NAME = 'cpc 2'
+CPC3_OID = 'cpc3-oid'
+CPC3_NAME = 'cpc 3'
 
-    def setUp(self):
-        self.session = Session('fake-host', 'fake-user', 'fake-id')
-        self.client = Client(self.session)  # contains CpcManager object
-        with requests_mock.mock() as m:
-            # Because logon is deferred until needed, we perform it
-            # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
-            self.session.logon()
+HTTPError_404_1 = HTTPError({'http-status': 404, 'reason': 1})
+HTTPError_409_5 = HTTPError({'http-status': 409, 'reason': 5})
+HTTPError_409_4 = HTTPError({'http-status': 409, 'reason': 4})
 
-    def tearDown(self):
-        with requests_mock.mock() as m:
-            m.delete('/api/sessions/this-session', status_code=204)
-            self.session.logoff()
 
-    def test_init(self):
-        """Test __init__() on CpcManager instance in client."""
-        cpc_mgr = self.client.cpcs
-        self.assertEqual(cpc_mgr.parent, None)
-        self.assertTrue(cpc_mgr.session is self.session)
+class TestCpc(object):
+    """All tests for the Cpc and CpcManager classes."""
 
-    def test_list_short_ok(self):
+    def setup_method(self):
         """
-        Test successful list() with short set of properties on CpcManager
-        instance in client.
+        Set up a faked session.
         """
-        cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2',
-                        'name': 'P0000P30',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
 
-            cpcs = cpc_mgr.list(full_properties=False)
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.client = Client(self.session)
 
-            self.assertEqual(len(cpcs), len(result['cpcs']))
-            for idx, cpc in enumerate(cpcs):
-                self.assertEqual(cpc.properties, result['cpcs'][idx])
+    def add_cpc(self, cpc_name):
+        """Add a faked CPC."""
 
-    def test_list_full_ok(self):
-        """
-        Test successful list() with full set of properties on CpcManager
-        instance in client.
-        """
-        cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            mock_result_cpcs = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2',
-                        'name': 'P0000P30',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-3',
-                        'name': 'P0000OLD',
-                        'status': 'enabled',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=mock_result_cpcs)
-            mock_result_cpc1 = {
-                'object-uri': '/api/cpcs/fake-cpc-id-1',
-                'name': 'P0ZHMP02',
-                'status': 'service-required',
+        if cpc_name == CPC1_NAME:
+            faked_cpc = self.session.hmc.cpcs.add({
+                'object-id': CPC1_OID,
+                # object-uri is set up automatically
+                'parent': None,
+                'class': 'cpc',
+                'name': CPC1_NAME,
+                'description': 'CPC #1 (z13 in DPM mode)',
+                'status': 'active',
                 'dpm-enabled': True,
-                'bla': 'blub',
-            }
-            m.get('/api/cpcs/fake-cpc-id-1', json=mock_result_cpc1)
-            mock_result_cpc1p = {
-                'partitions': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1/'
-                                      'partitions/fake-part-id-1',
-                        'name': 'PART1',
-                        'status': 'active',
-                    }
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=mock_result_cpc1p)
-            mock_result_cpc1l = {
-                'http-status': 404,
-                'reason': 1,
-                'message': 'Invalid resource',
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/logical-partitions',
-                  json=mock_result_cpc1l, status_code=404, reason='Not Found')
-
-            mock_result_cpc2 = {
-                'object-uri': '/api/cpcs/fake-cpc-id-2',
-                'name': 'P0000P30',
-                'status': 'service-required',
+                'is-ensemble-member': False,
+                'iml-mode': 'dpm',
+                'machine-type': '2964',
+            })
+        elif cpc_name == CPC2_NAME:
+            faked_cpc = self.session.hmc.cpcs.add({
+                'object-id': CPC2_OID,
+                # object-uri is set up automatically
+                'parent': None,
+                'class': 'cpc',
+                'name': CPC2_NAME,
+                'description': 'CPC #2 (z13 in classic mode)',
+                'status': 'operating',
                 'dpm-enabled': False,
-                'bla': 'baz',
-            }
-            m.get('/api/cpcs/fake-cpc-id-2', json=mock_result_cpc2)
-            mock_result_cpc2p = {
-                'http-status': 404,
-                'reason': 1,
-                'message': 'Invalid resource',
-            }
-            m.get('/api/cpcs/fake-cpc-id-2/partitions',
-                  json=mock_result_cpc2p, status_code=404, reason='Not Found')
-            mock_result_cpc2l = {
-                'logical-partitions': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2/'
-                                      'logical-partitions/fake-lpar-id-1',
-                        'name': 'LPAR1',
-                        'status': 'active',
-                    }
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-2/logical-partitions',
-                  json=mock_result_cpc2l)
+                'is-ensemble-member': False,
+                'iml-mode': 'lpar',
+                'machine-type': '2964',
+            })
+        elif cpc_name == CPC3_NAME:
+            faked_cpc = self.session.hmc.cpcs.add({
+                'object-id': CPC3_OID,
+                # object-uri is set up automatically
+                'parent': None,
+                'class': 'cpc',
+                'name': CPC3_NAME,
+                'description': 'CPC #3 (zEC12)',
+                'status': 'operating',
+                # zEC12 does not have a dpm-enabled property
+                'is-ensemble-member': False,
+                'iml-mode': 'lpar',
+                'machine-type': '2827',
+            })
+        else:
+            raise ValueError("Invalid value for cpc_name: %s" % cpc_name)
+        return faked_cpc
 
-            mock_result_cpc3 = {
-                'object-uri': '/api/cpcs/fake-cpc-id-3',
-                'name': 'P0000OLD',
-                'status': 'enabled',
-                'bla': 'foo',
-            }
-            m.get('/api/cpcs/fake-cpc-id-3', json=mock_result_cpc3)
-            mock_result_cpc3p = {
-                'http-status': 404,
-                'reason': 1,
-                'message': 'Invalid resource',
-            }
-            m.get('/api/cpcs/fake-cpc-id-3/partitions',
-                  json=mock_result_cpc3p, status_code=404, reason='Not Found')
-            mock_result_cpc3l = {
-                'logical-partitions': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-3/'
-                                      'logical-partitions/fake-lpar-id-1',
-                        'name': 'LPAR1',
-                        'status': 'active',
-                    }
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-3/logical-partitions',
-                  json=mock_result_cpc3l)
+    def test_cpcmanager_initial_attrs(self):
+        """Test initial attributes of CpcManager."""
 
-            result = {
-                'cpcs': [
-                    mock_result_cpc1,
-                    mock_result_cpc2,
-                    mock_result_cpc3,
-                ]
-            }
-            dpm_enabled_result = [
-                True,
-                False,
-                False,
-            ]
-
-            cpcs = cpc_mgr.list(full_properties=True)
-
-            self.assertEqual(len(cpcs), len(result['cpcs']))
-            for idx, cpc in enumerate(cpcs):
-                self.assertEqual(cpc.properties, result['cpcs'][idx])
-                self.assertEqual(cpc.dpm_enabled, dpm_enabled_result[idx])
-                if dpm_enabled_result[idx]:
-                    self.assertTrue(
-                        isinstance(cpc.partitions, PartitionManager))
-                else:
-                    self.assertTrue(isinstance(cpc.lpars, LparManager))
-
-    def test_start(self):
-        """
-        This tests the 'Start CPC' operation.
-        """
         cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2',
-                        'name': 'P0000P30',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
 
-            cpcs = cpc_mgr.list(full_properties=False)
-            cpc = cpcs[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post('/api/cpcs/fake-cpc-id-1/operations/start', json=result)
-            status = cpc.start(wait_for_completion=False)
-            self.assertEqual(status, result)
+        # Verify all public properties of the manager object
+        assert cpc_mgr.resource_class == Cpc
+        assert cpc_mgr.session == self.session
+        assert cpc_mgr.parent is None
 
-    def test_stop(self):
-        """
-        This tests the 'Stop CPC' operation.
-        """
+    # TODO: Test for CpcManager.__repr__()
+
+    @pytest.mark.parametrize(
+        "full_properties_kwargs, prop_names", [
+            (dict(),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=False),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=True),
+             None),
+        ]
+    )
+    def test_cpcmanager_list_full_properties(
+            self, full_properties_kwargs, prop_names):
+        """Test CpcManager.list() with full_properties."""
+
+        # Add two faked CPCs
+        faked_cpc1 = self.add_cpc(CPC1_NAME)
+        faked_cpc2 = self.add_cpc(CPC2_NAME)
+
+        exp_faked_cpcs = [faked_cpc1, faked_cpc2]
         cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2',
-                        'name': 'P0000P30',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
 
-            cpcs = cpc_mgr.list(full_properties=False)
-            cpc = cpcs[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post('/api/cpcs/fake-cpc-id-1/operations/stop', json=result)
-            status = cpc.stop(wait_for_completion=False)
-            self.assertEqual(status, result)
+        # Execute the code to be tested
+        cpcs = cpc_mgr.list(**full_properties_kwargs)
 
-    def test_import_profiles(self):
-        """
-        This tests the 'Import Profiles' operation.
-        """
+        assert_resources(cpcs, exp_faked_cpcs, prop_names)
+
+    @pytest.mark.parametrize(
+        "filter_args, exp_names", [
+            ({'object-id': CPC1_OID},
+             [CPC1_NAME]),
+            ({'object-id': CPC2_OID},
+             [CPC2_NAME]),
+            ({'object-id': [CPC1_OID, CPC2_OID]},
+             [CPC1_NAME, CPC2_NAME]),
+            ({'object-id': [CPC1_OID, CPC1_OID]},
+             [CPC1_NAME]),
+            ({'object-id': CPC1_OID + 'foo'},
+             []),
+            ({'object-id': [CPC1_OID, CPC2_OID + 'foo']},
+             [CPC1_NAME]),
+            ({'object-id': [CPC2_OID + 'foo', CPC1_OID]},
+             [CPC1_NAME]),
+            ({'name': CPC1_NAME},
+             [CPC1_NAME]),
+            ({'name': CPC2_NAME},
+             [CPC2_NAME]),
+            ({'name': [CPC1_NAME, CPC2_NAME]},
+             [CPC1_NAME, CPC2_NAME]),
+            ({'name': CPC1_NAME + 'foo'},
+             []),
+            ({'name': [CPC1_NAME, CPC2_NAME + 'foo']},
+             [CPC1_NAME]),
+            ({'name': [CPC2_NAME + 'foo', CPC1_NAME]},
+             [CPC1_NAME]),
+            ({'name': [CPC1_NAME, CPC1_NAME]},
+             [CPC1_NAME]),
+            ({'name': '.*cpc 1'},
+             [CPC1_NAME]),
+            ({'name': 'cpc 1.*'},
+             [CPC1_NAME]),
+            ({'name': 'cpc .'},
+             [CPC1_NAME, CPC2_NAME]),
+            ({'name': '.pc 1'},
+             [CPC1_NAME]),
+            ({'name': '.+'},
+             [CPC1_NAME, CPC2_NAME]),
+            ({'name': 'cpc 1.+'},
+             []),
+            ({'name': '.+cpc 1'},
+             []),
+            ({'name': CPC1_NAME,
+              'object-id': CPC1_OID},
+             [CPC1_NAME]),
+            ({'name': CPC1_NAME,
+              'object-id': CPC1_OID + 'foo'},
+             []),
+            ({'name': CPC1_NAME + 'foo',
+              'object-id': CPC1_OID},
+             []),
+            ({'name': CPC1_NAME + 'foo',
+              'object-id': CPC1_OID + 'foo'},
+             []),
+        ]
+    )
+    def test_cpcmanager_list_filter_args(self, filter_args, exp_names):
+        """Test CpcManager.list() with filter_args."""
+
+        # Add two faked CPCs
+        self.add_cpc(CPC1_NAME)
+        self.add_cpc(CPC2_NAME)
+
         cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2',
-                        'name': 'P0000P30',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
 
-            cpcs = cpc_mgr.list(full_properties=False)
-            cpc = cpcs[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post('/api/cpcs/fake-cpc-id-1/operations/import-profiles',
-                   json=result)
-            status = cpc.import_profiles(1, wait_for_completion=False)
-            self.assertEqual(status, result)
+        # Execute the code to be tested
+        cpcs = cpc_mgr.list(filter_args=filter_args)
 
-    def test_export_profiles(self):
-        """
-        This tests the 'Export Profiles' operation.
-        """
+        assert len(cpcs) == len(exp_names)
+        if exp_names:
+            names = [ad.properties['name'] for ad in cpcs]
+            assert set(names) == set(exp_names)
+
+    # TODO: Test for initial Cpc attributes (lpars, partitions, adapters,
+    #       virtual_switches, reset_activation_profiles,
+    #       image_activation_profiles, load_activation_profiles, )
+
+    def test_cpc_repr(self):
+        """Test Cpc.__repr__()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(CPC1_NAME)
+
         cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2',
-                        'name': 'P0000P30',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
+        cpc = cpc_mgr.find(name=faked_cpc.name)
 
-            cpcs = cpc_mgr.list(full_properties=False)
-            cpc = cpcs[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post('/api/cpcs/fake-cpc-id-1/operations/export-profiles',
-                   json=result)
-            status = cpc.export_profiles(1, wait_for_completion=False)
-            self.assertEqual(status, result)
+        # Execute the code to be tested
+        repr_str = repr(cpc)
 
-    def test_wwpns_of_partitions(self):
-        """
-        This tests the 'wwpns_of_partitions()' method.
-        """
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=cpc.__class__.__name__,
+                               id=id(cpc)),
+                        repr_str)
+
+    @pytest.mark.parametrize(
+        "cpc_name, exp_dpm_enabled", [
+            (CPC1_NAME, True),
+            (CPC2_NAME, False),
+            (CPC3_NAME, False),
+        ]
+    )
+    def test_cpc_dpm_enabled(self, cpc_name, exp_dpm_enabled):
+        """Test Cpc.dpm_enabled."""
+
+        # Add a faked CPC
+        self.add_cpc(cpc_name)
+
         cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
+        cpc = cpc_mgr.find(name=cpc_name)
 
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-2',
-                        'name': 'P0000P30',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
+        # Execute the code to be tested
+        dpm_enabled = cpc.dpm_enabled
 
-            result = {
-                'partitions': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1/'
-                                      'partitions/part-id-1',
-                        'name': 'part-name-1',
-                        'status': 'active',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1/'
-                                      'partitions/part-id-2',
-                        'name': 'part-name-2',
-                        'status': 'active',
-                    },
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1/'
-                                      'partitions/part-id-3',
-                        'name': 'part-name-3',
-                        'status': 'active',
-                    },
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
+        assert dpm_enabled == exp_dpm_enabled
 
-            # TODO: Add the request body to the mock call:
-            # request = {
-            #     'partitions': [
-            #         '/api/cpcs/fake-cpc-id-1/partitions/part-id-1',
-            #         '/api/cpcs/fake-cpc-id-1/partitions/part-id-2',
-            #     ]
-            # }
-            result = {
-                'wwpn-list': [
-                    'part-name-1,adapter-id-1,devno-1,wwpn-1',
-                    'part-name-2,adapter-id-1,devno-2,wwpn-2',
-                ]
-            }
-            m.post('/api/cpcs/fake-cpc-id-1/operations/export-port-names-list',
-                   json=result)
+    # TODO: Test for Cpc.maximum_active_partitions
+
+    @pytest.mark.parametrize(
+        "input_props", [
+            {},
+            {'description': 'New CPC description'},
+            {'acceptable-status': ['active', 'degraded'],
+             'description': 'New CPC description'},
+        ]
+    )
+    def test_cpc_update_properties(self, input_props):
+        """Test Cpc.update_properties()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(CPC1_NAME)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=faked_cpc.name)
+
+        cpc.pull_full_properties()
+        saved_properties = copy.deepcopy(cpc.properties)
+
+        # Execute the code to be tested
+        cpc.update_properties(properties=input_props)
+
+        # Verify that the resource object already reflects the property
+        # updates.
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in cpc.properties
+            prop_value = cpc.properties[prop_name]
+            assert prop_value == exp_prop_value
+
+        # Refresh the resource object and verify that the resource object
+        # still reflects the property updates.
+        cpc.pull_full_properties()
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in cpc.properties
+            prop_value = cpc.properties[prop_name]
+            assert prop_value == exp_prop_value
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, initial_status, exp_status, exp_error", [
+            (CPC1_NAME, 'not-operating', 'active', None),
+            (CPC2_NAME, 'not-operating', None, HTTPError_409_5),
+            (CPC3_NAME, 'not-operating', None, HTTPError_409_5),
+        ]
+    )
+    def test_cpc_start(self, cpc_name, initial_status, exp_status, exp_error,
+                       wait_for_completion):
+        """Test Cpc.start()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set initial status of the CPC for this test
+        faked_cpc.properties['status'] = initial_status
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.start(wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.start(wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplemented
+
+            cpc.pull_full_properties()
+            status = cpc.properties['status']
+            assert status == exp_status
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, initial_status, exp_status, exp_error", [
+            (CPC1_NAME, 'active', 'not-operating', None),
+            (CPC2_NAME, 'operating', None, HTTPError_409_5),
+            (CPC3_NAME, 'operating', None, HTTPError_409_5),
+        ]
+    )
+    def test_cpc_stop(self, cpc_name, initial_status, exp_status, exp_error,
+                      wait_for_completion):
+        """Test Cpc.stop()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set initial status of the CPC for this test
+        faked_cpc.properties['status'] = initial_status
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.stop(wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.stop(wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplemented
+
+            cpc.pull_full_properties()
+            status = cpc.properties['status']
+            assert status == exp_status
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, exp_error", [
+            (CPC1_NAME, HTTPError_409_4),
+            (CPC2_NAME, None),
+            (CPC3_NAME, None),
+        ]
+    )
+    def test_cpc_import_profiles(self, cpc_name, exp_error,
+                                 wait_for_completion):
+        """Test Cpc.import_profiles()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        self.add_cpc(cpc_name)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+        profile_area = 1
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.import_profiles(
+                    profile_area, wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.import_profiles(
+                profile_area, wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplemented
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, exp_error", [
+            (CPC1_NAME, HTTPError_409_4),
+            (CPC2_NAME, None),
+            (CPC3_NAME, None),
+        ]
+    )
+    def test_cpc_export_profiles(self, cpc_name, exp_error,
+                                 wait_for_completion):
+        """Test Cpc.export_profiles()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        self.add_cpc(cpc_name)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+        profile_area = 1
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.export_profiles(
+                    profile_area, wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.export_profiles(
+                profile_area, wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplemented
+
+    @pytest.mark.parametrize(
+        "cpc_name, exp_error", [
+            (CPC1_NAME, None),
+            (CPC2_NAME, HTTPError_409_5),
+            (CPC3_NAME, HTTPError_409_5),
+        ]
+    )
+    def test_cpc_get_wwpns(self, cpc_name, exp_error):
+        """Test Cpc.get_wwpns()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        faked_fcp1 = faked_cpc.adapters.add({
+            'object-id': 'fake-fcp1-oid',
+            # object-uri is automatically set
+            'parent': faked_cpc.uri,
+            'class': 'adapter',
+            'name': 'fake-fcp1-name',
+            'description': 'FCP #1 in CPC #1',
+            'status': 'active',
+            'type': 'fcp',
+            'port-count': 1,
+            'adapter-id': '12F',
+            # network-port-uris is automatically set when adding port
+        })
+
+        faked_port11 = faked_fcp1.ports.add({
+            'element-id': 'fake-port11-oid',
+            # element-uri is automatically set
+            'parent': faked_fcp1.uri,
+            'class': 'storage-port',
+            'index': 0,
+            'name': 'fake-port11-name',
+            'description': 'FCP #1 Port #1',
+        })
+
+        faked_part1 = faked_cpc.partitions.add({
+            'object-id': 'fake-part1-oid',
+            # object-uri is automatically set
+            'parent': faked_cpc.uri,
+            'class': 'partition',
+            'name': 'fake-part1-name',
+            'description': 'Partition #1',
+            'status': 'active',
+        })
+
+        faked_hba1 = faked_part1.hbas.add({
+            'element-id': 'fake-hba1-oid',
+            # element-uri is automatically set
+            'parent': faked_part1.uri,
+            'class': 'hba',
+            'name': 'fake-hba1-name',
+            'description': 'HBA #1 in Partition #1',
+            'wwpn': 'AABBCCDDEC000082',
+            'adapter-port-uri': faked_port11.uri,
+            'device-number': '012F',
+        })
+
+        faked_part2 = faked_cpc.partitions.add({
+            'object-id': 'fake-part2-oid',
+            # object-uri is automatically set
+            'parent': faked_cpc.uri,
+            'class': 'partition',
+            'name': 'fake-part2-name',
+            'description': 'Partition #2',
+            'status': 'active',
+        })
+
+        faked_hba2 = faked_part2.hbas.add({
+            'element-id': 'fake-hba2-oid',
+            # element-uri is automatically set
+            'parent': faked_part2.uri,
+            'class': 'hba',
+            'name': 'fake-hba2-name',
+            'description': 'HBA #2 in Partition #2',
+            'wwpn': 'AABBCCDDEC000084',
+            'adapter-port-uri': faked_port11.uri,
+            'device-number': '012E',
+        })
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+        partitions = cpc.partitions.list()
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                wwpn_list = cpc.get_wwpns(partitions)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            wwpn_list = cpc.get_wwpns(partitions)
 
             exp_wwpn_list = [
-                {
-                    'partition-name': 'part-name-1',
-                    'adapter-id': 'adapter-id-1',
-                    'device-number': 'devno-1',
-                    'wwpn': 'wwpn-1'
-                },
-                {
-                    'partition-name': 'part-name-2',
-                    'adapter-id': 'adapter-id-1',
-                    'device-number': 'devno-2',
-                    'wwpn': 'wwpn-2'
-                },
+                {'wwpn': faked_hba1.properties['wwpn'],
+                 'partition-name': faked_part1.properties['name'],
+                 'adapter-id': faked_fcp1.properties['adapter-id'],
+                 'device-number': faked_hba1.properties['device-number']},
+                {'wwpn': faked_hba2.properties['wwpn'],
+                 'partition-name': faked_part2.properties['name'],
+                 'adapter-id': faked_fcp1.properties['adapter-id'],
+                 'device-number': faked_hba2.properties['device-number']},
             ]
+            assert wwpn_list == exp_wwpn_list
 
-            cpcs = cpc_mgr.list()
-            cpc = cpcs[0]
-            partitions = cpc.partitions.list()
-
-            wwpn_list = cpc.get_wwpns(partitions[0:2])
-
-            self.assertEqual(wwpn_list, exp_wwpn_list)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    # TODO: Test for Cpc.get_free_crypto_domains()

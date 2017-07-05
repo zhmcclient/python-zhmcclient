@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,567 +18,657 @@ Unit tests for _partition module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
-import requests_mock
-from requests.utils import quote
+import pytest
+import re
+import copy
 
-from zhmcclient import Session, Client, Partition
+from zhmcclient import Client, Partition, HTTPError, NotFound
+from zhmcclient_mock import FakedSession
+from .utils import assert_resources
 
 
-class PartitionTests(unittest.TestCase):
-    """All tests for Partition and PartitionManager classes."""
+# Object IDs and names of our faked partitions:
+PART1_OID = 'part1-oid'
+PART1_NAME = 'part 1'
+PART2_OID = 'part2-oid'
+PART2_NAME = 'part 2'
 
-    def setUp(self):
-        self.session = Session('test-dpm-host', 'test-user', 'test-id')
+
+class TestPartition(object):
+    """All tests for the Partition and PartitionManager classes."""
+
+    def setup_method(self):
+        """
+        Set up a faked session, and add a faked CPC in DPM mode without any
+        child resources.
+        """
+
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
-        with requests_mock.mock() as m:
-            # Because logon is deferred until needed, we perform it
-            # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'test-session-id'})
-            self.session.logon()
 
-        self.cpc_id = 'fake-cpc-id-1'
-        self.cpc_name = 'CPC1'
+        self.faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'fake-cpc1-oid',
+            # object-uri is set up automatically
+            'parent': None,
+            'class': 'cpc',
+            'name': 'fake-cpc1-name',
+            'description': 'CPC #1 (DPM mode)',
+            'status': 'active',
+            'dpm-enabled': True,
+            'is-ensemble-member': False,
+            'iml-mode': 'dpm',
+        })
+        self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
 
-        self.cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/%s' % self.cpc_id,
-                        'name': self.cpc_name,
-                        'status': '',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
-            cpcs = self.cpc_mgr.list()
-            self.cpc = cpcs[0]
+    def add_partition1(self):
+        """Add partition 1."""
 
-    def tearDown(self):
-        with requests_mock.mock() as m:
-            m.delete('/api/sessions/this-session', status_code=204)
-            self.session.logoff()
+        faked_partition = self.faked_cpc.partitions.add({
+            'object-id': PART1_OID,
+            # object-uri will be automatically set
+            'parent': self.faked_cpc.uri,
+            'class': 'partition',
+            'name': PART1_NAME,
+            'description': 'Partition #1',
+            'status': 'active',
+            'initial-memory': 1024,
+            'maximum-memory': 2048,
+        })
+        return faked_partition
 
-    def test_init(self):
-        """Test __init__() on PartitionManager instance in CPC."""
-        partition_mgr = self.cpc.partitions
-        self.assertEqual(partition_mgr.cpc, self.cpc)
+    def add_partition2(self):
+        """Add partition 2."""
 
-    def test_list_short_ok(self):
-        """
-        Test successful list() with short set of properties on PartitionManager
-        instance in CPC.
-        """
-        partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
+        faked_partition = self.faked_cpc.partitions.add({
+            'object-id': PART2_OID,
+            # object-uri will be automatically set
+            'parent': self.faked_cpc.uri,
+            'class': 'partition',
+            'name': PART2_NAME,
+            'description': 'Partition #2',
+            'status': 'active',
+            'initial-memory': 1024,
+            'maximum-memory': 2048,
+        })
+        return faked_partition
 
-            partitions = partition_mgr.list(full_properties=False)
+    def test_partitionmanager_initial_attrs(self):
+        """Test initial attributes of PartitionManager."""
 
-            self.assertEqual(len(partitions), len(result['partitions']))
-            for idx, partition in enumerate(partitions):
-                self.assertEqual(
-                    partition.properties,
-                    result['partitions'][idx])
-                self.assertEqual(
-                    partition.uri,
-                    result['partitions'][idx]['object-uri'])
-                self.assertFalse(partition.full_properties)
-                self.assertEqual(partition.manager, partition_mgr)
-
-    def test_list_full_ok(self):
-        """
-        Test successful list() with full set of properties on PartitionManager
-        instance in CPC.
-        """
-        partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
-
-            mock_result_part1 = {
-                'status': 'active',
-                'object-uri': '/api/partitions/fake-part-id-1',
-                'name': 'PART1',
-                'description': 'Test Partition',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/partitions/fake-part-id-1',
-                  json=mock_result_part1)
-            mock_result_part2 = {
-                'status': 'stopped',
-                'object-uri': '/api/partitions/fake-lpar-id-2',
-                'name': 'PART2',
-                'description': 'Test Partition',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/partitions/fake-part-id-2',
-                  json=mock_result_part2)
-
-            partitions = partition_mgr.list(full_properties=True)
-
-            self.assertEqual(len(partitions), len(result['partitions']))
-            for idx, partition in enumerate(partitions):
-                self.assertEqual(partition.properties['name'],
-                                 result['partitions'][idx]['name'])
-                self.assertEqual(
-                    partition.uri,
-                    result['partitions'][idx]['object-uri'])
-                self.assertTrue(partition.full_properties)
-                self.assertEqual(partition.manager, partition_mgr)
-
-    def test_create_empty_input(self):
-        """
-        This tests the 'Create' operation, with no input properties.
-        """
         partition_mgr = self.cpc.partitions
 
-        part_id = 'fake-part-id-1'  # created by faked HMC
-        part_uri = '/api/partitions/%s' % part_id
-        part_name = 'fake-part-name-1'
+        # Verify all public properties of the manager object
+        assert partition_mgr.resource_class == Partition
+        assert partition_mgr.session == self.session
+        assert partition_mgr.parent == self.cpc
+        assert partition_mgr.cpc == self.cpc
 
-        with requests_mock.mock() as m:
-            input_props = {
-            }
-            mock_create_result = {
-                'object-uri': part_uri
-            }
-            # this test implements a mocked HMC that creates a default name:
-            mock_get_result = {
-                'object-uri': part_uri,
-                'name': part_name
-            }
-            m.post('/api/cpcs/%s/partitions' % self.cpc_id,
-                   json=mock_create_result)
+    # TODO: Test for PartitionManager.__repr__()
 
+    @pytest.mark.parametrize(
+        "full_properties_kwargs, prop_names", [
+            (dict(),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=False),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=True),
+             None),
+        ]
+    )
+    def test_partitionmanager_list_full_properties(
+            self, full_properties_kwargs, prop_names):
+        """Test PartitionManager.list() with full_properties."""
+
+        # Add two faked partitions
+        faked_partition1 = self.add_partition1()
+        faked_partition2 = self.add_partition2()
+
+        exp_faked_partitions = [faked_partition1, faked_partition2]
+        partition_mgr = self.cpc.partitions
+
+        # Execute the code to be tested
+        partitions = partition_mgr.list(**full_properties_kwargs)
+
+        assert_resources(partitions, exp_faked_partitions, prop_names)
+
+    @pytest.mark.parametrize(
+        "filter_args, exp_names", [
+            ({'object-id': PART1_OID},
+             [PART1_NAME]),
+            ({'object-id': PART2_OID},
+             [PART2_NAME]),
+            ({'object-id': [PART1_OID, PART2_OID]},
+             [PART1_NAME, PART2_NAME]),
+            ({'object-id': [PART1_OID, PART1_OID]},
+             [PART1_NAME]),
+            ({'object-id': PART1_OID + 'foo'},
+             []),
+            ({'object-id': [PART1_OID, PART2_OID + 'foo']},
+             [PART1_NAME]),
+            ({'object-id': [PART2_OID + 'foo', PART1_OID]},
+             [PART1_NAME]),
+            ({'name': PART1_NAME},
+             [PART1_NAME]),
+            ({'name': PART2_NAME},
+             [PART2_NAME]),
+            ({'name': [PART1_NAME, PART2_NAME]},
+             [PART1_NAME, PART2_NAME]),
+            ({'name': PART1_NAME + 'foo'},
+             []),
+            ({'name': [PART1_NAME, PART2_NAME + 'foo']},
+             [PART1_NAME]),
+            ({'name': [PART2_NAME + 'foo', PART1_NAME]},
+             [PART1_NAME]),
+            ({'name': [PART1_NAME, PART1_NAME]},
+             [PART1_NAME]),
+            ({'name': '.*part 1'},
+             [PART1_NAME]),
+            ({'name': 'part 1.*'},
+             [PART1_NAME]),
+            ({'name': 'part .'},
+             [PART1_NAME, PART2_NAME]),
+            ({'name': '.art 1'},
+             [PART1_NAME]),
+            ({'name': '.+'},
+             [PART1_NAME, PART2_NAME]),
+            ({'name': 'part 1.+'},
+             []),
+            ({'name': '.+part 1'},
+             []),
+            ({'name': PART1_NAME,
+              'object-id': PART1_OID},
+             [PART1_NAME]),
+            ({'name': PART1_NAME,
+              'object-id': PART1_OID + 'foo'},
+             []),
+            ({'name': PART1_NAME + 'foo',
+              'object-id': PART1_OID},
+             []),
+            ({'name': PART1_NAME + 'foo',
+              'object-id': PART1_OID + 'foo'},
+             []),
+        ]
+    )
+    def test_partitionmanager_list_filter_args(self, filter_args, exp_names):
+        """Test PartitionManager.list() with filter_args."""
+
+        # Add two faked partitions
+        self.add_partition1()
+        self.add_partition2()
+
+        partition_mgr = self.cpc.partitions
+
+        # Execute the code to be tested
+        partitions = partition_mgr.list(filter_args=filter_args)
+
+        assert len(partitions) == len(exp_names)
+        if exp_names:
+            names = [p.properties['name'] for p in partitions]
+            assert set(names) == set(exp_names)
+
+    @pytest.mark.parametrize(
+        "input_props, exp_prop_names, exp_exc", [
+            ({},
+             None,
+             HTTPError({'http-status': 400, 'reason': 5})),
+            ({'description': 'fake description X'},
+             None,
+             HTTPError({'http-status': 400, 'reason': 5})),
+            ({'name': 'fake-part-x'},
+             None,
+             HTTPError({'http-status': 400, 'reason': 5})),
+            ({'name': 'fake-part-x',
+              'initial-memory': 1024},
+             None,
+             HTTPError({'http-status': 400, 'reason': 5})),
+            ({'name': 'fake-part-x',
+              'initial-memory': 1024,
+              'maximum-memory': 1024},
+             ['object-uri', 'name', 'initial-memory', 'maximum-memory'],
+             None),
+            ({'name': 'fake-part-x',
+              'initial-memory': 1024,
+              'maximum-memory': 1024,
+              'description': 'fake description X'},
+             ['object-uri', 'name', 'initial-memory', 'maximum-memory',
+              'description'],
+             None),
+        ]
+    )
+    def test_partitionmanager_create(self, input_props, exp_prop_names,
+                                     exp_exc):
+        """Test PartitionManager.create()."""
+
+        partition_mgr = self.cpc.partitions
+
+        if exp_exc is not None:
+
+            with pytest.raises(exp_exc.__class__) as exc_info:
+
+                # Execute the code to be tested
+                partition = partition_mgr.create(properties=input_props)
+
+            exc = exc_info.value
+            if isinstance(exp_exc, HTTPError):
+                assert exc.http_status == exp_exc.http_status
+                assert exc.reason == exp_exc.reason
+
+        else:
+
+            # Execute the code to be tested.
+            # Note: the Partition object returned by Partition.create() has
+            # the input properties plus 'object-uri'.
             partition = partition_mgr.create(properties=input_props)
 
-            props = input_props.copy()
-            props.update(mock_create_result)
+            # Check the resource for consistency within itself
+            assert isinstance(partition, Partition)
+            partition_name = partition.name
+            exp_partition_name = partition.properties['name']
+            assert partition_name == exp_partition_name
+            partition_uri = partition.uri
+            exp_partition_uri = partition.properties['object-uri']
+            assert partition_uri == exp_partition_uri
 
-            self.assertTrue(isinstance(partition, Partition))
-            self.assertEqual(partition.properties, props)
-            self.assertEqual(partition.uri, part_uri)
+            # Check the properties against the expected names and values
+            for prop_name in exp_prop_names:
+                assert prop_name in partition.properties
+                if prop_name in input_props:
+                    value = partition.properties[prop_name]
+                    exp_value = input_props[prop_name]
+                    assert value == exp_value
 
-            # Check the name property (accessing it will cause a get)
-            m.get(part_uri, json=mock_get_result)
-            self.assertEqual(partition.name, part_name)
-
-    def test_create_name_input(self):
+    def test_partitionmanager_partition_object(self):
         """
-        This tests the 'Create' operation, with partition name as input
-        properties.
-        """
-        partition_mgr = self.cpc.partitions
-
-        part_id = 'fake-part-id-1'  # created by faked HMC
-        part_uri = '/api/partitions/%s' % part_id
-        part_name = 'fake-part-name-1'
-
-        with requests_mock.mock() as m:
-            input_props = {
-                'name': part_name
-            }
-            mock_create_result = {
-                'object-uri': part_uri
-            }
-            m.post('/api/cpcs/%s/partitions' % self.cpc_id,
-                   json=mock_create_result)
-
-            partition = partition_mgr.create(properties=input_props)
-
-            props = input_props.copy()
-            props.update(mock_create_result)
-
-            self.assertTrue(isinstance(partition, Partition))
-            self.assertEqual(partition.properties, props)
-            self.assertEqual(partition.uri, part_uri)
-
-            # Check the name property (accessing it will not cause a get,
-            # because the create() method is supposed to also update the
-            # properties of the Python resource object, so the property
-            # is already available).
-            self.assertEqual(partition.name, part_name)
-
-    def test_start(self):
-        """
-        This tests the 'Start Partition' operation.
+        Test PartitionManager.partition_object().
         """
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'partitions': [
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post("/api/partitions/fake-part-id-1/operations/start",
-                   json=result)
-            status = partition.start(wait_for_completion=False)
-            self.assertEqual(status, result)
+        partition_oid = 'fake-partition-id42'
 
-    def test_stop(self):
-        """
-        This tests the 'Stop Partition' operation.
-        """
+        # Execute the code to be tested
+        partition = partition_mgr.partition_object(partition_oid)
+
+        partition_uri = "/api/partitions/" + partition_oid
+
+        assert isinstance(partition, Partition)
+        assert partition.uri == partition_uri
+        assert partition.properties['object-uri'] == partition_uri
+        assert partition.properties['object-id'] == partition_oid
+        assert partition.properties['class'] == 'partition'
+        assert partition.properties['parent'] == self.cpc.uri
+
+    # TODO: Test for initial Partition attributes (nics, hbas,
+    #       virtual_functions)
+
+    def test_partition_repr(self):
+        """Test Partition.__repr__()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
+        partition = partition_mgr.find(name=faked_partition.name)
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post("/api/partitions/fake-part-id-1/operations/stop",
-                   json=result)
-            status = partition.stop(wait_for_completion=False)
-            self.assertEqual(status, result)
+        # Execute the code to be tested
+        repr_str = repr(partition)
 
-    def test_delete(self):
-        """
-        This tests the 'Delete Partition' operation.
-        """
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=partition.__class__.__name__,
+                               id=id(partition)),
+                        repr_str)
+
+    @pytest.mark.parametrize(
+        "initial_status, exp_exc", [
+            ('stopped', None),
+            ('terminated', HTTPError({'http-status': 409, 'reason': 1})),
+            ('starting', HTTPError({'http-status': 409, 'reason': 1})),
+            ('active', HTTPError({'http-status': 409, 'reason': 1})),
+            ('stopping', HTTPError({'http-status': 409, 'reason': 1})),
+            ('degraded', HTTPError({'http-status': 409, 'reason': 1})),
+            ('reservation-error',
+             HTTPError({'http-status': 409, 'reason': 1})),
+            ('paused', HTTPError({'http-status': 409, 'reason': 1})),
+        ]
+    )
+    def test_partition_delete(self, initial_status, exp_exc):
+        """Test Partition.delete()."""
+
+        # Add a faked partition to be tested and another one
+        faked_partition = self.add_partition1()
+        self.add_partition2()
+
+        # Set the initial status of the faked partition
+        faked_partition.properties['status'] = initial_status
+
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            initial_partitions = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id,
-                  json=initial_partitions)
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            m.delete("/api/partitions/fake-part-id-1", status_code=204)
+        partition = partition_mgr.find(name=faked_partition.name)
+
+        if exp_exc is not None:
+
+            with pytest.raises(exp_exc.__class__) as exc_info:
+
+                # Execute the code to be tested
+                partition.delete()
+
+            exc = exc_info.value
+            if isinstance(exp_exc, HTTPError):
+                assert exc.http_status == exp_exc.http_status
+                assert exc.reason == exp_exc.reason
+
+            # Check that the partition still exists
+            partition_mgr.find(name=faked_partition.name)
+
+        else:
+
+            # Execute the code to be tested.
             partition.delete()
 
-    def test_delete_create_same_name(self):
-        """
-        This tests a partition deletion followed by a creation of a partition
-        with the same name.
-        """
+            # Check that the partition no longer exists
+            with pytest.raises(NotFound) as exc_info:
+                partition_mgr.find(name=faked_partition.name)
+
+    def test_partition_delete_create_same_name(self):
+        """Test Partition.delete() followed by create() with same name."""
+
+        # Add a faked partition to be tested and another one
+        faked_partition = self.add_partition1()
+        partition_name = faked_partition.name
+        self.add_partition2()
+
+        # Construct the input properties for a third partition
+        part3_props = copy.deepcopy(faked_partition.properties)
+        part3_props['description'] = 'Third partition'
+
+        # Set the initial status of the faked partition
+        faked_partition.properties['status'] = 'stopped'  # deletable
+
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            partition1_uri = '/api/partitions/fake-part-id-1#1'
-            list_partitions_result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': partition1_uri,
-                        'name': 'PART1',
-                        'description': 'PART1 #1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2#1',
-                        'name': 'PART2',
-                        'description': 'PART2 #1'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id,
-                  json=list_partitions_result)
+        partition = partition_mgr.find(name=partition_name)
 
-            # Find the partition.
-            partition1 = partition_mgr.find(name='PART1')
+        # Execute the deletion code to be tested.
+        partition.delete()
 
-            # Delete the partition.
-            m.delete(partition1_uri)
-            status = partition1.delete()
-            self.assertEqual(status, None)
+        # Check that the partition no longer exists
+        with pytest.raises(NotFound):
+            partition_mgr.find(name=partition_name)
 
-            # Create a new partition with the same name.
-            partition1_new_uri = '/api/partitions/fake-part-id-1#2'
-            partition1_new_props = {
-                'name': 'PART1',
-                'description': 'PART1 #2'
-            }
-            create_partition1_new_result = {
-                'object-uri': partition1_new_uri
-            }
-            m.post('/api/cpcs/%s/partitions' % self.cpc_id,
-                   json=create_partition1_new_result)
-            partition1_new_created = partition_mgr.create(partition1_new_props)
-            self.assertNotEqual(partition1_new_created.uri, partition1_uri)
-            self.assertEqual(partition1_new_created.uri, partition1_new_uri)
+        # Execute the creation code to be tested.
+        partition_mgr.create(part3_props)
 
-            # Find the new partition.
-            partition1_new_found = partition_mgr.find(name='PART1')
-            self.assertEqual(partition1_new_found.uri, partition1_new_uri)
+        # Check that the partition exists again under that name
+        partition3 = partition_mgr.find(name=partition_name)
+        description = partition3.get_property('description')
+        assert description == 'Third partition'
 
-    def test_update_properties_all(self):
-        """
-        This tests the `update_properties()` method with a number of different
-        new properties.
-        """
-
-        # Each list item is a separate test.
-        # TODO: Use fixtures instead of loop, for better diagnostics
-        update_props_tests = [
+    @pytest.mark.parametrize(
+        "input_props", [
             {},
-            {'name': 'PART1-updated'},
-            {'description': 'new description added'},
+            {'description': 'New partition description'},
+            {'initial-memory': 512,
+             'description': 'New partition description'},
         ]
+    )
+    def test_partition_update_properties(self, input_props):
+        """Test Partition.update_properties()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
 
         partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=faked_partition.name)
 
-        for update_props in update_props_tests:
-            with requests_mock.mock() as m:
-                list_partitions_result = {
-                    'partitions': [
-                        {
-                            'status': 'active',
-                            'object-uri': '/api/partitions/fake-part-id-1',
-                            'name': 'PART1'
-                        }
-                    ]
-                }
-                m.get('/api/cpcs/%s/partitions' % self.cpc_id,
-                      json=list_partitions_result)
-                partition = partition_mgr.list(full_properties=False)[0]
-                partition_props = partition.properties.copy()
+        partition.pull_full_properties()
+        saved_properties = copy.deepcopy(partition.properties)
 
-                m.post("/api/partitions/fake-part-id-1", status_code=204)
-                partition.update_properties(properties=update_props)
+        # Execute the code to be tested
+        partition.update_properties(properties=input_props)
 
-                list_partitions_result['partitions'][0].update(update_props)
-                partition_upd = partition_mgr.list(full_properties=False)[0]
-                partition_upd_props = partition_upd.properties.copy()
+        # Verify that the resource object already reflects the property
+        # updates.
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in partition.properties
+            prop_value = partition.properties[prop_name]
+            assert prop_value == exp_prop_value
 
-                exp_partition_upd_props = partition_props.copy()
-                exp_partition_upd_props.update(update_props)
-                self.assertEqual(partition_upd_props, exp_partition_upd_props)
+        # Refresh the resource object and verify that the resource object
+        # still reflects the property updates.
+        partition.pull_full_properties()
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in partition.properties
+            prop_value = partition.properties[prop_name]
+            assert prop_value == exp_prop_value
 
-    def test_dump_partition(self):
+    def test_partition_update_name(self):
         """
-        This tests the 'Dump Partition' operation.
+        Test Partition.update_properties() with 'name' property.
         """
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+        partition_name = faked_partition.name
+
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
+        partition = partition_mgr.find(name=partition_name)
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            result = {
-                'job-uri': '/api/jobs/fake-job-id-1'
-            }
-            m.post("/api/partitions/fake-part-id-1/operations/scsi-dump",
-                   json=result)
-            status = partition.dump_partition(
-                wait_for_completion=False, parameters={})
-            self.assertEqual(status, result)
+        new_partition_name = "new-" + partition_name
 
-    def test_psw_restart(self):
-        """
-        This tests the 'Perform PSW Restart' operation.
-        """
+        # Execute the code to be tested
+        partition.update_properties(properties={'name': new_partition_name})
+
+        # Verify that the resource is no longer found by its old name, using
+        # list() (this does not use the name-to-URI cache).
+        partitions_list = partition_mgr.list(
+            filter_args=dict(name=partition_name))
+        assert len(partitions_list) == 0
+
+        # Verify that the resource is no longer found by its old name, using
+        # find() (this uses the name-to-URI cache).
+        with pytest.raises(NotFound):
+            partition_mgr.find(name=partition_name)
+
+        # Verify that the resource object already reflects the update, even
+        # though it has not been refreshed yet.
+        assert partition.properties['name'] == new_partition_name
+
+        # Refresh the resource object and verify that it still reflects the
+        # update.
+        partition.pull_full_properties()
+        assert partition.properties['name'] == new_partition_name
+
+        # Verify that the resource can be found by its new name, using find()
+        new_partition_find = partition_mgr.find(name=new_partition_name)
+        assert new_partition_find.properties['name'] == new_partition_name
+
+        # Verify that the resource can be found by its new name, using list()
+        new_partitions_list = partition_mgr.list(
+            filter_args=dict(name=new_partition_name))
+        assert len(new_partitions_list) == 1
+        new_partition_list = new_partitions_list[0]
+        assert new_partition_list.properties['name'] == new_partition_name
+
+    @pytest.mark.parametrize(
+        "initial_status, exp_exc", [
+            ('stopped', None),
+            ('terminated', HTTPError({'http-status': 409, 'reason': 1})),
+            ('starting', HTTPError({'http-status': 409, 'reason': 1})),
+            ('active', HTTPError({'http-status': 409, 'reason': 1})),
+            ('stopping', HTTPError({'http-status': 409, 'reason': 1})),
+            ('degraded', HTTPError({'http-status': 409, 'reason': 1})),
+            ('reservation-error',
+             HTTPError({'http-status': 409, 'reason': 1})),
+            ('paused', HTTPError({'http-status': 409, 'reason': 1})),
+        ]
+    )
+    def test_partition_start(self, initial_status, exp_exc):
+        """Test Partition.start()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+
+        # Set the initial status of the faked partition
+        faked_partition.properties['status'] = initial_status
+
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
+        partition = partition_mgr.find(name=faked_partition.name)
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            result = {
-                'job-uri': '/api/jobs/fake-job-id-1'
-            }
-            m.post("/api/partitions/fake-part-id-1/operations/psw-restart",
-                   json=result)
-            status = partition.psw_restart(wait_for_completion=False)
-            self.assertEqual(status, result)
+        if exp_exc is not None:
 
-    def test_mount_iso_image(self):
-        """
-        This tests the 'Mount ISO image' operation.
-        """
+            with pytest.raises(exp_exc.__class__) as exc_info:
+
+                # Execute the code to be tested
+                partition.start()
+
+            exc = exc_info.value
+            if isinstance(exp_exc, HTTPError):
+                assert exc.http_status == exp_exc.http_status
+                assert exc.reason == exp_exc.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = partition.start()
+
+            assert ret == {}
+
+            partition.pull_full_properties()
+            status = partition.get_property('status')
+            assert status == 'active'
+
+    @pytest.mark.parametrize(
+        "initial_status, exp_exc", [
+            ('stopped', HTTPError({'http-status': 409, 'reason': 1})),
+            ('terminated', None),
+            ('starting', HTTPError({'http-status': 409, 'reason': 1})),
+            ('active', None),
+            ('stopping', HTTPError({'http-status': 409, 'reason': 1})),
+            ('degraded', None),
+            ('reservation-error', None),
+            ('paused', None),
+        ]
+    )
+    def test_partition_stop(self, initial_status, exp_exc):
+        """Test Partition.stop()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+
+        # Set the initial status of the faked partition
+        faked_partition.properties['status'] = initial_status
+
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
+        partition = partition_mgr.find(name=faked_partition.name)
 
-            image_name = 'faked-image-name'
-            ins_file_name = 'faked-ins-file-name'
-            image = b'faked-image-data'
+        if exp_exc is not None:
 
-            result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
+            with pytest.raises(exp_exc.__class__) as exc_info:
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            result = {
-                'job-uri': '/api/jobs/fake-job-id-1'
-            }
-            qp = '?image-name={}&ins-file-name={}'. \
-                format(quote(image_name, safe=''),
-                       quote(ins_file_name, safe=''))
-            m.post(
-                "/api/partitions/fake-part-id-1/operations/mount-iso-image" +
-                qp, json=result)
-            status = partition.mount_iso_image(
-                image=image, image_name=image_name,
-                ins_file_name=ins_file_name)
-            self.assertEqual(status, None)
+                # Execute the code to be tested
+                partition.stop()
 
-    def test_unmount_iso_image(self):
-        """
-        This tests the 'Unmount ISO image' operation.
-        """
+            exc = exc_info.value
+            if isinstance(exp_exc, HTTPError):
+                assert exc.http_status == exp_exc.http_status
+                assert exc.reason == exp_exc.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = partition.stop()
+
+            assert ret == {}
+
+            partition.pull_full_properties()
+            status = partition.get_property('status')
+            assert status == 'stopped'
+
+    # TODO: Re-enable test_partition_dump_partition() once supported in hdlr
+    def xtest_partition_dump_partition(self):
+        """Test Partition.dump_partition()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+
         partition_mgr = self.cpc.partitions
-        with requests_mock.mock() as m:
-            result = {
-                'partitions': [
-                    {
-                        'status': 'active',
-                        'object-uri': '/api/partitions/fake-part-id-1',
-                        'name': 'PART1'
-                    },
-                    {
-                        'status': 'stopped',
-                        'object-uri': '/api/partitions/fake-part-id-2',
-                        'name': 'PART2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/%s/partitions' % self.cpc_id, json=result)
+        partition = partition_mgr.find(name=faked_partition.name)
 
-            partitions = partition_mgr.list(full_properties=False)
-            partition = partitions[0]
-            result = {
-                'job-uri': '/api/jobs/fake-job-id-1'
-            }
-            m.post("/api/partitions/fake-part-id-1/operations/"
-                   "unmount-iso-image", json=result)
-            status = partition.unmount_iso_image()
-            self.assertEqual(status, None)
+        parameters = {
+            'dump-load-hba-uri': 'fake-hba-uri',
+            'dump-world-wide-port-name': 'fake-wwpn',
+            'dump-logical-unit-number': 'fake-lun',
+        }
 
-    def test_partition_object(self):
-        """
-        This tests the `partition_object()` method.
-        """
+        # Execute the code to be tested.
+        ret = partition.dump_partition(parameters=parameters)
+
+        assert ret == {}
+
+    # TODO: Re-enable test_partition_psw_restart() once supported in hdlr
+    def xtest_partition_psw_restart(self):
+        """Test Partition.psw_restart()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+
         partition_mgr = self.cpc.partitions
-        partition_id = 'fake-partition-id42'
+        partition = partition_mgr.find(name=faked_partition.name)
 
-        partition = partition_mgr.partition_object(partition_id)
+        # Execute the code to be tested.
+        ret = partition.psw_restart()
 
-        partition_uri = "/api/partitions/" + partition_id
+        assert ret == {}
 
-        self.assertTrue(isinstance(partition, Partition))
-        self.assertEqual(partition.uri, partition_uri)
-        self.assertEqual(partition.properties['object-uri'], partition_uri)
-        self.assertEqual(partition.properties['object-id'], partition_id)
-        self.assertEqual(partition.properties['class'], 'partition')
-        self.assertEqual(partition.properties['parent'], self.cpc.uri)
+    # TODO: Re-enable test_partition_mount_iso_image() once supported in hdlr
+    def xtest_partition_mount_iso_image(self):
+        """Test Partition.mount_iso_image()."""
 
+        # Add a faked partition
+        faked_partition = self.add_partition1()
 
-if __name__ == '__main__':
-    unittest.main()
+        partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=faked_partition.name)
+
+        image = b'fake-image-data'
+        image_name = 'fake-image-name'
+        ins_file_name = 'fake-ins-file-name'
+
+        # Execute the code to be tested.
+        ret = partition.mount_iso_image(image=image, image_name=image_name,
+                                        ins_file_name=ins_file_name)
+
+        assert ret is None
+
+    # TODO: Re-enable test_partition_unmount_iso_image() once supported in hdlr
+    def xtest_partition_unmount_iso_image(self):
+        """Test Partition.unmount_iso_image()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+
+        partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=faked_partition.name)
+
+        # Execute the code to be tested.
+        ret = partition.unmount_iso_image()
+
+        assert ret is None
+
+    # TODO: Test for Partition.send_os_command()
+
+    # TODO: Test for Partition.wait_for_status()
+
+    # TODO: Test for Partition.increase_crypto_config()
+
+    # TODO: Test for Partition.decrease_crypto_config()
+
+    # TODO: Test for Partition.change_crypto_domain_config()
