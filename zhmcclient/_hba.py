@@ -135,6 +135,29 @@ class HbaManager(BaseManager):
         """
         Create and configure an HBA in this Partition.
 
+        The HBA must be backed by an adapter port on an FCP adapter.
+
+        The backing adapter port is specified in the "properties" parameter of
+        this method by setting the "adapter-port-uri" property to the URI of
+        the backing adapter port.
+
+        The value for the "adapter-port-uri" property can be determined from a
+        given adapter name and port index as shown in the following example
+        code (omitting any error handling):
+
+        .. code-block:: python
+
+            partition = ...  # Partition object for the new HBA
+
+            adapter_name = 'FCP #1'  # name of adapter with backing port
+            adapter_port_index = 0   # port index of backing port
+
+            adapter = partition.manager.cpc.adapters.find(name=adapter_name)
+
+            port = adapter.ports.find(index=adapter_port_index)
+
+            properties['adapter-port-uri'] = port.uri
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -146,10 +169,6 @@ class HbaManager(BaseManager):
           properties (dict): Initial property values.
             Allowable properties are defined in section 'Request body contents'
             in section 'Create HBA' in the :term:`HMC API` book.
-
-            The underlying :term:`FCP port` for the new HBA is assigned via the
-            "adapter-port-uri" property, which specifies the Port on the
-            backing Adapter.
 
         Returns:
 
