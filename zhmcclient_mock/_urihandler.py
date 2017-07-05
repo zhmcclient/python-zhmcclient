@@ -547,6 +547,7 @@ class PartitionStartHandler(object):
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         partition.properties['status'] = 'active'
+        return {}
 
 
 class PartitionStopHandler(object):
@@ -563,6 +564,7 @@ class PartitionStopHandler(object):
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         partition.properties['status'] = 'stopped'
+        return {}
 
 
 def ensure_crypto_config(partition):
