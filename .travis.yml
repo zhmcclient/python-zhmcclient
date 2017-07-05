@@ -58,20 +58,20 @@ matrix:
       env:
         - PACKAGE_LEVEL=minimum
         - PYTHON=2
-    - os: osx
-      sudo: required
-      language: generic
-      python:
-      env:
-        - PACKAGE_LEVEL=latest
-        - PYTHON=2
-    - os: osx
-      sudo: required
-      language: generic
-      python:
-      env:
-        - PACKAGE_LEVEL=minimum
-        - PYTHON=3
+#    - os: osx
+#      sudo: required
+#      language: generic
+#      python:
+#      env:
+#        - PACKAGE_LEVEL=latest
+#        - PYTHON=2
+#    - os: osx
+#      sudo: required
+#      language: generic
+#      python:
+#      env:
+#        - PACKAGE_LEVEL=minimum
+#        - PYTHON=3
     - os: osx
       sudo: required
       language: generic
@@ -104,14 +104,17 @@ install:
   - make develop
   - $PIP_CMD install python-coveralls
   - $PIP_CMD list
+  - make pyshow
+  - bash -c "echo $TRAVIS_EVENT_TYPE"
 
 # commands to run builds & tests
 script:
   - make check
-  - make build
-  - make builddoc
   - make test
-  - make pyshow
+  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then
+      make build;
+      make builddoc;
+    fi
 
 after_success:
   - if [[ $TRAVIS_PYTHON_VERSION == 2.7 && $PACKAGE_LEVEL == latest ]]; then coveralls; fi
