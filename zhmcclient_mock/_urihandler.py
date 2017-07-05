@@ -97,6 +97,16 @@ class BadRequestError(HTTPError):
             message=message)
 
 
+class ConflictError(HTTPError):
+
+    def __init__(self, method, uri, reason, message):
+        super(ConflictError, self).__init__(
+            method, uri,
+            http_status=409,
+            reason=reason,
+            message=message)
+
+
 class CpcNotInDpmError(HTTPError):
     """
     Indicates that the operation requires DPM mode but the CPC is not in DPM
