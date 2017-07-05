@@ -26,8 +26,6 @@ have not been implemented yet::
     POST     /api/partitions/([^/]+)/hbas/([^/]+)/operations/reassign-
                storage-adapter-port
     POST     /api/virtual-switches/([^/]+)/operations/get-connected-vnics
-    POST     /api/cpcs/([^/]+)/operations/import-profiles
-    POST     /api/cpcs/([^/]+)/operations/export-profiles
     POST     /api/adapters/([^/]+)/operations/change-crypto-type
 """
 
@@ -305,6 +303,38 @@ class CpcStopHandler(object):
         cpc.properties['status'] = 'not-operating'
 
 
+class CpcImportProfilesHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Import Profiles (requires classic mode)."""
+        assert wait_for_completion is True  # no async
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        if cpc.dpm_enabled:
+            raise CpcInDpmError('POST', uri, cpc)
+        # TODO: Import from simulated profile-area
+
+
+class CpcExportProfilesHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Export Profiles (requires classic mode)."""
+        assert wait_for_completion is True  # no async
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        if cpc.dpm_enabled:
+            raise CpcInDpmError('POST', uri, cpc)
+        # TODO: Export to simulated profile-area
+
+
 class CpcExportPortNamesListHandler(object):
 
     @staticmethod
@@ -316,7 +346,8 @@ class CpcExportPortNamesListHandler(object):
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('POST', uri)
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError('POST', uri, cpc)
         if body is None or 'partitions' not in body:
             raise HTTPError('POST', uri, 400,
                             149,  # TODO: Maybe use different reason?
@@ -343,9 +374,10 @@ class CpcExportPortNamesListHandler(object):
                 port_uri = hba.properties['adapter-port-uri']
                 port = hmc.lookup_by_uri(port_uri)
                 adapter = port.manager.parent
+                adapter_id = adapter.properties.get('adapter-id', '')
                 devno = hba.properties.get('device-number', '')
                 wwpn = hba.properties.get('wwpn', '')
-                wwpn_str = '%s,%s,%s,%s' % (partition_name, adapter.oid,
+                wwpn_str = '%s,%s,%s,%s' % (partition_name, adapter_id,
                                             devno, wwpn)
                 wwpn_list.append(wwpn_str)
         return {
@@ -1050,10 +1082,10 @@ URIS = (
 
     # Only in classic (or ensemble) mode:
 
-    # ('/api/cpcs/([^/]+)/operations/import-profiles',
-    #  CpcImportProfilesHandler),
-    # ('/api/cpcs/([^/]+)/operations/export-profiles',
-    #  CpcExportProfilesHandler),
+    ('/api/cpcs/([^/]+)/operations/import-profiles',
+     CpcImportProfilesHandler),
+    ('/api/cpcs/([^/]+)/operations/export-profiles',
+     CpcExportProfilesHandler),
 
     ('/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
     ('/api/logical-partitions/([^/]+)', LparHandler),
