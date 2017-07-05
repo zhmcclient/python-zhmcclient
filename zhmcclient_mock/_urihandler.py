@@ -316,7 +316,8 @@ class CpcExportPortNamesListHandler(object):
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
             raise InvalidResourceError('POST', uri)
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError('POST', uri, cpc)
         if body is None or 'partitions' not in body:
             raise HTTPError('POST', uri, 400,
                             149,  # TODO: Maybe use different reason?
@@ -343,9 +344,10 @@ class CpcExportPortNamesListHandler(object):
                 port_uri = hba.properties['adapter-port-uri']
                 port = hmc.lookup_by_uri(port_uri)
                 adapter = port.manager.parent
+                adapter_id = adapter.properties.get('adapter-id', '')
                 devno = hba.properties.get('device-number', '')
                 wwpn = hba.properties.get('wwpn', '')
-                wwpn_str = '%s,%s,%s,%s' % (partition_name, adapter.oid,
+                wwpn_str = '%s,%s,%s,%s' % (partition_name, adapter_id,
                                             devno, wwpn)
                 wwpn_list.append(wwpn_str)
         return {

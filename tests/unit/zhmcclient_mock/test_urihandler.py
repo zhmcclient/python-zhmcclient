@@ -564,6 +564,7 @@ def standard_test_hmc():
                             'adapter-family': 'osa',
                             'network-port-uris': [],   # updated automatically
                             'status': 'active',
+                            'adapter-id': 'BEF',
                         },
                         'ports': [
                             {
@@ -582,6 +583,7 @@ def standard_test_hmc():
                             'description': 'FCP #2 in CPC #2',
                             'adapter-family': 'ficon',
                             'storage-port-uris': [],   # updated automatically
+                            'adapter-id': 'CEF',
                         },
                         'ports': [
                             {
@@ -600,6 +602,7 @@ def standard_test_hmc():
                             'description': 'ROCE #3 in CPC #2',
                             'adapter-family': 'roce',
                             'network-port-uris': [],   # updated automatically
+                            'adapter-id': 'DEF',
                         },
                         'ports': [
                             {
@@ -857,7 +860,7 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
             ]
         }
         exp_wwpn_list = [
-            'partition_1,2,1001,CFFEAFFE00008001',
+            'partition_1,CEF,1001,CFFEAFFE00008001',
         ]
 
         # the function to be tested:
@@ -921,6 +924,7 @@ class AdapterHandlersTests(unittest.TestCase):
             'status': 'active',
             'adapter-family': 'osa',
             'network-port-uris': ['/api/adapters/1/network-ports/1'],
+            'adapter-id': 'BEF',
         }
         self.assertEqual(adapter1, exp_adapter1)
 
