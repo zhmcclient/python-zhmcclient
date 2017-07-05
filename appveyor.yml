@@ -18,9 +18,9 @@ environment:
 #    - PYTHON_VERSION: 3.5
 #      PYTHON_ARCH: 32
 #      PYTHON_HOME: C:\Python35
-    - PYTHON_VERSION: 3.5
-      PYTHON_ARCH: 64
-      PYTHON_HOME: C:\Python35-x64
+#    - PYTHON_VERSION: 3.5
+#      PYTHON_ARCH: 64
+#      PYTHON_HOME: C:\Python35-x64
 #    - PYTHON_VERSION: 3.6
 #      PYTHON_ARCH: 32
 #      PYTHON_HOME: C:\Python36
@@ -30,7 +30,7 @@ environment:
 
 configuration:
 # These values will become the values of the PACKAGE_LEVEL env.var.
-  - minimum
+#  - minimum
   - latest
 
 install:
