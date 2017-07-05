@@ -95,6 +95,16 @@ class BadRequestError(HTTPError):
             message=message)
 
 
+class ConflictError(HTTPError):
+
+    def __init__(self, method, uri, reason, message):
+        super(ConflictError, self).__init__(
+            method, uri,
+            http_status=409,
+            reason=reason,
+            message=message)
+
+
 class CpcNotInDpmError(HTTPError):
     """
     Indicates that the operation requires DPM mode but the CPC is not in DPM
@@ -530,6 +540,13 @@ class PartitionHandler(GenericGetPropertiesHandler,
             raise InvalidResourceError('DELETE', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
+        # Check status
+        status = partition.properties['status']
+        if status not in ('stopped',):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot delete partition {!r} in status {!r}".
+                format(partition.name, status))
         partition.manager.remove(partition.oid)
 
 
@@ -546,6 +563,14 @@ class PartitionStartHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
+        # Check status
+        status = partition.properties['status']
+        if status not in ('stopped',):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot start partition {!r} in status {!r}".
+                format(partition.name, status))
+        # Reflect the result of starting the partition
         partition.properties['status'] = 'active'
 
 
@@ -562,6 +587,15 @@ class PartitionStopHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
+        # Check status
+        status = partition.properties['status']
+        if status not in ('active', 'degraded', 'paused', 'terminated',
+                          'reservation-error'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot stop partition {!r} in status {!r}".
+                format(partition.name, status))
+        # Reflect the result of stopping the partition
         partition.properties['status'] = 'stopped'
 
 
