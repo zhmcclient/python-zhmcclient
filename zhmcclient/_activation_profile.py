@@ -254,6 +254,7 @@ class ActivationProfile(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(self.uri, body=properties)
+        # Attempts to change the 'name' property will be rejected by the HMC,
+        # so we don't need to update the name-to-URI cache.
+        assert self.manager._name_prop not in properties
         self.properties.update(copy.deepcopy(properties))
-        if self.manager._name_prop in properties:
-            self.manager._name_uri_cache.update(self.name, self.uri)

@@ -298,6 +298,11 @@ class Nic(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(self.uri, body=properties)
+        is_rename = self.manager._name_prop in properties
+        if is_rename:
+            # Delete the old name from the cache
+            self.manager._name_uri_cache.delete(self.name)
         self.properties.update(copy.deepcopy(properties))
-        if self.manager._name_prop in properties:
+        if is_rename:
+            # Add the new name to the cache
             self.manager._name_uri_cache.update(self.name, self.uri)
