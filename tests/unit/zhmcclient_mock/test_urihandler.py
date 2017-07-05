@@ -1208,19 +1208,30 @@ class PartitionStartStopHandlerTests(unittest.TestCase):
         partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
         self.assertEqual(partition1['status'], 'stopped')
 
-        # the function to be tested:
+        # the start() function to be tested, with a valid initial status:
         self.urihandler.post(self.hmc, '/api/partitions/1/operations/start',
                              None, True, True)
-
         partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
         self.assertEqual(partition1['status'], 'active')
 
-        # the function to be tested:
+        # the start() function to be tested, with an invalid initial status:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(self.hmc,
+                                 '/api/partitions/1/operations/start',
+                                 None, True, True)
+
+        # the stop() function to be tested, with a valid initial status:
+        self.assertEqual(partition1['status'], 'active')
         self.urihandler.post(self.hmc, '/api/partitions/1/operations/stop',
                              None, True, True)
-
         partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
         self.assertEqual(partition1['status'], 'stopped')
+
+        # the stop() function to be tested, with an invalid initial status:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(self.hmc,
+                                 '/api/partitions/1/operations/stop',
+                                 None, True, True)
 
 
 class HbaHandlerTests(unittest.TestCase):
