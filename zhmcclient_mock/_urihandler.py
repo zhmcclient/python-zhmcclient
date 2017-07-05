@@ -26,8 +26,6 @@ have not been implemented yet::
     POST     /api/partitions/([^/]+)/hbas/([^/]+)/operations/reassign-
                storage-adapter-port
     POST     /api/virtual-switches/([^/]+)/operations/get-connected-vnics
-    POST     /api/cpcs/([^/]+)/operations/import-profiles
-    POST     /api/cpcs/([^/]+)/operations/export-profiles
     POST     /api/adapters/([^/]+)/operations/change-crypto-type
 """
 
@@ -303,6 +301,46 @@ class CpcStopHandler(object):
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError('POST', uri, cpc)
         cpc.properties['status'] = 'not-operating'
+
+
+class CpcImportProfilesHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Import Profiles (requires classic mode)."""
+        assert wait_for_completion is True  # no async
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        if cpc.dpm_enabled:
+            raise CpcInDpmError('POST', uri, cpc)
+        if body is None or 'profile-area' not in body:
+            raise HTTPError('POST', uri, 400, 5,
+                            "The required 'profile-area' field is missing in "
+                            "the request body.")
+        # TODO: Import the CPC profiles from a simulated profile area
+
+
+class CpcExportProfilesHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Export Profiles (requires classic mode)."""
+        assert wait_for_completion is True  # no async
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        if cpc.dpm_enabled:
+            raise CpcInDpmError('POST', uri, cpc)
+        if body is None or 'profile-area' not in body:
+            raise HTTPError('POST', uri, 400, 5,
+                            "The required 'profile-area' field is missing in "
+                            "the request body.")
+        # TODO: Export the CPC profiles to a simulated profile area
 
 
 class CpcExportPortNamesListHandler(object):
@@ -1050,10 +1088,10 @@ URIS = (
 
     # Only in classic (or ensemble) mode:
 
-    # ('/api/cpcs/([^/]+)/operations/import-profiles',
-    #  CpcImportProfilesHandler),
-    # ('/api/cpcs/([^/]+)/operations/export-profiles',
-    #  CpcExportProfilesHandler),
+    ('/api/cpcs/([^/]+)/operations/import-profiles',
+     CpcImportProfilesHandler),
+    ('/api/cpcs/([^/]+)/operations/export-profiles',
+     CpcExportProfilesHandler),
 
     ('/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
     ('/api/logical-partitions/([^/]+)', LparHandler),
