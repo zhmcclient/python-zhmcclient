@@ -30,6 +30,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     GenericGetPropertiesHandler, GenericUpdatePropertiesHandler, \
     VersionHandler, \
     CpcsHandler, CpcHandler, CpcStartHandler, CpcStopHandler, \
+    CpcImportProfilesHandler, CpcExportProfilesHandler, \
     CpcExportPortNamesListHandler, \
     PartitionsHandler, PartitionHandler, PartitionStartHandler, \
     PartitionStopHandler, \
@@ -872,6 +873,74 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
         self.assertIn('wwpn-list', resp)
         wwpn_list = resp['wwpn-list']
         self.assertEqual(wwpn_list, exp_wwpn_list)
+
+
+class CpcImportProfilesHandlerTests(unittest.TestCase):
+    """All tests for class CpcImportProfilesHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
+            ('/api/cpcs/([^/]+)', CpcHandler),
+            ('/api/cpcs/([^/]+)/operations/import-profiles',
+             CpcImportProfilesHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_no_input(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/cpcs/1/operations/import-profiles',
+                None, True, True)
+
+    def test_invoke_ok(self):
+        operation_body = {
+            'profile-area': 2,
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/cpcs/1/operations/import-profiles',
+            operation_body, True, True)
+
+        self.assertIsNone(resp)
+
+
+class CpcExportProfilesHandlerTests(unittest.TestCase):
+    """All tests for class CpcExportProfilesHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
+            ('/api/cpcs/([^/]+)', CpcHandler),
+            ('/api/cpcs/([^/]+)/operations/export-profiles',
+             CpcExportProfilesHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_no_input(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/cpcs/1/operations/export-profiles',
+                None, True, True)
+
+    def test_invoke_ok(self):
+        operation_body = {
+            'profile-area': 2,
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/cpcs/1/operations/export-profiles',
+            operation_body, True, True)
+
+        self.assertIsNone(resp)
 
 
 class AdapterHandlersTests(unittest.TestCase):
