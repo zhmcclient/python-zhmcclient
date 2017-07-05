@@ -572,6 +572,7 @@ class PartitionStartHandler(object):
                 format(partition.name, status))
         # Reflect the result of starting the partition
         partition.properties['status'] = 'active'
+        return {}
 
 
 class PartitionStopHandler(object):
@@ -597,6 +598,7 @@ class PartitionStopHandler(object):
                 format(partition.name, status))
         # Reflect the result of stopping the partition
         partition.properties['status'] = 'stopped'
+        return {}
 
 
 def ensure_crypto_config(partition):
