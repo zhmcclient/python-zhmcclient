@@ -33,7 +33,8 @@ Tutorial                            Short description
 ==================================  ===========================================
 :nbview:`01_notebook_basics.ipynb`  1: Basics about Jupyter notebooks
 :nbview:`02_connections.ipynb`      2: Connecting to an HMC
-:nbview:`03_datamodel.ipynb`        3: Python data model for the HMC API
+:nbview:`03_datamodel.ipynb`        3: Basics about working with HMC resources
+:nbview:`04_error_handling.ipynb`   4: Error handling
 ==================================  ===========================================
 
 Executing code in the tutorials
