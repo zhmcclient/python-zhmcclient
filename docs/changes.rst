@@ -60,6 +60,9 @@ Released: not yet
 * Reads the vlan-id as a integer instead as a string for
   the 'zhmc nic create/update' cli command. See issue #337.
 
+* Fixed the AttributeError that occurred when using zhmcclient in Jupyter
+  notebooks, or in the python interactive mode. See issue #341.
+
 **Enhancements:**
 
 * Improved content of ``zhmcclient.ParseError`` message for better problem

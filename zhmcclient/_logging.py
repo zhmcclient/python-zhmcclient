@@ -181,9 +181,11 @@ def logged_api_call(func):
             this_frame = inspect.currentframe()  # this function here
             apifunc_frame = this_frame.f_back  # the decorated API function
             apicaller_frame = apifunc_frame.f_back  # caller of API function
-
             apicaller_module = inspect.getmodule(apicaller_frame)
-            apicaller_module_name = apicaller_module.__name__
+            if apicaller_module is None:
+                apicaller_module_name = "<unknown>"
+            else:
+                apicaller_module_name = apicaller_module.__name__
         finally:
             # Recommended way to deal with frame objects to avoid ref cycles
             del this_frame
