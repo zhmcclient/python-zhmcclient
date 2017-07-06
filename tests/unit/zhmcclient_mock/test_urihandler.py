@@ -204,76 +204,97 @@ class ParseQueryParmsTests(unittest.TestCase):
     """All tests for parse_query_parms()."""
 
     def test_none(self):
-        filter_args = parse_query_parms(None)
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', None)
         self.assertIsNone(filter_args)
 
     def test_empty(self):
-        filter_args = parse_query_parms('')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', '')
         self.assertIsNone(filter_args)
 
     def test_one_normal(self):
-        filter_args = parse_query_parms('a=b')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b')
         self.assertEqual(filter_args, {'a': 'b'})
 
     def test_two_normal(self):
-        filter_args = parse_query_parms('a=b&c=d')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&c=d')
         self.assertEqual(filter_args, {'a': 'b', 'c': 'd'})
 
     def test_one_trailing_amp(self):
-        filter_args = parse_query_parms('a=b&')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&')
         self.assertEqual(filter_args, {'a': 'b'})
 
     def test_one_leading_amp(self):
-        filter_args = parse_query_parms('&a=b')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', '&a=b')
         self.assertEqual(filter_args, {'a': 'b'})
 
     def test_one_missing_value(self):
-        filter_args = parse_query_parms('a=')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=')
         self.assertEqual(filter_args, {'a': ''})
 
     def test_one_missing_name(self):
-        filter_args = parse_query_parms('=b')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', '=b')
         self.assertEqual(filter_args, {'': 'b'})
 
     def test_two_same_normal(self):
-        filter_args = parse_query_parms('a=b&a=c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&a=c')
         self.assertEqual(filter_args, {'a': ['b', 'c']})
 
     def test_two_same_one_normal(self):
-        filter_args = parse_query_parms('a=b&d=e&a=c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&d=e&a=c')
         self.assertEqual(filter_args, {'a': ['b', 'c'], 'd': 'e'})
 
     def test_space_value_1(self):
-        filter_args = parse_query_parms('a=b%20c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b%20c')
         self.assertEqual(filter_args, {'a': 'b c'})
 
     def test_space_value_2(self):
-        filter_args = parse_query_parms('a=%20c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=%20c')
         self.assertEqual(filter_args, {'a': ' c'})
 
     def test_space_value_3(self):
-        filter_args = parse_query_parms('a=b%20')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b%20')
         self.assertEqual(filter_args, {'a': 'b '})
 
     def test_space_value_4(self):
-        filter_args = parse_query_parms('a=%20')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=%20')
         self.assertEqual(filter_args, {'a': ' '})
 
     def test_space_name_1(self):
-        filter_args = parse_query_parms('a%20b=c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a%20b=c')
         self.assertEqual(filter_args, {'a b': 'c'})
 
     def test_space_name_2(self):
-        filter_args = parse_query_parms('%20b=c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', '%20b=c')
         self.assertEqual(filter_args, {' b': 'c'})
 
     def test_space_name_3(self):
-        filter_args = parse_query_parms('a%20=c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a%20=c')
         self.assertEqual(filter_args, {'a ': 'c'})
 
     def test_space_name_4(self):
-        filter_args = parse_query_parms('%20=c')
+        filter_args = parse_query_parms('fake-meth', 'fake-uri', '%20=c')
         self.assertEqual(filter_args, {' ': 'c'})
+
+    def test_invalid_format_1(self):
+        with self.assertRaises(HTTPError) as cm:
+            parse_query_parms('fake-meth', 'fake-uri', 'a==b')
+        exc = cm.exception
+        self.assertEqual(exc.http_status, 400)
+        self.assertEqual(exc.reason, 1)
+
+    def test_invalid_format_2(self):
+        with self.assertRaises(HTTPError) as cm:
+            parse_query_parms('fake-meth', 'fake-uri', 'a=b=c')
+        exc = cm.exception
+        self.assertEqual(exc.http_status, 400)
+        self.assertEqual(exc.reason, 1)
+
+    def test_invalid_format_3(self):
+        with self.assertRaises(HTTPError) as cm:
+            parse_query_parms('fake-meth', 'fake-uri', 'a')
+        exc = cm.exception
+        self.assertEqual(exc.http_status, 400)
+        self.assertEqual(exc.reason, 1)
 
 
 class UriHandlerHandlerEmptyTests(unittest.TestCase):

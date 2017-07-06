@@ -105,7 +105,7 @@ class ConflictError(HTTPError):
             message=message)
 
 
-class CpcNotInDpmError(HTTPError):
+class CpcNotInDpmError(ConflictError):
     """
     Indicates that the operation requires DPM mode but the CPC is not in DPM
     mode.
@@ -122,13 +122,11 @@ class CpcNotInDpmError(HTTPError):
 
     def __init__(self, method, uri, cpc):
         super(CpcNotInDpmError, self).__init__(
-            method, uri,
-            http_status=409,
-            reason=5,
+            method, uri, reason=5,
             message="CPC is not in DPM mode: %s" % cpc.uri)
 
 
-class CpcInDpmError(HTTPError):
+class CpcInDpmError(ConflictError):
     """
     Indicates that the operation requires to be not in DPM mode, but the CPC is
     in DPM mode.
@@ -144,40 +142,71 @@ class CpcInDpmError(HTTPError):
 
     def __init__(self, method, uri, cpc):
         super(CpcInDpmError, self).__init__(
-            method, uri,
-            http_status=409,
-            reason=4,
+            method, uri, reason=4,
             message="CPC is in DPM mode: %s" % cpc.uri)
 
 
-def parse_query_parms(query_str):
+def parse_query_parms(method, uri, query_str):
     """
-    Parse the specified query parms string and return a dictionary of
-    filter arguments that will match what is specified for the filter_args
-    argument in BaseResource.list().
+    Parse the specified query parms string and return a dictionary of query
+    parameters. The key of each dict item is the query parameter name, and the
+    value of each dict item is the query parameter value. If a query parameter
+    shows up more than once, the resulting dict item value is a list of all
+    those values.
 
     query_str is the query string from the URL, everything after the '?'. If
     it is empty or None, None is returned.
+
+    If a query parameter is not of the format "name=value", an HTTPError 400,1
+    is raised.
     """
     if not query_str:
         return None
-    filter_args = {}
+    query_parms = {}
     for query_item in query_str.split('&'):
         # Example for these items: 'name=a%20b'
         if query_item == '':
             continue
-        prop, match_value = query_item.split('=')
-        prop = unquote(prop)
-        match_value = unquote(match_value)
-        if prop in filter_args:
-            existing_value = filter_args[prop]
+        items = query_item.split('=')
+        if len(items) != 2:
+            raise BadRequestError(
+                method, uri, reason=1,
+                message="Invalid format for URI query parameter: {!r} "
+                "(valid format is: 'name=value').".
+                format(query_item))
+        name = unquote(items[0])
+        value = unquote(items[1])
+        if name in query_parms:
+            existing_value = query_parms[name]
             if not isinstance(existing_value, list):
-                filter_args[prop] = list()
-                filter_args[prop].append(existing_value)
-            filter_args[prop].append(match_value)
+                query_parms[name] = list()
+                query_parms[name].append(existing_value)
+            query_parms[name].append(value)
         else:
-            filter_args[prop] = match_value
-    return filter_args
+            query_parms[name] = value
+    return query_parms
+
+
+def check_required_fields(method, uri, body, field_names):
+    """
+    Check required fields in the request body.
+
+    Raises:
+      BadRequestError with reason 3: Missing request body
+      BadRequestError with reason 5: Missing required field in request body
+    """
+
+    # Check presence of request body
+    if body is None:
+        raise BadRequestError(method, uri, reason=3,
+                              message="Missing request body")
+
+    # Check required input fields
+    for field_name in field_names:
+        if field_name not in body:
+            raise BadRequestError(method, uri, reason=5,
+                                  message="Missing required field in request "
+                                  "body: {}".format(field_name))
 
 
 class UriHandler(object):
@@ -266,7 +295,7 @@ class CpcsHandler(object):
         """Operation: List CPCs."""
         query_str = uri_parms[0]
         result_cpcs = []
-        filter_args = parse_query_parms(query_str)
+        filter_args = parse_query_parms('GET', uri, query_str)
         for cpc in hmc.cpcs.list(filter_args):
             result_cpc = {}
             for prop in cpc.properties:
@@ -326,10 +355,7 @@ class CpcImportProfilesHandler(object):
             raise InvalidResourceError('POST', uri)
         if cpc.dpm_enabled:
             raise CpcInDpmError('POST', uri, cpc)
-        if body is None or 'profile-area' not in body:
-            raise HTTPError('POST', uri, 400, 5,
-                            "The required 'profile-area' field is missing in "
-                            "the request body.")
+        check_required_fields('POST', uri, body, ['profile-area'])
         # TODO: Import the CPC profiles from a simulated profile area
 
 
@@ -346,10 +372,7 @@ class CpcExportProfilesHandler(object):
             raise InvalidResourceError('POST', uri)
         if cpc.dpm_enabled:
             raise CpcInDpmError('POST', uri, cpc)
-        if body is None or 'profile-area' not in body:
-            raise HTTPError('POST', uri, 400, 5,
-                            "The required 'profile-area' field is missing in "
-                            "the request body.")
+        check_required_fields('POST', uri, body, ['profile-area'])
         # TODO: Export the CPC profiles to a simulated profile area
 
 
@@ -366,27 +389,24 @@ class CpcExportPortNamesListHandler(object):
             raise InvalidResourceError('POST', uri)
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError('POST', uri, cpc)
-        if body is None or 'partitions' not in body:
-            raise HTTPError('POST', uri, 400,
-                            149,  # TODO: Maybe use different reason?
-                            "No 'partitions' property provided in request "
-                            "body.")
+        check_required_fields('POST', uri, body, ['partitions'])
         partition_uris = body['partitions']
         if len(partition_uris) == 0:
-            raise HTTPError('POST', uri, 400, 149,
-                            "'partitions' property provided in request "
-                            "body is empty.")
+            raise BadRequestError(
+                'POST', uri, reason=149,
+                message="'partitions' field in request body is empty.")
 
         wwpn_list = []
         for partition_uri in partition_uris:
             partition = hmc.lookup_by_uri(partition_uri)
             partition_cpc = partition.manager.parent
             if partition_cpc.oid != cpc_oid:
-                raise HTTPError('POST', uri, 400,
-                                149,  # TODO: Maybe use different reason?
-                                "Partition with object ID %s specified in "
-                                "'partitions' property is not in CPC with "
-                                "object ID %s." % (partition.oid, cpc_oid))
+                raise BadRequestError(
+                    'POST', uri, reason=149,
+                    message="Partition %r specified in 'partitions' field "
+                    "is not in the targeted CPC with ID %r (but in the CPC "
+                    "with ID %r)." %
+                    (partition.uri, cpc_oid, partition_cpc.oid))
             partition_name = partition.properties.get('name', '')
             for hba in partition.hbas.list():
                 port_uri = hba.properties['adapter-port-uri']
@@ -417,7 +437,7 @@ class AdaptersHandler(object):
             raise InvalidResourceError('GET', uri)
         result_adapters = []
         if cpc.dpm_enabled:
-            filter_args = parse_query_parms(query_str)
+            filter_args = parse_query_parms('GET', uri, query_str)
             for adapter in cpc.adapters.list(filter_args):
                 result_adapter = {}
                 for prop in adapter.properties:
@@ -437,13 +457,7 @@ class AdaptersHandler(object):
             raise InvalidResourceError('POST', uri)
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError('POST', uri, cpc)
-        # Check required input properties
-        required_props = ['name']
-        for prop_name in required_props:
-            if prop_name not in body:
-                raise BadRequestError(
-                    'POST', uri, reason=5,
-                    message="Missing input property: %s" % prop_name)
+        check_required_fields('POST', uri, body, ['name'])
         # We need to emulate the behavior of this POST to always create a
         # hipersocket, but the add() method is used for adding all kinds of
         # faked adapters to the faked HMC. So we need to specify the adapter
@@ -495,7 +509,7 @@ class PartitionsHandler(object):
             raise InvalidResourceError('GET', uri)
         result_partitions = []
         if cpc.dpm_enabled:
-            filter_args = parse_query_parms(query_str)
+            filter_args = parse_query_parms('GET', uri, query_str)
             for partition in cpc.partitions.list(filter_args):
                 result_partition = {}
                 for prop in partition.properties:
@@ -515,13 +529,8 @@ class PartitionsHandler(object):
             raise InvalidResourceError('POST', uri)
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError('POST', uri, cpc)
-        # Check required input properties
-        required_props = ['name', 'initial-memory', 'maximum-memory']
-        for prop_name in required_props:
-            if prop_name not in body:
-                raise BadRequestError(
-                    'POST', uri, reason=5,
-                    message="Missing input property: %s" % prop_name)
+        check_required_fields('POST', uri, body,
+                              ['name', 'initial-memory', 'maximum-memory'])
         # TODO: There are some more input properties that are required under
         # certain conditions.
         new_partition = cpc.partitions.add(body)
@@ -556,7 +565,8 @@ class PartitionStartHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Start Partition (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
-        partition_uri = uri.split('/operations/')[0]
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
@@ -581,7 +591,8 @@ class PartitionStopHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Start Partition (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
-        partition_uri = uri.split('/operations/')[0]
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
@@ -631,7 +642,8 @@ class PartitionIncreaseCryptoConfigHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Increase Crypto Configuration (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
-        partition_uri = uri.split('/operations/')[0]
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
@@ -672,7 +684,8 @@ class PartitionDecreaseCryptoConfigHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Decrease Crypto Configuration (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
-        partition_uri = uri.split('/operations/')[0]
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
@@ -714,7 +727,8 @@ class PartitionChangeCryptoConfigHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Change Crypto Configuration (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
-        partition_uri = uri.split('/operations/')[0]
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
@@ -724,19 +738,11 @@ class PartitionChangeCryptoConfigHandler(object):
 
         adapter_uris, domain_configs = ensure_crypto_config(partition)
 
-        try:
-            change_domain_index = body['domain-index']
-        except KeyError:
-            raise HTTPError('POST', uri, 400, 999,
-                            "Input field 'domain-index' not set in request "
-                            "body.")
+        check_required_fields('POST', uri, body,
+                              ['domain-index', 'access-mode'])
 
-        try:
-            change_access_mode = body['access-mode']
-        except KeyError:
-            raise HTTPError('POST', uri, 400, 999,
-                            "Input field 'access-mode' not set in request "
-                            "body.")
+        change_domain_index = body['domain-index']
+        change_access_mode = body['access-mode']
 
         # We don't support finding errors in this simple-minded mock support,
         # so we assume that the input is fine (e.g. no invalid domain indexes)
@@ -760,13 +766,7 @@ class HbasHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
-        # Check required input properties
-        required_props = ['name']
-        for prop_name in required_props:
-            if prop_name not in body:
-                raise BadRequestError(
-                    'POST', uri, reason=5,
-                    message="Missing input property: %s" % prop_name)
+        check_required_fields('POST', uri, body, ['name'])
         new_hba = partition.hbas.add(body)
         return {'element-uri': new_hba.uri}
 
@@ -800,13 +800,7 @@ class NicsHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
-        # Check required input properties
-        required_props = ['name']
-        for prop_name in required_props:
-            if prop_name not in body:
-                raise BadRequestError(
-                    'POST', uri, reason=5,
-                    message="Missing input property: %s" % prop_name)
+        check_required_fields('POST', uri, body, ['name'])
         new_nic = partition.nics.add(body)
         return {'element-uri': new_nic.uri}
 
@@ -840,13 +834,7 @@ class VirtualFunctionsHandler(object):
             raise InvalidResourceError('POST', uri)
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
-        # Check required input properties
-        required_props = ['name']
-        for prop_name in required_props:
-            if prop_name not in body:
-                raise BadRequestError(
-                    'POST', uri, reason=5,
-                    message="Missing input property: %s" % prop_name)
+        check_required_fields('POST', uri, body, ['name'])
         new_vf = partition.virtual_functions.add(body)
         return {'element-uri': new_vf.uri}
 
@@ -881,7 +869,7 @@ class VirtualSwitchesHandler(object):
             raise InvalidResourceError('GET', uri)
         result_vswitches = []
         if cpc.dpm_enabled:
-            filter_args = parse_query_parms(query_str)
+            filter_args = parse_query_parms('GET', uri, query_str)
             for vswitch in cpc.virtual_switches.list(filter_args):
                 result_vswitch = {}
                 for prop in vswitch.properties:
@@ -910,7 +898,7 @@ class LparsHandler(object):
             raise InvalidResourceError('GET', uri)
         result_lpars = []
         if not cpc.dpm_enabled:
-            filter_args = parse_query_parms(query_str)
+            filter_args = parse_query_parms('GET', uri, query_str)
             for lpar in cpc.lpars.list(filter_args):
                 result_lpar = {}
                 for prop in lpar.properties:
@@ -931,7 +919,8 @@ class LparActivateHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Activate Logical Partition (requires classic mode)."""
         assert wait_for_completion is True  # async not supported yet
-        lpar_uri = uri.split('/operations/')[0]
+        lpar_oid = uri_parms[0]
+        lpar_uri = '/api/logical-partitions/' + lpar_oid
         try:
             lpar = hmc.lookup_by_uri(lpar_uri)
         except KeyError:
@@ -947,7 +936,8 @@ class LparDeactivateHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Deactivate Logical Partition (requires classic mode)."""
         assert wait_for_completion is True  # async not supported yet
-        lpar_uri = uri.split('/operations/')[0]
+        lpar_oid = uri_parms[0]
+        lpar_uri = '/api/logical-partitions/' + lpar_oid
         try:
             lpar = hmc.lookup_by_uri(lpar_uri)
         except KeyError:
@@ -963,7 +953,8 @@ class LparLoadHandler(object):
     def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
         """Operation: Load Logical Partition (requires classic mode)."""
         assert wait_for_completion is True  # async not supported yet
-        lpar_uri = uri.split('/operations/')[0]
+        lpar_oid = uri_parms[0]
+        lpar_uri = '/api/logical-partitions/' + lpar_oid
         try:
             lpar = hmc.lookup_by_uri(lpar_uri)
         except KeyError:
@@ -987,7 +978,7 @@ class ResetActProfilesHandler(object):
             raise InvalidResourceError('GET', uri)
         assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        filter_args = parse_query_parms(query_str)
+        filter_args = parse_query_parms('GET', uri, query_str)
         for profile in cpc.reset_activation_profiles.list(filter_args):
             result_profile = {}
             for prop in profile.properties:
@@ -1016,7 +1007,7 @@ class ImageActProfilesHandler(object):
             raise InvalidResourceError('GET', uri)
         assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        filter_args = parse_query_parms(query_str)
+        filter_args = parse_query_parms('GET', uri, query_str)
         for profile in cpc.image_activation_profiles.list(filter_args):
             result_profile = {}
             for prop in profile.properties:
@@ -1044,7 +1035,7 @@ class LoadActProfilesHandler(object):
             raise InvalidResourceError('GET', uri)
         assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        filter_args = parse_query_parms(query_str)
+        filter_args = parse_query_parms('GET', uri, query_str)
         for profile in cpc.load_activation_profiles.list(filter_args):
             result_profile = {}
             for prop in profile.properties:
