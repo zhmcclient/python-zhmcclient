@@ -23,8 +23,6 @@ have not been implemented yet::
     POST     /api/partitions/([^/]+)/operations/psw-restart
     POST     /api/partitions/([^/]+)/operations/mount-iso-image
     POST     /api/partitions/([^/]+)/operations/unmount-iso-image
-    POST     /api/partitions/([^/]+)/hbas/([^/]+)/operations/reassign-
-               storage-adapter-port
     POST     /api/virtual-switches/([^/]+)/operations/get-connected-vnics
     POST     /api/adapters/([^/]+)/operations/change-crypto-type
 """
@@ -787,6 +785,32 @@ class HbaHandler(GenericGetPropertiesHandler,
         partition.hbas.remove(hba.oid)
 
 
+class HbaReassignPortHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Reassign Storage Adapter Port (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
+        hba_oid = uri_parms[1]
+        hba_uri = '/api/partitions/' + partition_oid + '/hbas/' + hba_oid
+        partition = hmc.lookup_by_uri(partition_uri)  # assert it exists
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+
+        try:
+            hba = hmc.lookup_by_uri(hba_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+
+        check_required_fields('POST', uri, body, ['adapter-port-uri'])
+
+        # Reflect the effect of the operation on the HBA
+        new_port_uri = body['adapter-port-uri']
+        hba.properties['adapter-port-uri'] = new_port_uri
+
+
 class NicsHandler(object):
 
     @staticmethod
@@ -1099,8 +1123,8 @@ URIS = (
 
     ('/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
     ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
-    # ('/api/partitions/([^/]+)/hbas/([^/]+)/operations/'\
-    #  'reassign-storage-adapter-port', HbaReassignPortHandler),
+    ('/api/partitions/([^/]+)/hbas/([^/]+)/operations/'\
+     'reassign-storage-adapter-port', HbaReassignPortHandler),
 
     ('/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
     ('/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
