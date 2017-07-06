@@ -44,6 +44,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     NetworkPortHandler, \
     StoragePortHandler, \
     VirtualSwitchesHandler, VirtualSwitchHandler, \
+    VirtualSwitchGetVnicsHandler, \
     LparsHandler, LparHandler, LparActivateHandler, LparDeactivateHandler, \
     LparLoadHandler, \
     ResetActProfilesHandler, ResetActProfileHandler, \
@@ -2307,8 +2308,42 @@ class VirtualSwitchHandlersTests(unittest.TestCase):
             'object-uri': '/api/virtual-switches/1',
             'name': 'vswitch_osa_1',
             'description': 'Vswitch for OSA #1 in CPC #2',
+            'connected-vnic-uris': [],  # auto-generated
         }
         self.assertEqual(vswitch1, exp_vswitch1)
+
+
+class VirtualSwitchGetVnicsHandlerTests(unittest.TestCase):
+    """All tests for class VirtualSwitchGetVnicsHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
+            ('/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
+             VirtualSwitchGetVnicsHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_ok(self):
+
+        connected_nic_uris = ['/api/adapters/1/ports/1']
+
+        # Set up the connected vNICs in the vswitch
+        vswitch1 = self.urihandler.get(self.hmc, '/api/virtual-switches/1',
+                                       True)
+        vswitch1['connected-vnic-uris'] = connected_nic_uris
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc,
+            '/api/virtual-switches/1/operations/get-connected-vnics',
+            None, True, True)
+
+        exp_resp = {
+            'connected-vnic-uris': connected_nic_uris,
+        }
+        self.assertEqual(resp, exp_resp)
 
 
 class LparHandlersTests(unittest.TestCase):

@@ -15,11 +15,6 @@
 """
 A utility class that handles HTTP methods against HMC URIs, based on the
 faked HMC.
-
-Note: At this point, the following HTTP methods needed by the zhmcclient
-have not been implemented yet::
-
-    POST     /api/virtual-switches/([^/]+)/operations/get-connected-vnics
 """
 
 from __future__ import absolute_import
@@ -1057,6 +1052,26 @@ class VirtualSwitchHandler(GenericGetPropertiesHandler,
     pass
 
 
+class VirtualSwitchGetVnicsHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Get Connected VNICs of a Virtual Switch
+        (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        vswitch_oid = uri_parms[0]
+        vswitch_uri = '/api/virtual-switches/' + vswitch_oid
+        try:
+            vswitch = hmc.lookup_by_uri(vswitch_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = vswitch.manager.parent
+        assert cpc.dpm_enabled
+
+        connected_vnic_uris = vswitch.properties['connected-vnic-uris']
+        return {'connected-vnic-uris': connected_vnic_uris}
+
+
 class LparsHandler(object):
 
     @staticmethod
@@ -1285,8 +1300,8 @@ URIS = (
 
     ('/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?', VirtualSwitchesHandler),
     ('/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
-    # ('/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
-    #  VirtualSwitchGetVnicsHandler),
+    ('/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
+     VirtualSwitchGetVnicsHandler),
 
     # Only in classic (or ensemble) mode:
 

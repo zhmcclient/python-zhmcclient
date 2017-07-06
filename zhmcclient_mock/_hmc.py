@@ -1211,6 +1211,10 @@ class FakedNicManager(FakedBaseManager):
             faked Partition resource, by adding the URI for the faked NIC
             resource.
 
+            This method also updates the 'connected-vnic-uris' property in the
+            virtual switch referenced by 'virtual-switch-uri' property,
+            and sets it to the URI of the faked NIC resource.
+
         Returns:
           :class:`zhmcclient_mock.FakedNic`: The faked NIC resource.
         """
@@ -1231,6 +1235,17 @@ class FakedNicManager(FakedBaseManager):
         if 'device-number' not in new_nic.properties:
             devno = partition.devno_alloc()
             new_nic.properties['device-number'] = devno
+        if 'virtual-switch-uri' in new_nic.properties:
+            vswitch_uri = new_nic.properties['virtual-switch-uri']
+            try:
+                vswitch = self.hmc.lookup_by_uri(vswitch_uri)
+            except KeyError:
+                raise ValueError("FakedNic with object ID %s specified "
+                                 "a non-existing virtual switch in its "
+                                 "'virtual-switch-uri' property: %r" %
+                                 (new_nic.oid, vswitch_uri))
+            if new_nic.uri not in vswitch.properties['connected-vnic-uris']:
+                vswitch.properties['connected-vnic-uris'].append(new_nic.uri)
         return new_nic
 
     def remove(self, oid):
@@ -1717,6 +1732,8 @@ class FakedVirtualSwitchManager(FakedBaseManager):
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
               if not specified.
+            * 'connected-vnic-uris' will be auto-generated as an empty array,
+              if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedVirtualSwitch`: The faked Virtual
@@ -1738,3 +1755,5 @@ class FakedVirtualSwitch(FakedBaseResource):
         super(FakedVirtualSwitch, self).__init__(
             manager=manager,
             properties=properties)
+        if 'connected-vnic-uris' not in self.properties:
+            self.properties['connected-vnic-uris'] = []
