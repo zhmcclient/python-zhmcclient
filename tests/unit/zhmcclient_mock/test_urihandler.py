@@ -33,7 +33,9 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     CpcImportProfilesHandler, CpcExportProfilesHandler, \
     CpcExportPortNamesListHandler, \
     PartitionsHandler, PartitionHandler, PartitionStartHandler, \
-    PartitionStopHandler, \
+    PartitionStopHandler, PartitionScsiDumpHandler, \
+    PartitionPswRestartHandler, PartitionMountIsoImageHandler, \
+    PartitionUnmountIsoImageHandler, \
     HbasHandler, HbaHandler, HbaReassignPortHandler, \
     NicsHandler, NicHandler, \
     VirtualFunctionsHandler, VirtualFunctionHandler, \
@@ -1343,6 +1345,247 @@ class PartitionStartStopHandlerTests(unittest.TestCase):
             self.urihandler.post(self.hmc,
                                  '/api/partitions/1/operations/stop',
                                  None, True, True)
+
+
+class PartitionScsiDumpHandlerTests(unittest.TestCase):
+    """All tests for class PartitionScsiDumpHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/operations/scsi-dump',
+             PartitionScsiDumpHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_no_body(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/scsi-dump',
+                None, True, True)
+
+    def test_invoke_err_missing_fields_1(self):
+        operation_body = {
+            # missing: 'dump-load-hba-uri'
+            'dump-world-wide-port-name': 'fake-wwpn',
+            'dump-logical-unit-number': 'fake-lun',
+        }
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/scsi-dump',
+                operation_body, True, True)
+
+    def test_invoke_err_missing_fields_2(self):
+        operation_body = {
+            'dump-load-hba-uri': 'fake-uri',
+            # missing: 'dump-world-wide-port-name'
+            'dump-logical-unit-number': 'fake-lun',
+        }
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/scsi-dump',
+                operation_body, True, True)
+
+    def test_invoke_err_missing_fields_3(self):
+        operation_body = {
+            'dump-load-hba-uri': 'fake-uri',
+            'dump-world-wide-port-name': 'fake-wwpn',
+            # missing: 'dump-logical-unit-number'
+        }
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/scsi-dump',
+                operation_body, True, True)
+
+    def test_invoke_err_status_1(self):
+        operation_body = {
+            'dump-load-hba-uri': 'fake-uri',
+            'dump-world-wide-port-name': 'fake-wwpn',
+            'dump-logical-unit-number': 'fake-lun',
+        }
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'stopped'
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/scsi-dump',
+                operation_body, True, True)
+
+    def test_invoke_ok(self):
+        operation_body = {
+            'dump-load-hba-uri': 'fake-uri',
+            'dump-world-wide-port-name': 'fake-wwpn',
+            'dump-logical-unit-number': 'fake-lun',
+        }
+
+        # Set the partition status to a valid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'active'
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/partitions/1/operations/scsi-dump',
+            operation_body, True, True)
+
+        self.assertEqual(resp, {})
+
+
+class PartitionPswRestartHandlerTests(unittest.TestCase):
+    """All tests for class PartitionPswRestartHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/operations/psw-restart',
+             PartitionPswRestartHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_status_1(self):
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'stopped'
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/psw-restart',
+                None, True, True)
+
+    def test_invoke_ok(self):
+
+        # Set the partition status to a valid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'active'
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/partitions/1/operations/psw-restart',
+            None, True, True)
+
+        self.assertEqual(resp, {})
+
+
+class PartitionMountIsoImageHandlerTests(unittest.TestCase):
+    """All tests for class PartitionMountIsoImageHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/operations/mount-iso-image(?:\?(.*))?',
+             PartitionMountIsoImageHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_queryparm_1(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/mount-iso-image?'
+                'image-namex=fake-image&ins-file-name=fake-ins',
+                None, True, True)
+
+    def test_invoke_err_queryparm_2(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/mount-iso-image?'
+                'image-name=fake-image&ins-file-namex=fake-ins',
+                None, True, True)
+
+    def test_invoke_err_status_1(self):
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'starting'
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/mount-iso-image?'
+                'image-name=fake-image&ins-file-name=fake-ins',
+                None, True, True)
+
+    def test_invoke_ok(self):
+
+        # Set the partition status to a valid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'active'
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/partitions/1/operations/mount-iso-image?'
+            'image-name=fake-image&ins-file-name=fake-ins',
+            None, True, True)
+
+        self.assertEqual(resp, {})
+
+        boot_iso_image_name = partition1['boot-iso-image-name']
+        self.assertEqual(boot_iso_image_name, 'fake-image')
+
+        boot_iso_ins_file = partition1['boot-iso-ins-file']
+        self.assertEqual(boot_iso_ins_file, 'fake-ins')
+
+
+class PartitionUnmountIsoImageHandlerTests(unittest.TestCase):
+    """All tests for class PartitionUnmountIsoImageHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/operations/unmount-iso-image',
+             PartitionUnmountIsoImageHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_status_1(self):
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'starting'
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/unmount-iso-image',
+                None, True, True)
+
+    def test_invoke_ok(self):
+
+        # Set the partition status to a valid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'active'
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/partitions/1/operations/unmount-iso-image',
+            None, True, True)
+
+        self.assertEqual(resp, {})
+
+        boot_iso_image_name = partition1['boot-iso-image-name']
+        self.assertIsNone(boot_iso_image_name)
+
+        boot_iso_ins_file = partition1['boot-iso-ins-file']
+        self.assertIsNone(boot_iso_ins_file)
 
 
 class HbaHandlerTests(unittest.TestCase):

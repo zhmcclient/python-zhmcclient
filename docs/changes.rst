@@ -162,6 +162,10 @@ Released: not yet
 * Improved the description of the ``Hba.create()`` and ``Nic.create()``
   methods to describe how the backing adapter port is specified.
 
+* Extended the zhmcclient mock support by adding support for all operations
+  thet are supported at the zhmcclient API but were not yet supported for
+  mocking, so far.
+
 **Known issues:**
 
 * See `list of open issues`_.
