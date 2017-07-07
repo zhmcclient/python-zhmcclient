@@ -19,10 +19,6 @@ faked HMC.
 Note: At this point, the following HTTP methods needed by the zhmcclient
 have not been implemented yet::
 
-    POST     /api/partitions/([^/]+)/operations/scsi-dump
-    POST     /api/partitions/([^/]+)/operations/psw-restart
-    POST     /api/partitions/([^/]+)/operations/mount-iso-image
-    POST     /api/partitions/([^/]+)/operations/unmount-iso-image
     POST     /api/virtual-switches/([^/]+)/operations/get-connected-vnics
 """
 
@@ -635,6 +631,126 @@ class PartitionStopHandler(object):
         return {}
 
 
+class PartitionScsiDumpHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Dump Partition (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+        check_required_fields('POST', uri, body,
+                              ['dump-load-hba-uri',
+                               'dump-world-wide-port-name',
+                               'dump-logical-unit-number'])
+        # Check status
+        status = partition.properties['status']
+        if status not in ('active', 'paused', 'terminated'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot dump partition {!r} in status {!r}".
+                format(partition.name, status))
+        return {}
+
+
+class PartitionPswRestartHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Perform PSW Restart (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+        # Check status
+        status = partition.properties['status']
+        if status not in ('active', 'paused', 'terminated'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot perform PSW restart on partition {!r} in "
+                "status {!r}".format(partition.name, status))
+        return {}
+
+
+class PartitionMountIsoImageHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Mount ISO Image (requires DPM mode)."""
+        assert wait_for_completion is True  # synchronous operation
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+        # Parse and check required query parameters
+        query_parms = parse_query_parms('GET', uri, uri_parms[1])
+        try:
+            image_name = query_parms['image-name']
+        except KeyError:
+            raise BadRequestError(
+                'POST', uri, reason=1,
+                message="Missing required URI query parameter 'image-name'")
+        try:
+            ins_file_name = query_parms['ins-file-name']
+        except KeyError:
+            raise BadRequestError(
+                'POST', uri, reason=1,
+                message="Missing required URI query parameter 'ins-file-name'")
+        # Check status
+        status = partition.properties['status']
+        if status in ('starting', 'stopping'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot mount ISO image for partition {!r} in "
+                "status {!r}".format(partition.name, status))
+        # Reflect the effect of mounting in the partition properties
+        partition.properties['boot-iso-image-name'] = image_name
+        partition.properties['boot-iso-ins-file'] = ins_file_name
+        return {}
+
+
+class PartitionUnmountIsoImageHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Perform PSW Restart (requires DPM mode)."""
+        assert wait_for_completion is True  # synchronous operation
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+        # Check status
+        status = partition.properties['status']
+        if status in ('starting', 'stopping'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot mount ISO image for partition {!r} in "
+                "status {!r}".format(partition.name, status))
+        # Reflect the effect of unmounting in the partition properties
+        partition.properties['boot-iso-image-name'] = None
+        partition.properties['boot-iso-ins-file'] = None
+        return {}
+
+
 def ensure_crypto_config(partition):
     """
     Ensure that the 'crypto-configuration' property on the faked partition
@@ -1115,14 +1231,14 @@ URIS = (
     ('/api/partitions/([^/]+)', PartitionHandler),
     ('/api/partitions/([^/]+)/operations/start', PartitionStartHandler),
     ('/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
-    # ('/api/partitions/([^/]+)/operations/scsi-dump',
-    #  PartitionScsiDumpHandler),
-    # ('/api/partitions/([^/]+)/operations/psw-restart',
-    #  PartitionPswRestartHandler),
-    # ('/api/partitions/([^/]+)/operations/mount-iso-image',
-    #  PartitionMountIsoImageHandler),
-    # ('/api/partitions/([^/]+)/operations/unmount-iso-image',
-    #  PartitionUnmountIsoImageHandler),
+    ('/api/partitions/([^/]+)/operations/scsi-dump',
+     PartitionScsiDumpHandler),
+    ('/api/partitions/([^/]+)/operations/psw-restart',
+     PartitionPswRestartHandler),
+    ('/api/partitions/([^/]+)/operations/mount-iso-image(?:\?(.*))?',
+     PartitionMountIsoImageHandler),
+    ('/api/partitions/([^/]+)/operations/unmount-iso-image',
+     PartitionUnmountIsoImageHandler),
     ('/api/partitions/([^/]+)/operations/increase-crypto-configuration',
      PartitionIncreaseCryptoConfigHandler),
     ('/api/partitions/([^/]+)/operations/decrease-crypto-configuration',
