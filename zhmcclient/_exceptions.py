@@ -347,7 +347,7 @@ class AuthError(Error):
 class ClientAuthError(AuthError):
     """
     This exception indicates an authentication related problem detected on
-    the cient side.
+    the client side.
 
     Derived from :exc:`~zhmcclient.AuthError`.
     """
