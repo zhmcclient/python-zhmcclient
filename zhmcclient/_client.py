@@ -67,8 +67,8 @@ class Client(object):
     def metrics_contexts(self):
         """
         :class:`~zhmcclient.MetricsContextManager`:
-          Manager object for the MetrcsContexts in scope of this client
-          (i.e. in scope of its HMC).
+          Manager object for the :term:`Metrics Contexts <Metrics Context>` in
+          scope of this client (i.e. in scope of its HMC).
         """
         return self._metrics_contexts
 

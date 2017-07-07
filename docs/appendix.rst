@@ -165,7 +165,7 @@ Resources scoped to the HMC
      TBD - Not yet supported.
 
   Metrics Context
-     TBD - Not yet supported.
+     A user-created definition of metrics that can be retrieved.
 
   Password Rule
      TBD - Not yet supported.

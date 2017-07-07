@@ -1,4 +1,4 @@
-# Copyright 2016 IBM Corp. All Rights Reserved.
+# Copyright 2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,15 @@
 # limitations under the License.
 
 """
-A Metrics Service provides a mechanism to retrieve performance
-metric data for resources of a physical z Systems or LinuxONE computer.
-A structure called a :term:`Metrics Context` is associated with
-any metrics retrieval, and that structure includes metric group names,
-individual metric field names, and the associated individual
-metric data types.
+The HMC supports the retrieval of metrics values for resources of a z Systems
+or LinuxONE computer. This section describes the zhmcclient API for retrieving
+such metrics from the HMC.
+
+A resource termed :term:`Metrics Context` is associated with any metrics
+retrieval. These resources are user-created definitions of the kinds of metrics
+that are intended to be retrieved. A metrics context mostly defines the names
+of the metric groups to be retrieved. The available metric groups are described
+in section 'Metric Groups' in the :term:`HMC API` book.
 """
 
 from __future__ import absolute_import
@@ -36,15 +39,15 @@ LOG = get_logger(__name__)
 
 class MetricsContextManager(BaseManager):
     """
-    Manager providing access to the :term:`Metric sContexts <Metrics Context>`
-    exposed by the HMC this client is connected to.
+    Manager providing access to the :term:`Metrics Context` resources that
+    were created through this manager object.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
 
     Objects of this class are not directly created by the user; they are
-    accessible as properties in higher level resources (in this case,
-    the :class:`~zhmcclient.Client` object connecting to the HMC).
+    accessible via the :attr:`~zhmcclient.Client.metrics_contexts` attribute
+    of the :class:`~zhmcclient.Client` object connected to the HMC.
     """
 
     def __init__(self, client):
@@ -53,33 +56,37 @@ class MetricsContextManager(BaseManager):
         #   client (:class:`~zhmcclient.Client`):
         #      Client object for the HMC to be used.
 
-        # Resource properties that are supported as filter query parameters
-        # (for server-side filtering).
-        query_props = [
-        ]
-
         super(MetricsContextManager, self).__init__(
             resource_class=MetricsContext,
+            session=client.session,
             parent=None,
-            uri_prop='object-uri',
+            base_uri='/api/services/metrics/context',
+            oid_prop='',
+            uri_prop='',
             name_prop='',
-            query_props=query_props)
+            query_props=[])
 
-        self._session = client.session
-        self._metrics_contexts = []
         self._client = client
+        self._metrics_contexts = []
 
     @logged_api_call
     def list(self, full_properties=False):
         """
-        List the MetricsContext exposed by the HMC this client is connected to.
+        List the :term:`Metrics Context` resources that were created through
+        this manager object.
+
+        Note that the HMC does not provide a way to enumerate the existing
+        :term:`Metrics Context` resources. Therefore, this method will only
+        list the :term:`Metrics Context` resources that were created through
+        this manager object. For example, :term:`Metrics Context` resources
+        created through a second :class:`~zhmcclient.Client` object will not be
+        listed.
 
         Parameters:
 
           full_properties (bool):
-            Controls whether the full set of resource properties should be
-            retrieved, vs. only the short set as returned by the list
-            operation.
+            This parameter exists for compatibility with other resource
+            classes, but for this class, it has no effect on the result.
 
         Returns:
 
@@ -96,7 +103,8 @@ class MetricsContextManager(BaseManager):
 
     def create(self, properties):
         """
-        Create and configure a Metrics Context in this Session.
+        Create a :term:`Metrics Context` resource in the HMC this client is
+        connected to.
 
         Parameters:
 
@@ -104,13 +112,15 @@ class MetricsContextManager(BaseManager):
             Allowable properties are defined in section 'Request body contents'
             in section 'Create Metrics Context' in the :term:`HMC API` book.
 
+            TODO: Turn the specific (two) properties into method parameters?
+
         Returns:
 
-          MetricsContext:
-            The resource object for the new MetricsContext.
-            The object will have its 'metrics-context-uri'
-            property set as returned by the HMC,
-            and will also have the input properties set.
+          :class:`~zhmcclient.MetricsContext`:
+            The resource object for the new :term:`Metrics Context` resource.
+
+            TODO: What about the metrics info structure that is also returned
+            by the HMC?
 
         Raises:
 
@@ -121,11 +131,6 @@ class MetricsContextManager(BaseManager):
         """
         result = self.session.post('/api/services/metrics/context',
                                    body=properties)
-        # There should not be overlaps, but just in case there are, the
-        # returned props should overwrite the input props:
-#        print(result)
-#        props = properties.copy()
-#        props.update(result)
         new_metrics_context = MetricsContext(self,
                                              result['metrics-context-uri'],
                                              None,
@@ -135,22 +140,27 @@ class MetricsContextManager(BaseManager):
 
     @property
     def client(self):
+        """
+        :class:`~zhmcclient.Client`:
+          The client defining the scope for this manager.
+        """
         return self._client
 
 
 class MetricsContext(BaseResource):
     """
-    Representation of a :term:`Metrics Context`.
+    Representation of a :term:`Metrics Context` resource.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
 
-    Objects of this class are directly created by the user.
+    Objects of this class can be created by the user with the
+    :meth:`zhmcclient.MetricsContextManager.create` method.
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
-        #   manager (:class:`~zhmcclient.CpcManager`):
+        #   manager (:class:`~zhmcclient.MetricsContextManager`):
         #     Manager object for this resource object.
         #   uri (string):
         #     Canonical URI path of the resource.
@@ -168,20 +178,16 @@ class MetricsContext(BaseResource):
     @logged_api_call
     def get_metrics(self):
         """
-        Start this CPC, using the HMC operation "Start CPC".
+        Retrieve the metrics data for this :term:`Metrics Context` resource.
 
         Returns:
 
-          :term:`json object`:
+          :term:`string` in MetricsResponse format:
+            The metrics response, in the `MetricsResponse` format described in
+            section 'Response body contents' in section 'Get Metrics' in the
+            :term:`HMC API` book.
 
-            If `wait_for_completion` is `True`, returns None.
-
-            If `wait_for_completion` is `False`, returns a JSON object with a
-            member named ``job-uri``. The value of ``job-uri`` identifies the
-            job that was started, and can be used with the
-            :meth:`~zhmcclient.Session.query_job_status` method to determine
-            the status of the job and the result of the asynchronous HMC
-            operation, once the job has completed.
+            TODO: Change return value to a list of MetricsGroup objects?
 
         Raises:
 
@@ -195,7 +201,7 @@ class MetricsContext(BaseResource):
 
     def delete(self):
         """
-        Delete this MetricsContext.
+        Delete this :term:`Metrics Context` resource.
 
         Raises:
 
@@ -204,14 +210,18 @@ class MetricsContext(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self.manager.list().remove(self)
         self.manager.session.delete(self.uri)
+        self.manager._metrics_contexts.remove(self)
 
 
 class CollectedMetrics(object):
+    """
+    TODO: Describe this class.
+    """
 
     def __init__(self, metrics_context, rawdata):
         """
+        TODO: Describe this method.
         """
         self._metrics_context = metrics_context
         self._client = self._metrics_context.manager.client
@@ -231,6 +241,9 @@ class CollectedMetrics(object):
 
     @property
     def metrics(self):
+        """
+        TODO: Describe this method.
+        """
         if self._metrics:
             return self._metrics
         else:
@@ -282,9 +295,13 @@ class CollectedMetrics(object):
 
 
 class Metrics(object):
+    """
+    TODO: Describe this class.
+    """
 
     def __init__(self, client, metrics_group, uri, timestamp, metrics):
         """
+        TODO: Describe this method.
         """
         self._client = client
         self._metrics_group = metrics_group
@@ -295,6 +312,7 @@ class Metrics(object):
     @property
     def properties(self):
         """
+        TODO: Describe this property.
         """
         return self._metrics
 
@@ -310,26 +328,35 @@ class Metrics(object):
     @property
     def metrics_group(self):
         """
+        TODO: Describe this property.
         """
         return self._metrics_group
 
     @property
     def timestamp(self):
         """
+        TODO: Describe this property.
         """
         return self._timestamp
 
     @logged_api_call
     def get_property(self, name):
+        """
+        TODO: Describe this method.
+        """
         return self._metrics[name]
 
     @logged_api_call
     def prop(self, name, default=None):
+        """
+        TODO: Describe this method.
+        """
         return self._metrics[name]
 
     @property
     def managed_object(self):
         """
+        TODO: Describe this property.
         """
         metrics_group_to_managed_object = {
             'channel-usage': 'cpc',
