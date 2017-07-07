@@ -678,18 +678,10 @@ class PartitionIncreaseCryptoConfigHandler(object):
 
         adapter_uris, domain_configs = ensure_crypto_config(partition)
 
-        try:
-            add_adapter_uris = body['crypto-adapter-uris']
-        except KeyError:
-            raise HTTPError('POST', uri, 400, 999,
-                            "Input field 'crypto-adapter-uris' not set in "
-                            "request body.")
-        try:
-            add_domain_configs = body['crypto-domain-configurations']
-        except KeyError:
-            raise HTTPError('POST', uri, 400, 999,
-                            "Input field 'crypto-domain-configurations' not "
-                            "set in request body.")
+        check_required_fields('POST', uri, body, [])  # check just body
+
+        add_adapter_uris = body.get('crypto-adapter-uris', [])
+        add_domain_configs = body.get('crypto-domain-configurations', [])
 
         # We don't support finding errors in this simple-minded mock support,
         # so we assume that the input is fine (e.g. no invalid adapters) and
@@ -720,18 +712,10 @@ class PartitionDecreaseCryptoConfigHandler(object):
 
         adapter_uris, domain_configs = ensure_crypto_config(partition)
 
-        try:
-            remove_adapter_uris = body['crypto-adapter-uris']
-        except KeyError:
-            raise HTTPError('POST', uri, 400, 999,
-                            "Input field 'crypto-adapter-uris' not set in "
-                            "request body.")
-        try:
-            remove_domain_indexes = body['crypto-domain-indexes']
-        except KeyError:
-            raise HTTPError('POST', uri, 400, 999,
-                            "Input field 'crypto-domain-indexes' not "
-                            "set in request body.")
+        check_required_fields('POST', uri, body, [])  # check just body
+
+        remove_adapter_uris = body.get('crypto-adapter-uris', [])
+        remove_domain_indexes = body.get('crypto-domain-indexes', [])
 
         # We don't support finding errors in this simple-minded mock support,
         # so we assume that the input is fine (e.g. no invalid adapters) and
