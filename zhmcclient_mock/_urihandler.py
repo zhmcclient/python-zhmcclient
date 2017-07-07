@@ -797,6 +797,14 @@ class PartitionIncreaseCryptoConfigHandler(object):
         add_adapter_uris = body.get('crypto-adapter-uris', [])
         add_domain_configs = body.get('crypto-domain-configurations', [])
 
+        # Check status
+        status = partition.properties['status']
+        if status in ('starting', 'stopping'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot increase crypto config for partition {!r} in "
+                "status {!r}".format(partition.name, status))
+
         # We don't support finding errors in this simple-minded mock support,
         # so we assume that the input is fine (e.g. no invalid adapters) and
         # we just add it.
@@ -830,6 +838,14 @@ class PartitionDecreaseCryptoConfigHandler(object):
 
         remove_adapter_uris = body.get('crypto-adapter-uris', [])
         remove_domain_indexes = body.get('crypto-domain-indexes', [])
+
+        # Check status
+        status = partition.properties['status']
+        if status in ('starting', 'stopping'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot decrease crypto config for partition {!r} in "
+                "status {!r}".format(partition.name, status))
 
         # We don't support finding errors in this simple-minded mock support,
         # so we assume that the input is fine (e.g. no invalid adapters) and
@@ -866,6 +882,14 @@ class PartitionChangeCryptoConfigHandler(object):
 
         change_domain_index = body['domain-index']
         change_access_mode = body['access-mode']
+
+        # Check status
+        status = partition.properties['status']
+        if status in ('starting', 'stopping'):
+            raise ConflictError(
+                'POST', uri, reason=1,
+                message="Cannot change crypto config for partition {!r} in "
+                "status {!r}".format(partition.name, status))
 
         # We don't support finding errors in this simple-minded mock support,
         # so we assume that the input is fine (e.g. no invalid domain indexes)

@@ -35,7 +35,8 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     PartitionsHandler, PartitionHandler, PartitionStartHandler, \
     PartitionStopHandler, PartitionScsiDumpHandler, \
     PartitionPswRestartHandler, PartitionMountIsoImageHandler, \
-    PartitionUnmountIsoImageHandler, \
+    PartitionUnmountIsoImageHandler, PartitionIncreaseCryptoConfigHandler, \
+    PartitionDecreaseCryptoConfigHandler, PartitionChangeCryptoConfigHandler, \
     HbasHandler, HbaHandler, HbaReassignPortHandler, \
     NicsHandler, NicHandler, \
     VirtualFunctionsHandler, VirtualFunctionHandler, \
@@ -1586,6 +1587,334 @@ class PartitionUnmountIsoImageHandlerTests(unittest.TestCase):
 
         boot_iso_ins_file = partition1['boot-iso-ins-file']
         self.assertIsNone(boot_iso_ins_file)
+
+
+class PartitionIncreaseCryptoConfigHandlerTests(unittest.TestCase):
+    """All tests for class PartitionIncreaseCryptoConfigHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/operations/'
+             'increase-crypto-configuration',
+             PartitionIncreaseCryptoConfigHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_missing_body(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/increase-crypto-configuration',
+                None, True, True)
+
+    def test_invoke_err_status_1(self):
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'starting'
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/increase-crypto-configuration',
+                {}, True, True)
+
+    def test_invoke_ok(self):
+
+        testcases = [
+            # (input_adapter_uris, input_domain_configs)
+            # TODO: Change testcases to allow for different initial states
+            (None,
+             None),
+            (None,
+             [{'domain-index': 17, 'access-mode': 'control-usage'},
+              {'domain-index': 18, 'access-mode': 'control-usage'}]),
+            (['fake-uri1', 'fake-uri2'],
+             None),
+            ([],
+             []),
+            ([],
+             [{'domain-index': 17, 'access-mode': 'control-usage'},
+              {'domain-index': 18, 'access-mode': 'control-usage'}]),
+            (['fake-uri1', 'fake-uri2'],
+             []),
+            (['fake-uri1', 'fake-uri2'],
+             [{'domain-index': 17, 'access-mode': 'control-usage'},
+              {'domain-index': 18, 'access-mode': 'control-usage'}]),
+        ]
+
+        for tc in testcases:
+
+            input_adapter_uris = tc[0]
+            input_domain_configs = tc[1]
+
+            operation_body = {}
+            if input_adapter_uris is not None:
+                operation_body['crypto-adapter-uris'] = input_adapter_uris
+            if input_domain_configs is not None:
+                operation_body['crypto-domain-configurations'] = \
+                    input_domain_configs
+
+            # Set the partition status to a valid status for this operation
+            partition1 = self.urihandler.get(
+                self.hmc, '/api/partitions/1', True)
+            partition1['status'] = 'active'
+
+            # Set up the initial partition config
+            partition1['crypto-configuration'] = None
+
+            # the function to be tested:
+            resp = self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/increase-crypto-configuration',
+                operation_body, True, True)
+
+            self.assertIsNone(resp)
+
+            crypto_config = partition1['crypto-configuration']
+            self.assertTrue(isinstance(crypto_config, dict))
+
+            adapter_uris = crypto_config['crypto-adapter-uris']
+            self.assertTrue(isinstance(adapter_uris, list))
+            exp_adapter_uris = input_adapter_uris \
+                if input_adapter_uris is not None else []
+            self.assertEqual(adapter_uris, exp_adapter_uris)
+
+            domain_configs = crypto_config['crypto-domain-configurations']
+            self.assertTrue(isinstance(domain_configs, list))
+            exp_domain_configs = input_domain_configs \
+                if input_domain_configs is not None else []
+            self.assertEqual(domain_configs, exp_domain_configs)
+
+
+class PartitionDecreaseCryptoConfigHandlerTests(unittest.TestCase):
+    """All tests for class PartitionDecreaseCryptoConfigHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/operations/'
+             'decrease-crypto-configuration',
+             PartitionDecreaseCryptoConfigHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_missing_body(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/decrease-crypto-configuration',
+                None, True, True)
+
+    def test_invoke_err_status_1(self):
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'starting'
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/decrease-crypto-configuration',
+                {}, True, True)
+
+    def test_invoke_ok(self):
+
+        testcases = [
+            # (input_adapter_uris, input_domain_indexes)
+            # TODO: Change testcases to allow for different initial states
+            # TODO: Change testcases to allow for expected results
+            (None,
+             None),
+            (None,
+             [17, 18]),
+            (['fake-uri1', 'fake-uri2'],
+             None),
+            ([],
+             []),
+            ([],
+             [17, 18]),
+            (['fake-uri1', 'fake-uri2'],
+             []),
+            (['fake-uri1', 'fake-uri2'],
+             [17, 18]),
+        ]
+
+        for tc in testcases:
+
+            input_adapter_uris = tc[0]
+            input_domain_indexes = tc[1]
+
+            operation_body = {}
+            if input_adapter_uris is not None:
+                operation_body['crypto-adapter-uris'] = input_adapter_uris
+            if input_domain_indexes is not None:
+                operation_body['crypto-domain-indexes'] = \
+                    input_domain_indexes
+
+            # Set the partition status to a valid status for this operation
+            partition1 = self.urihandler.get(
+                self.hmc, '/api/partitions/1', True)
+            partition1['status'] = 'active'
+
+            # Set up the initial partition config
+            partition1['crypto-configuration'] = {
+                'crypto-adapter-uris': ['fake-uri1', 'fake-uri2'],
+                'crypto-domain-configurations': [
+                    {'domain-index': 17,
+                     'access-mode': 'control-usage'},
+                    {'domain-index': 18,
+                     'access-mode': 'control-usage'},
+                ]
+            }
+
+            # the function to be tested:
+            resp = self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/decrease-crypto-configuration',
+                operation_body, True, True)
+
+            self.assertIsNone(resp)
+
+            crypto_config = partition1['crypto-configuration']
+            self.assertTrue(isinstance(crypto_config, dict))
+
+            adapter_uris = crypto_config['crypto-adapter-uris']
+            self.assertTrue(isinstance(adapter_uris, list))
+
+            domain_configs = crypto_config['crypto-domain-configurations']
+            self.assertTrue(isinstance(domain_configs, list))
+
+
+class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
+    """All tests for class PartitionChangeCryptoConfigHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/operations/'
+             'change-crypto-domain-configuration',
+             PartitionChangeCryptoConfigHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_missing_body(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/'
+                'change-crypto-domain-configuration',
+                None, True, True)
+
+    def test_invoke_err_missing_field_1(self):
+
+        operation_body = {
+            # missing 'domain-index'
+            'access-mode': 'control-usage',
+        }
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/'
+                'change-crypto-domain-configuration',
+                operation_body, True, True)
+
+    def test_invoke_err_missing_field_2(self):
+
+        operation_body = {
+            'domain-index': 17,
+            # missing 'access-mode'
+        }
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/'
+                'change-crypto-domain-configuration',
+                operation_body, True, True)
+
+    def test_invoke_err_status_1(self):
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'starting'
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/'
+                'change-crypto-domain-configuration',
+                {}, True, True)
+
+    def test_invoke_ok(self):
+
+        testcases = [
+            # (input_domain_index, input_access_mode)
+            # TODO: Change testcases to allow for different initial states
+            # TODO: Change testcases to allow for expected results
+            (17, 'control'),
+        ]
+
+        for tc in testcases:
+
+            input_domain_index = tc[0]
+            input_access_mode = tc[1]
+
+            operation_body = {}
+            if input_domain_index is not None:
+                operation_body['domain-index'] = input_domain_index
+            if input_access_mode is not None:
+                operation_body['access-mode'] = input_access_mode
+
+            # Set the partition status to a valid status for this operation
+            partition1 = self.urihandler.get(
+                self.hmc, '/api/partitions/1', True)
+            partition1['status'] = 'active'
+
+            # Set up the initial partition config
+            partition1['crypto-configuration'] = {
+                'crypto-adapter-uris': ['fake-uri1', 'fake-uri2'],
+                'crypto-domain-configurations': [
+                    {'domain-index': 17,
+                     'access-mode': 'control-usage'},
+                    {'domain-index': 18,
+                     'access-mode': 'control-usage'},
+                ]
+            }
+
+            # the function to be tested:
+            resp = self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/operations/'
+                'change-crypto-domain-configuration',
+                operation_body, True, True)
+
+            self.assertIsNone(resp)
+
+            crypto_config = partition1['crypto-configuration']
+            self.assertTrue(isinstance(crypto_config, dict))
+
+            adapter_uris = crypto_config['crypto-adapter-uris']
+            self.assertTrue(isinstance(adapter_uris, list))
+
+            domain_configs = crypto_config['crypto-domain-configurations']
+            self.assertTrue(isinstance(domain_configs, list))
 
 
 class HbaHandlerTests(unittest.TestCase):
