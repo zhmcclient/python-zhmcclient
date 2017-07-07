@@ -22,17 +22,63 @@ retrieval. These resources are user-created definitions of the kinds of metrics
 that are intended to be retrieved. A metrics context mostly defines the names
 of the metric groups to be retrieved. The available metric groups are described
 in section 'Metric Groups' in the :term:`HMC API` book.
+
+The zhmcclient API for metrics provides access to the metric values and to
+their definitions, so that clients using the metric values do not need to have
+intimate knowledge about the specific metric values when just displaying them.
+
+The basic usage of the metrics API is shown in this example:
+
+.. code-block:: python
+
+    # Create a Metrics Context for the desired metric groups:
+    metric_groups = ['dpm-system-usage-overview', 'partition-usage']
+    mc = client.metrics_contexts.create(
+        {'anticipated-frequency-seconds': 15,
+         'metric-groups': metric_groups})
+
+    # Retrieve the current metric values:
+    mr_str = mc.get_metrics()
+
+    # Display the metric values:
+    print("Current metric values:")
+    mr = zhmcclient.MetricsResponse(mc, mr_str)
+    for mg in mr.metric_groups:
+        mg_name = mg.name
+        mg_def = mc.metric_group_definitions[mg_name]
+        print("  Metric group: {}".format(mg_name))
+        for ov in mg.object_values:
+            print("    Resource: {}".format(ov.resource_uri))
+            print("    Timestamp: {}".format(ov.timestamp))
+            print("    Metric values:")
+            for m_name in ov.metrics:
+                m_value = ov.metrics[m_name]
+                m_def = mg_def.metric_definitions[m_name]
+                m_unit = m_def.unit
+                m_type = m_def.type
+                print("      {:30}  {} {}".
+                      format(m_name, m_value, m_unit.encode('utf-8')))
+
+    # Delete the Metrics Context:
+    mc.delete()
 """
 
 from __future__ import absolute_import
+
+from collections import namedtuple
+import re
+from datetime import datetime
+import pytz
+import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import get_logger, logged_api_call
 from ._exceptions import NotFound
 
-__all__ = ['MetricsContextManager', 'MetricsContext', 'Metrics',
-           'CollectedMetrics']
+__all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
+           'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
+           'MetricObjectValues']
 
 LOG = get_logger(__name__)
 
@@ -55,19 +101,26 @@ class MetricsContextManager(BaseManager):
         # Parameters:
         #   client (:class:`~zhmcclient.Client`):
         #      Client object for the HMC to be used.
-
         super(MetricsContextManager, self).__init__(
             resource_class=MetricsContext,
             session=client.session,
             parent=None,
             base_uri='/api/services/metrics/context',
             oid_prop='',
-            uri_prop='',
+            uri_prop='metrics-context-uri',
             name_prop='',
             query_props=[])
 
         self._client = client
         self._metrics_contexts = []
+
+    @property
+    def client(self):
+        """
+        :class:`~zhmcclient.Client`:
+          The client defining the scope for this manager.
+        """
+        return self._client
 
     @logged_api_call
     def list(self, full_properties=False):
@@ -101,6 +154,7 @@ class MetricsContextManager(BaseManager):
         """
         return self._metrics_contexts
 
+    @logged_api_call
     def create(self, properties):
         """
         Create a :term:`Metrics Context` resource in the HMC this client is
@@ -112,15 +166,10 @@ class MetricsContextManager(BaseManager):
             Allowable properties are defined in section 'Request body contents'
             in section 'Create Metrics Context' in the :term:`HMC API` book.
 
-            TODO: Turn the specific (two) properties into method parameters?
-
         Returns:
 
           :class:`~zhmcclient.MetricsContext`:
             The resource object for the new :term:`Metrics Context` resource.
-
-            TODO: What about the metrics info structure that is also returned
-            by the HMC?
 
         Raises:
 
@@ -131,28 +180,29 @@ class MetricsContextManager(BaseManager):
         """
         result = self.session.post('/api/services/metrics/context',
                                    body=properties)
+        mc_properties = properties.copy()
+        mc_properties.update(result)
         new_metrics_context = MetricsContext(self,
                                              result['metrics-context-uri'],
                                              None,
-                                             result)
+                                             mc_properties)
         self._metrics_contexts.append(new_metrics_context)
         return new_metrics_context
-
-    @property
-    def client(self):
-        """
-        :class:`~zhmcclient.Client`:
-          The client defining the scope for this manager.
-        """
-        return self._client
 
 
 class MetricsContext(BaseResource):
     """
     Representation of a :term:`Metrics Context` resource.
 
-    Derived from :class:`~zhmcclient.BaseResource`; see there for common
-    methods and attributes.
+    A :term:`Metrics Context` resource specifies a list of metrics groups for
+    which the current metric values can be retrieved using the
+    :meth:`~zhmcclient.MetricsContext.get_metrics` method.
+
+    The properties of this resource are the response fields described for the
+    'Create Metrics Context' operation in the :term:`HMC API` book.
+
+    This class id derived from :class:`~zhmcclient.BaseResource`; see there
+    for common methods and attributes.
 
     Objects of this class can be created by the user with the
     :meth:`zhmcclient.MetricsContextManager.create` method.
@@ -175,19 +225,60 @@ class MetricsContext(BaseResource):
                 (MetricsContextManager, type(manager)))
         super(MetricsContext, self).__init__(manager, uri, name, properties)
 
+        self._metric_group_definitions = self._setup_metric_group_definitions()
+
+    def _setup_metric_group_definitions(self):
+        """
+        Return the dict of MetricGroupDefinition objects for this metrics
+        context, by processing its 'metric-group-infos' property.
+        """
+        # Dictionary of MetricGroupDefinition objects, by metric group name
+        metric_group_definitions = dict()
+        for mg_info in self.properties['metric-group-infos']:
+            mg_name = mg_info['group-name']
+            mg_def = MetricGroupDefinition(
+                name=mg_name,
+                resource_class=_resource_class_from_group(mg_name),
+                metric_definitions=dict())
+            for i, m_info in enumerate(mg_info['metric-infos']):
+                m_name = m_info['metric-name']
+                m_def = MetricDefinition(
+                    index=i,
+                    name=m_name,
+                    type=_metric_type(m_info['metric-type']),
+                    unit=_metric_unit_from_name(m_name))
+                mg_def.metric_definitions[m_name] = m_def
+            metric_group_definitions[mg_name] = mg_def
+        return metric_group_definitions
+
+    @property
+    def metric_group_definitions(self):
+        """
+        dict: The metric definitions for the metric groups of this
+          :term:`Metrics Context` resource, as a dictionary of
+          :class:`~zhmcclient.MetricGroupDefinition` objects, by metric group
+          name.
+        """
+        return self._metric_group_definitions
+
     @logged_api_call
     def get_metrics(self):
         """
-        Retrieve the metrics data for this :term:`Metrics Context` resource.
+        Retrieve the current metric values for this :term:`Metrics Context`
+        resource from the HMC.
+
+        The metric values are returned by this method as a string in the
+        `MetricsResponse` format described with the 'Get Metrics' operation in
+        the :term:`HMC API` book.
+
+        The :class:`~zhmcclient.MetricsResponse` class can be used to process
+        the `MetricsResponse` string returned by this method, and provides
+        structured access to the metrics values.
 
         Returns:
 
-          :term:`string` in MetricsResponse format:
-            The metrics response, in the `MetricsResponse` format described in
-            section 'Response body contents' in section 'Get Metrics' in the
-            :term:`HMC API` book.
-
-            TODO: Change return value to a list of MetricsGroup objects?
+          :term:`string`:
+            The current metric values, in the `MetricsResponse` string format.
 
         Raises:
 
@@ -196,9 +287,10 @@ class MetricsContext(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        result = self.manager.session.get(self.uri)
-        return result
+        metrics_response = self.manager.session.get(self.uri)
+        return metrics_response
 
+    @logged_api_call
     def delete(self):
         """
         Delete this :term:`Metrics Context` resource.
@@ -214,204 +306,519 @@ class MetricsContext(BaseResource):
         self.manager._metrics_contexts.remove(self)
 
 
-class CollectedMetrics(object):
+_MetricGroupDefinitionTuple = namedtuple(
+    '_MetricGroupDefinitionTuple',
+    ['name', 'resource_class', 'metric_definitions']
+)
+
+
+class MetricGroupDefinition(_MetricGroupDefinitionTuple):
     """
-    TODO: Describe this class.
+    A named tuple representing definitional information for a metric group,
+    with the following attributes:
+
+    Attributes:
+
+      name (:term:`string`):
+        Metric group name, as defined in section 'Metric groups' in the
+        :term:`HMC API` book.
+
+      resource_class (:term:`string`):
+        A string identifying the resource class to which this metric group
+        belongs, using the values from the 'class' property of resource
+        objects.
+
+      metric_definitions (dict):
+        Metric definitions for the metrics in this metric group, as a
+        dictionary where the key is the metric name and the value is the
+        :class:`~zhmcclient.MetricDefinition` object for the metric.
+    """
+    __slots__ = ()
+
+    def __repr__(self):
+        repr_str = "MetricGroupDefinition(" \
+            "name={s.name!r}, " \
+            "resource_class={s.resource_class!r}, " \
+            "metric_definitions={s.metric_definitions!r})". \
+            format(s=self)
+        return repr_str
+
+
+_MetricDefinitionTuple = namedtuple(
+    '_MetricDefinitionTuple',
+    ['index', 'name', 'type', 'unit']
+)
+
+
+class MetricDefinition(_MetricDefinitionTuple):
+    """
+    A named tuple representing definitional information for a single metric,
+    with the following attributes:
+
+    Attributes:
+
+      index (:term:`integer`):
+        0-based index (=position) of the metric in a MetricsResponse value row.
+
+      name (:term:`string`):
+        Metric field name, as shown in the tables defining the metric groups in
+        section 'Metric groups' in the :term:`HMC API` book.
+
+      type (:term:`callable`):
+        Python type for the metric value. The type must be a constructor
+        (callable) that takes the metrics value from the `MetricsResponse`
+        string as its only argument.
+
+      unit (:term:`string`):
+        Unit of the metric value.
+    """
+    __slots__ = ()
+
+    def __repr__(self):
+        repr_str = "MetricDefinition(" \
+            "index={s.index!r}, " \
+            "name={s.name!r}, " \
+            "type={s.type!r}, " \
+            "unit={s.unit!r})". \
+            format(s=self)
+        return repr_str
+
+
+def _metric_type(metric_type_name):
+    """
+    Return a constructor callable for the given metric type name.
+
+    The returned callable takes the metric value as a string as its only
+    argument and returns a Python object representing that metric value using
+    the correct Python type.
+    """
+    return _METRIC_TYPES_BY_NAME[metric_type_name]
+
+
+_METRIC_TYPES_BY_NAME = {
+    'boolean-metric': bool,
+    'byte-metric': int,
+    'short-metric': int,
+    'integer-metric': int,
+    'long-metric': int,
+    'double-metric': float,
+    'string-metric': six.text_type,
+}
+
+
+def _metric_value(value_str, metric_type):
+    """
+    Return a Python-typed metric value from a metric value string.
+    """
+    if metric_type in (int, float):
+        try:
+            return metric_type(value_str)
+        except ValueError:
+            raise ValueError("Invalid {} metric value: {!r}".
+                             format(metric_type.__class__.__name__, value_str))
+    elif metric_type is six.text_type:
+        return value_str.strip('"').decode('unicode_escape')
+    else:
+        assert metric_type is bool
+        lower_str = value_str.lower()
+        if lower_str == 'true':
+            return True
+        elif lower_str == 'false':
+            return False
+        else:
+            raise ValueError("Invalid boolean metric value: {!r}".
+                             format(value_str))
+
+
+def _metric_unit_from_name(metric_name):
+    """
+    Return a metric unit string for human consumption, that is inferred from
+    the metric name.
+
+    If a unit cannot be inferred, `None` is returned.
+    """
+    for item in _PATTERN_UNIT_LIST:
+        pattern, unit = item
+        if pattern.match(metric_name):
+            return unit
+    return None
+
+
+_USE_UNICODE = True
+if _USE_UNICODE:
+    MICROSECONDS = u"\u00b5s"  # U+00B5 = Micro Sign
+    CELSIUS = u"\u00B0C"  # U+00B0 = Degree Sign
+    # Note: Use of U+2103 (Degree Celsius) is discouraged by Unicode standard
+else:
+    MICROSECONDS = u"us"
+    CELSIUS = u"degree Celsius"  # Official SI unit when not using degree sign
+
+
+_PATTERN_UNIT_LIST = {
+    # End patterns:
+    (re.compile(r".+-usage$"), u"%"),
+    (re.compile(r".+-time$"), MICROSECONDS),
+    (re.compile(r".+-time-used$"), MICROSECONDS),
+    (re.compile(r".+-celsius$"), CELSIUS),
+    (re.compile(r".+-watts$"), u"W"),
+    (re.compile(r".+-paging-rate$"), u"pages/s"),
+    (re.compile(r".+-sampling-rate$"), u"samples/s"),
+    # Begin patterns:
+    (re.compile(r"^bytes-.+"), u"B"),
+    (re.compile(r"^heat-load.+"), u"BTU/h"),  # Note: No trailing hyphen
+    (re.compile(r"^interval-bytes-.+"), u"B"),
+    (re.compile(r"^bytes-per-second-.+"), u"B/s"),
+    # Special cases:
+    (re.compile(r"^storage-rate$"), u"kB/s"),
+    (re.compile(r"^humidity$"), u"%"),
+    (re.compile(r"^memory-used$"), u"MiB"),
+    (re.compile(r"^policy-activation-time$"), u""),  # timestamp
+    (re.compile(r"^velocity-numerator$"), MICROSECONDS),
+    (re.compile(r"^velocity-denominator$"), MICROSECONDS),
+    (re.compile(r"^utilization$"), u"%"),
+}
+
+
+def _resource_class_from_group(metric_group_name):
+    """
+    Return the resource class string from the metric group name.
+
+    Metric groups for resources that are specific to ensemble mode are not
+    supported.
+
+    Returns an empty string if a metric group name is unknown.
+    """
+    return _CLASS_FROM_GROUP.get(metric_group_name, '')
+
+
+_CLASS_FROM_GROUP = {
+    # DPM mode only:
+    'dpm-system-usage-overview': 'cpc',
+    'partition-usage': 'partition',
+    'adapter-usage': 'adapter',
+    # Classic mode only:
+    'cpc-usage-overview': 'cpc',
+    'logical-partition-usage': 'logical-partition',
+    'channel-usage': 'cpc',
+    # DPM mode or classic mode:
+    'zcpc-environmentals-and-power': 'cpc',
+    'zcpc-processor-usage': 'cpc',
+    # TODO: Clarify CPC mode dependency:
+    'crypto-usage': 'cpc',
+    'flash-memory-usage': 'cpc',
+    'roce-usage': 'cpc',
+}
+
+
+class MetricsResponse(object):
+    """
+    Represents the metric values returned by one call to the
+    :meth:`~zhmcclient.MetricsContext.get_metrics` method, and provides
+    structured access to the data.
     """
 
-    def __init__(self, metrics_context, rawdata):
+    def __init__(self, metrics_context, metrics_response_str):
         """
-        TODO: Describe this method.
+        Parameters:
+
+          metrics_context (:class:`~zhmcclient.MetricsContext`):
+            The :class:`~zhmcclient.MetricsContext` object that was used to
+            retrieve the metrics response string. It defines the structure of
+            the metric values in the metrics response string.
+
+          metrics_response_str (:term:`string`):
+            The metrics response string, as returned by the
+            :meth:`~zhmcclient.MetricsContext.get_metrics` method.
         """
         self._metrics_context = metrics_context
+        self._metrics_response_str = metrics_response_str
         self._client = self._metrics_context.manager.client
-        self._rawdata = rawdata
-        self._metrics_groups = None
-        self._metrics = None
 
-        metric_groups = dict()
-        metric_group_infos = metrics_context.properties['metric-group-infos']
-        for metric_group_info in metric_group_infos:
-            metric_infos = metric_group_info['metric-infos']
-            metric_names = list()
-            for metric_info in metric_infos:
-                metric_names.append(metric_info['metric-name'])
-            metric_groups[metric_group_info['group-name']] = metric_names
-        self._metrics_groups = metric_groups
+        self._metric_group_values = self._setup_metric_group_values()
+
+    def _setup_metric_group_values(self):
+        """
+        Return the list of MetricGroupValues objects for this metrics response,
+        by processing its metrics response string.
+
+        The lines in the metrics response string are::
+
+            MetricsResponse: MetricsGroup{0,*}
+                             <emptyline>      a third empty line at the end
+
+            MetricsGroup:    MetricsGroupName
+                             ObjectValues{0,*}
+                             <emptyline>      a second empty line after each MG
+
+            ObjectValues:    ObjectURI
+                             Timestamp
+                             ValueRow{1,*}
+                             <emptyline>      a first empty line after this blk
+        """
+
+        mg_defs = self._metrics_context.metric_group_definitions
+
+        metric_group_name = None
+        resource_uri = None
+        dt_timestamp = None
+
+        object_values = None
+        metric_group_values = list()
+        state = 0
+        for mr_line in self._metrics_response_str.splitlines():
+            if state == 0:
+                if object_values is not None:
+                    # Store the result from the previous metric group
+                    mgv = MetricGroupValues(metric_group_name, object_values)
+                    metric_group_values.append(mgv)
+                    object_values = None
+                if mr_line == '':
+                    # Skip initial (or trailing) empty lines
+                    pass
+                else:
+                    # Process the next metrics group
+                    metric_group_name = mr_line.strip('"')  # No " or \ inside
+                    assert metric_group_name in mg_defs
+                    m_defs = mg_defs[metric_group_name].metric_definitions
+                    object_values = list()
+                    state = 1
+            elif state == 1:
+                if mr_line == '':
+                    # There are no (or no more) ObjectValues items in this
+                    # metrics group
+                    state = 0
+                else:
+                    # There are ObjectValues items
+                    resource_uri = mr_line.strip('"')  # No " or \ inside
+                    state = 2
+            elif state == 2:
+                # Process the timestamp
+                assert mr_line != ''
+                _epoch_milliseconds = int(mr_line)
+                _epoch_seconds = _epoch_milliseconds // 1000
+                _delta_microseconds = _epoch_milliseconds % 1000 * 1000
+                try:
+                    dt_timestamp = datetime.fromtimestamp(
+                        _epoch_seconds, pytz.utc)
+                    dt_timestamp.replace(microsecond=_delta_microseconds)
+                except ValueError:
+                    # Sometimes, the returned epoch timestamp values are way
+                    # too large, e.g. 3651584404810066 (which would translate
+                    # to the year 115791 A.D.). Python datetime supports
+                    # up to the year 9999. We circumvent this issue by
+                    # simply using the current date&time.
+                    # TODO: Remove the circumvention for too large timestamps.
+                    dt_timestamp = datetime.now(pytz.utc)
+                state = 3
+            elif state == 3:
+                if mr_line != '':
+                    # Process the metric values in the ValueRow line
+                    str_values = mr_line.split(',')
+                    metrics = dict()
+                    for m_name in m_defs:
+                        m_def = m_defs[m_name]
+                        m_type = m_def.type
+                        m_value_str = str_values[m_def.index]
+                        m_value = _metric_value(m_value_str, m_type)
+                        metrics[m_name] = m_value
+                    ov = MetricObjectValues(
+                        self._client, mg_defs[metric_group_name], resource_uri,
+                        dt_timestamp, metrics)
+                    object_values.append(ov)
+                    # stay in this state, for more ValueRow lines
+                else:
+                    # On the empty line after the last ValueRow line
+                    state = 1
+
+        return metric_group_values
 
     @property
-    def metrics(self):
+    def metrics_context(self):
         """
-        TODO: Describe this method.
+        :class:`~zhmcclient.MetricsContext` object for this metric response.
+        This can be used to access the metric definitions for this response.
         """
-        if self._metrics:
-            return self._metrics
-        else:
-            metrics_list = list()
-            metrics_group = None
-            uri = None
-            epoch_timestamp = None
-#    print(metric_groups.keys())
-            state = 0
-            for rawdata_line in self._rawdata.splitlines():
-                if state == 0:
-                    if rawdata_line.replace('"', '') in \
-                            self._metrics_groups.keys():
-                        metrics_group = rawdata_line.replace('"', '')
-                        state = 1
-                elif state == 1:
-                    if not rawdata_line:
-                        state = 0
-                    else:
-                        uri = rawdata_line.replace('"', '')
-#                print(uri)
-                        state = 2
-                elif state == 2:
-                    epoch_timestamp = rawdata_line
-#            print(time.strftime("%a, %d %b %Y %H:%M:%S +0000",
-#                 time.localtime(float(epoch_timestamp[:-3]))))
-                    state = 3
-                elif state == 3:
-                    metrics_values = rawdata_line.split(',')
-                    metrics = dict(zip(self._metrics_groups[metrics_group],
-                                       metrics_values))
-                    m = Metrics(self._client, metrics_group, uri,
-                                epoch_timestamp, metrics)
-                    metrics_list.append(m)
-                    state = 4
-                elif state == 4:
-                    if not rawdata_line:
-                        state = 1
-                    else:
-                        metrics_values = rawdata_line.split(',')
-                        metrics = dict(zip(self._metrics_groups[metrics_group],
-                                           metrics_values))
-                        m = Metrics(self._client, metrics_group, uri,
-                                    epoch_timestamp, metrics)
-                        metrics_list.append(m)
-                        state = 4
-            self._metrics = metrics_list
-            return self._metrics
+        return self._metrics_context
+
+    @property
+    def metric_group_values(self):
+        """
+        :class:`py:list`: The list of :class:`~zhmcclient.MetricGroupValues`
+          objects representing the metric groups in this metric response.
+
+          Each :class:`~zhmcclient.MetricGroupValues` object contains a list of
+          :class:`~zhmcclient.MetricObjectValues` objects representing the
+          metric values in this group (each for a single resource and point in
+          time).
+        """
+        return self._metric_group_values
 
 
-class Metrics(object):
+class MetricGroupValues(object):
     """
-    TODO: Describe this class.
+    Represents the metric values for a metric group in a MetricsResponse
+    string.
     """
 
-    def __init__(self, client, metrics_group, uri, timestamp, metrics):
+    def __init__(self, name, object_values):
         """
-        TODO: Describe this method.
+        Parameters:
+
+          name (:term:`string`):
+            Metric group name.
+
+          object_values (:class:`py:list`):
+            The :class:`~zhmcclient.MetricObjectValues` objects in this metric
+            group. Each of them represents the metric values for a single
+            resource at a single point in time.
+        """
+        self._name = name
+        self._object_values = object_values
+
+    @property
+    def name(self):
+        """
+        string: The metric group name.
+        """
+        return self._name
+
+    @property
+    def object_values(self):
+        """
+        :class:`py:list`: The :class:`~zhmcclient.MetricObjectValues` objects
+          in this metric group. Each of them represents the metric values for
+          a single resource at a single point in time.
+        """
+        return self._object_values
+
+
+class MetricObjectValues(object):
+    """
+    Represents the metric values for a single resource at a single point in
+    time.
+    """
+
+    def __init__(self, client, metric_group_definition, resource_uri,
+                 timestamp, metrics):
+        """
+        Parameters:
+
+          client (:class:`~zhmcclient.Client`):
+            Client object, for retrieving the actual resource.
+
+          metric_group_definition (:class:`~zhmcclient.MetricGroupDefinition`):
+            Metric group definition for this set of metric values.
+
+          resource_uri (:term:`string`):
+            Resource URI of the resource these metric values apply to.
+
+          timestamp (:class:`py:datetime.datetime`):
+            Point in time when the HMC captured these metric values (as a
+            timezone-aware datetime object).
+
+          metrics (dict):
+            The metric values, as a dictionary of the (Python typed) metric
+            values, by metric name.
         """
         self._client = client
-        self._metrics_group = metrics_group
-        self._uri = uri
+        self._metric_group_definition = metric_group_definition
+        self._resource_uri = resource_uri
         self._timestamp = timestamp
         self._metrics = metrics
+        self._resource = None  # Lazy initialization
 
     @property
-    def properties(self):
+    def client(self):
         """
-        TODO: Describe this property.
+        :class:`~zhmcclient.Client`: Client object, for retrieving the actual
+        resource.
         """
-        return self._metrics
+        return self._client
 
     @property
-    def uri(self):
+    def metric_group_definition(self):
         """
-        string: The canonical URI path of the resource. Will not be `None`.
+        :class:`~zhmcclient.MetricGroupDefinition`: Metric group definition for
+        this set of metric values.
+        """
+        return self._metric_group_definition
+
+    @property
+    def resource_uri(self):
+        """
+        string: The canonical URI path of the resource these metric values
+        apply to.
 
         Example: ``/api/cpcs/12345``
         """
-        return self._uri
-
-    @property
-    def metrics_group(self):
-        """
-        TODO: Describe this property.
-        """
-        return self._metrics_group
+        return self._resource_uri
 
     @property
     def timestamp(self):
         """
-        TODO: Describe this property.
+        :class:`py:datetime.datetime`: Point in time when the HMC captured
+          these metric values (as a timezone-aware datetime object).
         """
         return self._timestamp
 
-    @logged_api_call
-    def get_property(self, name):
+    @property
+    def metrics(self):
         """
-        TODO: Describe this method.
+        dict: The metric values, as a dictionary of the (Python typed) metric
+          values, by metric name.
         """
-        return self._metrics[name]
-
-    @logged_api_call
-    def prop(self, name, default=None):
-        """
-        TODO: Describe this method.
-        """
-        return self._metrics[name]
+        return self._metrics
 
     @property
-    def managed_object(self):
+    def resource(self):
         """
-        TODO: Describe this property.
-        """
-        metrics_group_to_managed_object = {
-            'channel-usage': 'cpc',
-            'cpc-usage-overview': 'cpc',
-            'dpm-system-usage-overview': 'cpc',
-            'logical-partition-usage': 'logical-partition',
-            'partition-usage': 'partition',
-            'zcpc-environmentals-and-power': 'cpc',
-            'zcpc-processor-usage': 'cpc',
-            'crypto-usage': 'cpc',
-            'adapter-usage': 'adapter',
-            'flash-memory-usage': 'cpc',
-            'roce-usage': 'cpc'
-        }
-        managed_object = metrics_group_to_managed_object[self._metrics_group]
-        if managed_object == 'cpc':
-            # print("Finding CPC by uri=%s ..." % self._uri)
-            try:
-                filter_args = {'object-uri': self._uri}
-                cpc = self._client.cpcs.find(**filter_args)
-                # print(cpc)
-                # print("Found CPC %s at: %s" % (cpc.name, cpc.uri))
-                return cpc
-            except NotFound:
-                print("Could not find CPC on HMC %s" %
-                      self._client.session.host)
+        :class:`~zhmcclient.BaseResource`: The Python resource object of the
+          resource these metric values apply to.
 
-        elif managed_object == 'logical-partition':
-            # print("Finding LPAR by uri=%s ..." % self._uri)
-            lpar = None
-            for cpc in self._client.cpcs.list():
+        Raises:
+
+          :exc:`~zhmcclient.NotFound`: No resource found for this URI in the
+            management scope of the HMC.
+        """
+        if self._resource is not None:
+            return self._resource
+
+        resource_class = self.metric_group_definition.resource_class
+        resource_uri = self.resource_uri
+        if resource_class == 'cpc':
+            filter_args = {'object-uri': resource_uri}
+            resource = self.client.cpcs.find(**filter_args)
+        elif resource_class == 'logical-partition':
+            for cpc in self.client.cpcs.list():
                 try:
-                    filter_args = {'object-uri': self._uri}
-                    lpar = cpc.lpars.find(**filter_args)
-                    # print (lpar)
-                    # print("Found LPAR %s at: %s" % (lpar.name, lpar.uri))
-                    return lpar
+                    filter_args = {'object-uri': resource_uri}
+                    resource = cpc.lpars.find(**filter_args)
+                    break
                 except NotFound:
-                    pass
-            print("Could not find LPAR on HMC %s" % self._client.session.host)
-        elif managed_object == 'partition':
-            # print("Finding Partition by uri=%s ..." % self._uri)
-            partition = None
-            for cpc in self._client.cpcs.list():
+                    pass  # Try next CPC
+            else:
+                raise NotFound
+        elif resource_class == 'partition':
+            for cpc in self.client.cpcs.list():
                 try:
-                    filter_args = {'object-uri': self._uri}
-                    partition = cpc.partitions.find(**filter_args)
-                    # print(partition)
-                    # print("Found Partition %s at: %s" % (partition.name,
-                    #      partition.uri))
-                    return partition
+                    filter_args = {'object-uri': resource_uri}
+                    resource = cpc.partitions.find(**filter_args)
+                    break
                 except NotFound:
-                    pass
-            print("Could not find Partition on HMC %s" %
-                  self._client.session.host)
+                    pass  # Try next CPC
+            else:
+                raise NotFound
         else:
-            print("Unsupported metrics_group: " + self._metrics_group)
-        return None
+            assert resource_class == 'adapter'
+            for cpc in self.client.cpcs.list():
+                try:
+                    filter_args = {'object-uri': resource_uri}
+                    resource = cpc.adapters.find(**filter_args)
+                    break
+                except NotFound:
+                    pass  # Try next CPC
+            else:
+                raise NotFound
+
+        self._resource = resource
+        return self._resource

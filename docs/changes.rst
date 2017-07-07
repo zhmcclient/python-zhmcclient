@@ -32,6 +32,11 @@ Released: not yet
 
 **Enhancements:**
 
+* Added support for the HMC Metric Service. For details, see section 'Metrics' in the
+  zhmcclient documentation. There is an example script ``metrics.py`` demonstrating
+  the use of the metrics support. The metrics support caused an additional package
+  requirement for the ``pytz`` package.
+
 **Known issues:**
 
 * See `list of open issues`_.

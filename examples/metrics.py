@@ -14,15 +14,12 @@
 # limitations under the License.
 
 """
-Example: Create a metrics context, retrieve metrics and
-delete metrics context.
+Example: Create a metrics context, retrieve metrics and delete metrics context.
 """
 
 import sys
-import logging
 import yaml
 import requests.packages.urllib3
-import time
 
 import zhmcclient
 
@@ -39,14 +36,12 @@ with open(hmccreds_file, 'r') as fp:
 
 examples = hmccreds.get("examples", None)
 if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
+    print("examples not found in credentials file %s" % hmccreds_file)
     sys.exit(1)
 
 example = examples.get("metrics", None)
 if example is None:
-    print("metrics section not found in credentials file %s" % \
-          (hmccreds_file))
+    print("metrics section not found in credentials file %s" % hmccreds_file)
     sys.exit(1)
 
 
@@ -54,7 +49,7 @@ hmc = example["hmc"]
 
 cred = hmccreds.get(hmc, None)
 if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
+    print("Credentials for HMC %s not found in credentials file %s" %
           (hmc, hmccreds_file))
     sys.exit(1)
 
@@ -72,33 +67,47 @@ try:
     if timestats:
         session.time_stats_keeper.enable()
 
-    print("Create Metrics Context ...")
-    properties = { "anticipated-frequency-seconds" : 15,
-#                   "metric-groups": ["cpc-usage-overview", "logical-partition-usage", "channel-usage"] }
-#                   "metric-groups": ["cpc-usage-overview"] }
-#                   "metric-groups": [ "channel-usage"] }
-#                   "metric-groups": ["dpm-system-usage-overview", "partition-usage", "adapter-usage"] }
-#                   "metric-groups": ["dpm-system-usage-overview"] }
-                   "metric-groups": ["partition-usage"] }
-#                   "metric-groups": ["logical-partition-usage"] }
-#                   "metric-groups": [ "adapter-usage"] }
-    mc = cl.metrics_contexts.create(properties)
-    print(mc.uri)
-#    print(mc.properties)
+    metric_groups = [
 
-    print("Metrics Context List:")
-    print(cl.metrics_contexts.list())
+        'cpc-usage-overview',  # Only in classic mode
+        'logical-partition-usage',  # Only in classic mode
+        'channel-usage',  # Only in classic mode
 
-    time.sleep(30)
-    print("Get Metrics:")
-    metrics_values = mc.get_metrics()
-    cv = zhmcclient.CollectedMetrics(mc, metrics_values)
+        'dpm-system-usage-overview',  # Only in DPM mode
+        'partition-usage',  # Only in DPM mode
+        'adapter-usage',  # Only in DPM mode
 
-    for metric in cv.metrics:
-        print(metric.properties)
-        print(metric.managed_object)
-    print("Delete Metrics Context.")
+        'virtualization-host-cpu-memory-usage',  # Only in ensemble mode
 
+    ]
+
+    print("Creating Metrics Context ...")
+    mc = cl.metrics_contexts.create(
+        {'anticipated-frequency-seconds': 15,
+         'metric-groups': metric_groups})
+
+    print("Retrieving the current metric values ...")
+    mr_str = mc.get_metrics()
+
+    print("Current metric values:")
+    mr = zhmcclient.MetricsResponse(mc, mr_str)
+    for mg in mr.metric_group_values:
+        mg_name = mg.name
+        mg_def = mc.metric_group_definitions[mg_name]
+        print("  Metric group: {}".format(mg_name))
+        for ov in mg.object_values:
+            print("    Resource: {}".format(ov.resource_uri))
+            print("    Timestamp: {}".format(ov.timestamp))
+            print("    Metric values:")
+            for m_name in ov.metrics:
+                m_value = ov.metrics[m_name]
+                m_def = mg_def.metric_definitions[m_name]
+                m_unit = m_def.unit
+                m_type = m_def.type
+                print("      {:30}  {} {}".
+                      format(m_name, m_value, m_unit.encode('utf-8')))
+
+    print("Deleting Metrics Context ...")
     mc.delete()
 
     print("Logging off ...")

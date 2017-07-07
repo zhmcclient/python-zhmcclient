@@ -90,11 +90,23 @@ Metrics
    :members:
    :special-members: __str__
 
-.. autoclass:: zhmcclient.CollectedMetrics
+.. autoclass:: zhmcclient.MetricGroupDefinition
    :members:
    :special-members: __str__
 
-.. autoclass:: zhmcclient.Metrics
+.. autoclass:: zhmcclient.MetricDefinition
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricsResponse
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricGroup
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricObjectValues
    :members:
    :special-members: __str__
 
