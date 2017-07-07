@@ -22,7 +22,7 @@ Change log
 Version 0.14.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-07-07
 
 **Incompatible changes:**
 
@@ -165,12 +165,6 @@ Released: not yet
 * Extended the zhmcclient mock support by adding support for all operations
   thet are supported at the zhmcclient API but were not yet supported for
   mocking, so far.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.13.0
