@@ -37,7 +37,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     HbasHandler, HbaHandler, \
     NicsHandler, NicHandler, \
     VirtualFunctionsHandler, VirtualFunctionHandler, \
-    AdaptersHandler, AdapterHandler, \
+    AdaptersHandler, AdapterHandler, AdapterChangeCryptoTypeHandler, \
     NetworkPortHandler, \
     StoragePortHandler, \
     VirtualSwitchesHandler, VirtualSwitchHandler, \
@@ -636,6 +636,18 @@ def standard_test_hmc():
                             },
                         ],
                     },
+                    {
+                        'properties': {
+                            'object-id': '4',
+                            'name': 'crypto_4',
+                            'description': 'Crypto #4 in CPC #2',
+                            'adapter-family': 'crypto',
+                            'adapter-id': 'EEF',
+                            'detected-card-type': 'crypto-express-5s',
+                            'crypto-number': 7,
+                            'crypto-type': 'accelerator',
+                        },
+                    },
                 ],
                 'virtual_switches': [
                     {
@@ -997,6 +1009,11 @@ class AdapterHandlersTests(unittest.TestCase):
                     'name': 'roce_3',
                     'status': 'active',
                 },
+                {
+                    'object-uri': '/api/adapters/4',
+                    'name': 'crypto_4',
+                    'status': 'active',
+                },
             ]
         }
         self.assertEqual(adapters, exp_adapters)
@@ -1029,6 +1046,55 @@ class AdapterHandlersTests(unittest.TestCase):
 
         adapter1 = self.urihandler.get(self.hmc, '/api/adapters/1', True)
         self.assertEqual(adapter1['description'], 'updated adapter #1')
+
+
+class AdapterChangeCryptoTypeHandlerTests(unittest.TestCase):
+    """All tests for class AdapterChangeCryptoTypeHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
+            ('/api/adapters/([^/]+)', AdapterHandler),
+            ('/api/adapters/([^/]+)/operations/change-crypto-type',
+             AdapterChangeCryptoTypeHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_no_body(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/adapters/4/operations/change-crypto-type',
+                None, True, True)
+
+    def test_invoke_err_no_crypto_type_field(self):
+
+        operation_body = {
+            # no 'crypto-type' field
+        }
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/adapters/4/operations/change-crypto-type',
+                operation_body, True, True)
+
+    def test_invoke_ok(self):
+        operation_body = {
+            'crypto-type': 'cca-coprocessor',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc,
+            '/api/adapters/4/operations/change-crypto-type',
+            operation_body, True, True)
+
+        self.assertIsNone(resp)
 
 
 class NetworkPortHandlersTests(unittest.TestCase):

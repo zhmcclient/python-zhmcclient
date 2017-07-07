@@ -26,7 +26,6 @@ have not been implemented yet::
     POST     /api/partitions/([^/]+)/hbas/([^/]+)/operations/reassign-
                storage-adapter-port
     POST     /api/virtual-switches/([^/]+)/operations/get-connected-vnics
-    POST     /api/adapters/([^/]+)/operations/change-crypto-type
 """
 
 from __future__ import absolute_import
@@ -483,6 +482,32 @@ class AdapterHandler(GenericGetPropertiesHandler,
         cpc = adapter.manager.parent
         assert cpc.dpm_enabled
         adapter.manager.remove(adapter.oid)
+
+
+class AdapterChangeCryptoTypeHandler(object):
+
+    @staticmethod
+    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+        """Operation: Change Crypto Type (requires DPM mode)."""
+        assert wait_for_completion is True  # HMC operation is synchronous
+        adapter_uri = uri.split('/operations/')[0]
+        try:
+            adapter = hmc.lookup_by_uri(adapter_uri)
+        except KeyError:
+            raise InvalidResourceError('POST', uri)
+        cpc = adapter.manager.parent
+        assert cpc.dpm_enabled
+        check_required_fields('POST', uri, body, ['crypto-type'])
+        # Check the validity of the new crypto_type
+        crypto_type = body['crypto-type']
+        if crypto_type not in ['accelerator', 'cca-coprocessor',
+                               'ep11-coprocessor']:
+            raise BadRequestError(
+                'POST', uri, reason=8,
+                message="Invalid value for 'crypto-type' field: %s" %
+                crypto_type)
+        # Reflect the result of changing the crypto type
+        adapter.properties['crypto-type'] = crypto_type
 
 
 class NetworkPortHandler(GenericGetPropertiesHandler,
@@ -1071,12 +1096,12 @@ URIS = (
 
     ('/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
     ('/api/adapters/([^/]+)', AdapterHandler),
+    ('/api/adapters/([^/]+)/operations/change-crypto-type',
+     AdapterChangeCryptoTypeHandler),
 
     ('/api/adapters/([^/]+)/network-ports/([^/]+)', NetworkPortHandler),
 
     ('/api/adapters/([^/]+)/storage-ports/([^/]+)', StoragePortHandler),
-    # ('/api/adapters/([^/]+)/operations/change-crypto-type',
-    #  AdapterChangeCryptoTypeHandler),
 
     ('/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
     ('/api/partitions/([^/]+)', PartitionHandler),
