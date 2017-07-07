@@ -34,7 +34,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     CpcExportPortNamesListHandler, \
     PartitionsHandler, PartitionHandler, PartitionStartHandler, \
     PartitionStopHandler, \
-    HbasHandler, HbaHandler, \
+    HbasHandler, HbaHandler, HbaReassignPortHandler, \
     NicsHandler, NicHandler, \
     VirtualFunctionsHandler, VirtualFunctionHandler, \
     AdaptersHandler, AdapterHandler, AdapterChangeCryptoTypeHandler, \
@@ -619,6 +619,25 @@ def standard_test_hmc():
                     },
                     {
                         'properties': {
+                            'object-id': '2a',
+                            'name': 'fcp_2a',
+                            'description': 'FCP #2a in CPC #2',
+                            'adapter-family': 'ficon',
+                            'storage-port-uris': [],   # updated automatically
+                            'adapter-id': 'CEE',
+                        },
+                        'ports': [
+                            {
+                                'properties': {
+                                    'element-id': '1',
+                                    'name': 'fcp_2a_port_1',
+                                    'description': 'Port #1 of FCP #2a',
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        'properties': {
                             'object-id': '3',
                             'name': 'roce_3',
                             'description': 'ROCE #3 in CPC #2',
@@ -1002,6 +1021,11 @@ class AdapterHandlersTests(unittest.TestCase):
                 {
                     'object-uri': '/api/adapters/2',
                     'name': 'fcp_2',
+                    'status': 'active',
+                },
+                {
+                    'object-uri': '/api/adapters/2a',
+                    'name': 'fcp_2a',
                     'status': 'active',
                 },
                 {
@@ -1415,6 +1439,63 @@ class HbaHandlerTests(unittest.TestCase):
 
         with self.assertRaises(InvalidResourceError):
             self.urihandler.get(self.hmc, '/api/partitions/1/hbas/1', True)
+
+
+class HbaReassignPortHandlerTests(unittest.TestCase):
+    """All tests for class HbaReassignPortHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/partitions/([^/]+)', PartitionHandler),
+            ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
+            ('/api/partitions/([^/]+)/hbas/([^/]+)'
+             '/operations/reassign-storage-adapter-port',
+             HbaReassignPortHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_missing_body(self):
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/hbas/1/operations/'
+                'reassign-storage-adapter-port',
+                None, True, True)
+
+    def test_invoke_err_missing_field_1(self):
+        operation_body = {
+            # missing 'adapter-port-uri'
+        }
+
+        # the function to be tested:
+        with self.assertRaises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/partitions/1/hbas/1/operations/'
+                'reassign-storage-adapter-port',
+                operation_body, True, True)
+
+    def test_invoke_ok(self):
+        new_adapter_port_uri = '/api/adapters/2a/port/1'
+        operation_body = {
+            'adapter-port-uri': new_adapter_port_uri,
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc,
+            '/api/partitions/1/hbas/1/operations/'
+            'reassign-storage-adapter-port',
+            operation_body, True, True)
+
+        self.assertIsNone(resp)
+
+        hba = self.urihandler.get(self.hmc, '/api/partitions/1/hbas/1', True)
+        adapter_port_uri = hba['adapter-port-uri']
+        self.assertEqual(adapter_port_uri, new_adapter_port_uri)
 
 
 class NicHandlerTests(unittest.TestCase):
