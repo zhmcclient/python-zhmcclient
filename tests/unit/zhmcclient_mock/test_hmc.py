@@ -1472,6 +1472,7 @@ class FakedVirtualSwitchTests(unittest.TestCase):
         virtual_switch1_out_props.update({
             'object-id': virtual_switch1.oid,
             'object-uri': virtual_switch1.uri,
+            'connected-vnic-uris': [],
         })
         self.assertIsInstance(virtual_switch1, FakedVirtualSwitch)
         self.assertEqual(virtual_switch1.properties, virtual_switch1_out_props)
@@ -1506,6 +1507,7 @@ class FakedVirtualSwitchTests(unittest.TestCase):
         virtual_switch2_out_props.update({
             'object-id': virtual_switch2.oid,
             'object-uri': virtual_switch2.uri,
+            'connected-vnic-uris': [],
         })
         self.assertIsInstance(virtual_switch2, FakedVirtualSwitch)
         self.assertEqual(virtual_switch2.properties, virtual_switch2_out_props)
