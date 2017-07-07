@@ -156,6 +156,9 @@ Released: not yet
 * Added an ``update_properties()`` method to the ``Lpar`` and ``Cpc``
   resource classes.
 
+* Improved the description of the ``Hba.create()`` and ``Nic.create()``
+  methods to describe how the backing adapter port is specified.
+
 **Known issues:**
 
 * See `list of open issues`_.

@@ -136,6 +136,66 @@ class NicManager(BaseManager):
         """
         Create and configure a NIC in this Partition.
 
+        The NIC must be backed by an adapter port (on an OSA, ROCE, or
+        Hipersockets adapter).
+
+        The way the backing adapter port is specified in the "properties"
+        parameter of this method depends on the adapter type, as follows:
+
+        * For OSA and Hipersockets adapters, the "virtual-switch-uri"
+          property is used to specify the URI of the virtual switch that is
+          associated with the backing adapter port.
+
+          This virtual switch is a resource that automatically exists as soon
+          as the adapter resource exists. Note that these virtual switches do
+          not show up in the HMC GUI; but they do show up at the HMC REST API
+          and thus also at the zhmcclient API as the
+          :class:`~zhmcclient.VirtualSwitch` class.
+
+          The value for the "virtual-switch-uri" property can be determined
+          from a given adapter name and port index as shown in the following
+          example code (omitting any error handling):
+
+          .. code-block:: python
+
+              partition = ...  # Partition object for the new NIC
+
+              adapter_name = 'OSA #1'  # name of adapter with backing port
+              adapter_port_index = 0   # port index of backing port
+
+              adapter = partition.manager.cpc.adapters.find(name=adapter_name)
+
+              vswitches = partition.manager.cpc.virtual_switches.findall(
+                  **{'backing-adapter-uri': adapter.uri})
+
+              vswitch = None
+              for vs in vswitches:
+                  if vs.get_property('port') == adapter_port_index:
+                      vswitch = vs
+                      break
+
+              properties['virtual-switch-uri'] = vswitch.uri
+
+        * For RoCE adapters, the "network-adapter-port-uri" property is used to
+          specify the URI of the backing adapter port, directly.
+
+          The value for the "network-adapter-port-uri" property can be
+          determined from a given adapter name and port index as shown in the
+          following example code (omitting any error handling):
+
+          .. code-block:: python
+
+              partition = ...  # Partition object for the new NIC
+
+              adapter_name = 'ROCE #1'  # name of adapter with backing port
+              adapter_port_index = 0   # port index of backing port
+
+              adapter = partition.manager.cpc.adapters.find(name=adapter_name)
+
+              port = adapter.ports.find(index=adapter_port_index)
+
+              properties['network-adapter-port-uri'] = port.uri
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -147,14 +207,6 @@ class NicManager(BaseManager):
           properties (dict): Initial property values.
             Allowable properties are defined in section 'Request body contents'
             in section 'Create NIC' in the :term:`HMC API` book.
-
-            The backing Adapter for the new NIC is identified as follows:
-
-            * For OSA and Hipersockets adapters, the Adapter associated with
-              the Virtual Switch designated by the "virtual-switch-uri"
-              property.
-            * For RoCE adapters, the Adapter of the Port designated by the
-              "network-adapter-port-uri" property.
 
         Returns:
 
