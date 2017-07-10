@@ -46,15 +46,21 @@ class PortManager(BaseManager):
     :class:`~zhmcclient.Adapter` object).
     """
 
-    def __init__(self, adapter):
+    def __init__(self, adapter, port_type):
         # This function should not go into the docs.
         # Parameters:
         #   adapter (:class:`~zhmcclient.Adapter`):
         #     Adapter defining the scope for this manager.
+        #   port_type (string):
+        #     Type of Ports managed by this manager:
+        #     * `network`: Ports of a network adapter
+        #     * `storage`: Ports of a storage adapter
+        #     * None: Adapter family without ports
 
         super(PortManager, self).__init__(
             resource_class=Port,
             session=adapter.manager.session,
+            class_name='{}-port'.format(port_type) if port_type else None,
             parent=adapter,
             base_uri='',
             # TODO: Re-enable the following when unit/test_hba.py has been
@@ -66,6 +72,8 @@ class PortManager(BaseManager):
             query_props=[],
             list_has_name=False)
 
+        self._port_type = port_type
+
     @property
     def adapter(self):
         """
@@ -73,6 +81,17 @@ class PortManager(BaseManager):
         this manager.
         """
         return self._parent
+
+    @property
+    def port_type(self):
+        """
+        :term:`string`: Type of the Ports managed by this object:
+
+        * ``'network'`` - Ports of a network adapter
+        * ``'storage'`` - Ports of a storage adapter
+        * ``None`` - Adapter family without ports
+        """
+        return self._port_type
 
     @logged_api_call
     def list(self, full_properties=False, filter_args=None):

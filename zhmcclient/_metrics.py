@@ -103,6 +103,7 @@ class MetricsContextManager(BaseManager):
         #      Client object for the HMC to be used.
         super(MetricsContextManager, self).__init__(
             resource_class=MetricsContext,
+            class_name='',
             session=client.session,
             parent=None,
             base_uri='/api/services/metrics/context',
@@ -496,17 +497,18 @@ _CLASS_FROM_GROUP = {
     'dpm-system-usage-overview': 'cpc',
     'partition-usage': 'partition',
     'adapter-usage': 'adapter',
+    'network-physical-adapter-port': 'adapter',
+    'partition-attached-network-interface': 'nic',
     # Classic mode only:
     'cpc-usage-overview': 'cpc',
     'logical-partition-usage': 'logical-partition',
     'channel-usage': 'cpc',
+    'crypto-usage': 'cpc',
+    'flash-memory-usage': 'cpc',  # TODO: verify CPC mode dependency
+    'roce-usage': 'cpc',  # TODO: verify CPC mode dependency
     # DPM mode or classic mode:
     'zcpc-environmentals-and-power': 'cpc',
     'zcpc-processor-usage': 'cpc',
-    # TODO: Clarify CPC mode dependency:
-    'crypto-usage': 'cpc',
-    'flash-memory-usage': 'cpc',
-    'roce-usage': 'cpc',
 }
 
 
@@ -785,6 +787,7 @@ class MetricObjectValues(object):
 
         resource_class = self.metric_group_definition.resource_class
         resource_uri = self.resource_uri
+
         if resource_class == 'cpc':
             filter_args = {'object-uri': resource_uri}
             resource = self.client.cpcs.find(**filter_args)
@@ -797,7 +800,7 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise NotFound
+                raise
         elif resource_class == 'partition':
             for cpc in self.client.cpcs.list():
                 try:
@@ -807,9 +810,8 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise NotFound
-        else:
-            assert resource_class == 'adapter'
+                raise
+        elif resource_class == 'adapter':
             for cpc in self.client.cpcs.list():
                 try:
                     filter_args = {'object-uri': resource_uri}
@@ -818,7 +820,25 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise NotFound
+                raise
+        elif resource_class == 'nic':
+            for cpc in self.client.cpcs.list():
+                found = False
+                for partition in cpc.partitions.list():
+                    try:
+                        filter_args = {'element-uri': resource_uri}
+                        resource = partition.nics.find(**filter_args)
+                        found = True
+                        break
+                    except NotFound:
+                        pass  # Try next partition / next CPC
+                if found:
+                    break
+            else:
+                raise
+        else:
+            raise ValueError(
+                "Invalid resource class: {!r}".format(resource_class))
 
         self._resource = resource
         return self._resource

@@ -58,6 +58,7 @@ class VirtualFunctionManager(BaseManager):
         #     Partition defining the scope for this manager.
         super(VirtualFunctionManager, self).__init__(
             resource_class=VirtualFunction,
+            class_name='virtual-function',
             session=partition.manager.session,
             parent=partition,
             base_uri='{}/virtual-functions'.format(partition.uri),

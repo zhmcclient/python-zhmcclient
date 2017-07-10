@@ -110,6 +110,7 @@ class AdapterManager(BaseManager):
 
         super(AdapterManager, self).__init__(
             resource_class=Adapter,
+            class_name='adapter',
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/adapters',
@@ -265,6 +266,14 @@ class Adapter(BaseResource):
         'hipersockets': 'network-ports',
     }
 
+    # Port type, dependent on adapter family
+    port_type_by_family = {
+        'ficon': 'storage',
+        'osa': 'network',
+        'roce': 'network',
+        'hipersockets': 'network',
+    }
+
     def __init__(self, manager, uri, name=None, properties=None):
         # This function should not go into the docs.
         #   manager (:class:`~zhmcclient.AdapterManager`):
@@ -293,7 +302,12 @@ class Adapter(BaseResource):
         """
         # We do here some lazy loading.
         if not self._ports:
-            self._ports = PortManager(self)
+            family = self.get_property('adapter-family')
+            try:
+                port_type = port_type_by_family[family]
+            except KeyError:
+                port_type = None
+            self._ports = PortManager(self, port_type)
         return self._ports
 
     @property
