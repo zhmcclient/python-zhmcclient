@@ -138,6 +138,7 @@ commands:
       -o, --output-format [[table|plain|simple|psql|rst|mediawiki|html|latex|
                           json]]
                                       Output format (Default: table).
+      -x, --transpose                 Transpose the output table for metrics.
       -e, --error-format [msg|def]    Error message format (Default: msg).
       -t, --timestats                 Show time statistics of HMC operations.
       --log COMP=LEVEL,...            Set a component to a log level
@@ -160,6 +161,7 @@ commands:
       help       Show help message for interactive mode.
       info       Show information about the HMC.
       lpar       Command group for managing LPARs.
+      metrics    Command group for reporting metrics.
       nic        Command group for managing NICs.
       partition  Command group for managing partitions.
       port       Command group for managing adapter ports.
@@ -200,6 +202,7 @@ examples, an underscore ``_`` is shown as the cursor:
         --userid          Username for the HMC (Default: ZHMC_USERID environment variable).
         --password        Password for the HMC (Default: ZHMC_PASSWORD environment variable).
         --output-format   Output format (Default: table).
+        --transpose       Transpose the output table for metrics.
         --error-format    Error message format (Default: msg).
         --timestats       Show time statistics of HMC operations.
         --log             Set a component to a log level (COMP: [api|hmc|console|all], LEVEL: [error|warning|info|debug], Default: all=warning).
