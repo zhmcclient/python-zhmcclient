@@ -304,7 +304,7 @@ class Adapter(BaseResource):
         if not self._ports:
             family = self.get_property('adapter-family')
             try:
-                port_type = port_type_by_family[family]
+                port_type = self.port_type_by_family[family]
             except KeyError:
                 port_type = None
             self._ports = PortManager(self, port_type)

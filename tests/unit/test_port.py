@@ -127,7 +127,9 @@ class PortTests(unittest.TestCase):
         """
         adapters = self.adapters
         for idy, adapter in enumerate(adapters):
-            port_mgr = adapter.ports
+            with requests_mock.mock() as m:
+                m.get(adapter.uri, json=adapter.properties)
+                port_mgr = adapter.ports
             ports = port_mgr.list(full_properties=False)
             if len(ports) != 0:
                 result_adapter = self.result['adapters'][idy]
