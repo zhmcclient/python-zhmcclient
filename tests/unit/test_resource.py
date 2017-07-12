@@ -50,6 +50,7 @@ class MyManager(BaseManager):
     def __init__(self, session):
         super(MyManager, self).__init__(
             resource_class=MyResource,
+            class_name='myresource',
             session=session,
             parent=None,  # a top-level resource
             base_uri='/api/myresources/',

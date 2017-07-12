@@ -60,7 +60,7 @@ class PortManager(BaseManager):
         super(PortManager, self).__init__(
             resource_class=Port,
             session=adapter.manager.session,
-            class_name='{}-port'.format(port_type) if port_type else None,
+            class_name='{}-port'.format(port_type) if port_type else '',
             parent=adapter,
             base_uri='',
             # TODO: Re-enable the following when unit/test_hba.py has been
