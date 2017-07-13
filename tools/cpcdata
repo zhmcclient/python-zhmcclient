@@ -38,23 +38,22 @@ MYNAME = 'cpcdata'
 MACH_TYPE_INFO = {
 
     # mach-type: (name, max-partitions)
-    # TODO: Fill in max number of partitions
 
-    '2064': ('z900', None),
-    '2084': ('z990', None),
-    '2094': ('z9 EC', None),
-    '2097': ('z10 EC', None),
-    '2817': ('z196', None),
+    '2064': ('z900', 15),
+    '2084': ('z990', 30),
+    '2094': ('z9 EC', 60),
+    '2097': ('z10 EC', 60),
+    '2817': ('z196', 60),
     '2827': ('zEC12', 60),
     '2964': ('z13', 85),  # Also LinuxONE Emperor
 
-    '2066': ('z800', None),  # BC version of z900
-    '2086': ('z890', None),  # BC version of z990
-    '2096': ('z9 BC', None),
-    '2098': ('z10 BC', None),
-    '2818': ('z114', None),  # BC version of z196
-    '2828': ('zBC12', 60),  # Also LinuxONE Rockhopper 2964
-    '2965': ('z13s', 85),  # Also LinuxONE Rockhopper 2965
+    '2066': ('z800', 15),
+    '2086': ('z890', 30),
+    '2096': ('z9 BC', 30),  # Some models have only 15 partitions
+    '2098': ('z10 BC', 30),
+    '2818': ('z114', 30),
+    '2828': ('zBC12', 30),
+    '2965': ('z13s', 40),  # Also LinuxONE Rockhopper
 }
 
 
@@ -245,6 +244,7 @@ def process_cpc(config, cpc, hmc_host):
     cpc_info['hmc'] = hmc_host
     cpc_info['name'] = cpc.prop('name')
     cpc_info['description'] = cpc.prop('description')
+    cpc_info['status'] = cpc.prop('status')
     cpc_info['machine-type'] = cpc.prop('machine-type')
     cpc_info['machine-model'] = cpc.prop('machine-model')
     cpc_info['machine-type-name'] = model_name(cpc)
@@ -268,8 +268,7 @@ def process_cpc(config, cpc, hmc_host):
 
 def print_cpc_as_text(config, cpc_info):
 
-    print("CPC {name} managed by HMC {hmc} at {timestamp:%Y-%m-%d %H:%M}:".
-          format(**cpc_info))
+    print("CPC {name} managed by HMC {hmc}:".format(**cpc_info))
 
     print("  Description:  {description}".format(**cpc_info))
     print("  Machine:  {machine-type}-{machine-model} ({machine-type-name})".
@@ -277,6 +276,7 @@ def print_cpc_as_text(config, cpc_info):
     print("  DPM enabled: {dpm-enabled}".format(**cpc_info))
     print("  Member of ensemble: {is-ensemble-member}".format(**cpc_info))
     print("  IML mode: {iml-mode}".format(**cpc_info))
+    print("  Status: {status}".format(**cpc_info))
 
     print("  Processors: CPs: {processors-cp}, IFLs: {processors-ifl}".
           format(**cpc_info))
@@ -288,7 +288,7 @@ def print_cpc_as_text(config, cpc_info):
     print("  Memory for partitions: total: {}, available: {}".
           format(mem_total, mem_avail))
 
-    print("  Partitions: max: {}, defined: {}, running: {}".
+    print("  Partitions: max-active: {}, defined: {}, running: {}".
           format(cpc_info['partitions-maximum'] or "N/A",
                  cpc_info['partitions-defined'] or "N/A",
                  cpc_info['partitions-running'] or "N/A"))
@@ -452,8 +452,14 @@ def model_name(cpc):
     Return the model name for a CPC.
     """
     mach_type = cpc.prop('machine-type')
-    info = MACH_TYPE_INFO[mach_type]
-    return info[0]
+    try:
+        _model_name = MACH_TYPE_INFO[mach_type][0]
+    except KeyError:
+        _model_name = None
+    if _model_name:
+        return _model_name
+    else:
+        return "unknown"
 
 
 def max_partitions(cpc):
@@ -461,8 +467,14 @@ def max_partitions(cpc):
     Return the maxiumum number of user partitions or LPARs for a CPC.
     """
     mach_type = cpc.prop('machine-type')
-    info = MACH_TYPE_INFO[mach_type]
-    return info[1]
+    try:
+        max_parts = MACH_TYPE_INFO[mach_type][1]
+    except KeyError:
+        max_parts = None
+    if max_parts:
+        return max_parts
+    else:
+        return "?"
 
 
 def defined_partitions(partitions):
