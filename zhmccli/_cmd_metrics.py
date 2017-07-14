@@ -30,8 +30,11 @@ from ._helper import COMMAND_OPTIONS_METAVAR, TABLE_FORMATS, \
 # Metrics calls against this context. The minimum accepted value is 15.
 MIN_ANTICIPATED_FREQUENCY = 15
 
-# Max number of retries for get_metrics() to obtain metrics data (1 sec each)
-GET_METRICS_MAX_RETRIES = 30
+# Max number of retries in get_metrics() to obtain metrics data
+GET_METRICS_MAX_RETRIES = 8
+
+# Time in seconds between retries in get_metrics() to obtain metrics data
+GET_METRICS_RETRY_TIME = 2
 
 # Debug control: Print MetricsResponse string
 DEBUG_METRICS_RESPONSE = False
@@ -58,14 +61,8 @@ def wait_for_metrics(metric_context, metric_groups):
                 break
         if not got_data:
             if retries > GET_METRICS_MAX_RETRIES:
-                if len(metric_groups) > 1:
-                    mg_txt = "one or more of the metric groups"
-                else:
-                    mg_txt = "metric group"
-                raise zhmcclient.Error(
-                    "Retrieving metrics data of {} {!r} exceeded {} retries.".
-                    format(mg_txt, metric_groups, GET_METRICS_MAX_RETRIES))
-            time.sleep(1)  # avoid hot spin loop
+                return None
+            time.sleep(GET_METRICS_RETRY_TIME)  # avoid hot spin loop
             retries += 1
     return mg_values
 
@@ -96,14 +93,15 @@ def print_object_values_as_table(
     Print a list of object values in a tabular output format.
     """
 
-    metric_definitions = metric_group_definition.metric_definitions
-    sorted_metric_names = sorted(metric_definitions, key=lambda md: md.index)
+    if object_values_list:
+        metric_definitions = metric_group_definition.metric_definitions
+        sorted_metric_names = sorted(metric_definitions,
+                                     key=lambda md: md.index)
 
     table = list()
+    headers = list()
     for i, ov in enumerate(object_values_list):
 
-        if i == 0:
-            headers = list()
         row = list()
 
         # Add resource names up to the CPC
@@ -138,8 +136,9 @@ def print_object_values_as_table(
         headers = []
 
     if not table:
-        click.echo("No {} resources with metrics data.".
-                   format(metric_group_definition.resource_class))
+        click.echo("No {} resources with metrics data for metric group {}.".
+                   format(metric_group_definition.resource_class,
+                          metric_group_definition.name))
     else:
         click.echo(tabulate(table, headers, tablefmt=table_format))
 
@@ -150,8 +149,10 @@ def print_object_values_as_json(
     Print a list of object values in JSON output format.
     """
 
-    metric_definitions = metric_group_definition.metric_definitions
-    sorted_metric_names = sorted(metric_definitions, key=lambda md: md.index)
+    if object_values_list:
+        metric_definitions = metric_group_definition.metric_definitions
+        sorted_metric_names = sorted(metric_definitions,
+                                     key=lambda md: md.index)
 
     json_obj = list()
     for i, ov in enumerate(object_values_list):
@@ -214,81 +215,92 @@ def print_metric_groups(cmd_ctx, client, metric_groups, resource_filter):
     }
     mc = client.metrics_contexts.create(properties)
     mg_values = wait_for_metrics(mc, metric_groups)
-    mg_def = mc.metric_group_definitions[mg_values.name]
-
-    filter_cpc = None
-    filter_partition = None
-    filter_lpar = None
-    filter_adapter = None
-    filter_nic = None
-    for r_class, r_name in resource_filter:
-        if r_class == 'cpc' and r_name:
-            filter_cpc = client.cpcs.find(name=r_name)
-        elif r_class == 'partition' and r_name:
-            assert filter_cpc
-            filter_partition = filter_cpc.partitions.find(name=r_name)
-        elif r_class == 'logical-partition' and r_name:
-            assert filter_cpc
-            filter_lpar = filter_cpc.lpars.find(name=r_name)
-        elif r_class == 'adapter' and r_name:
-            assert filter_cpc
-            filter_adapter = filter_cpc.adapters.find(name=r_name)
-        elif r_class == 'nic' and r_name:
-            assert filter_partition
-            filter_nic = filter_partition.nics.find(name=r_name)
-
-    resource_class = mg_def.resource_class
-
     filtered_object_values = list()  # of MetricObjectValues
-    for ov in mg_values.object_values:
-        included = False
-        if resource_class == 'cpc':
-            if not filter_cpc:
-                included = True
-            elif ov.resource_uri == filter_cpc.uri:
-                included = True
-        elif resource_class == 'partition':
-            if not filter_cpc:
-                included = True
-            elif ov.resource.manager.cpc.uri == filter_cpc.uri:
-                if not filter_partition:
-                    included = True
-                elif ov.resource_uri == filter_partition.uri:
-                    included = True
-        elif resource_class == 'logical-partition':
-            if not filter_cpc:
-                included = True
-            elif ov.resource.manager.cpc.uri == filter_cpc.uri:
-                if not filter_lpar:
-                    included = True
-                elif ov.resource_uri == filter_lpar.uri:
-                    included = True
-        elif resource_class == 'adapter':
-            if not filter_cpc:
-                included = True
-            elif ov.resource.manager.cpc.uri == filter_cpc.uri:
-                if not filter_adapter:
-                    included = True
-                elif ov.resource_uri == filter_adapter.uri:
-                    included = True
-        elif resource_class == 'nic':
-            if not filter_cpc:
-                included = True
-            elif ov.resource.manager.partition.manager.cpc.uri == \
-                    filter_cpc.uri:
-                if not filter_partition:
-                    included = True
-                elif ov.resource.manager.partition.uri == filter_partition.uri:
-                    if not filter_nic:
-                        included = True
-                    elif ov.resource_uri == filter_nic.uri:
-                        included = True
-        else:
-            raise ValueError(
-                "Invalid resource class: {}".format(resource_class))
 
-        if included:
-            filtered_object_values.append(ov)
+    if not mg_values:
+
+        mg_name = metric_groups[0]  # just pick any
+        res_class = zhmcclient._metrics._resource_class_from_group(mg_name)
+        mg_def = zhmcclient.MetricGroupDefinition(
+            name=mg_name, resource_class=res_class, metric_definitions=[])
+
+    else:
+
+        mg_def = mc.metric_group_definitions[mg_values.name]
+
+        filter_cpc = None
+        filter_partition = None
+        filter_lpar = None
+        filter_adapter = None
+        filter_nic = None
+        for r_class, r_name in resource_filter:
+            if r_class == 'cpc' and r_name:
+                filter_cpc = client.cpcs.find(name=r_name)
+            elif r_class == 'partition' and r_name:
+                assert filter_cpc
+                filter_partition = filter_cpc.partitions.find(name=r_name)
+            elif r_class == 'logical-partition' and r_name:
+                assert filter_cpc
+                filter_lpar = filter_cpc.lpars.find(name=r_name)
+            elif r_class == 'adapter' and r_name:
+                assert filter_cpc
+                filter_adapter = filter_cpc.adapters.find(name=r_name)
+            elif r_class == 'nic' and r_name:
+                assert filter_partition
+                filter_nic = filter_partition.nics.find(name=r_name)
+
+        resource_class = mg_def.resource_class
+
+        for ov in mg_values.object_values:
+            included = False
+            if resource_class == 'cpc':
+                if not filter_cpc:
+                    included = True
+                elif ov.resource_uri == filter_cpc.uri:
+                    included = True
+            elif resource_class == 'partition':
+                if not filter_cpc:
+                    included = True
+                elif ov.resource.manager.cpc.uri == filter_cpc.uri:
+                    if not filter_partition:
+                        included = True
+                    elif ov.resource_uri == filter_partition.uri:
+                        included = True
+            elif resource_class == 'logical-partition':
+                if not filter_cpc:
+                    included = True
+                elif ov.resource.manager.cpc.uri == filter_cpc.uri:
+                    if not filter_lpar:
+                        included = True
+                    elif ov.resource_uri == filter_lpar.uri:
+                        included = True
+            elif resource_class == 'adapter':
+                if not filter_cpc:
+                    included = True
+                elif ov.resource.manager.cpc.uri == filter_cpc.uri:
+                    if not filter_adapter:
+                        included = True
+                    elif ov.resource_uri == filter_adapter.uri:
+                        included = True
+            elif resource_class == 'nic':
+                if not filter_cpc:
+                    included = True
+                elif ov.resource.manager.partition.manager.cpc.uri == \
+                        filter_cpc.uri:
+                    if not filter_partition:
+                        included = True
+                    elif ov.resource.manager.partition.uri == \
+                            filter_partition.uri:
+                        if not filter_nic:
+                            included = True
+                        elif ov.resource_uri == filter_nic.uri:
+                            included = True
+            else:
+                raise ValueError(
+                    "Invalid resource class: {}".format(resource_class))
+
+            if included:
+                filtered_object_values.append(ov)
 
     resource_classes = [f[0] for f in resource_filter]
 
