@@ -182,7 +182,7 @@ class BaseManager(object):
     documented and may change incompatibly.
     """
 
-    def __init__(self, resource_class, session, parent, base_uri,
+    def __init__(self, resource_class, class_name, session, parent, base_uri,
                  oid_prop, uri_prop, name_prop, query_props,
                  list_has_name=True):
         # This method intentionally has no docstring, because it is internal.
@@ -190,6 +190,10 @@ class BaseManager(object):
         # Parameters:
         #   resource_class (class):
         #     Python class for the resources of this manager.
+        #     Must not be `None`.
+        #   class_name (string):
+        #     Resource class name (e.g. 'cpc' for a CPC resource). Must
+        #     be the value of the 'class' property of the resource.
         #     Must not be `None`.
         #   session (:class:`~zhmcclient.Session`):
         #     Session for this manager.
@@ -232,6 +236,7 @@ class BaseManager(object):
         # We want to surface precondition violations as early as possible,
         # so we test those that are not surfaced through the init code:
         assert resource_class is not None
+        assert class_name is not None
         assert session is not None
         assert base_uri is not None
         assert oid_prop is not None
@@ -240,6 +245,7 @@ class BaseManager(object):
         assert query_props is not None
 
         self._resource_class = resource_class
+        self._class_name = class_name
         self._session = session
         self._parent = parent
         self._base_uri = base_uri
@@ -260,6 +266,7 @@ class BaseManager(object):
         ret = (
             "{classname} at 0x{id:08x} (\n"
             "  _resource_class = {_resource_class!r}\n"
+            "  _class_name = {_class_name!r}\n"
             "  _session = {_session_classname} at 0x{_session_id:08x}\n"
             "  _parent = {_parent_classname} at 0x{_parent_id:08x}\n"
             "  _base_uri = {_base_uri!r}\n"
@@ -273,6 +280,7 @@ class BaseManager(object):
                 classname=self.__class__.__name__,
                 id=id(self),
                 _resource_class=self._resource_class,
+                _class_name=self._class_name,
                 _session_classname=self._session.__class__.__name__,
                 _session_id=id(self._session),
                 _parent_classname=self._parent.__class__.__name__,
@@ -524,6 +532,13 @@ class BaseManager(object):
         The Python class of the parent resource of this manager.
         """
         return self._resource_class
+
+    @property
+    def class_name(self):
+        """
+        The resource class name
+        """
+        return self._class_name
 
     @property
     def session(self):

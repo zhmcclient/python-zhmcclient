@@ -64,6 +64,8 @@ SYSLOG_ADDRESSES = {
               ['json']),
               help='Output format (Default: {of}).'.
               format(of=DEFAULT_OUTPUT_FORMAT))
+@click.option('-x', '--transpose', type=str, is_flag=True,
+              help='Transpose the output table for metrics.')
 @click.option('-e', '--error-format', type=click.Choice(ERROR_FORMATS),
               help='Error message format (Default: {ef}).'.
               format(ef=DEFAULT_ERROR_FORMAT))
@@ -84,8 +86,8 @@ SYSLOG_ADDRESSES = {
               format(slf=DEFAULT_SYSLOG_FACILITY))
 @click.version_option(help="Show the version of this command and exit.")
 @click.pass_context
-def cli(ctx, host, userid, password, output_format, error_format, timestats,
-        log, log_dest, syslog_facility):
+def cli(ctx, host, userid, password, output_format, transpose, error_format,
+        timestats, log, log_dest, syslog_facility):
     """
     Command line interface for the z Systems HMC.
 
@@ -106,6 +108,8 @@ def cli(ctx, host, userid, password, output_format, error_format, timestats,
         # We apply the documented option defaults.
         if output_format is None:
             output_format = DEFAULT_OUTPUT_FORMAT
+        if transpose is None:
+            transpose = False
         if error_format is None:
             error_format = DEFAULT_ERROR_FORMAT
         if timestats is None:
@@ -121,10 +125,19 @@ def cli(ctx, host, userid, password, output_format, error_format, timestats,
             password = ctx.obj._password
         if output_format is None:
             output_format = ctx.obj.output_format
+        if transpose is None:
+            transpose = ctx.obj.transpose
         if error_format is None:
             error_format = ctx.obj.error_format
         if timestats is None:
             timestats = ctx.obj.timestats
+
+    if transpose and output_format == 'json':
+        raise_click_exception(
+            "Transposing output tables (-x / --transpose) conflicts with "
+            "non-table output format (-o / --output-format): {}".
+            format(output_format),
+            error_format)
 
     # TODO: Add context support for the following options:
     if log is None:
@@ -233,8 +246,9 @@ def cli(ctx, host, userid, password, output_format, error_format, timestats,
     # We create a command context for each command: An interactive command has
     # its own command context different from the command context for the
     # command line.
-    ctx.obj = CmdContext(host, userid, password, output_format, error_format,
-                         timestats, session_id, get_password_via_prompt)
+    ctx.obj = CmdContext(host, userid, password, output_format, transpose,
+                         error_format, timestats, session_id,
+                         get_password_via_prompt)
 
     # Invoke default command
     if ctx.invoked_subcommand is None:
