@@ -334,7 +334,18 @@ class HbaTests(unittest.TestCase):
         adapter_uri = '/api/adapters/fake-adapter-id-1'
         adapter = Adapter(adapter_mgr, adapter_uri)
 
-        port_mgr = adapter.ports
+        with requests_mock.mock() as m:
+            mock_result_get_adapter = {
+                'parent': self.cpc.uri,
+                'name': 'adapter1',
+                'element-uri': adapter_uri,
+                'element-id': 'fake-adapter-id-1',
+                'class': 'adapter',
+                'adapter-family': 'ficon',
+            }
+            m.get(adapter_uri, json=mock_result_get_adapter)
+            port_mgr = adapter.ports
+
         port2_uri = '/api/adapters/fake-adapter-id-2/'\
                     'storage-ports/fake-port-id-2'
         port2 = Port(port_mgr, port2_uri)

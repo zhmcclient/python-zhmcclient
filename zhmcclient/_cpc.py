@@ -88,6 +88,7 @@ class CpcManager(BaseManager):
 
         super(CpcManager, self).__init__(
             resource_class=Cpc,
+            class_name='cpc',
             session=client.session,
             parent=None,
             base_uri='/api/cpcs',

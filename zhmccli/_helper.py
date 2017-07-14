@@ -69,12 +69,13 @@ class InvalidOutputFormatError(click.ClickException):
 
 class CmdContext(object):
 
-    def __init__(self, host, userid, password, output_format, error_format,
-                 timestats, session_id, get_password):
+    def __init__(self, host, userid, password, output_format, transpose,
+                 error_format, timestats, session_id, get_password):
         self._host = host
         self._userid = userid
         self._password = password
         self._output_format = output_format
+        self._transpose = transpose
         self._error_format = error_format
         self._timestats = timestats
         self._session_id = session_id
@@ -84,11 +85,12 @@ class CmdContext(object):
 
     def __repr__(self):
         ret = "CmdContext(at 0x%08x, host=%r, userid=%r, password=%r, " \
-            "output_format=%r, error_format=%r, session_id=%r, " \
-            "session=%r, ...)" % \
+            "output_format=%r, transpose=%r, error_format=%r, " \
+            "session_id=%r, session=%r, ...)" % \
             (id(self), self._host, self._userid,
              '...' if self._password else None, self._output_format,
-             self._error_format, self._session_id, self._session)
+             self._transpose, self._error_format, self._session_id,
+             self._session)
         return ret
 
     @property
@@ -111,6 +113,13 @@ class CmdContext(object):
         :term:`string`: Output format to be used.
         """
         return self._output_format
+
+    @property
+    def transpose(self):
+        """
+        bool: Transpose the output table.
+        """
+        return self._transpose
 
     @property
     def error_format(self):

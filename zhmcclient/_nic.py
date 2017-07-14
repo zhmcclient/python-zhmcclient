@@ -60,6 +60,7 @@ class NicManager(BaseManager):
 
         super(NicManager, self).__init__(
             resource_class=Nic,
+            class_name='nic',
             session=partition.manager.session,
             parent=partition,
             base_uri='{}/nics'.format(partition.uri),

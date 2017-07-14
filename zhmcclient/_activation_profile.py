@@ -102,6 +102,7 @@ class ActivationProfileManager(BaseManager):
 
         super(ActivationProfileManager, self).__init__(
             resource_class=ActivationProfile,
+            class_name='{}-activation-profile'.format(profile_type),
             session=cpc.manager.session,
             parent=cpc,
             base_uri='{}/{}-activation-profiles'.format(cpc.uri, profile_type),
