@@ -19,6 +19,7 @@ Client class: A client to an HMC.
 from __future__ import absolute_import
 
 from ._cpc import CpcManager
+from ._metrics import MetricsContextManager
 from ._logging import get_logger, logged_api_call
 
 __all__ = ['Client']
@@ -42,6 +43,7 @@ class Client(object):
         """
         self._session = session
         self._cpcs = CpcManager(self)
+        self._metrics_contexts = MetricsContextManager(self)
         self._api_version = None
 
     @property
@@ -60,6 +62,15 @@ class Client(object):
           of its HMC).
         """
         return self._cpcs
+
+    @property
+    def metrics_contexts(self):
+        """
+        :class:`~zhmcclient.MetricsContextManager`:
+          Manager object for the :term:`Metrics Contexts <Metrics Context>` in
+          scope of this client (i.e. in scope of its HMC).
+        """
+        return self._metrics_contexts
 
     @logged_api_call
     def version_info(self):

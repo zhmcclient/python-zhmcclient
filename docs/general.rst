@@ -75,6 +75,42 @@ Time Statistics
    :special-members: __str__
 
 
+.. _`Metrics`:
+
+Metrics
+-------
+
+.. automodule:: zhmcclient._metrics
+
+.. autoclass:: zhmcclient.MetricsContextManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricsContext
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricGroupDefinition
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricDefinition
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricsResponse
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricGroup
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MetricObjectValues
+   :members:
+   :special-members: __str__
+
+
 .. _`Logging`:
 
 Logging
