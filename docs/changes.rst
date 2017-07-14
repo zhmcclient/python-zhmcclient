@@ -37,6 +37,8 @@ Released: not yet
   the use of the metrics support. The metrics support caused an additional package
   requirement for the ``pytz`` package.
 
+* Added support for a "metrics" command to the zhmc CLI.
+
 **Known issues:**
 
 * See `list of open issues`_.

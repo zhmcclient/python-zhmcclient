@@ -70,6 +70,7 @@ class VirtualSwitchManager(BaseManager):
 
         super(VirtualSwitchManager, self).__init__(
             resource_class=VirtualSwitch,
+            class_name='virtual-switch',
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/virtual-switches',

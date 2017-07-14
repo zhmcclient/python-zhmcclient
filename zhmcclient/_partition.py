@@ -80,6 +80,7 @@ class PartitionManager(BaseManager):
 
         super(PartitionManager, self).__init__(
             resource_class=Partition,
+            class_name='partition',
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/partitions',

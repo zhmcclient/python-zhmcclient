@@ -59,6 +59,7 @@ class HbaManager(BaseManager):
 
         super(HbaManager, self).__init__(
             resource_class=Hba,
+            class_name='hba',
             session=partition.manager.session,
             parent=partition,
             base_uri='{}/hbas'.format(partition.uri),

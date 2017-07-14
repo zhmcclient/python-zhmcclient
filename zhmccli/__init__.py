@@ -25,3 +25,4 @@ from ._cmd_hba import *        # noqa: F401
 from ._cmd_nic import *        # noqa: F401
 from ._cmd_vfunction import *  # noqa: F401
 from ._cmd_vswitch import *    # noqa: F401
+from ._cmd_metrics import *    # noqa: F401

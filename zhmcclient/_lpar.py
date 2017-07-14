@@ -71,6 +71,7 @@ class LparManager(BaseManager):
 
         super(LparManager, self).__init__(
             resource_class=Lpar,
+            class_name='logical-partition',
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/logical-partitions',
