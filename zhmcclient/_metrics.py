@@ -418,7 +418,9 @@ def _metric_value(value_str, metric_type):
             raise ValueError("Invalid {} metric value: {!r}".
                              format(metric_type.__class__.__name__, value_str))
     elif metric_type is six.text_type:
-        return value_str.strip('"').decode('unicode_escape')
+        # In Python 3, decode('unicode_escape) requires bytes, so we need
+        # to encode to bytes. This also works in Python 2.
+        return value_str.strip('"').encode('utf-8').decode('unicode_escape')
     else:
         assert metric_type is bool
         lower_str = value_str.lower()
