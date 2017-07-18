@@ -112,30 +112,28 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       virtualenv venv -p $PYTHON_CMD && source venv/bin/activate;
     fi
-  - which $PIP_CMD
-  - $PIP_CMD --version
-  - which $PYTHON_CMD
-  - $PYTHON_CMD --version
 
 # commands to install dependencies
 install:
+  - make pyshow
   - $PIP_CMD list
   - make install
   - $PIP_CMD list
   - make develop
+  - $PIP_CMD list
   - $PIP_CMD install python-coveralls
   - $PIP_CMD list
-  - make pyshow
-  - bash -c "echo $TRAVIS_EVENT_TYPE"
 
 # commands to run builds & tests
 script:
   - make check
   - make test
-  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then
+  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
       make build;
       make builddoc;
     fi
 
 after_success:
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 && $PACKAGE_LEVEL == latest ]]; then coveralls; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" ]]; then
+      coveralls;
+    fi
