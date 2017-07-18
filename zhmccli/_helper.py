@@ -361,7 +361,7 @@ def print_resources_as_table(resources, table_format, show_list=None):
                 properties[name] = resource.prop(name)
         if i == 0:
             headers = properties.keys()
-        row = properties.values()
+        row = list(properties.values())  # Needed for Python 3 to sort by row
         table.append(row)
     if not table:
         click.echo("No resources.")

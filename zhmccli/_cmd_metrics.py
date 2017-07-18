@@ -95,8 +95,9 @@ def print_object_values_as_table(
 
     if object_values_list:
         metric_definitions = metric_group_definition.metric_definitions
-        sorted_metric_names = sorted(metric_definitions,
-                                     key=lambda md: md.index)
+        sorted_metric_names = [md.name for md in
+                               sorted(metric_definitions.values(),
+                                      key=lambda md: md.index)]
 
     table = list()
     headers = list()
@@ -151,8 +152,9 @@ def print_object_values_as_json(
 
     if object_values_list:
         metric_definitions = metric_group_definition.metric_definitions
-        sorted_metric_names = sorted(metric_definitions,
-                                     key=lambda md: md.index)
+        sorted_metric_names = [md.name for md in
+                               sorted(metric_definitions.values(),
+                                      key=lambda md: md.index)]
 
     json_obj = list()
     for i, ov in enumerate(object_values_list):

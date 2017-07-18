@@ -1301,11 +1301,9 @@ def _result_object(result):
         }
         return result_obj
     elif content_type.startswith('application/vnd.ibm-z-zmanager-metrics'):
-        try:
-            return result.content
-        except ValueError as exc:
-            raise ParseError("Parse error in returned RAW: {}".
-                             format(exc.args[0]))
+        content_bytes = result.content
+        assert isinstance(content_bytes, six.binary_type)
+        return content_bytes.decode('utf-8')  # as a unicode object
     else:
         raise ParseError(
             "Unknown content type in HTTP response: {}. "

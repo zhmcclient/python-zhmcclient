@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a TypeError: "'odict_values' object does not support indexing" on
+  Python 3.x (issue #372).
+
 **Enhancements:**
 
 * Added support for the HMC Metric Service. For details, see section 'Metrics' in the
