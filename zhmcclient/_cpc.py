@@ -329,6 +329,7 @@ class Cpc(BaseResource):
         '2828': 30,  # zBC12
         '2964': 85,  # z13 / Emperor
         '2965': 40,  # z13s / Rockhopper
+        '3906': 85,  # z14
     }
 
     @property
@@ -351,6 +352,7 @@ class Cpc(BaseResource):
         zBC12                               30
         z13 / Emperor                       85
         z13s / Rockhopper                   40
+        z14                                 85
         ==================  ==================
 
         Raises:
