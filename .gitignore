@@ -7,8 +7,8 @@
 /build/
 /build_doc/
 /dist/
-AUTHORS
-ChangeLog
+/AUTHORS
+/ChangeLog
 .ipynb_checkpoints/
 .coverage
 .venv

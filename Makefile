@@ -130,10 +130,12 @@ endif
 
 # Files the distribution archive depends upon.
 dist_dependent_files := \
+    setup.py setup.cfg \
     README.rst \
     requirements.txt \
     $(wildcard *.py) \
     $(wildcard $(package_name)/*.py) \
+    $(wildcard zhmcclient_mock/*.py) \
     $(wildcard $(cli_package_name)/*.py) \
 
 # No built-in rules needed:
@@ -306,17 +308,27 @@ else
 endif
 
 # Distribution archives.
-$(bdist_file) $(sdist_file): Makefile setup.py $(dist_dependent_files)
+$(bdist_file): Makefile $(dist_dependent_files)
 ifneq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs
-	$(PYTHON_CMD) setup.py sdist -d $(dist_dir) bdist_wheel -d $(dist_dir) --universal
-	@echo 'Done: Created distribution files: $@'
+	$(PYTHON_CMD) setup.py bdist_wheel -d $(dist_dir) --universal
+	@echo 'Done: Created binary distribution archive: $@'
 else
-	@echo 'Error: Creating distribution archives requires to run on Linux or OSX'
+	@echo 'Error: Creating binary distribution archive requires to run on Linux or OSX'
 	@false
 endif
 
-$(win64_dist_file): Makefile setup.py $(dist_dependent_files)
+$(sdist_file): Makefile $(dist_dependent_files)
+ifneq ($(PLATFORM),Windows)
+	rm -Rfv $(package_name).egg-info .eggs
+	$(PYTHON_CMD) setup.py sdist -d $(dist_dir)
+	@echo 'Done: Created source distribution archive: $@'
+else
+	@echo 'Error: Creating source distribution archive requires to run on Linux or OSX'
+	@false
+endif
+
+$(win64_dist_file): Makefile $(dist_dependent_files)
 ifeq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs
 	$(PYTHON_CMD) setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
