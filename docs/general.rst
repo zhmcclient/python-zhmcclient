@@ -102,7 +102,7 @@ Metrics
    :members:
    :special-members: __str__
 
-.. autoclass:: zhmcclient.MetricGroup
+.. autoclass:: zhmcclient.MetricGroupValues
    :members:
    :special-members: __str__
 

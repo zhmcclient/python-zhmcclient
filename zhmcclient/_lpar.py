@@ -581,9 +581,10 @@ class Lpar(BaseResource):
           status (:term:`string` or iterable of :term:`string`):
             Desired LPAR status or set of status values to reach; one or more
             of the following values:
+
             * ``"not-activated"`` - The LPAR is not active.
-            * ``"not-operating" - The LPAR is active but no operating system is
-              running in the LPAR.
+            * ``"not-operating"`` - The LPAR is active but no operating system
+              is running in the LPAR.
             * ``"operating"`` - The LPAR is active and an operating system is
               running in the LPAR.
             * ``"exceptions"`` - The LPAR or its CPC has one or more unusual

@@ -425,7 +425,10 @@ output formats are supported:
 
 * ``-o mediawiki``: Tables in `Mediawiki`_ markup:
 
-  .. code-block:: mediawiki
+  .. Note: The 'moin' language in the following code-block is used because
+  .. Pygments does not specifically support the MediaWiki language.
+
+  .. code-block:: moin
 
       {| class="wikitable" style="text-align: left;"
       |+ <!-- caption -->
