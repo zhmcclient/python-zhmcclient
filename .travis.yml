@@ -80,41 +80,60 @@ matrix:
         - PACKAGE_LEVEL=latest
         - PYTHON=3
 
-# commands to install dependencies
-install:
-  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-      if [[ ${PYTHON:0:1} == '2' ]]; then
-        OSX_PYTHON_PKG=python;
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      if [[ "${PYTHON:0:1}" == "2" ]]; then
         export PYTHON_CMD=python;
         export PIP_CMD=pip;
       else
-        OSX_PYTHON_PKG=python3;
         export PYTHON_CMD=python3;
         export PIP_CMD=pip3;
       fi;
-      brew update;
-      brew ls --versions $OSX_PYTHON_PKG && brew upgrade $OSX_PYTHON_PKG || brew install $OSX_PYTHON_PKG;
     else
       export PYTHON_CMD=python;
       export PIP_CMD=pip;
+    fi;
+    echo "PYTHON_CMD=$PYTHON_CMD";
+    echo "PIP_CMD=$PIP_CMD"
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      if [[ "${PYTHON:0:1}" == "2" ]]; then
+        OSX_PYTHON_PKG=python;
+      else
+        OSX_PYTHON_PKG=python3;
+      fi;
+      echo "OSX_PYTHON_PKG=$OSX_PYTHON_PKG";
     fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew ls --versions $OSX_PYTHON_PKG && brew upgrade $OSX_PYTHON_PKG || brew install $OSX_PYTHON_PKG;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      virtualenv venv -p $PYTHON_CMD && source venv/bin/activate;
+    fi
+
+# commands to install dependencies
+install:
+  - make pyshow
   - $PIP_CMD list
   - make install
   - $PIP_CMD list
   - make develop
+  - $PIP_CMD list
   - $PIP_CMD install python-coveralls
   - $PIP_CMD list
-  - make pyshow
-  - bash -c "echo $TRAVIS_EVENT_TYPE"
 
 # commands to run builds & tests
 script:
   - make check
   - make test
-  - if [[ $TRAVIS_EVENT_TYPE == 'cron' ]]; then
+  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
       make build;
       make builddoc;
     fi
 
 after_success:
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 && $PACKAGE_LEVEL == latest ]]; then coveralls; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" ]]; then
+      coveralls;
+    fi
