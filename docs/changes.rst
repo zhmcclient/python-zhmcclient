@@ -42,6 +42,9 @@ Released: not yet
 
 * Added support for a "metrics" command to the zhmc CLI.
 
+* Added support for the IBM z14 system (in internal machine type tables and in the
+  documentation).
+
 **Known issues:**
 
 * See `list of open issues`_.

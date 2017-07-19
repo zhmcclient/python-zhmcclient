@@ -352,12 +352,13 @@ class Adapter(BaseResource):
         The following table shows the maximum number of crypto domains for
         crypto adapters supported on machines in DPM mode:
 
-        =================  ==================  ===============
-        Adapter type       Machine generation  Maximum domains
-        =================  ==================  ===============
-        Crypto Express 5S  z13 / Emperor                    85
-        Crypto Express 5S  z13s / Rockhopper                40
-        =================  ==================  ===============
+        =================  ===================  ===============
+        Adapter type       Machine generation   Maximum domains
+        =================  ===================  ===============
+        Crypto Express 5S  z14 / z13 / Emperor               85
+        Crypto Express 5S  z13s / Rockhopper                 40
+        Crypto Express 6S  z14                               85
+        =================  ===================  ===============
 
         If this adapter is not a crypto adapter, `None` is returned.
 
@@ -375,7 +376,7 @@ class Adapter(BaseResource):
         if self.get_property('adapter-family') != 'crypto':
             return None
         card_type = self.get_property('detected-card-type')
-        if card_type == 'crypto-express-5s':
+        if card_type.startswith('crypto-express-'):
             max_domains = self.manager.cpc.maximum_active_partitions
         else:
             raise ValueError("Unknown crypto card type: {!r}".
