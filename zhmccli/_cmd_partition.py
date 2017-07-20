@@ -34,6 +34,9 @@ DEFAULT_PROCESSOR_MODE = 'shared'
 PARTITION_TYPES = ['ssc', 'linux', 'zvm']
 DEFAULT_PARTITION_TYPE = 'linux'
 DEFAULT_SSC_BOOT = 'installer'
+DEFAULT_PROCESSING_WEIGHT = 100
+MIN_PROCESSING_WEIGHT = 1
+MAX_PROCESSING_WEIGHT = 999
 
 
 def find_partition(cmd_ctx, client, cpc_name, partition_name):
@@ -211,6 +214,46 @@ def partition_stop(cmd_ctx, cpc, partition):
 @click.option('--ssc-master-pw', type=str, required=False,
               help='Secure Service Container master user password. '
               'Only applicable to and required for ssc type partitions.')
+@click.option('--initial-cp-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=DEFAULT_PROCESSING_WEIGHT,
+              help='Defines the initial processing weight of CP processors. '
+              'Default: {}'.format(DEFAULT_PROCESSING_WEIGHT))
+@click.option('--initial-ifl-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=DEFAULT_PROCESSING_WEIGHT,
+              help='Defines the initial processing weight of IFL processors. '
+              'Default: {}'.format(DEFAULT_PROCESSING_WEIGHT))
+@click.option('--minimum-ifl-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MIN_PROCESSING_WEIGHT,
+              help='Represents the minimum amount of IFL processor '
+              'resources allocated to the partition. '
+              'Default: {}'.format(MIN_PROCESSING_WEIGHT))
+@click.option('--minimum-cp-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MIN_PROCESSING_WEIGHT,
+              help='Represents the minimum amount of general purpose '
+              'processor resources allocated to the partition. '
+              'Default: {}'.format(MIN_PROCESSING_WEIGHT))
+@click.option('--maximum-ifl-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MAX_PROCESSING_WEIGHT,
+              help='Represents the maximum amount of IFL processor '
+              'resources allocated to the partition. '
+              'Default: {}'.format(MAX_PROCESSING_WEIGHT))
+@click.option('--maximum-cp-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MAX_PROCESSING_WEIGHT,
+              help='Represents the maximum amount of general purpose '
+              'processor resources allocated to the partition. '
+              'Default: {}'.format(MAX_PROCESSING_WEIGHT))
 @click.pass_obj
 def partition_create(cmd_ctx, cpc, **options):
     """
@@ -315,6 +358,46 @@ def partition_create(cmd_ctx, cpc, **options):
 @click.option('--ssc-master-pw', type=str, required=False,
               help='Secure Service Container master user password. '
               'Only applicable to ssc type partitions.')
+@click.option('--initial-cp-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=DEFAULT_PROCESSING_WEIGHT,
+              help='Defines the initial processing weight of CP processors. '
+              'Default: {}'.format(DEFAULT_PROCESSING_WEIGHT))
+@click.option('--initial-ifl-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=DEFAULT_PROCESSING_WEIGHT,
+              help='Defines the initial processing weight of IFL processors. '
+              'Default: {}'.format(DEFAULT_PROCESSING_WEIGHT))
+@click.option('--minimum-ifl-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MIN_PROCESSING_WEIGHT,
+              help='Represents the minimum amount of IFL processor '
+              'resources allocated to the partition. '
+              'Default: {}'.format(MIN_PROCESSING_WEIGHT))
+@click.option('--minimum-cp-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MIN_PROCESSING_WEIGHT,
+              help='Represents the minimum amount of general purpose '
+              'processor resources allocated to the partition. '
+              'Default: {}'.format(MIN_PROCESSING_WEIGHT))
+@click.option('--maximum-ifl-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MAX_PROCESSING_WEIGHT,
+              help='Represents the maximum amount of IFL processor '
+              'resources allocated to the partition. '
+              'Default: {}'.format(MAX_PROCESSING_WEIGHT))
+@click.option('--maximum-cp-processing-weight',
+              type=click.IntRange(MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT),
+              required=False, default=MAX_PROCESSING_WEIGHT,
+              help='Represents the maximum amount of general purpose '
+              'processor resources allocated to the partition. '
+              'Default: {}'.format(MAX_PROCESSING_WEIGHT))
 @click.pass_obj
 def partition_update(cmd_ctx, cpc, partition, **options):
     """
