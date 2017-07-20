@@ -165,6 +165,34 @@ def partition_stop(cmd_ctx, cpc, partition):
 @click.option('--boot-media-file', type=str, required=False,
               help='Boot from removable media on the HMC: The path to the '
               'image file on the HMC.')
+@click.option('--access-global-performance-data', type=bool, required=False,
+              help='Indicates if global performance data authorization '
+              'control is requested. Default: False')
+@click.option('--permit-cross-partition-commands', type=bool, required=False,
+              help='Indicates if cross partition commands authorization is'
+              'requested. Default: False')
+@click.option('--access-basic-counter-set', type=bool, required=False,
+              help='Indicates if basic counter set authorization control is '
+              'requested. Default: False')
+@click.option('--access-problem-state-counter-set', type=bool, required=False,
+              help='Indicates if problem state counter set authorization '
+              'is requested. Default: False')
+@click.option('--access-crypto-activity-counter-set',
+              type=bool, required=False,
+              help='Indicates is crypto activity counter set authorization '
+              'control is requested. Default: False')
+@click.option('--access-extended-counter-set', type=bool, required=False,
+              help='Indicates if extended counter set authorization control '
+              'is requested. Default: False')
+@click.option('--access-coprocessor-group-set', type=bool, required=False,
+              help='Indicates if coprocessor group set authorization control '
+              'is requested. Default: False')
+@click.option('--access-basic-sampling', type=bool, required=False,
+              help='Indicates if basic CPU sampling authorization control is '
+              'requested. Default: False')
+@click.option('--access-diagnostic-sampling', type=bool, required=False,
+              help='Indicates if diagnostic sampling authorization control '
+              'is requested. Default: False')
 @click.option('--type', type=click.Choice(PARTITION_TYPES), required=False,
               help='Defines the type of the partition (Default: {pd}).'.
               format(pd=DEFAULT_PARTITION_TYPE))
@@ -239,6 +267,34 @@ def partition_create(cmd_ctx, cpc, **options):
               'image file on the HMC.')
 @click.option('--boot-iso', type=str, required=False,
               help='Boot from an ISO image mounted to this partition.')
+@click.option('--access-global-performance-data', type=bool, required=False,
+              help='Indicates if global performance data authorization '
+              'control is requested. Default: False')
+@click.option('--permit-cross-partition-commands', type=bool, required=False,
+              help='Indicates if cross partition commands authorization is'
+              'requested. Default: False')
+@click.option('--access-basic-counter-set', type=bool, required=False,
+              help='Indicates if basic counter set authorization control is '
+              'requested. Default: False')
+@click.option('--access-problem-state-counter-set', type=bool, required=False,
+              help='Indicates if problem state counter set authorization '
+              'is requested. Default: False')
+@click.option('--access-crypto-activity-counter-set',
+              type=bool, required=False,
+              help='Indicates is crypto activity counter set authorization '
+              'control is requested. Default: False')
+@click.option('--access-extended-counter-set', type=bool, required=False,
+              help='Indicates if extended counter set authorization control '
+              'is requested. Default: False')
+@click.option('--access-coprocessor-group-set', type=bool, required=False,
+              help='Indicates if coprocessor group set authorization control '
+              'is requested. Default: False')
+@click.option('--access-basic-sampling', type=bool, required=False,
+              help='Indicates if basic CPU sampling authorization control is '
+              'requested. Default: False')
+@click.option('--access-diagnostic-sampling', type=bool, required=False,
+              help='Indicates if diagnostic sampling authorization control '
+              'is requested. Default: False')
 @click.option('--ssc-host-name', type=str, required=False,
               help='Secure Service Container host name.')
 @click.option('--ssc-boot-selection',
