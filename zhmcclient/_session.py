@@ -38,7 +38,8 @@ from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
-    DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME
+    DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME, \
+    HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
 
@@ -1278,23 +1279,38 @@ def _result_object(result):
             html_uni = result.content.decode(encoding)
         except LookupError as exc:
             html_uni = result.content.decode()
+
         # We convert to one line to be regexp-friendly.
-        html_oneline = html_uni.replace('\r', '\\n').replace('\n', '\\n')
-        m = re.search(r'<title>([^<]*)</title>', html_oneline)
-        html_title = m.group(1) if m else ""
-        m = re.search(r'<h2>Details:</h2>(.*)<hr', html_oneline)
-        html_details = m.group(1) if m else ""
-        # Some rudimentary beautifying
-        html_details = html_details. \
-            replace('<p>', '\\n'). \
-            replace('<br>', '\\n'). \
-            replace('\\n\\n', '\\n')
+        html_oneline = html_uni.replace('\r\n', '\\n').replace('\r', '\\n').\
+            replace('\n', '\\n')
+
+        # Check for some well-known errors:
+        if re.search(r'javax\.servlet\.ServletException: '
+                     'Web Services are not enabled\.', html_oneline):
+            html_title = "Console Configuration Error"
+            html_details = "Web Services API is not enabled on the HMC."
+            html_reason = HTML_REASON_WEB_SERVICES_DISABLED
+        else:
+            m = re.search(
+                r'<title>([^<]*)</title>.*'
+                r'<h2>Details:</h2>(.*)(<hr size="1" noshade>)?</body>',
+                html_oneline)
+            if m:
+                html_title = m.group(1)
+                # Spend a reasonable effort to make the HTML readable:
+                html_details = m.group(2).replace('<p>', '\\n').\
+                    replace('<br>', '\\n').replace('\\n\\n', '\\n').strip()
+            else:
+                html_title = "Console Internal Error"
+                html_details = "Response body: {!r}".format(html_uni)
+            html_reason = HTML_REASON_OTHER
         message = "{}: {}".format(html_title, html_details)
+
         # We create a minimal JSON error object (to the extent we use it
         # when processing it):
         result_obj = {
             'http-status': result.status_code,
-            'reason': HTTPError.html_error_reason,
+            'reason': html_reason,
             'message': message,
             'request-uri': result.request.url,
             'request-method': result.request.method,

@@ -26,6 +26,11 @@ Released: not yet
 
 **Incompatible changes:**
 
+* In case the user code was specifically processing the reason code 900 used
+  for HTML-formatted error responses with HTTP status 500: This reason code
+  has been split up into multiple reason codes. See the corresponding item
+  in section "Enhancements".
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -51,6 +56,13 @@ Released: not yet
 * zhmccli: Support for 'authorization controls' of a Partition (issue #380)
 
 * Added CLI support for processing weights (issue #383)
+
+* The `HTTPError` raised at the API for HMC Web Services not enabled now has
+  a simple error message and uses a specific reason code of 900. Previously,
+  the returned HTML-formatted response body was used for the message and a
+  generic reason code of 999. All other HTML-formatted error responses still
+  use the generic reason code 999. That reason code 999 is now documented to
+  be changed to more specific reason codes, over time. (issue #296).
 
 **Known issues:**
 
