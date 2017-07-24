@@ -48,6 +48,10 @@ Released: not yet
 * Added support for the IBM z14 system (in internal machine type tables and in the
   documentation).
 
+* zhmccli: Support for 'authorization controls' of a Partition (issue #380)
+
+* Added CLI support for processing weights (issue #383)
+
 **Known issues:**
 
 * See `list of open issues`_.
