@@ -27,9 +27,6 @@
 # the dependents (as of 2017-04-11). They should not be installed when
 # testing with the minimum package level (and they will be pulled in with their
 # latest versions automatically when testing with the latest package level):
-#   python-dateutil (2.6.0)
-#   scandir (1.5)
-#   webencodings (0.5.1)
 
 
 # Dependencies for installation with Pip:
@@ -39,7 +36,7 @@ setuptools===30.0.0
 wheel===0.29.0
 
 
-# Dependencies for runtime (must be consistent with requirements.txt)
+# Direct dependencies for runtime (must be consistent with requirements.txt)
 
 click===6.6
 click-repl===0.1.0
@@ -47,94 +44,121 @@ click-spinner===0.1.6
 decorator===4.0.10
 pbr===1.10.0
 progressbar2===3.12.0
-prompt_toolkit===1.0.9 # from click-repl
-python-utils===2.0.1 # from progressbar2
+pytz===2016.10
 requests===2.12.4
 six===1.10.0
 stomp.py===4.1.15
 tabulate===0.7.7
-wcwidth===0.1.7 # from prompt_toolkit
 
 
-# Dependencies for development (must be consistent with dev-requirements.txt)
+# Indirect dependencies for runtime (must be consistent with requirements.txt)
+
+certifi===2016.9.26
+chardet===3.0.2
+idna===2.5
+prompt_toolkit===1.0.9
+python-utils===2.0.1
+wcwidth===0.1.7
+urllib3===1.21.1
+
+
+# Direct dependencies for development (must be consistent with dev-requirements.txt)
+
+# Unit test:
+pytest===3.0.5
+pytest-cov===2.4.0
+python-coveralls===2.9.0
+coverage===4.0.3
+mock===2.0.0
+requests-mock===1.2.0
+testfixtures===4.13.3
+
+# Sphinx:
+Sphinx===1.5.1
+sphinx-git===10.0.0
+GitPython===2.1.1
+
+# PyLint:
+pylint===1.6.4 ; python_version == '2.7'
+
+# Flake8:
+flake8===3.2.1
+
+# Twine: Needed for uploading to Pypi
+twine===1.8.1
+
+# Jupyter Notebook:
+jupyter===1.0.0
+
+# Examples:
+PyYAML===3.12
+
+
+# Indirect ependencies for development (must be consistent with dev-requirements.txt)
 
 alabaster===0.7.9
-appnope===0.1.0 ; sys_platform == "darwin" # from ipython
+appnope===0.1.0; sys_platform == "darwin"
 args===0.1.0
-astroid===1.4.9 ; python_version == '2.7' # from pylint
+astroid===1.4.9; python_version == '2.7'
 Babel===2.3.4
 backports-abc===0.5
 backports.functools-lru-cache===1.3
 backports.shutil-get-terminal-size===1.0.0
+backports.ssl-match-hostname===3.5.0.1
 bleach===1.5.0
-certifi===2016.9.26
-click-repl===0.1.0
 clint===0.5.1
 configparser===3.5.0
-coverage===4.0.3
 docutils===0.13.1
 entrypoints===0.2.2
 enum34===1.1.6
-flake8===3.2.1
 funcsigs===1.0.2 ; python_version < '3.3' # from mock
 functools32===3.2.3.post2 ; python_version == '2.7'
 gitdb2===2.0.0
-GitPython===2.1.1
 html5lib===0.9999999
 imagesize===0.7.1
 ipykernel===4.5.2
 ipython===5.1.0
-ipython-genutils===0.1.0
+ipython_genutils===0.1.0
 ipywidgets===5.2.2
 isort===4.2.5
 Jinja2===2.8
 jsonschema===2.5.1
-jupyter===1.0.0
-jupyter-client===4.4.0
-jupyter-console===5.0.0
-jupyter-core===4.2.1
+jupyter_client===4.4.0
+jupyter_console===5.0.0
+jupyter_core===4.2.1
 lazy-object-proxy===1.2.2
 MarkupSafe===0.23
 mccabe===0.5.3
 mistune===0.7.3
-mock===2.0.0
 nbconvert===5.0.0
 nbformat===4.2.0
-nose===1.3.7
 notebook===4.3.1
-numpy===1.11.3
 pandocfilters===1.4.1
 pathlib2===2.1.0
 pexpect===4.2.1
 pickleshare===0.7.4
 pkginfo===1.4.1
-progressbar2===3.12.0
 ptyprocess===0.5.1
 py===1.4.32
 pycodestyle===2.2.0
 pyflakes===1.3.0
 Pygments===2.1.3
-pylint===1.6.4 ; python_version == '2.7'
-pytest===3.0.5
-pytest-cov===2.4.0
-python-coveralls===2.9.0
-pytz===2016.10
-PyYAML===3.12
+python-dateutil===2.6.0
 pyzmq===16.0.2
 qtconsole===4.2.1
-requests-mock===1.2.0
 requests-toolbelt===0.7.0
+scandir===1.5
 simplegeneric===0.8.1
 singledispatch===3.4.0.3
 smmap2===2.0.1
 snowballstemmer===1.2.1
-Sphinx===1.5.1
-sphinx-git===10.0.0
+sphinxcontrib-websupport===1.0.1
 terminado===0.6
-testfixtures===4.13.3
 testpath===0.3
 tornado===4.4.2
+tqdm===4.11.2
 traitlets===4.3.1
-twine===1.8.1
+typing===3.6.1
+webencodings===0.5.1
 widgetsnbextension===1.2.6
 wrapt===1.10.8
