@@ -248,18 +248,10 @@ class SessionTests(unittest.TestCase):
             # The following expected results reflect what is done in
             # _session._result_object().
 
-            exp_reason = 999
+            exp_reason = 900
             exp_message = \
-                "Console Internal Error: \\n" \
-                "HTTP status code: 500\\n" \
-                "The server encountered an internal error that prevented it " \
-                "from fulfilling this request.\\n" \
-                "<pre>javax.servlet.ServletException: Web Services are not " \
-                "enabled.\\n" \
-                "\tat com.ibm.hwmca.fw.api.ApiServlet.execute(ApiServlet." \
-                "java:135)\\n" \
-                "\t. . .\\n" \
-                "</pre>"
+                "Console Configuration Error: " \
+                "Web Services API is not enabled on the HMC."
 
             with self.assertRaises(HTTPError) as cm:
                 session.get(get_uri, logon_required=False)

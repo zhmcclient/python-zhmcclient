@@ -594,8 +594,6 @@ class HTTPError(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    html_error_reason = 999  # Used when the HMC returns HTML content
-
     def __init__(self, body):
         """
         Parameters:

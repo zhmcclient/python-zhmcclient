@@ -33,7 +33,9 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_NAME_URI_CACHE_TIMETOLIVE',
            'HMC_LOGGER_NAME',
            'API_LOGGER_NAME',
-           'CONSOLE_LOGGER_NAME']
+           'CONSOLE_LOGGER_NAME',
+           'HTML_REASON_WEB_SERVICES_DISABLED',
+           'HTML_REASON_OTHER']
 
 
 #: Default HTTP connect timeout in seconds,
@@ -111,3 +113,10 @@ API_LOGGER_NAME = 'zhmcclient.api'
 
 #: Name of the Python logger that logs zhmccli console calls made by the user.
 CONSOLE_LOGGER_NAME = 'zhmccli.console'
+
+#: HTTP reason code: Web Services API is not enabled on the HMC.
+HTML_REASON_WEB_SERVICES_DISABLED = 900
+
+#: HTTP reason code: Other HTML-formatted error response. Note that over time,
+#: there may be more specific reason codes introduced for such situations.
+HTML_REASON_OTHER = 999
