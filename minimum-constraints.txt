@@ -14,20 +14,6 @@
 # Make sure that the package versions in minimum-constraints.txt are also
 # the minimum versions required in requirements.txt and dev-requirements.txt.
 
-# Note: New dependent packages for current version of setuptools that are not
-# in the specified version fo setuptools. They are installed into virtual
-# environments default (due to using the latest setuptools version).
-# Ideally, these packages would be removed when testing the minimum package
-# level, but probably they don't hurt:
-#   appdirs (1.4.3) # from setuptools
-#   packaging (16.8) # from setuptools
-#   pyparsing (2.2.0) # from packaging
-
-# Note: New dependent packages that came in after the original definition of
-# the dependents (as of 2017-04-11). They should not be installed when
-# testing with the minimum package level (and they will be pulled in with their
-# latest versions automatically when testing with the latest package level):
-
 
 # Dependencies for installation with Pip:
 
@@ -64,37 +50,40 @@ urllib3===1.21.1
 
 # Direct dependencies for development (must be consistent with dev-requirements.txt)
 
-# Unit test:
+# zhmcclient examples (imports into the example scripts):
+PyYAML===3.12
+
+# Unit test (imports into testcases):
 pytest===3.0.5
-pytest-cov===2.4.0
-python-coveralls===2.9.0
-coverage===4.0.3
 mock===2.0.0
 requests-mock===1.2.0
 testfixtures===4.13.3
 
-# Sphinx:
+# Unit test (no imports, invoked via py.test script):
+pytest-cov===2.4.0
+
+# Coverage reporting (no imports, invoked via coveralls script):
+python-coveralls===2.9.0
+
+# Sphinx (no imports, invoked via sphinx-build script):
 Sphinx===1.5.1
 sphinx-git===10.0.0
 GitPython===2.1.1
 
-# PyLint:
-pylint===1.6.4 ; python_version == '2.7'
+# PyLint (no imports, invoked via pylint script):
+pylint===1.6.4; python_version == '2.7'
 
-# Flake8:
+# Flake8 (no imports, invoked via flake8 script):
 flake8===3.2.1
 
-# Twine: Needed for uploading to Pypi
+# Twine (no imports, invoked via twine script):
 twine===1.8.1
 
-# Jupyter Notebook:
+# Jupyter Notebook (no imports, invoked via jupyter script):
 jupyter===1.0.0
 
-# Examples:
-PyYAML===3.12
 
-
-# Indirect ependencies for development (must be consistent with dev-requirements.txt)
+# Indirect dependencies for development (must be consistent with dev-requirements.txt)
 
 alabaster===0.7.9
 appnope===0.1.0; sys_platform == "darwin"
@@ -108,11 +97,12 @@ backports.ssl-match-hostname===3.5.0.1
 bleach===1.5.0
 clint===0.5.1
 configparser===3.5.0
+coverage===4.0.3
 docutils===0.13.1
 entrypoints===0.2.2
 enum34===1.1.6
-funcsigs===1.0.2 ; python_version < '3.3' # from mock
-functools32===3.2.3.post2 ; python_version == '2.7'
+funcsigs===1.0.2; python_version < '3.3'
+functools32===3.2.3.post2; python_version == '2.7'
 gitdb2===2.0.0
 html5lib===0.9999999
 imagesize===0.7.1

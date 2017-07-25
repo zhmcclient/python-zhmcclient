@@ -14,42 +14,45 @@
 
 # Direct dependencies:
 
-# Unit test:
+# zhmcclient examples (imports into the example scripts):
+PyYAML>=3.12 # MIT
+
+# Unit test (imports into testcases):
 pytest>=3.0.5 # MIT
-pytest-cov>=2.4.0 # BSD
-python-coveralls>=2.9.0 # Apache-2.0
-coverage>=4.0.3 # Apache-2.0
 mock>=2.0.0 # BSD
 requests-mock>=1.2.0 # Apache-2.0
 testfixtures>=4.13.3 # Apache-2.0
 
-# Sphinx:
+# Unit test (no imports, invoked via py.test script):
+pytest-cov>=2.4.0 # BSD
+
+# Coverage reporting (no imports, invoked via coveralls script):
+python-coveralls>=2.9.0 # Apache-2.0
+
+# Sphinx (no imports, invoked via sphinx-build script):
 Sphinx>=1.5.1 # BSD
 sphinx-git>=10.0.0 # GPL
 GitPython>=2.1.1 # BSD
 
-# PyLint:
+# PyLint (no imports, invoked via pylint script):
 pylint>=1.6.4; python_version == '2.7'
 
-# Flake8:
+# Flake8 (no imports, invoked via flake8 script):
 flake8>=3.2.1 # MIT
 
-# Twine: Needed for uploading to Pypi
+# Twine (no imports, invoked via twine script):
 twine>=1.8.1 # Apache-2.0
 
-# Jupyter Notebook:
+# Jupyter Notebook (no imports, invoked via jupyter script):
 jupyter>=1.0.0 # BSD
-
-# Examples:
-PyYAML>=3.12 # MIT
 
 
 # Indirect dependencies (normally commented out, only listed to document their license):
 
 # alabaster # BSD, from Sphinx
-# appnope; sys_platform == "darwin" # BSD, from ipython -> ipywidgets -> jupyter
+# appnope # BSD, from ipython for darwin -> ipywidgets -> jupyter
 # args # BSD, from clint -> twine<1.9.1
-# astroid; python_version == '2.7' # LGPL, from pylint
+# astroid # LGPL, from pylint for py=2.7
 # Babel # BSD, from Sphinx
 # backports-abc # PSFL, from tornado -> notebook -> jupyter
 # backports.functools-lru-cache # MIT, from pylint
@@ -57,12 +60,13 @@ PyYAML>=3.12 # MIT
 # backports.ssl-match-hostname # PSFL, from tornado -> notebook -> jupyter
 # bleach # Apache, from nbconvert -> jupyter
 # clint # ISCL, from twine<1.9.1
-# configparser # MIT, from pylint
+# configparser # MIT, from pylint and from flake8 for py<3.2
+# coverage # Apache-2.0, from pytest-cov
 # docutils # public domain | Python | 2-Clause BSD | GPL 3, from Sphinx
 # entrypoints # MIT, from nbconvert -> jupyter
 # enum34 # BSD, from astroid
-# funcsigs; python_version < '3.3' # Apache, from mock
-# functools32; python_version == '2.7' # PSFL, from jsonschema -> nbformat -> ipywidgets -> jupyter
+# funcsigs # Apache, from mock for py<3.3
+# functools32 # PSFL, from jsonschema for py=2.7 -> nbformat -> ipywidgets -> jupyter
 # gitdb2 # BSD, from GitPython
 # html5lib # MIT, from bleach -> nbconvert -> jupyter
 # imagesize # MIT, from Sphinx
@@ -78,7 +82,7 @@ PyYAML>=3.12 # MIT
 # jupyter_core # BSD, from notebook -> jupyter
 # lazy-object-proxy # BSD, from astroid
 # MarkupSafe # BSD, from Jinja2 -> Sphinx
-# mccabe # MIT, from pylint
+# mccabe # MIT, from pylint and from flake8
 # mistune # BSD, from nbconvert -> jupyter
 # nbconvert # BSD, from jupyter
 # nbformat # BSD, from ipywidgets -> jupyter
@@ -97,18 +101,18 @@ PyYAML>=3.12 # MIT
 # pyzmq #  LGPL + BSD, from jupyter-client -> notebook -> jupyter
 # qtconsole # BSD, from jupyter
 # requests-toolbelt # Apache 2.0, from twine
-# scandir; python_version < "3.5" # New BSD, from pathlib2 -> python_version -> ipython -> ipywidgets -> jupyter
+# scandir # New BSD, from pathlib2 for py<3.5 -> python_version -> ipython -> ipywidgets -> jupyter
 # simplegeneric # ZPL 2.1, from ipython -> ipywidgets -> jupyter
 # singledispatch # MIT, from pylint
 # smmap2 # BSD, from gitdb2 -> GitPython
 # snowballstemmer # BSD, from Sphinx
 # sphinxcontrib-websupport # BSD, from Sphinx>=1.6.1
-# terminado; sys_platform != "win32" # BSD, from notebook -> jupyter
+# terminado # BSD, from notebook for non-Windows -> jupyter
 # testpath # MIT, from nbconvert -> jupyter
 # tornado # Apache 2.0, from notebook -> jupyter
 # tqdm # MPL 2.0, MIT, from twine>=1.9.1
 # traitlets # BSD, from ipywidgets -> jupyter
-# typing; python_version < "3.5" # PSFL, from Sphinx>=1.6.1
+# typing # PSFL, from Sphinx>=1.6.1 for py<3.5
 # webencodings # BSD, from html5lib -> bleach -> nbconvert -> jupyter
 # widgetsnbextension # BSD, from ipywidgets -> jupyter
 # wrapt # BSD, from astroid
