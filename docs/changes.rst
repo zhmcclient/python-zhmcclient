@@ -64,6 +64,9 @@ Released: not yet
   use the generic reason code 999. That reason code 999 is now documented to
   be changed to more specific reason codes, over time. (issue #296).
 
+* Reduced the package requirements to only the direct dependencies of
+  this package.
+
 **Known issues:**
 
 * See `list of open issues`_.
