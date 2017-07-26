@@ -28,16 +28,290 @@ from .utils import assert_resources
 
 
 # Object IDs and names of our faked CPCs:
+CPC1_NAME = 'cpc 1'  # z13s in DPM mode
 CPC1_OID = 'cpc1-oid'
-CPC1_NAME = 'cpc 1'
+CPC1_MAX_CRYPTO_DOMAINS = 40  # Crypto Express5S on a z13s
+CPC2_NAME = 'cpc 2'  # z13s in classic mode
 CPC2_OID = 'cpc2-oid'
-CPC2_NAME = 'cpc 2'
+CPC3_NAME = 'cpc 3'  # zEC12
 CPC3_OID = 'cpc3-oid'
-CPC3_NAME = 'cpc 3'
 
 HTTPError_404_1 = HTTPError({'http-status': 404, 'reason': 1})
 HTTPError_409_5 = HTTPError({'http-status': 409, 'reason': 5})
 HTTPError_409_4 = HTTPError({'http-status': 409, 'reason': 4})
+
+# Names of our faked crypto adapters:
+CRYPTO1_NAME = 'crypto 1'
+CRYPTO2_NAME = 'crypto 2'
+
+CPC1_UNUSED_CRYPTO_DOMAINS = list(range(4, CPC1_MAX_CRYPTO_DOMAINS))
+
+GET_FREE_CRYPTO_DOMAINS_ENVIRONMENTS = {
+    'env0-example': {
+        'desc': "The example from the description of method "
+        "Cpc.get_free_crypto_domains()",
+        'cpc_name': CPC1_NAME,
+        'adapter_names': [
+            CRYPTO1_NAME,
+            CRYPTO2_NAME,
+        ],
+        'partitions': [
+            {
+                'name': 'part-A',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 0, 'access-mode': 'control-usage'},
+                    {'domain-index': 1, 'access-mode': 'control'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+            {
+                'name': 'part-B',
+                'adapter_names': [
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 0, 'access-mode': 'control'},
+                    {'domain-index': 1, 'access-mode': 'control-usage'},
+                    {'domain-index': 2, 'access-mode': 'control-usage'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+            {
+                'name': 'part-C',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 0, 'access-mode': 'control'},
+                    {'domain-index': 1, 'access-mode': 'control'},
+                    {'domain-index': 3, 'access-mode': 'control-usage'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+        ]
+    },
+    'env1-ocdu': {
+        'desc': "Overlapped control of domains, but disjoint usage "
+        "on all adapters",
+        'cpc_name': CPC1_NAME,
+        'adapter_names': [
+            CRYPTO1_NAME,
+            CRYPTO2_NAME,
+        ],
+        'partitions': [
+            {
+                'name': 'part-0',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 0, 'access-mode': 'control-usage'},
+                    {'domain-index': 1, 'access-mode': 'control'},
+                    {'domain-index': 2, 'access-mode': 'control'},
+                    {'domain-index': 3, 'access-mode': 'control'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+            {
+                'name': 'part-1',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 1, 'access-mode': 'control-usage'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+        ]
+    },
+    'env2-dcdu': {
+        'desc': "Disjoint control and usage of domains on all adapters",
+        'cpc_name': CPC1_NAME,
+        'adapter_names': [
+            CRYPTO1_NAME,
+            CRYPTO2_NAME,
+        ],
+        'partitions': [
+            {
+                'name': 'part-0',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 0, 'access-mode': 'control-usage'},
+                    {'domain-index': 1, 'access-mode': 'control'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+            {
+                'name': 'part-2',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 2, 'access-mode': 'control-usage'},
+                    {'domain-index': 3, 'access-mode': 'control'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+        ]
+    },
+    'env3-dcou': {
+        'desc': "Disjoint control of domains, but overlapping usage on all "
+        "adapters (this prevents activating the partitions at the same time)",
+        'cpc_name': CPC1_NAME,
+        'adapter_names': [
+            CRYPTO1_NAME,
+            CRYPTO2_NAME,
+        ],
+        'partitions': [
+            {
+                'name': 'part-1',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 1, 'access-mode': 'control-usage'},
+                    {'domain-index': 2, 'access-mode': 'control'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+            {
+                'name': 'part-2',
+                'adapter_names': [
+                    CRYPTO1_NAME,
+                    CRYPTO2_NAME,
+                ],
+                'domain_configs': [
+                    {'domain-index': 1, 'access-mode': 'control-usage'},
+                    {'domain-index': 3, 'access-mode': 'control'},
+                    # We leave domain index 4 and higher untouched
+                ],
+            },
+        ]
+    },
+}
+
+GET_FREE_CRYPTO_DOMAINS_SUCCESS_TESTCASES = [
+    # (env_name, parm_adapter_names, exp_free_domains)
+
+    # test cases for environment 'env0-example':
+    (
+        'env0-example',
+        [],
+        None,
+    ),
+    (
+        'env0-example',
+        [CRYPTO1_NAME],
+        [1, 2] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env0-example',
+        [CRYPTO2_NAME],
+        [0] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env0-example',
+        [CRYPTO1_NAME, CRYPTO2_NAME],
+        [] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env0-example',
+        None,
+        [] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+
+    # test cases for environment 'env1-ocdu':
+    (
+        'env1-ocdu',
+        [],
+        None,
+    ),
+    (
+        'env1-ocdu',
+        [CRYPTO1_NAME],
+        [2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env1-ocdu',
+        [CRYPTO2_NAME],
+        [2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env1-ocdu',
+        [CRYPTO1_NAME, CRYPTO2_NAME],
+        [2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env1-ocdu',
+        None,
+        [2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+
+    # test cases for environment 'env2-dcdu':
+    (
+        'env2-dcdu',
+        [],
+        None,
+    ),
+    (
+        'env2-dcdu',
+        [CRYPTO1_NAME],
+        [1, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env2-dcdu',
+        [CRYPTO2_NAME],
+        [1, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env2-dcdu',
+        [CRYPTO1_NAME, CRYPTO2_NAME],
+        [1, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env2-dcdu',
+        None,
+        [1, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+
+    # test cases for environment 'env3-dcou':
+    (
+        'env3-dcou',
+        [],
+        None,
+    ),
+    (
+        'env3-dcou',
+        [CRYPTO1_NAME],
+        [0, 2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env3-dcou',
+        [CRYPTO2_NAME],
+        [0, 2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env3-dcou',
+        [CRYPTO1_NAME, CRYPTO2_NAME],
+        [0, 2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+    (
+        'env3-dcou',
+        None,
+        [0, 2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
+    ),
+]
 
 
 class TestCpc(object):
@@ -61,12 +335,12 @@ class TestCpc(object):
                 'parent': None,
                 'class': 'cpc',
                 'name': CPC1_NAME,
-                'description': 'CPC #1 (z13 in DPM mode)',
+                'description': 'CPC #1 (z13s in DPM mode)',
                 'status': 'active',
                 'dpm-enabled': True,
                 'is-ensemble-member': False,
                 'iml-mode': 'dpm',
-                'machine-type': '2964',
+                'machine-type': '2965',
             })
         elif cpc_name == CPC2_NAME:
             faked_cpc = self.session.hmc.cpcs.add({
@@ -75,12 +349,12 @@ class TestCpc(object):
                 'parent': None,
                 'class': 'cpc',
                 'name': CPC2_NAME,
-                'description': 'CPC #2 (z13 in classic mode)',
+                'description': 'CPC #2 (z13s in classic mode)',
                 'status': 'operating',
                 'dpm-enabled': False,
                 'is-ensemble-member': False,
                 'iml-mode': 'lpar',
-                'machine-type': '2964',
+                'machine-type': '2965',
             })
         elif cpc_name == CPC3_NAME:
             faked_cpc = self.session.hmc.cpcs.add({
@@ -99,6 +373,60 @@ class TestCpc(object):
         else:
             raise ValueError("Invalid value for cpc_name: %s" % cpc_name)
         return faked_cpc
+
+    def add_crypto_adapter(self, faked_cpc, adapter_name):
+        """Add a faked crypto adapter to a faked CPC."""
+
+        if adapter_name == CRYPTO1_NAME:
+            faked_crypto_adapter = faked_cpc.adapters.add({
+                'object-id': adapter_name + '-oid',
+                # object-uri is automatically set
+                'parent': faked_cpc.uri,
+                'class': 'adapter',
+                'name': adapter_name,
+                'status': 'active',
+                'type': 'crypto',
+                'adapter-family': 'crypto',
+                'detected-card-type': 'crypto-express-5s',
+                'crypto-type': 'ep11-coprocessor',
+                'crypto-number': 1,
+                'adapter-id': '12C',
+            })
+        elif adapter_name == CRYPTO2_NAME:
+            faked_crypto_adapter = faked_cpc.adapters.add({
+                'object-id': adapter_name + '-oid',
+                # object-uri is automatically set
+                'parent': faked_cpc.uri,
+                'class': 'adapter',
+                'name': adapter_name,
+                'status': 'active',
+                'type': 'crypto',
+                'adapter-family': 'crypto',
+                'detected-card-type': 'crypto-express-5s',
+                'crypto-type': 'cca-coprocessor',
+                'crypto-number': 2,
+                'adapter-id': '12D',
+            })
+        else:
+            raise ValueError("Invalid value for crypto_name: %s" %
+                             adapter_name)
+        return faked_crypto_adapter
+
+    def add_partition(self, faked_cpc, part_name):
+        """Add a faked partition to a faked CPC, with standard properties."""
+
+        faked_partition = faked_cpc.partitions.add({
+            'object-id': part_name + '-oid',
+            # object-uri is automatically set
+            'parent': faked_cpc.uri,
+            'class': 'partition',
+            'name': part_name,
+            'status': 'active',
+            'ifl-processors': 2,
+            'initial-memory': 1024,
+            'maximum-memory': 1024,
+        })
+        return faked_partition
 
     def test_cpcmanager_initial_attrs(self):
         """Test initial attributes of CpcManager."""
@@ -604,4 +932,49 @@ class TestCpc(object):
             ]
             assert wwpn_list == exp_wwpn_list
 
-    # TODO: Test for Cpc.get_free_crypto_domains()
+    @pytest.mark.parametrize(
+        "env_name, parm_adapter_names, exp_free_domains",
+        GET_FREE_CRYPTO_DOMAINS_SUCCESS_TESTCASES)
+    def test_cpc_get_free_crypto_domains(self, env_name, parm_adapter_names,
+                                         exp_free_domains):
+        """Test Cpc.get_free_crypto_domains()."""
+
+        env = GET_FREE_CRYPTO_DOMAINS_ENVIRONMENTS[env_name]
+
+        cpc_name = env['cpc_name']
+
+        # Add the faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Add the faked crypto adapters
+        faked_adapters = {}  # faked crypto adapters by name
+        for adapter_name in env['adapter_names']:
+            faked_adapter = self.add_crypto_adapter(faked_cpc, adapter_name)
+            faked_adapters[adapter_name] = faked_adapter
+
+        # Add the faked partitions
+        for part in env['partitions']:
+            faked_part = self.add_partition(faked_cpc, part['name'])
+
+            part_adapter_uris = [faked_adapters[name].uri
+                                 for name in part['adapter_names']]
+            part_domain_configs = part['domain_configs']
+            crypto_config = {
+                'crypto-adapter-uris': part_adapter_uris,
+                'crypto-domain-configurations': part_domain_configs,
+            }
+            faked_part.properties['crypto-configuration'] = crypto_config
+
+        # Set up input parameters
+        cpc = self.client.cpcs.find(name=cpc_name)
+        if parm_adapter_names is None:
+            parm_adapters = None
+        else:
+            parm_adapters = [cpc.adapters.find(name=name)
+                             for name in parm_adapter_names]
+
+        # Execute the code to be tested
+        act_free_domains = cpc.get_free_crypto_domains(parm_adapters)
+
+        # Verify the result
+        assert act_free_domains == exp_free_domains

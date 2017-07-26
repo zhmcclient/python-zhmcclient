@@ -67,6 +67,11 @@ Released: not yet
 * Reduced the package requirements to only the direct dependencies of
   this package.
 
+* Changed the experimental ``Cpc.get_free_crypto_domains()`` method to test
+  only control-usage access to the specified adapters. Improved that method
+  by supporting `None` for the list of adapters which means to inspect all
+  crypto adapters of the CPC.
+
 **Known issues:**
 
 * See `list of open issues`_.
