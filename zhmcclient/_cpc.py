@@ -691,15 +691,66 @@ class Cpc(BaseResource):
         return wwpn_list
 
     @logged_api_call
-    def get_free_crypto_domains(self, crypto_adapters):
+    def get_free_crypto_domains(self, crypto_adapters=None):
         """
-        Return a list of free crypto domains for the specified crypto adapters.
+        Return a list of crypto domains that are free for usage on a list of
+        crypto adapters in this CPC.
 
-        Free crypto domains for a set of crypto adapters are those that are not
-        assigned to any partition of this CPC on any of these crypto adapters,
-        i.e. they are unassigned on all of these crypto adapters.
+        A crypto domain is considered free for usage if it is not assigned to
+        any defined partition of this CPC in access mode 'control-usage' on any
+        of the specified crypto adapters.
+
+        For this test, all currently defined partitions of this CPC are
+        checked, regardless of whether or not they are active. This ensures
+        that a crypto domain that is found to be free for usage can be assigned
+        to a partition for 'control-usage' access to the specified crypto
+        adapters, without causing a crypto domain conflict when activating that
+        partition.
+
+        Note that a similar notion of free domains does not exist for access
+        mode 'control', because a crypto domain on a crypto adapter can be
+        in control access by multiple active partitions.
 
         This method requires the CPC to be in DPM mode.
+
+        **Example:**
+
+            .. code-block:: text
+
+                           crypto domains
+               adapters     0   1   2   3
+                          +---+---+---+---+
+                 c1       |A,c|a,c|   | C |
+                          +---+---+---+---+
+                 c2       |b,c|B,c| B | C |
+                          +---+---+---+---+
+
+            In this example, the CPC has two crypto adapters c1 and c2. For
+            simplicity of the example, we assume these crypto adapters support
+            only 4 crypto domains.
+
+            Partition A uses only adapter c1 and has domain 0 in
+            'control-usage' access (indicated by an upper case letter 'A' in
+            the corresponding cell) and has domain 1 in 'control' access
+            (indicated by a lower case letter 'a' in the corresponding cell).
+
+            Partition B uses only adapter c2 and has domain 0 in 'control'
+            access and domains 1 and 2 in 'control-usage' access.
+
+            Partition C uses both adapters, and has domains 0 and 1 in
+            'control' access and domain 3 in 'control-usage' access.
+
+            The domains free for usage in this example are shown in the
+            following table, for each combination of crypto adapters to be
+            investigated:
+
+            ===============  ======================
+            crypto_adapters  domains free for usage
+            ===============  ======================
+            c1               1, 2
+            c2               0
+            c1, c2           (empty list)
+            ===============  ======================
 
         **Experimental:** This method has been added in v0.14.0 and is
         currently considered experimental. Its interface may change
@@ -716,12 +767,16 @@ class Cpc(BaseResource):
 
           crypto_adapters (:term:`iterable` of :class:`~zhmcclient.Adapter`):
             The crypto :term:`Adapters <Adapter>` to be investigated.
+
             `None` means to investigate all crypto adapters of this CPC.
 
         Returns:
 
-          A list of domain index numbers (integers) of the free crypto domains.
-          Returns `None`, if no crypto adapters were specified or defaulted.
+          A sorted list of domain index numbers (integers) of the crypto
+          domains that are free for usage on the specified crypto adapters.
+
+          Returns `None`, if ``crypto_adapters`` was an empty list or if
+          ``crypto_adapters`` was `None` and the CPC has no crypto adapters.
 
         Raises:
 
@@ -730,9 +785,6 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        max_domains = None  # maximum number of domains across all adapters
-        used_domains = set()
-
         if crypto_adapters is None:
             crypto_adapters = self.adapters.findall(type='crypto')
 
@@ -745,12 +797,14 @@ class Cpc(BaseResource):
         # has a crypto configuration and (2) further down we want the inner
         # loop to be on the crypto adapters because accessing them multiple
         # times does not drive additional HMC operations.
+        max_domains = None  # maximum number of domains across all adapters
         for ca in crypto_adapters:
             if max_domains is None:
                 max_domains = ca.maximum_crypto_domains
             else:
                 max_domains = min(ca.maximum_crypto_domains, max_domains)
 
+        used_domains = set()  # Crypto domains used in control-usage mode
         partitions = self.partitions.list(full_properties=True)
         for partition in partitions:
             crypto_config = partition.get_property('crypto-configuration')
@@ -759,8 +813,10 @@ class Cpc(BaseResource):
                 domain_configs = crypto_config['crypto-domain-configurations']
                 for ca in crypto_adapters:
                     if ca.uri in adapter_uris:
-                        used_adapter_domains = [dc['domain-index']
-                                                for dc in domain_configs]
+                        used_adapter_domains = list()
+                        for dc in domain_configs:
+                            if dc['access-mode'] == 'control-usage':
+                                used_adapter_domains.append(dc['domain-index'])
                         used_domains.update(used_adapter_domains)
 
         all_domains = set(range(0, max_domains))
