@@ -149,7 +149,7 @@ For further discussion of good and bad practices regarding commits, see:
 * `How to Get Your Change Into the Linux Kernel`_
 
 .. _OpenStack Git Commit Good Practice: https://wiki.openstack.org/wiki/GitCommitMessages
-.. _How to Get Your Change Into the Linux Kernel: https://www.kernel.org/doc/Documentation/SubmittingPatches
+.. _How to Get Your Change Into the Linux Kernel: https://www.kernel.org/doc/Documentation/process/submitting-patches.rst
 
 Format of commit messages
 -------------------------
