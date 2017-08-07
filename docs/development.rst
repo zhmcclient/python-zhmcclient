@@ -24,6 +24,17 @@ want to test the project are also considered developers for the purpose of
 this section.
 
 
+.. _`Code of Conduct Section`:
+
+Code of Conduct
+---------------
+
+Help us keep zhmcclient open and inclusive. Please read and follow our
+`Code of Conduct`_.
+
+.. _Code of Conduct: https://raw.githubusercontent.com/zhmcclient/python-zhmcclient/master/CODE_OF_CONDUCT.md
+
+
 .. _`Repository`:
 
 Repository
