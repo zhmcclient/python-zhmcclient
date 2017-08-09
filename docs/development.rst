@@ -32,7 +32,7 @@ Code of Conduct
 Help us keep zhmcclient open and inclusive. Please read and follow our
 `Code of Conduct`_.
 
-.. _Code of Conduct: https://raw.githubusercontent.com/zhmcclient/python-zhmcclient/master/CODE_OF_CONDUCT.md
+.. _Code of Conduct: https://github.com/zhmcclient/python-zhmcclient/blob/master/CODE_OF_CONDUCT.md
 
 
 .. _`Repository`:
