@@ -89,7 +89,7 @@ SYSLOG_ADDRESSES = {
 def cli(ctx, host, userid, password, output_format, transpose, error_format,
         timestats, log, log_dest, syslog_facility):
     """
-    Command line interface for the z Systems HMC.
+    Command line interface for the IBM Z HMC.
 
     The options shown in this help text are general options that can also
     be specified on any of the (sub-)commands.

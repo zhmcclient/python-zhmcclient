@@ -13,8 +13,8 @@
 .. limitations under the License.
 ..
 
-zhmcclient - A pure Python client library for the z Systems HMC Web Services API
-********************************************************************************
+zhmcclient - A pure Python client library for the IBM Z HMC Web Services API
+****************************************************************************
 
 .. _GitHub project page: https://github.com/zhmcclient/python-zhmcclient
 

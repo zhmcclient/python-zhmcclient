@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-The HMC supports the retrieval of metrics values for resources of a z Systems
+The HMC supports the retrieval of metrics values for resources of a IBM Z
 or LinuxONE computer. This section describes the zhmcclient API for retrieving
 such metrics from the HMC.
 
