@@ -26,15 +26,15 @@ What this package provides
 
 The zhmcclient package (also known as python-zhmcclient) is a client library
 written in pure Python that interacts with the Web Services API of the Hardware
-Management Console (HMC) of `z Systems`_ or `LinuxONE`_ machines. The goal of
+Management Console (HMC) of `IBM Z`_ or `LinuxONE`_ machines. The goal of
 this package is to make the HMC Web Services API easily consumable for Python
 programmers.
 
-.. _z Systems: http://www.ibm.com/systems/z/
+.. _IBM Z: http://www.ibm.com/systems/z/
 .. _LinuxONE: http://www.ibm.com/systems/linuxone/
 
 The HMC Web Services API is the access point for any external tools to
-manage the z Systems or LinuxONE platform. It supports management of the
+manage the IBM Z or LinuxONE platform. It supports management of the
 lifecycle and configuration of various platform resources, such as partitions,
 CPU, memory, virtual switches, I/O adapters, and more.
 
@@ -64,7 +64,7 @@ The zhmcclient package is supported in these environments:
 * HMC versions: 2.11.1 and higher
 
 The following table shows for each HMC version the supported HMC API version
-and the supported z Systems and LinuxONE machine generations:
+and the supported IBM Z and LinuxONE machine generations:
 
 ===========  ===============  ======================  ===============================================
 HMC version  HMC API version  HMC API book            Machine generations

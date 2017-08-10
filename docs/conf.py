@@ -63,10 +63,10 @@ else:
 # General information about the project.
 project = u'zhmcclient'
 copyright = u'IBM'
-author = u'z Systems KVM OpenStack Team'
+author = u'IBM Z KVM OpenStack Team'
 
 # The short description of the package.
-_short_description = u'Client library for z Systems Hardware Management Console Web Services API'
+_short_description = u'Client library for IBM Z Hardware Management Console Web Services API'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

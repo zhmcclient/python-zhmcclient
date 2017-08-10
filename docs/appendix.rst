@@ -194,7 +194,7 @@ Resources scoped to CPCs in any mode
      TBD - Not yet supported.
 
   CPC
-     Central Processor Complex, a physical z Systems or LinuxONE computer.
+     Central Processor Complex, a physical IBM Z or LinuxONE computer.
 
      For details, see section :ref:`CPCs`.
 

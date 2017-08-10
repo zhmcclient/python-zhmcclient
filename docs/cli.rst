@@ -125,7 +125,7 @@ commands:
     > --help
     Usage: zhmc  [OPTIONS] COMMAND [ARGS]...
 
-      Command line interface for the z Systems HMC.
+      Command line interface for the IBM Z HMC.
       . . .
 
     Options:
