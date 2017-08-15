@@ -22,7 +22,7 @@ Change log
 Version 0.15.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-08-15
 
 **Incompatible changes:**
 
@@ -75,12 +75,6 @@ Released: not yet
   only control-usage access to the specified adapters. Improved that method
   by supporting `None` for the list of adapters which means to inspect all
   crypto adapters of the CPC.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-  .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.14.0
