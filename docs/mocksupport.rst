@@ -181,6 +181,12 @@ Faked HMC
 .. autoclass:: zhmcclient_mock.FakedAdapter
    :members:
 
+.. autoclass:: zhmcclient_mock.FakedConsoleManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedConsole
+   :members:
+
 .. autoclass:: zhmcclient_mock.FakedCpcManager
    :members:
 
@@ -191,6 +197,12 @@ Faked HMC
    :members:
 
 .. autoclass:: zhmcclient_mock.FakedHba
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedLdapServerDefinitionManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedLdapServerDefinition
    :members:
 
 .. autoclass:: zhmcclient_mock.FakedLparManager
@@ -211,10 +223,46 @@ Faked HMC
 .. autoclass:: zhmcclient_mock.FakedPartition
    :members:
 
+.. autoclass:: zhmcclient_mock.FakedPasswordRuleManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedPasswordRule
+   :members:
+
 .. autoclass:: zhmcclient_mock.FakedPortManager
    :members:
 
 .. autoclass:: zhmcclient_mock.FakedPort
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedTaskManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedTask
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUnmanagedCpcManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUnmanagedCpc
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUserManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUser
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUserPatternManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUserPattern
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUserRoleManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedUserRole
    :members:
 
 .. autoclass:: zhmcclient_mock.FakedVirtualFunctionManager

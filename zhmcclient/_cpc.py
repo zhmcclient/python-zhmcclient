@@ -16,7 +16,13 @@
 A :term:`CPC` (Central Processor Complex) is a physical IBM Z or LinuxONE
 computer.
 
-A particular HMC can manage multiple CPCs.
+A particular HMC can manage multiple CPCs and can discover other CPCs that
+are not managed by that HMC. Such other CPCs are called "unmanaged CPCs" and
+they may or may not be managed by another HMC.
+
+This section describes the interface for *managed* CPCs using resource class
+:class:`~zhmcclient.Cpc` and the corresponding manager class
+:class:`~zhmcclient.CpcManager`.
 
 The HMC can manage a range of old and new CPC generations. Some older CPC
 generations are not capable of supporting the HMC Web Services API; these older
@@ -61,8 +67,8 @@ LOG = get_logger(__name__)
 
 class CpcManager(BaseManager):
     """
-    Manager providing access to the :term:`CPCs <CPC>` exposed by the HMC this
-    client is connected to.
+    Manager providing access to the managed :term:`CPCs <CPC>` exposed by the
+    HMC this client is connected to.
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
@@ -100,7 +106,7 @@ class CpcManager(BaseManager):
     @logged_api_call
     def list(self, full_properties=False, filter_args=None):
         """
-        List the CPCs exposed by the HMC this client is connected to.
+        List the CPCs managed by the HMC this client is connected to.
 
         Authorization requirements:
 
@@ -165,7 +171,7 @@ class CpcManager(BaseManager):
 
 class Cpc(BaseResource):
     """
-    Representation of a :term:`CPC`.
+    Representation of a managed :term:`CPC`.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.

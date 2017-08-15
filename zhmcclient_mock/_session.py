@@ -21,7 +21,7 @@ from __future__ import absolute_import
 import zhmcclient
 
 from ._hmc import FakedHmc
-from ._urihandler import UriHandler, HTTPError, URIS
+from ._urihandler import UriHandler, HTTPError, ConnectionError, URIS
 
 __all__ = ['FakedSession']
 
@@ -144,12 +144,14 @@ class FakedSession(zhmcclient.Session):
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError` (not implemented)
           :exc:`~zhmcclient.AuthError` (not implemented)
-          :exc:`~zhmcclient.ConnectionError` (not implemented)
+          :exc:`~zhmcclient.ConnectionError`
         """
         try:
             return self._urihandler.get(self._hmc, uri, logon_required)
         except HTTPError as exc:
             raise zhmcclient.HTTPError(exc.response())
+        except ConnectionError as exc:
+            raise zhmcclient.ConnectionError(exc.message, None)
 
     def post(self, uri, body=None, logon_required=True,
              wait_for_completion=True, operation_timeout=None):
@@ -254,13 +256,15 @@ class FakedSession(zhmcclient.Session):
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError` (not implemented)
           :exc:`~zhmcclient.AuthError` (not implemented)
-          :exc:`~zhmcclient.ConnectionError` (not implemented)
+          :exc:`~zhmcclient.ConnectionError`
         """
         try:
             return self._urihandler.post(self._hmc, uri, body, logon_required,
                                          wait_for_completion)
         except HTTPError as exc:
             raise zhmcclient.HTTPError(exc.response())
+        except ConnectionError as exc:
+            raise zhmcclient.ConnectionError(exc.message, None)
 
     def delete(self, uri, logon_required=True):
         """
@@ -289,9 +293,11 @@ class FakedSession(zhmcclient.Session):
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError` (not implemented)
           :exc:`~zhmcclient.AuthError` (not implemented)
-          :exc:`~zhmcclient.ConnectionError` (not implemented)
+          :exc:`~zhmcclient.ConnectionError`
         """
         try:
             self._urihandler.delete(self._hmc, uri, logon_required)
         except HTTPError as exc:
             raise zhmcclient.HTTPError(exc.response())
+        except ConnectionError as exc:
+            raise zhmcclient.ConnectionError(exc.message, None)

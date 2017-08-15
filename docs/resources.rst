@@ -45,7 +45,7 @@ Boolean                      :class:`py:bool`
 Byte, Integer, Long, Short   :term:`integer`
 Float                        :class:`py:float`
 String, String Enum          :term:`unicode string`
-Timestamp                    :term:`integer`
+:term:`timestamp`            :term:`integer`
 Array                        :class:`py:list`
 Object                       :class:`py:dict`
 ===========================  =====================
@@ -63,6 +63,22 @@ CPCs
    :special-members: __str__
 
 .. autoclass:: zhmcclient.Cpc
+   :members:
+   :special-members: __str__
+
+
+.. _`Unmanaged CPCs`:
+
+Unmanaged CPCs
+--------------
+
+.. automodule:: zhmcclient._unmanaged_cpc
+
+.. autoclass:: zhmcclient.UnmanagedCpcManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.UnmanagedCpc
    :members:
    :special-members: __str__
 
@@ -207,5 +223,117 @@ Virtual Switches
    :special-members: __str__
 
 .. autoclass:: zhmcclient.VirtualSwitch
+   :members:
+   :special-members: __str__
+
+
+.. _`Console`:
+
+Console
+-------
+
+.. automodule:: zhmcclient._console
+
+.. autoclass:: zhmcclient.ConsoleManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Console
+   :members:
+   :special-members: __str__
+
+
+.. _`User`:
+
+User
+----
+
+.. automodule:: zhmcclient._user
+
+.. autoclass:: zhmcclient.UserManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.User
+   :members:
+   :special-members: __str__
+
+
+.. _`User Role`:
+
+User Role
+---------
+
+.. automodule:: zhmcclient._user_role
+
+.. autoclass:: zhmcclient.UserRoleManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.UserRole
+   :members:
+   :special-members: __str__
+
+
+.. _`User Pattern`:
+
+User Pattern
+------------
+
+.. automodule:: zhmcclient._user_pattern
+
+.. autoclass:: zhmcclient.UserPatternManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.UserPattern
+   :members:
+   :special-members: __str__
+
+
+.. _`Password Rule`:
+
+Password Rule
+-------------
+
+.. automodule:: zhmcclient._password_rule
+
+.. autoclass:: zhmcclient.PasswordRuleManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.PasswordRule
+   :members:
+   :special-members: __str__
+
+
+.. _`Task`:
+
+Task
+----
+
+.. automodule:: zhmcclient._task
+
+.. autoclass:: zhmcclient.TaskManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Task
+   :members:
+   :special-members: __str__
+
+
+.. _`LDAP Server Definition`:
+
+LDAP Server Definition
+----------------------
+
+.. automodule:: zhmcclient._ldap_server_definition
+
+.. autoclass:: zhmcclient.LdapServerDefinitionManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.LdapServerDefinition
    :members:
    :special-members: __str__

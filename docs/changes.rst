@@ -116,6 +116,30 @@ Released: not yet
 * Improved the way the named tuples ``MetricGroupDefinition`` and
   ``MetricDefinition`` are documented.
 
+* Added support for ``Console`` resource and its child resources ``User``,
+  ``User Role``, ``User Pattern``, ``Password Rule``, ``Task``, and
+  ``LDAP Server Definition``, both for the zhmcclient API and for the
+  zhmcclient mock support.
+
+* As part of support for the ``Console`` resource, added a new resource class
+  ``UnmanagedCpc`` which representd unmanaged CPCs that have been discovered by
+  the HMC. The existing ``Cpc`` class continues to represent only managed CPCs;
+  this has been clarified in the documentation.
+
+* As part of support for the ``Console`` resource, added a method
+  ``wait_for_available()`` to the ``Client`` class, which waits until the HMC
+  is available again after a restart. This method is used by
+  ``Console.restart()``, but it can also be used by zhmcclient users.
+
+* As part of support for the ``Console`` resource, improved ``Session.post()``
+  to allow for an empty response body when the operation returns with HTTP
+  status 202 (Accepted). This status code so far was always assumed to indicate
+  that an asynchronous job had been started, but it can happen in some
+  ``Console`` operations as well.
+
+* Improved the error information in the ``ParseError`` exception, by adding
+  the "Content-Type" header in cases where that is interesting.
+
 **Known issues:**
 
 * See `list of open issues`_.
