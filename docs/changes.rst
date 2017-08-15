@@ -41,6 +41,10 @@ Released: not yet
 * Minor fixes in the documentation (e.g. fixed name of ``MetricGroupValues``
   class).
 
+* Fixed the zhmc CLI for Python 3 where multiple commands raised
+  AttributeError: "'dict' object has no attribute 'iteritems' in
+  ``zhmccli/_helper.py``. (issue #396).
+
 **Enhancements:**
 
 * Added support for the HMC Metric Service. For details, see section 'Metrics' in the

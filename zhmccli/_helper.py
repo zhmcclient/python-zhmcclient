@@ -210,7 +210,7 @@ def original_options(options):
       dict: Options with their original names.
     """
     org_options = {}
-    for name, value in options.iteritems():
+    for name, value in six.iteritems(options):
         org_name = name.replace('_', '-')
         org_options[org_name] = value
     return org_options
@@ -244,7 +244,7 @@ def options_to_properties(options, name_map=None):
       dict: Resource properties (key: property name, value: option value)
     """
     properties = {}
-    for name, value in options.iteritems():
+    for name, value in six.iteritems(options):
         if value is None:
             continue
         if name_map:
