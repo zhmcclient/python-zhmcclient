@@ -4,12 +4,29 @@ engines:
     enabled: true
     config:
       languages:
-        - python
+        python:
+          mass_threshold: 40
+    checks:
+      Similar code:
+        enabled: false
   radon:
     enabled: true
+    config:
+      threshold: "C"
+  fixme:
+    enabled: true
+    config:
+      strings:
+      - FIXME
 ratings:
   paths:
   - "**.py"
+# Including paths "**.py" also includes the ".pylintrc" file, so
+# we are excluding it again via ".*".
 exclude_paths:
-- tests/
-- examples/
+- ".*"
+- "design/"
+- "dist/"
+- "docs/"
+- "examples/"
+- "tests/"
