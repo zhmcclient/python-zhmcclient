@@ -65,6 +65,10 @@ zhmcclient - A pure Python client library for the IBM Z HMC Web Services API
     :target: https://coveralls.io/r/zhmcclient/python-zhmcclient
     :alt: Test coverage (master)
 
+.. image:: https://codeclimate.com/github/zhmcclient/python-zhmcclient/badges/gpa.svg
+    :target: https://codeclimate.com/github/zhmcclient/python-zhmcclient
+    :alt: Code Climate
+
 .. contents:: Contents:
    :local:
 
