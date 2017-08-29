@@ -22,11 +22,7 @@ Change log
 Version 0.16.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2017-08-29
 
 **Bug fixes:**
 
@@ -35,12 +31,6 @@ Released: not yet
 **Enhancements:**
 
 * Added Code Climate support.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-  .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.15.0
@@ -54,8 +44,6 @@ Released: 2017-08-15
   for HTML-formatted error responses with HTTP status 500: This reason code
   has been split up into multiple reason codes. See the corresponding item
   in section "Enhancements".
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -114,8 +102,6 @@ Released: 2017-07-07
 
 * Changed the arguments of ``Partition.mount_iso_image()`` incompatibly,
   in order to fix issue #57.
-
-**Deprecations:**
 
 **Bug fixes:**
 
