@@ -46,28 +46,24 @@ matrix:
 #      env:
 #        - PACKAGE_LEVEL=minimum
     - os: osx
-      sudo: required
       language: generic
       python:
       env:
         - PACKAGE_LEVEL=minimum
         - PYTHON=2
 #    - os: osx
-#      sudo: required
 #      language: generic
 #      python:
 #      env:
 #        - PACKAGE_LEVEL=latest
 #        - PYTHON=2
 #    - os: osx
-#      sudo: required
 #      language: generic
 #      python:
 #      env:
 #        - PACKAGE_LEVEL=minimum
 #        - PYTHON=3
     - os: osx
-      sudo: required
       language: generic
       python:
       env:
