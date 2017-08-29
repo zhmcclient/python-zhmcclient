@@ -159,12 +159,10 @@ def nic_create(cmd_ctx, cpc, partition, **options):
 @click.option('--adapter', type=str, required=False,
               help='The name of the new network adapter with the port backing '
               'the NIC. '
-              'Only for ROCE adapters'
-              'Default: No change.')
+              'Only for ROCE adapters')
 @click.option('--port', type=str, required=False,
               help='The name of the new network port backing the NIC. '
-              'Only for ROCE adapters'
-              'Default: No change.')
+              'Only for ROCE adapters')
 @click.option('--virtual-switch', type=str, required=False,
               help='The name of the virtual switch of the new network port '
               'backing the NIC. '

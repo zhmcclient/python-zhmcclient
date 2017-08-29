@@ -30,7 +30,11 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed CLI: Remove defaults for options for 'partition update' (issue #405).
+
 **Enhancements:**
+
+* Added Code Climate support.
 
 **Known issues:**
 

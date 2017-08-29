@@ -344,8 +344,7 @@ def partition_create(cmd_ctx, cpc, **options):
               type=click.Choice(['installer']), required=False,
               help='Set the boot mode of the Secure Service Container '
               'to run the SSC Appliance Installer again upon next '
-              'partition start. Only applicable to ssc type partitions. '
-              'Default: No change')
+              'partition start. Only applicable to ssc type partitions.')
 @click.option('--ssc-ipv4-gateway', type=str, required=False,
               help='Default IPv4 Gateway to be used. '
               'Only applicable to ssc type partitions.')
@@ -360,44 +359,32 @@ def partition_create(cmd_ctx, cpc, **options):
               'Only applicable to ssc type partitions.')
 @click.option('--initial-cp-processing-weight',
               type=click.IntRange(MIN_PROCESSING_WEIGHT,
-                                  MAX_PROCESSING_WEIGHT),
-              required=False, default=DEFAULT_PROCESSING_WEIGHT,
-              help='Defines the initial processing weight of CP processors. '
-              'Default: {}'.format(DEFAULT_PROCESSING_WEIGHT))
+                                  MAX_PROCESSING_WEIGHT), required=False,
+              help='Defines the initial processing weight of CP processors.')
 @click.option('--initial-ifl-processing-weight',
               type=click.IntRange(MIN_PROCESSING_WEIGHT,
-                                  MAX_PROCESSING_WEIGHT),
-              required=False, default=DEFAULT_PROCESSING_WEIGHT,
-              help='Defines the initial processing weight of IFL processors. '
-              'Default: {}'.format(DEFAULT_PROCESSING_WEIGHT))
+                                  MAX_PROCESSING_WEIGHT), required=False,
+              help='Defines the initial processing weight of IFL processors.')
 @click.option('--minimum-ifl-processing-weight',
               type=click.IntRange(MIN_PROCESSING_WEIGHT,
-                                  MAX_PROCESSING_WEIGHT),
-              required=False, default=MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT), required=False,
               help='Represents the minimum amount of IFL processor '
-              'resources allocated to the partition. '
-              'Default: {}'.format(MIN_PROCESSING_WEIGHT))
+              'resources allocated to the partition.')
 @click.option('--minimum-cp-processing-weight',
               type=click.IntRange(MIN_PROCESSING_WEIGHT,
-                                  MAX_PROCESSING_WEIGHT),
-              required=False, default=MIN_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT), required=False,
               help='Represents the minimum amount of general purpose '
-              'processor resources allocated to the partition. '
-              'Default: {}'.format(MIN_PROCESSING_WEIGHT))
+              'processor resources allocated to the partition.')
 @click.option('--maximum-ifl-processing-weight',
               type=click.IntRange(MIN_PROCESSING_WEIGHT,
-                                  MAX_PROCESSING_WEIGHT),
-              required=False, default=MAX_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT), required=False,
               help='Represents the maximum amount of IFL processor '
-              'resources allocated to the partition. '
-              'Default: {}'.format(MAX_PROCESSING_WEIGHT))
+              'resources allocated to the partition.')
 @click.option('--maximum-cp-processing-weight',
               type=click.IntRange(MIN_PROCESSING_WEIGHT,
-                                  MAX_PROCESSING_WEIGHT),
-              required=False, default=MAX_PROCESSING_WEIGHT,
+                                  MAX_PROCESSING_WEIGHT), required=False,
               help='Represents the maximum amount of general purpose '
-              'processor resources allocated to the partition. '
-              'Default: {}'.format(MAX_PROCESSING_WEIGHT))
+              'processor resources allocated to the partition.')
 @click.pass_obj
 def partition_update(cmd_ctx, cpc, partition, **options):
     """
