@@ -245,6 +245,8 @@ pyshow:
 	$(PYTHON_CMD) --version
 	which $(PIP_CMD)
 	$(PIP_CMD) --version
+	$(PYTHON_CMD) -c "from datetime import datetime as dt; print('datetime.min = {}\ndatetime.max = {}'.format(dt.min, dt.max))"
+	$(PYTHON_CMD) -c "import struct; print('address-size = {} bit'.format(struct.calcsize('P') * 8))"
 	@echo '$@ done.'
 
 .PHONY: check
