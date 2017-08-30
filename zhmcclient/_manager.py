@@ -590,7 +590,7 @@ class BaseManager(object):
 
         Parameters:
 
-          \**filter_args:
+          \\**filter_args:
             All keyword arguments are used as filter arguments. Specifying no
             keyword arguments causes no filtering to happen. See the examples
             for usage details.
@@ -669,7 +669,7 @@ class BaseManager(object):
 
         Parameters:
 
-          \**filter_args:
+          \\**filter_args:
             All keyword arguments are used as filter arguments. Specifying no
             keyword arguments causes no filtering to happen. See the examples
             for usage details.

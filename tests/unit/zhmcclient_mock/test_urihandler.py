@@ -322,9 +322,9 @@ class UriHandlerHandlerSimpleTests(unittest.TestCase):
 
     def setUp(self):
         self.uris = (
-            ('/api/cpcs', DummyHandler1),
-            ('/api/cpcs/([^/]+)', DummyHandler2),
-            ('/api/cpcs/([^/]+)/child', DummyHandler3),
+            (r'/api/cpcs', DummyHandler1),
+            (r'/api/cpcs/([^/]+)', DummyHandler2),
+            (r'/api/cpcs/([^/]+)/child', DummyHandler3),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -386,8 +386,8 @@ class UriHandlerMethodTests(unittest.TestCase):
 
     def setUp(self):
         self.uris = (
-            ('/api/cpcs', DummyHandler1),
-            ('/api/cpcs/([^/]+)', DummyHandler2),
+            (r'/api/cpcs', DummyHandler1),
+            (r'/api/cpcs/([^/]+)', DummyHandler2),
         )
         self.cpc1 = {
             'object-id': '1',
@@ -695,7 +695,7 @@ class GenericGetPropertiesHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)', GenericGetPropertiesHandler),
+            (r'/api/cpcs/([^/]+)', GenericGetPropertiesHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -727,7 +727,7 @@ class GenericUpdatePropertiesHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)', _GenericGetUpdatePropertiesHandler),
+            (r'/api/cpcs/([^/]+)', _GenericGetUpdatePropertiesHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -751,7 +751,7 @@ class VersionHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/version', VersionHandler),
+            (r'/api/version', VersionHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -776,8 +776,8 @@ class CpcHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
-            ('/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
+            (r'/api/cpcs/([^/]+)', CpcHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -837,9 +837,9 @@ class CpcStartStopHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)', CpcHandler),
-            ('/api/cpcs/([^/]+)/operations/start', CpcStartHandler),
-            ('/api/cpcs/([^/]+)/operations/stop', CpcStopHandler),
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/start', CpcStartHandler),
+            (r'/api/cpcs/([^/]+)/operations/stop', CpcStopHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -895,9 +895,9 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
-            ('/api/cpcs/([^/]+)', CpcHandler),
-            ('/api/cpcs/([^/]+)/operations/export-port-names-list',
+            (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/export-port-names-list',
              CpcExportPortNamesListHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -937,9 +937,9 @@ class CpcImportProfilesHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
-            ('/api/cpcs/([^/]+)', CpcHandler),
-            ('/api/cpcs/([^/]+)/operations/import-profiles',
+            (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/import-profiles',
              CpcImportProfilesHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -971,9 +971,9 @@ class CpcExportProfilesHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs(?:\?(.*))?', CpcsHandler),
-            ('/api/cpcs/([^/]+)', CpcHandler),
-            ('/api/cpcs/([^/]+)/operations/export-profiles',
+            (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/export-profiles',
              CpcExportProfilesHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1005,8 +1005,8 @@ class AdapterHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
-            ('/api/adapters/([^/]+)', AdapterHandler),
+            (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
+            (r'/api/adapters/([^/]+)', AdapterHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1082,9 +1082,9 @@ class AdapterChangeCryptoTypeHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
-            ('/api/adapters/([^/]+)', AdapterHandler),
-            ('/api/adapters/([^/]+)/operations/change-crypto-type',
+            (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
+            (r'/api/adapters/([^/]+)', AdapterHandler),
+            (r'/api/adapters/([^/]+)/operations/change-crypto-type',
              AdapterChangeCryptoTypeHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1131,7 +1131,7 @@ class NetworkPortHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/adapters/([^/]+)/network-ports/([^/]+)',
+            (r'/api/adapters/([^/]+)/network-ports/([^/]+)',
              NetworkPortHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1170,7 +1170,7 @@ class StoragePortHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/adapters/([^/]+)/storage-ports/([^/]+)',
+            (r'/api/adapters/([^/]+)/storage-ports/([^/]+)',
              StoragePortHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1209,8 +1209,8 @@ class PartitionHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
-            ('/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
+            (r'/api/partitions/([^/]+)', PartitionHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1311,10 +1311,10 @@ class PartitionStartStopHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/start',
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/start',
              PartitionStartHandler),
-            ('/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
+            (r'/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1355,8 +1355,8 @@ class PartitionScsiDumpHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/scsi-dump',
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/scsi-dump',
              PartitionScsiDumpHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1450,8 +1450,8 @@ class PartitionPswRestartHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/psw-restart',
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/psw-restart',
              PartitionPswRestartHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1488,8 +1488,8 @@ class PartitionMountIsoImageHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/mount-iso-image(?:\?(.*))?',
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/mount-iso-image(?:\?(.*))?',
              PartitionMountIsoImageHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1552,8 +1552,8 @@ class PartitionUnmountIsoImageHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/unmount-iso-image',
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/unmount-iso-image',
              PartitionUnmountIsoImageHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1596,8 +1596,8 @@ class PartitionIncreaseCryptoConfigHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/'
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/'
              'increase-crypto-configuration',
              PartitionIncreaseCryptoConfigHandler),
         )
@@ -1699,8 +1699,8 @@ class PartitionDecreaseCryptoConfigHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/'
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/'
              'decrease-crypto-configuration',
              PartitionDecreaseCryptoConfigHandler),
         )
@@ -1802,8 +1802,8 @@ class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/operations/'
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/'
              'change-crypto-domain-configuration',
              PartitionChangeCryptoConfigHandler),
         )
@@ -1924,9 +1924,9 @@ class HbaHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
-            ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
+            (r'/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -2020,9 +2020,9 @@ class HbaReassignPortHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
-            ('/api/partitions/([^/]+)/hbas/([^/]+)'
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
+            (r'/api/partitions/([^/]+)/hbas/([^/]+)'
              '/operations/reassign-storage-adapter-port',
              HbaReassignPortHandler),
         )
@@ -2077,9 +2077,9 @@ class NicHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
-            ('/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
+            (r'/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -2172,10 +2172,10 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/partitions/([^/]+)', PartitionHandler),
-            ('/api/partitions/([^/]+)/virtual-functions(?:\?(.*))?',
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/virtual-functions(?:\?(.*))?',
              VirtualFunctionsHandler),
-            ('/api/partitions/([^/]+)/virtual-functions/([^/]+)',
+            (r'/api/partitions/([^/]+)/virtual-functions/([^/]+)',
              VirtualFunctionHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -2274,9 +2274,9 @@ class VirtualSwitchHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?',
+            (r'/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?',
              VirtualSwitchesHandler),
-            ('/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
+            (r'/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -2319,8 +2319,8 @@ class VirtualSwitchGetVnicsHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
-            ('/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
+            (r'/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
+            (r'/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
              VirtualSwitchGetVnicsHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -2352,8 +2352,8 @@ class LparHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
-            ('/api/logical-partitions/([^/]+)', LparHandler),
+            (r'/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
+            (r'/api/logical-partitions/([^/]+)', LparHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -2397,13 +2397,13 @@ class LparActLoadDeactHandlerTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/logical-partitions/([^/]+)',
+            (r'/api/logical-partitions/([^/]+)',
              LparHandler),
-            ('/api/logical-partitions/([^/]+)/operations/activate',
+            (r'/api/logical-partitions/([^/]+)/operations/activate',
              LparActivateHandler),
-            ('/api/logical-partitions/([^/]+)/operations/deactivate',
+            (r'/api/logical-partitions/([^/]+)/operations/deactivate',
              LparDeactivateHandler),
-            ('/api/logical-partitions/([^/]+)/operations/load',
+            (r'/api/logical-partitions/([^/]+)/operations/load',
              LparLoadHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -2449,9 +2449,9 @@ class ResetActProfileHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
+            (r'/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
              ResetActProfilesHandler),
-            ('/api/cpcs/([^/]+)/reset-activation-profiles/([^/]+)',
+            (r'/api/cpcs/([^/]+)/reset-activation-profiles/([^/]+)',
              ResetActProfileHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -2495,9 +2495,9 @@ class ImageActProfileHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
+            (r'/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
              ImageActProfileHandler),
-            ('/api/cpcs/([^/]+)/image-activation-profiles(?:\?(.*))?',
+            (r'/api/cpcs/([^/]+)/image-activation-profiles(?:\?(.*))?',
              ImageActProfilesHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -2541,9 +2541,9 @@ class LoadActProfileHandlersTests(unittest.TestCase):
     def setUp(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
+            (r'/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
              LoadActProfileHandler),
-            ('/api/cpcs/([^/]+)/load-activation-profiles(?:\?(.*))?',
+            (r'/api/cpcs/([^/]+)/load-activation-profiles(?:\?(.*))?',
              LoadActProfilesHandler),
         )
         self.urihandler = UriHandler(self.uris)
