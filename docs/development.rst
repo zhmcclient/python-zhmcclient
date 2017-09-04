@@ -162,6 +162,9 @@ For further discussion of good and bad practices regarding commits, see:
 .. _OpenStack Git Commit Good Practice: https://wiki.openstack.org/wiki/GitCommitMessages
 .. _How to Get Your Change Into the Linux Kernel: https://www.kernel.org/doc/Documentation/process/submitting-patches.rst
 
+
+.. _`Format of commit messages`:
+
 Format of commit messages
 -------------------------
 
@@ -227,10 +230,14 @@ sign-off line by using a commit template file:
 
       git config commit.template ~/.git-signoff.template
 
-Releasing a version to PyPI
----------------------------
 
-This section shows the steps for releasing a version to PyPI.
+.. _`Releasing a version`:
+
+Releasing a version
+-------------------
+
+This section shows the steps for releasing a version to `PyPI
+<https://pypi.python.org/>`_.
 
 Switch to your work directory of the python-zhmcclient Git repo (this is where
 the ``Makefile`` is), and perform the following steps in that directory:
@@ -254,12 +261,11 @@ the ``Makefile`` is), and perform the following steps in that directory:
         git checkout master
         git pull
 
-4.  Create a topic branch for the release:
+4.  Create a topic branch for the release, based upon the ``master`` branch:
 
     .. code-block:: text
 
         git checkout -b release-$MNU
-        git branch --set-upstream-to origin/release-$MNU release-$MNU
 
 5.  Edit the change log (``docs/changes.rst``) and perform the following
     changes in the top-most section (that is the section for the version to be
@@ -301,9 +307,9 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
         git add docs/changes.rst
         git commit -sm "Updated change log for $MNU release."
-        git push
+        git push --set-upstream origin release-$MNU
 
-7.  On GitHub, create a pull request for branch release-$MNU.
+7.  On GitHub, create a pull request for branch ``release-$MNU``.
 
 8.  Perform a complete test:
 
@@ -369,16 +375,18 @@ the ``Makefile`` is), and perform the following steps in that directory:
     Note: RTD builds the documentation automatically, but it may take a few
     minutes to do so.
 
-16. On GitHub, close milestone `M.N.U`.
+16. On GitHub, close milestone ``M.N.U``.
 
 
-Starting a new release
+.. _`Starting a new version`:
+
+Starting a new version
 ----------------------
 
 This section shows the steps for starting development of a new version.
 
-These steps may be performed right after the steps for releasing to PyPI,
-or independently.
+These steps may be performed right after the steps for
+:ref:`releasing a version`, or independently.
 
 This description works for releases that are direct successors of the previous
 release. It does not cover starting a new version that is a fix release to a
@@ -406,12 +414,11 @@ the ``Makefile`` is), and perform the following steps in that directory:
         git checkout master
         git pull
 
-4.  Create a topic branch for the release:
+4.  Create a topic branch for the release, based upon the ``master`` branch:
 
     .. code-block:: text
 
         git checkout -b start-$MNU
-        git branch --set-upstream-to origin/start-$MNU start-$MNU
 
 5.  Edit the change log (``docs/changes.rst``) and insert the following section
     before the top-most section (which is the section about the latest released
@@ -444,12 +451,12 @@ the ``Makefile`` is), and perform the following steps in that directory:
 
         git add docs/changes.rst
         git commit -sm "Started $MNU release."
-        git push
+        git push --set-upstream origin start-$MNU
 
-7.  On GitHub, create a pull request for branch start-$MNU.
+7.  On GitHub, create a pull request for branch ``start-$MNU``.
 
 8.  On GitHub, create a new milestone for development of the next release,
-    e.g. `M.N.U`.
+    e.g. ``M.N.U``.
 
     You can create a milestone in GitHub via Issues -> Milestones -> New
     Milestone.
