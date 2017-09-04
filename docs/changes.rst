@@ -29,6 +29,11 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed the bug that aborting a confirmation question in the CLI (e.g. for
+  "zhmc partition delete") caused an AttributeError to be raised. It now
+  prints "Aborted!" and in interactive mode, terminates only the current
+  command. (issue #418).
+
 **Enhancements:**
 
 * Avoided `DeprecationWarning` on Python 3 for invalid escape sequences

@@ -52,9 +52,34 @@ SYSLOG_FACILITIES = ['user', 'local0', 'local1', 'local2', 'local3', 'local4',
 
 
 def abort_if_false(ctx, param, value):
+    """
+    Click callback function that aborts the current command if the option
+    value is false.
+
+    Because this used as a reaction to an interactive confirmation question,
+    we issue the error message always in a human readable format (i.e. ignore
+    the specified error format).
+
+    Note that abortion mechanisms such as ctx.abort() or raising click.Abort
+    terminate the CLI completely, and not just the current command. This makes
+    a difference in the interactive mode.
+
+    Parameters:
+
+      ctx (:class:`click.Context`): The click context object. Created by the
+        ``@click.pass_context`` decorator.
+
+      param (class:`click.Option`): The click option that used this callback.
+
+      value: The option value to be tested.
+    """
     # pylint: disable=unused-argument
     if not value:
-        raise_click_exception("Aborted.", ctx.error_format)
+        # click.ClickException seems to be the only reasonable exception we
+        # can raise here, but it prefixes the error text with 'Error: ', which
+        # is confusing in this case, because the user simply decided to abort.
+        # We therefore play the trick with overwriting that prefix.
+        raise click.ClickException("\rAborted!")
 
 
 class InvalidOutputFormatError(click.ClickException):
@@ -68,6 +93,11 @@ class InvalidOutputFormatError(click.ClickException):
 
 
 class CmdContext(object):
+    """
+    A context object we attach to the :class:`click.Context` object in its
+    ``obj`` attribute. It is used to provide command line options and other
+    data.
+    """
 
     def __init__(self, host, userid, password, output_format, transpose,
                  error_format, timestats, session_id, get_password):

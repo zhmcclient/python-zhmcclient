@@ -93,6 +93,14 @@ def cli(ctx, host, userid, password, output_format, transpose, error_format,
 
     The options shown in this help text are general options that can also
     be specified on any of the (sub-)commands.
+
+    Parameters:
+
+      ctx (:class:`click.Context`): The click context object. Created by the
+        ``@click.pass_context`` decorator.
+
+      : The remaining parameters are defined by the ``@click.option``
+        decorators.
     """
 
     # Concept: In interactive mode, the global options specified in the command
@@ -260,6 +268,11 @@ def cli(ctx, host, userid, password, output_format, transpose, error_format,
 def repl_help(ctx):
     """
     Show help message for interactive mode.
+
+    Parameters:
+
+      ctx (:class:`click.Context`): The click context object. Created by the
+        ``@click.pass_context`` decorator.
     """
     print("""
 The following can be entered in interactive mode:
@@ -284,6 +297,11 @@ The following can be entered in interactive mode:
 def repl(ctx):
     """
     Enter interactive (REPL) mode (default).
+
+    Parameters:
+
+      ctx (:class:`click.Context`): The click context object. Created by the
+        ``@click.pass_context`` decorator.
     """
 
     history_file = REPL_HISTORY_FILE
