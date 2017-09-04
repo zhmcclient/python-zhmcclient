@@ -30,39 +30,47 @@ matrix:
       python: "3.4"
       env:
         - PACKAGE_LEVEL=minimum
-#    - os: linux
-#      language: python
-#      python: "3.5"
-#      env:
-#        - PACKAGE_LEVEL=minimum
+    - os: linux
+      language: python
+      python: "3.5"
+      env:
+        - PACKAGE_LEVEL=minimum
+      before_install:
+        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
     - os: linux
       language: python
       python: "3.6"
       env:
         - PACKAGE_LEVEL=latest
-#    - os: linux
-#      language: python
-#      python: "pypy-5.3.1"  # Python 2.7.10
-#      env:
-#        - PACKAGE_LEVEL=minimum
+    - os: linux
+      language: python
+      python: "pypy-5.3.1"  # Python 2.7.10
+      env:
+        - PACKAGE_LEVEL=minimum
+      before_install:
+        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
     - os: osx
       language: generic
       python:
       env:
         - PACKAGE_LEVEL=minimum
         - PYTHON=2
-#    - os: osx
-#      language: generic
-#      python:
-#      env:
-#        - PACKAGE_LEVEL=latest
-#        - PYTHON=2
-#    - os: osx
-#      language: generic
-#      python:
-#      env:
-#        - PACKAGE_LEVEL=minimum
-#        - PYTHON=3
+    - os: osx
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=latest
+        - PYTHON=2
+      before_install:
+        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
+    - os: osx
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=minimum
+        - PYTHON=3
+      before_install:
+        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
     - os: osx
       language: generic
       python:
@@ -124,6 +132,6 @@ script:
     fi
 
 after_success:
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" ]]; then
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" ]]; then
       coveralls;
     fi
