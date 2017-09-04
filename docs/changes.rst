@@ -31,6 +31,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Avoided `DeprecationWarning` on Python 3 for invalid escape sequences
+  in some places.
+
 **Known issues:**
 
 * See `list of open issues`_.

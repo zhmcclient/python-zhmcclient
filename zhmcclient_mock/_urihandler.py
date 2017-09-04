@@ -1242,94 +1242,95 @@ class LoadActProfileHandler(GenericGetPropertiesHandler,
 # Note: This list covers only the HMC operations implemented in the zhmcclient.
 # The HMC supports several more operations.
 URIS = (
+    # (uri_regexp, handler_class)
 
     # In all modes:
 
-    ('/api/version', VersionHandler),
+    (r'/api/version', VersionHandler),
 
-    ('/api/cpcs(?:\?(.*))?', CpcsHandler),
-    ('/api/cpcs/([^/]+)', CpcHandler),
+    (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
+    (r'/api/cpcs/([^/]+)', CpcHandler),
 
     # Only in DPM mode:
 
-    ('/api/cpcs/([^/]+)/operations/start', CpcStartHandler),
-    ('/api/cpcs/([^/]+)/operations/stop', CpcStopHandler),
-    ('/api/cpcs/([^/]+)/operations/export-port-names-list',
+    (r'/api/cpcs/([^/]+)/operations/start', CpcStartHandler),
+    (r'/api/cpcs/([^/]+)/operations/stop', CpcStopHandler),
+    (r'/api/cpcs/([^/]+)/operations/export-port-names-list',
      CpcExportPortNamesListHandler),
 
-    ('/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
-    ('/api/adapters/([^/]+)', AdapterHandler),
-    ('/api/adapters/([^/]+)/operations/change-crypto-type',
+    (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
+    (r'/api/adapters/([^/]+)', AdapterHandler),
+    (r'/api/adapters/([^/]+)/operations/change-crypto-type',
      AdapterChangeCryptoTypeHandler),
 
-    ('/api/adapters/([^/]+)/network-ports/([^/]+)', NetworkPortHandler),
+    (r'/api/adapters/([^/]+)/network-ports/([^/]+)', NetworkPortHandler),
 
-    ('/api/adapters/([^/]+)/storage-ports/([^/]+)', StoragePortHandler),
+    (r'/api/adapters/([^/]+)/storage-ports/([^/]+)', StoragePortHandler),
 
-    ('/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
-    ('/api/partitions/([^/]+)', PartitionHandler),
-    ('/api/partitions/([^/]+)/operations/start', PartitionStartHandler),
-    ('/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
-    ('/api/partitions/([^/]+)/operations/scsi-dump',
+    (r'/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
+    (r'/api/partitions/([^/]+)', PartitionHandler),
+    (r'/api/partitions/([^/]+)/operations/start', PartitionStartHandler),
+    (r'/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
+    (r'/api/partitions/([^/]+)/operations/scsi-dump',
      PartitionScsiDumpHandler),
-    ('/api/partitions/([^/]+)/operations/psw-restart',
+    (r'/api/partitions/([^/]+)/operations/psw-restart',
      PartitionPswRestartHandler),
-    ('/api/partitions/([^/]+)/operations/mount-iso-image(?:\?(.*))?',
+    (r'/api/partitions/([^/]+)/operations/mount-iso-image(?:\?(.*))?',
      PartitionMountIsoImageHandler),
-    ('/api/partitions/([^/]+)/operations/unmount-iso-image',
+    (r'/api/partitions/([^/]+)/operations/unmount-iso-image',
      PartitionUnmountIsoImageHandler),
-    ('/api/partitions/([^/]+)/operations/increase-crypto-configuration',
+    (r'/api/partitions/([^/]+)/operations/increase-crypto-configuration',
      PartitionIncreaseCryptoConfigHandler),
-    ('/api/partitions/([^/]+)/operations/decrease-crypto-configuration',
+    (r'/api/partitions/([^/]+)/operations/decrease-crypto-configuration',
      PartitionDecreaseCryptoConfigHandler),
-    ('/api/partitions/([^/]+)/operations/change-crypto-domain-configuration',
+    (r'/api/partitions/([^/]+)/operations/change-crypto-domain-configuration',
      PartitionChangeCryptoConfigHandler),
 
-    ('/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
-    ('/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
-    ('/api/partitions/([^/]+)/hbas/([^/]+)/operations/'\
+    (r'/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
+    (r'/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
+    (r'/api/partitions/([^/]+)/hbas/([^/]+)/operations/'\
      'reassign-storage-adapter-port', HbaReassignPortHandler),
 
-    ('/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
-    ('/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
+    (r'/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
+    (r'/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
 
-    ('/api/partitions/([^/]+)/virtual-functions(?:\?(.*))?',
+    (r'/api/partitions/([^/]+)/virtual-functions(?:\?(.*))?',
      VirtualFunctionsHandler),
-    ('/api/partitions/([^/]+)/virtual-functions/([^/]+)',
+    (r'/api/partitions/([^/]+)/virtual-functions/([^/]+)',
      VirtualFunctionHandler),
 
-    ('/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?', VirtualSwitchesHandler),
-    ('/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
-    ('/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
+    (r'/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?', VirtualSwitchesHandler),
+    (r'/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
+    (r'/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
      VirtualSwitchGetVnicsHandler),
 
     # Only in classic (or ensemble) mode:
 
-    ('/api/cpcs/([^/]+)/operations/import-profiles',
+    (r'/api/cpcs/([^/]+)/operations/import-profiles',
      CpcImportProfilesHandler),
-    ('/api/cpcs/([^/]+)/operations/export-profiles',
+    (r'/api/cpcs/([^/]+)/operations/export-profiles',
      CpcExportProfilesHandler),
 
-    ('/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
-    ('/api/logical-partitions/([^/]+)', LparHandler),
-    ('/api/logical-partitions/([^/]+)/operations/activate',
+    (r'/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
+    (r'/api/logical-partitions/([^/]+)', LparHandler),
+    (r'/api/logical-partitions/([^/]+)/operations/activate',
      LparActivateHandler),
-    ('/api/logical-partitions/([^/]+)/operations/deactivate',
+    (r'/api/logical-partitions/([^/]+)/operations/deactivate',
      LparDeactivateHandler),
-    ('/api/logical-partitions/([^/]+)/operations/load', LparLoadHandler),
+    (r'/api/logical-partitions/([^/]+)/operations/load', LparLoadHandler),
 
-    ('/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
+    (r'/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
      ResetActProfilesHandler),
-    ('/api/cpcs/([^/]+)/reset-activation-profiles/([^/]+)',
+    (r'/api/cpcs/([^/]+)/reset-activation-profiles/([^/]+)',
      ResetActProfileHandler),
 
-    ('/api/cpcs/([^/]+)/image-activation-profiles(?:\?(.*))?',
+    (r'/api/cpcs/([^/]+)/image-activation-profiles(?:\?(.*))?',
      ImageActProfilesHandler),
-    ('/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
+    (r'/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
      ImageActProfileHandler),
 
-    ('/api/cpcs/([^/]+)/load-activation-profiles(?:\?(.*))?',
+    (r'/api/cpcs/([^/]+)/load-activation-profiles(?:\?(.*))?',
      LoadActProfilesHandler),
-    ('/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
+    (r'/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
      LoadActProfileHandler),
 )

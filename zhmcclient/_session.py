@@ -1286,7 +1286,7 @@ def _result_object(result):
 
         # Check for some well-known errors:
         if re.search(r'javax\.servlet\.ServletException: '
-                     'Web Services are not enabled\.', html_oneline):
+                     r'Web Services are not enabled\.', html_oneline):
             html_title = "Console Configuration Error"
             html_details = "Web Services API is not enabled on the HMC."
             html_reason = HTML_REASON_WEB_SERVICES_DISABLED
