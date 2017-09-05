@@ -43,6 +43,10 @@ Released: not yet
 * Avoided `DeprecationWarning` on Python 3 for invalid escape sequences
   in some places.
 
+* Added ``datetime_from_timestamp()`` and ``datetime_from_timestamp()``
+  functions that convert between Python ``datetime`` objects and HMC timestamp
+  numbers.
+
 **Known issues:**
 
 * See `list of open issues`_.

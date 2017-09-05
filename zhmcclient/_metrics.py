@@ -75,6 +75,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import get_logger, logged_api_call
 from ._exceptions import NotFound
+from ._utils import datetime_from_timestamp
 
 __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
            'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
@@ -598,13 +599,8 @@ class MetricsResponse(object):
             elif state == 2:
                 # Process the timestamp
                 assert mr_line != ''
-                _epoch_milliseconds = int(mr_line)
-                _epoch_seconds = _epoch_milliseconds // 1000
-                _delta_microseconds = _epoch_milliseconds % 1000 * 1000
                 try:
-                    dt_timestamp = datetime.fromtimestamp(
-                        _epoch_seconds, pytz.utc)
-                    dt_timestamp.replace(microsecond=_delta_microseconds)
+                    dt_timestamp = datetime_from_timestamp(int(mr_line))
                 except ValueError:
                     # Sometimes, the returned epoch timestamp values are way
                     # too large, e.g. 3651584404810066 (which would translate
