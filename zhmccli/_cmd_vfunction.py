@@ -249,7 +249,7 @@ def cmd_vfunction_update(cmd_ctx, cpc_name, partition_name, vfunction_name,
     if options['adapter'] is not None:
         adapter_name = options['adapter']
         try:
-            adapter = vfunction.partition.manager.cpc.adapters.find(
+            adapter = vfunction.manager.partition.manager.cpc.adapters.find(
                 name=adapter_name)
         except zhmcclient.NotFound:
             raise_click_exception("Could not find adapter %s in CPC %s." %

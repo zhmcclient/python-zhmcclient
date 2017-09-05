@@ -34,6 +34,10 @@ Released: not yet
   prints "Aborted!" and in interactive mode, terminates only the current
   command. (issue #418).
 
+* Fixed an AttributeError when calling 'zhmc vfunction update'.
+  Access to a partition from nic and vfunction is done via the respective
+  manager (issue #416).
+
 **Enhancements:**
 
 * Avoided `DeprecationWarning` on Python 3 for invalid escape sequences
