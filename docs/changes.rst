@@ -38,10 +38,17 @@ Released: not yet
   Access to a partition from nic and vfunction is done via the respective
   manager (issue #416).
 
+* In the zhmc CLI, fixed that creating a new session reused an existing
+  session. This prevented switching between userids on the same HMC
+  (issue #422).
+
 **Enhancements:**
 
 * Avoided `DeprecationWarning` on Python 3 for invalid escape sequences
   in some places.
+
+* Added a ``verify`` argument to ``Session.logoff()``, consistent with
+  ``Session.logon()``. This was needed as part of fixing issue #422.
 
 **Known issues:**
 
