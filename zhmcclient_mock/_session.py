@@ -71,6 +71,32 @@ class FakedSession(zhmcclient.Session):
         self._hmc = FakedHmc(hmc_name, hmc_version, api_version)
         self._urihandler = UriHandler(URIS)
 
+    def __repr__(self):
+        """
+        Return a string with the state of this faked session, for debug
+        purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _host = {s._host!r}\n"
+            "  _userid = {s._userid!r}\n"
+            "  _password = '...'\n"
+            "  _get_password = {s._get_password!r}\n"
+            "  _retry_timeout_config = {s._retry_timeout_config!r}\n"
+            "  _base_url = {s._base_url!r}\n"
+            "  _headers = {s._headers!r}\n"
+            "  _session_id = {s._session_id!r}\n"
+            "  _session = {s._session!r}\n"
+            "  _hmc = {hmc_classname} at 0x{hmc_id:08x}\n"
+            "  _urihandler = {s._urihandler!r}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                hmc_classname=self._hmc.__class__.__name__,
+                hmc_id=id(self._hmc),
+                s=self))
+        return ret
+
     @property
     def hmc(self):
         """
