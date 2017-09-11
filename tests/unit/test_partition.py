@@ -61,7 +61,7 @@ class TestPartition(object):
         self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
 
     def add_partition1(self):
-        """Add partition 1."""
+        """Add partition 1 (type linux)."""
 
         faked_partition = self.faked_cpc.partitions.add({
             'object-id': PART1_OID,
@@ -71,13 +71,14 @@ class TestPartition(object):
             'name': PART1_NAME,
             'description': 'Partition #1',
             'status': 'active',
+            'type': 'linux',
             'initial-memory': 1024,
             'maximum-memory': 2048,
         })
         return faked_partition
 
     def add_partition2(self):
-        """Add partition 2."""
+        """Add partition 2 (type ssc)."""
 
         faked_partition = self.faked_cpc.partitions.add({
             'object-id': PART2_OID,
@@ -87,6 +88,7 @@ class TestPartition(object):
             'name': PART2_NAME,
             'description': 'Partition #2',
             'status': 'active',
+            'type': 'ssc',
             'initial-memory': 1024,
             'maximum-memory': 2048,
         })
@@ -404,21 +406,51 @@ class TestPartition(object):
         assert description == 'Third partition'
 
     @pytest.mark.parametrize(
+        "partition_name", [
+            PART1_NAME,
+            PART2_NAME,
+        ]
+    )
+    @pytest.mark.parametrize(
         "input_props", [
             {},
             {'description': 'New partition description'},
             {'initial-memory': 512,
              'description': 'New partition description'},
+            {'autogenerate-partition-id': True,
+             'partition-id': None},
+            {'boot-device': 'none',
+             'boot-ftp-host': None,
+             'boot-ftp-username': None,
+             'boot-ftp-password': None,
+             'boot-ftp-insfile': None},
+            {'boot-device': 'none',
+             'boot-network-device': None},
+            {'boot-device': 'none',
+             'boot-removable-media': None,
+             'boot-removable-media-type': None},
+            {'boot-device': 'none',
+             'boot-storage-device': None,
+             'boot-logical-unit-number': None,
+             'boot-world-wide-port-name': None},
+            {'boot-device': 'none',
+             'boot-iso-image-name': None,
+             'boot-iso-insfile': None},
+            {'ssc-ipv4-gateway': None,
+             'ssc-ipv6-gateway': None,
+             'ssc-master-userid': None,
+             'ssc-master-pw': None},
         ]
     )
-    def test_partition_update_properties(self, input_props):
+    def test_partition_update_properties(self, input_props, partition_name):
         """Test Partition.update_properties()."""
 
-        # Add a faked partition
-        faked_partition = self.add_partition1()
+        # Add faked partitions
+        self.add_partition1()
+        self.add_partition2()
 
         partition_mgr = self.cpc.partitions
-        partition = partition_mgr.find(name=faked_partition.name)
+        partition = partition_mgr.find(name=partition_name)
 
         partition.pull_full_properties()
         saved_properties = copy.deepcopy(partition.properties)
