@@ -25,6 +25,11 @@ Released: not yet
 
 **Incompatible changes:**
 
+* In the `HTTPError` exception class, `args[0]` was set to the `body` argument,
+  i.e. to the entore response body. Because by convention, `args[0]` should be
+  a human readable message, this has been changed to now set `args[0]` to the
+  'message' field in the response body, or to `None` if not present.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -42,6 +47,20 @@ Released: not yet
 
 * Avoided `DeprecationWarning` on Python 3 for invalid escape sequences
   in some places.
+
+* In the `ParseError` exception class, a message of `None` is now tolerated,
+  for consistency with the other zhmcclient exception classes.
+
+* In the `NotFound` exception class, a `filter_args` parameter of `None` is now
+  tolerated, for consistency with the `NoUniqueMatch` exception class.
+
+* Documented for the zhmcclient exception classes how `args[0]` is set.
+
+* Clarified in the documentation that the `manager` and `resources` parameters
+  of the `NoUniqueMatch` and `NotFound` exception classes must not be `None`.
+
+* Improved the unit test cases for the `Client` class and for the zhmcclient
+  exception classes, and migrated them to py.test.
 
 **Known issues:**
 
