@@ -51,6 +51,12 @@ Released: not yet
   session. This prevented switching between userids on the same HMC
   (issue #422).
 
+* Docs: In the "Introduction" chapter of the documentation, fixed the HMC API
+  version shown for z14.
+
+* Docs: In the Appendix of the documentation, added IBM book number and link
+  for the HMC API book of z14.
+
 **Enhancements:**
 
 * Avoided `DeprecationWarning` on Python 3 for invalid escape sequences

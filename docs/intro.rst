@@ -74,7 +74,7 @@ HMC version  HMC API version  HMC API book            Machine generations
 2.12.1       1.4 / 1.5        :term:`HMC API 2.12.1`  z196 to zEC12 and z114 to zBC12
 2.13.0       1.6              :term:`HMC API 2.13.0`  z196 to z13/Emperor and z114 to zBC12
 2.13.1       1.7 / 2.1 / 2.2  :term:`HMC API 2.13.1`  z196 to z13/Emperor and z114 to z13s/Rockhopper
-2.14.0       2.3              :term:`HMC API 2.14.0`  z196 to z14/Emperor and z114 to z13s/Rockhopper
+2.14.0       2.20             :term:`HMC API 2.14.0`  z196 to z14/Emperor and z114 to z13s/Rockhopper
 ===========  ===============  ======================  ===============================================
 
 
