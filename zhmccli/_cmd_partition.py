@@ -15,6 +15,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import os
+
 import logging
 import click
 
@@ -439,6 +441,45 @@ def partition_console(cmd_ctx, cpc, partition, **options):
                                                       options))
 
 
+@partition_group.command('mountiso', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.option('--imagefile', type=str, required=True,
+              help='The file path of the ISO imagei file.')
+@click.option('--imageinsfile', type=str, required=True,
+              help='The file path of the INS file (within the file system '
+              'of the ISO image file).')
+@click.option('--boot', '-b', is_flag=True, required=False,
+              help='Set boot-device property to iso-image.')
+@click.pass_obj
+def partition_mount_iso(cmd_ctx, cpc, partition, **options):
+    """
+    Mount an ISO image to a partition.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_partition_mount_iso(cmd_ctx, cpc,
+                                                        partition, options))
+
+
+@partition_group.command('unmountiso', options_metavar=COMMAND_OPTIONS_METAVAR)
+@click.argument('CPC', type=str, metavar='CPC')
+@click.argument('PARTITION', type=str, metavar='PARTITION')
+@click.pass_obj
+def partition_unmount_iso(cmd_ctx, cpc, partition):
+    """
+    Unmount an ISO image from a partition.
+
+    In addition to the command-specific options shown in this help text, the
+    general options (see 'zhmc --help') can also be specified right after the
+    'zhmc' command name.
+    """
+    cmd_ctx.execute_cmd(lambda: cmd_partition_unmount_iso(cmd_ctx, cpc,
+                                                          partition))
+
+
 def cmd_partition_list(cmd_ctx, cpc_name, options):
 
     client = zhmcclient.Client(cmd_ctx.session)
@@ -703,3 +744,39 @@ def cmd_partition_console(cmd_ctx, cpc_name, partition_name, options):
         part_console(cmd_ctx.session, partition, refresh, logger)
     except zhmcclient.Error as exc:
         raise click.ClickException("%s: %s" % (exc.__class__.__name__, exc))
+
+
+def cmd_partition_mount_iso(cmd_ctx, cpc_name, partition_name, options):
+
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
+
+    image_file = options['imagefile']
+    image_fp = open(image_file, 'rb')
+    path, image_name = os.path.split(image_file)
+    partition.mount_iso_image(image_fp, image_name, options['imageinsfile'])
+    if options['boot']:
+        partition.update_properties({'boot-device': 'iso-image'})
+    cmd_ctx.spinner.stop()
+    click.echo('ISO image %s has been mounted to Partition %s.' %
+               (image_name, partition.name))
+
+
+def cmd_partition_unmount_iso(cmd_ctx, cpc_name, partition_name):
+
+    client = zhmcclient.Client(cmd_ctx.session)
+    partition = find_partition(cmd_ctx, client, cpc_name, partition_name)
+
+    partition.pull_full_properties()
+    image_name = partition.get_property('boot-iso-image-name')
+    if image_name:
+        boot_device = partition.get_property('boot-device')
+        if boot_device == 'iso-image':
+            partition.update_properties({'boot-device': 'none'})
+        partition.unmount_iso_image()
+        cmd_ctx.spinner.stop()
+        click.echo('ISO image %s has been unmounted from Partition %s.' %
+                   (image_name, partition.name))
+    else:
+        cmd_ctx.spinner.stop()
+        click.echo('No ISO image is mounted to Partition %s.' % partition.name)

@@ -105,8 +105,8 @@ Released: not yet
 
 * Clarified in the description of `HbaManager.list()` that only the
   'element-uri' property is returned and can be used for filtering.
-  
-* The mock support for the "Create NIC" operation now performs more 
+
+* The mock support for the "Create NIC" operation now performs more
   checking on the URIs specified in the 'network-adapter-port' or
   'virtual-switch-uri' input properties, raising HTTP status 404 (Not Found)
   as specified in the HMC API book.
@@ -145,6 +145,8 @@ Released: not yet
 
 * Improved the error information in the ``ParseError`` exception, by adding
   the "Content-Type" header in cases where that is interesting.
+
+* Add CLI commmands to mount and unmount an ISO to a Partition.
 
 **Known issues:**
 
