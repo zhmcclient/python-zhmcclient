@@ -552,8 +552,9 @@ class TestPartition(object):
             ('starting', HTTPError({'http-status': 409, 'reason': 1})),
             ('active', None),
             ('stopping', HTTPError({'http-status': 409, 'reason': 1})),
-            ('degraded', None),
-            ('reservation-error', None),
+            ('degraded', HTTPError({'http-status': 409, 'reason': 1})),
+            ('reservation-error',
+             HTTPError({'http-status': 409, 'reason': 1})),
             ('paused', None),
         ]
     )

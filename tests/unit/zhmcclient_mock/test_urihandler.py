@@ -431,8 +431,8 @@ class UriHandlerMethodTests(unittest.TestCase):
 
         self.assertEqual(result, self.cpcs)
 
-        DummyHandler1.get.assert_called_with(self.hmc, '/api/cpcs', tuple(),
-                                             True)
+        DummyHandler1.get.assert_called_with(
+            'GET', self.hmc, '/api/cpcs', tuple(), True)
         self.assertEqual(DummyHandler1.post.called, 0)
         self.assertEqual(DummyHandler2.get.called, 0)
         self.assertEqual(DummyHandler2.delete.called, 0)
@@ -446,8 +446,8 @@ class UriHandlerMethodTests(unittest.TestCase):
 
         self.assertEqual(DummyHandler1.get.called, 0)
         self.assertEqual(DummyHandler1.post.called, 0)
-        DummyHandler2.get.assert_called_with(self.hmc, '/api/cpcs/1',
-                                             tuple('1'), True)
+        DummyHandler2.get.assert_called_with(
+            'GET', self.hmc, '/api/cpcs/1', tuple('1'), True)
         self.assertEqual(DummyHandler2.delete.called, 0)
 
     def test_post_cpcs(self):
@@ -458,8 +458,8 @@ class UriHandlerMethodTests(unittest.TestCase):
         self.assertEqual(result, self.new_cpc)
 
         self.assertEqual(DummyHandler1.get.called, 0)
-        DummyHandler1.post.assert_called_with(self.hmc, '/api/cpcs', tuple(),
-                                              {}, True, True)
+        DummyHandler1.post.assert_called_with(
+            'POST', self.hmc, '/api/cpcs', tuple(), {}, True, True)
         self.assertEqual(DummyHandler2.get.called, 0)
         self.assertEqual(DummyHandler2.delete.called, 0)
 
@@ -471,8 +471,8 @@ class UriHandlerMethodTests(unittest.TestCase):
         self.assertEqual(DummyHandler1.get.called, 0)
         self.assertEqual(DummyHandler1.post.called, 0)
         self.assertEqual(DummyHandler2.get.called, 0)
-        DummyHandler2.delete.assert_called_with(self.hmc, '/api/cpcs/2',
-                                                tuple('2'), True)
+        DummyHandler2.delete.assert_called_with(
+            'DELETE', self.hmc, '/api/cpcs/2', tuple('2'), True)
 
 
 def standard_test_hmc():
