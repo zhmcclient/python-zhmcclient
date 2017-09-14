@@ -57,6 +57,15 @@ Released: not yet
   handler of the mock support now converts that into an HTTP error 400
   (Bad Request), consistent with the HMC API book.
 
+* Migrated the unit tests for HBAs from unittest to py.test, and
+  improved the test cases.
+
+* In the `Hba.reassign_port()` method, updated the `Hba` object with the
+  changed port, consistent with other update situations.
+
+* Clarified in the description of `HbaManager.list()` that only the
+  'element-uri' property is returned and can be used for filtering.
+  
 **Known issues:**
 
 * See `list of open issues`_.
