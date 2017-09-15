@@ -48,16 +48,20 @@ class HTTPError(Exception):
 
 class InvalidResourceError(HTTPError):
 
-    def __init__(self, method, uri, handler_class=None):
+    def __init__(self, method, uri, handler_class=None, reason=1,
+                 resource_uri=None):
         if handler_class is not None:
             handler_txt = " (handler class %s)" % handler_class.__name__
         else:
             handler_txt = ""
+        if not resource_uri:
+            resource_uri = uri
         super(InvalidResourceError, self).__init__(
             method, uri,
             http_status=404,
-            reason=1,
-            message="Unknown resource with URI: %s%s" % (uri, handler_txt))
+            reason=reason,
+            message="Unknown resource with URI: %s%s" %
+            (resource_uri, handler_txt))
 
 
 class InvalidMethodError(HTTPError):
