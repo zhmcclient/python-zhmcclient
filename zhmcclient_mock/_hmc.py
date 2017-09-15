@@ -1248,33 +1248,35 @@ class FakedNicManager(FakedBaseManager):
             properties.
         """
         new_nic = super(FakedNicManager, self).add(properties)
-        if 'network-adapter-port-uri' not in new_nic.properties and \
-                'virtual-switch-uri' not in new_nic.properties:
-            raise InputError("FakedNic with object ID %s must specify "
-                             "either a 'network-adapter-port-uri' property "
-                             "(for backing ROCE adapters) or a "
-                             "'virtual-switch-uri' property (for backing OSA "
-                             "and Hipersocket adapters)." % new_nic.oid)
-        # We don't verify that the specified URI actually exists, because
-        # it might not have been added yet, and we don't want to impose too
-        # much of an ordering requirement on the resources that are added.
+
         partition = self.parent
-        assert 'nic-uris' in partition.properties
-        partition.properties['nic-uris'].append(new_nic.uri)
-        if 'device-number' not in new_nic.properties:
-            devno = partition.devno_alloc()
-            new_nic.properties['device-number'] = devno
+
+        # For OSA-backed NICs, reflect the new NIC in the virtual switch
         if 'virtual-switch-uri' in new_nic.properties:
             vswitch_uri = new_nic.properties['virtual-switch-uri']
+            # Even though the URI handler when calling this method ensures that
+            # the vswitch exists, this method can be called by the user as
+            # well, so we have to handle the possibility that it does not
+            # exist:
             try:
                 vswitch = self.hmc.lookup_by_uri(vswitch_uri)
             except KeyError:
-                raise InputError("FakedNic with object ID %s specified "
-                                 "a non-existing virtual switch in its "
-                                 "'virtual-switch-uri' property: %r" %
-                                 (new_nic.oid, vswitch_uri))
-            if new_nic.uri not in vswitch.properties['connected-vnic-uris']:
-                vswitch.properties['connected-vnic-uris'].append(new_nic.uri)
+                raise InputError("The virtual switch specified in the "
+                                 "'virtual-switch-uri' property does not "
+                                 "exist: {!r}".format(vswitch_uri))
+            connected_uris = vswitch.properties['connected-vnic-uris']
+            if new_nic.uri not in connected_uris:
+                connected_uris.append(new_nic.uri)
+
+        # Create a default device-number if not specified
+        if 'device-number' not in new_nic.properties:
+            devno = partition.devno_alloc()
+            new_nic.properties['device-number'] = devno
+
+        # Reflect the new NIC in the partition
+        assert 'nic-uris' in partition.properties
+        partition.properties['nic-uris'].append(new_nic.uri)
+
         return new_nic
 
     def remove(self, oid):

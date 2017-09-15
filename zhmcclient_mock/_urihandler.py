@@ -1077,10 +1077,45 @@ class NicsHandler(object):
                                invalid_statuses=['starting', 'stopping'])
         check_required_fields(method, uri, body, ['name'])
 
-        try:
-            new_nic = partition.nics.add(body)
-        except InputError as exc:
-            raise BadRequestError(method, uri, reason=5, message=str(exc))
+        # Check the port-related input properties
+        if 'network-adapter-port-uri' in body:
+            port_uri = body['network-adapter-port-uri']
+            m = re.match(r'(^/api/adapters/[^/]+)/network-ports/[^/]+$',
+                         port_uri)
+            if not m:
+                # We treat an invalid port URI like "port not found".
+                raise InvalidResourceError(method, uri, reason=6,
+                                           resource_uri=port_uri)
+            adapter_uri = m.group(1)
+            try:
+                hmc.lookup_by_uri(adapter_uri)
+            except KeyError:
+                raise InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=adapter_uri)
+            try:
+                hmc.lookup_by_uri(port_uri)
+            except KeyError:
+                raise InvalidResourceError(method, uri, reason=6,
+                                           resource_uri=port_uri)
+        elif 'virtual-switch-uri' in body:
+            vswitch_uri = body['virtual-switch-uri']
+            try:
+                hmc.lookup_by_uri(vswitch_uri)
+            except KeyError:
+                raise InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=vswitch_uri)
+        else:
+            nic_name = body.get('name', None)
+            raise BadRequestError(
+                method, uri, reason=5,
+                message="The input properties for creating a NIC {!r} in "
+                        "partition {!r} must specify either the "
+                        "'network-adapter-port-uri' or the "
+                        "'virtual-switch-uri' property.".
+                        format(nic_name, partition.name))
+
+        # We have ensured that the vswitch exists, so no InputError handling
+        new_nic = partition.nics.add(body)
 
         return {'element-uri': new_nic.uri}
 
