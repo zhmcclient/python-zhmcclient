@@ -31,7 +31,7 @@ import copy
 from ._idpool import IdPool
 from zhmcclient._utils import repr_dict, repr_manager
 
-__all__ = ['FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
+__all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedActivationProfileManager', 'FakedActivationProfile',
            'FakedAdapterManager', 'FakedAdapter',
            'FakedCpcManager', 'FakedCpc',
@@ -43,6 +43,18 @@ __all__ = ['FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedVirtualFunctionManager', 'FakedVirtualFunction',
            'FakedVirtualSwitchManager', 'FakedVirtualSwitch',
            ]
+
+
+class InputError(Exception):
+    """
+    An error that is raised by the faked resource classes and indicates
+    that the input is invalid in some way.
+
+    ``args[0]`` will be set to a message detailing the issue.
+    """
+
+    def __init__(self, message):
+        super(InputError, self).__init__(message)
 
 
 class FakedBaseResource(object):
@@ -494,6 +506,10 @@ class FakedHmc(FakedBaseResource):
             properties, see the ``add()`` methods of the various faked resource
             managers (e.g. :meth:`zhmcclient_mock.FakedCpcManager.add`).
 
+        Raises:
+          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+            resources.
+
         Example for resource dictionary::
 
             resources = {
@@ -556,13 +572,13 @@ class FakedHmc(FakedBaseResource):
     def _process_child_list(self, parent_resource, child_attr, child_list):
         child_manager = getattr(parent_resource, child_attr, None)
         if child_manager is None:
-            raise ValueError("Invalid child resource type specified in "
+            raise InputError("Invalid child resource type specified in "
                              "resource dictionary: {}".format(child_attr))
         for child_dict in child_list:
             # child_dict is a dict of 'properties' and grand child resources
             properties = child_dict.get('properties', None)
             if properties is None:
-                raise ValueError("A resource for resource type {} has no"
+                raise InputError("A resource for resource type {} has no"
                                  "properties specified.".format(child_attr))
             child_resource = child_manager.add(properties)
             for grandchild_attr in child_dict:
@@ -701,6 +717,10 @@ class FakedAdapterManager(FakedBaseManager):
 
         Returns:
           :class:`~zhmcclient_mock.FakedAdapter`: The faked Adapter resource.
+
+        Raises:
+          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+            properties.
         """
         return super(FakedAdapterManager, self).add(properties)
 
@@ -718,6 +738,7 @@ class FakedAdapter(FakedBaseResource):
         super(FakedAdapter, self).__init__(
             manager=manager,
             properties=properties)
+        # TODO: Maybe move this stuff into AdapterManager.add()?
         if 'adapter-family' in self.properties:
             family = self.properties['adapter-family']
             if family in ('osa', 'roce', 'hipersockets'):
@@ -749,11 +770,11 @@ class FakedAdapter(FakedBaseResource):
                 self.properties['adapter-family'] = 'accelerator'
                 self._adapter_kind = 'other'
             else:
-                raise ValueError("FakedAdapter with object-id=%s has an "
+                raise InputError("FakedAdapter with object-id=%s has an "
                                  "unknown value in its 'type' property: %s." %
                                  (self.oid, type_))
         else:
-            raise ValueError("FakedAdapter with object-id=%s must have "
+            raise InputError("FakedAdapter with object-id=%s must have "
                              "'adapter-family' or 'type' property specified." %
                              self.oid)
         if self.adapter_kind == 'network':
@@ -1048,10 +1069,14 @@ class FakedHbaManager(FakedBaseManager):
 
         Returns:
           :class:`~zhmcclient_mock.FakedHba`: The faked HBA resource.
+
+        Raises:
+          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+            properties.
         """
         new_hba = super(FakedHbaManager, self).add(properties)
         if 'adapter-port-uri' not in new_hba.properties:
-            raise ValueError("FakedHba with object-id=%s must have "
+            raise InputError("FakedHba with object-id=%s must have "
                              "'adapter-port-uri' property." %
                              new_hba.oid)
         # We don't verify that the specified URI actually exists, because
@@ -1217,11 +1242,15 @@ class FakedNicManager(FakedBaseManager):
 
         Returns:
           :class:`zhmcclient_mock.FakedNic`: The faked NIC resource.
+
+        Raises:
+          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+            properties.
         """
         new_nic = super(FakedNicManager, self).add(properties)
         if 'network-adapter-port-uri' not in new_nic.properties and \
                 'virtual-switch-uri' not in new_nic.properties:
-            raise ValueError("FakedNic with object ID %s must specify "
+            raise InputError("FakedNic with object ID %s must specify "
                              "either a 'network-adapter-port-uri' property "
                              "(for backing ROCE adapters) or a "
                              "'virtual-switch-uri' property (for backing OSA "
@@ -1240,7 +1269,7 @@ class FakedNicManager(FakedBaseManager):
             try:
                 vswitch = self.hmc.lookup_by_uri(vswitch_uri)
             except KeyError:
-                raise ValueError("FakedNic with object ID %s specified "
+                raise InputError("FakedNic with object ID %s specified "
                                  "a non-existing virtual switch in its "
                                  "'virtual-switch-uri' property: %r" %
                                  (new_nic.oid, vswitch_uri))
@@ -1525,9 +1554,9 @@ class FakedPortManager(FakedBaseManager):
         elif adapter.adapter_kind == 'storage':
             port_segment = 'storage-ports'
         else:
-            raise ValueError("FakedAdapter with object-id=%s must be a "
-                             "storage or network adapter to have ports." %
-                             adapter.oid)
+            raise AssertionError("FakedAdapter with object-id=%s must be a "
+                                 "storage or network adapter to have ports." %
+                                 adapter.oid)
         super(FakedPortManager, self).__init__(
             hmc=hmc,
             parent=adapter,

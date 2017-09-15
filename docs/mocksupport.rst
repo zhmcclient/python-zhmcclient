@@ -163,6 +163,9 @@ Faked HMC
 
 .. automodule:: zhmcclient_mock._hmc
 
+.. autoclass:: zhmcclient_mock.InputError
+   :members:
+
 .. autoclass:: zhmcclient_mock.FakedHmc
    :members:
 
