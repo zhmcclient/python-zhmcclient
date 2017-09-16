@@ -57,6 +57,10 @@ Released: not yet
   handler of the mock support now converts that into an HTTP error 400
   (Bad Request), consistent with the HMC API book.
 
+* Added ``datetime_from_timestamp()`` and ``datetime_from_timestamp()``
+  functions that convert between Python ``datetime`` objects and HMC timestamp
+  numbers.
+
 **Known issues:**
 
 * See `list of open issues`_.
