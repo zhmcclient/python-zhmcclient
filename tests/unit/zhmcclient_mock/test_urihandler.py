@@ -117,6 +117,23 @@ class InvalidResourceErrorTests(unittest.TestCase):
         self.assertEqual(exc.uri, uri)
         self.assertEqual(exc.http_status, exp_http_status)
         self.assertEqual(exc.reason, exp_reason)
+        self.assertIn(uri, exc.message)
+
+        # next test case
+        exp_reason = 2
+
+        exc = InvalidResourceError(method, uri, DummyHandler1,
+                                   reason=exp_reason)
+
+        self.assertEqual(exc.reason, exp_reason)
+
+        # next test case
+        exp_resource_uri = '/api/resource'
+
+        exc = InvalidResourceError(method, uri, DummyHandler1,
+                                   resource_uri=exp_resource_uri)
+
+        self.assertIn(exp_resource_uri, exc.message)
 
     def test_attributes_no_handler(self):
         method = 'GET'
