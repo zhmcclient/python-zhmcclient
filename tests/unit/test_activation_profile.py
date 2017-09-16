@@ -291,6 +291,16 @@ class TestActivationProfile(object):
         "input_props", [
             {},
             {'description': 'New profile description'},
+            {'description': ''},
+            {'ssc-network-info': {
+                'chpid': '1a',
+                'port': 0,
+                'ipaddr-type': 'dhcp',
+                'vlan-id': None,
+                'static-ip-info': None,
+            }},
+            {'group-profile-uri': None},
+            {'zaware-gateway-info': None},
         ]
     )
     def test_profile_update_properties(self, input_props, profile_type):
