@@ -22,6 +22,8 @@ from __future__ import absolute_import
 import re
 from requests.utils import unquote
 
+from ._hmc import InputError
+
 __all__ = ['UriHandler', 'HTTPError', 'URIS']
 
 
@@ -539,7 +541,10 @@ class AdaptersHandler(object):
         # property on a copy of the input properties.
         body2 = body.copy()
         body2['type'] = 'hipersockets'
-        new_adapter = cpc.adapters.add(body2)
+        try:
+            new_adapter = cpc.adapters.add(body2)
+        except InputError as exc:
+            raise BadRequestError(method, uri, reason=5, message=str(exc))
         return {'object-uri': new_adapter.uri}
 
 
@@ -990,7 +995,11 @@ class HbasHandler(object):
                                invalid_statuses=['starting', 'stopping'])
         check_required_fields(method, uri, body, ['name', 'adapter-port-uri'])
 
-        new_hba = partition.hbas.add(body)
+        try:
+            new_hba = partition.hbas.add(body)
+        except InputError as exc:
+            raise BadRequestError(method, uri, reason=5, message=str(exc))
+
         return {'element-uri': new_hba.uri}
 
 
@@ -1064,7 +1073,11 @@ class NicsHandler(object):
                                invalid_statuses=['starting', 'stopping'])
         check_required_fields(method, uri, body, ['name'])
 
-        new_nic = partition.nics.add(body)
+        try:
+            new_nic = partition.nics.add(body)
+        except InputError as exc:
+            raise BadRequestError(method, uri, reason=5, message=str(exc))
+
         return {'element-uri': new_nic.uri}
 
 
