@@ -21,9 +21,11 @@ from __future__ import absolute_import, print_function
 
 import requests.packages.urllib3
 import unittest
+from datetime import datetime
 from mock import MagicMock
 
-from zhmcclient_mock._hmc import FakedHmc
+from zhmcclient_mock._hmc import FakedHmc, FakedMetricGroupDefinition, \
+    FakedMetricObjectValues
 from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     InvalidMethodError, CpcNotInDpmError, CpcInDpmError, \
     parse_query_parms, UriHandler, \
@@ -32,6 +34,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     CpcsHandler, CpcHandler, CpcStartHandler, CpcStopHandler, \
     CpcImportProfilesHandler, CpcExportProfilesHandler, \
     CpcExportPortNamesListHandler, \
+    MetricsContextsHandler, MetricsContextHandler, \
     PartitionsHandler, PartitionHandler, PartitionStartHandler, \
     PartitionStopHandler, PartitionScsiDumpHandler, \
     PartitionPswRestartHandler, PartitionMountIsoImageHandler, \
@@ -1014,6 +1017,148 @@ class CpcExportProfilesHandlerTests(unittest.TestCase):
             operation_body, True, True)
 
         self.assertIsNone(resp)
+
+
+class MetricsContextHandlersTests(unittest.TestCase):
+    """All tests for classes MetricsContextsHandler and
+    MetricsContextHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/services/metrics/context', MetricsContextsHandler),
+            (r'/api/services/metrics/context/([^/]+)', MetricsContextHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_create_get_delete_context(self):
+
+        mc_mgr = self.hmc.metrics_contexts
+
+        # Prepare faked metric group definitions
+
+        mg_name = 'partition-usage'
+        mg_def = FakedMetricGroupDefinition(
+            name=mg_name,
+            types=[
+                ('metric-1', 'string-metric'),
+                ('metric-2', 'integer-metric'),
+            ])
+        mg_info = {
+            'group-name': mg_name,
+            'metric-infos': [
+                {
+                    'metric-name': 'metric-1',
+                    'metric-type': 'string-metric',
+                },
+                {
+                    'metric-name': 'metric-2',
+                    'metric-type': 'integer-metric',
+                },
+            ],
+        }
+        mc_mgr.add_metric_group_definition(mg_def)
+
+        mg_name2 = 'cpc-usage'
+        mg_def2 = FakedMetricGroupDefinition(
+            name=mg_name2,
+            types=[
+                ('metric-3', 'string-metric'),
+                ('metric-4', 'integer-metric'),
+            ])
+        mg_info2 = {
+            'group-name': mg_name2,
+            'metric-infos': [
+                {
+                    'metric-name': 'metric-3',
+                    'metric-type': 'string-metric',
+                },
+                {
+                    'metric-name': 'metric-4',
+                    'metric-type': 'integer-metric',
+                },
+            ],
+        }
+        mc_mgr.add_metric_group_definition(mg_def2)
+
+        # Prepare faked metric values
+
+        mo_val1_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid',
+            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            values=[
+                ('metric-1', "a"),
+                ('metric-2', 5),
+            ])
+        mc_mgr.add_metric_values(mo_val1_input)
+
+        mo_val2_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid',
+            timestamp=datetime(2017, 9, 5, 12, 13, 20, 0),
+            values=[
+                ('metric-1', "b"),
+                ('metric-2', -7),
+            ])
+        mc_mgr.add_metric_values(mo_val2_input)
+
+        mo_val3_input = FakedMetricObjectValues(
+            group_name=mg_name2,
+            resource_uri='/api/cpcs/fake-oid',
+            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            values=[
+                ('metric-1', "c"),
+                ('metric-2', 0),
+            ])
+        mc_mgr.add_metric_values(mo_val3_input)
+
+        body = {
+            'anticipated-frequency-seconds': '10',
+            'metric-groups': [mg_name, mg_name2],
+        }
+
+        # the create function to be tested:
+        resp = self.urihandler.post(self.hmc, '/api/services/metrics/context',
+                                    body, True, True)
+
+        self.assertIsInstance(resp, dict)
+        self.assertIn('metrics-context-uri', resp)
+        uri = resp['metrics-context-uri']
+        self.assertTrue(uri.startswith('/api/services/metrics/context/'))
+        self.assertIn('metric-group-infos', resp)
+        mg_infos = resp['metric-group-infos']
+        self.assertEqual(mg_infos, [mg_info, mg_info2])
+
+        # the get function to be tested:
+        mv_resp = self.urihandler.get(self.hmc, uri, True)
+
+        exp_mv_resp = '''"partition-usage"
+"/api/partitions/fake-oid"
+1504613590000
+"a",5
+
+"/api/partitions/fake-oid"
+1504613600000
+"b",-7
+
+
+"cpc-usage"
+"/api/cpcs/fake-oid"
+1504613590000
+"c",0
+
+
+
+'''
+        self.assertEqual(
+            mv_resp, exp_mv_resp,
+            "Actual response string:\n{!r}\n"
+            "Expected response string:\n{!r}\n".
+            format(mv_resp, exp_mv_resp))
+
+        # the delete function to be tested:
+        self.urihandler.delete(self.hmc, uri, True)
 
 
 class AdapterHandlersTests(unittest.TestCase):

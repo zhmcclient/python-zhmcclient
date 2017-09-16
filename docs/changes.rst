@@ -61,6 +61,8 @@ Released: not yet
   functions that convert between Python ``datetime`` objects and HMC timestamp
   numbers.
 
+* Added mock support for Metrics resources.
+
 **Known issues:**
 
 * See `list of open issues`_.
