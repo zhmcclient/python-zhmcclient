@@ -503,12 +503,16 @@ class Session(object):
             self._do_logon()
 
     @logged_api_call
-    def logoff(self):
+    def logoff(self, verify=False):
         """
         Make sure the session is logged off from the HMC.
 
         After successful logoff, the HMC session-id and
         :class:`requests.Session` object stored in this object are reset.
+
+        Parameters:
+
+          verify (bool): If a session-id is already set, verify its validity.
 
         Raises:
 
@@ -517,7 +521,7 @@ class Session(object):
           :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if self.is_logon():
+        if self.is_logon(verify):
             self._do_logoff()
 
     @logged_api_call

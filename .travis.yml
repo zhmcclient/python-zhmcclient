@@ -78,7 +78,8 @@ matrix:
         - PACKAGE_LEVEL=latest
         - PYTHON=3
 
-before_install:
+# commands to install dependencies
+install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       if [[ "${PYTHON:0:1}" == "2" ]]; then
         export PYTHON_CMD=python;
@@ -110,9 +111,6 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       virtualenv venv -p $PYTHON_CMD && source venv/bin/activate;
     fi
-
-# commands to install dependencies
-install:
   - make pyshow
   - $PIP_CMD list
   - make install
