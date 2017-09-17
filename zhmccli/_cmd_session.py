@@ -62,6 +62,10 @@ def cmd_session_create(cmd_ctx):
     """Create an HMC session."""
     session = cmd_ctx.session
     try:
+        # We need to first log off, to make the logon really create a new
+        # session. If we don't first log off, the session from the
+        # ZHMC_SESSION_ID env var will be used and no new session be created.
+        session.logoff(verify=True)
         session.logon(verify=True)
     except zhmcclient.Error as exc:
         raise_click_exception(exc, cmd_ctx.error_format)
