@@ -53,8 +53,8 @@ class MyManager(BaseManager):
             class_name='myresource',
             session=session,
             parent=None,  # a top-level resource
-            base_uri='/api/myresources/',
-            oid_prop='fake_object_id',
+            base_uri='/api/myresources',
+            oid_prop='fake-oid-prop',
             uri_prop='fake-uri-prop',
             name_prop='fake-name-prop',
             query_props=['qp1', 'qp2'])
@@ -74,7 +74,7 @@ class ResourceTestCase(unittest.TestCase):
     def setUp(self):
         self.session = Session(host='fake-host')
         self.mgr = MyManager(self.session)
-        self.uri = "/api/resource/deadbeef-beef-beef-beef-deadbeefbeef"
+        self.uri = self.mgr._base_uri + '/deadbeef-beef-beef-beef-deadbeefbeef'
         self.name = "fake-name"
         self.uri_prop = 'fake-uri-prop'  # same as in MyManager
         self.name_prop = 'fake-name-prop'  # same as in MyManager
@@ -88,9 +88,17 @@ class ResourceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(resource.properties, dict))
 
         # Verify that the resource properties are as expected
-        self.assertEqual(len(resource.properties), len(exp_props))
-        for key, value in exp_props.items():
-            self.assertEqual(resource.properties[key], value)
+        self.assertEqual(
+            len(resource.properties), len(exp_props),
+            "Set of properties does not match. Expected {!r}, got {!r}".
+            format(resource.properties.keys(), exp_props.keys()))
+
+        for name, exp_value in exp_props.items():
+            act_value = resource.properties[name]
+            self.assertEqual(
+                act_value, exp_value,
+                "Property {!r} does not match. Expected {!r}, got {!r}".
+                format(name, exp_value, act_value))
 
 
 class InitTests(ResourceTestCase):

@@ -29,7 +29,7 @@ import re
 import copy
 
 from ._idpool import IdPool
-from zhmcclient._utils import repr_dict, repr_manager
+from zhmcclient._utils import repr_dict, repr_manager, timestamp_from_datetime
 
 __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedActivationProfileManager', 'FakedActivationProfile',
@@ -42,6 +42,7 @@ __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedPortManager', 'FakedPort',
            'FakedVirtualFunctionManager', 'FakedVirtualFunction',
            'FakedVirtualSwitchManager', 'FakedVirtualSwitch',
+           'FakedMetricsContextManager', 'FakedMetricsContext',
            ]
 
 
@@ -458,6 +459,8 @@ class FakedHmc(FakedBaseResource):
         self.hmc_version = hmc_version
         self.api_version = api_version
         self.cpcs = FakedCpcManager(hmc=self, client=self)
+        self.metrics_contexts = FakedMetricsContextManager(
+            hmc=self, client=self)
 
         # Flat list of all Faked{Resource} objs in this faked HMC, by URI:
         self.all_resources = {}
@@ -472,6 +475,7 @@ class FakedHmc(FakedBaseResource):
             "  hmc_version = {hmc_version!r}\n"
             "  api_version = {api_version!r}\n"
             "  cpcs = {cpcs!r}\n"
+            "  metrics_contexts = {metrics_contexts!r}\n"
             "  all_resources(keys) = {all_resource_keys}\n"
             ")".format(
                 classname=self.__class__.__name__,
@@ -480,6 +484,7 @@ class FakedHmc(FakedBaseResource):
                 hmc_version=self.hmc_version,
                 api_version=self.api_version,
                 cpcs=self.cpcs,
+                metrics_contexts=self.metrics_contexts,
                 all_resource_keys=repr_dict(self.all_resources.keys(),
                                             indent=4),
             ))
@@ -1787,3 +1792,505 @@ class FakedVirtualSwitch(FakedBaseResource):
             properties=properties)
         if 'connected-vnic-uris' not in self.properties:
             self.properties['connected-vnic-uris'] = []
+
+
+class FakedMetricsContextManager(FakedBaseManager):
+    """
+    A manager for faked Metrics Context resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+
+    Example:
+
+    * The following code sets up the faked data for metrics retrieval for
+      partition usage metrics, and then retrieves the metrics:
+
+      .. code-block:: python
+
+          session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+          client = Client(session)
+
+          # URIs of (faked or real) Partitions the metric apply to:
+          part1_uri = ...
+          part2_uri = ...
+
+          # Add a faked metric group definition for group 'partition-usage':
+          session.hmc.metric_contexts.add_metric_group_definition(
+              FakedMetricGroupDefinition(
+                  name='partition-usage',
+                  types=[
+                      ('processor-usage', 'integer-metric'),
+                      ('network-usage', 'integer-metric'),
+                      ('storage-usage', 'integer-metric'),
+                      ('accelerator-usage', 'integer-metric'),
+                      ('crypto-usage', 'integer-metric'),
+                  ]))
+
+          # Prepare the faked metric response for that metric group, with
+          # data for two partitions:
+          session.hmc.metric_contexts.add_metric_values(
+              FakedMetricObjectValues(
+                  group_name='partition-usage',
+                  resource_uri=part1_uri,
+                  timestamp=datetime.now(),
+                  values=[
+                      ('processor-usage', 15),
+                      ('network-usage', 0),
+                      ('storage-usage', 1),
+                      ('accelerator-usage', 0),
+                      ('crypto-usage', 0),
+                  ]))
+          session.hmc.metric_contexts.add_metric_values(
+              FakedMetricObjectValues(
+                  group_name='partition-usage',
+                  resource_uri=part2_uri,
+                  timestamp=datetime.now(),
+                  values=[
+                      ('processor-usage', 17),
+                      ('network-usage', 5),
+                      ('storage-usage', 2),
+                      ('accelerator-usage', 0),
+                      ('crypto-usage', 0),
+                  ]))
+
+          # Create a Metrics Context resource for one metric group:
+          mc = client.metrics_contexts.create({
+              'anticipated-frequency-seconds': 15,
+              'metric-groups' ['partition-usage'],
+          })
+
+          # Retrieve the metrics for that metric context:
+          metrics_response = mc.get_metrics()
+    """
+
+    def __init__(self, hmc, client):
+        super(FakedMetricsContextManager, self).__init__(
+            hmc=hmc,
+            parent=client,
+            resource_class=FakedMetricsContext,
+            base_uri=self.api_root + '/services/metrics/context',
+            oid_prop='fake-id',
+            uri_prop='fake-uri')
+        self._metric_group_def_names = []
+        self._metric_group_defs = {}  # by group name
+        self._metric_value_names = []
+        self._metric_values = {}  # by group name
+
+    def add(self, properties):
+        """
+        Add a faked Metrics Context resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties, as defined in the description of the
+            :class:`~zhmcclient_mock.FakedMetricsContext` class.
+
+            Special handling and requirements for certain properties:
+
+            * 'fake-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'fake-uri' will be auto-generated based upon the 'fake-id'
+              property, if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedMetricsContext`: The faked Metrics
+          Context resource.
+        """
+        return super(FakedMetricsContextManager, self).add(properties)
+
+    def add_metric_group_definition(self, definition):
+        """
+        Add a faked metric group definition.
+
+        The definition will be used:
+
+        * For later addition of faked metrics responses.
+        * For returning the metric-group-info objects in the response of the
+          Create Metrics Context operations.
+
+        For defined metric groups, see chapter "Metric groups" in the
+        :term:`HMC API` book.
+
+        Parameters:
+
+          definition (:class:~zhmcclient.FakedMetricGroupDefinition`):
+            Definition of the metric group.
+
+        Raises:
+
+          ValueError: A metric group definition with this name already exists.
+        """
+        assert isinstance(definition, FakedMetricGroupDefinition)
+        group_name = definition.name
+        if group_name in self._metric_group_defs:
+            raise ValueError("A metric group definition with this name "
+                             "already exists: {}".format(group_name))
+        self._metric_group_defs[group_name] = definition
+        self._metric_group_def_names.append(group_name)
+
+    def get_metric_group_definition(self, group_name):
+        """
+        Get a faked metric group definition by its group name.
+
+        Parameters:
+
+          group_name (:term:`string`): Name of the metric group.
+
+        Returns:
+
+          :class:~zhmcclient.FakedMetricGroupDefinition`: Definition of the
+            metric group.
+
+        Raises:
+
+          ValueError: A metric group definition with this name does not exist.
+        """
+        if group_name not in self._metric_group_defs:
+            raise ValueError("A metric group definition with this name does "
+                             "not exist: {}".format(group_name))
+        return self._metric_group_defs[group_name]
+
+    def get_metric_group_definition_names(self):
+        """
+        Get the group names of all faked metric group definitions.
+
+        Returns:
+
+          iterable of string: The group names, in the order their metric
+            group definitions had been added.
+        """
+        return self._metric_group_def_names
+
+    def add_metric_values(self, values):
+        """
+        Add one set of faked metric values for a particular resource to the
+        metrics response for a particular metric group, for later retrieval.
+
+        For defined metric groups, see chapter "Metric groups" in the
+        :term:`HMC API` book.
+
+        Parameters:
+
+          values (:class:`~zhmclient.FakedMetricObjectValues`):
+            The set of metric values to be added. It specifies the resource URI
+            and the targeted metric group name.
+        """
+        assert isinstance(values, FakedMetricObjectValues)
+        group_name = values.group_name
+        if group_name not in self._metric_values:
+            self._metric_values[group_name] = []
+        self._metric_values[group_name].append(values)
+        if group_name not in self._metric_value_names:
+            self._metric_value_names.append(group_name)
+
+    def get_metric_values(self, group_name):
+        """
+        Get the faked metric values for a metric group, by its metric group
+        name.
+
+        The result includes all metric object values added earlier for that
+        metric group name, using
+        :meth:`~zhmcclient.FakedMetricsContextManager.add_metric_object_values`
+        i.e. the metric values for all resources and all points in time that
+        were added.
+
+        Parameters:
+
+          group_name (:term:`string`): Name of the metric group.
+
+        Returns:
+
+          iterable of :class:`~zhmclient.FakedMetricObjectValues`: The metric
+            values for that metric group, in the order they had been added.
+
+        Raises:
+
+          ValueError: Metric values for this group name do not exist.
+        """
+        if group_name not in self._metric_values:
+            raise ValueError("Metric values for this group name do not "
+                             "exist: {}".format(group_name))
+        return self._metric_values[group_name]
+
+    def get_metric_values_group_names(self):
+        """
+        Get the group names of metric groups for which there are faked metric
+        values.
+
+        Returns:
+
+          iterable of string: The group names, in the order their metric values
+            had been added.
+        """
+        return self._metric_value_names
+
+
+class FakedMetricsContext(FakedBaseResource):
+    """
+    A faked Metrics Context resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+
+    The Metrics Context "resource" is really a service and therefore does not
+    have a data model defined in the :term:`HMC API` book.
+    In order to fit into the zhmcclient mock framework, the faked Metrics
+    Context in the zhmcclient mock framework is treated like all other faked
+    resources and does have a data model.
+
+    Data Model:
+
+      'fake-id' (:term:`string`): Object ID of the resource.
+
+        Initialization: Optional. If omitted, it will be auto-generated.
+
+      'fake-uri' (:term:`string`): Resource URI of the resource (used for Get
+        Metrics operation).
+
+        Initialization: Optional. If omitted, it will be auto-generated from
+        the Object ID.
+
+      'anticipated-frequency-seconds' (:term:`integer`):
+        The number of seconds the client anticipates will elapse between
+        metrics retrievals using this context. The minimum accepted value is
+        15.
+
+        Initialization: Required.
+
+      'metric-groups' (list of :term:`string`):
+        The metric group names to be returned by a metric retrieval
+        using this context.
+
+        Initialization: Optional. If omitted or the empty list, all metric
+        groups that are valid for the operational mode of each CPC will be
+        returned.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedMetricsContext, self).__init__(
+            manager=manager,
+            properties=properties)
+        assert 'anticipated-frequency-seconds' in properties
+
+    def get_metric_group_definitions(self):
+        """
+        Get the faked metric group definitions for this context object
+        that are to be returned from its create operation.
+
+        If a 'metric-groups' property had been specified for this context,
+        only those faked metric group definitions of its manager object that
+        are in that list, are included in the result. Otherwise, all metric
+        group definitions of its manager are included in the result.
+
+        Returns:
+
+          iterable of :class:~zhmcclient.FakedMetricGroupDefinition`: The faked
+            metric group definitions, in the order they had been added.
+        """
+        group_names = self.properties.get('metric-groups', None)
+        if not group_names:
+            group_names = self.manager.get_metric_group_definition_names()
+        mg_defs = []
+        for group_name in group_names:
+            try:
+                mg_def = self.manager.get_metric_group_definition(group_name)
+                mg_defs.append(mg_def)
+            except ValueError:
+                pass  # ignore metric groups without metric group defs
+        return mg_defs
+
+    def get_metric_group_infos(self):
+        """
+        Get the faked metric group definitions for this context object
+        that are to be returned from its create operation, in the format
+        needed for the "Create Metrics Context" operation response.
+
+        Returns:
+
+          "metric-group-infos" JSON object as described for the "Create Metrics
+            Context "operation response.
+        """
+        mg_defs = self.get_metric_group_definitions()
+        mg_infos = []
+        for mg_def in mg_defs:
+            metric_infos = []
+            for metric_name, metric_type in mg_def.types:
+                metric_infos.append({
+                    'metric-name': metric_name,
+                    'metric-type': metric_type,
+                })
+            mg_info = {
+                'group-name': mg_def.name,
+                'metric-infos': metric_infos,
+            }
+            mg_infos.append(mg_info)
+        return mg_infos
+
+    def get_metric_values(self):
+        """
+        Get the faked metrics, for all metric groups and all resources that
+        have been prepared on the manager object of this context object.
+
+        Returns:
+
+          iterable of tuple (group_name, iterable of values): The faked
+            metrics, in the order they had been added, where:
+
+            group_name (string): Metric group name.
+
+            values (:class:~zhmcclient.FakedMetricObjectValues`):
+              The metric values for one resource at one point in time.
+        """
+        group_names = self.properties.get('metric-groups', None)
+        if not group_names:
+            group_names = self.manager.get_metric_values_group_names()
+        ret = []
+        for group_name in group_names:
+            try:
+                mo_val = self.manager.get_metric_values(group_name)
+                ret_item = (group_name, mo_val)
+                ret.append(ret_item)
+            except ValueError:
+                pass  # ignore metric groups without metric values
+        return ret
+
+    def get_metric_values_response(self):
+        """
+        Get the faked metrics, for all metric groups and all resources that
+        have been prepared on the manager object of this context object, as a
+        string in the format needed for the "Get Metrics" operation response.
+
+        Returns:
+
+          "MetricsResponse" string as described for the "Get Metrics"
+            operation response.
+        """
+        mv_list = self.get_metric_values()
+        resp_lines = []
+        for mv in mv_list:
+            group_name = mv[0]
+            resp_lines.append('"{}"'.format(group_name))
+            mo_vals = mv[1]
+            for mo_val in mo_vals:
+                resp_lines.append('"{}"'.format(mo_val.resource_uri))
+                resp_lines.append(
+                    str(timestamp_from_datetime(mo_val.timestamp)))
+                v_list = []
+                for n, v in mo_val.values:
+                    if isinstance(v, six.string_types):
+                        v_str = '"{}"'.format(v)
+                    else:
+                        v_str = str(v)
+                    v_list.append(v_str)
+                v_line = ','.join(v_list)
+                resp_lines.append(v_line)
+                resp_lines.append('')
+            resp_lines.append('')
+        resp_lines.append('')
+        return '\n'.join(resp_lines) + '\n'
+
+
+class FakedMetricGroupDefinition(object):
+    """
+    A faked metric group definition (of one metric group).
+
+    An object of this class contains the information (in a differently
+    structured way) of a "metric-group-info" object described for the
+    "Create Metrics Context" operation in the :term:`HMC API` book.
+
+    The following table lists for each type mentioned in the metric group
+    descriptions in chapter "Metric groups" in the :term:`HMC API` book,
+    the Python types that are used for representing metric values of that type,
+    and the metric type strings used in the metric group definitions for
+    that type:
+
+    =============================  ======================  ==================
+    Metric group description type  Python type             Metric type string
+    =============================  ======================  ==================
+    Boolean                        :class:`py:bool`        ``boolean-metric``
+    Byte                           :term:`integer`         ``byte-metric``
+    Short                          :term:`integer`         ``short-metric``
+    Integer                        :term:`integer`         ``integer-metric``
+    Long                           :term:`integer`         ``long-metric``
+    Double                         :class:`py:float`       ``double-metric``
+    String, String Enum            :term:`unicode string`  ``string-metric``
+    =============================  ======================  ==================
+    """
+
+    def __init__(self, name, types):
+        """
+        Parameters:
+
+          name (:term:`string`): Name of the metric group.
+
+          types (list of tuple(name, type)): Definition of the metric names
+            and their types, as follows:
+
+            * name (string): The metric name.
+            * type (string): The metric type string (see table above).
+        """
+        self.name = name
+        self.types = copy.deepcopy(types)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this object, for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  name = {s.name!r}\n"
+            "  types = {s.types!r}\n"
+            ")".format(classname=self.__class__.__name__, id=id(self), s=self))
+        return ret
+
+
+class FakedMetricObjectValues(object):
+    """
+    Faked metric values for one resource and one metric group.
+
+    An object of this class contains the information (in a structured way)
+    of an "ObjectValues" item described for the data format of the response
+    body of the "Get Metrics" operation in the :term:`HMC API` book.
+    """
+
+    def __init__(self, group_name, resource_uri, timestamp, values):
+        """
+        Parameters:
+
+          group_name (:term:`string`): Name of the metric group to which
+            these metric values apply.
+
+          resource_uri (:term:`string`): URI of the resource to which these
+            metric values apply.
+
+          timestamp (datetime): Point in time to which these metric values
+            apply.
+
+          values (list of tuple(name, value)): The metric values, as follows:
+
+            * name (string): The metric name.
+            * value: The metric value as an object of the Python type listed
+              in the table in the description of
+              :class:`~zhmcclient.FakedMetricGroupDefinition`).
+        """
+        self.group_name = group_name
+        self.resource_uri = resource_uri
+        self.timestamp = timestamp
+        self.values = copy.deepcopy(values)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this object, for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  group_name = {s.group_name!r}\n"
+            "  resource_uri = {s.resource_uri!r}\n"
+            "  timestamp ={s.timestamp!r}\n"
+            "  values ={s.values!r}\n"
+            ")".format(classname=self.__class__.__name__, id=id(self), s=self))
+        return ret

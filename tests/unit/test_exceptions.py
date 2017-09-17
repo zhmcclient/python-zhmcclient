@@ -19,13 +19,64 @@ Unit tests for _exceptions module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
+import pytest
+import re
+import six
 
 from zhmcclient import Error, ConnectionError, ConnectTimeout, ReadTimeout, \
-    RetriesExceeded, ClientAuthError, ServerAuthError, ParseError, \
+    RetriesExceeded, AuthError, ClientAuthError, ServerAuthError, ParseError, \
     VersionError, HTTPError, OperationTimeout, StatusTimeout, NoUniqueMatch, \
     NotFound, Client
 from zhmcclient_mock import FakedSession
+
+
+# Some HTTPError response bodies, used by multiple testcases:
+
+HTTP_ERROR_1 = {
+    'http-status': 404,
+    'reason': 42,
+    'message': 'abc def',
+    'request-method': 'POST',
+    'request-uri': '/api/cpcs/cpc1',
+    'request-query-parms': ['properties=abc,def'],
+    'request-headers': {
+        'content-type': 'application/json',
+    },
+    'request-authenticated-as': 'fake_user',
+    'request-body': None,
+    'request-body-as-string': "fake request body",
+    'request-body-as-string-partial': None,
+    'stack': None,
+    'error-details': None,
+}
+
+HTTP_ERROR_2 = {
+    'http-status': 404,
+    'reason': 42,
+    'message': 'abc def',
+}
+
+HTTP_ERROR_3 = {
+    'message': 'abc def',
+}
+
+HTTP_ERROR_4 = {
+}
+
+
+def func_args(arg_values, arg_names):
+    """
+    Convert args and arg_names into positional args and keyword args.
+    """
+    posargs = []
+    kwargs = {}
+    for i, name in enumerate(arg_names):
+        value = arg_values[i]
+        if name is not None:
+            kwargs[name] = value
+        else:
+            posargs.append(value)
+    return posargs, kwargs
 
 
 class MyError(Error):
@@ -37,769 +88,1183 @@ class MyError(Error):
         super(MyError, self).__init__(*args, **kwargs)
 
 
-class TestError(unittest.TestCase):
+class TestError(object):
     """
-    Test the ``Error`` exception class.
+    All tests for exception class Error.
 
-    Because this is an abstract base class, we use our own derived class.
-    """
-
-    def test_empty(self):
-        """Test Error exception with no argument."""
-
-        exc = MyError()
-
-        self.assertTrue(isinstance(exc, Error))
-        self.assertTrue(isinstance(exc.args, tuple))
-        self.assertEqual(len(exc.args), 0)
-
-    def test_one(self):
-        """Test Error exception with one argument."""
-
-        exc = MyError('zaphod')
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], 'zaphod')
-
-    def test_two(self):
-        """Test with two arguments."""
-
-        exc = MyError('zaphod', 42)
-
-        self.assertEqual(len(exc.args), 2)
-        self.assertEqual(exc.args[0], 'zaphod')
-        self.assertEqual(exc.args[1], 42)
-
-    def test_one_tuple(self):
-        """Test Error exception with one argument that is a tuple of two
-        items."""
-
-        exc = MyError(('zaphod', 42))
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], ('zaphod', 42))
-
-
-class TestConnectionError(unittest.TestCase):
-    """
-    Test exception class ``ConnectionError``.
+    Because this is an abstract base class, we use our own derived class
+    MyError.
     """
 
-    def setUp(self):
-        self.message = "bla bla connection error"
-        self.details_exc = ValueError("value error")
-
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-
-        exc = ConnectionError(self.message, self.details_exc)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ConnectionError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ConnectionError'), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
-
-        exc = ConnectionError(msg=self.message, details=self.details_exc)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ConnectionError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ConnectionError'), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestConnectTimeout(unittest.TestCase):
-    """
-    Test exception class ``ConnectTimeout``.
-    """
-
-    def setUp(self):
-        self.message = "bla bla connection timeout"
-        self.details_exc = ValueError("value error")
-        self.connect_timeout = 30
-        self.connect_retries = 3
-
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-
-        exc = ConnectTimeout(self.message, self.details_exc,
-                             self.connect_timeout, self.connect_retries)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        self.assertEqual(exc.connect_timeout, self.connect_timeout)
-        self.assertEqual(exc.connect_retries, self.connect_retries)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ConnectTimeout\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ConnectTimeout'), str_def)
-        self.assertIn('connect_timeout={!r};'.
-                      format(exc.connect_timeout), str_def)
-        self.assertIn('connect_retries={!r};'.
-                      format(exc.connect_retries), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
-
-        exc = ConnectTimeout(msg=self.message, details=self.details_exc,
-                             connect_timeout=self.connect_timeout,
-                             connect_retries=self.connect_retries)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        self.assertEqual(exc.connect_timeout, self.connect_timeout)
-        self.assertEqual(exc.connect_retries, self.connect_retries)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ConnectTimeout\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ConnectTimeout'), str_def)
-        self.assertIn('connect_timeout={!r};'.
-                      format(exc.connect_timeout), str_def)
-        self.assertIn('connect_retries={!r};'.
-                      format(exc.connect_retries), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestReadTimeout(unittest.TestCase):
-    """
-    Test exception class ``ReadTimeout``.
-    """
-
-    def setUp(self):
-        self.message = "bla bla read timeout"
-        self.details_exc = ValueError("value error")
-        self.read_timeout = 30
-        self.read_retries = 3
-
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-
-        exc = ReadTimeout(self.message, self.details_exc,
-                          self.read_timeout, self.read_retries)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        self.assertEqual(exc.read_timeout, self.read_timeout)
-        self.assertEqual(exc.read_retries, self.read_retries)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ReadTimeout\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ReadTimeout'), str_def)
-        self.assertIn('read_timeout={!r};'.
-                      format(exc.read_timeout), str_def)
-        self.assertIn('read_retries={!r};'.
-                      format(exc.read_retries), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
-
-        exc = ReadTimeout(msg=self.message, details=self.details_exc,
-                          read_timeout=self.read_timeout,
-                          read_retries=self.read_retries)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        self.assertEqual(exc.read_timeout, self.read_timeout)
-        self.assertEqual(exc.read_retries, self.read_retries)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ReadTimeout\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ReadTimeout'), str_def)
-        self.assertIn('read_timeout={!r};'.
-                      format(exc.read_timeout), str_def)
-        self.assertIn('read_retries={!r};'.
-                      format(exc.read_retries), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestRetriesExceeded(unittest.TestCase):
-    """
-    Test exception class ``RetriesExceeded``.
-    """
-
-    def setUp(self):
-        self.message = "bla bla retries exceeded"
-        self.details_exc = ValueError("value error")
-        self.connect_retries = 3
-
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-
-        exc = RetriesExceeded(self.message, self.details_exc,
-                              self.connect_retries)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        self.assertEqual(exc.connect_retries, self.connect_retries)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^RetriesExceeded\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('RetriesExceeded'), str_def)
-        self.assertIn('connect_retries={!r};'.
-                      format(exc.connect_retries), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
-
-        exc = RetriesExceeded(msg=self.message, details=self.details_exc,
-                              connect_retries=self.connect_retries)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        self.assertEqual(exc.connect_retries, self.connect_retries)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^RetriesExceeded\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('RetriesExceeded'), str_def)
-        self.assertIn('connect_retries={!r};'.
-                      format(exc.connect_retries), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestClientAuthError(unittest.TestCase):
-    """
-    Test exception class ``ClientAuthError``.
-    """
-
-    def setUp(self):
-        self.message = "bla bla client auth error"
-
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-
-        exc = ClientAuthError(self.message)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ClientAuthError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ClientAuthError'), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
-
-        exc = ClientAuthError(msg=self.message)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ClientAuthError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ClientAuthError'), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestServerAuthError(unittest.TestCase):
-    """
-    Test exception class ``ServerAuthError``.
-    """
-
-    def setUp(self):
-        resp_body = {
-            'http-status': 404,
-            'reason': 42,
-            'message': 'abc def',
-            'request-method': 'POST',
-            'request-uri': '/api/cpcs/cpc1',
-            'request-query-parms': [],
-            'request-headers': {
-                'content-type': 'application/json',
-            },
-            'request-authenticated-as': None,
-            'request-body': None,
-            'request-body-as-string': None,
-            'request-body-as-string-partial': None,
-            'stack': None,
-            'error-details': None,
-        }
-        self.details_exc = HTTPError(resp_body)
-        self.message = "bla bla server auth error"
-
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-
-        exc = ServerAuthError(self.message, self.details_exc)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ServerAuthError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ServerAuthError'), str_def)
-        self.assertIn('request_method={!r};'.
-                      format(exc.details.request_method), str_def)
-        self.assertIn('request_uri={!r};'.
-                      format(exc.details.request_uri), str_def)
-        self.assertIn('http_status={!r};'.
-                      format(exc.details.http_status), str_def)
-        self.assertIn('reason={!r};'.
-                      format(exc.details.reason), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
-
-        exc = ServerAuthError(msg=self.message, details=self.details_exc)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.details, self.details_exc)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ServerAuthError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ServerAuthError'), str_def)
-        self.assertIn('request_method={!r};'.
-                      format(exc.details.request_method), str_def)
-        self.assertIn('request_uri={!r};'.
-                      format(exc.details.request_uri), str_def)
-        self.assertIn('http_status={!r};'.
-                      format(exc.details.http_status), str_def)
-        self.assertIn('reason={!r};'.
-                      format(exc.details.reason), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestParseError(unittest.TestCase):
-    """
-    Test exception class ``ParseError``.
-    """
-
-    def setUp(self):
-        self.exc_class = ParseError
-
-    def test_line_column_1(self):
-        """A simple message string that matches the line/col parsing."""
-        message = "Bla: line 42 column 7 (char 6)"
-
-        exc = ParseError(message)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], message)
-
-        self.assertEqual(exc.line, 42)
-        self.assertEqual(exc.column, 7)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ParseError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ParseError'), str_def)
-        self.assertIn('line={!r};'.format(exc.line), str_def)
-        self.assertIn('column={!r};'.format(exc.column), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_line_column_2(self):
-        """A minimally matching message string."""
-        message = ": line 7 column 42 "
-
-        exc = ParseError(message)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], message)
-
-        self.assertEqual(exc.line, 7)
-        self.assertEqual(exc.column, 42)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ParseError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ParseError'), str_def)
-        self.assertIn('line={!r};'.format(exc.line), str_def)
-        self.assertIn('column={!r};'.format(exc.column), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_line_column_3(self):
-        """A message string that does not match (because of the 'x' in the
-        line)."""
-        message = ": line 7x column 42 "
-
-        exc = ParseError(message)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], message)
-
-        self.assertEqual(exc.line, None)
-        self.assertEqual(exc.column, None)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^ParseError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('ParseError'), str_def)
-        self.assertIn('line={!r};'.format(exc.line), str_def)
-        self.assertIn('column={!r};'.format(exc.column), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestVersionError(unittest.TestCase):
-    """
-    Test exception class ``VersionError``.
-    """
-
-    def test_api_version(self):
-        """Test that the minimum and actual API version can be retrieved."""
-        min_api_version = (2, 3)
-        api_version = (1, 4)
-        message = "invalid version"
-
-        exc = VersionError(message, min_api_version, api_version)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], message)
-
-        self.assertEqual(exc.min_api_version, min_api_version)
-        self.assertEqual(exc.api_version, api_version)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^VersionError\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('VersionError'), str_def)
-        self.assertIn('min_api_version={!r};'.
-                      format(exc.min_api_version), str_def)
-        self.assertIn('api_version={!r};'.format(exc.api_version), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestHTTPError(unittest.TestCase):
-    """
-    Test exception class ``HTTPError``.
-    """
-
-    def test_good(self):
-        """Test HTTPError with a good input argument."""
-
-        resp_body = {
-            'http-status': 404,
-            'reason': 42,
-            'message': 'abc def',
-            'request-method': 'POST',
-            'request-uri': '/api/cpcs/cpc1',
-            'request-query-parms': [],
-            'request-headers': {
-                'content-type': 'application/json',
-            },
-            'request-authenticated-as': None,  # TODO: Real value
-            'request-body': None,  # TODO: Real value
-            'request-body-as-string': None,  # TODO: Real value
-            'request-body-as-string-partial': None,  # TODO: Real value
-            'stack': None,  # TODO: Real value
-            'error-details': None,  # TODO: Real value
-        }
-
-        exc = HTTPError(resp_body)
-
-        self.assertTrue(isinstance(exc, Error))
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertTrue(isinstance(exc.args[0], dict))
-
-        # Check the result properties:
-        self.assertEqual(exc.http_status, resp_body['http-status'])
-        self.assertEqual(exc.reason, resp_body['reason'])
-        self.assertEqual(exc.message, resp_body['message'])
-        self.assertEqual(exc.request_method, resp_body['request-method'])
-        self.assertEqual(exc.request_uri, resp_body['request-uri'])
-        self.assertEqual(exc.request_query_parms,
-                         resp_body['request-query-parms'])
-        self.assertEqual(exc.request_headers, resp_body['request-headers'])
-        self.assertEqual(exc.request_authenticated_as,
-                         resp_body['request-authenticated-as'])
-        self.assertEqual(exc.request_body, resp_body['request-body'])
-        self.assertEqual(exc.request_body_as_string,
-                         resp_body['request-body-as-string'])
-        self.assertEqual(exc.request_body_as_string_partial,
-                         resp_body['request-body-as-string-partial'])
-        self.assertEqual(exc.stack, resp_body['stack'])
-        self.assertEqual(exc.error_details, resp_body['error-details'])
-
-        # Check repr()
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (arg1, ...)
+            (),  # no args
+            ('zaphod',),  # one arg
+            ('zaphod', 42),  # two args
+            (('zaphod', 42),),  # one arg that is a tuple
+        ]
+    )
+    def test_error_initial_attrs(self, args):
+        """Test initial attributes of Error."""
+
+        # Execute the code to be tested
+        exc = MyError(*args)
+
+        assert isinstance(exc, Error)
+        assert exc.args == args
+
+
+class TestConnectionError(object):
+    """All tests for exception class ConnectionError."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, details)
+            ("fake msg", ValueError("fake value error")),
+            ("", None),
+            (None, None),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None),
+            (None, 'details'),
+            ('msg', 'details'),
+        ]
+    )
+    def test_connectionerror_initial_attrs(self, arg_names, args):
+        """Test initial attributes of ConnectionError."""
+
+        msg, details = args
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = ConnectionError(*posargs, **kwargs)
+
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.details == details
+
+    @pytest.mark.parametrize(
+        "msg, details", [
+            ("fake msg", ValueError("fake value error")),
+            ("", None),
+            (None, None),
+        ]
+    )
+    def test_connectionerror_repr(self, msg, details):
+        """All tests for ConnectionError.__repr__()."""
+
+        exc = ConnectionError(msg, details)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
         repr_str = repr(exc)
-        repr_pattern = r'^HTTPError\(.*\)$'
-        self.assertRegexpMatches(repr_str, repr_pattern)
 
-        # Check str()
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, details", [
+            ("fake msg", ValueError("fake value error")),
+            ("", None),
+            (None, None),
+        ]
+    )
+    def test_connectionerror_str(self, msg, details):
+        """All tests for ConnectionError.__str__()."""
+
+        exc = ConnectionError(msg, details)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, details", [
+            ("fake msg", ValueError("fake value error")),
+            ("", None),
+            (None, None),
+        ]
+    )
+    def test_connectionerror_str_def(self, msg, details):
+        """All tests for ConnectionError.str_def()."""
+
+        exc = ConnectionError(msg, details)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+
+
+class TestConnectTimeout(object):
+    """All tests for exception class ConnectTimeout."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, details, connect_timeout, connect_retries)
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None, None, None),
+            ('msg', 'details', 'connect_timeout', 'connect_retries'),
+        ]
+    )
+    def test_connecttimeout_initial_attrs(self, arg_names, args):
+        """Test initial attributes of ConnectTimeout."""
+
+        msg, details, connect_timeout, connect_retries = args
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = ConnectTimeout(*posargs, **kwargs)
+
+        assert isinstance(exc, ConnectionError)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.details == details
+        assert exc.connect_timeout == connect_timeout
+        assert exc.connect_retries == connect_retries
+
+    @pytest.mark.parametrize(
+        "msg, details, connect_timeout, connect_retries", [
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    def test_connecttimeout_repr(
+            self, msg, details, connect_timeout, connect_retries):
+        """All tests for ConnectTimeout.__repr__()."""
+
+        exc = ConnectTimeout(msg, details, connect_timeout, connect_retries)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, details, connect_timeout, connect_retries", [
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    def test_connecttimeout_str(
+            self, msg, details, connect_timeout, connect_retries):
+        """All tests for ConnectTimeout.__str__()."""
+
+        exc = ConnectTimeout(msg, details, connect_timeout, connect_retries)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, details, connect_timeout, connect_retries", [
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    def test_connecttimeout_str_def(
+            self, msg, details, connect_timeout, connect_retries):
+        """All tests for ConnectTimeout.str_def()."""
+
+        exc = ConnectTimeout(msg, details, connect_timeout, connect_retries)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+        assert str_def.find(' connect_timeout={!r};'.
+                            format(connect_timeout)) >= 0
+        assert str_def.find(' connect_retries={!r};'.
+                            format(connect_retries)) >= 0
+
+
+class TestReadTimeout(object):
+    """All tests for exception class ReadTimeout."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, details, read_timeout, read_retries)
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None, None, None),
+            ('msg', 'details', 'read_timeout', 'read_retries'),
+        ]
+    )
+    def test_readtimeout_initial_attrs(self, arg_names, args):
+        """Test initial attributes of ReadTimeout."""
+
+        msg, details, read_timeout, read_retries = args
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = ReadTimeout(*posargs, **kwargs)
+
+        assert isinstance(exc, ConnectionError)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.details == details
+        assert exc.read_timeout == read_timeout
+        assert exc.read_retries == read_retries
+
+    @pytest.mark.parametrize(
+        "msg, details, read_timeout, read_retries", [
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    def test_readtimeout_repr(
+            self, msg, details, read_timeout, read_retries):
+        """All tests for ReadTimeout.__repr__()."""
+
+        exc = ReadTimeout(msg, details, read_timeout, read_retries)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, details, read_timeout, read_retries", [
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    def test_readtimeout_str(
+            self, msg, details, read_timeout, read_retries):
+        """All tests for ReadTimeout.__str__()."""
+
+        exc = ReadTimeout(msg, details, read_timeout, read_retries)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, details, read_timeout, read_retries", [
+            ("fake msg", ValueError("fake value error"), 30, 3),
+            ("", None, 30, 3),
+            (None, None, 0, 0),
+        ]
+    )
+    def test_readtimeout_str_def(
+            self, msg, details, read_timeout, read_retries):
+        """All tests for ReadTimeout.str_def()."""
+
+        exc = ReadTimeout(msg, details, read_timeout, read_retries)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+        assert str_def.find(' read_timeout={!r};'.format(read_timeout)) >= 0
+        assert str_def.find(' read_retries={!r};'.format(read_retries)) >= 0
+
+
+class TestRetriesExceeded(object):
+    """All tests for exception class RetriesExceeded."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, details, connect_retries)
+            ("fake msg", ValueError("fake value error"), 3),
+            ("", None, 3),
+            (None, None, 0),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None, None),
+            ('msg', 'details', 'connect_retries'),
+        ]
+    )
+    def test_retriesexceeded_initial_attrs(self, arg_names, args):
+        """Test initial attributes of RetriesExceeded."""
+
+        msg, details, connect_retries = args
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = RetriesExceeded(*posargs, **kwargs)
+
+        assert isinstance(exc, ConnectionError)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.details == details
+        assert exc.connect_retries == connect_retries
+
+    @pytest.mark.parametrize(
+        "msg, details, connect_retries", [
+            ("fake msg", ValueError("fake value error"), 3),
+            ("", None, 3),
+            (None, None, 0),
+        ]
+    )
+    def test_retriesexceeded_repr(
+            self, msg, details, connect_retries):
+        """All tests for RetriesExceeded.__repr__()."""
+
+        exc = RetriesExceeded(msg, details, connect_retries)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, details, connect_retries", [
+            ("fake msg", ValueError("fake value error"), 3),
+            ("", None, 3),
+            (None, None, 0),
+        ]
+    )
+    def test_retriesexceeded_str(
+            self, msg, details, connect_retries):
+        """All tests for RetriesExceeded.__str__()."""
+
+        exc = RetriesExceeded(msg, details, connect_retries)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, details, connect_retries", [
+            ("fake msg", ValueError("fake value error"), 3),
+            ("", None, 3),
+            (None, None, 0),
+        ]
+    )
+    def test_retriesexceeded_str_def(
+            self, msg, details, connect_retries):
+        """All tests for RetriesExceeded.str_def()."""
+
+        exc = RetriesExceeded(msg, details, connect_retries)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+        assert str_def.find(' connect_retries={!r};'.
+                            format(connect_retries)) >= 0
+
+
+class TestClientAuthError(object):
+    """All tests for exception class ClientAuthError."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg,)
+            ("fake msg",),
+            (None,),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None,),
+            ('msg',),
+        ]
+    )
+    def test_clientautherror_initial_attrs(self, arg_names, args):
+        """Test initial attributes of ClientAuthError."""
+
+        msg = args[0]
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = ClientAuthError(*posargs, **kwargs)
+
+        assert isinstance(exc, AuthError)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+
+    @pytest.mark.parametrize(
+        "msg", [
+            ("fake msg"),
+            (""),
+            (None),
+        ]
+    )
+    def test_clientautherror_repr(self, msg):
+        """All tests for ClientAuthError.__repr__()."""
+
+        exc = ClientAuthError(msg)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg", [
+            ("fake msg"),
+            (""),
+            (None),
+        ]
+    )
+    def test_clientautherror_str(self, msg):
+        """All tests for ClientAuthError.__str__()."""
+
+        exc = ClientAuthError(msg)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg", [
+            ("fake msg"),
+            (""),
+            (None),
+        ]
+    )
+    def test_clientautherror_str_def(self, msg):
+        """All tests for ClientAuthError.str_def()."""
+
+        exc = ClientAuthError(msg)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+
+
+class TestServerAuthError(object):
+    """All tests for exception class ServerAuthError."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, details)
+            ("fake msg", HTTPError(HTTP_ERROR_1)),
+            ("", HTTPError(HTTP_ERROR_1)),
+            (None, HTTPError(HTTP_ERROR_1)),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None),
+            (None, 'details'),
+            ('msg', 'details'),
+        ]
+    )
+    def test_serverautherror_initial_attrs(self, arg_names, args):
+        """Test initial attributes of ServerAuthError."""
+
+        msg, details = args
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = ServerAuthError(*posargs, **kwargs)
+
+        assert isinstance(exc, AuthError)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.details == details
+
+    @pytest.mark.parametrize(
+        "msg, details", [
+            ("fake msg", HTTPError(HTTP_ERROR_1)),
+            ("", HTTPError(HTTP_ERROR_1)),
+            (None, HTTPError(HTTP_ERROR_1)),
+        ]
+    )
+    def test_serverautherror_repr(self, msg, details):
+        """All tests for ServerAuthError.__repr__()."""
+
+        exc = ServerAuthError(msg, details)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, details", [
+            ("fake msg", HTTPError(HTTP_ERROR_1)),
+            ("", HTTPError(HTTP_ERROR_1)),
+            (None, HTTPError(HTTP_ERROR_1)),
+        ]
+    )
+    def test_serverautherror_str(self, msg, details):
+        """All tests for ServerAuthError.__str__()."""
+
+        exc = ServerAuthError(msg, details)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, details", [
+            ("fake msg", HTTPError(HTTP_ERROR_1)),
+            ("", HTTPError(HTTP_ERROR_1)),
+            (None, HTTPError(HTTP_ERROR_1)),
+        ]
+    )
+    def test_serverautherror_str_def(self, msg, details):
+        """All tests for ServerAuthError.str_def()."""
+
+        exc = ServerAuthError(msg, details)
+
+        classname = exc.__class__.__name__
+        request_method = details.request_method
+        request_uri = details.request_uri
+        http_status = details.http_status
+        reason = details.reason
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' request_method={!r};'.
+                            format(request_method)) >= 0
+        assert str_def.find(' request_uri={!r};'.format(request_uri)) >= 0
+        assert str_def.find(' http_status={!r};'.format(http_status)) >= 0
+        assert str_def.find(' reason={!r};'.format(reason)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+
+
+class TestParseError(object):
+    """All tests for exception class ParseError."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args, exp_line, exp_column", [
+            # args: (msg,)
+            (("Bla: line 42 column 7 (char 6)",), 42, 7),
+            (("Bla line 42 column 7 (char 6)",), None, None),
+            (("Bla: line 42, column 7 (char 6)",), None, None),
+            (("Bla: line 42 column 7, (char 6)",), None, None),
+            (("",), None, None),
+            ((None,), None, None),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None,),
+            ('msg',),
+        ]
+    )
+    def test_parseerror_initial_attrs(
+            self, arg_names, args, exp_line, exp_column):
+        """Test initial attributes of ParseError."""
+
+        msg = args[0]
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = ParseError(*posargs, **kwargs)
+
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.line == exp_line
+        assert exc.column == exp_column
+
+    @pytest.mark.parametrize(
+        "msg", [
+            ("Bla: line 42 column 7 (char 6)"),
+            ("fake msg"),
+            (""),
+            (None),
+        ]
+    )
+    def test_parseerror_repr(self, msg):
+        """All tests for ParseError.__repr__()."""
+
+        exc = ParseError(msg)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg", [
+            ("Bla: line 42 column 7 (char 6)"),
+            ("fake msg"),
+            (""),
+            (None),
+        ]
+    )
+    def test_parseerror_str(self, msg):
+        """All tests for ParseError.__str__()."""
+
+        exc = ParseError(msg)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg", [
+            ("Bla: line 42 column 7 (char 6)"),
+            ("fake msg"),
+            (""),
+            (None),
+        ]
+    )
+    def test_parseerror_str_def(self, msg):
+        """All tests for ParseError.str_def()."""
+
+        exc = ParseError(msg)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' line={!r};'.format(exc.line)) >= 0
+        assert str_def.find(' column={!r};'.format(exc.column)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+
+
+class TestVersionError(object):
+    """All tests for exception class VersionError."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, min_api_version, api_version)
+            ("fake msg", (2, 1), (1, 2)),
+            ("", (2, 1), (1, 2)),
+            (None, (2, 1), (1, 2)),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None, None),
+            ('msg', 'min_api_version', 'api_version'),
+        ]
+    )
+    def test_versionerror_initial_attrs(self, arg_names, args):
+        """Test initial attributes of VersionError."""
+
+        msg, min_api_version, api_version = args
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = VersionError(*posargs, **kwargs)
+
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.min_api_version == min_api_version
+        assert exc.api_version == api_version
+
+    @pytest.mark.parametrize(
+        "msg, min_api_version, api_version", [
+            ("fake msg", (2, 1), (1, 2)),
+            ("", (2, 1), (1, 2)),
+            (None, (2, 1), (1, 2)),
+        ]
+    )
+    def test_versionerror_repr(
+            self, msg, min_api_version, api_version):
+        """All tests for VersionError.__repr__()."""
+
+        exc = VersionError(msg, min_api_version, api_version)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, min_api_version, api_version", [
+            ("fake msg", (2, 1), (1, 2)),
+            ("", (2, 1), (1, 2)),
+            (None, (2, 1), (1, 2)),
+        ]
+    )
+    def test_versionerror_str(
+            self, msg, min_api_version, api_version):
+        """All tests for VersionError.__str__()."""
+
+        exc = VersionError(msg, min_api_version, api_version)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, min_api_version, api_version", [
+            ("fake msg", (2, 1), (1, 2)),
+            ("", (2, 1), (1, 2)),
+            (None, (2, 1), (1, 2)),
+        ]
+    )
+    def test_versionerror_str_def(
+            self, msg, min_api_version, api_version):
+        """All tests for VersionError.str_def()."""
+
+        exc = VersionError(msg, min_api_version, api_version)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+        assert str_def.find(' min_api_version={!r};'.
+                            format(min_api_version)) >= 0
+        assert str_def.find(' api_version={!r};'.
+                            format(api_version)) >= 0
+
+
+class TestHTTPError(object):
+    """All tests for exception class HTTPError."""
+
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (body,)
+            (HTTP_ERROR_1,),
+            (HTTP_ERROR_2,),
+            (HTTP_ERROR_3,),
+            (HTTP_ERROR_4,),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None,),
+            ('body',),
+        ]
+    )
+    def test_httperror_initial_attrs(self, arg_names, args):
+        """Test initial attributes of HTTPError."""
+
+        body = args[0]
+        posargs, kwargs = func_args(args, arg_names)
+
+        # Execute the code to be tested
+        exc = HTTPError(*posargs, **kwargs)
+
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert exc.args[0] == body.get('message', None)
+        assert exc.http_status == body.get('http-status', None)
+        assert exc.reason == body.get('reason', None)
+        assert exc.message == body.get('message', None)
+        assert exc.request_method == body.get('request-method', None)
+        assert exc.request_uri == body.get('request-uri', None)
+        assert exc.request_query_parms == body.get('request-query-parms', None)
+        assert exc.request_headers == body.get('request-headers', None)
+        assert exc.request_authenticated_as == \
+            body.get('request-authenticated-as', None)
+        assert exc.request_body == body.get('request-body', None)
+        assert exc.request_body_as_string == \
+            body.get('request-body-as-string', None)
+        assert exc.request_body_as_string_partial == \
+            body.get('request-body-as-string-partial', None)
+        assert exc.stack == body.get('stack', None)
+        assert exc.error_details == body.get('error-details', None)
+
+    @pytest.mark.parametrize(
+        "body", [
+            HTTP_ERROR_1,
+        ]
+    )
+    def test_httperror_repr(self, body):
+        """All tests for HTTPError.__repr__()."""
+
+        exc = HTTPError(body)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "body", [
+            HTTP_ERROR_1,
+        ]
+    )
+    def test_httperror_str(self, body):
+        """All tests for HTTPError.__str__()."""
+
+        exc = HTTPError(body)
+
         exp_str = "{http-status},{reason}: {message} [{request-method} "\
-                  "{request-uri}]".format(**resp_body)
-        self.assertEqual(str(exc), exp_str)
+                  "{request-uri}]".format(**body)
 
-        # Check str_def()
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "body", [
+            HTTP_ERROR_1,
+        ]
+    )
+    def test_httperror_str_def(self, body):
+        """All tests for HTTPError.str_def()."""
+
+        exc = HTTPError(body)
+
+        classname = exc.__class__.__name__
+        request_method = exc.request_method
+        request_uri = exc.request_uri
+        http_status = exc.http_status
+        reason = exc.reason
+        msg = exc.message
+
+        # Execute the code to be tested
         str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('HTTPError'), str_def)
-        self.assertIn('request_method={!r};'.
-                      format(exc.request_method), str_def)
-        self.assertIn('request_uri={!r};'.
-                      format(exc.request_uri), str_def)
-        self.assertIn('http_status={!r};'.
-                      format(exc.http_status), str_def)
-        self.assertIn('reason={!r};'.
-                      format(exc.reason), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' request_method={!r};'.
+                            format(request_method)) >= 0
+        assert str_def.find(' request_uri={!r};'.format(request_uri)) >= 0
+        assert str_def.find(' http_status={!r};'.format(http_status)) >= 0
+        assert str_def.find(' reason={!r};'.format(reason)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
 
 
-class TestOperationTimeout(unittest.TestCase):
-    """
-    Test exception class ``OperationTimeout``.
-    """
+class TestOperationTimeout(object):
+    """All tests for exception class OperationTimeout."""
 
-    def setUp(self):
-        self.message = "bla bla operation timeout"
-        self.details_exc = ValueError("value error")
-        self.operation_timeout = 200
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, operation_timeout)
+            ("fake msg", 3),
+            ("", 3),
+            (None, 0),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None),
+            ('msg', 'operation_timeout'),
+        ]
+    )
+    def test_operationtimeout_initial_attrs(self, arg_names, args):
+        """Test initial attributes of OperationTimeout."""
 
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
+        msg, operation_timeout = args
+        posargs, kwargs = func_args(args, arg_names)
 
-        exc = OperationTimeout(self.message, self.operation_timeout)
+        # Execute the code to be tested
+        exc = OperationTimeout(*posargs, **kwargs)
 
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.operation_timeout == operation_timeout
 
-        self.assertEqual(exc.operation_timeout, self.operation_timeout)
+    @pytest.mark.parametrize(
+        "msg, operation_timeout", [
+            ("fake msg", 3),
+            ("", 3),
+            (None, 0),
+        ]
+    )
+    def test_operationtimeout_repr(
+            self, msg, operation_timeout):
+        """All tests for OperationTimeout.__repr__()."""
 
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
+        exc = OperationTimeout(msg, operation_timeout)
 
-        # Check str_def()
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, operation_timeout", [
+            ("fake msg", 3),
+            ("", 3),
+            (None, 0),
+        ]
+    )
+    def test_operationtimeout_str(
+            self, msg, operation_timeout):
+        """All tests for OperationTimeout.__str__()."""
+
+        exc = OperationTimeout(msg, operation_timeout)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, operation_timeout", [
+            ("fake msg", 3),
+            ("", 3),
+            (None, 0),
+        ]
+    )
+    def test_operationtimeout_str_def(
+            self, msg, operation_timeout):
+        """All tests for OperationTimeout.str_def()."""
+
+        exc = OperationTimeout(msg, operation_timeout)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
         str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('OperationTimeout'), str_def)
-        self.assertIn('operation_timeout={!r};'.
-                      format(exc.operation_timeout), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
 
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+        assert str_def.find(' operation_timeout={!r};'.
+                            format(operation_timeout)) >= 0
 
-        exc = OperationTimeout(msg=self.message,
-                               operation_timeout=self.operation_timeout)
 
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
+class TestStatusTimeout(object):
+    """All tests for exception class StatusTimeout."""
 
-        self.assertEqual(exc.operation_timeout, self.operation_timeout)
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # (msg, actual_status, desired_statuses, status_timeout)
+            ("fake msg", 'foo off', ['foo on', 'bla'], 3),
+            ("", '', [], 3),
+            (None, None, [], 0),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None, None, None),
+            ('msg', 'actual_status', 'desired_statuses', 'status_timeout'),
+        ]
+    )
+    def test_statustimeout_initial_attrs(self, arg_names, args):
+        """Test initial attributes of StatusTimeout."""
 
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^OperationTimeout\(.*\)$')
+        msg, actual_status, desired_statuses, status_timeout = args
+        posargs, kwargs = func_args(args, arg_names)
 
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
+        # Execute the code to be tested
+        exc = StatusTimeout(*posargs, **kwargs)
 
-        # Check str_def()
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert exc.args[0] == msg
+        assert exc.actual_status == actual_status
+        assert exc.desired_statuses == desired_statuses
+        assert exc.status_timeout == status_timeout
+
+    @pytest.mark.parametrize(
+        "msg, actual_status, desired_statuses, status_timeout", [
+            ("fake msg", 'foo off', ['foo on', 'bla'], 3),
+            ("", '', [], 3),
+            (None, None, [], 0),
+        ]
+    )
+    def test_statustimeout_repr(
+            self, msg, actual_status, desired_statuses, status_timeout):
+        """All tests for StatusTimeout.__repr__()."""
+
+        exc = StatusTimeout(
+            msg, actual_status, desired_statuses, status_timeout)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "msg, actual_status, desired_statuses, status_timeout", [
+            ("fake msg", 'foo off', ['foo on', 'bla'], 3),
+            ("", '', [], 3),
+            (None, None, [], 0),
+        ]
+    )
+    def test_statustimeout_str(
+            self, msg, actual_status, desired_statuses, status_timeout):
+        """All tests for StatusTimeout.__str__()."""
+
+        exc = StatusTimeout(
+            msg, actual_status, desired_statuses, status_timeout)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "msg, actual_status, desired_statuses, status_timeout", [
+            ("fake msg", 'foo off', ['foo on', 'bla'], 3),
+            ("", '', [], 3),
+            (None, None, [], 0),
+        ]
+    )
+    def test_statustimeout_str_def(
+            self, msg, actual_status, desired_statuses, status_timeout):
+        """All tests for StatusTimeout.str_def()."""
+
+        exc = StatusTimeout(
+            msg, actual_status, desired_statuses, status_timeout)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
         str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('OperationTimeout'), str_def)
-        self.assertIn('operation_timeout={!r};'.
-                      format(exc.operation_timeout), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
+
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' message={!r};'.format(msg)) >= 0
+        assert str_def.find(' actual_status={!r};'.
+                            format(actual_status)) >= 0
+        assert str_def.find(' desired_statuses={!r};'.
+                            format(desired_statuses)) >= 0
+        assert str_def.find(' status_timeout={!r};'.
+                            format(status_timeout)) >= 0
 
 
-class TestStatusTimeout(unittest.TestCase):
-    """
-    Test exception class ``StatusTimeout``.
-    """
+class TestNoUniqueMatch(object):
+    """All tests for exception class NoUniqueMatch."""
 
-    def setUp(self):
-        self.message = "bla bla operation timeout"
-        self.details_exc = ValueError("value error")
-        self.status_timeout = 90
-        self.desired_statuses = ['foo on']
-        self.actual_status = 'foo off'
-
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-
-        exc = StatusTimeout(self.message, self.actual_status,
-                            self.desired_statuses, self.status_timeout)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.actual_status, self.actual_status)
-        self.assertEqual(exc.desired_statuses, self.desired_statuses)
-        self.assertEqual(exc.status_timeout, self.status_timeout)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^StatusTimeout\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('StatusTimeout'), str_def)
-        self.assertIn('actual_status={!r};'.
-                      format(exc.actual_status), str_def)
-        self.assertIn('desired_statuses={!r};'.
-                      format(exc.desired_statuses), str_def)
-        self.assertIn('status_timeout={!r};'.
-                      format(exc.status_timeout), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-    def test_msg_named(self):
-        """Test exception created with named arguments."""
-
-        exc = StatusTimeout(msg=self.message,
-                            actual_status=self.actual_status,
-                            desired_statuses=self.desired_statuses,
-                            status_timeout=self.status_timeout)
-
-        self.assertEqual(len(exc.args), 1)
-        self.assertEqual(exc.args[0], self.message)
-
-        self.assertEqual(exc.actual_status, self.actual_status)
-        self.assertEqual(exc.desired_statuses, self.desired_statuses)
-        self.assertEqual(exc.status_timeout, self.status_timeout)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^StatusTimeout\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('StatusTimeout'), str_def)
-        self.assertIn('actual_status={!r};'.
-                      format(exc.actual_status), str_def)
-        self.assertIn('desired_statuses={!r};'.
-                      format(exc.desired_statuses), str_def)
-        self.assertIn('status_timeout={!r};'.
-                      format(exc.status_timeout), str_def)
-        self.assertIn('message={!r};'.format(exc.args[0]), str_def)
-
-
-class TestNoUniqueMatch(unittest.TestCase):
-    """
-    Test exception class ``NoUniqueMatch``.
-    """
-
-    def setUp(self):
+    def setup_method(self):
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.faked_cpc = self.session.hmc.cpcs.add({
             'object-id': 'faked-cpc1',
@@ -831,73 +1296,131 @@ class TestNoUniqueMatch(unittest.TestCase):
             'type': 'osd',
         })
         self.client = Client(self.session)
-        self.cpc = self.client.cpcs.list()[0]
-        self.adapters = self.cpc.adapters.list()
 
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-        filter_args = {'type': 'osa', 'status': 'active'}
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # args: (filter_args,) - manager, resources are added dynamically
+            ({'type': 'osa', 'status': 'active'},),
+            ({},),
+            (None,),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None, None),
+            ('filter_args', 'manager', 'resources'),
+        ]
+    )
+    def test_nouniquematch_initial_attrs(self, arg_names, args):
+        """Test initial attributes of NoUniqueMatch."""
 
-        exc = NoUniqueMatch(filter_args, self.cpc.adapters, self.adapters)
+        filter_args = args[0]
 
-        self.assertEqual(len(exc.args), 1)
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+        resources = manager.list()
+        resource_uris = [r.uri for r in resources]
+
+        _args = list(args)
+        _args.append(manager)
+        _args.append(resources)
+
+        posargs, kwargs = func_args(_args, arg_names)
+
+        # Execute the code to be tested
+        exc = NoUniqueMatch(*posargs, **kwargs)
+
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert isinstance(exc.args[0], six.string_types)
         # auto-generated message, we don't expect a particular value
+        assert exc.filter_args == filter_args
+        assert exc.manager == manager
+        assert exc.resources == resources
+        assert exc.resource_uris == resource_uris
 
-        self.assertEqual(exc.filter_args, filter_args)
-        self.assertEqual(exc.manager, self.cpc.adapters)
-        self.assertEqual(exc.resources, self.adapters)
+    @pytest.mark.parametrize(
+        "filter_args", [
+            {'type': 'osa', 'status': 'active'},
+        ]
+    )
+    def test_nouniquematch_repr(self, filter_args):
+        """All tests for NoUniqueMatch.__repr__()."""
 
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^NoUniqueMatch\(.*\)$')
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+        resources = manager.list()
 
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
+        exc = NoUniqueMatch(filter_args, manager, resources)
 
-        # Check str_def()
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "filter_args", [
+            {'type': 'osa', 'status': 'active'},
+        ]
+    )
+    def test_nouniquematch_str(self, filter_args):
+        """All tests for NoUniqueMatch.__str__()."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+        resources = manager.list()
+
+        exc = NoUniqueMatch(filter_args, manager, resources)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "filter_args", [
+            {'type': 'osa', 'status': 'active'},
+        ]
+    )
+    def test_nouniquematch_str_def(self, filter_args):
+        """All tests for NoUniqueMatch.str_def()."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+        resources = manager.list()
+
+        exc = NoUniqueMatch(filter_args, manager, resources)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
         str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('NoUniqueMatch'), str_def)
-        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
-        self.assertIn('filter_args={!r};'.
-                      format(exc.filter_args), str_def)
-        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
-        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
 
-    def test_named(self):
-        """Test exception created with named arguments."""
-        filter_args = {'type': 'osa', 'status': 'active'}
-
-        exc = NoUniqueMatch(filter_args=filter_args, manager=self.cpc.adapters,
-                            resources=tuple(self.adapters))
-
-        self.assertEqual(len(exc.args), 1)
-        # auto-generated message, we don't expect a particular value
-
-        self.assertEqual(exc.filter_args, filter_args)
-        self.assertEqual(exc.manager, self.cpc.adapters)
-        self.assertEqual(exc.resources, self.adapters)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^NoUniqueMatch\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('NoUniqueMatch'), str_def)
-        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
-        self.assertIn('filter_args={!r};'.
-                      format(exc.filter_args), str_def)
-        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
-        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' resource_classname={!r};'.
+                            format(manager.resource_class.__name__)) >= 0
+        assert str_def.find(' filter_args={!r};'.format(filter_args)) >= 0
+        assert str_def.find(' parent_classname={!r};'.
+                            format(manager.parent.__class__.__name__)) >= 0
+        assert str_def.find(' parent_name={!r};'.
+                            format(manager.parent.name)) >= 0
+        assert str_def.find(' message=') >= 0
 
 
-class TestNotFound(unittest.TestCase):
-    """
-    Test exception class ``NotFound``.
-    """
+class TestNotFound(object):
+    """All tests for exception class NotFound."""
 
-    def setUp(self):
+    def setup_method(self):
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.faked_cpc = self.session.hmc.cpcs.add({
             'object-id': 'faked-cpc1',
@@ -916,67 +1439,118 @@ class TestNotFound(unittest.TestCase):
             'class': 'adapter',
             'name': 'osa 1',
             'description': 'OSA #1',
-            'status': 'active',
+            'status': 'inactive',
             'type': 'osd',
         })
         self.client = Client(self.session)
-        self.cpc = self.client.cpcs.list()[0]
-        self.adapter = self.cpc.adapters.list()[0]
 
-    def test_unnamed(self):
-        """Test exception created with unnamed arguments."""
-        filter_args = {'type': 'osa', 'status': 'active'}
+    @pytest.mark.parametrize(
+        # Input and expected arguments.
+        "args", [
+            # args: (filter_args,) - manager is added dynamically
+            ({'type': 'osa', 'status': 'active'},),
+            ({},),
+            (None,),
+        ]
+    )
+    @pytest.mark.parametrize(
+        # Whether each input arg is passed as pos.arg (None) or keyword arg
+        # (arg name), or is defaulted (omitted from right).
+        "arg_names", [
+            (None, None),
+            ('filter_args', 'manager'),
+        ]
+    )
+    def test_notfound_initial_attrs(self, arg_names, args):
+        """Test initial attributes of NotFound."""
 
-        exc = NotFound(filter_args, self.cpc.adapters)
+        filter_args = args[0]
 
-        self.assertEqual(len(exc.args), 1)
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+
+        _args = list(args)
+        _args.append(manager)
+
+        posargs, kwargs = func_args(_args, arg_names)
+
+        # Execute the code to be tested
+        exc = NotFound(*posargs, **kwargs)
+
+        assert isinstance(exc, Error)
+        assert len(exc.args) == 1
+        assert isinstance(exc.args[0], six.string_types)
         # auto-generated message, we don't expect a particular value
+        assert exc.filter_args == filter_args
+        assert exc.manager == manager
 
-        self.assertEqual(exc.filter_args, filter_args)
-        self.assertEqual(exc.manager, self.cpc.adapters)
+    @pytest.mark.parametrize(
+        "filter_args", [
+            {'type': 'osa', 'status': 'active'},
+        ]
+    )
+    def test_notfound_repr(self, filter_args):
+        """All tests for NotFound.__repr__()."""
 
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^NotFound\(.*\)$')
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
 
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
+        exc = NotFound(filter_args, manager)
 
-        # Check str_def()
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+    @pytest.mark.parametrize(
+        "filter_args", [
+            {'type': 'osa', 'status': 'active'},
+        ]
+    )
+    def test_notfound_str(self, filter_args):
+        """All tests for NotFound.__str__()."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+
+        exc = NotFound(filter_args, manager)
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    @pytest.mark.parametrize(
+        "filter_args", [
+            {'type': 'osa', 'status': 'active'},
+        ]
+    )
+    def test_notfound_str_def(self, filter_args):
+        """All tests for NotFound.str_def()."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+
+        exc = NotFound(filter_args, manager)
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
         str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('NotFound'), str_def)
-        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
-        self.assertIn('filter_args={!r};'.
-                      format(exc.filter_args), str_def)
-        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
-        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
 
-    def test_named(self):
-        """Test exception created with named arguments."""
-        filter_args = {'type': 'osa', 'status': 'active'}
-
-        exc = NotFound(filter_args=filter_args, manager=self.cpc.adapters)
-
-        self.assertEqual(len(exc.args), 1)
-        # auto-generated message, we don't expect a particular value
-
-        self.assertEqual(exc.filter_args, filter_args)
-        self.assertEqual(exc.manager, self.cpc.adapters)
-
-        # Check repr()
-        self.assertRegexpMatches(repr(exc), r'^NotFound\(.*\)$')
-
-        # Check str()
-        self.assertEqual(str(exc), exc.args[0])
-
-        # Check str_def()
-        str_def = exc.str_def()
-        self.assertIn('classname={!r};'.format('NotFound'), str_def)
-        self.assertIn('resource_classname={!r};'.format('Adapter'), str_def)
-        self.assertIn('filter_args={!r};'.
-                      format(exc.filter_args), str_def)
-        self.assertIn('parent_classname={!r};'.format('Cpc'), str_def)
-        self.assertIn('parent_name={!r};'.format(self.cpc.name), str_def)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        str_def = ' ' + str_def
+        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(' resource_classname={!r};'.
+                            format(manager.resource_class.__name__)) >= 0
+        assert str_def.find(' filter_args={!r};'.format(filter_args)) >= 0
+        assert str_def.find(' parent_classname={!r};'.
+                            format(manager.parent.__class__.__name__)) >= 0
+        assert str_def.find(' parent_name={!r};'.
+                            format(manager.parent.name)) >= 0
+        assert str_def.find(' message=') >= 0

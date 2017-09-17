@@ -91,7 +91,7 @@ sphinx-git===10.0.0
 GitPython===2.1.1
 
 # PyLint (no imports, invoked via pylint script):
-pylint===1.6.4; python_version == '2.7'
+pylint===1.6.4 #; python_version == '2.7'
 
 # Flake8 (no imports, invoked via flake8 script):
 flake8===3.2.1
@@ -106,9 +106,9 @@ jupyter===1.0.0
 # Indirect dependencies for development (must be consistent with dev-requirements.txt)
 
 alabaster===0.7.9
-appnope===0.1.0; sys_platform == "darwin"
+appnope===0.1.0 #; sys_platform == "darwin"
 args===0.1.0
-astroid===1.4.9; python_version == '2.7'
+astroid===1.4.9 #; python_version == '2.7'
 Babel===2.3.4
 backports-abc===0.5
 backports.functools-lru-cache===1.3
@@ -121,8 +121,8 @@ coverage===4.0.3
 docutils===0.13.1
 entrypoints===0.2.2
 enum34===1.1.6
-funcsigs===1.0.2; python_version < '3.3'
-functools32===3.2.3.post2; python_version == '2.7'
+funcsigs===1.0.2 #; python_version < '3.3'
+functools32===3.2.3.post2 #; python_version == '2.7'
 gitdb2===2.0.0
 html5lib===0.9999999
 imagesize===0.7.1
