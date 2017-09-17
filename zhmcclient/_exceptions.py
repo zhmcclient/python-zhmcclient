@@ -83,6 +83,8 @@ class ConnectionError(Error):
 
           details (Exception):
             The original exception describing details about the error.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(ConnectionError, self).__init__(msg)
         self._details = details
@@ -149,6 +151,8 @@ class ConnectTimeout(ConnectionError):
 
           connect_retries (:term:`integer`):
             The number of connect retries.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(ConnectTimeout, self).__init__(msg, details)
         self._connect_timeout = connect_timeout
@@ -221,6 +225,8 @@ class ReadTimeout(ConnectionError):
 
           read_retries (:term:`integer`):
             The number of read retries.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(ReadTimeout, self).__init__(msg, details)
         self._read_timeout = read_timeout
@@ -291,6 +297,8 @@ class RetriesExceeded(ConnectionError):
 
           connect_retries (:term:`integer`):
             The number of connect retries.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(RetriesExceeded, self).__init__(msg, details)
         self._connect_retries = connect_retries
@@ -358,6 +366,8 @@ class ClientAuthError(AuthError):
 
           msg (:term:`string`):
             A human readable message describing the problem.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(ClientAuthError, self).__init__(msg)
 
@@ -399,6 +409,8 @@ class ServerAuthError(AuthError):
           details (Exception):
             The :exc:`~zhmcclient.HTTPError` exception describing the
             error returned by the HMC.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(ServerAuthError, self).__init__(msg)
         assert isinstance(details, HTTPError)
@@ -467,15 +479,17 @@ class ParseError(Error):
 
             This should be the message of the `ValueError` exception raised
             by methods of the :class:`py:json.JSONDecoder` class.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(ParseError, self).__init__(msg)
-        m = re.search(r': line ([0-9]+) column ([0-9]+) ', msg)
-        if m:
-            self._line = int(m.group(1))
-            self._column = int(m.group(2))
-        else:
-            self._line = None
-            self._column = None
+        self._line = None
+        self._column = None
+        if msg:
+            m = re.search(r': line ([0-9]+) column ([0-9]+) ', msg)
+            if m:
+                self._line = int(m.group(1))
+                self._column = int(m.group(2))
 
     @property
     def line(self):
@@ -541,6 +555,8 @@ class VersionError(Error):
 
           api_version (:term:`HMC API version`):
             The actual HMC API version supported by the HMC.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(VersionError, self).__init__(msg)
         self._min_api_version = min_api_version
@@ -600,8 +616,12 @@ class HTTPError(Error):
 
           body (:term:`json object`):
             Body of the HTTP error response.
+
+        ``args[0]`` will be set to the 'message' item of the body, or to `None`
+        if not present.
         """
-        super(HTTPError, self).__init__(body)
+        msg = body.get('message', None)
+        super(HTTPError, self).__init__(msg)
         self._body = body
 
     @property
@@ -802,6 +822,8 @@ class OperationTimeout(Error):
 
           operation_timeout (:term:`integer`):
             The operation timeout in seconds.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(OperationTimeout, self).__init__(msg)
         self._operation_timeout = operation_timeout
@@ -874,6 +896,8 @@ class StatusTimeout(Error):
 
           status_timeout (:term:`number`):
             The status timeout (in seconds) that has expired.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
         """
         super(StatusTimeout, self).__init__(msg)
         self._actual_status = actual_status
@@ -938,9 +962,6 @@ class NoUniqueMatch(Error):
 
     def __init__(self, filter_args, manager, resources):
         """
-        The exception message is automatically constructed from the input
-        arguments.
-
         Parameters:
 
           filter_args (dict):
@@ -952,8 +973,15 @@ class NoUniqueMatch(Error):
             The manager of the resource, in whose scope the resource was
             attempted to be found.
 
+            Must not be `None`.
+
           resources (:term:`iterable` of :class:`~zhmcclient.BaseResource`):
             The resources that did match the filter.
+
+            Must not be `None`.
+
+        ``args[0]`` will be set to an exception message that is automatically
+        constructed from the input parameters.
         """
         parent = manager.parent
         if parent:
@@ -1051,9 +1079,6 @@ class NotFound(Error):
 
     def __init__(self, filter_args, manager):
         """
-        The exception message is automatically constructed from the input
-        arguments.
-
         Parameters:
 
           filter_args (dict):
@@ -1064,6 +1089,11 @@ class NotFound(Error):
           manager (:class:`~zhmcclient.BaseManager`):
             The manager of the resource, in whose scope the resource was
             attempted to be found.
+
+            Must not be `None`.
+
+        ``args[0]`` will be set to an exception message that is automatically
+        constructed from the input parameters.
         """
         parent = manager.parent
         if parent:
@@ -1071,7 +1101,8 @@ class NotFound(Error):
                 format(parent.__class__.__name__, parent.name)
         else:
             in_str = ""
-        if len(filter_args) == 1 and manager._name_prop in filter_args:
+        if filter_args and len(filter_args) == 1 and \
+                manager._name_prop in filter_args:
             msg = "Could not find {} {!r}{}.". \
                 format(manager.resource_class.__name__,
                        filter_args[manager._name_prop], in_str)

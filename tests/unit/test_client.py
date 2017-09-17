@@ -19,68 +19,124 @@ Unit tests for _client module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
-import requests_mock
+import pytest
 
-from zhmcclient import Session, Client
+from zhmcclient import Client, CpcManager, MetricsContextManager
+from zhmcclient_mock import FakedSession
 
 
-class ClientTests(unittest.TestCase):
+class TestClient(object):
     """All tests for Client classes."""
 
-    def setUp(self):
-        self.session = Session('fake-host')
-        self.client = Client(self.session)
-        with requests_mock.mock() as m:
-            # Because logon is deferred until needed, we perform it
-            # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
+    @pytest.mark.parametrize(
+        "hmc_name, hmc_version, api_version", [
+            ('fake-hmc', '2.13.1', '1.8'),
+        ]
+    )
+    def test_client_initial_attrs(self, hmc_name, hmc_version, api_version):
+        """Test initial attributes of Client."""
 
-    def tearDown(self):
-        with requests_mock.mock() as m:
-            m.delete('/api/sessions/this-session', status_code=204)
+        session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
 
-    def test_init(self):
-        """Test Initialization of Client class."""
-        self.assertTrue(self.client.session is self.session)
+        # Execute the code to be tested
+        client = Client(session)
 
-    def test_version_info_ok(self):
-        """
-        Test successful version_info().
-        """
-        with requests_mock.mock() as m:
-            result = {
-                'hmc-name': 'FAKEHMC1',
-                'hmc-version': '2.13.1',
-                'api-minor-version': 7,
-                'api-features': ['internal-get-files-from-se'],
-                'api-major-version': 1
-            }
-            m.get('/api/version', json=result)
+        assert client.session is session
+        assert isinstance(client.cpcs, CpcManager)
+        assert client.cpcs.session is session
+        assert isinstance(client.metrics_contexts, MetricsContextManager)
+        assert client.metrics_contexts.session is session
+        assert client.metrics_contexts.client is client
 
-            vi = self.client.version_info()
-            self.assertEqual(vi[0], result['api-major-version'])
-            self.assertEqual(vi[1], result['api-minor-version'])
+    @pytest.mark.parametrize(
+        "hmc_name, hmc_version, api_version", [
+            ('fake-hmc1', '2.13.1', '1.8'),
+            ('fake-hmc2', '2.14.0', '2.20'),
+        ]
+    )
+    def test_version_info(self, hmc_name, hmc_version, api_version):
+        """All tests for Client.version_info()."""
 
-    def test_query_api_version_ok(self):
-        """
-        Test successful query_api_version().
-        """
-        with requests_mock.mock() as m:
-            result = {
-                'hmc-name': 'FAKEHMC1',
-                'hmc-version': '2.13.1',
-                'api-minor-version': 7,
-                'api-features': ['internal-get-files-from-se'],
-                'api-major-version': 1
-            }
-            m.get('/api/version', json=result)
+        session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
 
-            api_version = self.client.query_api_version()
-            vi = self.client.version_info()
-            self.assertEqual(vi[0], api_version['api-major-version'])
-            self.assertEqual(vi[1], api_version['api-minor-version'])
+        # Client object under test
+        client = Client(session)
 
+        # Execute the code to be tested
+        version_info = client.version_info()
 
-if __name__ == '__main__':
-    unittest.main()
+        exp_version_info = tuple([int(v) for v in api_version.split('.')])
+
+        assert version_info == exp_version_info
+
+    @pytest.mark.parametrize(
+        "hmc_name, hmc_version, api_version", [
+            ('fake-hmc1', '2.13.1', '1.8'),
+            ('fake-hmc2', '2.14.0', '2.20'),
+        ]
+    )
+    def test_query_api_version(self, hmc_name, hmc_version, api_version):
+        """All tests for Client.query_api_version()."""
+
+        session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
+
+        # Client object under test
+        client = Client(session)
+
+        # Execute the code to be tested
+        api_version_info = client.query_api_version()
+
+        api_major_version = int(api_version.split('.')[0])
+        api_minor_version = int(api_version.split('.')[1])
+
+        exp_api_version_info = {
+            'api-major-version': api_major_version,
+            'api-minor-version': api_minor_version,
+            'hmc-version': hmc_version,
+            'hmc-name': hmc_name,
+        }
+
+        assert api_version_info == exp_api_version_info
+
+    @pytest.mark.parametrize(
+        "resources, exp_exc, exp_inventory", [
+            (None,
+             Exception,
+             None
+             ),
+            ([],
+             None,
+             {}  # TODO: Add expected inventory
+             ),
+            (['partition'],
+             None,
+             {}  # TODO: Add expected inventory
+             ),
+        ]
+    )
+    def xtest_get_inventory(self, resources, exp_exc, exp_inventory):
+        """All tests for Client.get_inventory()."""
+
+        # TODO: Enable once mock support for Client.get_inventory() is there
+
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+
+        # Client object under test
+        client = Client(session)
+
+        # TODO: Set up inventory from expected inventory
+
+        if exp_exc:
+            try:
+
+                # Execute the code to be tested
+                client.get_inventory(resources)
+
+            except exp_exc:
+                pass
+        else:
+
+            # Execute the code to be tested
+            inventory = client.get_inventory(resources)
+
+            assert inventory == exp_inventory
