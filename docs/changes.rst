@@ -70,6 +70,8 @@ Released: not yet
 * Added a ``verify`` argument to ``Session.logoff()``, consistent with
   ``Session.logon()``. This was needed as part of fixing issue #422.
 
+* Added a `__repr__()` function to the `Session` class, for debug purposes.
+
 **Known issues:**
 
 * See `list of open issues`_.

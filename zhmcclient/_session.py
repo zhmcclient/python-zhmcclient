@@ -352,6 +352,24 @@ class Session(object):
             self._session = None
         self._time_stats_keeper = TimeStatsKeeper()
 
+    def __repr__(self):
+        """
+        Return a string with the state of this session, for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _host = {s._host!r}\n"
+            "  _userid = {s._userid!r}\n"
+            "  _password = '...'\n"
+            "  _get_password = {s._get_password!r}\n"
+            "  _retry_timeout_config = {s._retry_timeout_config!r}\n"
+            "  _base_url = {s._base_url!r}\n"
+            "  _headers = {s._headers!r}\n"
+            "  _session_id = {s._session_id!r}\n"
+            "  _session = {s._session!r}\n"
+            ")".format(classname=self.__class__.__name__, id=id(self), s=self))
+        return ret
+
     @property
     def host(self):
         """
