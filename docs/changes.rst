@@ -100,6 +100,19 @@ Released: not yet
 * Clarified in the description of `HbaManager.list()` that only the
   'element-uri' property is returned and can be used for filtering.
   
+* The mock support for the "Create NIC" operation now performs more 
+  checking on the URIs specified in the 'network-adapter-port' or
+  'virtual-switch-uri' input properties, raising HTTP status 404 (Not Found)
+  as specified in the HMC API book.
+
+* In the ``FakedNic.add()`` method of the mock support, the checking for the
+  URIs specified in the 'network-adapter-port' or 'virtual-switch-uri' input
+  properties was relaxed to only the minimum, in order to make the setting
+  up of faked resources easier.
+
+* Migrated the unit tests for ``Nic`` and ``NicManager`` from unittest to
+  py.test, and improved them.
+
 **Known issues:**
 
 * See `list of open issues`_.
