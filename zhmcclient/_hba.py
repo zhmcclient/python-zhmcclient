@@ -82,6 +82,10 @@ class HbaManager(BaseManager):
         """
         List the HBAs in this Partition.
 
+        The returned HBAs have only the 'element-uri' property set.
+
+        Filtering is supported only for the 'element-uri' property.
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -319,3 +323,4 @@ class Hba(BaseResource):
         self.manager.session.post(self._uri +
                                   '/operations/reassign-storage-adapter-port',
                                   body=body)
+        self.properties.update(body)

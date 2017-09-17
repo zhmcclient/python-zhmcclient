@@ -1080,22 +1080,23 @@ class FakedHbaManager(FakedBaseManager):
             properties.
         """
         new_hba = super(FakedHbaManager, self).add(properties)
-        if 'adapter-port-uri' not in new_hba.properties:
-            raise InputError("FakedHba with object-id=%s must have "
-                             "'adapter-port-uri' property." %
-                             new_hba.oid)
-        # We don't verify that the specified URI actually exists, because
-        # it might not have been added yet, and we don't want to impose too
-        # much of an ordering requirement on the resources that are added.
+
         partition = self.parent
+
+        # Reflect the new NIC in the partition
         assert 'hba-uris' in partition.properties
         partition.properties['hba-uris'].append(new_hba.uri)
+
+        # Create a default device-number if not specified
         if 'device-number' not in new_hba.properties:
             devno = partition.devno_alloc()
             new_hba.properties['device-number'] = devno
+
+        # Create a default wwpn if not specified
         if 'wwpn' not in new_hba.properties:
             wwpn = partition.wwpn_alloc()
             new_hba.properties['wwpn'] = wwpn
+
         return new_hba
 
     def remove(self, oid):

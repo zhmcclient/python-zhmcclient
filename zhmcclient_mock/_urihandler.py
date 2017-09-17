@@ -1037,10 +1037,26 @@ class HbasHandler(object):
                                invalid_statuses=['starting', 'stopping'])
         check_required_fields(method, uri, body, ['name', 'adapter-port-uri'])
 
+        # Check the port-related input property
+        port_uri = body['adapter-port-uri']
+        m = re.match(r'(^/api/adapters/[^/]+)/storage-ports/[^/]+$', port_uri)
+        if not m:
+            # We treat an invalid port URI like "port not found".
+            raise InvalidResourceError(method, uri, reason=6,
+                                       resource_uri=port_uri)
+        adapter_uri = m.group(1)
         try:
-            new_hba = partition.hbas.add(body)
-        except InputError as exc:
-            raise BadRequestError(method, uri, reason=5, message=str(exc))
+            hmc.lookup_by_uri(adapter_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri, reason=2,
+                                       resource_uri=adapter_uri)
+        try:
+            hmc.lookup_by_uri(port_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri, reason=6,
+                                       resource_uri=port_uri)
+
+        new_hba = partition.hbas.add(body)
 
         return {'element-uri': new_hba.uri}
 
