@@ -13,13 +13,19 @@
 # limitations under the License.
 
 """
-Internal utilities for the zhmcclient implementation.
+Utility functions.
 """
 
 from __future__ import absolute_import
 
 import pprint
 from datetime import datetime
+import pytz
+
+__all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
+
+
+_EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc)
 
 
 def _indent(text, amount, ch=' '):
@@ -49,14 +55,118 @@ def repr_dict(_dict, indent):
 
 
 def repr_timestamp(timestamp):
-    """Return a debug representation of a timestamp (as defined for HMC
-    properties, i.e. an integer number indicating seconds since the epoch)."""
-    dt = datetime.fromtimestamp(timestamp)
+    """Return a debug representation of an HMC timestamp number."""
+    dt = datetime_from_timestamp(timestamp)
     ret = "%d (%s)" % (timestamp,
-                       dt.strftime('%Y-%m-%d %H:%M:%S local'))
+                       dt.strftime('%Y-%m-%d %H:%M:%S.%f %Z'))
     return ret
 
 
 def repr_manager(manager, indent):
     """Return a debug representation of a manager object."""
     return repr_text(repr(manager), indent=indent)
+
+
+def datetime_from_timestamp(ts):
+    """
+    Convert an :term:`HMC timestamp number <timestamp>` into a
+    :class:`~py:datetime.datetime` object.
+
+    The HMC timestamp number must be non-negative. This means the special
+    timestamp value -1 cannot be represented as datetime and will cause
+    ``ValueError`` to be raised.
+
+    The date and time range supported by this function has the following
+    bounds:
+
+    * The upper bounds is determined by :attr:`py:datetime.datetime.max` and
+      additional limitations, as follows:
+
+      * 9999-12-31 23:59:59 UTC, for 32-bit and 64-bit CPython on Linux and
+        OS-X.
+      * 3001-01-01 07:59:59 UTC, for 32-bit and 64-bit CPython on Windows, due
+        to a limitation in `gmtime() in Visual C++
+        <https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/gmtime-gmtime32-gmtime64>`_.
+      * 2038-01-19 03:14:07 UTC, for some 32-bit Python implementations,
+        due to the `Year 2038 problem
+        <https://en.wikipedia.org/wiki/Year_2038_problem>`_.
+
+    * The lower bounds is the UNIX epoch: 1970-01-01 00:00:00 UTC.
+
+    Parameters:
+
+      ts (:term:`timestamp`):
+        Point in time as an HMC timestamp number.
+
+        Must not be `None`.
+
+    Returns:
+
+      :class:`~py:datetime.datetime`:
+        Point in time as a timezone-aware Python datetime object for timezone
+        UTC.
+
+    Raises:
+        ValueError
+    """
+    # Note that in Python 2, "None < 0" is allowed and will return True,
+    # therefore we do an extra check for None.
+    if ts is None:
+        raise ValueError("HMC timestamp value must not be None.")
+    if ts < 0:
+        raise ValueError(
+            "Negative HMC timestamp value {} cannot be represented as "
+            "datetime.".format(ts))
+    epoch_seconds = ts // 1000
+    delta_microseconds = ts % 1000 * 1000
+    try:
+        dt = datetime.fromtimestamp(epoch_seconds, pytz.utc)
+    except (ValueError, OSError) as exc:
+        raise ValueError(str(exc))
+    dt = dt.replace(microsecond=delta_microseconds)
+    return dt
+
+
+def timestamp_from_datetime(dt):
+    """
+    Convert a :class:`~py:datetime.datetime` object into an
+    :term:`HMC timestamp number <timestamp>`.
+
+    The date and time range supported by this function has the following
+    bounds:
+
+    * The upper bounds is :attr:`py:datetime.datetime.max`, as follows:
+
+      * 9999-12-31 23:59:59 UTC, for 32-bit and 64-bit CPython on Linux and
+        OS-X.
+      * 2038-01-19 03:14:07 UTC, for some 32-bit Python implementations,
+        due to the `Year 2038 problem
+        <https://en.wikipedia.org/wiki/Year_2038_problem>`_.
+
+    * The lower bounds is the UNIX epoch: 1970-01-01 00:00:00 UTC.
+
+    Parameters:
+
+      dt (:class:`~py:datetime.datetime`):
+        Point in time as a Python datetime object. The datetime object may be
+        timezone-aware or timezone-naive. If timezone-naive, the UTC timezone
+        is assumed.
+
+        Must not be `None`.
+
+    Returns:
+
+      :term:`timestamp`:
+        Point in time as an HMC timestamp number.
+
+    Raises:
+        ValueError
+    """
+    if dt is None:
+        raise ValueError("datetime value must not be None.")
+    if dt.tzinfo is None:
+        # Apply default timezone to the timezone-naive input
+        dt = pytz.utc.localize(dt)
+    epoch_seconds = (dt - _EPOCH_DT).total_seconds()
+    ts = int(epoch_seconds * 1000)
+    return ts

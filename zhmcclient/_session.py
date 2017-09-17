@@ -352,6 +352,24 @@ class Session(object):
             self._session = None
         self._time_stats_keeper = TimeStatsKeeper()
 
+    def __repr__(self):
+        """
+        Return a string with the state of this session, for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _host = {s._host!r}\n"
+            "  _userid = {s._userid!r}\n"
+            "  _password = '...'\n"
+            "  _get_password = {s._get_password!r}\n"
+            "  _retry_timeout_config = {s._retry_timeout_config!r}\n"
+            "  _base_url = {s._base_url!r}\n"
+            "  _headers = {s._headers!r}\n"
+            "  _session_id = {s._session_id!r}\n"
+            "  _session = {s._session!r}\n"
+            ")".format(classname=self.__class__.__name__, id=id(self), s=self))
+        return ret
+
     @property
     def host(self):
         """
@@ -485,12 +503,16 @@ class Session(object):
             self._do_logon()
 
     @logged_api_call
-    def logoff(self):
+    def logoff(self, verify=False):
         """
         Make sure the session is logged off from the HMC.
 
         After successful logoff, the HMC session-id and
         :class:`requests.Session` object stored in this object are reset.
+
+        Parameters:
+
+          verify (bool): If a session-id is already set, verify its validity.
 
         Raises:
 
@@ -499,7 +521,7 @@ class Session(object):
           :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if self.is_logon():
+        if self.is_logon(verify):
             self._do_logoff()
 
     @logged_api_call

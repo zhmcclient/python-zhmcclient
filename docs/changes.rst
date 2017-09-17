@@ -29,6 +29,11 @@ Released: not yet
   partition when it is in status 'degraded' or 'reservation-error'.
   That is consistent with the real HMC as described in the HMC API book.
 
+* In the `HTTPError` exception class, `args[0]` was set to the `body` argument,
+  i.e. to the entore response body. Because by convention, `args[0]` should be
+  a human readable message, this has been changed to now set `args[0]` to the
+  'message' field in the response body, or to `None` if not present.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -41,6 +46,10 @@ Released: not yet
 * Fixed an AttributeError when calling 'zhmc vfunction update'.
   Access to a partition from nic and vfunction is done via the respective
   manager (issue #416).
+
+* In the zhmc CLI, fixed that creating a new session reused an existing
+  session. This prevented switching between userids on the same HMC
+  (issue #422).
 
 **Enhancements:**
 
@@ -57,6 +66,40 @@ Released: not yet
   handler of the mock support now converts that into an HTTP error 400
   (Bad Request), consistent with the HMC API book.
 
+* Added ``datetime_from_timestamp()`` and ``datetime_from_timestamp()``
+  functions that convert between Python ``datetime`` objects and HMC timestamp
+  numbers.
+
+* Added mock support for Metrics resources.
+
+* Added a ``verify`` argument to ``Session.logoff()``, consistent with
+  ``Session.logon()``. This was needed as part of fixing issue #422.
+
+* Added a `__repr__()` function to the `Session` class, for debug purposes.
+
+* In the `ParseError` exception class, a message of `None` is now tolerated,
+  for consistency with the other zhmcclient exception classes.
+
+* In the `NotFound` exception class, a `filter_args` parameter of `None` is now
+  tolerated, for consistency with the `NoUniqueMatch` exception class.
+
+* Documented for the zhmcclient exception classes how `args[0]` is set.
+
+* Clarified in the documentation that the `manager` and `resources` parameters
+  of the `NoUniqueMatch` and `NotFound` exception classes must not be `None`.
+
+* Improved the unit test cases for the `Client` class and for the zhmcclient
+  exception classes, and migrated them to py.test.
+
+* Migrated the unit tests for HBAs from unittest to py.test, and
+  improved the test cases.
+
+* In the `Hba.reassign_port()` method, updated the `Hba` object with the
+  changed port, consistent with other update situations.
+
+* Clarified in the description of `HbaManager.list()` that only the
+  'element-uri' property is returned and can be used for filtering.
+  
 * The mock support for the "Create NIC" operation now performs more 
   checking on the URIs specified in the 'network-adapter-port' or
   'virtual-switch-uri' input properties, raising HTTP status 404 (Not Found)
