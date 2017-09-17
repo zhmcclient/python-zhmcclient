@@ -194,3 +194,19 @@ Constants
 
 .. automodule:: zhmcclient._constants
    :members:
+
+
+.. _`Utilities`:
+
+Utilities
+---------
+
+.. # Note: In order to avoid the issue that automodule members are shown
+.. # in their module namespace (e.g. zhmcclient._utils), we maintain the
+.. # members of the _utils module manually.
+
+.. automodule:: zhmcclient._utils
+
+.. autofunction:: zhmcclient.datetime_from_timestamp
+
+.. autofunction:: zhmcclient.timestamp_from_datetime

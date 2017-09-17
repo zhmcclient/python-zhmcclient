@@ -20,8 +20,10 @@ Unit tests for _hmc module of the zhmcclient_mock package.
 from __future__ import absolute_import, print_function
 
 import unittest
+from datetime import datetime
 
 from zhmcclient_mock._hmc import FakedHmc, \
+    FakedBaseManager, FakedBaseResource, \
     FakedActivationProfileManager, FakedActivationProfile, \
     FakedAdapterManager, FakedAdapter, \
     FakedCpcManager, FakedCpc, \
@@ -32,7 +34,8 @@ from zhmcclient_mock._hmc import FakedHmc, \
     FakedPortManager, FakedPort, \
     FakedVirtualFunctionManager, FakedVirtualFunction, \
     FakedVirtualSwitchManager, FakedVirtualSwitch, \
-    FakedBaseManager, FakedBaseResource
+    FakedMetricsContextManager, FakedMetricsContext, \
+    FakedMetricGroupDefinition, FakedMetricObjectValues
 
 
 class FakedHmcTests(unittest.TestCase):
@@ -1526,6 +1529,489 @@ class FakedVirtualSwitchTests(unittest.TestCase):
 
         virtual_switches = cpc1.virtual_switches.list()
         self.assertEqual(len(virtual_switches), 0)
+
+
+class FakedMetricsContextTests(unittest.TestCase):
+    """All tests for the FakedMetricsContextManager and FakedMetricsContext
+    classes."""
+
+    def setUp(self):
+        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        self.cpc1_in_props = {'name': 'cpc1'}
+        self.partition1_in_props = {'name': 'partition1'}
+        rd = {
+            'cpcs': [
+                {
+                    'properties': self.cpc1_in_props,
+                    'partitions': [
+                        {
+                            'properties': self.partition1_in_props,
+                        },
+                    ],
+                },
+            ]
+        }
+        self.hmc.add_resources(rd)
+
+    def test_metrics_contexts_attr(self):
+        """Test faked HMC 'metrics_contexts' attribute."""
+        faked_hmc = self.hmc
+
+        self.assertIsInstance(faked_hmc.metrics_contexts,
+                              FakedMetricsContextManager)
+        self.assertRegexpMatches(faked_hmc.metrics_contexts.base_uri,
+                                 r'api/services/metrics/context')
+
+    def test_metrics_contexts_add(self):
+        """Test add() of FakedMetricsContextManager."""
+        faked_hmc = self.hmc
+
+        mc_in_props = {
+            'anticipated-frequency-seconds': 1,
+            'metric-groups': ['partition-usage'],
+        }
+
+        # the function to be tested:
+        mc = faked_hmc.metrics_contexts.add(mc_in_props)
+
+        self.assertIsInstance(mc, FakedMetricsContext)
+        self.assertRegexpMatches(mc.uri,
+                                 r'api/services/metrics/context/[^/]+')
+        self.assertIs(mc.manager, faked_hmc.metrics_contexts)
+        mc_props = mc_in_props.copy()
+        mc_props.update({
+            'fake-id': mc.oid,
+            'fake-uri': mc.uri,
+        })
+        self.assertEqual(mc.properties, mc_props)
+
+    def test_metrics_contexts_add_get_mg_def(self):
+        """Test add_metric_group_definition(), get_metric_group_definition(),
+        and get_metric_group_definition_names() of
+        FakedMetricsContextManager."""
+
+        faked_hmc = self.hmc
+        mc_mgr = faked_hmc.metrics_contexts
+
+        mg_name = 'partition-usage'
+        mg_def_input = FakedMetricGroupDefinition(
+            name=mg_name,
+            types={
+                'metric-1': 'string-metric',
+                'metric-2': 'integer-metric',
+            })
+
+        # Verify the initial M.G.Def names
+        mg_def_names = mc_mgr.get_metric_group_definition_names()
+        self.assertEqual(list(mg_def_names), [])
+
+        # Verify that a M.G.Def can be added
+        mc_mgr.add_metric_group_definition(mg_def_input)
+
+        # Verify the M.G.Def names after having added one
+        mg_def_names = mc_mgr.get_metric_group_definition_names()
+        self.assertEqual(list(mg_def_names), [mg_name])
+
+        # Verify that it can be retrieved
+        mg_def = mc_mgr.get_metric_group_definition(mg_name)
+        self.assertEqual(mg_def, mg_def_input)
+
+        # Verify that retrieving a non-existing M.G.Def fails
+        with self.assertRaises(ValueError) as cm:
+            mc_mgr.get_metric_group_definition('foo')
+        exc = cm.exception
+        self.assertRegexpMatches(
+            str(exc),
+            r"^A metric group definition with this name does not exist:.*")
+
+        # Verify that adding an M.G.Def with an existing name fails
+        with self.assertRaises(ValueError) as cm:
+            mc_mgr.add_metric_group_definition(mg_def_input)
+        exc = cm.exception
+        self.assertRegexpMatches(
+            str(exc),
+            r"^A metric group definition with this name already exists:.*")
+
+        # Verify that the M.G.Def names have not changed in these fails
+        mg_def_names = mc_mgr.get_metric_group_definition_names()
+        self.assertEqual(list(mg_def_names), [mg_name])
+
+    def test_metrics_contexts_add_get_metric_values(self):
+        """Test add_metric_values(), get_metric_values(), and
+        get_metric_values_group_names() of FakedMetricsContextManager."""
+
+        faked_hmc = self.hmc
+        mc_mgr = faked_hmc.metrics_contexts
+
+        mg_name = 'partition-usage'
+        mo_val_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid',
+            timestamp=datetime.now(),
+            values=[
+                ('metric-1', "a"),
+                ('metric-2', 5),
+            ])
+        mo_val2_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid2',
+            timestamp=datetime.now(),
+            values=[
+                ('metric-1', "b"),
+                ('metric-2', 7),
+            ])
+
+        # Verify the initial M.O.Val group names
+        mo_val_group_names = mc_mgr.get_metric_values_group_names()
+        self.assertEqual(list(mo_val_group_names), [])
+
+        # Verify that a first M.O.Val can be added
+        mc_mgr.add_metric_values(mo_val_input)
+
+        # Verify the M.O.Val group names after having added one
+        mo_val_group_names = mc_mgr.get_metric_values_group_names()
+        self.assertEqual(list(mo_val_group_names), [mg_name])
+
+        # Verify that the M.O.Vals can be retrieved and contain the first one
+        mo_vals = mc_mgr.get_metric_values(mg_name)
+        self.assertEqual(list(mo_vals), [mo_val_input])
+
+        # Verify that retrieving a non-existing M.O.Val fails
+        with self.assertRaises(ValueError) as cm:
+            mc_mgr.get_metric_values('foo')
+        exc = cm.exception
+        self.assertRegexpMatches(
+            str(exc),
+            r"^Metric values for this group name do not exist:.*")
+
+        # Verify that a second M.O.Val can be added for the same group name
+        mc_mgr.add_metric_values(mo_val2_input)
+
+        # Verify the M.O.Val group names after having added a second M.O.Val
+        # for the same group name -> still just one group name
+        mo_val_group_names = mc_mgr.get_metric_values_group_names()
+        self.assertEqual(list(mo_val_group_names), [mg_name])
+
+        # Verify that the M.O.Vals can be retrieved and contain both
+        mo_vals = mc_mgr.get_metric_values(mg_name)
+        self.assertEqual(list(mo_vals), [mo_val_input, mo_val2_input])
+
+    def test_metrics_context_get_mg_defs(self):
+        """Test get_metric_group_definitions() of FakedMetricsContext."""
+
+        faked_hmc = self.hmc
+        mc_mgr = faked_hmc.metrics_contexts
+
+        mg_name = 'partition-usage'
+        mg_def = FakedMetricGroupDefinition(
+            name=mg_name,
+            types=[
+                ('metric-1', 'string-metric'),
+                ('metric-2', 'integer-metric'),
+            ])
+        mc_mgr.add_metric_group_definition(mg_def)
+
+        mg_name2 = 'cpc-usage'
+        mg_def2 = FakedMetricGroupDefinition(
+            name=mg_name2,
+            types=[
+                ('metric-3', 'string-metric'),
+                ('metric-4', 'integer-metric'),
+            ])
+        mc_mgr.add_metric_group_definition(mg_def2)
+
+        # Test case where only one M.G.Def is tested
+        mc_in_props = {
+            'anticipated-frequency-seconds': 1,
+            'metric-groups': [mg_name],
+        }
+        mc = faked_hmc.metrics_contexts.add(mc_in_props)
+        exp_mg_defs = [mg_def]
+
+        # the function to be tested:
+        mg_defs = mc.get_metric_group_definitions()
+
+        # Verify the returned M.G.Defs
+        self.assertEqual(list(mg_defs), exp_mg_defs)
+
+        # Test case where the default for M.G.Defs is tested
+        mc_in_props = {
+            'anticipated-frequency-seconds': 1,
+            # 'metric-groups' not specified -> default: return all
+        }
+        mc = faked_hmc.metrics_contexts.add(mc_in_props)
+        exp_mg_defs = [mg_def, mg_def2]
+
+        # the function to be tested:
+        mg_defs = mc.get_metric_group_definitions()
+
+        # Verify the returned M.G.Defs
+        self.assertEqual(list(mg_defs), exp_mg_defs)
+
+    def test_metrics_context_get_mg_infos(self):
+        """Test get_metric_group_infos() of FakedMetricsContext."""
+
+        faked_hmc = self.hmc
+        mc_mgr = faked_hmc.metrics_contexts
+
+        mg_name = 'partition-usage'
+        mg_def = FakedMetricGroupDefinition(
+            name=mg_name,
+            types=[
+                ('metric-1', 'string-metric'),
+                ('metric-2', 'integer-metric'),
+            ])
+        mg_info = {
+            'group-name': mg_name,
+            'metric-infos': [
+                {
+                    'metric-name': 'metric-1',
+                    'metric-type': 'string-metric',
+                },
+                {
+                    'metric-name': 'metric-2',
+                    'metric-type': 'integer-metric',
+                },
+            ],
+        }
+        mc_mgr.add_metric_group_definition(mg_def)
+
+        mg_name2 = 'cpc-usage'
+        mg_def2 = FakedMetricGroupDefinition(
+            name=mg_name2,
+            types=[
+                ('metric-3', 'string-metric'),
+                ('metric-4', 'integer-metric'),
+            ])
+        mg_info2 = {
+            'group-name': mg_name2,
+            'metric-infos': [
+                {
+                    'metric-name': 'metric-3',
+                    'metric-type': 'string-metric',
+                },
+                {
+                    'metric-name': 'metric-4',
+                    'metric-type': 'integer-metric',
+                },
+            ],
+        }
+        mc_mgr.add_metric_group_definition(mg_def2)
+
+        # Test case where only one M.G.Def is tested
+        mc_in_props = {
+            'anticipated-frequency-seconds': 1,
+            'metric-groups': [mg_name],
+        }
+        mc = faked_hmc.metrics_contexts.add(mc_in_props)
+        exp_mg_infos = [mg_info]
+
+        # the function to be tested:
+        mg_infos = mc.get_metric_group_infos()
+
+        # Verify the returned M.G.Defs
+        self.assertEqual(list(mg_infos), exp_mg_infos)
+
+        # Test case where the default for M.G.Defs is tested
+        mc_in_props = {
+            'anticipated-frequency-seconds': 1,
+            # 'metric-groups' not specified -> default: return all
+        }
+        mc = faked_hmc.metrics_contexts.add(mc_in_props)
+        exp_mg_infos = [mg_info, mg_info2]
+
+        # the function to be tested:
+        mg_infos = mc.get_metric_group_infos()
+
+        # Verify the returned M.G.Defs
+        self.assertEqual(list(mg_infos), exp_mg_infos)
+
+    def test_metrics_context_get_m_values(self):
+        """Test get_metric_values() of FakedMetricsContext."""
+
+        faked_hmc = self.hmc
+        mc_mgr = faked_hmc.metrics_contexts
+
+        mg_name = 'partition-usage'
+        mg_def = FakedMetricGroupDefinition(
+            name=mg_name,
+            types=[
+                ('metric-1', 'string-metric'),
+                ('metric-2', 'integer-metric'),
+            ])
+        mc_mgr.add_metric_group_definition(mg_def)
+
+        mo_val_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid',
+            timestamp=datetime.now(),
+            values=[
+                ('metric-1', "a"),
+                ('metric-2', 5),
+            ])
+        mc_mgr.add_metric_values(mo_val_input)
+        mo_val2_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid2',
+            timestamp=datetime.now(),
+            values=[
+                ('metric-1', "b"),
+                ('metric-2', 7),
+            ])
+        mc_mgr.add_metric_values(mo_val2_input)
+        exp_mo_vals = mc_mgr.get_metric_values(mg_name)
+
+        # Test case where only one M.G.Def is tested
+        mc_in_props = {
+            'anticipated-frequency-seconds': 1,
+            'metric-groups': [mg_name],
+        }
+        mc = mc_mgr.add(mc_in_props)
+
+        # the function to be tested:
+        mv_list = mc.get_metric_values()
+
+        self.assertEqual(len(mv_list), 1)
+        mv = mv_list[0]
+        self.assertEqual(mv[0], mg_name)
+        self.assertEqual(mv[1], exp_mo_vals)
+
+    def test_metrics_context_get_m_values_response(self):
+        """Test get_metric_values_response() of FakedMetricsContext."""
+
+        faked_hmc = self.hmc
+        mc_mgr = faked_hmc.metrics_contexts
+
+        mg_name = 'partition-usage'
+        mg_def = FakedMetricGroupDefinition(
+            name=mg_name,
+            types=[
+                ('metric-1', 'string-metric'),
+                ('metric-2', 'integer-metric'),
+                ('metric-3', 'double-metric'),
+            ])
+        mc_mgr.add_metric_group_definition(mg_def)
+
+        mo_val_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid',
+            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            values=[
+                ('metric-1', "a"),
+                ('metric-2', -5),
+                ('metric-3', 3.1),
+            ])
+        mc_mgr.add_metric_values(mo_val_input)
+        mo_val2_input = FakedMetricObjectValues(
+            group_name=mg_name,
+            resource_uri='/api/partitions/fake-oid',
+            timestamp=datetime(2017, 9, 5, 12, 13, 20, 0),
+            values=[
+                ('metric-1', "0"),
+                ('metric-2', 7),
+                ('metric-3', -4.2),
+            ])
+        mc_mgr.add_metric_values(mo_val2_input)
+
+        mg_name2 = 'cpc-usage'
+        mg_def2 = FakedMetricGroupDefinition(
+            name=mg_name2,
+            types=[
+                ('metric-4', 'double-metric'),
+            ])
+        mc_mgr.add_metric_group_definition(mg_def2)
+
+        mo_val3_input = FakedMetricObjectValues(
+            group_name=mg_name2,
+            resource_uri='/api/cpcs/fake-oid',
+            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            values=[
+                ('metric-4', 7.0),
+            ])
+        mc_mgr.add_metric_values(mo_val3_input)
+
+        exp_mv_resp = '''"partition-usage"
+"/api/partitions/fake-oid"
+1504613590000
+"a",-5,3.1
+
+"/api/partitions/fake-oid"
+1504613600000
+"0",7,-4.2
+
+
+"cpc-usage"
+"/api/cpcs/fake-oid"
+1504613590000
+7.0
+
+
+
+'''
+
+        # Test case where only one M.G.Def is tested
+        mc_in_props = {
+            'anticipated-frequency-seconds': 1,
+            'metric-groups': [mg_name, mg_name2],
+        }
+        mc = mc_mgr.add(mc_in_props)
+
+        # the function to be tested:
+        mv_resp = mc.get_metric_values_response()
+
+        self.assertEqual(
+            mv_resp, exp_mv_resp,
+            "Actual response string:\n{!r}\n"
+            "Expected response string:\n{!r}\n".
+            format(mv_resp, exp_mv_resp))
+
+
+class FakedMetricGroupDefinitionTests(unittest.TestCase):
+    """All tests for the FakedMetricGroupDefinition class."""
+
+    def test_metric_group_definition_attr(self):
+        """Test attributes of a FakedMetricGroupDefinition object."""
+
+        in_kwargs = {
+            'name': 'partition-usage',
+            'types': [
+                ('metric-1', 'string-metric'),
+                ('metric-2', 'integer-metric'),
+            ]
+        }
+
+        # the function to be tested:
+        new_mgd = FakedMetricGroupDefinition(**in_kwargs)
+
+        self.assertEqual(new_mgd.name, in_kwargs['name'])
+        self.assertEqual(new_mgd.types, in_kwargs['types'])
+        self.assertIsNot(new_mgd.types, in_kwargs['types'])  # was copied
+
+
+class FakedMetricObjectValuesTests(unittest.TestCase):
+    """All tests for the FakedMetricObjectValues class."""
+
+    def test_metric_object_values_attr(self):
+        """Test attributes of a FakedMetricObjectValues object."""
+
+        in_kwargs = {
+            'group_name': 'partition-usage',
+            'resource_uri': '/api/partitions/fake-oid',
+            'timestamp': datetime.now(),
+            'values': [
+                ('metric-1', "a"),
+                ('metric-2', 5),
+            ]
+        }
+
+        # the function to be tested:
+        new_mov = FakedMetricObjectValues(**in_kwargs)
+
+        self.assertEqual(new_mov.group_name, in_kwargs['group_name'])
+        self.assertEqual(new_mov.resource_uri, in_kwargs['resource_uri'])
+        self.assertEqual(new_mov.timestamp, in_kwargs['timestamp'])
+        self.assertEqual(new_mov.values, in_kwargs['values'])
+        self.assertIsNot(new_mov.values, in_kwargs['values'])  # was copied
 
 
 if __name__ == '__main__':

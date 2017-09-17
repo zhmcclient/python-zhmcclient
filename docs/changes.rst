@@ -25,6 +25,10 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The zhmcclient mock support for Partitions no longer allows to stop a
+  partition when it is in status 'degraded' or 'reservation-error'.
+  That is consistent with the real HMC as described in the HMC API book.
+
 * In the `HTTPError` exception class, `args[0]` was set to the `body` argument,
   i.e. to the entore response body. Because by convention, `args[0]` should be
   a human readable message, this has been changed to now set `args[0]` to the
@@ -43,10 +47,35 @@ Released: not yet
   Access to a partition from nic and vfunction is done via the respective
   manager (issue #416).
 
+* In the zhmc CLI, fixed that creating a new session reused an existing
+  session. This prevented switching between userids on the same HMC
+  (issue #422).
+
 **Enhancements:**
 
 * Avoided `DeprecationWarning` on Python 3 for invalid escape sequences
   in some places.
+
+* The zhmcclient mock support for various resource classes did not always
+  check for invalid CPC status and for invalid Partition status as
+  described in the HMC API book. It now does.
+
+* In the mock support, invalid input to faked resource classes (mainly when
+  adding faked resources) is now handled by raising a new exception
+  ``zhmcclient_mock.InputError`` (instead of ``ValueError``). The URI
+  handler of the mock support now converts that into an HTTP error 400
+  (Bad Request), consistent with the HMC API book.
+
+* Added ``datetime_from_timestamp()`` and ``datetime_from_timestamp()``
+  functions that convert between Python ``datetime`` objects and HMC timestamp
+  numbers.
+
+* Added mock support for Metrics resources.
+
+* Added a ``verify`` argument to ``Session.logoff()``, consistent with
+  ``Session.logon()``. This was needed as part of fixing issue #422.
+
+* Added a `__repr__()` function to the `Session` class, for debug purposes.
 
 * In the `ParseError` exception class, a message of `None` is now tolerated,
   for consistency with the other zhmcclient exception classes.

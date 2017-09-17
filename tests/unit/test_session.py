@@ -67,6 +67,21 @@ class SessionTests(unittest.TestCase):
         self.assertTrue('X-API-Session' not in session.headers)
         self.assertIsNone(session.session)
 
+    def test_repr(self):
+        """Test Session.__repr__()."""
+
+        session = Session('fake-host', 'fake-user', 'fake-pw')
+
+        repr_str = repr(session)
+
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        self.assertRegexpMatches(
+            repr_str,
+            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
+                classname=session.__class__.__name__,
+                id=id(session)))
+
     @requests_mock.mock()
     def test_logon_logoff(self, m):
         """Test logon and logoff; this uses post() and delete()."""

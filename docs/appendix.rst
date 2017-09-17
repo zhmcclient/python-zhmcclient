@@ -90,6 +90,12 @@ This documentation uses a few special terms to refer to Python types:
       one of the integer types :class:`py:int` or :class:`py2:long` (Python 2
       only).
 
+   timestamp
+      a Timestamp-typed value as used in the HMC API. This is a non-negative
+      :term:`integer` value representing a point in time as milliseconds since
+      the UNIX epoch (1970-01-01 00:00:00 UTC), or the value -1 to indicate
+      special treatment of the value.
+
    json object
       a :class:`py:dict` object that is a Python representation of a valid JSON
       object. See :ref:`py:py-to-json-table` for details.
