@@ -113,6 +113,9 @@ Released: not yet
 * Migrated the unit tests for ``Nic`` and ``NicManager`` from unittest to
   py.test, and improved them.
 
+* Improved the way the named tuples ``MetricGroupDefinition`` and
+  ``MetricDefinition`` are documented.
+
 **Known issues:**
 
 * See `list of open issues`_.

@@ -316,25 +316,33 @@ _MetricGroupDefinitionTuple = namedtuple(
 
 class MetricGroupDefinition(_MetricGroupDefinitionTuple):
     """
-    A named tuple representing definitional information for a metric group,
-    with the following attributes:
-
-    Attributes:
-
-      name (:term:`string`):
-        Metric group name, as defined in section 'Metric groups' in the
-        :term:`HMC API` book.
-
-      resource_class (:term:`string`):
-        A string identifying the resource class to which this metric group
-        belongs, using the values from the 'class' property of resource
-        objects.
-
-      metric_definitions (dict):
-        Metric definitions for the metrics in this metric group, as a
-        dictionary where the key is the metric name and the value is the
-        :class:`~zhmcclient.MetricDefinition` object for the metric.
+    A :func:`namedtuple <py:collections.namedtuple>` representing definitional
+    information for a metric group.
     """
+
+    def __init__(self, name, resource_class, metric_definitions):
+        """
+        Parameters:
+
+          name (:term:`string`):
+            Metric group name, as defined in section 'Metric groups' in the
+            :term:`HMC API` book.
+
+          resource_class (:term:`string`):
+            A string identifying the resource class to which this metric group
+            belongs, using the values from the 'class' property of resource
+            objects.
+
+          metric_definitions (dict):
+            Metric definitions for the metrics in this metric group, as a
+            dictionary where the key is the metric name and the value is the
+            :class:`~zhmcclient.MetricDefinition` object for the metric.
+
+        All these init parameters are also available as same-named attributes.
+        """
+        super(MetricGroupDefinition, self).__init__(
+            name, resource_class, metric_definitions)
+
     __slots__ = ()
 
     def __repr__(self):
@@ -354,43 +362,48 @@ _MetricDefinitionTuple = namedtuple(
 
 class MetricDefinition(_MetricDefinitionTuple):
     """
-    A named tuple representing definitional information for a single metric,
-    with the following attributes:
-
-    The following table lists the Python types that are used for each type
-    mentioned in the metric group descriptions in chapter "Metric groups" in
-    the :term:`HMC API` book:
-
-    =============================  ======================
-    Metric group description type  Python type
-    =============================  ======================
-    Boolean                        :class:`py:bool`
-    Byte                           :term:`integer`
-    Short                          :term:`integer`
-    Integer                        :term:`integer`
-    Long                           :term:`integer`
-    Double                         :class:`py:float`
-    String, String Enum            :term:`unicode string`
-    =============================  ======================
-
-    Attributes:
-
-      index (:term:`integer`):
-        0-based index (=position) of the metric in a MetricsResponse value row.
-
-      name (:term:`string`):
-        Metric field name, as shown in the tables defining the metric groups in
-        section 'Metric groups' in the :term:`HMC API` book.
-
-      type (:term:`callable`):
-        Python type for the metric value. The type must be a constructor
-        (callable) that takes the metrics value from the `MetricsResponse`
-        string as its only argument. For the actual types, see the mapping
-        table, above.
-
-      unit (:term:`string`):
-        Unit of the metric value.
+    A :func:`namedtuple <py:collections.namedtuple>` representing definitional
+    information for a single metric.
     """
+
+    def __init__(self, index, name, type, unit):
+        """
+        Parameters:
+
+          index (:term:`integer`):
+            0-based index (=position) of the metric in a MetricsResponse value
+            row.
+
+          name (:term:`string`):
+            Metric field name, as shown in the tables defining the metric
+            groups in section 'Metric groups' in the :term:`HMC API` book.
+
+          type (:term:`callable`):
+            Python type for the metric value. The type must be a constructor
+            (callable) that takes the metrics value from the `MetricsResponse`
+            string as its only argument, using the following Python types
+            for the metric group description types shown in the :term:`HMC API`
+            book:
+
+            =============================  ======================
+            Description type               Python type
+            =============================  ======================
+            Boolean                        :class:`py:bool`
+            Byte                           :term:`integer`
+            Short                          :term:`integer`
+            Integer                        :term:`integer`
+            Long                           :term:`integer`
+            Double                         :class:`py:float`
+            String, String Enum            :term:`unicode string`
+            =============================  ======================
+
+          unit (:term:`string`):
+            Unit of the metric value.
+
+        All these init parameters are also available as same-named attributes.
+        """
+        super(MetricDefinition, self).__init__(index, name, type, unit)
+
     __slots__ = ()
 
     def __repr__(self):
