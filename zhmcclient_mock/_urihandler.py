@@ -503,10 +503,11 @@ class CpcExportPortNamesListHandler(object):
 class MetricsContextsHandler(object):
 
     @staticmethod
-    def post(hmc, uri, uri_parms, body, logon_required, wait_for_completion):
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
         """Operation: Create Metrics Context."""
         assert wait_for_completion is True  # always synchronous
-        check_required_fields('POST', uri, body,
+        check_required_fields(method, uri, body,
                               ['anticipated-frequency-seconds'])
         new_metrics_context = hmc.metrics_contexts.add(body)
         result = {
@@ -519,21 +520,21 @@ class MetricsContextsHandler(object):
 class MetricsContextHandler(object):
 
     @staticmethod
-    def delete(hmc, uri, uri_parms, logon_required):
+    def delete(method, hmc, uri, uri_parms, logon_required):
         """Operation: Delete Metrics Context."""
         try:
             metrics_context = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError('DELETE', uri)
+            raise InvalidResourceError(method, uri)
         hmc.metrics_contexts.remove(metrics_context.oid)
 
     @staticmethod
-    def get(hmc, uri, uri_parms, logon_required):
+    def get(method, hmc, uri, uri_parms, logon_required):
         """Operation: Get Metrics."""
         try:
             metrics_context = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError('GET', uri)
+            raise InvalidResourceError(method, uri)
         result = metrics_context.get_metric_values_response()
         return result
 
