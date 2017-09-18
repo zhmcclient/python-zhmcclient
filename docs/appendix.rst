@@ -371,7 +371,7 @@ Bibliography
        `IBM SC27-2634, z Systems Hardware Management Console Web Services API (Version 2.13.1) <https://www-01.ibm.com/support/docview.wss?uid=isg2cb468b15654ca89b85257f7200746c16>`_
 
    HMC API 2.14.0
-       `IBM SC27-xxxx, z Systems Hardware Management Console Web Services API (Version 2.14.0) <https://www-01.ibm.com/support/docview.wss?uid=>`_
+       `IBM SC27-2636, z Systems Hardware Management Console Web Services API (Version 2.14.0) <https://www-01.ibm.com/support/docview.wss?uid=isg2db4805ce05eea3dd85258194006a371e>`_
 
    HMC Operations Guide
        The operations guide of the z Systems Hardware Management Console, described in the following books:
