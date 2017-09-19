@@ -28,10 +28,24 @@ from zhmcclient_mock._hmc import FakedHmc, FakedMetricGroupDefinition, \
     FakedMetricObjectValues
 
 from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
-    InvalidMethodError, CpcNotInDpmError, CpcInDpmError, \
+    InvalidMethodError, CpcNotInDpmError, CpcInDpmError, BadRequestError, \
+    ConflictError, ConnectionError, \
     parse_query_parms, UriHandler, \
     GenericGetPropertiesHandler, GenericUpdatePropertiesHandler, \
+    GenericDeleteHandler, \
     VersionHandler, \
+    ConsoleHandler, ConsoleRestartHandler, ConsoleShutdownHandler, \
+    ConsoleMakePrimaryHandler, ConsoleReorderUserPatternsHandler, \
+    ConsoleGetAuditLogHandler, ConsoleGetSecurityLogHandler, \
+    ConsoleListUnmanagedCpcsHandler, \
+    UsersHandler, UserHandler, UserAddUserRoleHandler, \
+    UserRemoveUserRoleHandler, \
+    UserRolesHandler, UserRoleHandler, UserRoleAddPermissionHandler, \
+    UserRoleRemovePermissionHandler, \
+    TasksHandler, TaskHandler, \
+    UserPatternsHandler, UserPatternHandler, \
+    PasswordRulesHandler, PasswordRuleHandler, \
+    LdapServerDefinitionsHandler, LdapServerDefinitionHandler, \
     CpcsHandler, CpcHandler, CpcStartHandler, CpcStopHandler, \
     CpcImportProfilesHandler, CpcExportProfilesHandler, \
     CpcExportPortNamesListHandler, \
@@ -92,6 +106,21 @@ class HTTPErrorTests(unittest.TestCase):
         response = exc.response()
 
         self.assertEqual(response, expected_response)
+
+
+class ConnectionErrorTests(unittest.TestCase):
+    """All tests for class ConnectionError."""
+
+    def setUp(self):
+        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        self.cpc1 = self.hmc.cpcs.add({'name': 'cpc1'})
+
+    def test_attributes(self):
+        msg = "fake error message"
+
+        exc = ConnectionError(msg)
+
+        self.assertEqual(exc.message, msg)
 
 
 class DummyHandler1(object):
@@ -437,7 +466,7 @@ class UriHandlerMethodTests(unittest.TestCase):
         DummyHandler2.delete = staticmethod(MagicMock(
             return_value=None))
         self.urihandler = UriHandler(self.uris)
-        self.hmc = 'fake-hmc-object'
+        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
     def tearDown(self):
         delattr(DummyHandler1, 'get')
@@ -502,6 +531,82 @@ def standard_test_hmc():
     for testing.
     """
     hmc_resources = {
+        'consoles': [
+            {
+                'properties': {
+                    'name': 'fake_console_name',
+                },
+                'users': [
+                    {
+                        'properties': {
+                            'object-id': 'fake-user-oid-1',
+                            'name': 'fake_user_name_1',
+                            'description': 'User #1',
+                            'type': 'system-defined',
+                        },
+                    },
+                ],
+                'user_roles': [
+                    {
+                        'properties': {
+                            'object-id': 'fake-user-role-oid-1',
+                            'name': 'fake_user_role_name_1',
+                            'description': 'User Role #1',
+                            'type': 'system-defined',
+                        },
+                    },
+                ],
+                'user_patterns': [
+                    {
+                        'properties': {
+                            'element-id': 'fake-user-pattern-oid-1',
+                            'name': 'fake_user_pattern_name_1',
+                            'description': 'User Pattern #1',
+                            'pattern': 'fake_user_name_*',
+                            'type': 'glob-like',
+                            'retention-time': 0,
+                            'user-template-uri': '/api/users/fake-user-oid-1',
+                        },
+                    },
+                ],
+                'password_rules': [
+                    {
+                        'properties': {
+                            'element-id': 'fake-password-rule-oid-1',
+                            'name': 'fake_password_rule_name_1',
+                            'description': 'Password Rule #1',
+                            'type': 'system-defined',
+                        },
+                    },
+                ],
+                'tasks': [
+                    {
+                        'properties': {
+                            'element-id': 'fake-task-oid-1',
+                            'name': 'fake_task_name_1',
+                            'description': 'Task #1',
+                        },
+                    },
+                    {
+                        'properties': {
+                            'element-id': 'fake-task-oid-2',
+                            'name': 'fake_task_name_2',
+                            'description': 'Task #2',
+                        },
+                    },
+                ],
+                'ldap_server_definitions': [
+                    {
+                        'properties': {
+                            'element-id': 'fake-ldap-srv-def-oid-1',
+                            'name': 'fake_ldap_srv_def_name_1',
+                            'description': 'LDAP Srv Def #1',
+                            'primary-hostname-ipaddr': '10.11.12.13',
+                        },
+                    },
+                ],
+            }
+        ],
         'cpcs': [
             {
                 'properties': {
@@ -736,6 +841,14 @@ class GenericGetPropertiesHandlerTests(unittest.TestCase):
         }
         self.assertEqual(cpc1, exp_cpc1)
 
+    def test_get_error_offline(self):
+
+        self.hmc.disable()
+
+        with self.assertRaises(ConnectionError):
+            # the function to be tested:
+            self.urihandler.get(self.hmc, '/api/cpcs/1', True)
+
 
 class _GenericGetUpdatePropertiesHandler(GenericGetPropertiesHandler,
                                          GenericUpdatePropertiesHandler):
@@ -765,6 +878,54 @@ class GenericUpdatePropertiesHandlerTests(unittest.TestCase):
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
         self.assertEqual(cpc1['description'], 'CPC #1 (updated)')
 
+    def test_post_error_offline(self):
+
+        self.hmc.disable()
+
+        update_cpc1 = {
+            'description': 'CPC #1 (updated)',
+        }
+
+        with self.assertRaises(ConnectionError):
+            # the function to be tested:
+            self.urihandler.post(self.hmc, '/api/cpcs/1', update_cpc1, True,
+                                 True)
+
+
+class GenericDeleteHandlerTests(unittest.TestCase):
+    """All tests for class GenericDeleteHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            ('/api/console/ldap-server-definitions/([^/]+)',
+             GenericDeleteHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_delete(self):
+
+        uri = '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1'
+
+        # the function to be tested:
+        ret = self.urihandler.delete(self.hmc, uri, True)
+
+        self.assertIsNone(ret)
+
+        # Verify it no longer exists:
+        with self.assertRaises(KeyError):
+            self.hmc.lookup_by_uri(uri)
+
+    def test_delete_error_offline(self):
+
+        self.hmc.disable()
+
+        uri = '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1'
+
+        with self.assertRaises(ConnectionError):
+            # the function to be tested:
+            self.urihandler.delete(self.hmc, uri, True)
+
 
 class VersionHandlerTests(unittest.TestCase):
     """All tests for class VersionHandler."""
@@ -789,6 +950,1745 @@ class VersionHandlerTests(unittest.TestCase):
             'api-minor-version': int(api_minor),
         }
         self.assertEqual(resp, exp_resp)
+
+
+class ConsoleHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    # Note: There is no test_list() function because there is no List
+    # operation for Console resources.
+
+    def test_get(self):
+
+        # the function to be tested:
+        console = self.urihandler.get(self.hmc, '/api/console', True)
+
+        exp_console = {
+            'object-uri': '/api/console',
+            'name': 'fake_console_name',
+        }
+        self.assertEqual(console, exp_console)
+
+
+class ConsoleRestartHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleRestartHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+            ('/api/console/operations/restart', ConsoleRestartHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_restart_success(self):
+        body = {
+            'force': False,
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/operations/restart', body, True, True)
+
+        self.assertTrue(self.hmc.enabled)
+        self.assertIsNone(resp)
+
+    def test_restart_error_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        body = {
+            'force': False,
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(
+                self.hmc, '/api/console/operations/restart', body, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+
+class ConsoleShutdownHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleShutdownHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+            ('/api/console/operations/shutdown', ConsoleShutdownHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_shutdown_success(self):
+        body = {
+            'force': False,
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/operations/shutdown', body, True, True)
+
+        self.assertFalse(self.hmc.enabled)
+        self.assertIsNone(resp)
+
+    def test_shutdown_error_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        body = {
+            'force': False,
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(
+                self.hmc, '/api/console/operations/shutdown', body, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+
+class ConsoleMakePrimaryHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleMakePrimaryHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+            ('/api/console/operations/make-primary',
+             ConsoleMakePrimaryHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_make_primary_success(self):
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/operations/make-primary', None, True, True)
+
+        self.assertTrue(self.hmc.enabled)
+        self.assertIsNone(resp)
+
+    def test_make_primary_error_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        body = {
+            'force': False,
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(
+                self.hmc, '/api/console/operations/make-primary', body, True,
+                True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+
+class ConsoleReorderUserPatternsHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleReorderUserPatternsHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        # Remove the standard User Pattern objects for this test
+        console = self.hmc.lookup_by_uri('/api/console')
+        user_pattern_objs = console.user_patterns.list()
+        for obj in user_pattern_objs:
+            console.user_patterns.remove(obj.oid)
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+            ('/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
+            ('/api/console/user-patterns/([^/]+)', UserPatternHandler),
+            ('/api/console/operations/reorder-user-patterns',
+             ConsoleReorderUserPatternsHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_reorder_all(self):
+        testcases = [
+            # (initial_order, new_order)
+            (['a', 'b'], ['a', 'b']),
+            (['a', 'b'], ['b', 'a']),
+            (['a', 'b', 'c'], ['a', 'c', 'b']),
+            (['a', 'b', 'c'], ['c', 'b', 'a']),
+        ]
+        for initial_order, new_order in testcases:
+            self._test_reorder_one(initial_order, new_order)
+
+    def _test_reorder_one(self, initial_order, new_order):
+
+        # Create User Pattern objects in the initial order and build
+        # name-to-URI mapping
+        uri_by_name = {}
+        for name in initial_order:
+            user_pattern = {
+                'element-id': name + '-oid',
+                'name': name,
+                'pattern': name + '*',
+                'type': 'glob-like',
+                'retention-time': 0,
+                'user-template-uri': 'fake-uri',
+            }
+            resp = self.urihandler.post(self.hmc, '/api/console/user-patterns',
+                                        user_pattern, True, True)
+            uri = resp['element-uri']
+            uri_by_name[name] = uri
+
+        new_uris = [uri_by_name[name] for name in new_order]
+
+        body = {
+            'user-pattern-uris': new_uris
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/operations/reorder-user-patterns', body,
+            True, True)
+
+        # Retrieve the actual order of User Pattern objects
+        resp = self.urihandler.get(self.hmc, '/api/console/user-patterns',
+                                   True)
+        act_user_patterns = resp['user-patterns']
+        act_uris = [up['element-uri'] for up in act_user_patterns]
+
+        # Verify that the actual order is the new (expected) order:
+        self.assertEqual(act_uris, new_uris)
+
+    def test_reorder_error_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        body = {
+            'user-pattern-uris': []
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+
+            self.urihandler.post(
+                self.hmc, '/api/console/operations/reorder-user-patterns',
+                body, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+
+class ConsoleGetAuditLogHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleGetAuditLogHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+            ('/api/console/operations/get-audit-log',
+             ConsoleGetAuditLogHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_get_audit_log_success(self):
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/operations/get-audit-log', None, True,
+            True)
+
+        self.assertEqual(resp, [])
+
+    # TODO: Add testcases with non-empty audit log (once supported in mock)
+
+    def test_get_audit_log_error_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(
+                self.hmc, '/api/console/operations/get-audit-log', None, True,
+                True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+
+class ConsoleGetSecurityLogHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleGetSecurityLogHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+            ('/api/console/operations/get-security-log',
+             ConsoleGetSecurityLogHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_get_security_log_success_empty(self):
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/operations/get-security-log', None, True,
+            True)
+
+        self.assertEqual(resp, [])
+
+    # TODO: Add testcases with non-empty security log (once supported in mock)
+
+    def test_get_security_log_error_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(
+                self.hmc, '/api/console/operations/get-security-log', None,
+                True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+
+class ConsoleListUnmanagedCpcsHandlerTests(unittest.TestCase):
+    """All tests for class ConsoleListUnmanagedCpcsHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console', ConsoleHandler),
+            ('/api/console/operations/list-unmanaged-cpcs(?:\?(.*))?',
+             ConsoleListUnmanagedCpcsHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_list_success_empty(self):
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc, '/api/console/operations/list-unmanaged-cpcs', True)
+
+        cpcs = resp['cpcs']
+        self.assertEqual(cpcs, [])
+
+    # TODO: Add testcases for non-empty list of unmanaged CPCs
+
+    def test_list_error_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.get(
+                self.hmc, '/api/console/operations/list-unmanaged-cpcs', True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+
+class UserHandlersTests(unittest.TestCase):
+    """All tests for classes UsersHandler and UserHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console/users(?:\?(.*))?', UsersHandler),
+            ('/api/users/([^/]+)', UserHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_list(self):
+
+        # the function to be tested:
+        users = self.urihandler.get(self.hmc, '/api/console/users', True)
+
+        exp_users = {  # properties reduced to those returned by List
+            'users': [
+                {
+                    'object-uri': '/api/users/fake-user-oid-1',
+                    'name': 'fake_user_name_1',
+                    'type': 'system-defined',
+                },
+            ]
+        }
+        self.assertEqual(users, exp_users)
+
+    def test_list_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.get(self.hmc, '/api/console/users', True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_get(self):
+
+        # the function to be tested:
+        user1 = self.urihandler.get(self.hmc, '/api/users/fake-user-oid-1',
+                                    True)
+
+        exp_user1 = {  # properties reduced to those in standard test HMC
+            'object-id': 'fake-user-oid-1',
+            'object-uri': '/api/users/fake-user-oid-1',
+            'name': 'fake_user_name_1',
+            'description': 'User #1',
+            'type': 'system-defined',
+        }
+        self.assertEqual(user1, exp_user1)
+
+    def test_create_verify(self):
+        new_user2 = {
+            'object-id': '2',
+            'name': 'user_2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(self.hmc, '/api/console/users',
+                                    new_user2, True, True)
+
+        self.assertEqual(len(resp), 1)
+        self.assertIn('object-uri', resp)
+        new_user2_uri = resp['object-uri']
+        self.assertEqual(new_user2_uri, '/api/users/2')
+
+        exp_user2 = {
+            'object-id': '2',
+            'object-uri': '/api/users/2',
+            'name': 'user_2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+
+        # the function to be tested:
+        user2 = self.urihandler.get(self.hmc, '/api/users/2', True)
+
+        self.assertEqual(user2, exp_user2)
+
+    def test_create_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        new_user2 = {
+            'object-id': '2',
+            'name': 'user_2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, '/api/console/users', new_user2,
+                                 True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_update_verify(self):
+        update_user1 = {
+            'description': 'updated user #1',
+        }
+
+        # the function to be tested:
+        self.urihandler.post(self.hmc, '/api/users/fake-user-oid-1',
+                             update_user1, True, True)
+
+        user1 = self.urihandler.get(self.hmc, '/api/users/fake-user-oid-1',
+                                    True)
+        self.assertEqual(user1['description'], 'updated user #1')
+
+    def test_delete_verify_all(self):
+        testcases = [
+            # (user_props, exp_exc_tuple)
+            ({
+                'object-id': '2',
+                'name': 'user_2',
+                'description': 'User #2',
+                'type': 'standard',
+                'authentication-type': 'local'},
+             None),
+            ({
+                'object-id': '3',
+                'name': 'user_3',
+                'description': 'User #3',
+                'type': 'template',
+                'authentication-type': 'local'},
+             None),
+            ({
+                'object-id': '4',
+                'name': 'user_4',
+                'description': 'User #4',
+                'type': 'pattern-based',
+                'authentication-type': 'local'},
+             (400, 312)),
+        ]
+        for user_props, exp_exc_tuple in testcases:
+            self._test_delete_verify_one(user_props, exp_exc_tuple)
+
+    def _test_delete_verify_one(self, user_props, exp_exc_tuple):
+
+        user_oid = user_props['object-id']
+        user_uri = '/api/users/{}'.format(user_oid)
+
+        # Create the user
+        self.urihandler.post(self.hmc, '/api/console/users', user_props, True,
+                             True)
+
+        # Verify that it exists
+        self.urihandler.get(self.hmc, user_uri, True)
+
+        if exp_exc_tuple is not None:
+
+            with self.assertRaises(HTTPError) as cm:
+
+                # Execute the code to be tested
+                self.urihandler.delete(self.hmc, user_uri, True)
+
+            exc = cm.exception
+            assert exc.http_status == exp_exc_tuple[0]
+            assert exc.reason == exp_exc_tuple[1]
+
+            # Verify that it still exists
+            self.urihandler.get(self.hmc, user_uri, True)
+
+        else:
+
+            # Execute the code to be tested
+            self.urihandler.delete(self.hmc, user_uri, True)
+
+            # Verify that it has been deleted
+            with self.assertRaises(InvalidResourceError):
+                self.urihandler.get(self.hmc, user_uri, True)
+
+
+class UserAddUserRoleHandlerTests(unittest.TestCase):
+    """All tests for class UserAddUserRoleHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        # Has a system-defined User (oid=fake-user-oid-1)
+        # Has a system-defined User Role (oid=fake-user-role-oid-1)
+
+        self.uris = (
+            ('/api/console/users(?:\?(.*))?', UsersHandler),
+            ('/api/users/([^/]+)', UserHandler),
+            ('/api/users/([^/]+)/operations/add-user-role',
+             UserAddUserRoleHandler),
+            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            ('/api/user-roles/([^/]+)', UserRoleHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_add_success(self):
+        """Test successful addition of a user role to a user."""
+
+        # Add a user-defined User for our tests
+        user2 = {
+            'name': 'user2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/users', user2, True, True)
+        self.user2_uri = resp['object-uri']
+        self.user2_props = self.urihandler.get(
+            self.hmc, self.user2_uri, True)
+
+        # Add a user-defined User Role for our tests
+        user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', user_role2, True, True)
+        self.user_role2_uri = resp['object-uri']
+        self.user_role2_props = self.urihandler.get(
+            self.hmc, self.user_role2_uri, True)
+
+        uri = self.user2_uri + '/operations/add-user-role'
+        input_parms = {
+            'user-role-uri': self.user_role2_uri
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        self.assertIsNone(resp)
+        user2_props = self.urihandler.get(self.hmc, self.user2_uri, True)
+        self.assertTrue('user-roles' in user2_props)
+        user_roles = user2_props['user-roles']
+        self.assertEqual(len(user_roles), 1)
+        user_role_uri = user_roles[0]
+        self.assertEqual(user_role_uri, self.user_role2_uri)
+
+    def test_add_error_bad_user(self):
+        """Test failed addition of a user role to a bad user."""
+
+        # Add a user-defined User Role for our tests
+        user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', user_role2, True, True)
+        self.user_role2_uri = resp['object-uri']
+        self.user_role2_props = self.urihandler.get(
+            self.hmc, self.user_role2_uri, True)
+
+        bad_user_uri = '/api/users/not-found-oid'
+
+        uri = bad_user_uri + '/operations/add-user-role'
+        input_parms = {
+            'user-role-uri': self.user_role2_uri
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    # TODO: Add testcase for adding to system-defined or pattern-based user
+
+    def test_add_error_bad_user_role(self):
+        """Test failed addition of a bad user role to a user."""
+
+        # Add a user-defined User for our tests
+        user2 = {
+            'name': 'user2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/users', user2, True, True)
+        self.user2_uri = resp['object-uri']
+        self.user2_props = self.urihandler.get(
+            self.hmc, self.user2_uri, True)
+
+        bad_user_role_uri = '/api/user-roles/not-found-oid'
+
+        uri = self.user2_uri + '/operations/add-user-role'
+        input_parms = {
+            'user-role-uri': bad_user_role_uri
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 2)
+
+
+class UserRemoveUserRoleHandlerTests(unittest.TestCase):
+    """All tests for class UserRemoveUserRoleHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        # Has a system-defined User (oid=fake-user-oid-1)
+        # Has a system-defined User Role (oid=fake-user-role-oid-1)
+
+        self.uris = (
+            ('/api/console/users(?:\?(.*))?', UsersHandler),
+            ('/api/users/([^/]+)', UserHandler),
+            ('/api/users/([^/]+)/operations/add-user-role',
+             UserAddUserRoleHandler),
+            ('/api/users/([^/]+)/operations/remove-user-role',
+             UserRemoveUserRoleHandler),
+            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            ('/api/user-roles/([^/]+)', UserRoleHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_remove_success(self):
+        """Test successful removal of a user role from a user."""
+
+        # Add a user-defined User for our tests
+        user2 = {
+            'name': 'user2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/users', user2, True, True)
+        self.user2_uri = resp['object-uri']
+        self.user2_props = self.urihandler.get(
+            self.hmc, self.user2_uri, True)
+
+        # Add a user-defined User Role for our tests
+        user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', user_role2, True, True)
+        self.user_role2_uri = resp['object-uri']
+        self.user_role2_props = self.urihandler.get(
+            self.hmc, self.user_role2_uri, True)
+
+        # Add the user role to the user
+        uri = self.user2_uri + '/operations/add-user-role'
+        input_parms = {
+            'user-role-uri': self.user_role2_uri
+        }
+        self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        uri = self.user2_uri + '/operations/remove-user-role'
+        input_parms = {
+            'user-role-uri': self.user_role2_uri
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        self.assertIsNone(resp)
+        user2_props = self.urihandler.get(self.hmc, self.user2_uri, True)
+        self.assertTrue('user-roles' in user2_props)
+        user_roles = user2_props['user-roles']
+        self.assertEqual(len(user_roles), 0)
+
+    def test_remove_error_bad_user(self):
+        """Test failed removal of a user role from a bad user."""
+
+        # Add a user-defined User Role for our tests
+        user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', user_role2, True, True)
+        self.user_role2_uri = resp['object-uri']
+        self.user_role2_props = self.urihandler.get(
+            self.hmc, self.user_role2_uri, True)
+
+        bad_user_uri = '/api/users/not-found-oid'
+
+        uri = bad_user_uri + '/operations/remove-user-role'
+        input_parms = {
+            'user-role-uri': self.user_role2_uri
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    # TODO: Add testcase for removing from system-defined or pattern-based user
+
+    def test_remove_error_bad_user_role(self):
+        """Test failed removal of a bad user role from a user."""
+
+        # Add a user-defined User for our tests
+        user2 = {
+            'name': 'user2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/users', user2, True, True)
+        self.user2_uri = resp['object-uri']
+        self.user2_props = self.urihandler.get(
+            self.hmc, self.user2_uri, True)
+
+        bad_user_role_uri = '/api/user-roles/not-found-oid'
+
+        uri = self.user2_uri + '/operations/remove-user-role'
+        input_parms = {
+            'user-role-uri': bad_user_role_uri
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 2)
+
+    def test_remove_error_no_user_role(self):
+        """Test failed removal of a user role that a user does not have."""
+
+        # Add a user-defined User for our tests
+        user2 = {
+            'name': 'user2',
+            'description': 'User #2',
+            'type': 'standard',
+            'authentication-type': 'local',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/users', user2, True, True)
+        self.user2_uri = resp['object-uri']
+        self.user2_props = self.urihandler.get(
+            self.hmc, self.user2_uri, True)
+
+        # Add a user-defined User Role for our tests
+        user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', user_role2, True, True)
+        self.user_role2_uri = resp['object-uri']
+        self.user_role2_props = self.urihandler.get(
+            self.hmc, self.user_role2_uri, True)
+
+        # Do not(!) add the user role to the user
+
+        uri = self.user2_uri + '/operations/remove-user-role'
+        input_parms = {
+            'user-role-uri': self.user_role2_uri
+        }
+        with self.assertRaises(ConflictError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 316)
+
+
+class UserRoleHandlersTests(unittest.TestCase):
+    """All tests for classes UserRolesHandler and UserRoleHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            ('/api/user-roles/([^/]+)', UserRoleHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_list(self):
+
+        # the function to be tested:
+        user_roles = self.urihandler.get(self.hmc, '/api/console/user-roles',
+                                         True)
+
+        exp_user_roles = {  # properties reduced to those returned by List
+            'user-roles': [
+                {
+                    'object-uri': '/api/user-roles/fake-user-role-oid-1',
+                    'name': 'fake_user_role_name_1',
+                    'type': 'system-defined',
+                },
+            ]
+        }
+        self.assertEqual(user_roles, exp_user_roles)
+
+    def test_list_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.get(self.hmc, '/api/console/user-roles', True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_get(self):
+
+        # the function to be tested:
+        user_role1 = self.urihandler.get(
+            self.hmc, '/api/user-roles/fake-user-role-oid-1', True)
+
+        exp_user_role1 = {  # properties reduced to those in standard test HMC
+            'object-id': 'fake-user-role-oid-1',
+            'object-uri': '/api/user-roles/fake-user-role-oid-1',
+            'name': 'fake_user_role_name_1',
+            'description': 'User Role #1',
+            'type': 'system-defined',
+        }
+        self.assertEqual(user_role1, exp_user_role1)
+
+    def test_create_verify(self):
+        new_user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', new_user_role2, True, True)
+
+        self.assertEqual(len(resp), 1)
+        self.assertIn('object-uri', resp)
+        new_user_role2_uri = resp['object-uri']
+
+        # the function to be tested:
+        user_role2 = self.urihandler.get(self.hmc, new_user_role2_uri, True)
+
+        self.assertEqual(user_role2['type'], 'user-defined')
+
+    def test_create_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        new_user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, '/api/console/user-roles',
+                                 new_user_role2, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_create_error_type(self):
+
+        new_user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+            'type': 'user-defined',  # error: type is implied
+        }
+
+        with self.assertRaises(BadRequestError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, '/api/console/user-roles',
+                                 new_user_role2, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 6)
+
+    def test_update_verify(self):
+        update_user_role1 = {
+            'description': 'updated user #1',
+        }
+
+        # the function to be tested:
+        self.urihandler.post(
+            self.hmc, '/api/user-roles/fake-user-role-oid-1',
+            update_user_role1, True, True)
+
+        user_role1 = self.urihandler.get(
+            self.hmc, '/api/user-roles/fake-user-role-oid-1', True)
+        self.assertEqual(user_role1['description'], 'updated user #1')
+
+    def test_delete_verify(self):
+
+        new_user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+
+        # Create the user role
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', new_user_role2, True, True)
+
+        new_user_role2_uri = resp['object-uri']
+
+        # Verify that it exists
+        self.urihandler.get(self.hmc, new_user_role2_uri, True)
+
+        # the function to be tested:
+        self.urihandler.delete(self.hmc, new_user_role2_uri, True)
+
+        # Verify that it has been deleted
+        with self.assertRaises(InvalidResourceError):
+            self.urihandler.get(self.hmc, new_user_role2_uri, True)
+
+
+class UserRoleAddPermissionHandlerTests(unittest.TestCase):
+    """All tests for class UserRoleAddPermissionHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        # Has a system-defined User Role (oid=fake-user-role-oid-1)
+
+        self.uris = (
+            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            ('/api/user-roles/([^/]+)', UserRoleHandler),
+            ('/api/user-roles/([^/]+)/operations/add-permission',
+             UserRoleAddPermissionHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_add_all(self):
+        """All tests for adding permissions to a User Role."""
+        testcases = [
+            # (input_permission, exp_permission)
+            (
+                {
+                    'permitted-object': 'partition',
+                    'permitted-object-type': 'object-class',
+                    'include-members': True,
+                    'view-only-mode': False,
+                },
+                {
+                    'permitted-object': 'partition',
+                    'permitted-object-type': 'object-class',
+                    'include-members': True,
+                    'view-only-mode': False,
+                },
+            ),
+            (
+                {
+                    'permitted-object': 'adapter',
+                    'permitted-object-type': 'object-class',
+                },
+                {
+                    'permitted-object': 'adapter',
+                    'permitted-object-type': 'object-class',
+                    'include-members': False,
+                    'view-only-mode': True,
+                },
+            ),
+        ]
+        for input_permission, exp_permission in testcases:
+            self._test_add_one(input_permission, exp_permission)
+
+    def _test_add_one(self, input_permission, exp_permission):
+
+        # Add a user-defined User Role for our tests
+        user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', user_role2, True, True)
+        self.user_role2_uri = resp['object-uri']
+        self.user_role2_props = self.urihandler.get(
+            self.hmc, self.user_role2_uri, True)
+
+        uri = self.user_role2_uri + '/operations/add-permission'
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, uri, input_permission, True, True)
+
+        self.assertIsNone(resp)
+        props = self.urihandler.get(self.hmc, self.user_role2_uri, True)
+        self.assertTrue('permissions' in props)
+        permissions = props['permissions']
+        self.assertEqual(len(permissions), 1)
+        perm = permissions[0]
+        self.assertEqual(perm, exp_permission)
+
+    def test_add_error_bad_user_role(self):
+        """Test failed addition of a permission to a bad User Role."""
+
+        bad_user_role_uri = '/api/user-roles/not-found-oid'
+
+        uri = bad_user_role_uri + '/operations/add-permission'
+        input_parms = {
+            'permitted-object': 'partition',
+            'permitted-object-type': 'object-class',
+            'include-members': True,
+            'view-only-mode': False,
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_add_error_system_user_role(self):
+        """Test failed addition of a permission to a system-defined User
+        Role."""
+
+        system_user_role_uri = '/api/user-roles/fake-user-role-oid-1'
+
+        uri = system_user_role_uri + '/operations/add-permission'
+        input_parms = {
+            'permitted-object': 'partition',
+            'permitted-object-type': 'object-class',
+            'include-members': True,
+            'view-only-mode': False,
+        }
+        with self.assertRaises(BadRequestError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 314)
+
+
+class UserRoleRemovePermissionHandlerTests(unittest.TestCase):
+    """All tests for class UserRoleRemovePermissionHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        # Has a system-defined User Role (oid=fake-user-role-oid-1)
+
+        self.uris = (
+            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            ('/api/user-roles/([^/]+)', UserRoleHandler),
+            ('/api/user-roles/([^/]+)/operations/add-permission',
+             UserRoleAddPermissionHandler),
+            ('/api/user-roles/([^/]+)/operations/remove-permission',
+             UserRoleRemovePermissionHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_remove_all(self):
+        """All tests for removing permissions from a User Role."""
+        testcases = [
+            # (input_permission, removed_permission)
+            (
+                {
+                    'permitted-object': 'partition',
+                    'permitted-object-type': 'object-class',
+                    'include-members': True,
+                    'view-only-mode': False,
+                },
+                {
+                    'permitted-object': 'partition',
+                    'permitted-object-type': 'object-class',
+                    'include-members': True,
+                    'view-only-mode': False,
+                },
+            ),
+            (
+                {
+                    'permitted-object': 'adapter',
+                    'permitted-object-type': 'object-class',
+                },
+                {
+                    'permitted-object': 'adapter',
+                    'permitted-object-type': 'object-class',
+                    'include-members': False,
+                    'view-only-mode': True,
+                },
+            ),
+        ]
+        for input_permission, removed_permission in testcases:
+            self._test_remove_one(input_permission, removed_permission)
+
+    def _test_remove_one(self, input_permission, removed_permission):
+
+        # Add a user-defined User Role for our tests
+        user_role2 = {
+            'name': 'user_role_2',
+            'description': 'User Role #2',
+        }
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-roles', user_role2, True, True)
+        self.user_role2_uri = resp['object-uri']
+        self.user_role2_props = self.urihandler.get(
+            self.hmc, self.user_role2_uri, True)
+
+        # Add the permission to be removed to the User Role:
+        uri = self.user_role2_uri + '/operations/add-permission'
+        resp = self.urihandler.post(
+            self.hmc, uri, removed_permission, True, True)
+
+        uri = self.user_role2_uri + '/operations/remove-permission'
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, uri, input_permission, True, True)
+
+        self.assertIsNone(resp)
+        props = self.urihandler.get(self.hmc, self.user_role2_uri, True)
+        self.assertTrue('permissions' in props)
+        permissions = props['permissions']
+        self.assertEqual(len(permissions), 0)
+
+    def test_remove_error_bad_user_role(self):
+        """Test failed removal of a permission from a bad User Role."""
+
+        bad_user_role_uri = '/api/user-roles/not-found-oid'
+
+        uri = bad_user_role_uri + '/operations/remove-permission'
+        input_parms = {
+            'permitted-object': 'partition',
+            'permitted-object-type': 'object-class',
+            'include-members': True,
+            'view-only-mode': False,
+        }
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_remove_error_system_user_role(self):
+        """Test failed removal of a permission from a system-defined User
+        Role."""
+
+        system_user_role_uri = '/api/user-roles/fake-user-role-oid-1'
+
+        uri = system_user_role_uri + '/operations/remove-permission'
+        input_parms = {
+            'permitted-object': 'partition',
+            'permitted-object-type': 'object-class',
+            'include-members': True,
+            'view-only-mode': False,
+        }
+        with self.assertRaises(BadRequestError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, uri, input_parms, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 314)
+
+
+class TaskHandlersTests(unittest.TestCase):
+    """All tests for classes TasksHandler and TaskHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console/tasks(?:\?(.*))?', TasksHandler),
+            ('/api/console/tasks/([^/]+)', TaskHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_list(self):
+
+        # the function to be tested:
+        tasks = self.urihandler.get(self.hmc, '/api/console/tasks', True)
+
+        exp_tasks = {  # properties reduced to those returned by List
+            'tasks': [
+                {
+                    'element-uri': '/api/console/tasks/fake-task-oid-1',
+                    'name': 'fake_task_name_1',
+                },
+                {
+                    'element-uri': '/api/console/tasks/fake-task-oid-2',
+                    'name': 'fake_task_name_2',
+                },
+            ]
+        }
+        self.assertEqual(tasks, exp_tasks)
+
+    def test_list_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.get(self.hmc, '/api/console/tasks', True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_get(self):
+
+        # the function to be tested:
+        task1 = self.urihandler.get(
+            self.hmc, '/api/console/tasks/fake-task-oid-1', True)
+
+        exp_task1 = {  # properties reduced to those in standard test HMC
+            'element-id': 'fake-task-oid-1',
+            'element-uri': '/api/console/tasks/fake-task-oid-1',
+            'name': 'fake_task_name_1',
+            'description': 'Task #1',
+        }
+        self.assertEqual(task1, exp_task1)
+
+
+class UserPatternHandlersTests(unittest.TestCase):
+    """All tests for classes UserPatternsHandler and UserPatternHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
+            ('/api/console/user-patterns/([^/]+)', UserPatternHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_list(self):
+
+        # the function to be tested:
+        user_patterns = self.urihandler.get(
+            self.hmc, '/api/console/user-patterns', True)
+
+        exp_user_patterns = {  # properties reduced to those returned by List
+            'user-patterns': [
+                {
+                    'element-uri':
+                        '/api/console/user-patterns/fake-user-pattern-oid-1',
+                    'name': 'fake_user_pattern_name_1',
+                    'type': 'glob-like',
+                },
+            ]
+        }
+        self.assertEqual(user_patterns, exp_user_patterns)
+
+    def test_list_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.get(self.hmc, '/api/console/user-patterns', True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_get(self):
+
+        # the function to be tested:
+        user_pattern1 = self.urihandler.get(
+            self.hmc, '/api/console/user-patterns/fake-user-pattern-oid-1',
+            True)
+
+        exp_user_pattern1 = {  # properties reduced to those in std test HMC
+            'element-id': 'fake-user-pattern-oid-1',
+            'element-uri':
+                '/api/console/user-patterns/fake-user-pattern-oid-1',
+            'name': 'fake_user_pattern_name_1',
+            'description': 'User Pattern #1',
+            'pattern': 'fake_user_name_*',
+            'type': 'glob-like',
+            'retention-time': 0,
+            'user-template-uri': '/api/users/fake-user-oid-1',
+        }
+        self.assertEqual(user_pattern1, exp_user_pattern1)
+
+    def test_create_verify(self):
+        new_user_pattern_input = {
+            'name': 'user_pattern_X',
+            'description': 'User Pattern #X',
+            'pattern': 'user*',
+            'type': 'glob-like',
+            'retention-time': 0,
+            'user-template-uri': '/api/users/fake-user-oid-1',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-patterns', new_user_pattern_input,
+            True, True)
+
+        self.assertEqual(len(resp), 1)
+        self.assertIn('element-uri', resp)
+        new_user_pattern_uri = resp['element-uri']
+
+        # the function to be tested:
+        new_user_pattern = self.urihandler.get(
+            self.hmc, new_user_pattern_uri, True)
+
+        new_name = new_user_pattern['name']
+        input_name = new_user_pattern_input['name']
+        self.assertEqual(new_name, input_name)
+
+    def test_create_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        new_user_pattern_input = {
+            'name': 'user_pattern_X',
+            'description': 'User Pattern #X',
+        }
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, '/api/console/user-patterns',
+                                 new_user_pattern_input, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_update_verify(self):
+        update_user_pattern1 = {
+            'description': 'updated user pattern #1',
+        }
+
+        # the function to be tested:
+        self.urihandler.post(
+            self.hmc, '/api/console/user-patterns/fake-user-pattern-oid-1',
+            update_user_pattern1, True, True)
+
+        user_pattern1 = self.urihandler.get(
+            self.hmc, '/api/console/user-patterns/fake-user-pattern-oid-1',
+            True)
+        self.assertEqual(user_pattern1['description'],
+                         'updated user pattern #1')
+
+    def test_delete_verify(self):
+
+        new_user_pattern_input = {
+            'name': 'user_pattern_x',
+            'description': 'User Pattern #X',
+            'pattern': 'user*',
+            'type': 'glob-like',
+            'retention-time': 0,
+            'user-template-uri': '/api/users/fake-user-oid-1',
+        }
+
+        # Create the User Pattern
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/user-patterns', new_user_pattern_input,
+            True, True)
+
+        new_user_pattern_uri = resp['element-uri']
+
+        # Verify that it exists
+        self.urihandler.get(self.hmc, new_user_pattern_uri, True)
+
+        # the function to be tested:
+        self.urihandler.delete(self.hmc, new_user_pattern_uri, True)
+
+        # Verify that it has been deleted
+        with self.assertRaises(InvalidResourceError):
+            self.urihandler.get(self.hmc, new_user_pattern_uri, True)
+
+
+class PasswordRuleHandlersTests(unittest.TestCase):
+    """All tests for classes PasswordRulesHandler and PasswordRuleHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console/password-rules(?:\?(.*))?', PasswordRulesHandler),
+            ('/api/console/password-rules/([^/]+)', PasswordRuleHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_list(self):
+
+        # the function to be tested:
+        password_rules = self.urihandler.get(
+            self.hmc, '/api/console/password-rules', True)
+
+        exp_password_rules = {  # properties reduced to those returned by List
+            'password-rules': [
+                {
+                    'element-uri':
+                        '/api/console/password-rules/fake-password-rule-oid-1',
+                    'name': 'fake_password_rule_name_1',
+                    'type': 'system-defined',
+                },
+            ]
+        }
+        self.assertEqual(password_rules, exp_password_rules)
+
+    def test_list_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.get(self.hmc, '/api/console/password-rules', True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_get(self):
+
+        # the function to be tested:
+        password_rule1 = self.urihandler.get(
+            self.hmc, '/api/console/password-rules/fake-password-rule-oid-1',
+            True)
+
+        exp_password_rule1 = {  # properties reduced to those in std test HMC
+            'element-id': 'fake-password-rule-oid-1',
+            'element-uri':
+                '/api/console/password-rules/fake-password-rule-oid-1',
+            'name': 'fake_password_rule_name_1',
+            'description': 'Password Rule #1',
+            'type': 'system-defined',
+        }
+        self.assertEqual(password_rule1, exp_password_rule1)
+
+    def test_create_verify(self):
+        new_password_rule_input = {
+            'name': 'password_rule_X',
+            'description': 'Password Rule #X',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/password-rules', new_password_rule_input,
+            True, True)
+
+        self.assertEqual(len(resp), 1)
+        self.assertIn('element-uri', resp)
+        new_password_rule_uri = resp['element-uri']
+
+        # the function to be tested:
+        new_password_rule = self.urihandler.get(
+            self.hmc, new_password_rule_uri, True)
+
+        new_name = new_password_rule['name']
+        input_name = new_password_rule_input['name']
+        self.assertEqual(new_name, input_name)
+
+    def test_create_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        new_password_rule_input = {
+            'name': 'password_rule_X',
+            'description': 'Password Rule #X',
+        }
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(self.hmc, '/api/console/password-rules',
+                                 new_password_rule_input, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_update_verify(self):
+        update_password_rule1 = {
+            'description': 'updated password rule #1',
+        }
+
+        # the function to be tested:
+        self.urihandler.post(
+            self.hmc, '/api/console/password-rules/fake-password-rule-oid-1',
+            update_password_rule1, True, True)
+
+        password_rule1 = self.urihandler.get(
+            self.hmc, '/api/console/password-rules/fake-password-rule-oid-1',
+            True)
+        self.assertEqual(password_rule1['description'],
+                         'updated password rule #1')
+
+    def test_delete_verify(self):
+
+        new_password_rule_input = {
+            'name': 'password_rule_X',
+            'description': 'Password Rule #X',
+        }
+
+        # Create the Password Rule
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/password-rules', new_password_rule_input,
+            True, True)
+
+        new_password_rule_uri = resp['element-uri']
+
+        # Verify that it exists
+        self.urihandler.get(self.hmc, new_password_rule_uri, True)
+
+        # the function to be tested:
+        self.urihandler.delete(self.hmc, new_password_rule_uri, True)
+
+        # Verify that it has been deleted
+        with self.assertRaises(InvalidResourceError):
+            self.urihandler.get(self.hmc, new_password_rule_uri, True)
+
+
+class LdapServerDefinitionHandlersTests(unittest.TestCase):
+    """All tests for classes LdapServerDefinitionsHandler and
+    LdapServerDefinitionHandler."""
+
+    def setUp(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+
+        self.uris = (
+            ('/api/console/ldap-server-definitions(?:\?(.*))?',
+             LdapServerDefinitionsHandler),
+            ('/api/console/ldap-server-definitions/([^/]+)',
+             LdapServerDefinitionHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_list(self):
+
+        # the function to be tested:
+        ldap_srv_defs = self.urihandler.get(
+            self.hmc, '/api/console/ldap-server-definitions', True)
+
+        exp_ldap_srv_defs = {  # properties reduced to those returned by List
+            'ldap-server-definitions': [
+                {
+                    'element-uri':
+                        '/api/console/ldap-server-definitions/'
+                        'fake-ldap-srv-def-oid-1',
+                    'name': 'fake_ldap_srv_def_name_1',
+                },
+            ]
+        }
+        self.assertEqual(ldap_srv_defs, exp_ldap_srv_defs)
+
+    def test_list_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.get(
+                self.hmc, '/api/console/ldap-server-definitions', True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_get(self):
+
+        # the function to be tested:
+        ldap_srv_def1 = self.urihandler.get(
+            self.hmc,
+            '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1',
+            True)
+
+        exp_ldap_srv_def1 = {  # properties reduced to those in std test HMC
+            'element-id': 'fake-ldap-srv-def-oid-1',
+            'element-uri':
+                '/api/console/ldap-server-definitions/'
+                'fake-ldap-srv-def-oid-1',
+            'name': 'fake_ldap_srv_def_name_1',
+            'description': 'LDAP Srv Def #1',
+            'primary-hostname-ipaddr': '10.11.12.13',
+        }
+        self.assertEqual(ldap_srv_def1, exp_ldap_srv_def1)
+
+    def test_create_verify(self):
+        new_ldap_srv_def_input = {
+            'name': 'ldap_srv_def_X',
+            'description': 'LDAP Srv Def #X',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/ldap-server-definitions',
+            new_ldap_srv_def_input, True, True)
+
+        self.assertEqual(len(resp), 1)
+        self.assertIn('element-uri', resp)
+        new_ldap_srv_def_uri = resp['element-uri']
+
+        # the function to be tested:
+        new_ldap_srv_def = self.urihandler.get(
+            self.hmc, new_ldap_srv_def_uri, True)
+
+        new_name = new_ldap_srv_def['name']
+        input_name = new_ldap_srv_def_input['name']
+        self.assertEqual(new_name, input_name)
+
+    def test_create_error_console_not_found(self):
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        new_ldap_srv_def_input = {
+            'name': 'ldap_srv_def_X',
+            'description': 'LDAP Srv Def #X',
+        }
+
+        with self.assertRaises(InvalidResourceError) as cm:
+
+            # the function to be tested:
+            self.urihandler.post(
+                self.hmc, '/api/console/ldap-server-definitions',
+                new_ldap_srv_def_input, True, True)
+
+        exc = cm.exception
+        self.assertEqual(exc.reason, 1)
+
+    def test_update_verify(self):
+        update_ldap_srv_def1 = {
+            'description': 'updated LDAP Srv Def #1',
+        }
+
+        # the function to be tested:
+        self.urihandler.post(
+            self.hmc,
+            '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1',
+            update_ldap_srv_def1, True, True)
+
+        ldap_srv_def1 = self.urihandler.get(
+            self.hmc,
+            '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1',
+            True)
+        self.assertEqual(ldap_srv_def1['description'],
+                         'updated LDAP Srv Def #1')
+
+    def test_delete_verify(self):
+
+        new_ldap_srv_def_input = {
+            'name': 'ldap_srv_def_X',
+            'description': 'LDAP Srv Def #X',
+        }
+
+        # Create the LDAP Srv Def
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/ldap-server-definitions',
+            new_ldap_srv_def_input, True, True)
+
+        new_ldap_srv_def_uri = resp['element-uri']
+
+        # Verify that it exists
+        self.urihandler.get(self.hmc, new_ldap_srv_def_uri, True)
+
+        # the function to be tested:
+        self.urihandler.delete(self.hmc, new_ldap_srv_def_uri, True)
+
+        # Verify that it has been deleted
+        with self.assertRaises(InvalidResourceError):
+            self.urihandler.get(self.hmc, new_ldap_srv_def_uri, True)
 
 
 class CpcHandlersTests(unittest.TestCase):

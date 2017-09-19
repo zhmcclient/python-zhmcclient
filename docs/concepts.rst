@@ -209,14 +209,22 @@ silently handled by the zhmcclient package:
   that the HMC session token has expired. It is handled by re-logon, creating a
   new session token, and retrying the original HMC operation.
 
-* POST with status 202: This means that an asynchronous job has been started
-  that performs the actual operation. If ``wait_for_completion=True`` in the
-  method that performs the HMC operation, this combination is handled by
-  waiting for completion of the job (via polling with GET on the job URI),
-  gathering success or failure from the job results. In case of success, the
-  job results are returned in an appropriate form. In case of failure, an
-  :class:`~zhmcclient.HTTPError` is raised based upon the error information in
-  the job results.
+* POST with status 202: This status code means that the operation is being
+  performed asynchronously. There are two cases for that:
+
+  * If there is a response body, an asynchronous job has been started on the
+    HMC that performs the actual operation. If ``wait_for_completion`` is
+    ``True`` in the method that invoked the HMC operation, the method waits for
+    completion of the job (via polling with GET on the job URI), gathering
+    success or failure from the job results. In case of success, the job
+    results are returned from the method. In case of failure, an
+    :class:`~zhmcclient.HTTPError` is raised based upon the error information
+    in the job results.
+
+  * If there is no response body, the operation is performed asynchronously
+    on the HMC, but there is no job resource that can be used to poll for
+    completion status. This is used only for operations such as restarting the
+    HMC.
 
 The other HTTP status / reason code combinations are forwarded to the user by
 means of raising :class:`~zhmcclient.HTTPError`. That exception class is

@@ -154,7 +154,7 @@ Resources scoped to the HMC
 .. glossary::
 
   Console
-     TBD - Not yet supported.
+     The HMC itself.
 
   Group
      TBD - Not yet supported.
@@ -168,28 +168,30 @@ Resources scoped to the HMC
      The execution of an asynchronous HMC operation.
 
   LDAP Server Definition
-     TBD - Not yet supported.
+     The information in an HMC about an LDAP server that may be used for
+     HMC user authorization purposes.
 
   Metrics Context
      A user-created definition of metrics that can be retrieved.
 
   Password Rule
-     TBD - Not yet supported.
+     A rule which HMC users need to follow when creating a HMC logon password.
 
   Session
      A session between a client of the HMC API and the HMC.
 
   Task
-     TBD - Not yet supported.
+     An action that an HMC user with appropriate authority can perform.
 
   User
-     TBD - Not yet supported.
+     An HMC user.
 
   User Pattern
-     TBD - Not yet supported.
+     A pattern for HMC user IDs that are not defined on the HMC as users but
+     can be verified by an LDAP server for user authentication.
 
   User Role
-     TBD - Not yet supported.
+     An authority role which can be assigned to one or more HMC users.
 
 Resources scoped to CPCs in any mode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -20,6 +20,8 @@ faked HMC.
 from __future__ import absolute_import
 
 import re
+import time
+import copy
 from requests.utils import unquote
 
 from ._hmc import InputError
@@ -44,6 +46,12 @@ class HTTPError(Exception):
             'reason': self.reason,
             'message': self.message,
         }
+
+
+class ConnectionError(Exception):
+
+    def __init__(self, message):
+        self.message = message
 
 
 class InvalidResourceError(HTTPError):
@@ -302,12 +310,16 @@ class UriHandler(object):
         raise InvalidResourceError(method, uri)
 
     def get(self, hmc, uri, logon_required):
+        if not hmc.enabled:
+            raise ConnectionError("HMC is not enabled.")
         handler_class, uri_parms = self.handler(uri, 'GET')
         if not getattr(handler_class, 'get', None):
             raise InvalidMethodError('GET', uri, handler_class)
         return handler_class.get('GET', hmc, uri, uri_parms, logon_required)
 
     def post(self, hmc, uri, body, logon_required, wait_for_completion):
+        if not hmc.enabled:
+            raise ConnectionError("HMC is not enabled.")
         handler_class, uri_parms = self.handler(uri, 'POST')
         if not getattr(handler_class, 'post', None):
             raise InvalidMethodError('POST', uri, handler_class)
@@ -315,6 +327,8 @@ class UriHandler(object):
                                   logon_required, wait_for_completion)
 
     def delete(self, hmc, uri, logon_required):
+        if not hmc.enabled:
+            raise ConnectionError("HMC is not enabled.")
         handler_class, uri_parms = self.handler(uri, 'DELETE')
         if not getattr(handler_class, 'delete', None):
             raise InvalidMethodError('DELETE', uri, handler_class)
@@ -347,6 +361,18 @@ class GenericUpdatePropertiesHandler(object):
         resource.update(body)
 
 
+class GenericDeleteHandler(object):
+
+    @staticmethod
+    def delete(method, hmc, uri, uri_parms, logon_required):
+        """Operation: Delete <resource>."""
+        try:
+            resource = hmc.lookup_by_uri(uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        resource.manager.remove(resource.oid)
+
+
 class VersionHandler(object):
 
     @staticmethod
@@ -358,6 +384,528 @@ class VersionHandler(object):
             'api-major-version': int(api_major),
             'api-minor-version': int(api_minor),
         }
+
+
+class ConsoleHandler(GenericGetPropertiesHandler):
+    pass
+
+
+class ConsoleRestartHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Restart Console."""
+        assert wait_for_completion is True  # synchronous operation
+        console_uri = '/api/console'
+        try:
+            hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        hmc.disable()
+        time.sleep(5)
+        hmc.enable()
+        # Note: The HTTP status 202 that the real HMC operation returns, is
+        # not visible for the caller of FakedSession (or Session).
+
+
+class ConsoleShutdownHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Shutdown Console."""
+        assert wait_for_completion is True  # synchronous operation
+        console_uri = '/api/console'
+        try:
+            hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        hmc.disable()
+        # Note: The HTTP status 202 that the real HMC operation returns, is
+        # not visible for the caller of FakedSession (or Session).
+
+
+class ConsoleMakePrimaryHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Make Console Primary."""
+        assert wait_for_completion is True  # synchronous operation
+        console_uri = '/api/console'
+        try:
+            hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        # Nothing to do, as long as the faked HMC does not need to know whether
+        # it is primary or alternate.
+
+
+class ConsoleReorderUserPatternsHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Reorder User Patterns."""
+        assert wait_for_completion is True  # synchronous operation
+        console_uri = '/api/console'
+        try:
+            console = hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['user-pattern-uris'])
+        new_order_uris = body['user-pattern-uris']
+        objs = console.user_patterns.list()
+        obj_by_uri = {}
+        for obj in objs:
+            obj_by_uri[obj.uri] = obj
+        # Perform the reordering in the faked HMC:
+        for uri in new_order_uris:
+            obj = obj_by_uri[uri]
+            console.user_patterns.remove(obj.oid)  # remove from old position
+            console.user_patterns.add(obj.properties)  # append to end
+
+
+class ConsoleGetAuditLogHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Get Console Audit Log."""
+        assert wait_for_completion is True  # synchronous operation
+        console_uri = '/api/console'
+        try:
+            hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        resp = []
+        # TODO: Add the ability to return audit log entries in mock support.
+        return resp
+
+
+class ConsoleGetSecurityLogHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Get Console Security Log."""
+        assert wait_for_completion is True  # synchronous operation
+        console_uri = '/api/console'
+        try:
+            hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        resp = []
+        # TODO: Add the ability to return security log entries in mock support.
+        return resp
+
+
+class ConsoleListUnmanagedCpcsHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List Unmanaged CPCs."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+
+        result_ucpcs = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for ucpc in console.unmanaged_cpcs.list(filter_args):
+            result_ucpc = {}
+            for prop in ucpc.properties:
+                if prop in ('object-uri', 'name'):
+                    result_ucpc[prop] = ucpc.properties[prop]
+            result_ucpcs.append(result_ucpc)
+        return {'cpcs': result_ucpcs}
+
+
+class UsersHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List Users."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        result_users = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for user in console.users.list(filter_args):
+            result_user = {}
+            for prop in user.properties:
+                if prop in ('object-uri', 'name', 'type'):
+                    result_user[prop] = user.properties[prop]
+            result_users.append(result_user)
+        return {'users': result_users}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Create User."""
+        assert wait_for_completion is True  # synchronous operation
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body,
+                              ['name', 'type', 'authentication-type'])
+        # TODO: There are some more input properties that are required under
+        # certain conditions.
+        new_user = console.users.add(body)
+        return {'object-uri': new_user.uri}
+
+
+class UserHandler(GenericGetPropertiesHandler,
+                  GenericUpdatePropertiesHandler):
+
+    # TODO: Add post() for Update User that rejects name update
+
+    @staticmethod
+    def delete(method, hmc, uri, uri_parms, logon_required):
+        """Operation: Delete User."""
+        try:
+            user = hmc.lookup_by_uri(uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        # Check user type
+        type_ = user.properties['type']
+        if type_ == 'pattern-based':
+            raise BadRequestError(
+                method, uri, reason=312,
+                message="Cannot delete pattern-based user {!r}".
+                format(user.name))
+        # Delete the mocked resource
+        user.manager.remove(user.oid)
+
+
+class UserAddUserRoleHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Add User Role to User."""
+        assert wait_for_completion is True  # synchronous operation
+        user_oid = uri_parms[0]
+        user_uri = '/api/users/' + user_oid
+        try:
+            user = hmc.lookup_by_uri(user_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['user-role-uri'])
+        user_type = user.properties['type']
+        if user_type in ('pattern-based', 'system-defined'):
+            raise BadRequestError(
+                method, uri, reason=314,
+                message="Cannot add user role to user of type {}: {}".
+                format(user_type, user_uri))
+        user_role_uri = body['user-role-uri']
+        try:
+            hmc.lookup_by_uri(user_role_uri)
+        except KeyError:
+            raise InvalidResourceError(method, user_role_uri, reason=2)
+        if user.properties.get('user-roles', None) is None:
+            user.properties['user-roles'] = []
+        user.properties['user-roles'].append(user_role_uri)
+
+
+class UserRemoveUserRoleHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Remove User Role from User."""
+        assert wait_for_completion is True  # synchronous operation
+        user_oid = uri_parms[0]
+        user_uri = '/api/users/' + user_oid
+        try:
+            user = hmc.lookup_by_uri(user_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['user-role-uri'])
+        user_type = user.properties['type']
+        if user_type in ('pattern-based', 'system-defined'):
+            raise BadRequestError(
+                method, uri, reason=314,
+                message="Cannot remove user role from user of type {}: {}".
+                format(user_type, user_uri))
+        user_role_uri = body['user-role-uri']
+        try:
+            user_role = hmc.lookup_by_uri(user_role_uri)
+        except KeyError:
+            raise InvalidResourceError(method, user_role_uri, reason=2)
+        if user.properties.get('user-roles', None) is None \
+                or user_role_uri not in user.properties['user-roles']:
+            raise ConflictError(
+                method, uri, reason=316,
+                message="User {!r} does not have User Role {!r}".
+                format(user.name, user_role.name))
+        user.properties['user-roles'].remove(user_role_uri)
+
+
+class UserRolesHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List User Roles."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        result_user_roles = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for user_role in console.user_roles.list(filter_args):
+            result_user_role = {}
+            for prop in user_role.properties:
+                if prop in ('object-uri', 'name', 'type'):
+                    result_user_role[prop] = user_role.properties[prop]
+            result_user_roles.append(result_user_role)
+        return {'user-roles': result_user_roles}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Create User Role."""
+        assert wait_for_completion is True  # synchronous operation
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['name'])
+        properties = copy.deepcopy(body)
+        if 'type' in properties:
+            raise BadRequestError(
+                method, uri, reason=6,
+                message="Type specified when creating a user role: {!r}".
+                format(properties['type']))
+        properties['type'] = 'user-defined'
+        new_user_role = console.user_roles.add(properties)
+        return {'object-uri': new_user_role.uri}
+
+
+class UserRoleHandler(GenericGetPropertiesHandler,
+                      GenericUpdatePropertiesHandler,
+                      GenericDeleteHandler):
+    pass
+    # TODO: Add post() for Update UserRole that rejects name update
+    # TODO: Add delete() for Delete UserRole that rejects system-defined type
+
+
+class UserRoleAddPermissionHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Add Permission to User Role."""
+        assert wait_for_completion is True  # synchronous operation
+        user_role_oid = uri_parms[0]
+        user_role_uri = '/api/user-roles/' + user_role_oid
+        try:
+            user_role = hmc.lookup_by_uri(user_role_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body,
+                              ['permitted-object', 'permitted-object-type'])
+        # Reject if User Role is system-defined:
+        if user_role.properties['type'] == 'system-defined':
+            raise BadRequestError(
+                method, uri, reason=314, message="Cannot add permission to "
+                "system-defined user role: {}".format(user_role_uri))
+        # Apply defaults, so our internally stored copy has all fields:
+        permission = copy.deepcopy(body)
+        if 'include-members' not in permission:
+            permission['include-members'] = False
+        if 'view-only-mode' not in permission:
+            permission['view-only-mode'] = True
+        # Add the permission to its store (the faked User Role object):
+        if user_role.properties.get('permissions', None) is None:
+            user_role.properties['permissions'] = []
+        user_role.properties['permissions'].append(permission)
+
+
+class UserRoleRemovePermissionHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Remove Permission from User Role."""
+        assert wait_for_completion is True  # synchronous operation
+        user_role_oid = uri_parms[0]
+        user_role_uri = '/api/user-roles/' + user_role_oid
+        try:
+            user_role = hmc.lookup_by_uri(user_role_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body,
+                              ['permitted-object', 'permitted-object-type'])
+        # Reject if User Role is system-defined:
+        if user_role.properties['type'] == 'system-defined':
+            raise BadRequestError(
+                method, uri, reason=314, message="Cannot remove permission "
+                "from system-defined user role: {}".format(user_role_uri))
+        # Apply defaults, so we can locate it based upon all fields:
+        permission = copy.deepcopy(body)
+        if 'include-members' not in permission:
+            permission['include-members'] = False
+        if 'view-only-mode' not in permission:
+            permission['view-only-mode'] = True
+        # Remove the permission from its store (the faked User Role object):
+        if user_role.properties.get('permissions', None) is not None:
+            user_role.properties['permissions'].remove(permission)
+
+
+class TasksHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List Tasks."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        result_tasks = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for task in console.tasks.list(filter_args):
+            result_task = {}
+            for prop in task.properties:
+                if prop in ('element-uri', 'name'):
+                    result_task[prop] = task.properties[prop]
+            result_tasks.append(result_task)
+        return {'tasks': result_tasks}
+
+
+class TaskHandler(GenericGetPropertiesHandler):
+    pass
+
+
+class UserPatternsHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List User Patterns."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        result_user_patterns = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for user_pattern in console.user_patterns.list(filter_args):
+            result_user_pattern = {}
+            for prop in user_pattern.properties:
+                if prop in ('element-uri', 'name', 'type'):
+                    result_user_pattern[prop] = user_pattern.properties[prop]
+            result_user_patterns.append(result_user_pattern)
+        return {'user-patterns': result_user_patterns}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Create User Pattern."""
+        assert wait_for_completion is True  # synchronous operation
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body,
+                              ['name', 'pattern', 'type', 'retention-time',
+                               'user-template-uri'])
+        new_user_pattern = console.user_patterns.add(body)
+        return {'element-uri': new_user_pattern.uri}
+
+
+class UserPatternHandler(GenericGetPropertiesHandler,
+                         GenericUpdatePropertiesHandler,
+                         GenericDeleteHandler):
+    pass
+
+
+class PasswordRulesHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List Password Rules."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        result_password_rules = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for password_rule in console.password_rules.list(filter_args):
+            result_password_rule = {}
+            for prop in password_rule.properties:
+                if prop in ('element-uri', 'name', 'type'):
+                    result_password_rule[prop] = password_rule.properties[prop]
+            result_password_rules.append(result_password_rule)
+        return {'password-rules': result_password_rules}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Create Password Rule."""
+        assert wait_for_completion is True  # synchronous operation
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['name'])
+        new_password_rule = console.password_rules.add(body)
+        return {'element-uri': new_password_rule.uri}
+
+
+class PasswordRuleHandler(GenericGetPropertiesHandler,
+                          GenericUpdatePropertiesHandler,
+                          GenericDeleteHandler):
+    pass
+    # TODO: Add post() for Update PasswordRule that rejects name update
+
+
+class LdapServerDefinitionsHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List LDAP Server Definitions."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        result_ldap_srv_defs = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for ldap_srv_def in console.ldap_server_definitions.list(filter_args):
+            result_ldap_srv_def = {}
+            for prop in ldap_srv_def.properties:
+                if prop in ('element-uri', 'name', 'type'):
+                    result_ldap_srv_def[prop] = ldap_srv_def.properties[prop]
+            result_ldap_srv_defs.append(result_ldap_srv_def)
+        return {'ldap-server-definitions': result_ldap_srv_defs}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Create LDAP Server Definition."""
+        assert wait_for_completion is True  # synchronous operation
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['name'])
+        new_ldap_srv_def = console.ldap_server_definitions.add(body)
+        return {'element-uri': new_ldap_srv_def.uri}
+
+
+class LdapServerDefinitionHandler(GenericGetPropertiesHandler,
+                                  GenericUpdatePropertiesHandler,
+                                  GenericDeleteHandler):
+    pass
+    # TODO: Add post() for Update LdapServerDefinition that rejects name update
 
 
 class CpcsHandler(object):
@@ -1472,6 +2020,47 @@ URIS = (
     # In all modes:
 
     (r'/api/version', VersionHandler),
+
+    (r'/api/console', ConsoleHandler),
+    (r'/api/console/operations/restart', ConsoleRestartHandler),
+    (r'/api/console/operations/shutdown', ConsoleShutdownHandler),
+    (r'/api/console/operations/make-primary', ConsoleMakePrimaryHandler),
+    (r'/api/console/operations/reorder-user-patterns',
+     ConsoleReorderUserPatternsHandler),
+    (r'/api/console/operations/get-audit-log(?:\?(.*))?',
+     ConsoleGetAuditLogHandler),
+    (r'/api/console/operations/get-security-log(?:\?(.*))?',
+     ConsoleGetSecurityLogHandler),
+    (r'/api/console/operations/list-unmanaged-cpcs(?:\?(.*))?',
+     ConsoleListUnmanagedCpcsHandler),
+
+    (r'/api/console/users(?:\?(.*))?', UsersHandler),
+    (r'/api/users/([^/]+)', UserHandler),
+    (r'/api/users/([^/]+)/operations/add-user-role',
+     UserAddUserRoleHandler),
+    (r'/api/users/([^/]+)/operations/remove-user-role',
+     UserRemoveUserRoleHandler),
+
+    (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+    (r'/api/user-roles/([^/]+)', UserRoleHandler),
+    (r'/api/user-roles/([^/]+)/operations/add-permission',
+     UserRoleAddPermissionHandler),
+    (r'/api/user-roles/([^/]+)/operations/remove-permission',
+     UserRoleRemovePermissionHandler),
+
+    (r'/api/console/tasks(?:\?(.*))?', TasksHandler),
+    (r'/api/console/tasks/([^/]+)', TaskHandler),
+
+    (r'/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
+    (r'/api/console/user-patterns/([^/]+)', UserPatternHandler),
+
+    (r'/api/console/password-rules(?:\?(.*))?', PasswordRulesHandler),
+    (r'/api/console/password-rules/([^/]+)', PasswordRuleHandler),
+
+    (r'/api/console/ldap-server-definitions(?:\?(.*))?',
+     LdapServerDefinitionsHandler),
+    (r'/api/console/ldap-server-definitions/([^/]+)',
+     LdapServerDefinitionHandler),
 
     (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
     (r'/api/cpcs/([^/]+)', CpcHandler),

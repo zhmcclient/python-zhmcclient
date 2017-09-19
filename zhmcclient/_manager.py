@@ -224,7 +224,7 @@ class BaseManager(object):
         #     List of names of resource properties that are supported as filter
         #     query parameters in HMC list operations for this type of resource
         #     (i.e. for server-side filtering).
-        #     Must not be `None`.
+        #     May be `None`.
         #     If the support for a resource property changes within the set of
         #     HMC versions that support this type of resource, this list must
         #     represent the version of the HMC this session is connected to.
@@ -242,7 +242,6 @@ class BaseManager(object):
         assert oid_prop is not None
         assert uri_prop is not None
         assert name_prop is not None
-        assert query_props is not None
 
         self._resource_class = resource_class
         self._class_name = class_name

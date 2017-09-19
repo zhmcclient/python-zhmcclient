@@ -175,10 +175,24 @@ accordingly:
 
 1. The Web Services API must be enabled on the HMC.
 
-2. The HMC user ID that will be used by the zhmcclient must be authorized for
-   the following tasks:
+2. To use all functionality provided in the zhmcclient package, the HMC user ID
+   that will be used by the zhmcclient must be authorized for the following
+   tasks. The description of each method of the zhmcclient package will mention
+   its specific authorization requirements.
 
-   * Use of the Web Services API.
+   * "Remote Restart" must be enabled on the HMC
+
+   * Use of the Web Services API
+   * Shutdown/Restart
+   * Manage Alternate HMC
+   * Audit and Log Management
+   * View Security Logs
+   * Manage LDAP Server Definitions
+   * Manage Password Rules
+   * Manage Users
+   * Manage User Patterns
+   * Manage User Roles
+   * Manage User Templates
 
    When using CPCs in DPM mode:
 

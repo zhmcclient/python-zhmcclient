@@ -18,9 +18,13 @@ Client class: A client to an HMC.
 
 from __future__ import absolute_import
 
+import time
+
 from ._cpc import CpcManager
+from ._console import ConsoleManager
 from ._metrics import MetricsContextManager
 from ._logging import get_logger, logged_api_call
+from ._exceptions import Error, OperationTimeout
 
 __all__ = ['Client']
 
@@ -43,6 +47,7 @@ class Client(object):
         """
         self._session = session
         self._cpcs = CpcManager(self)
+        self._consoles = ConsoleManager(self)
         self._metrics_contexts = MetricsContextManager(self)
         self._api_version = None
 
@@ -58,10 +63,19 @@ class Client(object):
     def cpcs(self):
         """
         :class:`~zhmcclient.CpcManager`:
-          Manager object for the CPCs in scope of this client (i.e. in scope
-          of its HMC).
+          Manager object for the CPCs in scope of this client. This includes
+          managed and unmanaged CPCs.
         """
         return self._cpcs
+
+    @property
+    def consoles(self):
+        """
+        :class:`~zhmcclient.ConsoleManager`:
+          Manager object for the (one) Console representing the HMC this client
+          is connected to.
+        """
+        return self._consoles
 
     @property
     def metrics_contexts(self):
@@ -165,3 +179,53 @@ class Client(object):
         body = {'resources': resources}
         result = self.session.post(uri, body=body)
         return result
+
+    @logged_api_call
+    def wait_for_available(self, operation_timeout=None):
+        """
+        Wait for the Console (HMC) this client is connected to, to become
+        available. The Console is considered available if the
+        :meth:`~zhmcclient.Client.query_api_version` method succeeds.
+
+        If the Console does not become available within the operation timeout,
+        an :exc:`~zhmcclient.OperationTimeout` exception is raised.
+
+        Parameters:
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, when waiting for the Console to become
+            available. The special value 0 means that no timeout is set. `None`
+            means that the default async operation timeout of the session is
+            used.
+
+            If the timeout expires, a :exc:`~zhmcclient.OperationTimeout`
+            is raised.
+
+        Raises:
+
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for the Console to become available.
+        """
+        if operation_timeout is None:
+            operation_timeout = \
+                self.session.retry_timeout_config.operation_timeout
+        if operation_timeout > 0:
+            start_time = time.time()
+        while True:
+            try:
+                self.query_api_version()
+            except Error:
+                pass
+            except Exception:
+                raise
+            else:
+                break
+            if operation_timeout > 0:
+                current_time = time.time()
+                if current_time > start_time + operation_timeout:
+                    raise OperationTimeout(
+                        "Waiting for Console at {} to become available timed "
+                        "out (operation timeout: {} s)".
+                        format(self.session.host, operation_timeout),
+                        operation_timeout)
+            time.sleep(10)  # Avoid hot spin loop

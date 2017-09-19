@@ -904,13 +904,21 @@ class Session(object):
                 # No content
                 return None
             elif result.status_code == 202:
-                result_object = _result_object(result)
-                job_uri = result_object['job-uri']
-                job = Job(self, job_uri, 'POST', uri)
-                if wait_for_completion:
-                    return job.wait_for_completion(operation_timeout)
+                if result.content == '':
+                    # Some operations (e.g. "Restart Console",
+                    # "Shutdown Console" or "Mount Virtual Media") return 202
+                    # with no response content.
+                    return None
                 else:
-                    return job
+                    # This is the most common case to return 202: An
+                    # asynchronous job has been started.
+                    result_object = _result_object(result)
+                    job_uri = result_object['job-uri']
+                    job = Job(self, job_uri, 'POST', uri)
+                    if wait_for_completion:
+                        return job.wait_for_completion(operation_timeout)
+                    else:
+                        return job
             elif result.status_code == 403:
                 result_object = _result_object(result)
                 reason = result_object.get('reason', None)
@@ -1283,10 +1291,12 @@ def _result_object(result):
             raise ParseError(
                 "JSON parse error in HTTP response: {}. "
                 "HTTP request: {} {}. "
-                "Response status {}, content (max.1000, decoded using {}): {}".
+                "Response status {}. "
+                "Response content-type: {!r}. "
+                "Content (max.1000, decoded using {}): {}".
                 format(exc.args[0],
                        result.request.method, result.request.url,
-                       result.status_code, result.encoding,
+                       result.status_code, content_type, result.encoding,
                        _text_repr(result.text, 1000)))
     elif content_type.startswith('text/html'):
         # We are in some error situation. The HMC returns HTML content
@@ -1346,8 +1356,10 @@ def _result_object(result):
         raise ParseError(
             "Unknown content type in HTTP response: {}. "
             "HTTP request: {} {}. "
-            "Response status {}, content (max.1000, decoded using {}): {}".
+            "Response status {}. "
+            "Response content-type: {!r}. "
+            "Content (max.1000, decoded using {}): {}".
             format(content_type,
                    result.request.method, result.request.url,
-                   result.status_code, result.encoding,
+                   result.status_code, content_type, result.encoding,
                    _text_repr(result.text, 1000)))

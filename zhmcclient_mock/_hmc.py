@@ -32,9 +32,17 @@ from ._idpool import IdPool
 from zhmcclient._utils import repr_dict, repr_manager, timestamp_from_datetime
 
 __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
+           'FakedConsoleManager', 'FakedConsole',
+           'FakedUserManager', 'FakedUser',
+           'FakedUserRoleManager', 'FakedUserRole',
+           'FakedUserPatternManager', 'FakedUserPattern',
+           'FakedPasswordRuleManager', 'FakedPasswordRule',
+           'FakedTaskManager', 'FakedTask',
+           'FakedLdapServerDefinitionManager', 'FakedLdapServerDefinition',
            'FakedActivationProfileManager', 'FakedActivationProfile',
            'FakedAdapterManager', 'FakedAdapter',
            'FakedCpcManager', 'FakedCpc',
+           'FakedUnmanagedCpcManager', 'FakedUnmanagedCpc',
            'FakedHbaManager', 'FakedHba',
            'FakedLparManager', 'FakedLpar',
            'FakedNicManager', 'FakedNic',
@@ -65,18 +73,25 @@ class FakedBaseResource(object):
 
     def __init__(self, manager, properties):
         self._manager = manager  # May be None
-        self._properties = copy.deepcopy(properties) \
-            if properties is not None else {}
+        if properties is not None:
+            self._properties = copy.deepcopy(properties)
+        else:
+            self._properties = {}
 
         if self.manager:
 
-            if self.manager.oid_prop not in self.properties:
-                new_oid = self.manager._new_oid()
-                self.properties[self.manager.oid_prop] = new_oid
-            self._oid = self.properties[self.manager.oid_prop]
+            if self.manager.oid_prop is None:
+                self._oid = None
+            else:
+                if self.manager.oid_prop not in self.properties:
+                    new_oid = self.manager._new_oid()
+                    self.properties[self.manager.oid_prop] = new_oid
+                self._oid = self.properties[self.manager.oid_prop]
 
             if self.manager.uri_prop not in self.properties:
-                new_uri = self.manager.base_uri + '/' + self.oid
+                new_uri = self.manager.base_uri
+                if self.oid is not None:
+                    new_uri += '/' + self.oid
                 self.properties[self.manager.uri_prop] = new_uri
             self._uri = self.properties[self.manager.uri_prop]
 
@@ -461,9 +476,12 @@ class FakedHmc(FakedBaseResource):
         self.cpcs = FakedCpcManager(hmc=self, client=self)
         self.metrics_contexts = FakedMetricsContextManager(
             hmc=self, client=self)
+        self.consoles = FakedConsoleManager(hmc=self, client=self)
 
         # Flat list of all Faked{Resource} objs in this faked HMC, by URI:
         self.all_resources = {}
+
+        self.enable()
 
     def __repr__(self):
         """
@@ -474,8 +492,10 @@ class FakedHmc(FakedBaseResource):
             "  hmc_name = {hmc_name!r}\n"
             "  hmc_version = {hmc_version!r}\n"
             "  api_version = {api_version!r}\n"
+            "  enabled = {enabled!r}\n"
             "  cpcs = {cpcs!r}\n"
             "  metrics_contexts = {metrics_contexts!r}\n"
+            "  consoles = {consoles!r}\n"
             "  all_resources(keys) = {all_resource_keys}\n"
             ")".format(
                 classname=self.__class__.__name__,
@@ -483,12 +503,34 @@ class FakedHmc(FakedBaseResource):
                 hmc_name=self.hmc_name,
                 hmc_version=self.hmc_version,
                 api_version=self.api_version,
+                enabled=self.enabled,
                 cpcs=self.cpcs,
                 metrics_contexts=self.metrics_contexts,
+                consoles=self.consoles,
                 all_resource_keys=repr_dict(self.all_resources.keys(),
                                             indent=4),
             ))
         return ret
+
+    @property
+    def enabled(self):
+        """
+        Return whether the faked HMC is enabled.
+        """
+        return self._enabled
+
+    def enable(self):
+        """
+        Enable the faked HMC.
+        """
+        self._enabled = True
+
+    def disable(self):
+        """
+        Disable the faked HMC. This will cause an error to be raised when
+        a faked session attempts to communicate with the disabled HMC.
+        """
+        self._enabled = False
 
     def add_resources(self, resources):
         """
@@ -610,6 +652,500 @@ class FakedHmc(FakedBaseResource):
           KeyError: No resource found for this object ID.
         """
         return self.all_resources[uri]
+
+
+class FakedConsoleManager(FakedBaseManager):
+    """
+    A manager for faked Console resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, client):
+        super(FakedConsoleManager, self).__init__(
+            hmc=hmc,
+            parent=client,
+            resource_class=FakedConsole,
+            base_uri=self.api_root + '/console',
+            oid_prop=None,  # Console does not have an object ID property
+            uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked Console resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-uri' will be auto-generated to '/api/console',
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedConsole`: The faked Console resource.
+        """
+        return super(FakedConsoleManager, self).add(properties)
+
+
+class FakedConsole(FakedBaseResource):
+    """
+    A faked Console resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedConsole, self).__init__(
+            manager=manager,
+            properties=properties)
+        self._users = FakedUserManager(hmc=manager.hmc, console=self)
+        self._user_roles = FakedUserRoleManager(hmc=manager.hmc, console=self)
+        self._user_patterns = FakedUserPatternManager(
+            hmc=manager.hmc, console=self)
+        self._password_rules = FakedPasswordRuleManager(
+            hmc=manager.hmc, console=self)
+        self._tasks = FakedTaskManager(hmc=manager.hmc, console=self)
+        self._ldap_server_definitions = FakedLdapServerDefinitionManager(
+            hmc=manager.hmc, console=self)
+        self._unmanaged_cpcs = FakedUnmanagedCpcManager(
+            hmc=manager.hmc, console=self)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked Console resource, for
+        debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            "  _users ={_users}\n"
+            "  _user_roles ={_user_roles}\n"
+            "  _user_patterns ={_user_patterns}\n"
+            "  _password_rules ={_password_rules}\n"
+            "  _tasks ={_tasks}\n"
+            "  _ldap_server_definitions ={_ldap_server_definitions}\n"
+            "  _unmanaged_cpcs ={_unmanaged_cpcs}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=4),
+                _users=repr_manager(repr(self.users), indent=2),
+                _user_roles=repr_manager(repr(self.user_roles), indent=2),
+                _user_patterns=repr_manager(
+                    repr(self.user_patterns), indent=2),
+                _password_rules=repr_manager(
+                    repr(self.password_rules), indent=2),
+                _tasks=repr_manager(repr(self.tasks), indent=2),
+                _ldap_server_definitions=repr_manager(
+                    repr(self.ldap_server_definitions), indent=2),
+                _unmanaged_cpcs=repr_manager(
+                    repr(self.unmanaged_cpcs), indent=2),
+            ))
+        return ret
+
+    @property
+    def users(self):
+        """
+        :class:`~zhmcclient_mock.FakedUserManager`: Access to the faked User
+        resources of this Console.
+        """
+        return self._users
+
+    @property
+    def user_roles(self):
+        """
+        :class:`~zhmcclient_mock.FakedUserRoleManager`: Access to the faked
+        User Role resources of this Console.
+        """
+        return self._user_roles
+
+    @property
+    def user_patterns(self):
+        """
+        :class:`~zhmcclient_mock.FakedUserPatternManager`: Access to the faked
+        User Pattern resources of this Console.
+        """
+        return self._user_patterns
+
+    @property
+    def password_rules(self):
+        """
+        :class:`~zhmcclient_mock.FakedPasswordRulesManager`: Access to the
+        faked Password Rule resources of this Console.
+        """
+        return self._password_rules
+
+    @property
+    def tasks(self):
+        """
+        :class:`~zhmcclient_mock.FakedTaskManager`: Access to the faked Task
+        resources of this Console.
+        """
+        return self._tasks
+
+    @property
+    def ldap_server_definitions(self):
+        """
+        :class:`~zhmcclient_mock.FakedLdapServerDefinitionManager`: Access to
+        the faked LDAP Server Definition resources of this Console.
+        """
+        return self._ldap_server_definitions
+
+    @property
+    def unmanaged_cpcs(self):
+        """
+        :class:`~zhmcclient_mock.FakedUnmanagedCpcManager`: Access to the faked
+        unmanaged CPC resources of this Console.
+        """
+        return self._unmanaged_cpcs
+
+
+class FakedUserManager(FakedBaseManager):
+    """
+    A manager for faked User resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedUserManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedUser,
+            base_uri=self.api_root + '/users',
+            oid_prop='object-id',
+            uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked User resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedUser`: The faked User resource.
+        """
+        return super(FakedUserManager, self).add(properties)
+
+
+class FakedUser(FakedBaseResource):
+    """
+    A faked User resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedUser, self).__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedUserRoleManager(FakedBaseManager):
+    """
+    A manager for faked User Role resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedUserRoleManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedUserRole,
+            base_uri=self.api_root + '/user-roles',
+            oid_prop='object-id',
+            uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked User Role resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedUserRole`: The faked User Role
+          resource.
+        """
+        return super(FakedUserRoleManager, self).add(properties)
+
+
+class FakedUserRole(FakedBaseResource):
+    """
+    A faked User Role resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedUserRole, self).__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedUserPatternManager(FakedBaseManager):
+    """
+    A manager for faked User Pattern resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedUserPatternManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedUserPattern,
+            base_uri=self.api_root + '/console/user-patterns',
+            oid_prop='element-id',
+            uri_prop='element-uri')
+
+    def add(self, properties):
+        """
+        Add a faked User Pattern resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedUserPattern`: The faked User Pattern
+          resource.
+        """
+        return super(FakedUserPatternManager, self).add(properties)
+
+
+class FakedUserPattern(FakedBaseResource):
+    """
+    A faked User Pattern resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedUserPattern, self).__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedPasswordRuleManager(FakedBaseManager):
+    """
+    A manager for faked Password Rule resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedPasswordRuleManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedPasswordRule,
+            base_uri=self.api_root + '/console/password-rules',
+            oid_prop='element-id',
+            uri_prop='element-uri')
+
+    def add(self, properties):
+        """
+        Add a faked Password Rule resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedPasswordRule`: The faked Password Rule
+          resource.
+        """
+        return super(FakedPasswordRuleManager, self).add(properties)
+
+
+class FakedPasswordRule(FakedBaseResource):
+    """
+    A faked Password Rule resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedPasswordRule, self).__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedTaskManager(FakedBaseManager):
+    """
+    A manager for faked Task resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedTaskManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedTask,
+            base_uri=self.api_root + '/console/tasks',
+            oid_prop='element-id',
+            uri_prop='element-uri')
+
+    def add(self, properties):
+        """
+        Add a faked Task resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedTask`: The faked Task resource.
+        """
+        return super(FakedTaskManager, self).add(properties)
+
+
+class FakedTask(FakedBaseResource):
+    """
+    A faked Task resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedTask, self).__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedLdapServerDefinitionManager(FakedBaseManager):
+    """
+    A manager for faked LDAP Server Definition resources within a faked HMC
+    (see :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedLdapServerDefinitionManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedLdapServerDefinition,
+            base_uri=self.api_root + '/console/ldap-server-definitions',
+            oid_prop='element-id',
+            uri_prop='element-uri')
+
+    def add(self, properties):
+        """
+        Add a faked LDAP Server Definition resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedLdapServerDefinition`: The faked
+          LdapServerDefinition resource.
+        """
+        return super(FakedLdapServerDefinitionManager, self).add(properties)
+
+
+class FakedLdapServerDefinition(FakedBaseResource):
+    """
+    A faked LDAP Server Definition resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedLdapServerDefinition, self).__init__(
+            manager=manager,
+            properties=properties)
 
 
 class FakedActivationProfileManager(FakedBaseManager):
@@ -846,7 +1382,7 @@ class FakedAdapter(FakedBaseResource):
 
 class FakedCpcManager(FakedBaseManager):
     """
-    A manager for faked CPC resources within a faked HMC (see
+    A manager for faked managed CPC resources within a faked HMC (see
     :class:`zhmcclient_mock.FakedHmc`).
 
     Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
@@ -891,7 +1427,7 @@ class FakedCpcManager(FakedBaseManager):
 
 class FakedCpc(FakedBaseResource):
     """
-    A faked CPC resource within a faked HMC (see
+    A faked managed CPC resource within a faked HMC (see
     :class:`zhmcclient_mock.FakedHmc`).
 
     Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
@@ -1027,6 +1563,84 @@ class FakedCpc(FakedBaseResource):
         faked Load Activation Profile resources of this CPC.
         """
         return self._load_activation_profiles
+
+
+class FakedUnmanagedCpcManager(FakedBaseManager):
+    """
+    A manager for faked unmanaged CPC resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedUnmanagedCpcManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedUnmanagedCpc,
+            base_uri=self.api_root + '/cpcs',
+            oid_prop='object-id',
+            uri_prop='object-uri')
+
+    def add(self, properties):
+        """
+        Add a faked unmanaged CPC resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedUnmanagedCpc`: The faked unmanaged CPC
+          resource.
+        """
+        return super(FakedUnmanagedCpcManager, self).add(properties)
+
+
+class FakedUnmanagedCpc(FakedBaseResource):
+    """
+    A faked unmanaged CPC resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedUnmanagedCpc, self).__init__(
+            manager=manager,
+            properties=properties)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked unmanaged Cpc resource,
+        for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=4),
+            ))
+        return ret
 
 
 class FakedHbaManager(FakedBaseManager):
