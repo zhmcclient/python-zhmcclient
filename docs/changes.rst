@@ -25,6 +25,20 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Removed the zhmc CLI support from this project, moving it into a new GitHub
+  project ``zhmcclient/zhmccli``.
+
+  This removes the following prerequisite Python packages for the zhmcclient
+  package:
+    - click
+    - click-repl
+    - click-spinner
+    - progressbar2
+    - tabulate
+    - prompt_toolkit  (from click-repl)
+    - python-utils  (from progressbar2)
+    - wcwidth  (from prompt-toolkit -> click-repl)
+
 **Deprecations:**
 
 **Bug fixes:**

@@ -144,21 +144,6 @@ Possible output when running the script:
 
     Cpc(name=P000S67B, object-uri=/api/cpcs/fa1f2466-12df-311a-804c-4ed2cc1d6564, status=service-required)
 
-This example uses the zhmc CLI to list the CPCs managed by an HMC, and shows
-a possible output:
-
-.. code-block:: bash
-
-    $ hmc_host="<IP address or hostname of the HMC>"
-    $ hmc_userid="<userid on that HMC>"
-    $ zhmc -h $hmc_host -u $hmc_userid cpc list
-    Enter password (for user <hmc_user> at HMC <hmc_host>): .......
-    +----------+------------------+
-    | name     | status           |
-    |----------+------------------|
-    | P000S67B | service-required |
-    +----------+------------------+
-
 Documentation
 =============
 
@@ -169,6 +154,22 @@ The zhmcclient documentation is on RTD:
 
 .. _Documentation for latest version on Pypi: http://python-zhmcclient.readthedocs.io/en/stable/
 .. _Documentation for master branch in Git repo: http://python-zhmcclient.readthedocs.io/en/latest/
+
+zhmc CLI
+========
+
+Before version 0.18.0 of the zhmcclient package, it contained the zhmc CLI.
+Starting with zhmcclient version 0.18.0, the zhmc CLI has been moved from this
+project into the new `zhmccli project`_.
+
+If your project uses the zhmc CLI, and you are upgrading the zhmcclient
+package from before 0.18.0 to 0.18.0 or later, your project will need to add
+the `zhmccli package`_ to its dependencies.
+
+.. _zhmccli project: https://github.com/zhmcclient/zhmccli
+
+.. _zhmccli package: https://pypi.python.org/pypi/zhmccli
+
 
 Contributing
 ============
