@@ -21,7 +21,7 @@ Change log
 Version 0.17.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-09-20
 
 **Incompatible changes:**
 
@@ -33,8 +33,6 @@ Released: not yet
   i.e. to the entore response body. Because by convention, `args[0]` should be
   a human readable message, this has been changed to now set `args[0]` to the
   'message' field in the response body, or to `None` if not present.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -147,12 +145,6 @@ Released: not yet
   the "Content-Type" header in cases where that is interesting.
 
 * Add CLI commmands to mount and unmount an ISO to a Partition.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.16.0
