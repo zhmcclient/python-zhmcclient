@@ -103,42 +103,11 @@ def cli(ctx, host, userid, password, output_format, transpose, error_format,
         decorators.
     """
 
-    # Concept: In interactive mode, the global options specified in the command
-    # line are used as defaults for the commands that are issued interactively.
-    # The interactive commands may override these options.
-    # This requires being able to determine for each option whether it has been
-    # specified. This is the reason the options don't define defaults in the
-    # decorators that define them.
-
-    if ctx.obj is None:
-        # We are in command mode or are processing the command line options in
-        # interactive mode.
-        # We apply the documented option defaults.
-        if output_format is None:
-            output_format = DEFAULT_OUTPUT_FORMAT
-        if transpose is None:
-            transpose = False
-        if error_format is None:
-            error_format = DEFAULT_ERROR_FORMAT
-        if timestats is None:
-            timestats = DEFAULT_TIMESTATS
-    else:
-        # We are processing an interactive command.
-        # We apply the option defaults from the command line options.
-        if host is None:
-            host = ctx.obj.host
-        if userid is None:
-            userid = ctx.obj.userid
-        if password is None:
-            password = ctx.obj._password
-        if output_format is None:
-            output_format = ctx.obj.output_format
-        if transpose is None:
-            transpose = ctx.obj.transpose
-        if error_format is None:
-            error_format = ctx.obj.error_format
-        if timestats is None:
-            timestats = ctx.obj.timestats
+    # Concept: We maintain exactly one set of options in one instance of
+    # CmdContext. That set of options is initially populated with the options
+    # from the command line and their defaults. Each subcommand operates on
+    # the same set of options, and any options specified by a subcommand will
+    # be used to update that one set of options.
 
     if transpose and output_format == 'json':
         raise_click_exception(
@@ -227,8 +196,6 @@ def cli(ctx, host, userid, password, output_format, transpose, error_format,
                     logger.addHandler(handler)
                     logger.setLevel(level)
 
-    session_id = os.environ.get('ZHMC_SESSION_ID', None)
-
     def get_password_via_prompt(host, userid):
         """
         Password retrieval function that prompts for the password.
@@ -251,12 +218,32 @@ def cli(ctx, host, userid, password, output_format, transpose, error_format,
                                         format(cmd=ctx.invoked_subcommand),
                                         error_format)
 
-    # We create a command context for each command: An interactive command has
-    # its own command context different from the command context for the
-    # command line.
-    ctx.obj = CmdContext(host, userid, password, output_format, transpose,
-                         error_format, timestats, session_id,
-                         get_password_via_prompt)
+    default_session_id = os.environ.get('ZHMC_SESSION_ID', None)
+
+    if ctx.obj is None:
+        ctx.obj = CmdContext(
+            host,  # defaulted by click.option (can still be None)
+            userid,   # defaulted by click.option (can still be None)
+            password,  # defaulted by click.option (can still be None)
+            output_format=DEFAULT_OUTPUT_FORMAT,
+            timestats=DEFAULT_TIMESTATS,
+            session_id=default_session_id,
+            get_password=get_password_via_prompt)
+    else:
+        if host:
+            ctx.obj._host = host
+        if userid:
+            ctx.obj._userid = userid
+        if password:
+            ctx.obj._password = password
+        if host or userid or password:
+            # We need a new session if any of those changes
+            ctx.obj._session = None
+            ctx.obj._session_id = None
+        if output_format:
+            ctx.obj._output_format = output_format
+        if timestats:
+            ctx.obj._timestats = timestats
 
     # Invoke default command
     if ctx.invoked_subcommand is None:
