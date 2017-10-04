@@ -79,6 +79,13 @@ win64_dist_file := $(dist_dir)/$(package_name)-$(package_version).win-amd64.exe
 # dist_files := $(bdist_file) $(sdist_file) $(win64_dist_file)
 dist_files := $(bdist_file) $(sdist_file)
 
+# Source files in the packages
+package_py_files := \
+    $(wildcard $(package_name)/*.py) \
+    $(wildcard $(package_name)/*/*.py) \
+    $(wildcard zhmcclient_mock/*.py) \
+    $(wildcard zhmcclient_mock/*/*.py) \
+
 # Directory for generated API documentation
 doc_build_dir := build_doc
 
@@ -94,8 +101,19 @@ doc_dependent_files := \
     $(doc_conf_dir)/conf.py \
     $(wildcard $(doc_conf_dir)/*.rst) \
     $(wildcard $(doc_conf_dir)/notebooks/*.ipynb) \
-    $(wildcard $(package_name)/*.py) \
-    $(wildcard zhmcclient_mock/*.py) \
+    $(package_py_files) \
+
+# Directory with test source files
+test_dir := tests
+
+# Test log
+test_log_file := test_$(python_version_fn).log
+
+# Source files with test code
+test_py_files := \
+    $(wildcard $(test_dir)/*.py) \
+    $(wildcard $(test_dir)/*/*.py) \
+    $(wildcard $(test_dir)/*/*/*.py) \
 
 # Flake8 config file
 flake8_rc_file := setup.cfg
@@ -106,22 +124,23 @@ pylint_rc_file := .pylintrc
 # Source files for check (with PyLint and Flake8)
 check_py_files := \
     setup.py \
-    $(wildcard $(package_name)/*.py) \
-    $(wildcard zhmcclient_mock/*.py) \
-    $(wildcard tests/unit/*.py) \
-    $(wildcard tests/unit/zhmcclient_mock/*.py) \
-    $(wildcard tests/function/*.py) \
+    $(package_py_files) \
+    $(test_py_files) \
     $(wildcard docs/notebooks/*.py) \
     $(wildcard tools/cpcinfo) \
     $(wildcard tools/cpcdata) \
-
-# Test log
-test_log_file := test_$(python_version_fn).log
 
 ifdef TESTCASES
 pytest_opts := -k $(TESTCASES)
 else
 pytest_opts :=
+endif
+
+# Files to be built
+ifeq ($(PLATFORM),Windows)
+build_files := $(win64_dist_file)
+else
+build_files := $(bdist_file) $(sdist_file)
 endif
 
 # Files the distribution archive depends upon.
@@ -130,8 +149,7 @@ dist_dependent_files := \
     README.rst \
     requirements.txt \
     $(wildcard *.py) \
-    $(wildcard $(package_name)/*.py) \
-    $(wildcard zhmcclient_mock/*.py) \
+    $(package_py_files) \
 
 # No built-in rules needed:
 .SUFFIXES:
@@ -143,15 +161,17 @@ help:
 	@echo 'Uses the currently active Python environment: Python $(python_version_fn)'
 	@echo 'Valid targets are (they do just what is stated, i.e. no automatic prereq targets):'
 	@echo '  develop    - Prepare the development environment by installing prerequisites'
-	@echo '  build      - Build the distribution files in: $(dist_dir) (requires Linux or OSX)'
-	@echo '  buildwin   - Build the Windows installable in: $(dist_dir) (requires Windows 64-bit)'
-	@echo '  builddoc   - Build documentation in: $(doc_build_dir)'
+	@echo '  install    - Install package in active Python environment'
 	@echo '  check      - Run Flake8 on sources and save results in: flake8.log'
 	@echo '  pylint     - Run PyLint on sources and save results in: pylint.log'
-	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_log_file)'
+	@echo '  test       - Run tests (and test coverage) and save results in: $(test_log_file)'
+	@echo '               Does not include install but depends on it, so make sure install is current.'
 	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
-	@echo '  all        - Do all of the above (except buildwin when not on Windows)'
-	@echo '  install    - Install package in active Python environment and test import (includes build)'
+	@echo '  build      - Build the distribution files in: $(dist_dir)'
+	@echo '               On Windows, builds: $(win64_dist_file)'
+	@echo '               On Linux + OSX, builds: $(bdist_file) $(sdist_file)'
+	@echo '  builddoc   - Build documentation in: $(doc_build_dir)'
+	@echo '  all        - Do all of the above'
 	@echo '  uninstall  - Uninstall package from active Python environment'
 	@echo '  upload     - Upload the distribution files to PyPI (includes uninstall+build)'
 	@echo '  clean      - Remove any temporary files'
@@ -170,13 +190,13 @@ _pip:
 	$(PIP_CMD) install $(pip_level_opts) pip setuptools wheel pbr
 
 .PHONY: develop
-develop: _pip
+develop: _pip dev-requirements.txt requirements.txt
 	@echo 'Installing runtime and development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
 	$(PIP_CMD) install $(pip_level_opts) -r dev-requirements.txt
 	@echo '$@ done.'
 
 .PHONY: build
-build: $(bdist_file) $(sdist_file)
+build: $(build_files)
 	@echo '$@ done.'
 
 .PHONY: buildwin
@@ -249,9 +269,9 @@ pylint: pylint.log
 	@echo '$@ done.'
 
 .PHONY: install
-install: _pip
+install: _pip requirements.txt setup.py setup.cfg $(package_py_files)
 	@echo 'Installing runtime requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_level_opts) .
+	$(PIP_CMD) install $(pip_level_opts) -r requirements.txt .
 	$(PYTHON_CMD) -c "import zhmcclient; print('Import: ok')"
 	@echo 'Done: Installed $(package_name) into current Python environment.'
 	@echo '$@ done.'
@@ -268,12 +288,10 @@ test: $(test_log_file)
 .PHONY: clobber
 clobber: uninstall clean
 	rm -Rf $(doc_build_dir) htmlcov .tox
-	rm -fv pylint.log flake8.log test_*.log
-	rm -fv $(bdist_file) $(sdist_file) $(win64_dist_file)
+	rm -f pylint.log flake8.log test_*.log $(bdist_file) $(sdist_file) $(win64_dist_file)
 	@echo 'Done: Removed all build products to get to a fresh state.'
 	@echo '$@ done.'
 
-# Also remove any build products that are dependent on the Python version
 .PHONY: clean
 clean:
 	rm -Rf build .cache $(package_name).egg-info .eggs
@@ -283,7 +301,7 @@ clean:
 	@echo '$@ done.'
 
 .PHONY: all
-all: develop check build builddoc test
+all: develop install check pylint test build builddoc
 	@echo '$@ done.'
 
 .PHONY: upload
@@ -303,7 +321,7 @@ endif
 # Distribution archives.
 $(bdist_file): Makefile $(dist_dependent_files)
 ifneq ($(PLATFORM),Windows)
-	rm -Rfv $(package_name).egg-info .eggs
+	rm -Rfv $(package_name).egg-info .eggs build
 	$(PYTHON_CMD) setup.py bdist_wheel -d $(dist_dir) --universal
 	@echo 'Done: Created binary distribution archive: $@'
 else
@@ -313,7 +331,7 @@ endif
 
 $(sdist_file): Makefile $(dist_dependent_files)
 ifneq ($(PLATFORM),Windows)
-	rm -Rfv $(package_name).egg-info .eggs
+	rm -Rfv $(package_name).egg-info .eggs build
 	$(PYTHON_CMD) setup.py sdist -d $(dist_dir)
 	@echo 'Done: Created source distribution archive: $@'
 else
@@ -323,7 +341,7 @@ endif
 
 $(win64_dist_file): Makefile $(dist_dependent_files)
 ifeq ($(PLATFORM),Windows)
-	rm -Rfv $(package_name).egg-info .eggs
+	rm -Rfv $(package_name).egg-info .eggs build
 	$(PYTHON_CMD) setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
 	@echo 'Done: Created Windows installable: $@'
 else
@@ -342,15 +360,14 @@ else
 	@echo 'Info: PyLint requires Python 2; skipping this step on Python $(python_major_version)'
 endif
 
-# TODO: Once Flake8 has no more errors, remove the dash "-"
 flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	rm -fv $@
 	bash -c 'set -o pipefail; flake8 $(check_py_files) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
-$(test_log_file): Makefile $(package_name)/*.py zhmcclient_mock/*.py tests/unit/*.py tests/unit/zhmcclient_mock/*.py tests/function/*.py .coveragerc
+$(test_log_file): Makefile $(package__py_files) $(test_py_files) .coveragerc
 	rm -fv $@
-	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test -s tests --cov $(package_name) --cov zhmcclient_mock --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
+	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test -s $(test_dir) --cov $(package_name) --cov zhmcclient_mock --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
 	@echo 'Done: Created test log file: $@'
