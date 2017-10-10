@@ -24,7 +24,7 @@ import re
 
 from zhmcclient import Client, ActivationProfile
 from zhmcclient_mock import FakedSession
-from .utils import assert_resources
+from tests.common.utils import assert_resources
 
 
 class TestActivationProfile(object):

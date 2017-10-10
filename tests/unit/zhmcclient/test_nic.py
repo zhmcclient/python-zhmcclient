@@ -24,7 +24,7 @@ import copy
 
 from zhmcclient import Client, Nic, HTTPError, NotFound
 from zhmcclient_mock import FakedSession
-from .utils import assert_resources
+from tests.common.utils import assert_resources
 
 
 # Object IDs and names of our faked NICs:

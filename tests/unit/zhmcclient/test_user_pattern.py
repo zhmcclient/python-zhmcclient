@@ -24,7 +24,7 @@ import copy
 
 from zhmcclient import Client, HTTPError, NotFound, UserPattern
 from zhmcclient_mock import FakedSession
-from .utils import assert_resources
+from tests.common.utils import assert_resources
 
 
 class TestUserPattern(object):

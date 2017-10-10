@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Unit test cases for the _idpool module of the zhmcclient_mock package.
+Unit tests for _idpool module of the zhmcclient_mock package.
 """
 
 from __future__ import absolute_import, print_function

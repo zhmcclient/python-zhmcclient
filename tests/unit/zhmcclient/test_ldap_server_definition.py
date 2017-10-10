@@ -24,7 +24,7 @@ import copy
 
 from zhmcclient import Client, HTTPError, NotFound, LdapServerDefinition
 from zhmcclient_mock import FakedSession
-from .utils import assert_resources
+from tests.common.utils import assert_resources
 
 
 class TestLdapServerDefinition(object):

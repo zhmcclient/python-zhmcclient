@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Unit tests for _task module.
+Unit tests for _unmanaged_cpc module.
 """
 
 from __future__ import absolute_import, print_function
@@ -21,13 +21,13 @@ from __future__ import absolute_import, print_function
 import pytest
 import re
 
-from zhmcclient import Client, Task
+from zhmcclient import Client, UnmanagedCpc
 from zhmcclient_mock import FakedSession
-from .utils import assert_resources
+from tests.common.utils import assert_resources
 
 
-class TestTask(object):
-    """All tests for the Task and TaskManager classes."""
+class TestUnmanagedCpc(object):
+    """All tests for the UnmanagedCpc and UnmanagedCpcManager classes."""
 
     def setup_method(self):
         """
@@ -48,53 +48,52 @@ class TestTask(object):
         })
         self.console = self.client.consoles.find(name=self.faked_console.name)
 
-    def add_task(self, name, view_only=True):
-        faked_task = self.faked_console.tasks.add({
-            'element-id': 'oid-{}'.format(name),
-            # element-uri will be automatically set
+    def add_unmanaged_cpc(self, name):
+        faked_unmanaged_cpc = self.faked_console.unmanaged_cpcs.add({
+            'object-id': 'oid-{}'.format(name),
+            # object-uri will be automatically set
             'parent': '/api/console',
-            'class': 'task',
+            'class': 'cpc',
             'name': name,
-            'description': 'Task {}'.format(name),
-            'view-only-mode-supported': view_only,
+            'description': 'Unmanaged CPC {}'.format(name),
         })
-        return faked_task
+        return faked_unmanaged_cpc
 
-    def test_task_manager_repr(self):
-        """Test TaskManager.__repr__()."""
+    def test_ucpc_manager_repr(self):
+        """Test UnmanagedCpcManager.__repr__()."""
 
-        task_mgr = self.console.tasks
+        ucpc_mgr = self.console.unmanaged_cpcs
 
         # Execute the code to be tested
-        repr_str = repr(task_mgr)
+        repr_str = repr(ucpc_mgr)
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
         assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=task_mgr.__class__.__name__,
-                               id=id(task_mgr)),
+                        format(classname=ucpc_mgr.__class__.__name__,
+                               id=id(ucpc_mgr)),
                         repr_str)
 
-    def test_task_manager_initial_attrs(self):
-        """Test initial attributes of TaskManager."""
+    def test_ucpc_manager_initial_attrs(self):
+        """Test initial attributes of UnmanagedCpcManager."""
 
-        task_mgr = self.console.tasks
+        ucpc_mgr = self.console.unmanaged_cpcs
 
         # Verify all public properties of the manager object
-        assert task_mgr.resource_class == Task
-        assert task_mgr.class_name == 'task'
-        assert task_mgr.session is self.session
-        assert task_mgr.parent is self.console
-        assert task_mgr.console is self.console
+        assert ucpc_mgr.resource_class == UnmanagedCpc
+        assert ucpc_mgr.class_name == 'cpc'
+        assert ucpc_mgr.session is self.session
+        assert ucpc_mgr.parent is self.console
+        assert ucpc_mgr.console is self.console
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
             (dict(full_properties=False),
-             ['element-uri']),
+             ['object-uri']),
             (dict(full_properties=True),
-             ['element-uri', 'name']),
+             ['object-uri', 'name']),
             (dict(),  # test default for full_properties (True)
-             ['element-uri', 'name']),
+             ['object-uri', 'name']),
         ]
     )
     @pytest.mark.parametrize(
@@ -107,34 +106,34 @@ class TestTask(object):
              ['a']),
         ]
     )
-    def test_task_manager_list(
+    def test_ucpc_manager_list(
             self, filter_args, exp_names, full_properties_kwargs, prop_names):
-        """Test TaskManager.list()."""
+        """Test UnmanagedCpcManager.list()."""
 
-        faked_task1 = self.add_task(name='a')
-        faked_task2 = self.add_task(name='b')
-        faked_tasks = [faked_task1, faked_task2]
-        exp_faked_tasks = [u for u in faked_tasks if u.name in exp_names]
-        task_mgr = self.console.tasks
+        faked_ucpc1 = self.add_unmanaged_cpc(name='a')
+        faked_ucpc2 = self.add_unmanaged_cpc(name='b')
+        faked_ucpcs = [faked_ucpc1, faked_ucpc2]
+        exp_faked_ucpcs = [u for u in faked_ucpcs if u.name in exp_names]
+        ucpc_mgr = self.console.unmanaged_cpcs
 
         # Execute the code to be tested
-        tasks = task_mgr.list(filter_args=filter_args,
+        ucpcs = ucpc_mgr.list(filter_args=filter_args,
                               **full_properties_kwargs)
 
-        assert_resources(tasks, exp_faked_tasks, prop_names)
+        assert_resources(ucpcs, exp_faked_ucpcs, prop_names)
 
-    def test_task_repr(self):
-        """Test Task.__repr__()."""
+    def test_ucpc_repr(self):
+        """Test UnmanagedCpc.__repr__()."""
 
-        faked_task1 = self.add_task(name='a')
-        task1 = self.console.tasks.find(name=faked_task1.name)
+        faked_ucpc1 = self.add_unmanaged_cpc(name='a')
+        ucpc1 = self.console.unmanaged_cpcs.find(name=faked_ucpc1.name)
 
         # Execute the code to be tested
-        repr_str = repr(task1)
+        repr_str = repr(ucpc1)
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
         assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=task1.__class__.__name__,
-                               id=id(task1)),
+                        format(classname=ucpc1.__class__.__name__,
+                               id=id(ucpc1)),
                         repr_str)

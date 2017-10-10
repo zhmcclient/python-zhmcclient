@@ -25,7 +25,7 @@ from zhmcclient import Client, Error, Console, UserManager, UserRoleManager, \
     UserPatternManager, PasswordRuleManager, TaskManager, \
     LdapServerDefinitionManager
 from zhmcclient_mock import FakedSession
-from .utils import assert_resources
+from tests.common.utils import assert_resources
 
 
 class TestConsole(object):
