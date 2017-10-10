@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,17 +18,17 @@ Unit tests for _virtual_switch module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
 import re
+# FIXME: Migrate requests_mock to zhmcclient_mock.
 import requests_mock
 
 from zhmcclient import Session, Client, Nic
 
 
-class VirtualSwitchTests(unittest.TestCase):
+class TestVirtualSwitch(object):
     """All tests for VirtualSwitch and VirtualSwitchManager classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session('vswitch-dpm-host', 'vswitch-user',
                                'vswitch-pwd')
         self.client = Client(self.session)
@@ -55,7 +54,7 @@ class VirtualSwitchTests(unittest.TestCase):
             cpcs = self.cpc_mgr.list()
             self.cpc = cpcs[0]
 
-    def tearDown(self):
+    def teardown_method(self):
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             self.session.logoff()
@@ -63,7 +62,7 @@ class VirtualSwitchTests(unittest.TestCase):
     def test_init(self):
         """Test __init__() on VirtualSwitchManager instance in CPC."""
         vswitch_mgr = self.cpc.virtual_switches
-        self.assertEqual(vswitch_mgr.cpc, self.cpc)
+        assert vswitch_mgr.cpc == self.cpc
 
     def test_list_short_ok(self):
         """
@@ -91,16 +90,14 @@ class VirtualSwitchTests(unittest.TestCase):
 
             vswitches = vswitch_mgr.list(full_properties=False)
 
-            self.assertEqual(len(vswitches), len(result['virtual-switches']))
+            assert len(vswitches) == len(result['virtual-switches'])
             for idx, vswitch in enumerate(vswitches):
-                self.assertEqual(
-                    vswitch.properties,
-                    result['virtual-switches'][idx])
-                self.assertEqual(
-                    vswitch.uri,
-                    result['virtual-switches'][idx]['object-uri'])
-                self.assertFalse(vswitch.full_properties)
-                self.assertEqual(vswitch.manager, vswitch_mgr)
+                assert vswitch.properties == \
+                    result['virtual-switches'][idx]
+                assert vswitch.uri == \
+                    result['virtual-switches'][idx]['object-uri']
+                assert not vswitch.full_properties
+                assert vswitch.manager == vswitch_mgr
 
     def test_list_full_ok(self):
         """
@@ -149,15 +146,14 @@ class VirtualSwitchTests(unittest.TestCase):
 
             vswitches = vswitch_mgr.list(full_properties=True)
 
-            self.assertEqual(len(vswitches), len(result['virtual-switches']))
+            assert len(vswitches) == len(result['virtual-switches'])
             for idx, vswitch in enumerate(vswitches):
-                self.assertEqual(vswitch.properties['name'],
-                                 result['virtual-switches'][idx]['name'])
-                self.assertEqual(
-                    vswitch.uri,
-                    result['virtual-switches'][idx]['object-uri'])
-                self.assertTrue(vswitch.full_properties)
-                self.assertEqual(vswitch.manager, vswitch_mgr)
+                assert vswitch.properties['name'] == \
+                    result['virtual-switches'][idx]['name']
+                assert vswitch.uri == \
+                    result['virtual-switches'][idx]['object-uri']
+                assert vswitch.full_properties
+                assert vswitch.manager == vswitch_mgr
 
     def test_update_properties(self):
         """
@@ -225,17 +221,13 @@ class VirtualSwitchTests(unittest.TestCase):
 
             nics = vswitch.get_connected_nics()
 
-            self.assertTrue(isinstance(nics, list))
+            assert isinstance(nics, list)
             for i, nic in enumerate(nics):
-                self.assertTrue(isinstance(nic, Nic))
+                assert isinstance(nic, Nic)
                 nic_uri = result['connected-vnic-uris'][i]
-                self.assertEqual(nic.uri, nic_uri)
-                self.assertEqual(nic.properties['element-uri'], nic_uri)
+                assert nic.uri == nic_uri
+                assert nic.properties['element-uri'] == nic_uri
                 m = re.match(r"^/api/partitions/([^/]+)/nics/([^/]+)/?$",
                              nic_uri)
                 nic_id = m.group(2)
-                self.assertEqual(nic.properties['element-id'], nic_id)
-
-
-if __name__ == '__main__':
-    unittest.main()
+                assert nic.properties['element-id'] == nic_id

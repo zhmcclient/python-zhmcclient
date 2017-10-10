@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,16 +18,16 @@ Unit tests for _lpar module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
+# FIXME: Migrate requests_mock to zhmcclient_mock.
 import requests_mock
 
 from zhmcclient import Session, Client
 
 
-class LparTests(unittest.TestCase):
+class TestLpar(object):
     """All tests for Lpar and LparManager classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session('fake-host', 'fake-user', 'fake-id')
         self.client = Client(self.session)
         with requests_mock.mock() as m:
@@ -52,7 +51,7 @@ class LparTests(unittest.TestCase):
             cpcs = self.cpc_mgr.list(full_properties=False)
             self.cpc = cpcs[0]
 
-    def tearDown(self):
+    def teardown_method(self):
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             self.session.logoff()
@@ -60,7 +59,7 @@ class LparTests(unittest.TestCase):
     def test_init(self):
         """Test __init__() on LparManager instance in CPC."""
         lpar_mgr = self.cpc.lpars
-        self.assertEqual(lpar_mgr.cpc, self.cpc)
+        assert lpar_mgr.cpc == self.cpc
 
     def test_list_short_ok(self):
         """
@@ -87,16 +86,13 @@ class LparTests(unittest.TestCase):
 
             lpars = lpar_mgr.list(full_properties=False)
 
-            self.assertEqual(len(lpars), len(result['logical-partitions']))
+            assert len(lpars) == len(result['logical-partitions'])
             for idx, lpar in enumerate(lpars):
-                self.assertEqual(
-                    lpar.properties,
-                    result['logical-partitions'][idx])
-                self.assertEqual(
-                    lpar.uri,
-                    result['logical-partitions'][idx]['object-uri'])
-                self.assertFalse(lpar.full_properties)
-                self.assertEqual(lpar.manager, lpar_mgr)
+                assert lpar.properties == result['logical-partitions'][idx]
+                assert lpar.uri == \
+                    result['logical-partitions'][idx]['object-uri']
+                assert not lpar.full_properties
+                assert lpar.manager == lpar_mgr
 
     def test_list_full_ok(self):
         """
@@ -143,15 +139,14 @@ class LparTests(unittest.TestCase):
 
             lpars = lpar_mgr.list(full_properties=True)
 
-            self.assertEqual(len(lpars), len(result['logical-partitions']))
+            assert len(lpars) == len(result['logical-partitions'])
             for idx, lpar in enumerate(lpars):
-                self.assertEqual(lpar.properties['name'],
-                                 result['logical-partitions'][idx]['name'])
-                self.assertEqual(
-                    lpar.uri,
-                    result['logical-partitions'][idx]['object-uri'])
-                self.assertTrue(lpar.full_properties)
-                self.assertEqual(lpar.manager, lpar_mgr)
+                assert lpar.properties['name'] == \
+                    result['logical-partitions'][idx]['name']
+                assert lpar.uri == \
+                    result['logical-partitions'][idx]['object-uri']
+                assert lpar.full_properties
+                assert lpar.manager == lpar_mgr
 
     def test_activate(self):
         """
@@ -185,7 +180,7 @@ class LparTests(unittest.TestCase):
             m.post("/api/logical-partitions/fake-lpar-id-1/operations/"
                    "activate", json=result)
             status = lpar.activate(wait_for_completion=False)
-            self.assertEqual(status, result)
+            assert status == result
 
     def test_deactivate(self):
         """
@@ -219,7 +214,7 @@ class LparTests(unittest.TestCase):
             m.post("/api/logical-partitions/fake-lpar-id-1/operations/"
                    "deactivate", json=result)
             status = lpar.deactivate(wait_for_completion=False)
-            self.assertEqual(status, result)
+            assert status == result
 
     def test_load(self):
         """
@@ -254,8 +249,4 @@ class LparTests(unittest.TestCase):
             m.post("/api/logical-partitions/fake-lpar-id-1/operations/load",
                    json=result)
             status = lpar.load(load_address='5162', wait_for_completion=False)
-            self.assertEqual(status, result)
-
-
-if __name__ == '__main__':
-    unittest.main()
+            assert status == result

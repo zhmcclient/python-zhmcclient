@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +18,8 @@ Unit tests for _resource module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
 import time
+import re
 from collections import OrderedDict
 
 from zhmcclient import BaseResource, BaseManager, Session
@@ -66,12 +65,12 @@ class MyManager(BaseManager):
         raise NotImplemented
 
 
-class ResourceTestCase(unittest.TestCase):
+class ResourceTestCase(object):
     """
     Base class for all tests in this file.
     """
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session(host='fake-host')
         self.mgr = MyManager(self.session)
         self.uri = self.mgr._base_uri + '/deadbeef-beef-beef-beef-deadbeefbeef'
@@ -85,23 +84,21 @@ class ResourceTestCase(unittest.TestCase):
         """
 
         # Check that the properties member is a dict
-        self.assertTrue(isinstance(resource.properties, dict))
+        assert isinstance(resource.properties, dict)
 
         # Verify that the resource properties are as expected
-        self.assertEqual(
-            len(resource.properties), len(exp_props),
-            "Set of properties does not match. Expected {!r}, got {!r}".
-            format(resource.properties.keys(), exp_props.keys()))
+        assert len(resource.properties) == len(exp_props), \
+            "Set of properties does not match. Expected {!r}, got {!r}". \
+            format(resource.properties.keys(), exp_props.keys())
 
         for name, exp_value in exp_props.items():
             act_value = resource.properties[name]
-            self.assertEqual(
-                act_value, exp_value,
-                "Property {!r} does not match. Expected {!r}, got {!r}".
-                format(name, exp_value, act_value))
+            assert act_value == exp_value, \
+                "Property {!r} does not match. Expected {!r}, got {!r}". \
+                format(name, exp_value, act_value)
 
 
-class InitTests(ResourceTestCase):
+class TestInit(ResourceTestCase):
     """Test BaseResource initialization."""
 
     def test_empty_name(self):
@@ -114,12 +111,12 @@ class InitTests(ResourceTestCase):
 
         res = MyResource(self.mgr, self.uri, self.name, init_props)
 
-        self.assertTrue(res.manager is self.mgr)
-        self.assertEqual(res.uri, self.uri)
-        self.assertEqual(res.name, self.name)
+        assert res.manager is self.mgr
+        assert res.uri == self.uri
+        assert res.name == self.name
         self.assert_properties(res, res_props)
-        self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
-        self.assertEqual(res.full_properties, False)
+        assert int(time.time()) - res.properties_timestamp <= 1
+        assert res.full_properties is False
 
     def test_empty_no_name(self):
         """Test with an empty set of input properties, without 'name'."""
@@ -130,11 +127,11 @@ class InitTests(ResourceTestCase):
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
-        self.assertTrue(res.manager is self.mgr)
-        self.assertEqual(res.uri, self.uri)
+        assert res.manager is self.mgr
+        assert res.uri == self.uri
         self.assert_properties(res, res_props)
-        self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
-        self.assertEqual(res.full_properties, False)
+        assert int(time.time()) - res.properties_timestamp <= 1
+        assert res.full_properties is False
 
     def test_simple(self):
         """Test with a simple set of input properties."""
@@ -150,11 +147,11 @@ class InitTests(ResourceTestCase):
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
-        self.assertTrue(res.manager is self.mgr)
-        self.assertEqual(res.uri, self.uri)
+        assert res.manager is self.mgr
+        assert res.uri == self.uri
         self.assert_properties(res, res_props)
-        self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
-        self.assertEqual(res.full_properties, False)
+        assert int(time.time()) - res.properties_timestamp <= 1
+        assert res.full_properties is False
 
     def test_prop_case(self):
         """Test case sensitivity for the input properties."""
@@ -170,11 +167,11 @@ class InitTests(ResourceTestCase):
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
-        self.assertTrue(res.manager is self.mgr)
-        self.assertEqual(res.uri, self.uri)
+        assert res.manager is self.mgr
+        assert res.uri == self.uri
         self.assert_properties(res, res_props)
-        self.assertTrue(int(time.time()) - res.properties_timestamp <= 1)
-        self.assertEqual(res.full_properties, False)
+        assert int(time.time()) - res.properties_timestamp <= 1
+        assert res.full_properties is False
 
     def test_invalid_type(self):
         """Test that input properties with an invalid type fail."""
@@ -201,10 +198,9 @@ class InitTests(ResourceTestCase):
 
         str_str = str_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            str_str,
-            r'^{classname}\s*\(.*'.format(
-                classname=resource.__class__.__name__))
+        assert re.match(r'^{classname}\s*\(.*'.
+                        format(classname=resource.__class__.__name__),
+                        str_str)
 
     def test_repr(self):
         """Test BaseResource.__repr__()."""
@@ -218,14 +214,13 @@ class InitTests(ResourceTestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=resource.__class__.__name__,
-                id=id(resource)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=resource.__class__.__name__,
+                               id=id(resource)),
+                        repr_str)
 
 
-class PropertySetTests(ResourceTestCase):
+class TestPropertySet(ResourceTestCase):
     """Test BaseResource by setting properties."""
 
     def test_add_to_empty(self):
@@ -271,7 +266,7 @@ class PropertySetTests(ResourceTestCase):
         self.assert_properties(res, res_props)
 
 
-class PropertyDelTests(ResourceTestCase):
+class TestPropertyDel(ResourceTestCase):
     """Test BaseResource by deleting properties."""
 
     def test_del_one(self):
@@ -344,10 +339,10 @@ class PropertyDelTests(ResourceTestCase):
 
         res.properties.clear()
 
-        self.assertEqual(len(res.properties), 0)
+        assert len(res.properties) == 0
 
 
-class ManagerDivideFilterTests(ResourceTestCase):
+class TestManagerDivideFilter(ResourceTestCase):
     """Test the _divide_filter_args() method of BaseManager."""
 
     # Reserved chars are defined in RFC 3986 as gen-delims and sub-delims.
@@ -369,8 +364,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '')
-        self.assertEqual(cf_args, {})
+        assert parm_str == ''
+        assert cf_args == {}
 
     def test_empty(self):
         """Test with an empty set of filter arguments."""
@@ -378,8 +373,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '')
-        self.assertEqual(cf_args, {})
+        assert parm_str == ''
+        assert cf_args == {}
 
     def test_one_string_qp(self):
         """Test with one string filter argument that is a query parm."""
@@ -387,8 +382,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp1=bar')
-        self.assertEqual(cf_args, {})
+        assert parm_str == '?qp1=bar'
+        assert cf_args == {}
 
     def test_one_string_cf(self):
         """Test with one string filter argument that is a client filter."""
@@ -396,8 +391,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '')
-        self.assertEqual(cf_args, {'foo': 'bar'})
+        assert parm_str == ''
+        assert cf_args == {'foo': 'bar'}
 
     def test_one_integer_qp(self):
         """Test with one integer filter argument that is a query parm."""
@@ -405,8 +400,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp2=42')
-        self.assertEqual(cf_args, {})
+        assert parm_str == '?qp2=42'
+        assert cf_args == {}
 
     def test_one_integer_cf(self):
         """Test with one integer filter argument that is a client filter."""
@@ -414,8 +409,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '')
-        self.assertEqual(cf_args, {'foo': 42})
+        assert parm_str == ''
+        assert cf_args == {'foo': 42}
 
     def test_one_str_reserved_val_qp(self):
         """Test with one string filter argument with reserved URI chars in
@@ -426,8 +421,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp1={}'.format(escape_str))
-        self.assertEqual(cf_args, {})
+        assert parm_str == '?qp1={}'.format(escape_str)
+        assert cf_args == {}
 
     def test_one_str_reserved_val_cf(self):
         """Test with one string filter argument with reserved URI chars in
@@ -437,8 +432,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '')
-        self.assertEqual(cf_args, {'foo': char_str})
+        assert parm_str == ''
+        assert cf_args == {'foo': char_str}
 
     def test_one_str_dash_name_qp(self):
         """Test with one string filter argument with a dash in its name that is
@@ -448,8 +443,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?foo-boo=bar')
-        self.assertEqual(cf_args, {})
+        assert parm_str == '?foo-boo=bar'
+        assert cf_args == {}
 
     def test_one_str_reserved_name_qp(self):
         """Test with one string filter argument with reserved URI chars in
@@ -461,8 +456,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?{}=bar'.format(escape_str))
-        self.assertEqual(cf_args, {})
+        assert parm_str == '?{}=bar'.format(escape_str)
+        assert cf_args == {}
 
     def test_two_qp(self):
         """Test with two filter arguments that are query parms."""
@@ -470,8 +465,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp1=bar&qp2=42')
-        self.assertEqual(cf_args, {})
+        assert parm_str == '?qp1=bar&qp2=42'
+        assert cf_args == {}
 
     def test_two_qp_cf(self):
         """Test with two filter arguments where one is a query parm and one is
@@ -480,8 +475,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp1=bar')
-        self.assertEqual(cf_args, {'foo': 42})
+        assert parm_str == '?qp1=bar'
+        assert cf_args == {'foo': 42}
 
     def test_two_cf_qp(self):
         """Test with two filter arguments where one is a client filter and one
@@ -490,8 +485,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp1=42')
-        self.assertEqual(cf_args, {'foo': 'bar'})
+        assert parm_str == '?qp1=42'
+        assert cf_args == {'foo': 'bar'}
 
     def test_two_two_qp(self):
         """Test with two filter arguments, one of which is a list of two, and
@@ -500,8 +495,8 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp1=bar&qp2=42&qp2=7')
-        self.assertEqual(cf_args, {})
+        assert parm_str == '?qp1=bar&qp2=42&qp2=7'
+        assert cf_args == {}
 
     def test_two_str_reserved_val_qp(self):
         """Test with two filter arguments, one of which is a list of two, and
@@ -512,9 +507,5 @@ class ManagerDivideFilterTests(ResourceTestCase):
 
         parm_str, cf_args = self.mgr._divide_filter_args(filter_args)
 
-        self.assertEqual(parm_str, '?qp1=bar&qp2=42&qp2={}'.format(escape_str))
-        self.assertEqual(cf_args, {})
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert parm_str == '?qp1=bar&qp2=42&qp2={}'.format(escape_str)
+        assert cf_args == {}

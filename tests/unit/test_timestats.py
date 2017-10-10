@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +19,7 @@ Tests for time statistics (`_timestats` module).
 from __future__ import absolute_import, print_function
 
 import time
-import unittest
+import pytest
 
 from zhmcclient import TimeStatsKeeper, TimeStats
 
@@ -56,7 +55,7 @@ def measure(stats, duration):
     return end - begin
 
 
-class TimeStatsTests(unittest.TestCase):
+class TestTimeStats(object):
     """All tests for TimeStatsKeeper and TimeStats."""
 
     def test_enabling(self):
@@ -64,70 +63,67 @@ class TimeStatsTests(unittest.TestCase):
 
         keeper = TimeStatsKeeper()
 
-        self.assertFalse(keeper.enabled,
-                         "Verify that initial state is disabled")
+        assert not keeper.enabled, \
+            "Verify that initial state is disabled"
 
         keeper.disable()
-        self.assertFalse(keeper.enabled,
-                         "Verify that disabling a disabled keeper works")
+        assert not keeper.enabled, \
+            "Verify that disabling a disabled keeper works"
 
         keeper.enable()
-        self.assertTrue(keeper.enabled,
-                        "Verify that enabling a disabled keeper works")
+        assert keeper.enabled, \
+            "Verify that enabling a disabled keeper works"
 
         keeper.enable()
-        self.assertTrue(keeper.enabled,
-                        "Verify that enabling an enabled keeper works")
+        assert keeper.enabled, \
+            "Verify that enabling an enabled keeper works"
 
         keeper.disable()
-        self.assertFalse(keeper.enabled,
-                         "Verify that disabling an enabled keeper works")
+        assert not keeper.enabled, \
+            "Verify that disabling an enabled keeper works"
 
     def test_get(self):
         """Test getting time statistics."""
 
         keeper = TimeStatsKeeper()
         snapshot_length = len(keeper.snapshot())
-        self.assertEqual(snapshot_length, 0,
-                         "Verify that initial state has no time statistics. "
-                         "Actual number = %d" % snapshot_length)
+        assert snapshot_length == 0, \
+            "Verify that initial state has no time statistics. " \
+            "Actual number = %d" % snapshot_length
 
         stats = keeper.get_stats('foo')
         snapshot_length = len(keeper.snapshot())
-        self.assertEqual(snapshot_length, 0,
-                         "Verify that getting a new stats with a disabled "
-                         "keeper results in no time statistics. "
-                         "Actual number = %d" % snapshot_length)
-        self.assertEqual(stats.keeper, keeper)
-        self.assertEqual(stats.name, "disabled")  # stats for disabled keeper
-        self.assertEqual(stats.count, 0)
-        self.assertEqual(stats.avg_time, 0)
-        self.assertEqual(stats.min_time, float('inf'))
-        self.assertEqual(stats.max_time, 0)
+        assert snapshot_length == 0, \
+            "Verify that getting a new stats with a disabled keeper results " \
+            "in no time statistics. Actual number = %d" % snapshot_length
+        assert stats.keeper == keeper
+        assert stats.name == "disabled"  # stats for disabled keeper
+        assert stats.count == 0
+        assert stats.avg_time == 0
+        assert stats.min_time == float('inf')
+        assert stats.max_time == 0
 
         keeper.enable()
 
         stats = keeper.get_stats('foo')
         snapshot_length = len(keeper.snapshot())
-        self.assertEqual(snapshot_length, 1,
-                         "Verify that getting a new stats with an enabled "
-                         "keeper results in one time statistics. "
-                         "Actual number = %d" % snapshot_length)
+        assert snapshot_length == 1, \
+            "Verify that getting a new stats with an enabled keeper results " \
+            "in one time statistics. Actual number = %d" % snapshot_length
 
-        self.assertEqual(stats.keeper, keeper)
-        self.assertEqual(stats.name, 'foo')
-        self.assertEqual(stats.count, 0)
-        self.assertEqual(stats.avg_time, 0)
-        self.assertEqual(stats.min_time, float('inf'))
-        self.assertEqual(stats.max_time, 0)
+        assert stats.keeper == keeper
+        assert stats.name == 'foo'
+        assert stats.count == 0
+        assert stats.avg_time == 0
+        assert stats.min_time == float('inf')
+        assert stats.max_time == 0
 
         keeper.get_stats('foo')
         snapshot_length = len(keeper.snapshot())
-        self.assertEqual(snapshot_length, 1,
-                         "Verify that getting an existing stats with an "
-                         "enabled keeper results in the same number of time "
-                         "statistics. "
-                         "Actual number = %d" % snapshot_length)
+        assert snapshot_length == 1, \
+            "Verify that getting an existing stats with an enabled keeper " \
+            "results in the same number of time statistics. " \
+            "Actual number = %d" % snapshot_length
 
     def test_measure_enabled(self):
         """Test measuring time with enabled keeper."""
@@ -145,22 +141,22 @@ class TimeStatsTests(unittest.TestCase):
         stats_dict = keeper.snapshot()
         for op_name in stats_dict:
             stats = stats_dict[op_name]
-            self.assertEqual(stats.count, 1)
-            self.assertLess(time_abs_delta(stats.avg_time, dur), delta,
-                            "avg time: actual: %f, expected: %f, delta: %f" %
-                            (stats.avg_time, dur, delta))
-            self.assertLess(time_abs_delta(stats.min_time, dur), delta,
-                            "min time: actual: %f, expected: %f, delta: %f" %
-                            (stats.min_time, dur, delta))
-            self.assertLess(time_abs_delta(stats.max_time, dur), delta,
-                            "max time: actual: %f, expected: %f, delta: %f" %
-                            (stats.max_time, dur, delta))
+            assert stats.count == 1
+            assert time_abs_delta(stats.avg_time, dur) < delta, \
+                "avg time: actual: %f, expected: %f, delta: %f" % \
+                (stats.avg_time, dur, delta)
+            assert time_abs_delta(stats.min_time, dur) < delta, \
+                "min time: actual: %f, expected: %f, delta: %f" % \
+                (stats.min_time, dur, delta)
+            assert time_abs_delta(stats.max_time, dur) < delta, \
+                "max time: actual: %f, expected: %f, delta: %f" % \
+                (stats.max_time, dur, delta)
 
         stats.reset()
-        self.assertEqual(stats.count, 0)
-        self.assertEqual(stats.avg_time, 0)
-        self.assertEqual(stats.min_time, float('inf'))
-        self.assertEqual(stats.max_time, 0)
+        assert stats.count == 0
+        assert stats.avg_time == 0
+        assert stats.min_time == float('inf')
+        assert stats.max_time == 0
 
     def test_measure_disabled(self):
         """Test measuring time with disabled keeper."""
@@ -170,7 +166,7 @@ class TimeStatsTests(unittest.TestCase):
         duration = 0.2
 
         stats = keeper.get_stats('foo')
-        self.assertEqual(stats.name, 'disabled')
+        assert stats.name == 'disabled'
 
         stats.begin()
         time.sleep(duration)
@@ -179,10 +175,10 @@ class TimeStatsTests(unittest.TestCase):
         stats_dict = keeper.snapshot()
         for op_name in stats_dict:
             stats = stats_dict[op_name]
-            self.assertEqual(stats.count, 0)
-            self.assertEqual(stats.avg_time, 0)
-            self.assertEqual(stats.min_time, float('inf'))
-            self.assertEqual(stats.max_time, 0)
+            assert stats.count == 0
+            assert stats.avg_time == 0
+            assert stats.min_time == float('inf')
+            assert stats.max_time == 0
 
     def test_snapshot(self):
         """Test that snapshot() takes a stable snapshot."""
@@ -210,10 +206,10 @@ class TimeStatsTests(unittest.TestCase):
         # verify that only the first data item is in the snapshot
         for op_name in snap_stats_dict:
             snap_stats = snap_stats_dict[op_name]
-            self.assertEqual(snap_stats.count, 1)
+            assert snap_stats.count == 1
 
         # verify that both data items are in the original stats object
-        self.assertEqual(stats.count, 2)
+        assert stats.count == 2
 
     def test_measure_avg_min_max(self):
         """Test measuring avg min max values."""
@@ -238,16 +234,16 @@ class TimeStatsTests(unittest.TestCase):
         stats_dict = keeper.snapshot()
         for op_name in stats_dict:
             stats = stats_dict[op_name]
-            self.assertEqual(stats.count, 3)
-            self.assertLess(time_abs_delta(stats.avg_time, avg_dur), delta,
-                            "avg time: actual: %f, expected: %f, delta: %f" %
-                            (stats.avg_time, avg_dur, delta))
-            self.assertLess(time_abs_delta(stats.min_time, min_dur), delta,
-                            "min time: actual: %f, expected: %f, delta: %f" %
-                            (stats.min_time, min_dur, delta))
-            self.assertLess(time_abs_delta(stats.max_time, max_dur), delta,
-                            "max time: actual: %f, expected: %f, delta: %f" %
-                            (stats.max_time, max_dur, delta))
+            assert stats.count == 3
+            assert time_abs_delta(stats.avg_time, avg_dur) < delta, \
+                "avg time: actual: %f, expected: %f, delta: %f" % \
+                (stats.avg_time, avg_dur, delta)
+            assert time_abs_delta(stats.min_time, min_dur) < delta, \
+                "min time: actual: %f, expected: %f, delta: %f" % \
+                (stats.min_time, min_dur, delta)
+            assert time_abs_delta(stats.max_time, max_dur) < delta, \
+                "max time: actual: %f, expected: %f, delta: %f" % \
+                (stats.max_time, max_dur, delta)
 
     def test_only_end(self):
         """Test that invoking end() before begin() has ever been called raises
@@ -257,7 +253,7 @@ class TimeStatsTests(unittest.TestCase):
         keeper.enable()
         stats = keeper.get_stats('foo')
 
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             stats.end()
 
     def test_end_after_end(self):
@@ -272,7 +268,7 @@ class TimeStatsTests(unittest.TestCase):
         time.sleep(0.01)
         stats.end()
 
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             stats.end()
 
     def test_str_empty(self):
@@ -281,14 +277,14 @@ class TimeStatsTests(unittest.TestCase):
         keeper = TimeStatsKeeper()
         keeper.enable()
         s = str(keeper)
-        self.assertEqual(s, PRINT_HEADER)
+        assert s == PRINT_HEADER
 
     def test_str_disabled(self):
         """Test TimestatsKeeper.__str__() for a disabled keeper."""
 
         keeper = TimeStatsKeeper()
         s = str(keeper)
-        self.assertEqual(s, PRINT_HEADER_DISABLED)
+        assert s == PRINT_HEADER_DISABLED
 
     def test_str_one(self):
         """Test TimestatsKeeper.__str__() for an enabled keeper with one data
@@ -307,11 +303,11 @@ class TimeStatsTests(unittest.TestCase):
         stats.end()
 
         s = str(keeper)
-        self.assertTrue(s.startswith(PRINT_HEADER),
-                        "Unexpected str(keeper): %r" % s)
+        assert s.startswith(PRINT_HEADER), \
+            "Unexpected str(keeper): %r" % s
         num_lines = len(s.split('\n'))
-        self.assertEqual(num_lines, 3,
-                         "Unexpected str(keeper): %r" % s)
+        assert num_lines == 3, \
+            "Unexpected str(keeper): %r" % s
 
     def test_ts_str(self):
         """Test Timestats.__str__()."""
@@ -320,12 +316,8 @@ class TimeStatsTests(unittest.TestCase):
         timestats = TimeStats(keeper, "foo")
 
         s = str(timestats)
-        self.assertTrue(s.startswith("TimeStats:"),
-                        "Unexpected str(timestats): %r" % s)
+        assert s.startswith("TimeStats:"), \
+            "Unexpected str(timestats): %r" % s
         num_lines = len(s.split('\n'))
-        self.assertEqual(num_lines, 1,
-                         "Unexpected str(timestats): %r" % s)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert num_lines == 1, \
+            "Unexpected str(timestats): %r" % s

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +18,11 @@ Unit tests for _manager module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
 from datetime import datetime
 import time
+import re
 import warnings
+import pytest
 
 from zhmcclient import BaseResource, BaseManager, Session, NotFound, \
     NoUniqueMatch
@@ -76,12 +76,12 @@ class MyManager(BaseManager):
         return result_list
 
 
-class Manager1Tests(unittest.TestCase):
+class TestManager1(object):
     """
     Tests for the BaseManager class with one resource.
     """
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session(host='fake-host', userid='fake-user',
                                password='fake-pw')
         self.manager = MyManager(self.session)
@@ -103,18 +103,17 @@ class Manager1Tests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=manager.__class__.__name__,
-                id=id(manager)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=manager.__class__.__name__,
+                               id=id(manager)),
+                        repr_str)
 
     def test_init_properties(self):
         """Test BaseManager properties after initialization."""
 
-        self.assertEqual(self.manager.resource_class, MyResource)
-        self.assertEqual(self.manager.session, self.session)
-        self.assertEqual(self.manager.parent, None)
+        assert self.manager.resource_class == MyResource
+        assert self.manager.session == self.session
+        assert self.manager.parent is None
 
     def test_invalidate_cache(self):
         """Test invalidate_cache()."""
@@ -122,11 +121,11 @@ class Manager1Tests(unittest.TestCase):
 
         # Populate the cache by finding a resource by name.
         self.manager.find(**filter_args)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Check that on the second find by name, list() is not called again.
         self.manager.find(**filter_args)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Invalidate the cache via invalidate_cache().
         self.manager.invalidate_cache()
@@ -134,7 +133,7 @@ class Manager1Tests(unittest.TestCase):
         # Check that on the third find by name, list() is called again, because
         # the cache had been invalidated.
         self.manager.find(**filter_args)
-        self.assertEqual(self.manager._list_called, 2)
+        assert self.manager._list_called == 2
 
     def test_flush(self):
         """Test flush() and verify that it raises a DeprecationWarning."""
@@ -142,25 +141,25 @@ class Manager1Tests(unittest.TestCase):
 
         # Populate the cache by finding a resource by name.
         self.manager.find(**filter_args)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Check that on the second find by name, list() is not called again.
         self.manager.find(**filter_args)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Invalidate the cache via flush().
         with warnings.catch_warnings(record=True) as wngs:
             warnings.simplefilter("always")
             self.manager.flush()
-        self.assertEqual(len(wngs), 1)
+        assert len(wngs) == 1
         wng = wngs[0]
-        self.assertTrue(issubclass(wng.category, DeprecationWarning),
-                        "Unexpected warnings class: %s" % wng.category)
+        assert issubclass(wng.category, DeprecationWarning), \
+            "Unexpected warnings class: %s" % wng.category
 
         # Check that on the third find by name, list() is called again, because
         # the cache had been invalidated.
         self.manager.find(**filter_args)
-        self.assertEqual(self.manager._list_called, 2)
+        assert self.manager._list_called == 2
 
     def test_list_not_implemented(self):
         """Test that BaseManager.list() raises NotImplementedError."""
@@ -175,16 +174,16 @@ class Manager1Tests(unittest.TestCase):
             name_prop='fake_name_prop',
             query_props=[])
 
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             manager.list()
 
 
-class Manager2Tests(unittest.TestCase):
+class TestManager2(object):
     """
     Tests for the BaseManager class with two resources.
     """
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session(host='fake-host', userid='fake-user',
                                password='fake-pw')
         self.manager = MyManager(self.session)
@@ -217,7 +216,7 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(**filter_args)
 
-        self.assertEqual(len(resources), 0)
+        assert len(resources) == 0
 
     def test_findall_name_one(self):
         """Test BaseManager.findall() with one resource matching by the name
@@ -226,9 +225,9 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(**filter_args)
 
-        self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0].uri, self.resource2.uri)
-        self.assertEqual(resources[0].name, self.resource2.name)
+        assert len(resources) == 1
+        assert resources[0].uri == self.resource2.uri
+        assert resources[0].name == self.resource2.name
 
     def test_findall_str_none(self):
         """Test BaseManager.findall() with no resource matching by a
@@ -236,7 +235,7 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(other="not-exists")
 
-        self.assertEqual(len(resources), 0)
+        assert len(resources) == 0
 
     def test_findall_str_one(self):
         """Test BaseManager.findall() with one resource matching by a
@@ -244,9 +243,9 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(other="fake-other-2")
 
-        self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0].uri, self.resource2.uri)
-        self.assertEqual(resources[0].name, self.resource2.name)
+        assert len(resources) == 1
+        assert resources[0].uri == self.resource2.uri
+        assert resources[0].name == self.resource2.name
 
     def test_findall_str_one_and(self):
         """Test BaseManager.findall() with one resource matching by two
@@ -255,9 +254,9 @@ class Manager2Tests(unittest.TestCase):
         resources = self.manager.findall(same="fake-same",
                                          other="fake-other-2")
 
-        self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0].uri, self.resource2.uri)
-        self.assertEqual(resources[0].name, self.resource2.name)
+        assert len(resources) == 1
+        assert resources[0].uri == self.resource2.uri
+        assert resources[0].name == self.resource2.name
 
     def test_findall_str_two(self):
         """Test BaseManager.findall() with two resources matching by a
@@ -265,9 +264,9 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(same="fake-same")
 
-        self.assertEqual(len(resources), 2)
-        self.assertEqual(set([res.uri for res in resources]),
-                         set([self.resource1.uri, self.resource2.uri]))
+        assert len(resources) == 2
+        assert set([res.uri for res in resources]) == \
+            set([self.resource1.uri, self.resource2.uri])
 
     def test_findall_str_two_or(self):
         """Test BaseManager.findall() with two resources matching by a
@@ -277,9 +276,9 @@ class Manager2Tests(unittest.TestCase):
         resources = self.manager.findall(other=["fake-other-1",
                                                 "fake-other-2"])
 
-        self.assertEqual(len(resources), 2)
-        self.assertEqual(set([res.uri for res in resources]),
-                         set([self.resource1.uri, self.resource2.uri]))
+        assert len(resources) == 2
+        assert set([res.uri for res in resources]) == \
+            set([self.resource1.uri, self.resource2.uri])
 
     def test_findall_int_none(self):
         """Test BaseManager.findall() with no resource matching by a
@@ -287,7 +286,7 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(int_other=815)
 
-        self.assertEqual(len(resources), 0)
+        assert len(resources) == 0
 
     def test_findall_int_one(self):
         """Test BaseManager.findall() with one resource matching by a
@@ -295,9 +294,9 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(int_other=24)
 
-        self.assertEqual(len(resources), 1)
-        self.assertEqual(resources[0].uri, self.resource2.uri)
-        self.assertEqual(resources[0].name, self.resource2.name)
+        assert len(resources) == 1
+        assert resources[0].uri == self.resource2.uri
+        assert resources[0].name == self.resource2.name
 
     def test_findall_int_two(self):
         """Test BaseManager.findall() with two resources matching by a
@@ -305,16 +304,16 @@ class Manager2Tests(unittest.TestCase):
 
         resources = self.manager.findall(int_same=42)
 
-        self.assertEqual(len(resources), 2)
-        self.assertEqual(set([res.uri for res in resources]),
-                         set([self.resource1.uri, self.resource2.uri]))
+        assert len(resources) == 2
+        assert set([res.uri for res in resources]) == \
+            set([self.resource1.uri, self.resource2.uri])
 
     def test_find_name_none(self):
         """Test BaseManager.find() with no resource matching by the name
         resource property."""
         filter_args = {self.manager._name_prop: "not-exists"}
 
-        with self.assertRaises(NotFound):
+        with pytest.raises(NotFound):
             self.manager.find(**filter_args)
 
     def test_find_name_one(self):
@@ -324,13 +323,13 @@ class Manager2Tests(unittest.TestCase):
 
         resource = self.manager.find(**filter_args)
 
-        self.assertEqual(resource.uri, self.resource2.uri)
-        self.assertEqual(resource.name, self.resource2.name)
+        assert resource.uri == self.resource2.uri
+        assert resource.name == self.resource2.name
 
     def test_find_str_none(self):
         """Test BaseManager.find() with no resource matching by a
         string-typed (non-name) resource property."""
-        with self.assertRaises(NotFound):
+        with pytest.raises(NotFound):
 
             self.manager.find(other="not-exists")
 
@@ -340,20 +339,20 @@ class Manager2Tests(unittest.TestCase):
 
         resource = self.manager.find(other="fake-other-2")
 
-        self.assertEqual(resource.uri, self.resource2.uri)
-        self.assertEqual(resource.name, self.resource2.name)
+        assert resource.uri == self.resource2.uri
+        assert resource.name == self.resource2.name
 
     def test_find_str_two(self):
         """Test BaseManager.find() with two resources matching by a
         string-typed (non-name) resource property."""
-        with self.assertRaises(NoUniqueMatch):
+        with pytest.raises(NoUniqueMatch):
 
             self.manager.find(same="fake-same")
 
     def test_find_int_none(self):
         """Test BaseManager.find() with no resource matching by a
         string-typed (non-name) resource property."""
-        with self.assertRaises(NotFound):
+        with pytest.raises(NotFound):
 
             self.manager.find(int_other=815)
 
@@ -363,13 +362,13 @@ class Manager2Tests(unittest.TestCase):
 
         resource = self.manager.find(int_other=24)
 
-        self.assertEqual(resource.uri, self.resource2.uri)
-        self.assertEqual(resource.name, self.resource2.name)
+        assert resource.uri == self.resource2.uri
+        assert resource.name == self.resource2.name
 
     def test_find_int_two(self):
         """Test BaseManager.find() with two resources matching by a
         string-typed (non-name) resource property."""
-        with self.assertRaises(NoUniqueMatch):
+        with pytest.raises(NoUniqueMatch):
 
             self.manager.find(int_same=42)
 
@@ -377,7 +376,7 @@ class Manager2Tests(unittest.TestCase):
         """Test BaseManager.find_by_name() with no resource matching by the
         name resource property."""
 
-        with self.assertRaises(NotFound):
+        with pytest.raises(NotFound):
             self.manager.find_by_name("not-exists")
 
     def test_find_by_name_one(self):
@@ -386,21 +385,20 @@ class Manager2Tests(unittest.TestCase):
 
         resource = self.manager.find_by_name(self.resource2.name)
 
-        self.assertEqual(resource.uri, self.resource2.uri)
-        self.assertEqual(resource.name, self.resource2.name)
+        assert resource.uri == self.resource2.uri
+        assert resource.name == self.resource2.name
 
 
-class NameUriCacheTests(unittest.TestCase):
+class TestNameUriCache(object):
     """All tests for the _NameUriCache class."""
 
-    def assertDatetimeNear(self, dt1, dt2, max_delta=0.1):
+    def assert_datetime_near(self, dt1, dt2, max_delta=0.1):
         delta = abs(dt2 - dt1).total_seconds()
-        if delta > max_delta:
-            self.fail(
-                "Datetime values are %s s apart, maximum is %s s" %
-                (delta, max_delta))
+        assert delta <= max_delta, \
+            "Datetime values are %s s apart, maximum is %s s" % \
+            (delta, max_delta)
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session(host='fake-host', userid='fake-user',
                                password='fake-pw')
         self.manager = MyManager(self.session)
@@ -430,10 +428,10 @@ class NameUriCacheTests(unittest.TestCase):
     def test_initial(self):
         """Test initial cache state."""
 
-        self.assertEqual(self.cache._manager, self.manager)
-        self.assertEqual(self.cache._timetolive, self.timetolive)
-        self.assertEqual(self.cache._uris, {})
-        self.assertDatetimeNear(self.cache._invalidated, self.created)
+        assert self.cache._manager == self.manager
+        assert self.cache._timetolive == self.timetolive
+        assert self.cache._uris == {}
+        self.assert_datetime_near(self.cache._invalidated, self.created)
 
     def test_get_no_invalidate(self):
         """Tests for get() without auto-invalidating the cache."""
@@ -442,37 +440,37 @@ class NameUriCacheTests(unittest.TestCase):
         # cache brings all resources into the cache and causes list() to be
         # called once.
         resource1_uri = self.cache.get(self.resource1_name)
-        self.assertEqual(resource1_uri, self.resource1.uri)
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
-        self.assertEqual(self.manager._list_called, 1)
+        assert resource1_uri == self.resource1.uri
+        assert set(self.cache._uris.keys()) == self.all_names
+        assert self.manager._list_called == 1
 
         # Check that on the second access of the same name, list() is not
         # called again.
         resource1_uri = self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
     def test_get_non_existing(self):
         """Tests for get() of a non-existing entry."""
 
         # Check that accessing a non-existing resource name raises an
         # exception, but has populated the cache.
-        with self.assertRaises(NotFound):
+        with pytest.raises(NotFound):
             self.cache.get('non-existing')
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
-        self.assertEqual(self.manager._list_called, 1)
+        assert set(self.cache._uris.keys()) == self.all_names
+        assert self.manager._list_called == 1
 
     def test_get_auto_invalidate(self):
         """Tests for get() with auto-invalidating the cache."""
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertDatetimeNear(self.cache._invalidated, self.created)
+        assert self.manager._list_called == 1
+        self.assert_datetime_near(self.cache._invalidated, self.created)
 
         # Check that on the second access of the same name, list() is not
         # called again.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Wait until the time-to-live has safely passed.
         time.sleep(self.timetolive + 0.2)
@@ -481,33 +479,33 @@ class NameUriCacheTests(unittest.TestCase):
         # again, because the cache now has auto-invalidated.
         self.cache.get(self.resource1_name)
         invalidated = datetime.now()
-        self.assertEqual(self.manager._list_called, 2)
-        self.assertDatetimeNear(self.cache._invalidated, invalidated)
+        assert self.manager._list_called == 2
+        self.assert_datetime_near(self.cache._invalidated, invalidated)
 
     def test_get_manual_invalidate(self):
         """Tests for get() and manual invalidate()."""
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertDatetimeNear(self.cache._invalidated, self.created)
+        assert self.manager._list_called == 1
+        self.assert_datetime_near(self.cache._invalidated, self.created)
 
         # Check that on the second access of the same name, list() is not
         # called again.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Manually invalidate the cache.
         self.cache.invalidate()
         invalidated = datetime.now()
-        self.assertDatetimeNear(self.cache._invalidated, invalidated)
-        self.assertEqual(self.cache._uris, {})
+        self.assert_datetime_near(self.cache._invalidated, invalidated)
+        assert self.cache._uris == {}
 
         # Check that on the third access of the same name, list() is called
         # again, because the cache has been invalidated.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 2)
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        assert self.manager._list_called == 2
+        assert set(self.cache._uris.keys()) == self.all_names
 
     def test_refresh_empty(self):
         """Test refresh() on an empty cache."""
@@ -516,71 +514,71 @@ class NameUriCacheTests(unittest.TestCase):
         # re-populates it.
         self.cache.refresh()
         refreshed = datetime.now()
-        self.assertDatetimeNear(self.cache._invalidated, refreshed)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        self.assert_datetime_near(self.cache._invalidated, refreshed)
+        assert self.manager._list_called == 1
+        assert set(self.cache._uris.keys()) == self.all_names
 
     def test_refresh_populated(self):
         """Test refresh() on a fully populated cache."""
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertDatetimeNear(self.cache._invalidated, self.created)
+        assert self.manager._list_called == 1
+        self.assert_datetime_near(self.cache._invalidated, self.created)
 
         # Refresh the cache and check that this invalidates it and
         # re-populates it.
         self.cache.refresh()
         refreshed = datetime.now()
-        self.assertDatetimeNear(self.cache._invalidated, refreshed)
-        self.assertEqual(self.manager._list_called, 2)
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        self.assert_datetime_near(self.cache._invalidated, refreshed)
+        assert self.manager._list_called == 2
+        assert set(self.cache._uris.keys()) == self.all_names
 
     def test_delete_existing(self):
         """Test delete() of an existing cache entry, and re-accessing it."""
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertDatetimeNear(self.cache._invalidated, self.created)
+        assert self.manager._list_called == 1
+        self.assert_datetime_near(self.cache._invalidated, self.created)
 
         # Delete an existing cache entry and check that the entry is now gone.
         self.cache.delete(self.resource1_name)
-        self.assertEqual(set(self.cache._uris.keys()), {self.resource2_name})
+        assert set(self.cache._uris.keys()) == {self.resource2_name}
 
         # Re-access the deleted entry, and check that list() is called again
         # to get that entry into the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 2)
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        assert self.manager._list_called == 2
+        assert set(self.cache._uris.keys()) == self.all_names
 
     def test_delete_non_existing(self):
         """Test delete() of a non-existing cache entry."""
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertDatetimeNear(self.cache._invalidated, self.created)
+        assert self.manager._list_called == 1
+        self.assert_datetime_near(self.cache._invalidated, self.created)
 
         # Delete a non-existing cache entry and check that no exception is
         # raised and that the cache still contains the same entries.
         self.cache.delete('non-existing')
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        assert self.manager._list_called == 1
+        assert set(self.cache._uris.keys()) == self.all_names
 
     def test_delete_none(self):
         """Test delete() of `None`."""
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertDatetimeNear(self.cache._invalidated, self.created)
+        assert self.manager._list_called == 1
+        self.assert_datetime_near(self.cache._invalidated, self.created)
 
         # Delete `None` and check that no exception is raised and that the
         # cache still contains the same entries.
         self.cache.delete(None)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(set(self.cache._uris.keys()), self.all_names)
+        assert self.manager._list_called == 1
+        assert set(self.cache._uris.keys()) == self.all_names
 
     def test_update_from_empty(self):
         """Test update_from() on an empty cache."""
@@ -603,9 +601,8 @@ class NameUriCacheTests(unittest.TestCase):
         # Update the cache from these two resources check that they are now in
         # the cache (and that list() has not been called)
         self.cache.update_from([resource3, resource4])
-        self.assertEqual(self.manager._list_called, 0)
-        self.assertEqual(set(self.cache._uris.keys()),
-                         {resource3_name, resource4_name})
+        assert self.manager._list_called == 0
+        assert set(self.cache._uris.keys()) == {resource3_name, resource4_name}
 
     def test_update_from_populated_modify_name(self):
         """Test update_from() on a populated cache and modify the URI of one
@@ -627,23 +624,22 @@ class NameUriCacheTests(unittest.TestCase):
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(set(self.cache._uris.keys()),
-                         {self.resource1_name, self.resource2_name})
+        assert self.manager._list_called == 1
+        assert set(self.cache._uris.keys()) == \
+            {self.resource1_name, self.resource2_name}
 
         # Update the cache from these two resources check that they are now in
         # the cache (and that list() has not been called again).
         self.cache.update_from([resource3, resource2_new])
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(
-            set(self.cache._uris.keys()),
-            {self.resource1_name, self.resource2_name, resource3_name})
+        assert self.manager._list_called == 1
+        assert set(self.cache._uris.keys()) == \
+            {self.resource1_name, self.resource2_name, resource3_name}
 
         # Access the modified entry, and check that the entry has changed
         # (and that list() has not been called again).
         resource2_uri = self.cache.get(self.resource2_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(resource2_uri, resource2_new_uri)
+        assert self.manager._list_called == 1
+        assert resource2_uri == resource2_new_uri
 
     def test_update_empty(self):
         """Test update() on an empty cache."""
@@ -653,13 +649,13 @@ class NameUriCacheTests(unittest.TestCase):
 
         # Update the cache, to get the entry added.
         self.cache.update(resource3_name, resource3_uri)
-        self.assertEqual(self.manager._list_called, 0)
+        assert self.manager._list_called == 0
 
         # Access the new entry, and check the entry (and that list() has not
         # been called).
         act_resource3_uri = self.cache.get(resource3_name)
-        self.assertEqual(self.manager._list_called, 0)
-        self.assertEqual(act_resource3_uri, resource3_uri)
+        assert self.manager._list_called == 0
+        assert act_resource3_uri == resource3_uri
 
     def test_update_empty_empty(self):
         """Test update() on an empty cache with an empty resource name."""
@@ -670,8 +666,8 @@ class NameUriCacheTests(unittest.TestCase):
         # Update the cache with the empty resource name, and check that no
         # exception is raised and that the cache is still empty.
         self.cache.update(resource3_name, resource3_uri)
-        self.assertEqual(self.cache._uris, {})
-        self.assertEqual(self.manager._list_called, 0)
+        assert self.cache._uris == {}
+        assert self.manager._list_called == 0
 
     def test_update_empty_none(self):
         """Test update() on an empty cache with a `None` resource name."""
@@ -682,8 +678,8 @@ class NameUriCacheTests(unittest.TestCase):
         # Update the cache with the empty resource name, and check that no
         # exception is raised and that the cache is still empty.
         self.cache.update(resource3_name, resource3_uri)
-        self.assertEqual(self.cache._uris, {})
-        self.assertEqual(self.manager._list_called, 0)
+        assert self.cache._uris == {}
+        assert self.manager._list_called == 0
 
     def test_update_populated_new(self):
         """Test update() on a populated cache with a new entry."""
@@ -693,19 +689,19 @@ class NameUriCacheTests(unittest.TestCase):
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(set(self.cache._uris.keys()),
-                         {self.resource1_name, self.resource2_name})
+        assert self.manager._list_called == 1
+        assert set(self.cache._uris.keys()) == \
+            {self.resource1_name, self.resource2_name}
 
         # Update the cache, to get the new entry added.
         self.cache.update(resource3_name, resource3_uri)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Access the new entry, and check the entry (and that list() has not
         # been called).
         act_resource3_uri = self.cache.get(resource3_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(act_resource3_uri, resource3_uri)
+        assert self.manager._list_called == 1
+        assert act_resource3_uri == resource3_uri
 
     def test_update_populated_modify(self):
         """Test update() on a populated cache by modifying an existing
@@ -715,16 +711,16 @@ class NameUriCacheTests(unittest.TestCase):
 
         # Populate the cache.
         self.cache.get(self.resource1_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(set(self.cache._uris.keys()),
-                         {self.resource1_name, self.resource2_name})
+        assert self.manager._list_called == 1
+        assert set(self.cache._uris.keys()) == \
+            {self.resource1_name, self.resource2_name}
 
         # Update the cache, to get the existing entry modified.
         self.cache.update(self.resource2_name, resource2_new_uri)
-        self.assertEqual(self.manager._list_called, 1)
+        assert self.manager._list_called == 1
 
         # Access the new entry, and check the entry (and that list() has not
         # been called again).
         act_resource2_uri = self.cache.get(self.resource2_name)
-        self.assertEqual(self.manager._list_called, 1)
-        self.assertEqual(act_resource2_uri, resource2_new_uri)
+        assert self.manager._list_called == 1
+        assert act_resource2_uri == resource2_new_uri

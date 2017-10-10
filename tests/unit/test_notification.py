@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,9 +21,9 @@ requests_mock package.
 
 from __future__ import absolute_import, print_function
 
-import unittest
 import json
 import threading
+# FIXME: Migrate mock to zhmcclient_mock.
 from mock import patch
 
 from zhmcclient._notification import NotificationReceiver
@@ -125,9 +124,9 @@ def receive_notifications(receiver):
     return msg_items
 
 
-class NotificationTests(unittest.TestCase):
+class TestNotification(object):
 
-    def setUp(self):
+    def setup_method(self):
         self.topic = 'fake-topic'
         self.hmc = 'fake-hmc'
         self.userid = 'fake-userid'
@@ -148,7 +147,7 @@ class NotificationTests(unittest.TestCase):
         conn.mock_start()
         msg_items = receive_notifications(receiver)
 
-        self.assertEqual(msg_items, [])
+        assert msg_items == []
 
     @patch(target='stomp.Connection', new=MockedStompConnection)
     def test_one_message(self):
@@ -163,8 +162,8 @@ class NotificationTests(unittest.TestCase):
         conn.mock_start()
         msg_items = receive_notifications(receiver)
 
-        self.assertEqual(len(msg_items), 1)
+        assert len(msg_items) == 1
 
         msg0 = msg_items[0]
-        self.assertEqual(msg0[0], self.std_headers)
-        self.assertEqual(msg0[1], message_obj)
+        assert msg0[0] == self.std_headers
+        assert msg0[1] == message_obj

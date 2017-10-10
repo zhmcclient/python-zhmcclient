@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +19,10 @@ Unit tests for _urihandler module of the zhmcclient_mock package.
 from __future__ import absolute_import, print_function
 
 import requests.packages.urllib3
-import unittest
 from datetime import datetime
+# FIXME: Migrate mock to zhmcclient_mock
 from mock import MagicMock
+import pytest
 
 from zhmcclient_mock._hmc import FakedHmc, FakedMetricGroupDefinition, \
     FakedMetricObjectValues
@@ -69,8 +69,10 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     ImageActProfilesHandler, ImageActProfileHandler, \
     LoadActProfilesHandler, LoadActProfileHandler
 
+requests.packages.urllib3.disable_warnings()
 
-class HTTPErrorTests(unittest.TestCase):
+
+class TestHTTPError(object):
     """All tests for class HTTPError."""
 
     def test_attributes(self):
@@ -82,11 +84,11 @@ class HTTPErrorTests(unittest.TestCase):
 
         exc = HTTPError(method, uri, http_status, reason, message)
 
-        self.assertEqual(exc.method, method)
-        self.assertEqual(exc.uri, uri)
-        self.assertEqual(exc.http_status, http_status)
-        self.assertEqual(exc.reason, reason)
-        self.assertEqual(exc.message, message)
+        assert exc.method == method
+        assert exc.uri == uri
+        assert exc.http_status == http_status
+        assert exc.reason == reason
+        assert exc.message == message
 
     def test_response(self):
         method = 'GET'
@@ -105,13 +107,13 @@ class HTTPErrorTests(unittest.TestCase):
 
         response = exc.response()
 
-        self.assertEqual(response, expected_response)
+        assert response == expected_response
 
 
-class ConnectionErrorTests(unittest.TestCase):
+class TestConnectionError(object):
     """All tests for class ConnectionError."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1 = self.hmc.cpcs.add({'name': 'cpc1'})
 
@@ -120,7 +122,7 @@ class ConnectionErrorTests(unittest.TestCase):
 
         exc = ConnectionError(msg)
 
-        self.assertEqual(exc.message, msg)
+        assert exc.message == msg
 
 
 class DummyHandler1(object):
@@ -135,7 +137,7 @@ class DummyHandler3(object):
     pass
 
 
-class InvalidResourceErrorTests(unittest.TestCase):
+class TestInvalidResourceError(object):
     """All tests for class InvalidResourceError."""
 
     def test_attributes_with_handler(self):
@@ -146,11 +148,11 @@ class InvalidResourceErrorTests(unittest.TestCase):
 
         exc = InvalidResourceError(method, uri, DummyHandler1)
 
-        self.assertEqual(exc.method, method)
-        self.assertEqual(exc.uri, uri)
-        self.assertEqual(exc.http_status, exp_http_status)
-        self.assertEqual(exc.reason, exp_reason)
-        self.assertIn(uri, exc.message)
+        assert exc.method == method
+        assert exc.uri == uri
+        assert exc.http_status == exp_http_status
+        assert exc.reason == exp_reason
+        assert uri in exc.message
 
         # next test case
         exp_reason = 2
@@ -158,7 +160,7 @@ class InvalidResourceErrorTests(unittest.TestCase):
         exc = InvalidResourceError(method, uri, DummyHandler1,
                                    reason=exp_reason)
 
-        self.assertEqual(exc.reason, exp_reason)
+        assert exc.reason == exp_reason
 
         # next test case
         exp_resource_uri = '/api/resource'
@@ -166,7 +168,7 @@ class InvalidResourceErrorTests(unittest.TestCase):
         exc = InvalidResourceError(method, uri, DummyHandler1,
                                    resource_uri=exp_resource_uri)
 
-        self.assertIn(exp_resource_uri, exc.message)
+        assert exp_resource_uri in exc.message
 
     def test_attributes_no_handler(self):
         method = 'GET'
@@ -176,13 +178,13 @@ class InvalidResourceErrorTests(unittest.TestCase):
 
         exc = InvalidResourceError(method, uri, None)
 
-        self.assertEqual(exc.method, method)
-        self.assertEqual(exc.uri, uri)
-        self.assertEqual(exc.http_status, exp_http_status)
-        self.assertEqual(exc.reason, exp_reason)
+        assert exc.method == method
+        assert exc.uri == uri
+        assert exc.http_status == exp_http_status
+        assert exc.reason == exp_reason
 
 
-class InvalidMethodErrorTests(unittest.TestCase):
+class TestInvalidMethodError(object):
     """All tests for class InvalidMethodError."""
 
     def test_attributes_with_handler(self):
@@ -193,10 +195,10 @@ class InvalidMethodErrorTests(unittest.TestCase):
 
         exc = InvalidMethodError(method, uri, DummyHandler1)
 
-        self.assertEqual(exc.method, method)
-        self.assertEqual(exc.uri, uri)
-        self.assertEqual(exc.http_status, exp_http_status)
-        self.assertEqual(exc.reason, exp_reason)
+        assert exc.method == method
+        assert exc.uri == uri
+        assert exc.http_status == exp_http_status
+        assert exc.reason == exp_reason
 
     def test_attributes_no_handler(self):
         method = 'DELETE'
@@ -206,16 +208,16 @@ class InvalidMethodErrorTests(unittest.TestCase):
 
         exc = InvalidMethodError(method, uri, None)
 
-        self.assertEqual(exc.method, method)
-        self.assertEqual(exc.uri, uri)
-        self.assertEqual(exc.http_status, exp_http_status)
-        self.assertEqual(exc.reason, exp_reason)
+        assert exc.method == method
+        assert exc.uri == uri
+        assert exc.http_status == exp_http_status
+        assert exc.reason == exp_reason
 
 
-class CpcNotInDpmErrorTests(unittest.TestCase):
+class TestCpcNotInDpmError(object):
     """All tests for class CpcNotInDpmError."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1 = self.hmc.cpcs.add({'name': 'cpc1'})
 
@@ -227,16 +229,16 @@ class CpcNotInDpmErrorTests(unittest.TestCase):
 
         exc = CpcNotInDpmError(method, uri, self.cpc1)
 
-        self.assertEqual(exc.method, method)
-        self.assertEqual(exc.uri, uri)
-        self.assertEqual(exc.http_status, exp_http_status)
-        self.assertEqual(exc.reason, exp_reason)
+        assert exc.method == method
+        assert exc.uri == uri
+        assert exc.http_status == exp_http_status
+        assert exc.reason == exp_reason
 
 
-class CpcInDpmErrorTests(unittest.TestCase):
+class TestCpcInDpmError(object):
     """All tests for class CpcInDpmError."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1 = self.hmc.cpcs.add({'name': 'cpc1'})
 
@@ -248,129 +250,129 @@ class CpcInDpmErrorTests(unittest.TestCase):
 
         exc = CpcInDpmError(method, uri, self.cpc1)
 
-        self.assertEqual(exc.method, method)
-        self.assertEqual(exc.uri, uri)
-        self.assertEqual(exc.http_status, exp_http_status)
-        self.assertEqual(exc.reason, exp_reason)
+        assert exc.method == method
+        assert exc.uri == uri
+        assert exc.http_status == exp_http_status
+        assert exc.reason == exp_reason
 
 
-class ParseQueryParmsTests(unittest.TestCase):
+class TestParseQueryParms(object):
     """All tests for parse_query_parms()."""
 
     def test_none(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', None)
-        self.assertIsNone(filter_args)
+        assert filter_args is None
 
     def test_empty(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', '')
-        self.assertIsNone(filter_args)
+        assert filter_args is None
 
     def test_one_normal(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b')
-        self.assertEqual(filter_args, {'a': 'b'})
+        assert filter_args == {'a': 'b'}
 
     def test_two_normal(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&c=d')
-        self.assertEqual(filter_args, {'a': 'b', 'c': 'd'})
+        assert filter_args == {'a': 'b', 'c': 'd'}
 
     def test_one_trailing_amp(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&')
-        self.assertEqual(filter_args, {'a': 'b'})
+        assert filter_args == {'a': 'b'}
 
     def test_one_leading_amp(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', '&a=b')
-        self.assertEqual(filter_args, {'a': 'b'})
+        assert filter_args == {'a': 'b'}
 
     def test_one_missing_value(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=')
-        self.assertEqual(filter_args, {'a': ''})
+        assert filter_args == {'a': ''}
 
     def test_one_missing_name(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', '=b')
-        self.assertEqual(filter_args, {'': 'b'})
+        assert filter_args == {'': 'b'}
 
     def test_two_same_normal(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&a=c')
-        self.assertEqual(filter_args, {'a': ['b', 'c']})
+        assert filter_args == {'a': ['b', 'c']}
 
     def test_two_same_one_normal(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b&d=e&a=c')
-        self.assertEqual(filter_args, {'a': ['b', 'c'], 'd': 'e'})
+        assert filter_args == {'a': ['b', 'c'], 'd': 'e'}
 
     def test_space_value_1(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b%20c')
-        self.assertEqual(filter_args, {'a': 'b c'})
+        assert filter_args == {'a': 'b c'}
 
     def test_space_value_2(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=%20c')
-        self.assertEqual(filter_args, {'a': ' c'})
+        assert filter_args == {'a': ' c'}
 
     def test_space_value_3(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=b%20')
-        self.assertEqual(filter_args, {'a': 'b '})
+        assert filter_args == {'a': 'b '}
 
     def test_space_value_4(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a=%20')
-        self.assertEqual(filter_args, {'a': ' '})
+        assert filter_args == {'a': ' '}
 
     def test_space_name_1(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a%20b=c')
-        self.assertEqual(filter_args, {'a b': 'c'})
+        assert filter_args == {'a b': 'c'}
 
     def test_space_name_2(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', '%20b=c')
-        self.assertEqual(filter_args, {' b': 'c'})
+        assert filter_args == {' b': 'c'}
 
     def test_space_name_3(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', 'a%20=c')
-        self.assertEqual(filter_args, {'a ': 'c'})
+        assert filter_args == {'a ': 'c'}
 
     def test_space_name_4(self):
         filter_args = parse_query_parms('fake-meth', 'fake-uri', '%20=c')
-        self.assertEqual(filter_args, {' ': 'c'})
+        assert filter_args == {' ': 'c'}
 
     def test_invalid_format_1(self):
-        with self.assertRaises(HTTPError) as cm:
+        with pytest.raises(HTTPError) as exc_info:
             parse_query_parms('fake-meth', 'fake-uri', 'a==b')
-        exc = cm.exception
-        self.assertEqual(exc.http_status, 400)
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.http_status == 400
+        assert exc.reason == 1
 
     def test_invalid_format_2(self):
-        with self.assertRaises(HTTPError) as cm:
+        with pytest.raises(HTTPError) as exc_info:
             parse_query_parms('fake-meth', 'fake-uri', 'a=b=c')
-        exc = cm.exception
-        self.assertEqual(exc.http_status, 400)
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.http_status == 400
+        assert exc.reason == 1
 
     def test_invalid_format_3(self):
-        with self.assertRaises(HTTPError) as cm:
+        with pytest.raises(HTTPError) as exc_info:
             parse_query_parms('fake-meth', 'fake-uri', 'a')
-        exc = cm.exception
-        self.assertEqual(exc.http_status, 400)
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.http_status == 400
+        assert exc.reason == 1
 
 
-class UriHandlerHandlerEmptyTests(unittest.TestCase):
+class TestUriHandlerHandlerEmpty(object):
     """All tests for UriHandler.handler() with empty URIs."""
 
-    def setUp(self):
+    def setup_method(self):
         self.uris = ()
         self.urihandler = UriHandler(self.uris)
 
     def test_uris_empty_1(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('/api/cpcs', 'GET')
 
     def test_uris_empty_2(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('', 'GET')
 
 
-class UriHandlerHandlerSimpleTests(unittest.TestCase):
+class TestUriHandlerHandlerSimple(object):
     """All tests for UriHandler.handler() with a simple set of URIs."""
 
-    def setUp(self):
+    def setup_method(self):
         self.uris = (
             (r'/api/cpcs', DummyHandler1),
             (r'/api/cpcs/([^/]+)', DummyHandler2),
@@ -381,60 +383,60 @@ class UriHandlerHandlerSimpleTests(unittest.TestCase):
     def test_ok1(self):
         handler_class, uri_parms = self.urihandler.handler(
             '/api/cpcs', 'GET')
-        self.assertEqual(handler_class, DummyHandler1)
-        self.assertEqual(len(uri_parms), 0)
+        assert handler_class == DummyHandler1
+        assert len(uri_parms) == 0
 
     def test_ok2(self):
         handler_class, uri_parms = self.urihandler.handler(
             '/api/cpcs/fake-id1', 'GET')
-        self.assertEqual(handler_class, DummyHandler2)
-        self.assertEqual(len(uri_parms), 1)
-        self.assertEqual(uri_parms[0], 'fake-id1')
+        assert handler_class == DummyHandler2
+        assert len(uri_parms) == 1
+        assert uri_parms[0] == 'fake-id1'
 
     def test_ok3(self):
         handler_class, uri_parms = self.urihandler.handler(
             '/api/cpcs/fake-id1/child', 'GET')
-        self.assertEqual(handler_class, DummyHandler3)
-        self.assertEqual(len(uri_parms), 1)
-        self.assertEqual(uri_parms[0], 'fake-id1')
+        assert handler_class == DummyHandler3
+        assert len(uri_parms) == 1
+        assert uri_parms[0] == 'fake-id1'
 
     def test_err_begin_missing(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('api/cpcs', 'GET')
 
     def test_err_begin_extra(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('x/api/cpcs', 'GET')
 
     def test_err_end_missing(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('/api/cpc', 'GET')
 
     def test_err_end_extra(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('/api/cpcs_x', 'GET')
 
     def test_err_end_slash(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('/api/cpcs/', 'GET')
 
     def test_err_end2_slash(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('/api/cpcs/fake-id1/', 'GET')
 
     def test_err_end2_missing(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('/api/cpcs/fake-id1/chil', 'GET')
 
     def test_err_end2_extra(self):
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.handler('/api/cpcs/fake-id1/child_x', 'GET')
 
 
-class UriHandlerMethodTests(unittest.TestCase):
+class TestUriHandlerMethod(object):
     """All tests for get(), post(), delete() methods of class UriHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.uris = (
             (r'/api/cpcs', DummyHandler1),
             (r'/api/cpcs/([^/]+)', DummyHandler2),
@@ -468,7 +470,7 @@ class UriHandlerMethodTests(unittest.TestCase):
         self.urihandler = UriHandler(self.uris)
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
-    def tearDown(self):
+    def teardown_method(self):
         delattr(DummyHandler1, 'get')
         delattr(DummyHandler1, 'post')
         delattr(DummyHandler2, 'get')
@@ -479,48 +481,48 @@ class UriHandlerMethodTests(unittest.TestCase):
         # the function to be tested
         result = self.urihandler.get(self.hmc, '/api/cpcs', True)
 
-        self.assertEqual(result, self.cpcs)
+        assert result == self.cpcs
 
         DummyHandler1.get.assert_called_with(
             'GET', self.hmc, '/api/cpcs', tuple(), True)
-        self.assertEqual(DummyHandler1.post.called, 0)
-        self.assertEqual(DummyHandler2.get.called, 0)
-        self.assertEqual(DummyHandler2.delete.called, 0)
+        assert DummyHandler1.post.called == 0
+        assert DummyHandler2.get.called == 0
+        assert DummyHandler2.delete.called == 0
 
     def test_get_cpc1(self):
 
         # the function to be tested
         result = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
 
-        self.assertEqual(result, self.cpc1)
+        assert result == self.cpc1
 
-        self.assertEqual(DummyHandler1.get.called, 0)
-        self.assertEqual(DummyHandler1.post.called, 0)
+        assert DummyHandler1.get.called == 0
+        assert DummyHandler1.post.called == 0
         DummyHandler2.get.assert_called_with(
             'GET', self.hmc, '/api/cpcs/1', tuple('1'), True)
-        self.assertEqual(DummyHandler2.delete.called, 0)
+        assert DummyHandler2.delete.called == 0
 
     def test_post_cpcs(self):
 
         # the function to be tested
         result = self.urihandler.post(self.hmc, '/api/cpcs', {}, True, True)
 
-        self.assertEqual(result, self.new_cpc)
+        assert result == self.new_cpc
 
-        self.assertEqual(DummyHandler1.get.called, 0)
+        assert DummyHandler1.get.called == 0
         DummyHandler1.post.assert_called_with(
             'POST', self.hmc, '/api/cpcs', tuple(), {}, True, True)
-        self.assertEqual(DummyHandler2.get.called, 0)
-        self.assertEqual(DummyHandler2.delete.called, 0)
+        assert DummyHandler2.get.called == 0
+        assert DummyHandler2.delete.called == 0
 
     def test_delete_cpc2(self):
 
         # the function to be tested
         self.urihandler.delete(self.hmc, '/api/cpcs/2', True)
 
-        self.assertEqual(DummyHandler1.get.called, 0)
-        self.assertEqual(DummyHandler1.post.called, 0)
-        self.assertEqual(DummyHandler2.get.called, 0)
+        assert DummyHandler1.get.called == 0
+        assert DummyHandler1.post.called == 0
+        assert DummyHandler2.get.called == 0
         DummyHandler2.delete.assert_called_with(
             'DELETE', self.hmc, '/api/cpcs/2', tuple('2'), True)
 
@@ -815,10 +817,10 @@ def standard_test_hmc():
     return hmc, hmc_resources
 
 
-class GenericGetPropertiesHandlerTests(unittest.TestCase):
+class TestGenericGetPropertiesHandler(object):
     """All tests for class GenericGetPropertiesHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)', GenericGetPropertiesHandler),
@@ -839,13 +841,13 @@ class GenericGetPropertiesHandlerTests(unittest.TestCase):
             'description': 'CPC #1 (classic mode)',
             'status': 'operating',
         }
-        self.assertEqual(cpc1, exp_cpc1)
+        assert cpc1 == exp_cpc1
 
     def test_get_error_offline(self):
 
         self.hmc.disable()
 
-        with self.assertRaises(ConnectionError):
+        with pytest.raises(ConnectionError):
             # the function to be tested:
             self.urihandler.get(self.hmc, '/api/cpcs/1', True)
 
@@ -855,10 +857,10 @@ class _GenericGetUpdatePropertiesHandler(GenericGetPropertiesHandler,
     pass
 
 
-class GenericUpdatePropertiesHandlerTests(unittest.TestCase):
+class TestGenericUpdatePropertiesHandler(object):
     """All tests for class GenericUpdatePropertiesHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)', _GenericGetUpdatePropertiesHandler),
@@ -874,9 +876,9 @@ class GenericUpdatePropertiesHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(self.hmc, '/api/cpcs/1', update_cpc1, True,
                                     True)
 
-        self.assertEqual(resp, None)
+        assert resp is None
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
-        self.assertEqual(cpc1['description'], 'CPC #1 (updated)')
+        assert cpc1['description'] == 'CPC #1 (updated)'
 
     def test_post_error_offline(self):
 
@@ -886,16 +888,16 @@ class GenericUpdatePropertiesHandlerTests(unittest.TestCase):
             'description': 'CPC #1 (updated)',
         }
 
-        with self.assertRaises(ConnectionError):
+        with pytest.raises(ConnectionError):
             # the function to be tested:
             self.urihandler.post(self.hmc, '/api/cpcs/1', update_cpc1, True,
                                  True)
 
 
-class GenericDeleteHandlerTests(unittest.TestCase):
+class TestGenericDeleteHandler(object):
     """All tests for class GenericDeleteHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             ('/api/console/ldap-server-definitions/([^/]+)',
@@ -910,10 +912,10 @@ class GenericDeleteHandlerTests(unittest.TestCase):
         # the function to be tested:
         ret = self.urihandler.delete(self.hmc, uri, True)
 
-        self.assertIsNone(ret)
+        assert ret is None
 
         # Verify it no longer exists:
-        with self.assertRaises(KeyError):
+        with pytest.raises(KeyError):
             self.hmc.lookup_by_uri(uri)
 
     def test_delete_error_offline(self):
@@ -922,15 +924,15 @@ class GenericDeleteHandlerTests(unittest.TestCase):
 
         uri = '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1'
 
-        with self.assertRaises(ConnectionError):
+        with pytest.raises(ConnectionError):
             # the function to be tested:
             self.urihandler.delete(self.hmc, uri, True)
 
 
-class VersionHandlerTests(unittest.TestCase):
+class TestVersionHandler(object):
     """All tests for class VersionHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/version', VersionHandler),
@@ -949,13 +951,13 @@ class VersionHandlerTests(unittest.TestCase):
             'api-major-version': int(api_major),
             'api-minor-version': int(api_minor),
         }
-        self.assertEqual(resp, exp_resp)
+        assert resp == exp_resp
 
 
-class ConsoleHandlerTests(unittest.TestCase):
+class TestConsoleHandler(object):
     """All tests for class ConsoleHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -975,13 +977,13 @@ class ConsoleHandlerTests(unittest.TestCase):
             'object-uri': '/api/console',
             'name': 'fake_console_name',
         }
-        self.assertEqual(console, exp_console)
+        assert console == exp_console
 
 
-class ConsoleRestartHandlerTests(unittest.TestCase):
+class TestConsoleRestartHandler(object):
     """All tests for class ConsoleRestartHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -999,8 +1001,8 @@ class ConsoleRestartHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(
             self.hmc, '/api/console/operations/restart', body, True, True)
 
-        self.assertTrue(self.hmc.enabled)
-        self.assertIsNone(resp)
+        assert self.hmc.enabled
+        assert resp is None
 
     def test_restart_error_not_found(self):
 
@@ -1010,20 +1012,20 @@ class ConsoleRestartHandlerTests(unittest.TestCase):
         body = {
             'force': False,
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(
                 self.hmc, '/api/console/operations/restart', body, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
 
-class ConsoleShutdownHandlerTests(unittest.TestCase):
+class TestConsoleShutdownHandler(object):
     """All tests for class ConsoleShutdownHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -1041,8 +1043,8 @@ class ConsoleShutdownHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(
             self.hmc, '/api/console/operations/shutdown', body, True, True)
 
-        self.assertFalse(self.hmc.enabled)
-        self.assertIsNone(resp)
+        assert not self.hmc.enabled
+        assert resp is None
 
     def test_shutdown_error_not_found(self):
 
@@ -1052,20 +1054,20 @@ class ConsoleShutdownHandlerTests(unittest.TestCase):
         body = {
             'force': False,
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(
                 self.hmc, '/api/console/operations/shutdown', body, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
 
-class ConsoleMakePrimaryHandlerTests(unittest.TestCase):
+class TestConsoleMakePrimaryHandler(object):
     """All tests for class ConsoleMakePrimaryHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -1081,8 +1083,8 @@ class ConsoleMakePrimaryHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(
             self.hmc, '/api/console/operations/make-primary', None, True, True)
 
-        self.assertTrue(self.hmc.enabled)
-        self.assertIsNone(resp)
+        assert self.hmc.enabled
+        assert resp is None
 
     def test_make_primary_error_not_found(self):
 
@@ -1092,21 +1094,21 @@ class ConsoleMakePrimaryHandlerTests(unittest.TestCase):
         body = {
             'force': False,
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(
                 self.hmc, '/api/console/operations/make-primary', body, True,
                 True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
 
-class ConsoleReorderUserPatternsHandlerTests(unittest.TestCase):
+class TestConsoleReorderUserPatternsHandler(object):
     """All tests for class ConsoleReorderUserPatternsHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         # Remove the standard User Pattern objects for this test
@@ -1172,7 +1174,7 @@ class ConsoleReorderUserPatternsHandlerTests(unittest.TestCase):
         act_uris = [up['element-uri'] for up in act_user_patterns]
 
         # Verify that the actual order is the new (expected) order:
-        self.assertEqual(act_uris, new_uris)
+        assert act_uris == new_uris
 
     def test_reorder_error_not_found(self):
 
@@ -1182,7 +1184,7 @@ class ConsoleReorderUserPatternsHandlerTests(unittest.TestCase):
         body = {
             'user-pattern-uris': []
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
 
@@ -1190,14 +1192,14 @@ class ConsoleReorderUserPatternsHandlerTests(unittest.TestCase):
                 self.hmc, '/api/console/operations/reorder-user-patterns',
                 body, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
 
-class ConsoleGetAuditLogHandlerTests(unittest.TestCase):
+class TestConsoleGetAuditLogHandler(object):
     """All tests for class ConsoleGetAuditLogHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -1214,7 +1216,7 @@ class ConsoleGetAuditLogHandlerTests(unittest.TestCase):
             self.hmc, '/api/console/operations/get-audit-log', None, True,
             True)
 
-        self.assertEqual(resp, [])
+        assert resp == []
 
     # TODO: Add testcases with non-empty audit log (once supported in mock)
 
@@ -1223,21 +1225,21 @@ class ConsoleGetAuditLogHandlerTests(unittest.TestCase):
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(
                 self.hmc, '/api/console/operations/get-audit-log', None, True,
                 True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
 
-class ConsoleGetSecurityLogHandlerTests(unittest.TestCase):
+class TestConsoleGetSecurityLogHandler(object):
     """All tests for class ConsoleGetSecurityLogHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -1254,7 +1256,7 @@ class ConsoleGetSecurityLogHandlerTests(unittest.TestCase):
             self.hmc, '/api/console/operations/get-security-log', None, True,
             True)
 
-        self.assertEqual(resp, [])
+        assert resp == []
 
     # TODO: Add testcases with non-empty security log (once supported in mock)
 
@@ -1263,21 +1265,21 @@ class ConsoleGetSecurityLogHandlerTests(unittest.TestCase):
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(
                 self.hmc, '/api/console/operations/get-security-log', None,
                 True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
 
-class ConsoleListUnmanagedCpcsHandlerTests(unittest.TestCase):
+class TestConsoleListUnmanagedCpcsHandler(object):
     """All tests for class ConsoleListUnmanagedCpcsHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -1294,7 +1296,7 @@ class ConsoleListUnmanagedCpcsHandlerTests(unittest.TestCase):
             self.hmc, '/api/console/operations/list-unmanaged-cpcs', True)
 
         cpcs = resp['cpcs']
-        self.assertEqual(cpcs, [])
+        assert cpcs == []
 
     # TODO: Add testcases for non-empty list of unmanaged CPCs
 
@@ -1303,20 +1305,20 @@ class ConsoleListUnmanagedCpcsHandlerTests(unittest.TestCase):
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.get(
                 self.hmc, '/api/console/operations/list-unmanaged-cpcs', True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
 
-class UserHandlersTests(unittest.TestCase):
+class TestUserHandlers(object):
     """All tests for classes UsersHandler and UserHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -1339,20 +1341,20 @@ class UserHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(users, exp_users)
+        assert users == exp_users
 
     def test_list_error_console_not_found(self):
 
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.get(self.hmc, '/api/console/users', True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_get(self):
 
@@ -1367,7 +1369,7 @@ class UserHandlersTests(unittest.TestCase):
             'description': 'User #1',
             'type': 'system-defined',
         }
-        self.assertEqual(user1, exp_user1)
+        assert user1 == exp_user1
 
     def test_create_verify(self):
         new_user2 = {
@@ -1382,10 +1384,10 @@ class UserHandlersTests(unittest.TestCase):
         resp = self.urihandler.post(self.hmc, '/api/console/users',
                                     new_user2, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('object-uri', resp)
+        assert len(resp) == 1
+        assert 'object-uri' in resp
         new_user2_uri = resp['object-uri']
-        self.assertEqual(new_user2_uri, '/api/users/2')
+        assert new_user2_uri == '/api/users/2'
 
         exp_user2 = {
             'object-id': '2',
@@ -1399,7 +1401,7 @@ class UserHandlersTests(unittest.TestCase):
         # the function to be tested:
         user2 = self.urihandler.get(self.hmc, '/api/users/2', True)
 
-        self.assertEqual(user2, exp_user2)
+        assert user2 == exp_user2
 
     def test_create_error_console_not_found(self):
 
@@ -1414,14 +1416,14 @@ class UserHandlersTests(unittest.TestCase):
             'authentication-type': 'local',
         }
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, '/api/console/users', new_user2,
                                  True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_update_verify(self):
         update_user1 = {
@@ -1434,7 +1436,7 @@ class UserHandlersTests(unittest.TestCase):
 
         user1 = self.urihandler.get(self.hmc, '/api/users/fake-user-oid-1',
                                     True)
-        self.assertEqual(user1['description'], 'updated user #1')
+        assert user1['description'] == 'updated user #1'
 
     def test_delete_verify_all(self):
         testcases = [
@@ -1478,12 +1480,12 @@ class UserHandlersTests(unittest.TestCase):
 
         if exp_exc_tuple is not None:
 
-            with self.assertRaises(HTTPError) as cm:
+            with pytest.raises(HTTPError) as exc_info:
 
                 # Execute the code to be tested
                 self.urihandler.delete(self.hmc, user_uri, True)
 
-            exc = cm.exception
+            exc = exc_info.value
             assert exc.http_status == exp_exc_tuple[0]
             assert exc.reason == exp_exc_tuple[1]
 
@@ -1496,14 +1498,14 @@ class UserHandlersTests(unittest.TestCase):
             self.urihandler.delete(self.hmc, user_uri, True)
 
             # Verify that it has been deleted
-            with self.assertRaises(InvalidResourceError):
+            with pytest.raises(InvalidResourceError):
                 self.urihandler.get(self.hmc, user_uri, True)
 
 
-class UserAddUserRoleHandlerTests(unittest.TestCase):
+class TestUserAddUserRoleHandler(object):
     """All tests for class UserAddUserRoleHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         # Has a system-defined User (oid=fake-user-oid-1)
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
@@ -1553,13 +1555,13 @@ class UserAddUserRoleHandlerTests(unittest.TestCase):
         # the function to be tested:
         resp = self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
         user2_props = self.urihandler.get(self.hmc, self.user2_uri, True)
-        self.assertTrue('user-roles' in user2_props)
+        assert 'user-roles' in user2_props
         user_roles = user2_props['user-roles']
-        self.assertEqual(len(user_roles), 1)
+        assert len(user_roles) == 1
         user_role_uri = user_roles[0]
-        self.assertEqual(user_role_uri, self.user_role2_uri)
+        assert user_role_uri == self.user_role2_uri
 
     def test_add_error_bad_user(self):
         """Test failed addition of a user role to a bad user."""
@@ -1581,13 +1583,13 @@ class UserAddUserRoleHandlerTests(unittest.TestCase):
         input_parms = {
             'user-role-uri': self.user_role2_uri
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     # TODO: Add testcase for adding to system-defined or pattern-based user
 
@@ -1613,19 +1615,19 @@ class UserAddUserRoleHandlerTests(unittest.TestCase):
         input_parms = {
             'user-role-uri': bad_user_role_uri
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 2)
+        exc = exc_info.value
+        assert exc.reason == 2
 
 
-class UserRemoveUserRoleHandlerTests(unittest.TestCase):
+class TestUserRemoveUserRoleHandler(object):
     """All tests for class UserRemoveUserRoleHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         # Has a system-defined User (oid=fake-user-oid-1)
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
@@ -1684,11 +1686,11 @@ class UserRemoveUserRoleHandlerTests(unittest.TestCase):
         # the function to be tested:
         resp = self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
         user2_props = self.urihandler.get(self.hmc, self.user2_uri, True)
-        self.assertTrue('user-roles' in user2_props)
+        assert 'user-roles' in user2_props
         user_roles = user2_props['user-roles']
-        self.assertEqual(len(user_roles), 0)
+        assert len(user_roles) == 0
 
     def test_remove_error_bad_user(self):
         """Test failed removal of a user role from a bad user."""
@@ -1710,13 +1712,13 @@ class UserRemoveUserRoleHandlerTests(unittest.TestCase):
         input_parms = {
             'user-role-uri': self.user_role2_uri
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     # TODO: Add testcase for removing from system-defined or pattern-based user
 
@@ -1742,13 +1744,13 @@ class UserRemoveUserRoleHandlerTests(unittest.TestCase):
         input_parms = {
             'user-role-uri': bad_user_role_uri
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 2)
+        exc = exc_info.value
+        assert exc.reason == 2
 
     def test_remove_error_no_user_role(self):
         """Test failed removal of a user role that a user does not have."""
@@ -1783,19 +1785,19 @@ class UserRemoveUserRoleHandlerTests(unittest.TestCase):
         input_parms = {
             'user-role-uri': self.user_role2_uri
         }
-        with self.assertRaises(ConflictError) as cm:
+        with pytest.raises(ConflictError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 316)
+        exc = exc_info.value
+        assert exc.reason == 316
 
 
-class UserRoleHandlersTests(unittest.TestCase):
+class TestUserRoleHandlers(object):
     """All tests for classes UserRolesHandler and UserRoleHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -1819,20 +1821,20 @@ class UserRoleHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(user_roles, exp_user_roles)
+        assert user_roles == exp_user_roles
 
     def test_list_error_console_not_found(self):
 
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.get(self.hmc, '/api/console/user-roles', True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_get(self):
 
@@ -1847,7 +1849,7 @@ class UserRoleHandlersTests(unittest.TestCase):
             'description': 'User Role #1',
             'type': 'system-defined',
         }
-        self.assertEqual(user_role1, exp_user_role1)
+        assert user_role1 == exp_user_role1
 
     def test_create_verify(self):
         new_user_role2 = {
@@ -1859,14 +1861,14 @@ class UserRoleHandlersTests(unittest.TestCase):
         resp = self.urihandler.post(
             self.hmc, '/api/console/user-roles', new_user_role2, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('object-uri', resp)
+        assert len(resp) == 1
+        assert 'object-uri' in resp
         new_user_role2_uri = resp['object-uri']
 
         # the function to be tested:
         user_role2 = self.urihandler.get(self.hmc, new_user_role2_uri, True)
 
-        self.assertEqual(user_role2['type'], 'user-defined')
+        assert user_role2['type'] == 'user-defined'
 
     def test_create_error_console_not_found(self):
 
@@ -1878,14 +1880,14 @@ class UserRoleHandlersTests(unittest.TestCase):
             'description': 'User Role #2',
         }
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, '/api/console/user-roles',
                                  new_user_role2, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_create_error_type(self):
 
@@ -1895,14 +1897,14 @@ class UserRoleHandlersTests(unittest.TestCase):
             'type': 'user-defined',  # error: type is implied
         }
 
-        with self.assertRaises(BadRequestError) as cm:
+        with pytest.raises(BadRequestError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, '/api/console/user-roles',
                                  new_user_role2, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 6)
+        exc = exc_info.value
+        assert exc.reason == 6
 
     def test_update_verify(self):
         update_user_role1 = {
@@ -1916,7 +1918,7 @@ class UserRoleHandlersTests(unittest.TestCase):
 
         user_role1 = self.urihandler.get(
             self.hmc, '/api/user-roles/fake-user-role-oid-1', True)
-        self.assertEqual(user_role1['description'], 'updated user #1')
+        assert user_role1['description'] == 'updated user #1'
 
     def test_delete_verify(self):
 
@@ -1938,14 +1940,14 @@ class UserRoleHandlersTests(unittest.TestCase):
         self.urihandler.delete(self.hmc, new_user_role2_uri, True)
 
         # Verify that it has been deleted
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, new_user_role2_uri, True)
 
 
-class UserRoleAddPermissionHandlerTests(unittest.TestCase):
+class TestUserRoleAddPermissionHandler(object):
     """All tests for class UserRoleAddPermissionHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
 
@@ -2010,13 +2012,13 @@ class UserRoleAddPermissionHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(
             self.hmc, uri, input_permission, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
         props = self.urihandler.get(self.hmc, self.user_role2_uri, True)
-        self.assertTrue('permissions' in props)
+        assert 'permissions' in props
         permissions = props['permissions']
-        self.assertEqual(len(permissions), 1)
+        assert len(permissions) == 1
         perm = permissions[0]
-        self.assertEqual(perm, exp_permission)
+        assert perm == exp_permission
 
     def test_add_error_bad_user_role(self):
         """Test failed addition of a permission to a bad User Role."""
@@ -2030,13 +2032,13 @@ class UserRoleAddPermissionHandlerTests(unittest.TestCase):
             'include-members': True,
             'view-only-mode': False,
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_add_error_system_user_role(self):
         """Test failed addition of a permission to a system-defined User
@@ -2051,19 +2053,19 @@ class UserRoleAddPermissionHandlerTests(unittest.TestCase):
             'include-members': True,
             'view-only-mode': False,
         }
-        with self.assertRaises(BadRequestError) as cm:
+        with pytest.raises(BadRequestError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 314)
+        exc = exc_info.value
+        assert exc.reason == 314
 
 
-class UserRoleRemovePermissionHandlerTests(unittest.TestCase):
+class TestUserRoleRemovePermissionHandler(object):
     """All tests for class UserRoleRemovePermissionHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
 
@@ -2135,11 +2137,11 @@ class UserRoleRemovePermissionHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(
             self.hmc, uri, input_permission, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
         props = self.urihandler.get(self.hmc, self.user_role2_uri, True)
-        self.assertTrue('permissions' in props)
+        assert 'permissions' in props
         permissions = props['permissions']
-        self.assertEqual(len(permissions), 0)
+        assert len(permissions) == 0
 
     def test_remove_error_bad_user_role(self):
         """Test failed removal of a permission from a bad User Role."""
@@ -2153,13 +2155,13 @@ class UserRoleRemovePermissionHandlerTests(unittest.TestCase):
             'include-members': True,
             'view-only-mode': False,
         }
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_remove_error_system_user_role(self):
         """Test failed removal of a permission from a system-defined User
@@ -2174,19 +2176,19 @@ class UserRoleRemovePermissionHandlerTests(unittest.TestCase):
             'include-members': True,
             'view-only-mode': False,
         }
-        with self.assertRaises(BadRequestError) as cm:
+        with pytest.raises(BadRequestError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, uri, input_parms, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 314)
+        exc = exc_info.value
+        assert exc.reason == 314
 
 
-class TaskHandlersTests(unittest.TestCase):
+class TestTaskHandlers(object):
     """All tests for classes TasksHandler and TaskHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -2212,20 +2214,20 @@ class TaskHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(tasks, exp_tasks)
+        assert tasks == exp_tasks
 
     def test_list_error_console_not_found(self):
 
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.get(self.hmc, '/api/console/tasks', True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_get(self):
 
@@ -2239,13 +2241,13 @@ class TaskHandlersTests(unittest.TestCase):
             'name': 'fake_task_name_1',
             'description': 'Task #1',
         }
-        self.assertEqual(task1, exp_task1)
+        assert task1 == exp_task1
 
 
-class UserPatternHandlersTests(unittest.TestCase):
+class TestUserPatternHandlers(object):
     """All tests for classes UserPatternsHandler and UserPatternHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -2270,20 +2272,20 @@ class UserPatternHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(user_patterns, exp_user_patterns)
+        assert user_patterns == exp_user_patterns
 
     def test_list_error_console_not_found(self):
 
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.get(self.hmc, '/api/console/user-patterns', True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_get(self):
 
@@ -2303,7 +2305,7 @@ class UserPatternHandlersTests(unittest.TestCase):
             'retention-time': 0,
             'user-template-uri': '/api/users/fake-user-oid-1',
         }
-        self.assertEqual(user_pattern1, exp_user_pattern1)
+        assert user_pattern1 == exp_user_pattern1
 
     def test_create_verify(self):
         new_user_pattern_input = {
@@ -2320,8 +2322,8 @@ class UserPatternHandlersTests(unittest.TestCase):
             self.hmc, '/api/console/user-patterns', new_user_pattern_input,
             True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('element-uri', resp)
+        assert len(resp) == 1
+        assert 'element-uri' in resp
         new_user_pattern_uri = resp['element-uri']
 
         # the function to be tested:
@@ -2330,7 +2332,7 @@ class UserPatternHandlersTests(unittest.TestCase):
 
         new_name = new_user_pattern['name']
         input_name = new_user_pattern_input['name']
-        self.assertEqual(new_name, input_name)
+        assert new_name == input_name
 
     def test_create_error_console_not_found(self):
 
@@ -2342,14 +2344,14 @@ class UserPatternHandlersTests(unittest.TestCase):
             'description': 'User Pattern #X',
         }
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, '/api/console/user-patterns',
                                  new_user_pattern_input, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_update_verify(self):
         update_user_pattern1 = {
@@ -2364,8 +2366,7 @@ class UserPatternHandlersTests(unittest.TestCase):
         user_pattern1 = self.urihandler.get(
             self.hmc, '/api/console/user-patterns/fake-user-pattern-oid-1',
             True)
-        self.assertEqual(user_pattern1['description'],
-                         'updated user pattern #1')
+        assert user_pattern1['description'] == 'updated user pattern #1'
 
     def test_delete_verify(self):
 
@@ -2392,14 +2393,14 @@ class UserPatternHandlersTests(unittest.TestCase):
         self.urihandler.delete(self.hmc, new_user_pattern_uri, True)
 
         # Verify that it has been deleted
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, new_user_pattern_uri, True)
 
 
-class PasswordRuleHandlersTests(unittest.TestCase):
+class TestPasswordRuleHandlers(object):
     """All tests for classes PasswordRulesHandler and PasswordRuleHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -2424,20 +2425,20 @@ class PasswordRuleHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(password_rules, exp_password_rules)
+        assert password_rules == exp_password_rules
 
     def test_list_error_console_not_found(self):
 
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.get(self.hmc, '/api/console/password-rules', True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_get(self):
 
@@ -2454,7 +2455,7 @@ class PasswordRuleHandlersTests(unittest.TestCase):
             'description': 'Password Rule #1',
             'type': 'system-defined',
         }
-        self.assertEqual(password_rule1, exp_password_rule1)
+        assert password_rule1 == exp_password_rule1
 
     def test_create_verify(self):
         new_password_rule_input = {
@@ -2467,8 +2468,8 @@ class PasswordRuleHandlersTests(unittest.TestCase):
             self.hmc, '/api/console/password-rules', new_password_rule_input,
             True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('element-uri', resp)
+        assert len(resp) == 1
+        assert 'element-uri' in resp
         new_password_rule_uri = resp['element-uri']
 
         # the function to be tested:
@@ -2477,7 +2478,7 @@ class PasswordRuleHandlersTests(unittest.TestCase):
 
         new_name = new_password_rule['name']
         input_name = new_password_rule_input['name']
-        self.assertEqual(new_name, input_name)
+        assert new_name == input_name
 
     def test_create_error_console_not_found(self):
 
@@ -2489,14 +2490,14 @@ class PasswordRuleHandlersTests(unittest.TestCase):
             'description': 'Password Rule #X',
         }
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(self.hmc, '/api/console/password-rules',
                                  new_password_rule_input, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_update_verify(self):
         update_password_rule1 = {
@@ -2511,8 +2512,7 @@ class PasswordRuleHandlersTests(unittest.TestCase):
         password_rule1 = self.urihandler.get(
             self.hmc, '/api/console/password-rules/fake-password-rule-oid-1',
             True)
-        self.assertEqual(password_rule1['description'],
-                         'updated password rule #1')
+        assert password_rule1['description'] == 'updated password rule #1'
 
     def test_delete_verify(self):
 
@@ -2535,15 +2535,15 @@ class PasswordRuleHandlersTests(unittest.TestCase):
         self.urihandler.delete(self.hmc, new_password_rule_uri, True)
 
         # Verify that it has been deleted
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, new_password_rule_uri, True)
 
 
-class LdapServerDefinitionHandlersTests(unittest.TestCase):
+class TestLdapServerDefinitionHandlers(object):
     """All tests for classes LdapServerDefinitionsHandler and
     LdapServerDefinitionHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
@@ -2570,21 +2570,21 @@ class LdapServerDefinitionHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(ldap_srv_defs, exp_ldap_srv_defs)
+        assert ldap_srv_defs == exp_ldap_srv_defs
 
     def test_list_error_console_not_found(self):
 
         # Remove the faked Console object
         self.hmc.consoles.remove(None)
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.get(
                 self.hmc, '/api/console/ldap-server-definitions', True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_get(self):
 
@@ -2603,7 +2603,7 @@ class LdapServerDefinitionHandlersTests(unittest.TestCase):
             'description': 'LDAP Srv Def #1',
             'primary-hostname-ipaddr': '10.11.12.13',
         }
-        self.assertEqual(ldap_srv_def1, exp_ldap_srv_def1)
+        assert ldap_srv_def1 == exp_ldap_srv_def1
 
     def test_create_verify(self):
         new_ldap_srv_def_input = {
@@ -2616,8 +2616,8 @@ class LdapServerDefinitionHandlersTests(unittest.TestCase):
             self.hmc, '/api/console/ldap-server-definitions',
             new_ldap_srv_def_input, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('element-uri', resp)
+        assert len(resp) == 1
+        assert 'element-uri' in resp
         new_ldap_srv_def_uri = resp['element-uri']
 
         # the function to be tested:
@@ -2626,7 +2626,7 @@ class LdapServerDefinitionHandlersTests(unittest.TestCase):
 
         new_name = new_ldap_srv_def['name']
         input_name = new_ldap_srv_def_input['name']
-        self.assertEqual(new_name, input_name)
+        assert new_name == input_name
 
     def test_create_error_console_not_found(self):
 
@@ -2638,15 +2638,15 @@ class LdapServerDefinitionHandlersTests(unittest.TestCase):
             'description': 'LDAP Srv Def #X',
         }
 
-        with self.assertRaises(InvalidResourceError) as cm:
+        with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
             self.urihandler.post(
                 self.hmc, '/api/console/ldap-server-definitions',
                 new_ldap_srv_def_input, True, True)
 
-        exc = cm.exception
-        self.assertEqual(exc.reason, 1)
+        exc = exc_info.value
+        assert exc.reason == 1
 
     def test_update_verify(self):
         update_ldap_srv_def1 = {
@@ -2663,8 +2663,7 @@ class LdapServerDefinitionHandlersTests(unittest.TestCase):
             self.hmc,
             '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1',
             True)
-        self.assertEqual(ldap_srv_def1['description'],
-                         'updated LDAP Srv Def #1')
+        assert ldap_srv_def1['description'] == 'updated LDAP Srv Def #1'
 
     def test_delete_verify(self):
 
@@ -2687,14 +2686,14 @@ class LdapServerDefinitionHandlersTests(unittest.TestCase):
         self.urihandler.delete(self.hmc, new_ldap_srv_def_uri, True)
 
         # Verify that it has been deleted
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, new_ldap_srv_def_uri, True)
 
 
-class CpcHandlersTests(unittest.TestCase):
+class TestCpcHandlers(object):
     """All tests for classes CpcsHandler and CpcHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
@@ -2721,7 +2720,7 @@ class CpcHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(cpcs, exp_cpcs)
+        assert cpcs == exp_cpcs
 
     def test_get(self):
 
@@ -2737,7 +2736,7 @@ class CpcHandlersTests(unittest.TestCase):
             'description': 'CPC #1 (classic mode)',
             'status': 'operating',
         }
-        self.assertEqual(cpc1, exp_cpc1)
+        assert cpc1 == exp_cpc1
 
     def test_update_verify(self):
         update_cpc1 = {
@@ -2749,13 +2748,13 @@ class CpcHandlersTests(unittest.TestCase):
                              update_cpc1, True, True)
 
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
-        self.assertEqual(cpc1['description'], 'updated cpc #1')
+        assert cpc1['description'] == 'updated cpc #1'
 
 
-class CpcStartStopHandlerTests(unittest.TestCase):
+class TestCpcStartStopHandler(object):
     """All tests for classes CpcStartHandler and CpcStopHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)', CpcHandler),
@@ -2767,53 +2766,53 @@ class CpcStartStopHandlerTests(unittest.TestCase):
     def test_stop_classic(self):
         # CPC1 is in classic mode
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
-        self.assertEqual(cpc1['status'], 'operating')
+        assert cpc1['status'] == 'operating'
 
         # the function to be tested:
-        with self.assertRaises(CpcNotInDpmError):
+        with pytest.raises(CpcNotInDpmError):
             self.urihandler.post(self.hmc, '/api/cpcs/1/operations/stop',
                                  None, True, True)
 
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
-        self.assertEqual(cpc1['status'], 'operating')
+        assert cpc1['status'] == 'operating'
 
     def test_start_classic(self):
         # CPC1 is in classic mode
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
-        self.assertEqual(cpc1['status'], 'operating')
+        assert cpc1['status'] == 'operating'
 
         # the function to be tested:
-        with self.assertRaises(CpcNotInDpmError):
+        with pytest.raises(CpcNotInDpmError):
             self.urihandler.post(self.hmc, '/api/cpcs/1/operations/start',
                                  None, True, True)
 
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
-        self.assertEqual(cpc1['status'], 'operating')
+        assert cpc1['status'] == 'operating'
 
     def test_stop_start_dpm(self):
         # CPC2 is in DPM mode
         cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
-        self.assertEqual(cpc2['status'], 'active')
+        assert cpc2['status'] == 'active'
 
         # the function to be tested:
         self.urihandler.post(self.hmc, '/api/cpcs/2/operations/stop',
                              None, True, True)
 
         cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
-        self.assertEqual(cpc2['status'], 'not-operating')
+        assert cpc2['status'] == 'not-operating'
 
         # the function to be tested:
         self.urihandler.post(self.hmc, '/api/cpcs/2/operations/start',
                              None, True, True)
 
         cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
-        self.assertEqual(cpc2['status'], 'active')
+        assert cpc2['status'] == 'active'
 
 
-class CpcExportPortNamesListHandlerTests(unittest.TestCase):
+class TestCpcExportPortNamesListHandler(object):
     """All tests for class CpcExportPortNamesListHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
@@ -2826,7 +2825,7 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
     def test_invoke_err_no_input(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/cpcs/2/operations/export-port-names-list',
                 None, True, True)
@@ -2846,16 +2845,16 @@ class CpcExportPortNamesListHandlerTests(unittest.TestCase):
             self.hmc, '/api/cpcs/2/operations/export-port-names-list',
             operation_body, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('wwpn-list', resp)
+        assert len(resp) == 1
+        assert 'wwpn-list' in resp
         wwpn_list = resp['wwpn-list']
-        self.assertEqual(wwpn_list, exp_wwpn_list)
+        assert wwpn_list == exp_wwpn_list
 
 
-class CpcImportProfilesHandlerTests(unittest.TestCase):
+class TestCpcImportProfilesHandler(object):
     """All tests for class CpcImportProfilesHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
@@ -2868,7 +2867,7 @@ class CpcImportProfilesHandlerTests(unittest.TestCase):
     def test_invoke_err_no_input(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/cpcs/1/operations/import-profiles',
                 None, True, True)
@@ -2883,13 +2882,13 @@ class CpcImportProfilesHandlerTests(unittest.TestCase):
             self.hmc, '/api/cpcs/1/operations/import-profiles',
             operation_body, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
 
 
-class CpcExportProfilesHandlerTests(unittest.TestCase):
+class TestCpcExportProfilesHandler(object):
     """All tests for class CpcExportProfilesHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
@@ -2902,7 +2901,7 @@ class CpcExportProfilesHandlerTests(unittest.TestCase):
     def test_invoke_err_no_input(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/cpcs/1/operations/export-profiles',
                 None, True, True)
@@ -2917,14 +2916,14 @@ class CpcExportProfilesHandlerTests(unittest.TestCase):
             self.hmc, '/api/cpcs/1/operations/export-profiles',
             operation_body, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
 
 
-class MetricsContextHandlersTests(unittest.TestCase):
+class TestMetricsContextHandlers(object):
     """All tests for classes MetricsContextsHandler and
     MetricsContextHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/services/metrics/context', MetricsContextsHandler),
@@ -3023,13 +3022,13 @@ class MetricsContextHandlersTests(unittest.TestCase):
         resp = self.urihandler.post(self.hmc, '/api/services/metrics/context',
                                     body, True, True)
 
-        self.assertIsInstance(resp, dict)
-        self.assertIn('metrics-context-uri', resp)
+        assert isinstance(resp, dict)
+        assert 'metrics-context-uri' in resp
         uri = resp['metrics-context-uri']
-        self.assertTrue(uri.startswith('/api/services/metrics/context/'))
-        self.assertIn('metric-group-infos', resp)
+        assert uri.startswith('/api/services/metrics/context/')
+        assert 'metric-group-infos' in resp
         mg_infos = resp['metric-group-infos']
-        self.assertEqual(mg_infos, [mg_info, mg_info2])
+        assert mg_infos == [mg_info, mg_info2]
 
         # the get function to be tested:
         mv_resp = self.urihandler.get(self.hmc, uri, True)
@@ -3052,20 +3051,19 @@ class MetricsContextHandlersTests(unittest.TestCase):
 
 
 '''
-        self.assertEqual(
-            mv_resp, exp_mv_resp,
-            "Actual response string:\n{!r}\n"
-            "Expected response string:\n{!r}\n".
-            format(mv_resp, exp_mv_resp))
+        assert mv_resp == exp_mv_resp, \
+            "Actual response string:\n{!r}\n" \
+            "Expected response string:\n{!r}\n". \
+            format(mv_resp, exp_mv_resp)
 
         # the delete function to be tested:
         self.urihandler.delete(self.hmc, uri, True)
 
 
-class AdapterHandlersTests(unittest.TestCase):
+class TestAdapterHandlers(object):
     """All tests for classes AdaptersHandler and AdapterHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
@@ -3107,7 +3105,7 @@ class AdapterHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(adapters, exp_adapters)
+        assert adapters == exp_adapters
 
     def test_get(self):
 
@@ -3124,7 +3122,7 @@ class AdapterHandlersTests(unittest.TestCase):
             'network-port-uris': ['/api/adapters/1/network-ports/1'],
             'adapter-id': 'BEF',
         }
-        self.assertEqual(adapter1, exp_adapter1)
+        assert adapter1 == exp_adapter1
 
     def test_update_verify(self):
         update_adapter1 = {
@@ -3136,13 +3134,13 @@ class AdapterHandlersTests(unittest.TestCase):
                              update_adapter1, True, True)
 
         adapter1 = self.urihandler.get(self.hmc, '/api/adapters/1', True)
-        self.assertEqual(adapter1['description'], 'updated adapter #1')
+        assert adapter1['description'] == 'updated adapter #1'
 
 
-class AdapterChangeCryptoTypeHandlerTests(unittest.TestCase):
+class TestAdapterChangeCryptoTypeHandler(object):
     """All tests for class AdapterChangeCryptoTypeHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
@@ -3155,7 +3153,7 @@ class AdapterChangeCryptoTypeHandlerTests(unittest.TestCase):
     def test_invoke_err_no_body(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/adapters/4/operations/change-crypto-type',
@@ -3168,7 +3166,7 @@ class AdapterChangeCryptoTypeHandlerTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/adapters/4/operations/change-crypto-type',
@@ -3185,13 +3183,13 @@ class AdapterChangeCryptoTypeHandlerTests(unittest.TestCase):
             '/api/adapters/4/operations/change-crypto-type',
             operation_body, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
 
 
-class NetworkPortHandlersTests(unittest.TestCase):
+class TestNetworkPortHandlers(object):
     """All tests for class NetworkPortHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/adapters/([^/]+)/network-ports/([^/]+)',
@@ -3211,7 +3209,7 @@ class NetworkPortHandlersTests(unittest.TestCase):
             'name': 'osa_1_port_1',
             'description': 'Port #1 of OSA #1',
         }
-        self.assertEqual(port1, exp_port1)
+        assert port1 == exp_port1
 
     def test_update_verify(self):
         update_port1 = {
@@ -3224,13 +3222,13 @@ class NetworkPortHandlersTests(unittest.TestCase):
 
         port1 = self.urihandler.get(self.hmc,
                                     '/api/adapters/1/network-ports/1', True)
-        self.assertEqual(port1['description'], 'updated port #1')
+        assert port1['description'] == 'updated port #1'
 
 
-class StoragePortHandlersTests(unittest.TestCase):
+class TestStoragePortHandlers(object):
     """All tests for class StoragePortHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/adapters/([^/]+)/storage-ports/([^/]+)',
@@ -3250,7 +3248,7 @@ class StoragePortHandlersTests(unittest.TestCase):
             'name': 'fcp_2_port_1',
             'description': 'Port #1 of FCP #2',
         }
-        self.assertEqual(port1, exp_port1)
+        assert port1 == exp_port1
 
     def test_update_verify(self):
         update_port1 = {
@@ -3263,13 +3261,13 @@ class StoragePortHandlersTests(unittest.TestCase):
 
         port1 = self.urihandler.get(self.hmc,
                                     '/api/adapters/2/storage-ports/1', True)
-        self.assertEqual(port1['description'], 'updated port #1')
+        assert port1['description'] == 'updated port #1'
 
 
-class PartitionHandlersTests(unittest.TestCase):
+class TestPartitionHandlers(object):
     """All tests for classes PartitionsHandler and PartitionHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
@@ -3292,7 +3290,7 @@ class PartitionHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(partitions, exp_partitions)
+        assert partitions == exp_partitions
 
     def test_get(self):
 
@@ -3309,7 +3307,7 @@ class PartitionHandlersTests(unittest.TestCase):
             'nic-uris': ['/api/partitions/1/nics/1'],
             'virtual-function-uris': ['/api/partitions/1/virtual-functions/1'],
         }
-        self.assertEqual(partition1, exp_partition1)
+        assert partition1 == exp_partition1
 
     def test_create_verify(self):
         new_partition2 = {
@@ -3323,10 +3321,10 @@ class PartitionHandlersTests(unittest.TestCase):
         resp = self.urihandler.post(self.hmc, '/api/cpcs/2/partitions',
                                     new_partition2, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('object-uri', resp)
+        assert len(resp) == 1
+        assert 'object-uri' in resp
         new_partition2_uri = resp['object-uri']
-        self.assertEqual(new_partition2_uri, '/api/partitions/2')
+        assert new_partition2_uri == '/api/partitions/2'
 
         exp_partition2 = {
             'object-id': '2',
@@ -3343,7 +3341,7 @@ class PartitionHandlersTests(unittest.TestCase):
         # the function to be tested:
         partition2 = self.urihandler.get(self.hmc, '/api/partitions/2', True)
 
-        self.assertEqual(partition2, exp_partition2)
+        assert partition2 == exp_partition2
 
     def test_update_verify(self):
         update_partition1 = {
@@ -3355,7 +3353,7 @@ class PartitionHandlersTests(unittest.TestCase):
                              update_partition1, True, True)
 
         partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        self.assertEqual(partition1['description'], 'updated partition #1')
+        assert partition1['description'] == 'updated partition #1'
 
     def test_delete_verify(self):
 
@@ -3364,14 +3362,14 @@ class PartitionHandlersTests(unittest.TestCase):
         # the function to be tested:
         self.urihandler.delete(self.hmc, '/api/partitions/1', True)
 
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, '/api/partitions/1', True)
 
 
-class PartitionStartStopHandlerTests(unittest.TestCase):
+class TestPartitionStartStopHandler(object):
     """All tests for classes PartitionStartHandler and PartitionStopHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3384,38 +3382,38 @@ class PartitionStartStopHandlerTests(unittest.TestCase):
     def test_start_stop(self):
         # CPC2 is in DPM mode
         partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        self.assertEqual(partition1['status'], 'stopped')
+        assert partition1['status'] == 'stopped'
 
         # the start() function to be tested, with a valid initial status:
         self.urihandler.post(self.hmc, '/api/partitions/1/operations/start',
                              None, True, True)
         partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        self.assertEqual(partition1['status'], 'active')
+        assert partition1['status'] == 'active'
 
         # the start() function to be tested, with an invalid initial status:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(self.hmc,
                                  '/api/partitions/1/operations/start',
                                  None, True, True)
 
         # the stop() function to be tested, with a valid initial status:
-        self.assertEqual(partition1['status'], 'active')
+        assert partition1['status'] == 'active'
         self.urihandler.post(self.hmc, '/api/partitions/1/operations/stop',
                              None, True, True)
         partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        self.assertEqual(partition1['status'], 'stopped')
+        assert partition1['status'] == 'stopped'
 
         # the stop() function to be tested, with an invalid initial status:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(self.hmc,
                                  '/api/partitions/1/operations/stop',
                                  None, True, True)
 
 
-class PartitionScsiDumpHandlerTests(unittest.TestCase):
+class TestPartitionScsiDumpHandler(object):
     """All tests for class PartitionScsiDumpHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3427,7 +3425,7 @@ class PartitionScsiDumpHandlerTests(unittest.TestCase):
     def test_invoke_err_no_body(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 None, True, True)
@@ -3440,7 +3438,7 @@ class PartitionScsiDumpHandlerTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -3453,7 +3451,7 @@ class PartitionScsiDumpHandlerTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -3466,7 +3464,7 @@ class PartitionScsiDumpHandlerTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -3483,7 +3481,7 @@ class PartitionScsiDumpHandlerTests(unittest.TestCase):
         partition1['status'] = 'stopped'
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -3504,13 +3502,13 @@ class PartitionScsiDumpHandlerTests(unittest.TestCase):
             self.hmc, '/api/partitions/1/operations/scsi-dump',
             operation_body, True, True)
 
-        self.assertEqual(resp, {})
+        assert resp == {}
 
 
-class PartitionPswRestartHandlerTests(unittest.TestCase):
+class TestPartitionPswRestartHandler(object):
     """All tests for class PartitionPswRestartHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3526,7 +3524,7 @@ class PartitionPswRestartHandlerTests(unittest.TestCase):
         partition1['status'] = 'stopped'
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/psw-restart',
                 None, True, True)
@@ -3542,13 +3540,13 @@ class PartitionPswRestartHandlerTests(unittest.TestCase):
             self.hmc, '/api/partitions/1/operations/psw-restart',
             None, True, True)
 
-        self.assertEqual(resp, {})
+        assert resp == {}
 
 
-class PartitionMountIsoImageHandlerTests(unittest.TestCase):
+class TestPartitionMountIsoImageHandler(object):
     """All tests for class PartitionMountIsoImageHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3560,7 +3558,7 @@ class PartitionMountIsoImageHandlerTests(unittest.TestCase):
     def test_invoke_err_queryparm_1(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/mount-iso-image?'
                 'image-namex=fake-image&ins-file-name=fake-ins',
@@ -3569,7 +3567,7 @@ class PartitionMountIsoImageHandlerTests(unittest.TestCase):
     def test_invoke_err_queryparm_2(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/mount-iso-image?'
                 'image-name=fake-image&ins-file-namex=fake-ins',
@@ -3582,7 +3580,7 @@ class PartitionMountIsoImageHandlerTests(unittest.TestCase):
         partition1['status'] = 'starting'
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/mount-iso-image?'
                 'image-name=fake-image&ins-file-name=fake-ins',
@@ -3600,19 +3598,19 @@ class PartitionMountIsoImageHandlerTests(unittest.TestCase):
             'image-name=fake-image&ins-file-name=fake-ins',
             None, True, True)
 
-        self.assertEqual(resp, {})
+        assert resp == {}
 
         boot_iso_image_name = partition1['boot-iso-image-name']
-        self.assertEqual(boot_iso_image_name, 'fake-image')
+        assert boot_iso_image_name == 'fake-image'
 
         boot_iso_ins_file = partition1['boot-iso-ins-file']
-        self.assertEqual(boot_iso_ins_file, 'fake-ins')
+        assert boot_iso_ins_file == 'fake-ins'
 
 
-class PartitionUnmountIsoImageHandlerTests(unittest.TestCase):
+class TestPartitionUnmountIsoImageHandler(object):
     """All tests for class PartitionUnmountIsoImageHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3628,7 +3626,7 @@ class PartitionUnmountIsoImageHandlerTests(unittest.TestCase):
         partition1['status'] = 'starting'
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/unmount-iso-image',
                 None, True, True)
@@ -3644,19 +3642,19 @@ class PartitionUnmountIsoImageHandlerTests(unittest.TestCase):
             self.hmc, '/api/partitions/1/operations/unmount-iso-image',
             None, True, True)
 
-        self.assertEqual(resp, {})
+        assert resp == {}
 
         boot_iso_image_name = partition1['boot-iso-image-name']
-        self.assertIsNone(boot_iso_image_name)
+        assert boot_iso_image_name is None
 
         boot_iso_ins_file = partition1['boot-iso-ins-file']
-        self.assertIsNone(boot_iso_ins_file)
+        assert boot_iso_ins_file is None
 
 
-class PartitionIncreaseCryptoConfigHandlerTests(unittest.TestCase):
+class TestPartitionIncreaseCryptoConfigHandler(object):
     """All tests for class PartitionIncreaseCryptoConfigHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3669,7 +3667,7 @@ class PartitionIncreaseCryptoConfigHandlerTests(unittest.TestCase):
     def test_invoke_err_missing_body(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/increase-crypto-configuration',
@@ -3682,7 +3680,7 @@ class PartitionIncreaseCryptoConfigHandlerTests(unittest.TestCase):
         partition1['status'] = 'starting'
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/increase-crypto-configuration',
@@ -3738,28 +3736,28 @@ class PartitionIncreaseCryptoConfigHandlerTests(unittest.TestCase):
                 '/api/partitions/1/operations/increase-crypto-configuration',
                 operation_body, True, True)
 
-            self.assertIsNone(resp)
+            assert resp is None
 
             crypto_config = partition1['crypto-configuration']
-            self.assertTrue(isinstance(crypto_config, dict))
+            assert isinstance(crypto_config, dict)
 
             adapter_uris = crypto_config['crypto-adapter-uris']
-            self.assertTrue(isinstance(adapter_uris, list))
+            assert isinstance(adapter_uris, list)
             exp_adapter_uris = input_adapter_uris \
                 if input_adapter_uris is not None else []
-            self.assertEqual(adapter_uris, exp_adapter_uris)
+            assert adapter_uris == exp_adapter_uris
 
             domain_configs = crypto_config['crypto-domain-configurations']
-            self.assertTrue(isinstance(domain_configs, list))
+            assert isinstance(domain_configs, list)
             exp_domain_configs = input_domain_configs \
                 if input_domain_configs is not None else []
-            self.assertEqual(domain_configs, exp_domain_configs)
+            assert domain_configs == exp_domain_configs
 
 
-class PartitionDecreaseCryptoConfigHandlerTests(unittest.TestCase):
+class TestPartitionDecreaseCryptoConfigHandler(object):
     """All tests for class PartitionDecreaseCryptoConfigHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3772,7 +3770,7 @@ class PartitionDecreaseCryptoConfigHandlerTests(unittest.TestCase):
     def test_invoke_err_missing_body(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/decrease-crypto-configuration',
@@ -3785,7 +3783,7 @@ class PartitionDecreaseCryptoConfigHandlerTests(unittest.TestCase):
         partition1['status'] = 'starting'
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/decrease-crypto-configuration',
@@ -3847,22 +3845,22 @@ class PartitionDecreaseCryptoConfigHandlerTests(unittest.TestCase):
                 '/api/partitions/1/operations/decrease-crypto-configuration',
                 operation_body, True, True)
 
-            self.assertIsNone(resp)
+            assert resp is None
 
             crypto_config = partition1['crypto-configuration']
-            self.assertTrue(isinstance(crypto_config, dict))
+            assert isinstance(crypto_config, dict)
 
             adapter_uris = crypto_config['crypto-adapter-uris']
-            self.assertTrue(isinstance(adapter_uris, list))
+            assert isinstance(adapter_uris, list)
 
             domain_configs = crypto_config['crypto-domain-configurations']
-            self.assertTrue(isinstance(domain_configs, list))
+            assert isinstance(domain_configs, list)
 
 
-class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
+class TestPartitionChangeCryptoConfigHandler(object):
     """All tests for class PartitionChangeCryptoConfigHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -3875,7 +3873,7 @@ class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
     def test_invoke_err_missing_body(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -3890,7 +3888,7 @@ class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -3905,7 +3903,7 @@ class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -3919,7 +3917,7 @@ class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
         partition1['status'] = 'starting'
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -3969,22 +3967,22 @@ class PartitionChangeCryptoConfigHandlerTests(unittest.TestCase):
                 'change-crypto-domain-configuration',
                 operation_body, True, True)
 
-            self.assertIsNone(resp)
+            assert resp is None
 
             crypto_config = partition1['crypto-configuration']
-            self.assertTrue(isinstance(crypto_config, dict))
+            assert isinstance(crypto_config, dict)
 
             adapter_uris = crypto_config['crypto-adapter-uris']
-            self.assertTrue(isinstance(adapter_uris, list))
+            assert isinstance(adapter_uris, list)
 
             domain_configs = crypto_config['crypto-domain-configurations']
-            self.assertTrue(isinstance(domain_configs, list))
+            assert isinstance(domain_configs, list)
 
 
-class HbaHandlerTests(unittest.TestCase):
+class TestHbaHandler(object):
     """All tests for classes HbasHandler and HbaHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -4003,7 +4001,7 @@ class HbaHandlerTests(unittest.TestCase):
         exp_hba_uris = [
             '/api/partitions/1/hbas/1',
         ]
-        self.assertEqual(hba_uris, exp_hba_uris)
+        assert hba_uris == exp_hba_uris
 
     def test_get(self):
 
@@ -4022,7 +4020,7 @@ class HbaHandlerTests(unittest.TestCase):
             'wwpn': 'CFFEAFFE00008001',
             'device-number': '1001',
         }
-        self.assertEqual(hba1, exp_hba1)
+        assert hba1 == exp_hba1
 
     def test_create_verify(self):
         new_hba2 = {
@@ -4035,10 +4033,10 @@ class HbaHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(self.hmc, '/api/partitions/1/hbas',
                                     new_hba2, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('element-uri', resp)
+        assert len(resp) == 1
+        assert 'element-uri' in resp
         new_hba2_uri = resp['element-uri']
-        self.assertEqual(new_hba2_uri, '/api/partitions/1/hbas/2')
+        assert new_hba2_uri == '/api/partitions/1/hbas/2'
 
         # the function to be tested:
         hba2 = self.urihandler.get(self.hmc, '/api/partitions/1/hbas/2', True)
@@ -4052,7 +4050,7 @@ class HbaHandlerTests(unittest.TestCase):
             'wwpn': hba2['wwpn'],  # auto-generated
         }
 
-        self.assertEqual(hba2, exp_hba2)
+        assert hba2 == exp_hba2
 
     def test_update_verify(self):
         update_hba1 = {
@@ -4064,7 +4062,7 @@ class HbaHandlerTests(unittest.TestCase):
                              update_hba1, True, True)
 
         hba1 = self.urihandler.get(self.hmc, '/api/partitions/1/hbas/1', True)
-        self.assertEqual(hba1['description'], 'updated hba #1')
+        assert hba1['description'] == 'updated hba #1'
 
     def test_delete_verify(self):
 
@@ -4073,14 +4071,14 @@ class HbaHandlerTests(unittest.TestCase):
         # the function to be tested:
         self.urihandler.delete(self.hmc, '/api/partitions/1/hbas/1', True)
 
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, '/api/partitions/1/hbas/1', True)
 
 
-class HbaReassignPortHandlerTests(unittest.TestCase):
+class TestHbaReassignPortHandler(object):
     """All tests for class HbaReassignPortHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -4094,7 +4092,7 @@ class HbaReassignPortHandlerTests(unittest.TestCase):
     def test_invoke_err_missing_body(self):
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/hbas/1/operations/'
@@ -4107,7 +4105,7 @@ class HbaReassignPortHandlerTests(unittest.TestCase):
         }
 
         # the function to be tested:
-        with self.assertRaises(HTTPError):
+        with pytest.raises(HTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/hbas/1/operations/'
@@ -4127,17 +4125,17 @@ class HbaReassignPortHandlerTests(unittest.TestCase):
             'reassign-storage-adapter-port',
             operation_body, True, True)
 
-        self.assertIsNone(resp)
+        assert resp is None
 
         hba = self.urihandler.get(self.hmc, '/api/partitions/1/hbas/1', True)
         adapter_port_uri = hba['adapter-port-uri']
-        self.assertEqual(adapter_port_uri, new_adapter_port_uri)
+        assert adapter_port_uri == new_adapter_port_uri
 
 
-class NicHandlerTests(unittest.TestCase):
+class TestNicHandler(object):
     """All tests for classes NicsHandler and NicHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -4156,7 +4154,7 @@ class NicHandlerTests(unittest.TestCase):
         exp_nic_uris = [
             '/api/partitions/1/nics/1',
         ]
-        self.assertEqual(nic_uris, exp_nic_uris)
+        assert nic_uris == exp_nic_uris
 
     def test_get(self):
 
@@ -4174,7 +4172,7 @@ class NicHandlerTests(unittest.TestCase):
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
             'device-number': '2001',
         }
-        self.assertEqual(nic1, exp_nic1)
+        assert nic1 == exp_nic1
 
     def test_create_verify(self):
         new_nic2 = {
@@ -4187,10 +4185,10 @@ class NicHandlerTests(unittest.TestCase):
         resp = self.urihandler.post(self.hmc, '/api/partitions/1/nics',
                                     new_nic2, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('element-uri', resp)
+        assert len(resp) == 1
+        assert 'element-uri' in resp
         new_nic2_uri = resp['element-uri']
-        self.assertEqual(new_nic2_uri, '/api/partitions/1/nics/2')
+        assert new_nic2_uri == '/api/partitions/1/nics/2'
 
         # the function to be tested:
         nic2 = self.urihandler.get(self.hmc, '/api/partitions/1/nics/2', True)
@@ -4203,7 +4201,7 @@ class NicHandlerTests(unittest.TestCase):
             'device-number': nic2['device-number'],  # auto-generated
         }
 
-        self.assertEqual(nic2, exp_nic2)
+        assert nic2 == exp_nic2
 
     def test_update_verify(self):
         update_nic1 = {
@@ -4215,7 +4213,7 @@ class NicHandlerTests(unittest.TestCase):
                              update_nic1, True, True)
 
         nic1 = self.urihandler.get(self.hmc, '/api/partitions/1/nics/1', True)
-        self.assertEqual(nic1['description'], 'updated nic #1')
+        assert nic1['description'] == 'updated nic #1'
 
     def test_delete_verify(self):
 
@@ -4224,15 +4222,15 @@ class NicHandlerTests(unittest.TestCase):
         # the function to be tested:
         self.urihandler.delete(self.hmc, '/api/partitions/1/nics/1', True)
 
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, '/api/partitions/1/nics/1', True)
 
 
-class VirtualFunctionHandlerTests(unittest.TestCase):
+class TestVirtualFunctionHandler(object):
     """All tests for classes VirtualFunctionsHandler and
     VirtualFunctionHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/partitions/([^/]+)', PartitionHandler),
@@ -4253,7 +4251,7 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
         exp_vf_uris = [
             '/api/partitions/1/virtual-functions/1',
         ]
-        self.assertEqual(vf_uris, exp_vf_uris)
+        assert vf_uris == exp_vf_uris
 
     def test_get(self):
 
@@ -4270,7 +4268,7 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
             'description': 'VF #1 in Partition #1',
             'device-number': '3001',
         }
-        self.assertEqual(vf1, exp_vf1)
+        assert vf1 == exp_vf1
 
     def test_create_verify(self):
         new_vf2 = {
@@ -4283,10 +4281,10 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
                                     '/api/partitions/1/virtual-functions',
                                     new_vf2, True, True)
 
-        self.assertEqual(len(resp), 1)
-        self.assertIn('element-uri', resp)
+        assert len(resp) == 1
+        assert 'element-uri' in resp
         new_vf2_uri = resp['element-uri']
-        self.assertEqual(new_vf2_uri, '/api/partitions/1/virtual-functions/2')
+        assert new_vf2_uri == '/api/partitions/1/virtual-functions/2'
 
         # the function to be tested:
         vf2 = self.urihandler.get(self.hmc,
@@ -4300,7 +4298,7 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
             'device-number': vf2['device-number'],  # auto-generated
         }
 
-        self.assertEqual(vf2, exp_vf2)
+        assert vf2 == exp_vf2
 
     def test_update_verify(self):
         update_vf1 = {
@@ -4314,7 +4312,7 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
         vf1 = self.urihandler.get(self.hmc,
                                   '/api/partitions/1/virtual-functions/1',
                                   True)
-        self.assertEqual(vf1['description'], 'updated vf #1')
+        assert vf1['description'] == 'updated vf #1'
 
     def test_delete_verify(self):
 
@@ -4325,16 +4323,16 @@ class VirtualFunctionHandlerTests(unittest.TestCase):
         self.urihandler.delete(self.hmc,
                                '/api/partitions/1/virtual-functions/1', True)
 
-        with self.assertRaises(InvalidResourceError):
+        with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc,
                                 '/api/partitions/1/virtual-functions/1', True)
 
 
-class VirtualSwitchHandlersTests(unittest.TestCase):
+class TestVirtualSwitchHandlers(object):
     """All tests for classes VirtualSwitchesHandler and
     VirtualSwitchHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?',
@@ -4358,7 +4356,7 @@ class VirtualSwitchHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(vswitches, exp_vswitches)
+        assert vswitches == exp_vswitches
 
     def test_get(self):
 
@@ -4373,13 +4371,13 @@ class VirtualSwitchHandlersTests(unittest.TestCase):
             'description': 'Vswitch for OSA #1 in CPC #2',
             'connected-vnic-uris': [],  # auto-generated
         }
-        self.assertEqual(vswitch1, exp_vswitch1)
+        assert vswitch1 == exp_vswitch1
 
 
-class VirtualSwitchGetVnicsHandlerTests(unittest.TestCase):
+class TestVirtualSwitchGetVnicsHandler(object):
     """All tests for class VirtualSwitchGetVnicsHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
@@ -4406,13 +4404,13 @@ class VirtualSwitchGetVnicsHandlerTests(unittest.TestCase):
         exp_resp = {
             'connected-vnic-uris': connected_nic_uris,
         }
-        self.assertEqual(resp, exp_resp)
+        assert resp == exp_resp
 
 
-class LparHandlersTests(unittest.TestCase):
+class TestLparHandlers(object):
     """All tests for classes LparsHandler and LparHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
@@ -4435,7 +4433,7 @@ class LparHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(lpars, exp_lpars)
+        assert lpars == exp_lpars
 
     def test_get(self):
 
@@ -4450,14 +4448,14 @@ class LparHandlersTests(unittest.TestCase):
             'status': 'not-activated',
             'description': 'LPAR #1 in CPC #1',
         }
-        self.assertEqual(lpar1, exp_lpar1)
+        assert lpar1 == exp_lpar1
 
 
-class LparActLoadDeactHandlerTests(unittest.TestCase):
+class TestLparActLoadDeactHandler(object):
     """All tests for classes LparActivateHandler, LparLoadHandler, and
     LparDeactivateHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/logical-partitions/([^/]+)',
@@ -4475,7 +4473,7 @@ class LparActLoadDeactHandlerTests(unittest.TestCase):
         # CPC1 is in classic mode
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)
-        self.assertEqual(lpar1['status'], 'not-activated')
+        assert lpar1['status'] == 'not-activated'
 
         # the function to be tested:
         self.urihandler.post(self.hmc,
@@ -4484,7 +4482,7 @@ class LparActLoadDeactHandlerTests(unittest.TestCase):
 
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)
-        self.assertEqual(lpar1['status'], 'not-operating')
+        assert lpar1['status'] == 'not-operating'
 
         # the function to be tested:
         self.urihandler.post(self.hmc,
@@ -4493,7 +4491,7 @@ class LparActLoadDeactHandlerTests(unittest.TestCase):
 
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)
-        self.assertEqual(lpar1['status'], 'operating')
+        assert lpar1['status'] == 'operating'
 
         # the function to be tested:
         self.urihandler.post(self.hmc,
@@ -4502,14 +4500,14 @@ class LparActLoadDeactHandlerTests(unittest.TestCase):
 
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)
-        self.assertEqual(lpar1['status'], 'not-activated')
+        assert lpar1['status'] == 'not-activated'
 
 
-class ResetActProfileHandlersTests(unittest.TestCase):
+class TestResetActProfileHandlers(object):
     """All tests for classes ResetActProfilesHandler and
     ResetActProfileHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
@@ -4534,7 +4532,7 @@ class ResetActProfileHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(raps, exp_raps)
+        assert raps == exp_raps
 
     def test_get(self):
 
@@ -4548,14 +4546,14 @@ class ResetActProfileHandlersTests(unittest.TestCase):
             'element-uri': '/api/cpcs/1/reset-activation-profiles/r1',
             'description': 'Reset profile #1 in CPC #1',
         }
-        self.assertEqual(rap1, exp_rap1)
+        assert rap1 == exp_rap1
 
 
-class ImageActProfileHandlersTests(unittest.TestCase):
+class TestImageActProfileHandlers(object):
     """All tests for classes ImageActProfilesHandler and
     ImageActProfileHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
@@ -4580,7 +4578,7 @@ class ImageActProfileHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(iaps, exp_iaps)
+        assert iaps == exp_iaps
 
     def test_get(self):
 
@@ -4594,14 +4592,14 @@ class ImageActProfileHandlersTests(unittest.TestCase):
             'element-uri': '/api/cpcs/1/image-activation-profiles/i1',
             'description': 'Image profile #1 in CPC #1',
         }
-        self.assertEqual(iap1, exp_iap1)
+        assert iap1 == exp_iap1
 
 
-class LoadActProfileHandlersTests(unittest.TestCase):
+class TestLoadActProfileHandlers(object):
     """All tests for classes LoadActProfilesHandler and
     LoadActProfileHandler."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
             (r'/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
@@ -4626,7 +4624,7 @@ class LoadActProfileHandlersTests(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(laps, exp_laps)
+        assert laps == exp_laps
 
     def test_get(self):
 
@@ -4640,9 +4638,4 @@ class LoadActProfileHandlersTests(unittest.TestCase):
             'element-uri': '/api/cpcs/1/load-activation-profiles/L1',
             'description': 'Load profile #1 in CPC #1',
         }
-        self.assertEqual(lap1, exp_lap1)
-
-
-if __name__ == '__main__':
-    requests.packages.urllib3.disable_warnings()
-    unittest.main()
+        assert lap1 == exp_lap1

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +18,9 @@ Unit tests for _hmc module of the zhmcclient_mock package.
 
 from __future__ import absolute_import, print_function
 
-import unittest
+import re
 from datetime import datetime
+import pytest
 
 from zhmcclient_mock._hmc import FakedHmc, \
     FakedBaseManager, FakedBaseResource, \
@@ -38,10 +38,10 @@ from zhmcclient_mock._hmc import FakedHmc, \
     FakedMetricGroupDefinition, FakedMetricObjectValues
 
 
-class FakedHmcTests(unittest.TestCase):
+class TestFakedHmc(object):
     """All tests for the zhmcclient_mock.FakedHmc class."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
     def test_repr(self):
@@ -52,22 +52,20 @@ class FakedHmcTests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=hmc.__class__.__name__,
-                id=id(hmc)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=hmc.__class__.__name__, id=id(hmc)),
+                        repr_str)
 
     def test_hmc(self):
-        self.assertEqual(self.hmc.hmc_name, 'fake-hmc')
-        self.assertEqual(self.hmc.hmc_version, '2.13.1')
-        self.assertEqual(self.hmc.api_version, '1.8')
-        self.assertIsInstance(self.hmc.cpcs, FakedCpcManager)
+        assert self.hmc.hmc_name == 'fake-hmc'
+        assert self.hmc.hmc_version == '2.13.1'
+        assert self.hmc.api_version == '1.8'
+        assert isinstance(self.hmc.cpcs, FakedCpcManager)
 
         # the function to be tested:
         cpcs = self.hmc.cpcs.list()
 
-        self.assertEqual(len(cpcs), 0)
+        assert len(cpcs) == 0
 
     def test_hmc_1_cpc(self):
         cpc1_in_props = {'name': 'cpc1'}
@@ -87,12 +85,12 @@ class FakedHmcTests(unittest.TestCase):
         # the function to be tested:
         cpcs = self.hmc.cpcs.list()
 
-        self.assertEqual(len(cpcs), 1)
-        self.assertEqual(cpcs[0], cpc1)
+        assert len(cpcs) == 1
+        assert cpcs[0] == cpc1
 
-        self.assertIsInstance(cpc1, FakedCpc)
-        self.assertEqual(cpc1.properties, cpc1_out_props)
-        self.assertEqual(cpc1.manager, self.hmc.cpcs)
+        assert isinstance(cpc1, FakedCpc)
+        assert cpc1.properties == cpc1_out_props
+        assert cpc1.manager == self.hmc.cpcs
 
     def test_hmc_2_cpcs(self):
         cpc1_in_props = {'name': 'cpc1'}
@@ -126,18 +124,18 @@ class FakedHmcTests(unittest.TestCase):
         # the function to be tested:
         cpcs = self.hmc.cpcs.list()
 
-        self.assertEqual(len(cpcs), 2)
+        assert len(cpcs) == 2
         # We expect the order of addition to be maintained:
-        self.assertEqual(cpcs[0], cpc1)
-        self.assertEqual(cpcs[1], cpc2)
+        assert cpcs[0] == cpc1
+        assert cpcs[1] == cpc2
 
-        self.assertIsInstance(cpc1, FakedCpc)
-        self.assertEqual(cpc1.properties, cpc1_out_props)
-        self.assertEqual(cpc1.manager, self.hmc.cpcs)
+        assert isinstance(cpc1, FakedCpc)
+        assert cpc1.properties == cpc1_out_props
+        assert cpc1.manager == self.hmc.cpcs
 
-        self.assertIsInstance(cpc2, FakedCpc)
-        self.assertEqual(cpc2.properties, cpc2_out_props)
-        self.assertEqual(cpc2.manager, self.hmc.cpcs)
+        assert isinstance(cpc2, FakedCpc)
+        assert cpc2.properties == cpc2_out_props
+        assert cpc2.manager == self.hmc.cpcs
 
     def test_res_dict(self):
         cpc1_in_props = {'name': 'cpc1'}
@@ -165,7 +163,7 @@ class FakedHmcTests(unittest.TestCase):
 
         cpcs = self.hmc.cpcs.list()
 
-        self.assertEqual(len(cpcs), 1)
+        assert len(cpcs) == 1
 
         cpc1 = cpcs[0]
         cpc1_out_props = cpc1_in_props.copy()
@@ -176,18 +174,18 @@ class FakedHmcTests(unittest.TestCase):
             'is-ensemble-member': False,
             'status': 'operating',
         })
-        self.assertIsInstance(cpc1, FakedCpc)
-        self.assertEqual(cpc1.properties, cpc1_out_props)
-        self.assertEqual(cpc1.manager, self.hmc.cpcs)
+        assert isinstance(cpc1, FakedCpc)
+        assert cpc1.properties == cpc1_out_props
+        assert cpc1.manager == self.hmc.cpcs
 
         cpc1_adapters = cpc1.adapters.list()
 
-        self.assertEqual(len(cpc1_adapters), 1)
+        assert len(cpc1_adapters) == 1
         adapter1 = cpc1_adapters[0]
 
         adapter1_ports = adapter1.ports.list()
 
-        self.assertEqual(len(adapter1_ports), 1)
+        assert len(adapter1_ports) == 1
         port1 = adapter1_ports[0]
 
         adapter1_out_props = adapter1_in_props.copy()
@@ -197,24 +195,24 @@ class FakedHmcTests(unittest.TestCase):
             'status': 'active',
             'network-port-uris': [port1.uri],
         })
-        self.assertIsInstance(adapter1, FakedAdapter)
-        self.assertEqual(adapter1.properties, adapter1_out_props)
-        self.assertEqual(adapter1.manager, cpc1.adapters)
+        assert isinstance(adapter1, FakedAdapter)
+        assert adapter1.properties == adapter1_out_props
+        assert adapter1.manager == cpc1.adapters
 
         port1_out_props = port1_in_props.copy()
         port1_out_props.update({
             'element-id': port1.oid,
             'element-uri': port1.uri,
         })
-        self.assertIsInstance(port1, FakedPort)
-        self.assertEqual(port1.properties, port1_out_props)
-        self.assertEqual(port1.manager, adapter1.ports)
+        assert isinstance(port1, FakedPort)
+        assert port1.properties == port1_out_props
+        assert port1.manager == adapter1.ports
 
 
-class FakedBaseTests(unittest.TestCase):
+class TestFakedBase(object):
     """All tests for the FakedBaseManager and FakedBaseResource classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.cpc1_oid = '42-abc-543'
@@ -250,11 +248,10 @@ class FakedBaseTests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=resource.__class__.__name__,
-                id=id(resource)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=resource.__class__.__name__,
+                               id=id(resource)),
+                        repr_str)
 
     def test_manager_repr(self):
         """Test FakedBaseManager.__repr__()."""
@@ -264,42 +261,39 @@ class FakedBaseTests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=manager.__class__.__name__,
-                id=id(manager)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=manager.__class__.__name__,
+                               id=id(manager)),
+                        repr_str)
 
     def test_manager_attr(self):
         """Test FakedBaseManager attributes."""
 
-        self.assertIsInstance(self.cpc_manager, FakedBaseManager)
+        assert isinstance(self.cpc_manager, FakedBaseManager)
 
-        self.assertEqual(self.cpc_manager.hmc, self.hmc)
-        self.assertEqual(self.cpc_manager.parent, self.hmc)
-        self.assertEqual(self.cpc_manager.resource_class, FakedCpc)
-        self.assertEqual(self.cpc_manager.base_uri, '/api/cpcs')
-        self.assertEqual(self.cpc_manager.oid_prop, 'object-id')
-        self.assertEqual(self.cpc_manager.uri_prop, 'object-uri')
+        assert self.cpc_manager.hmc == self.hmc
+        assert self.cpc_manager.parent == self.hmc
+        assert self.cpc_manager.resource_class == FakedCpc
+        assert self.cpc_manager.base_uri == '/api/cpcs'
+        assert self.cpc_manager.oid_prop == 'object-id'
+        assert self.cpc_manager.uri_prop == 'object-uri'
 
     def test_resource_attr(self):
         """Test FakedBaseResource attributes."""
 
-        self.assertIsInstance(self.cpc_resource, FakedBaseResource)
+        assert isinstance(self.cpc_resource, FakedBaseResource)
 
-        self.assertEqual(self.cpc_resource.manager, self.cpc_manager)
-        self.assertEqual(self.cpc_resource.properties, self.cpc1_out_props)
-        self.assertEqual(self.cpc_resource.oid,
-                         self.cpc1_out_props['object-id'])
-        self.assertEqual(self.cpc_resource.uri,
-                         self.cpc1_out_props['object-uri'])
+        assert self.cpc_resource.manager == self.cpc_manager
+        assert self.cpc_resource.properties == self.cpc1_out_props
+        assert self.cpc_resource.oid == self.cpc1_out_props['object-id']
+        assert self.cpc_resource.uri == self.cpc1_out_props['object-uri']
 
 
-class FakedActivationProfileTests(unittest.TestCase):
+class TestFakedActivationProfile(object):
     """All tests for the FakedActivationProfileManager and
     FakedActivationProfile classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.resetprofile1_in_props = {'name': 'resetprofile1'}
@@ -331,27 +325,27 @@ class FakedActivationProfileTests(unittest.TestCase):
 
         # Test reset activation profiles
 
-        self.assertIsInstance(cpc1.reset_activation_profiles,
-                              FakedActivationProfileManager)
-        self.assertEqual(cpc1.reset_activation_profiles.profile_type, 'reset')
-        self.assertRegexpMatches(cpc1.reset_activation_profiles.base_uri,
-                                 r'/api/cpcs/[^/]+/reset-activation-profiles')
+        assert isinstance(cpc1.reset_activation_profiles,
+                          FakedActivationProfileManager)
+        assert cpc1.reset_activation_profiles.profile_type == 'reset'
+        assert re.match(r'/api/cpcs/[^/]+/reset-activation-profiles',
+                        cpc1.reset_activation_profiles.base_uri)
 
         # Test image activation profiles
 
-        self.assertIsInstance(cpc1.image_activation_profiles,
-                              FakedActivationProfileManager)
-        self.assertEqual(cpc1.image_activation_profiles.profile_type, 'image')
-        self.assertRegexpMatches(cpc1.image_activation_profiles.base_uri,
-                                 r'/api/cpcs/[^/]+/image-activation-profiles')
+        assert isinstance(cpc1.image_activation_profiles,
+                          FakedActivationProfileManager)
+        assert cpc1.image_activation_profiles.profile_type == 'image'
+        assert re.match(r'/api/cpcs/[^/]+/image-activation-profiles',
+                        cpc1.image_activation_profiles.base_uri)
 
         # Test load activation profiles
 
-        self.assertIsInstance(cpc1.load_activation_profiles,
-                              FakedActivationProfileManager)
-        self.assertEqual(cpc1.load_activation_profiles.profile_type, 'load')
-        self.assertRegexpMatches(cpc1.load_activation_profiles.base_uri,
-                                 r'/api/cpcs/[^/]+/load-activation-profiles')
+        assert isinstance(cpc1.load_activation_profiles,
+                          FakedActivationProfileManager)
+        assert cpc1.load_activation_profiles.profile_type == 'load'
+        assert re.match(r'/api/cpcs/[^/]+/load-activation-profiles',
+                        cpc1.load_activation_profiles.base_uri)
 
     def test_profiles_list(self):
         """Test list() of FakedActivationProfileManager."""
@@ -362,53 +356,53 @@ class FakedActivationProfileTests(unittest.TestCase):
 
         resetprofiles = cpc1.reset_activation_profiles.list()
 
-        self.assertEqual(len(resetprofiles), 1)
+        assert len(resetprofiles) == 1
         resetprofile1 = resetprofiles[0]
         resetprofile1_out_props = self.resetprofile1_in_props.copy()
         resetprofile1_out_props.update({
             'name': resetprofile1.oid,
             'element-uri': resetprofile1.uri,
         })
-        self.assertIsInstance(resetprofile1, FakedActivationProfile)
-        self.assertEqual(resetprofile1.properties, resetprofile1_out_props)
-        self.assertEqual(resetprofile1.manager, cpc1.reset_activation_profiles)
+        assert isinstance(resetprofile1, FakedActivationProfile)
+        assert resetprofile1.properties == resetprofile1_out_props
+        assert resetprofile1.manager == cpc1.reset_activation_profiles
 
         # Test image activation profiles
 
         imageprofiles = cpc1.image_activation_profiles.list()
 
-        self.assertEqual(len(imageprofiles), 1)
+        assert len(imageprofiles) == 1
         imageprofile1 = imageprofiles[0]
         imageprofile1_out_props = self.imageprofile1_in_props.copy()
         imageprofile1_out_props.update({
             'name': imageprofile1.oid,
             'element-uri': imageprofile1.uri,
         })
-        self.assertIsInstance(imageprofile1, FakedActivationProfile)
-        self.assertEqual(imageprofile1.properties, imageprofile1_out_props)
-        self.assertEqual(imageprofile1.manager, cpc1.image_activation_profiles)
+        assert isinstance(imageprofile1, FakedActivationProfile)
+        assert imageprofile1.properties == imageprofile1_out_props
+        assert imageprofile1.manager == cpc1.image_activation_profiles
 
         # Test load activation profiles
 
         loadprofiles = cpc1.load_activation_profiles.list()
 
-        self.assertEqual(len(loadprofiles), 1)
+        assert len(loadprofiles) == 1
         loadprofile1 = loadprofiles[0]
         loadprofile1_out_props = self.loadprofile1_in_props.copy()
         loadprofile1_out_props.update({
             'name': loadprofile1.oid,
             'element-uri': loadprofile1.uri,
         })
-        self.assertIsInstance(loadprofile1, FakedActivationProfile)
-        self.assertEqual(loadprofile1.properties, loadprofile1_out_props)
-        self.assertEqual(loadprofile1.manager, cpc1.load_activation_profiles)
+        assert isinstance(loadprofile1, FakedActivationProfile)
+        assert loadprofile1.properties == loadprofile1_out_props
+        assert loadprofile1.manager == cpc1.load_activation_profiles
 
     def test_profiles_add(self):
         """Test add() of FakedActivationProfileManager."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         resetprofiles = cpc1.reset_activation_profiles.list()
-        self.assertEqual(len(resetprofiles), 1)
+        assert len(resetprofiles) == 1
 
         resetprofile2_in_props = {'name': 'resetprofile2'}
 
@@ -417,23 +411,23 @@ class FakedActivationProfileTests(unittest.TestCase):
             resetprofile2_in_props)
 
         resetprofiles = cpc1.reset_activation_profiles.list()
-        self.assertEqual(len(resetprofiles), 2)
+        assert len(resetprofiles) == 2
 
         resetprofile2 = [p for p in resetprofiles
                          if p.properties['name'] ==
                          resetprofile2_in_props['name']][0]
 
-        self.assertEqual(new_resetprofile.properties, resetprofile2.properties)
-        self.assertEqual(new_resetprofile.manager, resetprofile2.manager)
+        assert new_resetprofile.properties == resetprofile2.properties
+        assert new_resetprofile.manager == resetprofile2.manager
 
         resetprofile2_out_props = resetprofile2_in_props.copy()
         resetprofile2_out_props.update({
             'name': resetprofile2.oid,
             'element-uri': resetprofile2.uri,
         })
-        self.assertIsInstance(resetprofile2, FakedActivationProfile)
-        self.assertEqual(resetprofile2.properties, resetprofile2_out_props)
-        self.assertEqual(resetprofile2.manager, cpc1.reset_activation_profiles)
+        assert isinstance(resetprofile2, FakedActivationProfile)
+        assert resetprofile2.properties == resetprofile2_out_props
+        assert resetprofile2.manager == cpc1.reset_activation_profiles
 
         # Because we know that the image and load profile managers are of the
         # same class, we don't need to test them.
@@ -444,22 +438,22 @@ class FakedActivationProfileTests(unittest.TestCase):
         cpc1 = cpcs[0]
         resetprofiles = cpc1.reset_activation_profiles.list()
         resetprofile1 = resetprofiles[0]
-        self.assertEqual(len(resetprofiles), 1)
+        assert len(resetprofiles) == 1
 
         # the function to be tested:
         cpc1.reset_activation_profiles.remove(resetprofile1.oid)
 
         resetprofiles = cpc1.reset_activation_profiles.list()
-        self.assertEqual(len(resetprofiles), 0)
+        assert len(resetprofiles) == 0
 
         # Because we know that the image and load profile managers are of the
         # same class, we don't need to test them.
 
 
-class FakedAdapterTests(unittest.TestCase):
+class TestFakedAdapter(object):
     """All tests for the FakedAdapterManager and FakedAdapter classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.adapter1_in_props = {'name': 'adapter1', 'type': 'roce'}
@@ -487,19 +481,18 @@ class FakedAdapterTests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=adapter.__class__.__name__,
-                id=id(adapter)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=adapter.__class__.__name__,
+                               id=id(adapter)),
+                        repr_str)
 
     def test_adapters_attr(self):
         """Test CPC 'adapters' attribute."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
-        self.assertIsInstance(cpc1.adapters, FakedAdapterManager)
-        self.assertRegexpMatches(cpc1.adapters.base_uri, r'/api/adapters')
+        assert isinstance(cpc1.adapters, FakedAdapterManager)
+        assert re.match(r'/api/adapters', cpc1.adapters.base_uri)
 
     def test_adapters_list(self):
         """Test list() of FakedAdapterManager."""
@@ -509,7 +502,7 @@ class FakedAdapterTests(unittest.TestCase):
         # the function to be tested:
         adapters = cpc1.adapters.list()
 
-        self.assertEqual(len(adapters), 1)
+        assert len(adapters) == 1
         adapter1 = adapters[0]
         adapter1_out_props = self.adapter1_in_props.copy()
         adapter1_out_props.update({
@@ -519,19 +512,19 @@ class FakedAdapterTests(unittest.TestCase):
             'adapter-family': 'roce',
             'network-port-uris': [],
         })
-        self.assertIsInstance(adapter1, FakedAdapter)
-        self.assertEqual(adapter1.properties, adapter1_out_props)
-        self.assertEqual(adapter1.manager, cpc1.adapters)
+        assert isinstance(adapter1, FakedAdapter)
+        assert adapter1.properties == adapter1_out_props
+        assert adapter1.manager == cpc1.adapters
 
         # Quick check of child resources:
-        self.assertIsInstance(adapter1.ports, FakedPortManager)
+        assert isinstance(adapter1.ports, FakedPortManager)
 
     def test_adapters_add(self):
         """Test add() of FakedAdapterManager."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
-        self.assertEqual(len(adapters), 1)
+        assert len(adapters) == 1
 
         adapter2_in_props = {'name': 'adapter2', 'adapter-family': 'ficon'}
 
@@ -540,13 +533,13 @@ class FakedAdapterTests(unittest.TestCase):
             adapter2_in_props)
 
         adapters = cpc1.adapters.list()
-        self.assertEqual(len(adapters), 2)
+        assert len(adapters) == 2
 
         adapter2 = [a for a in adapters
                     if a.properties['name'] == adapter2_in_props['name']][0]
 
-        self.assertEqual(new_adapter.properties, adapter2.properties)
-        self.assertEqual(new_adapter.manager, adapter2.manager)
+        assert new_adapter.properties == adapter2.properties
+        assert new_adapter.manager == adapter2.manager
 
         adapter2_out_props = adapter2_in_props.copy()
         adapter2_out_props.update({
@@ -555,9 +548,9 @@ class FakedAdapterTests(unittest.TestCase):
             'status': 'active',
             'storage-port-uris': [],
         })
-        self.assertIsInstance(adapter2, FakedAdapter)
-        self.assertEqual(adapter2.properties, adapter2_out_props)
-        self.assertEqual(adapter2.manager, cpc1.adapters)
+        assert isinstance(adapter2, FakedAdapter)
+        assert adapter2.properties == adapter2_out_props
+        assert adapter2.manager == cpc1.adapters
 
     def test_adapters_remove(self):
         """Test remove() of FakedAdapterManager."""
@@ -565,19 +558,19 @@ class FakedAdapterTests(unittest.TestCase):
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
         adapter1 = adapters[0]
-        self.assertEqual(len(adapters), 1)
+        assert len(adapters) == 1
 
         # the function to be tested:
         cpc1.adapters.remove(adapter1.oid)
 
         adapters = cpc1.adapters.list()
-        self.assertEqual(len(adapters), 0)
+        assert len(adapters) == 0
 
 
-class FakedCpcTests(unittest.TestCase):
+class TestFakedCpc(object):
     """All tests for the FakedCpcManager and FakedCpc classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         rd = {
@@ -599,16 +592,14 @@ class FakedCpcTests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=cpc.__class__.__name__,
-                id=id(cpc)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=cpc.__class__.__name__, id=id(cpc)),
+                        repr_str)
 
     def test_cpcs_attr(self):
         """Test HMC 'cpcs' attribute."""
-        self.assertIsInstance(self.hmc.cpcs, FakedCpcManager)
-        self.assertRegexpMatches(self.hmc.cpcs.base_uri, r'/api/cpcs')
+        assert isinstance(self.hmc.cpcs, FakedCpcManager)
+        assert re.match(r'/api/cpcs', self.hmc.cpcs.base_uri)
 
     def test_cpcs_list(self):
         """Test list() of FakedCpcManager."""
@@ -625,26 +616,26 @@ class FakedCpcTests(unittest.TestCase):
             'is-ensemble-member': False,
             'status': 'operating',
         })
-        self.assertIsInstance(cpc1, FakedCpc)
-        self.assertEqual(cpc1.properties, cpc1_out_props)
-        self.assertEqual(cpc1.manager, self.hmc.cpcs)
+        assert isinstance(cpc1, FakedCpc)
+        assert cpc1.properties == cpc1_out_props
+        assert cpc1.manager == self.hmc.cpcs
 
         # Quick check of child resources:
-        self.assertIsInstance(cpc1.lpars, FakedLparManager)
-        self.assertIsInstance(cpc1.partitions, FakedPartitionManager)
-        self.assertIsInstance(cpc1.adapters, FakedAdapterManager)
-        self.assertIsInstance(cpc1.virtual_switches, FakedVirtualSwitchManager)
-        self.assertIsInstance(cpc1.reset_activation_profiles,
-                              FakedActivationProfileManager)
-        self.assertIsInstance(cpc1.image_activation_profiles,
-                              FakedActivationProfileManager)
-        self.assertIsInstance(cpc1.load_activation_profiles,
-                              FakedActivationProfileManager)
+        assert isinstance(cpc1.lpars, FakedLparManager)
+        assert isinstance(cpc1.partitions, FakedPartitionManager)
+        assert isinstance(cpc1.adapters, FakedAdapterManager)
+        assert isinstance(cpc1.virtual_switches, FakedVirtualSwitchManager)
+        assert isinstance(cpc1.reset_activation_profiles,
+                          FakedActivationProfileManager)
+        assert isinstance(cpc1.image_activation_profiles,
+                          FakedActivationProfileManager)
+        assert isinstance(cpc1.load_activation_profiles,
+                          FakedActivationProfileManager)
 
     def test_cpcs_add(self):
         """Test add() of FakedCpcManager."""
         cpcs = self.hmc.cpcs.list()
-        self.assertEqual(len(cpcs), 1)
+        assert len(cpcs) == 1
 
         cpc2_in_props = {'name': 'cpc2'}
 
@@ -652,13 +643,13 @@ class FakedCpcTests(unittest.TestCase):
         new_cpc = self.hmc.cpcs.add(cpc2_in_props)
 
         cpcs = self.hmc.cpcs.list()
-        self.assertEqual(len(cpcs), 2)
+        assert len(cpcs) == 2
 
         cpc2 = [cpc for cpc in cpcs
                 if cpc.properties['name'] == cpc2_in_props['name']][0]
 
-        self.assertEqual(new_cpc.properties, cpc2.properties)
-        self.assertEqual(new_cpc.manager, cpc2.manager)
+        assert new_cpc.properties == cpc2.properties
+        assert new_cpc.manager == cpc2.manager
 
         cpc2_out_props = cpc2_in_props.copy()
         cpc2_out_props.update({
@@ -668,27 +659,27 @@ class FakedCpcTests(unittest.TestCase):
             'is-ensemble-member': False,
             'status': 'operating',
         })
-        self.assertIsInstance(cpc2, FakedCpc)
-        self.assertEqual(cpc2.properties, cpc2_out_props)
-        self.assertEqual(cpc2.manager, self.hmc.cpcs)
+        assert isinstance(cpc2, FakedCpc)
+        assert cpc2.properties == cpc2_out_props
+        assert cpc2.manager == self.hmc.cpcs
 
     def test_cpcs_remove(self):
         """Test remove() of FakedCpcManager."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
-        self.assertEqual(len(cpcs), 1)
+        assert len(cpcs) == 1
 
         # the function to be tested:
         self.hmc.cpcs.remove(cpc1.oid)
 
         cpcs = self.hmc.cpcs.list()
-        self.assertEqual(len(cpcs), 0)
+        assert len(cpcs) == 0
 
 
-class FakedHbaTests(unittest.TestCase):
+class TestFakedHba(object):
     """All tests for the FakedHbaManager and FakedHba classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.adapter1_oid = '747-abc-12345'
@@ -747,9 +738,9 @@ class FakedHbaTests(unittest.TestCase):
         partitions = cpc1.partitions.list()
         partition1 = partitions[0]
 
-        self.assertIsInstance(partition1.hbas, FakedHbaManager)
-        self.assertRegexpMatches(partition1.hbas.base_uri,
-                                 r'/api/partitions/[^/]+/hbas')
+        assert isinstance(partition1.hbas, FakedHbaManager)
+        assert re.match(r'/api/partitions/[^/]+/hbas',
+                        partition1.hbas.base_uri)
 
     def test_hbas_list(self):
         """Test list() of FakedHbaManager."""
@@ -761,7 +752,7 @@ class FakedHbaTests(unittest.TestCase):
         # the function to be tested:
         hbas = partition1.hbas.list()
 
-        self.assertEqual(len(hbas), 1)
+        assert len(hbas) == 1
         hba1 = hbas[0]
         hba1_out_props = self.hba1_in_props.copy()
         hba1_out_props.update({
@@ -770,9 +761,9 @@ class FakedHbaTests(unittest.TestCase):
             'device-number': hba1.properties['device-number'],
             'wwpn': hba1.properties['wwpn'],
         })
-        self.assertIsInstance(hba1, FakedHba)
-        self.assertEqual(hba1.properties, hba1_out_props)
-        self.assertEqual(hba1.manager, partition1.hbas)
+        assert isinstance(hba1, FakedHba)
+        assert hba1.properties == hba1_out_props
+        assert hba1.manager == partition1.hbas
 
     def test_hbas_add(self):
         """Test add() of FakedHbaManager."""
@@ -781,7 +772,7 @@ class FakedHbaTests(unittest.TestCase):
         partitions = cpc1.partitions.list()
         partition1 = partitions[0]
         hbas = partition1.hbas.list()
-        self.assertEqual(len(hbas), 1)
+        assert len(hbas) == 1
 
         hba2_oid = '22-55-xy'
         port_uri = '/api/adapters/abc-123/storage-ports/42'
@@ -799,22 +790,22 @@ class FakedHbaTests(unittest.TestCase):
             hba2_in_props)
 
         hbas = partition1.hbas.list()
-        self.assertEqual(len(hbas), 2)
+        assert len(hbas) == 2
 
         hba2 = [hba for hba in hbas
                 if hba.properties['name'] == hba2_in_props['name']][0]
 
-        self.assertEqual(new_hba.properties, hba2.properties)
-        self.assertEqual(new_hba.manager, hba2.manager)
+        assert new_hba.properties == hba2.properties
+        assert new_hba.manager == hba2.manager
 
         hba2_out_props = hba2_in_props.copy()
         hba2_out_props.update({
             'element-id': hba2_oid,
             'element-uri': hba2.uri,
         })
-        self.assertIsInstance(hba2, FakedHba)
-        self.assertEqual(hba2.properties, hba2_out_props)
-        self.assertEqual(hba2.manager, partition1.hbas)
+        assert isinstance(hba2, FakedHba)
+        assert hba2.properties == hba2_out_props
+        assert hba2.manager == partition1.hbas
 
     def test_hbas_remove(self):
         """Test remove() of FakedHbaManager."""
@@ -824,21 +815,21 @@ class FakedHbaTests(unittest.TestCase):
         partition1 = partitions[0]
         hbas = partition1.hbas.list()
         hba1 = hbas[0]
-        self.assertEqual(len(hbas), 1)
+        assert len(hbas) == 1
 
         # the function to be tested:
         partition1.hbas.remove(hba1.oid)
 
         hbas = partition1.hbas.list()
-        self.assertEqual(len(hbas), 0)
+        assert len(hbas) == 0
 
     # TODO: Add testcases for updating 'hba-uris' parent property
 
 
-class FakedLparTests(unittest.TestCase):
+class TestFakedLpar(object):
     """All tests for the FakedLparManager and FakedLpar classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.lpar1_in_props = {'name': 'lpar1'}
@@ -860,9 +851,8 @@ class FakedLparTests(unittest.TestCase):
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
-        self.assertIsInstance(cpc1.lpars, FakedLparManager)
-        self.assertRegexpMatches(cpc1.lpars.base_uri,
-                                 r'/api/logical-partitions')
+        assert isinstance(cpc1.lpars, FakedLparManager)
+        assert re.match(r'/api/logical-partitions', cpc1.lpars.base_uri)
 
     def test_lpars_list(self):
         """Test list() of FakedLparManager."""
@@ -872,7 +862,7 @@ class FakedLparTests(unittest.TestCase):
         # the function to be tested:
         lpars = cpc1.lpars.list()
 
-        self.assertEqual(len(lpars), 1)
+        assert len(lpars) == 1
         lpar1 = lpars[0]
         lpar1_out_props = self.lpar1_in_props.copy()
         lpar1_out_props.update({
@@ -880,16 +870,16 @@ class FakedLparTests(unittest.TestCase):
             'object-uri': lpar1.uri,
             'status': 'not-activated',
         })
-        self.assertIsInstance(lpar1, FakedLpar)
-        self.assertEqual(lpar1.properties, lpar1_out_props)
-        self.assertEqual(lpar1.manager, cpc1.lpars)
+        assert isinstance(lpar1, FakedLpar)
+        assert lpar1.properties == lpar1_out_props
+        assert lpar1.manager == cpc1.lpars
 
     def test_lpars_add(self):
         """Test add() of FakedLparManager."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         lpars = cpc1.lpars.list()
-        self.assertEqual(len(lpars), 1)
+        assert len(lpars) == 1
 
         lpar2_in_props = {'name': 'lpar2'}
 
@@ -898,13 +888,13 @@ class FakedLparTests(unittest.TestCase):
             lpar2_in_props)
 
         lpars = cpc1.lpars.list()
-        self.assertEqual(len(lpars), 2)
+        assert len(lpars) == 2
 
         lpar2 = [p for p in lpars
                  if p.properties['name'] == lpar2_in_props['name']][0]
 
-        self.assertEqual(new_lpar.properties, lpar2.properties)
-        self.assertEqual(new_lpar.manager, lpar2.manager)
+        assert new_lpar.properties == lpar2.properties
+        assert new_lpar.manager == lpar2.manager
 
         lpar2_out_props = lpar2_in_props.copy()
         lpar2_out_props.update({
@@ -912,9 +902,9 @@ class FakedLparTests(unittest.TestCase):
             'object-uri': lpar2.uri,
             'status': 'not-activated',
         })
-        self.assertIsInstance(lpar2, FakedLpar)
-        self.assertEqual(lpar2.properties, lpar2_out_props)
-        self.assertEqual(lpar2.manager, cpc1.lpars)
+        assert isinstance(lpar2, FakedLpar)
+        assert lpar2.properties == lpar2_out_props
+        assert lpar2.manager == cpc1.lpars
 
     def test_lpars_remove(self):
         """Test remove() of FakedLparManager."""
@@ -922,19 +912,19 @@ class FakedLparTests(unittest.TestCase):
         cpc1 = cpcs[0]
         lpars = cpc1.lpars.list()
         lpar1 = lpars[0]
-        self.assertEqual(len(lpars), 1)
+        assert len(lpars) == 1
 
         # the function to be tested:
         cpc1.lpars.remove(lpar1.oid)
 
         lpars = cpc1.lpars.list()
-        self.assertEqual(len(lpars), 0)
+        assert len(lpars) == 0
 
 
-class FakedNicTests(unittest.TestCase):
+class TestFakedNic(object):
     """All tests for the FakedNicManager and FakedNic classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.adapter1_oid = '380-xyz-12345'
@@ -993,9 +983,9 @@ class FakedNicTests(unittest.TestCase):
         partitions = cpc1.partitions.list()
         partition1 = partitions[0]
 
-        self.assertIsInstance(partition1.nics, FakedNicManager)
-        self.assertRegexpMatches(partition1.nics.base_uri,
-                                 r'/api/partitions/[^/]+/nics')
+        assert isinstance(partition1.nics, FakedNicManager)
+        assert re.match(r'/api/partitions/[^/]+/nics',
+                        partition1.nics.base_uri)
 
     def test_nics_list(self):
         """Test list() of FakedNicManager."""
@@ -1007,7 +997,7 @@ class FakedNicTests(unittest.TestCase):
         # the function to be tested:
         nics = partition1.nics.list()
 
-        self.assertEqual(len(nics), 1)
+        assert len(nics) == 1
         nic1 = nics[0]
         nic1_out_props = self.nic1_in_props.copy()
         nic1_out_props.update({
@@ -1015,9 +1005,9 @@ class FakedNicTests(unittest.TestCase):
             'element-uri': nic1.uri,
             'device-number': nic1.properties['device-number'],
         })
-        self.assertIsInstance(nic1, FakedNic)
-        self.assertEqual(nic1.properties, nic1_out_props)
-        self.assertEqual(nic1.manager, partition1.nics)
+        assert isinstance(nic1, FakedNic)
+        assert nic1.properties == nic1_out_props
+        assert nic1.manager == partition1.nics
 
     def test_nics_add(self):
         """Test add() of FakedNicManager."""
@@ -1026,7 +1016,7 @@ class FakedNicTests(unittest.TestCase):
         partitions = cpc1.partitions.list()
         partition1 = partitions[0]
         nics = partition1.nics.list()
-        self.assertEqual(len(nics), 1)
+        assert len(nics) == 1
 
         nic2_oid = '77-55-ab'
         port_uri = '/api/adapters/abc-123/network-ports/42'
@@ -1042,13 +1032,13 @@ class FakedNicTests(unittest.TestCase):
             nic2_in_props)
 
         nics = partition1.nics.list()
-        self.assertEqual(len(nics), 2)
+        assert len(nics) == 2
 
         nic2 = [nic for nic in nics
                 if nic.properties['name'] == nic2_in_props['name']][0]
 
-        self.assertEqual(new_nic.properties, nic2.properties)
-        self.assertEqual(new_nic.manager, nic2.manager)
+        assert new_nic.properties == nic2.properties
+        assert new_nic.manager == nic2.manager
 
         nic2_out_props = nic2_in_props.copy()
         nic2_out_props.update({
@@ -1056,9 +1046,9 @@ class FakedNicTests(unittest.TestCase):
             'element-uri': nic2.uri,
             'device-number': nic2.properties['device-number'],
         })
-        self.assertIsInstance(nic2, FakedNic)
-        self.assertEqual(nic2.properties, nic2_out_props)
-        self.assertEqual(nic2.manager, partition1.nics)
+        assert isinstance(nic2, FakedNic)
+        assert nic2.properties == nic2_out_props
+        assert nic2.manager == partition1.nics
 
     def test_nics_remove(self):
         """Test remove() of FakedNicManager."""
@@ -1068,21 +1058,21 @@ class FakedNicTests(unittest.TestCase):
         partition1 = partitions[0]
         nics = partition1.nics.list()
         nic1 = nics[0]
-        self.assertEqual(len(nics), 1)
+        assert len(nics) == 1
 
         # the function to be tested:
         partition1.nics.remove(nic1.oid)
 
         nics = partition1.nics.list()
-        self.assertEqual(len(nics), 0)
+        assert len(nics) == 0
 
     # TODO: Add testcases for updating 'nic-uris' parent property
 
 
-class FakedPartitionTests(unittest.TestCase):
+class TestFakedPartition(object):
     """All tests for the FakedPartitionManager and FakedPartition classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
@@ -1110,19 +1100,18 @@ class FakedPartitionTests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=partition.__class__.__name__,
-                id=id(partition)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=partition.__class__.__name__,
+                               id=id(partition)),
+                        repr_str)
 
     def test_partitions_attr(self):
         """Test CPC 'partitions' attribute."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
-        self.assertIsInstance(cpc1.partitions, FakedPartitionManager)
-        self.assertRegexpMatches(cpc1.partitions.base_uri, r'/api/partitions')
+        assert isinstance(cpc1.partitions, FakedPartitionManager)
+        assert re.match(r'/api/partitions', cpc1.partitions.base_uri)
 
     def test_partitions_list(self):
         """Test list() of FakedPartitionManager."""
@@ -1132,7 +1121,7 @@ class FakedPartitionTests(unittest.TestCase):
         # the function to be tested:
         partitions = cpc1.partitions.list()
 
-        self.assertEqual(len(partitions), 1)
+        assert len(partitions) == 1
         partition1 = partitions[0]
         partition1_out_props = self.partition1_in_props.copy()
         partition1_out_props.update({
@@ -1143,16 +1132,16 @@ class FakedPartitionTests(unittest.TestCase):
             'nic-uris': [],
             'virtual-function-uris': [],
         })
-        self.assertIsInstance(partition1, FakedPartition)
-        self.assertEqual(partition1.properties, partition1_out_props)
-        self.assertEqual(partition1.manager, cpc1.partitions)
+        assert isinstance(partition1, FakedPartition)
+        assert partition1.properties == partition1_out_props
+        assert partition1.manager == cpc1.partitions
 
     def test_partitions_add(self):
         """Test add() of FakedPartitionManager."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
-        self.assertEqual(len(partitions), 1)
+        assert len(partitions) == 1
 
         partition2_in_props = {'name': 'partition2'}
 
@@ -1161,14 +1150,14 @@ class FakedPartitionTests(unittest.TestCase):
             partition2_in_props)
 
         partitions = cpc1.partitions.list()
-        self.assertEqual(len(partitions), 2)
+        assert len(partitions) == 2
 
         partition2 = [p for p in partitions
                       if p.properties['name'] ==
                       partition2_in_props['name']][0]
 
-        self.assertEqual(new_partition.properties, partition2.properties)
-        self.assertEqual(new_partition.manager, partition2.manager)
+        assert new_partition.properties == partition2.properties
+        assert new_partition.manager == partition2.manager
 
         partition2_out_props = partition2_in_props.copy()
         partition2_out_props.update({
@@ -1179,9 +1168,9 @@ class FakedPartitionTests(unittest.TestCase):
             'nic-uris': [],
             'virtual-function-uris': [],
         })
-        self.assertIsInstance(partition2, FakedPartition)
-        self.assertEqual(partition2.properties, partition2_out_props)
-        self.assertEqual(partition2.manager, cpc1.partitions)
+        assert isinstance(partition2, FakedPartition)
+        assert partition2.properties == partition2_out_props
+        assert partition2.manager == cpc1.partitions
 
     def test_partitions_remove(self):
         """Test remove() of FakedPartitionManager."""
@@ -1189,19 +1178,19 @@ class FakedPartitionTests(unittest.TestCase):
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
         partition1 = partitions[0]
-        self.assertEqual(len(partitions), 1)
+        assert len(partitions) == 1
 
         # the function to be tested:
         cpc1.partitions.remove(partition1.oid)
 
         partitions = cpc1.partitions.list()
-        self.assertEqual(len(partitions), 0)
+        assert len(partitions) == 0
 
 
-class FakedPortTests(unittest.TestCase):
+class TestFakedPort(object):
     """All tests for the FakedPortManager and FakedPort classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.adapter1_in_props = {'name': 'adapter1', 'adapter-family': 'osa'}
@@ -1231,9 +1220,9 @@ class FakedPortTests(unittest.TestCase):
         adapters = cpc1.adapters.list()
         adapter1 = adapters[0]
 
-        self.assertIsInstance(adapter1.ports, FakedPortManager)
-        self.assertRegexpMatches(adapter1.ports.base_uri,
-                                 r'/api/adapters/[^/]+/network-ports')
+        assert isinstance(adapter1.ports, FakedPortManager)
+        assert re.match(r'/api/adapters/[^/]+/network-ports',
+                        adapter1.ports.base_uri)
 
     def test_ports_list(self):
         """Test list() of FakedPortManager."""
@@ -1245,16 +1234,16 @@ class FakedPortTests(unittest.TestCase):
         # the function to be tested:
         ports = adapter1.ports.list()
 
-        self.assertEqual(len(ports), 1)
+        assert len(ports) == 1
         port1 = ports[0]
         port1_out_props = self.port1_in_props.copy()
         port1_out_props.update({
             'element-id': port1.oid,
             'element-uri': port1.uri,
         })
-        self.assertIsInstance(port1, FakedPort)
-        self.assertEqual(port1.properties, port1_out_props)
-        self.assertEqual(port1.manager, adapter1.ports)
+        assert isinstance(port1, FakedPort)
+        assert port1.properties == port1_out_props
+        assert port1.manager == adapter1.ports
 
     def test_ports_add(self):
         """Test add() of FakedPortManager."""
@@ -1263,7 +1252,7 @@ class FakedPortTests(unittest.TestCase):
         adapters = cpc1.adapters.list()
         adapter1 = adapters[0]
         ports = adapter1.ports.list()
-        self.assertEqual(len(ports), 1)
+        assert len(ports) == 1
 
         port2_in_props = {'name': 'port2'}
 
@@ -1272,22 +1261,22 @@ class FakedPortTests(unittest.TestCase):
             port2_in_props)
 
         ports = adapter1.ports.list()
-        self.assertEqual(len(ports), 2)
+        assert len(ports) == 2
 
         port2 = [p for p in ports
                  if p.properties['name'] == port2_in_props['name']][0]
 
-        self.assertEqual(new_port.properties, port2.properties)
-        self.assertEqual(new_port.manager, port2.manager)
+        assert new_port.properties == port2.properties
+        assert new_port.manager == port2.manager
 
         port2_out_props = port2_in_props.copy()
         port2_out_props.update({
             'element-id': port2.oid,
             'element-uri': port2.uri,
         })
-        self.assertIsInstance(port2, FakedPort)
-        self.assertEqual(port2.properties, port2_out_props)
-        self.assertEqual(port2.manager, adapter1.ports)
+        assert isinstance(port2, FakedPort)
+        assert port2.properties == port2_out_props
+        assert port2.manager == adapter1.ports
 
     def test_ports_remove(self):
         """Test remove() of FakedPortManager."""
@@ -1297,23 +1286,23 @@ class FakedPortTests(unittest.TestCase):
         adapter1 = adapters[0]
         ports = adapter1.ports.list()
         port1 = ports[0]
-        self.assertEqual(len(ports), 1)
+        assert len(ports) == 1
 
         # the function to be tested:
         adapter1.ports.remove(port1.oid)
 
         ports = adapter1.ports.list()
-        self.assertEqual(len(ports), 0)
+        assert len(ports) == 0
 
     # TODO: Add testcases for updating 'network-port-uris' and
     #       'storage-port-uris' parent properties
 
 
-class FakedVirtualFunctionTests(unittest.TestCase):
+class TestFakedVirtualFunction(object):
     """All tests for the FakedVirtualFunctionManager and FakedVirtualFunction
     classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
@@ -1344,10 +1333,10 @@ class FakedVirtualFunctionTests(unittest.TestCase):
         partitions = cpc1.partitions.list()
         partition1 = partitions[0]
 
-        self.assertIsInstance(partition1.virtual_functions,
-                              FakedVirtualFunctionManager)
-        self.assertRegexpMatches(partition1.virtual_functions.base_uri,
-                                 r'/api/partitions/[^/]+/virtual-functions')
+        assert isinstance(partition1.virtual_functions,
+                          FakedVirtualFunctionManager)
+        assert re.match(r'/api/partitions/[^/]+/virtual-functions',
+                        partition1.virtual_functions.base_uri)
 
     def test_virtual_functions_list(self):
         """Test list() of FakedVirtualFunctionManager."""
@@ -1359,7 +1348,7 @@ class FakedVirtualFunctionTests(unittest.TestCase):
         # the function to be tested:
         virtual_functions = partition1.virtual_functions.list()
 
-        self.assertEqual(len(virtual_functions), 1)
+        assert len(virtual_functions) == 1
         virtual_function1 = virtual_functions[0]
         virtual_function1_out_props = self.virtual_function1_in_props.copy()
         virtual_function1_out_props.update({
@@ -1367,11 +1356,9 @@ class FakedVirtualFunctionTests(unittest.TestCase):
             'element-uri': virtual_function1.uri,
             'device-number': virtual_function1.properties['device-number'],
         })
-        self.assertIsInstance(virtual_function1, FakedVirtualFunction)
-        self.assertEqual(virtual_function1.properties,
-                         virtual_function1_out_props)
-        self.assertEqual(virtual_function1.manager,
-                         partition1.virtual_functions)
+        assert isinstance(virtual_function1, FakedVirtualFunction)
+        assert virtual_function1.properties == virtual_function1_out_props
+        assert virtual_function1.manager == partition1.virtual_functions
 
     def test_virtual_functions_add(self):
         """Test add() of FakedVirtualFunctionManager."""
@@ -1380,7 +1367,7 @@ class FakedVirtualFunctionTests(unittest.TestCase):
         partitions = cpc1.partitions.list()
         partition1 = partitions[0]
         virtual_functions = partition1.virtual_functions.list()
-        self.assertEqual(len(virtual_functions), 1)
+        assert len(virtual_functions) == 1
 
         virtual_function2_in_props = {'name': 'virtual_function2'}
 
@@ -1389,16 +1376,14 @@ class FakedVirtualFunctionTests(unittest.TestCase):
             virtual_function2_in_props)
 
         virtual_functions = partition1.virtual_functions.list()
-        self.assertEqual(len(virtual_functions), 2)
+        assert len(virtual_functions) == 2
 
         virtual_function2 = [vf for vf in virtual_functions
                              if vf.properties['name'] ==
                              virtual_function2_in_props['name']][0]
 
-        self.assertEqual(new_virtual_function.properties,
-                         virtual_function2.properties)
-        self.assertEqual(new_virtual_function.manager,
-                         virtual_function2.manager)
+        assert new_virtual_function.properties == virtual_function2.properties
+        assert new_virtual_function.manager == virtual_function2.manager
 
         virtual_function2_out_props = virtual_function2_in_props.copy()
         virtual_function2_out_props.update({
@@ -1406,11 +1391,9 @@ class FakedVirtualFunctionTests(unittest.TestCase):
             'element-uri': virtual_function2.uri,
             'device-number': virtual_function2.properties['device-number'],
         })
-        self.assertIsInstance(virtual_function2, FakedVirtualFunction)
-        self.assertEqual(virtual_function2.properties,
-                         virtual_function2_out_props)
-        self.assertEqual(virtual_function2.manager,
-                         partition1.virtual_functions)
+        assert isinstance(virtual_function2, FakedVirtualFunction)
+        assert virtual_function2.properties == virtual_function2_out_props
+        assert virtual_function2.manager == partition1.virtual_functions
 
     def test_virtual_functions_remove(self):
         """Test remove() of FakedVirtualFunctionManager."""
@@ -1420,22 +1403,22 @@ class FakedVirtualFunctionTests(unittest.TestCase):
         partition1 = partitions[0]
         virtual_functions = partition1.virtual_functions.list()
         virtual_function1 = virtual_functions[0]
-        self.assertEqual(len(virtual_functions), 1)
+        assert len(virtual_functions) == 1
 
         # the function to be tested:
         partition1.virtual_functions.remove(virtual_function1.oid)
 
         virtual_functions = partition1.virtual_functions.list()
-        self.assertEqual(len(virtual_functions), 0)
+        assert len(virtual_functions) == 0
 
     # TODO: Add testcases for updating 'virtual-function-uris' parent property
 
 
-class FakedVirtualSwitchTests(unittest.TestCase):
+class TestFakedVirtualSwitch(object):
     """All tests for the FakedVirtualSwitchManager and FakedVirtualSwitch
     classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.virtual_switch1_in_props = {'name': 'virtual_switch1'}
@@ -1457,9 +1440,9 @@ class FakedVirtualSwitchTests(unittest.TestCase):
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
-        self.assertIsInstance(cpc1.virtual_switches, FakedVirtualSwitchManager)
-        self.assertRegexpMatches(cpc1.virtual_switches.base_uri,
-                                 r'/api/virtual-switches')
+        assert isinstance(cpc1.virtual_switches, FakedVirtualSwitchManager)
+        assert re.match(r'/api/virtual-switches',
+                        cpc1.virtual_switches.base_uri)
 
     def test_virtual_switches_list(self):
         """Test list() of FakedVirtualSwitchManager."""
@@ -1469,7 +1452,7 @@ class FakedVirtualSwitchTests(unittest.TestCase):
         # the function to be tested:
         virtual_switches = cpc1.virtual_switches.list()
 
-        self.assertEqual(len(virtual_switches), 1)
+        assert len(virtual_switches) == 1
         virtual_switch1 = virtual_switches[0]
         virtual_switch1_out_props = self.virtual_switch1_in_props.copy()
         virtual_switch1_out_props.update({
@@ -1477,16 +1460,16 @@ class FakedVirtualSwitchTests(unittest.TestCase):
             'object-uri': virtual_switch1.uri,
             'connected-vnic-uris': [],
         })
-        self.assertIsInstance(virtual_switch1, FakedVirtualSwitch)
-        self.assertEqual(virtual_switch1.properties, virtual_switch1_out_props)
-        self.assertEqual(virtual_switch1.manager, cpc1.virtual_switches)
+        assert isinstance(virtual_switch1, FakedVirtualSwitch)
+        assert virtual_switch1.properties == virtual_switch1_out_props
+        assert virtual_switch1.manager == cpc1.virtual_switches
 
     def test_virtual_switches_add(self):
         """Test add() of FakedVirtualSwitchManager."""
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         virtual_switches = cpc1.virtual_switches.list()
-        self.assertEqual(len(virtual_switches), 1)
+        assert len(virtual_switches) == 1
 
         virtual_switch2_in_props = {'name': 'virtual_switch2'}
 
@@ -1495,16 +1478,14 @@ class FakedVirtualSwitchTests(unittest.TestCase):
             virtual_switch2_in_props)
 
         virtual_switches = cpc1.virtual_switches.list()
-        self.assertEqual(len(virtual_switches), 2)
+        assert len(virtual_switches) == 2
 
         virtual_switch2 = [p for p in virtual_switches
                            if p.properties['name'] ==
                            virtual_switch2_in_props['name']][0]
 
-        self.assertEqual(new_virtual_switch.properties,
-                         virtual_switch2.properties)
-        self.assertEqual(new_virtual_switch.manager,
-                         virtual_switch2.manager)
+        assert new_virtual_switch.properties == virtual_switch2.properties
+        assert new_virtual_switch.manager == virtual_switch2.manager
 
         virtual_switch2_out_props = virtual_switch2_in_props.copy()
         virtual_switch2_out_props.update({
@@ -1512,9 +1493,9 @@ class FakedVirtualSwitchTests(unittest.TestCase):
             'object-uri': virtual_switch2.uri,
             'connected-vnic-uris': [],
         })
-        self.assertIsInstance(virtual_switch2, FakedVirtualSwitch)
-        self.assertEqual(virtual_switch2.properties, virtual_switch2_out_props)
-        self.assertEqual(virtual_switch2.manager, cpc1.virtual_switches)
+        assert isinstance(virtual_switch2, FakedVirtualSwitch)
+        assert virtual_switch2.properties == virtual_switch2_out_props
+        assert virtual_switch2.manager == cpc1.virtual_switches
 
     def test_virtual_switches_remove(self):
         """Test remove() of FakedVirtualSwitchManager."""
@@ -1522,20 +1503,20 @@ class FakedVirtualSwitchTests(unittest.TestCase):
         cpc1 = cpcs[0]
         virtual_switches = cpc1.virtual_switches.list()
         virtual_switch1 = virtual_switches[0]
-        self.assertEqual(len(virtual_switches), 1)
+        assert len(virtual_switches) == 1
 
         # the function to be tested:
         cpc1.virtual_switches.remove(virtual_switch1.oid)
 
         virtual_switches = cpc1.virtual_switches.list()
-        self.assertEqual(len(virtual_switches), 0)
+        assert len(virtual_switches) == 0
 
 
-class FakedMetricsContextTests(unittest.TestCase):
+class TestFakedMetricsContext(object):
     """All tests for the FakedMetricsContextManager and FakedMetricsContext
     classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
@@ -1557,10 +1538,10 @@ class FakedMetricsContextTests(unittest.TestCase):
         """Test faked HMC 'metrics_contexts' attribute."""
         faked_hmc = self.hmc
 
-        self.assertIsInstance(faked_hmc.metrics_contexts,
-                              FakedMetricsContextManager)
-        self.assertRegexpMatches(faked_hmc.metrics_contexts.base_uri,
-                                 r'api/services/metrics/context')
+        assert isinstance(faked_hmc.metrics_contexts,
+                          FakedMetricsContextManager)
+        assert re.match(r'/api/services/metrics/context',
+                        faked_hmc.metrics_contexts.base_uri)
 
     def test_metrics_contexts_add(self):
         """Test add() of FakedMetricsContextManager."""
@@ -1574,16 +1555,15 @@ class FakedMetricsContextTests(unittest.TestCase):
         # the function to be tested:
         mc = faked_hmc.metrics_contexts.add(mc_in_props)
 
-        self.assertIsInstance(mc, FakedMetricsContext)
-        self.assertRegexpMatches(mc.uri,
-                                 r'api/services/metrics/context/[^/]+')
-        self.assertIs(mc.manager, faked_hmc.metrics_contexts)
+        assert isinstance(mc, FakedMetricsContext)
+        assert re.match(r'/api/services/metrics/context/[^/]+', mc.uri)
+        assert mc.manager is faked_hmc.metrics_contexts
         mc_props = mc_in_props.copy()
         mc_props.update({
             'fake-id': mc.oid,
             'fake-uri': mc.uri,
         })
-        self.assertEqual(mc.properties, mc_props)
+        assert mc.properties == mc_props
 
     def test_metrics_contexts_add_get_mg_def(self):
         """Test add_metric_group_definition(), get_metric_group_definition(),
@@ -1603,38 +1583,36 @@ class FakedMetricsContextTests(unittest.TestCase):
 
         # Verify the initial M.G.Def names
         mg_def_names = mc_mgr.get_metric_group_definition_names()
-        self.assertEqual(list(mg_def_names), [])
+        assert list(mg_def_names) == []
 
         # Verify that a M.G.Def can be added
         mc_mgr.add_metric_group_definition(mg_def_input)
 
         # Verify the M.G.Def names after having added one
         mg_def_names = mc_mgr.get_metric_group_definition_names()
-        self.assertEqual(list(mg_def_names), [mg_name])
+        assert list(mg_def_names) == [mg_name]
 
         # Verify that it can be retrieved
         mg_def = mc_mgr.get_metric_group_definition(mg_name)
-        self.assertEqual(mg_def, mg_def_input)
+        assert mg_def == mg_def_input
 
         # Verify that retrieving a non-existing M.G.Def fails
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as exc_info:
             mc_mgr.get_metric_group_definition('foo')
-        exc = cm.exception
-        self.assertRegexpMatches(
-            str(exc),
-            r"^A metric group definition with this name does not exist:.*")
+        exc = exc_info.value
+        assert re.match(r"^A metric group definition with this name does "
+                        r"not exist:.*", str(exc))
 
         # Verify that adding an M.G.Def with an existing name fails
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as exc_info:
             mc_mgr.add_metric_group_definition(mg_def_input)
-        exc = cm.exception
-        self.assertRegexpMatches(
-            str(exc),
-            r"^A metric group definition with this name already exists:.*")
+        exc = exc_info.value
+        assert re.match(r"^A metric group definition with this name already "
+                        r"exists:.*", str(exc))
 
         # Verify that the M.G.Def names have not changed in these fails
         mg_def_names = mc_mgr.get_metric_group_definition_names()
-        self.assertEqual(list(mg_def_names), [mg_name])
+        assert list(mg_def_names) == [mg_name]
 
     def test_metrics_contexts_add_get_metric_values(self):
         """Test add_metric_values(), get_metric_values(), and
@@ -1663,26 +1641,25 @@ class FakedMetricsContextTests(unittest.TestCase):
 
         # Verify the initial M.O.Val group names
         mo_val_group_names = mc_mgr.get_metric_values_group_names()
-        self.assertEqual(list(mo_val_group_names), [])
+        assert list(mo_val_group_names) == []
 
         # Verify that a first M.O.Val can be added
         mc_mgr.add_metric_values(mo_val_input)
 
         # Verify the M.O.Val group names after having added one
         mo_val_group_names = mc_mgr.get_metric_values_group_names()
-        self.assertEqual(list(mo_val_group_names), [mg_name])
+        assert list(mo_val_group_names) == [mg_name]
 
         # Verify that the M.O.Vals can be retrieved and contain the first one
         mo_vals = mc_mgr.get_metric_values(mg_name)
-        self.assertEqual(list(mo_vals), [mo_val_input])
+        assert list(mo_vals) == [mo_val_input]
 
         # Verify that retrieving a non-existing M.O.Val fails
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as exc_info:
             mc_mgr.get_metric_values('foo')
-        exc = cm.exception
-        self.assertRegexpMatches(
-            str(exc),
-            r"^Metric values for this group name do not exist:.*")
+        exc = exc_info.value
+        assert re.match(r"^Metric values for this group name do not "
+                        r"exist:.*", str(exc))
 
         # Verify that a second M.O.Val can be added for the same group name
         mc_mgr.add_metric_values(mo_val2_input)
@@ -1690,11 +1667,11 @@ class FakedMetricsContextTests(unittest.TestCase):
         # Verify the M.O.Val group names after having added a second M.O.Val
         # for the same group name -> still just one group name
         mo_val_group_names = mc_mgr.get_metric_values_group_names()
-        self.assertEqual(list(mo_val_group_names), [mg_name])
+        assert list(mo_val_group_names) == [mg_name]
 
         # Verify that the M.O.Vals can be retrieved and contain both
         mo_vals = mc_mgr.get_metric_values(mg_name)
-        self.assertEqual(list(mo_vals), [mo_val_input, mo_val2_input])
+        assert list(mo_vals) == [mo_val_input, mo_val2_input]
 
     def test_metrics_context_get_mg_defs(self):
         """Test get_metric_group_definitions() of FakedMetricsContext."""
@@ -1732,7 +1709,7 @@ class FakedMetricsContextTests(unittest.TestCase):
         mg_defs = mc.get_metric_group_definitions()
 
         # Verify the returned M.G.Defs
-        self.assertEqual(list(mg_defs), exp_mg_defs)
+        assert list(mg_defs) == exp_mg_defs
 
         # Test case where the default for M.G.Defs is tested
         mc_in_props = {
@@ -1746,7 +1723,7 @@ class FakedMetricsContextTests(unittest.TestCase):
         mg_defs = mc.get_metric_group_definitions()
 
         # Verify the returned M.G.Defs
-        self.assertEqual(list(mg_defs), exp_mg_defs)
+        assert list(mg_defs) == exp_mg_defs
 
     def test_metrics_context_get_mg_infos(self):
         """Test get_metric_group_infos() of FakedMetricsContext."""
@@ -1810,7 +1787,7 @@ class FakedMetricsContextTests(unittest.TestCase):
         mg_infos = mc.get_metric_group_infos()
 
         # Verify the returned M.G.Defs
-        self.assertEqual(list(mg_infos), exp_mg_infos)
+        assert list(mg_infos) == exp_mg_infos
 
         # Test case where the default for M.G.Defs is tested
         mc_in_props = {
@@ -1824,7 +1801,7 @@ class FakedMetricsContextTests(unittest.TestCase):
         mg_infos = mc.get_metric_group_infos()
 
         # Verify the returned M.G.Defs
-        self.assertEqual(list(mg_infos), exp_mg_infos)
+        assert list(mg_infos) == exp_mg_infos
 
     def test_metrics_context_get_m_values(self):
         """Test get_metric_values() of FakedMetricsContext."""
@@ -1871,10 +1848,10 @@ class FakedMetricsContextTests(unittest.TestCase):
         # the function to be tested:
         mv_list = mc.get_metric_values()
 
-        self.assertEqual(len(mv_list), 1)
+        assert len(mv_list) == 1
         mv = mv_list[0]
-        self.assertEqual(mv[0], mg_name)
-        self.assertEqual(mv[1], exp_mo_vals)
+        assert mv[0] == mg_name
+        assert mv[1] == exp_mo_vals
 
     def test_metrics_context_get_m_values_response(self):
         """Test get_metric_values_response() of FakedMetricsContext."""
@@ -1959,14 +1936,13 @@ class FakedMetricsContextTests(unittest.TestCase):
         # the function to be tested:
         mv_resp = mc.get_metric_values_response()
 
-        self.assertEqual(
-            mv_resp, exp_mv_resp,
-            "Actual response string:\n{!r}\n"
-            "Expected response string:\n{!r}\n".
-            format(mv_resp, exp_mv_resp))
+        assert mv_resp == exp_mv_resp, \
+            "Actual response string:\n{!r}\n" \
+            "Expected response string:\n{!r}\n". \
+            format(mv_resp, exp_mv_resp)
 
 
-class FakedMetricGroupDefinitionTests(unittest.TestCase):
+class TestFakedMetricGroupDefinition(object):
     """All tests for the FakedMetricGroupDefinition class."""
 
     def test_metric_group_definition_attr(self):
@@ -1983,12 +1959,12 @@ class FakedMetricGroupDefinitionTests(unittest.TestCase):
         # the function to be tested:
         new_mgd = FakedMetricGroupDefinition(**in_kwargs)
 
-        self.assertEqual(new_mgd.name, in_kwargs['name'])
-        self.assertEqual(new_mgd.types, in_kwargs['types'])
-        self.assertIsNot(new_mgd.types, in_kwargs['types'])  # was copied
+        assert new_mgd.name == in_kwargs['name']
+        assert new_mgd.types == in_kwargs['types']
+        assert new_mgd.types is not in_kwargs['types']  # was copied
 
 
-class FakedMetricObjectValuesTests(unittest.TestCase):
+class TestFakedMetricObjectValues(object):
     """All tests for the FakedMetricObjectValues class."""
 
     def test_metric_object_values_attr(self):
@@ -2007,12 +1983,8 @@ class FakedMetricObjectValuesTests(unittest.TestCase):
         # the function to be tested:
         new_mov = FakedMetricObjectValues(**in_kwargs)
 
-        self.assertEqual(new_mov.group_name, in_kwargs['group_name'])
-        self.assertEqual(new_mov.resource_uri, in_kwargs['resource_uri'])
-        self.assertEqual(new_mov.timestamp, in_kwargs['timestamp'])
-        self.assertEqual(new_mov.values, in_kwargs['values'])
-        self.assertIsNot(new_mov.values, in_kwargs['values'])  # was copied
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert new_mov.group_name == in_kwargs['group_name']
+        assert new_mov.resource_uri == in_kwargs['resource_uri']
+        assert new_mov.timestamp == in_kwargs['timestamp']
+        assert new_mov.values == in_kwargs['values']
+        assert new_mov.values is not in_kwargs['values']  # was copied
