@@ -28,7 +28,6 @@ zhmcclient - A pure Python client library for the IBM Z HMC Web Services API
    general.rst
    resources.rst
    notifications.rst
-   cli.rst
    mocksupport.rst
    development.rst
    appendix.rst

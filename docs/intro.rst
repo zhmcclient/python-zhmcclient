@@ -50,6 +50,20 @@ Services API:
   completion of asynchronous tasks started using REST.
 
 
+.. _`zhmc CLI`:
+
+zhmc CLI
+~~~~~~~~
+
+Before version 0.18.0 of the zhmcclient package, it contained the zhmc CLI.
+Starting with zhmcclient version 0.18.0, the zhmc CLI has been moved from this
+project into the new :term:`zhmccli project`.
+
+If your project uses the zhmc CLI, and you are upgrading the zhmcclient
+package from before 0.18.0 to 0.18.0 or later, your project will need to add
+the :term:`zhmccli package` to its dependencies.
+
+
 .. _`Supported environments`:
 
 Supported environments
@@ -97,9 +111,6 @@ up a `virtual Python environment`_ for your project, because that leaves your
 system Python installation unchanged, it does not require ``sudo`` rights,
 and last but not least it gives you better control about the installed
 packages and their versions.
-
-If you are only interested in the zhmcclient CLI (the ``zhmc`` command), you
-may as well install the package into the system Python.
 
 Installation of latest released version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -277,21 +288,6 @@ Possible output when running the script:
 .. code-block:: text
 
     Cpc(name=P000S67B, object-uri=/api/cpcs/fa1f2466-12df-311a-804c-4ed2cc1d6564, status=service-required)
-
-This example uses the zhmc CLI to list the CPCs managed by an HMC, and shows
-a possible output:
-
-.. code-block:: text
-
-    $ hmc_host="<IP address or hostname of the HMC>"
-    $ hmc_userid="<userid on that HMC>"
-    $ zhmc -h $hmc_host -u $hmc_userid cpc list
-    Enter password (for user <hmc_user> at HMC <hmc_host>): .......
-    +----------+------------------+
-    | name     | status           |
-    |----------+------------------|
-    | P000S67B | service-required |
-    +----------+------------------+
 
 For more example code, see the Python scripts in the `examples directory`_ of
 the Git repository, or the :ref:`Tutorial` section of this documentation.

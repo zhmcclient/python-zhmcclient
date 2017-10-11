@@ -12,7 +12,6 @@
 #     rm, mv, find, tee, which
 #   These commands on all OS platforms in the active Python environment:
 #     python (or python3 on OS-X)
-#     pip (or pip3 on OS-X)
 #     twine
 #   These commands on Linux and OS-X:
 #     uname
@@ -56,9 +55,6 @@ endif
 
 # Name of this Python package (top-level Python namespace + Pypi package name)
 package_name := zhmcclient
-
-# Name of the Python namespace for the CLI
-cli_package_name := zhmccli
 
 # Package version (full version, including any pre-release suffixes, e.g. "0.1.0-alpha1")
 # package_version := $(shell $(PYTHON_CMD) -c "import sys, $(package_name); sys.stdout.write($(package_name).__version__)")
@@ -112,7 +108,6 @@ check_py_files := \
     setup.py \
     $(wildcard $(package_name)/*.py) \
     $(wildcard zhmcclient_mock/*.py) \
-    $(wildcard $(cli_package_name)/*.py) \
     $(wildcard tests/unit/*.py) \
     $(wildcard tests/unit/zhmcclient_mock/*.py) \
     $(wildcard tests/function/*.py) \
@@ -137,7 +132,6 @@ dist_dependent_files := \
     $(wildcard *.py) \
     $(wildcard $(package_name)/*.py) \
     $(wildcard zhmcclient_mock/*.py) \
-    $(wildcard $(cli_package_name)/*.py) \
 
 # No built-in rules needed:
 .SUFFIXES:
