@@ -1994,7 +1994,7 @@ class LparLoadHandler(object):
                               "(and force was not specified).".
                               format(lpar.name))
 
-        # Reflect the successful deactivation in the resource
+        # Reflect the successful load in the resource
         lpar.properties['status'] = 'operating'
 
 

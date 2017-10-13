@@ -66,6 +66,8 @@ Released: not yet
   initial LPAR status is not permitted, or when the activation profile name
   does not match the LPAR name.
 
+* Improved the testcases for the Lpar and LparManager classes.
+
 **Known issues:**
 
 * See `list of open issues`_.

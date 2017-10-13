@@ -18,235 +18,479 @@ Unit tests for _lpar module.
 
 from __future__ import absolute_import, print_function
 
-# FIXME: Migrate requests_mock to zhmcclient_mock.
-import requests_mock
+import pytest
+import re
+import copy
 
-from zhmcclient import Session, Client
+from zhmcclient import Client, Lpar, HTTPError
+from zhmcclient_mock import FakedSession
+from tests.common.utils import assert_resources
+
+
+# Object IDs and names of our faked LPARs:
+LPAR1_OID = 'lpar1-oid'
+LPAR1_NAME = 'lpar 1'
+LPAR2_OID = 'lpar2-oid'
+LPAR2_NAME = 'lpar 2'
 
 
 class TestLpar(object):
     """All tests for Lpar and LparManager classes."""
 
     def setup_method(self):
-        self.session = Session('fake-host', 'fake-user', 'fake-id')
+        """
+        Set up a faked session, and add a faked CPC in classic mode without any
+        child resources.
+        """
+
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
-        with requests_mock.mock() as m:
-            # Because logon is deferred until needed, we perform it
-            # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'fake-session-id'})
-            self.session.logon()
 
-        self.cpc_mgr = self.client.cpcs
-        with requests_mock.mock() as m:
-            result = {
-                'cpcs': [
-                    {
-                        'object-uri': '/api/cpcs/fake-cpc-id-1',
-                        'name': 'P0ZHMP02',
-                        'status': 'service-required',
-                    }
-                ]
-            }
-            m.get('/api/cpcs', json=result)
-            cpcs = self.cpc_mgr.list(full_properties=False)
-            self.cpc = cpcs[0]
+        self.faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'fake-cpc1-oid',
+            # object-uri is set up automatically
+            'parent': None,
+            'class': 'cpc',
+            'name': 'fake-cpc1-name',
+            'description': 'CPC #1 (classic mode)',
+            'status': 'active',
+            'dpm-enabled': False,
+            'is-ensemble-member': False,
+            'iml-mode': 'lpar',
+        })
+        self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
 
-    def teardown_method(self):
-        with requests_mock.mock() as m:
-            m.delete('/api/sessions/this-session', status_code=204)
-            self.session.logoff()
+    def add_lpar1(self):
+        """Add lpar 1 (type linux)."""
 
-    def test_init(self):
-        """Test __init__() on LparManager instance in CPC."""
+        faked_lpar = self.faked_cpc.lpars.add({
+            'object-id': LPAR1_OID,
+            # object-uri will be automatically set
+            'parent': self.faked_cpc.uri,
+            'class': 'logical-partition',
+            'name': LPAR1_NAME,
+            'description': 'LPAR #1 (Linux)',
+            'status': 'operating',
+            'activation-mode': 'linux',
+        })
+        return faked_lpar
+
+    def add_lpar2(self):
+        """Add lpar 2 (type ssc)."""
+
+        faked_lpar = self.faked_cpc.lpars.add({
+            'object-id': LPAR2_OID,
+            # object-uri will be automatically set
+            'parent': self.faked_cpc.uri,
+            'class': 'logical-partition',
+            'name': LPAR2_NAME,
+            'description': 'LPAR #2 (SSC)',
+            'status': 'operating',
+            'activation-mode': 'ssc',
+        })
+        return faked_lpar
+
+    def test_lparmanager_initial_attrs(self):
+        """Test initial attributes of LparManager."""
+
         lpar_mgr = self.cpc.lpars
+
+        # Verify all public properties of the manager object
+        assert lpar_mgr.resource_class == Lpar
+        assert lpar_mgr.session == self.session
+        assert lpar_mgr.parent == self.cpc
         assert lpar_mgr.cpc == self.cpc
 
-    def test_list_short_ok(self):
-        """
-        Test successful list() with short set of properties on LparManager
-        instance in CPC.
-        """
+    # TODO: Test for LparManager.__repr__()
+
+    @pytest.mark.parametrize(
+        "full_properties_kwargs, prop_names", [
+            (dict(),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=False),
+             ['object-uri', 'name', 'status']),
+            (dict(full_properties=True),
+             None),
+        ]
+    )
+    def test_lparmanager_list_full_properties(
+            self, full_properties_kwargs, prop_names):
+        """Test LparManager.list() with full_properties."""
+
+        # Add two faked LPARs
+        faked_lpar1 = self.add_lpar1()
+        faked_lpar2 = self.add_lpar2()
+
+        exp_faked_lpars = [faked_lpar1, faked_lpar2]
         lpar_mgr = self.cpc.lpars
-        with requests_mock.mock() as m:
-            result = {
-                'logical-partitions': [
-                    {
-                        'status': 'not-activated',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-1',
-                        'name': 'LPAR1'
-                    },
-                    {
-                        'status': 'operating',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-2',
-                        'name': 'LPAR2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/logical-partitions', json=result)
 
-            lpars = lpar_mgr.list(full_properties=False)
+        # Execute the code to be tested
+        lpars = lpar_mgr.list(**full_properties_kwargs)
 
-            assert len(lpars) == len(result['logical-partitions'])
-            for idx, lpar in enumerate(lpars):
-                assert lpar.properties == result['logical-partitions'][idx]
-                assert lpar.uri == \
-                    result['logical-partitions'][idx]['object-uri']
-                assert not lpar.full_properties
-                assert lpar.manager == lpar_mgr
+        assert_resources(lpars, exp_faked_lpars, prop_names)
 
-    def test_list_full_ok(self):
-        """
-        Test successful list() with full set of properties on LparManager
-        instance in CPC.
-        """
+    @pytest.mark.parametrize(
+        "filter_args, exp_names", [
+            ({'object-id': LPAR1_OID},
+             [LPAR1_NAME]),
+            ({'object-id': LPAR2_OID},
+             [LPAR2_NAME]),
+            ({'object-id': [LPAR1_OID, LPAR2_OID]},
+             [LPAR1_NAME, LPAR2_NAME]),
+            ({'object-id': [LPAR1_OID, LPAR1_OID]},
+             [LPAR1_NAME]),
+            ({'object-id': LPAR1_OID + 'foo'},
+             []),
+            ({'object-id': [LPAR1_OID, LPAR2_OID + 'foo']},
+             [LPAR1_NAME]),
+            ({'object-id': [LPAR2_OID + 'foo', LPAR1_OID]},
+             [LPAR1_NAME]),
+            ({'name': LPAR1_NAME},
+             [LPAR1_NAME]),
+            ({'name': LPAR2_NAME},
+             [LPAR2_NAME]),
+            ({'name': [LPAR1_NAME, LPAR2_NAME]},
+             [LPAR1_NAME, LPAR2_NAME]),
+            ({'name': LPAR1_NAME + 'foo'},
+             []),
+            ({'name': [LPAR1_NAME, LPAR2_NAME + 'foo']},
+             [LPAR1_NAME]),
+            ({'name': [LPAR2_NAME + 'foo', LPAR1_NAME]},
+             [LPAR1_NAME]),
+            ({'name': [LPAR1_NAME, LPAR1_NAME]},
+             [LPAR1_NAME]),
+            ({'name': '.*lpar 1'},
+             [LPAR1_NAME]),
+            ({'name': 'lpar 1.*'},
+             [LPAR1_NAME]),
+            ({'name': 'lpar .'},
+             [LPAR1_NAME, LPAR2_NAME]),
+            ({'name': '.par 1'},
+             [LPAR1_NAME]),
+            ({'name': '.+'},
+             [LPAR1_NAME, LPAR2_NAME]),
+            ({'name': 'lpar 1.+'},
+             []),
+            ({'name': '.+lpar 1'},
+             []),
+            ({'name': LPAR1_NAME,
+              'object-id': LPAR1_OID},
+             [LPAR1_NAME]),
+            ({'name': LPAR1_NAME,
+              'object-id': LPAR1_OID + 'foo'},
+             []),
+            ({'name': LPAR1_NAME + 'foo',
+              'object-id': LPAR1_OID},
+             []),
+            ({'name': LPAR1_NAME + 'foo',
+              'object-id': LPAR1_OID + 'foo'},
+             []),
+        ]
+    )
+    def test_lparmanager_list_filter_args(self, filter_args, exp_names):
+        """Test LparManager.list() with filter_args."""
+
+        # Add two faked LPARs
+        self.add_lpar1()
+        self.add_lpar2()
+
         lpar_mgr = self.cpc.lpars
-        with requests_mock.mock() as m:
-            result = {
-                'logical-partitions': [
-                    {
-                        'status': 'not-activated',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-1',
-                        'name': 'LPAR1'
-                    },
-                    {
-                        'status': 'operating',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-2',
-                        'name': 'LPAR2'
-                    }
 
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/logical-partitions', json=result)
+        # Execute the code to be tested
+        lpars = lpar_mgr.list(filter_args=filter_args)
 
-            mock_result_lpar1 = {
-                'status': 'not-activated',
-                'object-uri': '/api/logical-partitions/fake-lpar-id-1',
-                'name': 'LPAR1',
-                'description': 'LPAR Image',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/logical-partitions/fake-lpar-id-1',
-                  json=mock_result_lpar1)
-            mock_result_lpar2 = {
-                'status': 'not-activated',
-                'object-uri': '/api/logical-partitions/fake-lpar-id-2',
-                'name': 'LPAR2',
-                'description': 'LPAR Image',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/logical-partitions/fake-lpar-id-2',
-                  json=mock_result_lpar2)
+        assert len(lpars) == len(exp_names)
+        if exp_names:
+            names = [p.properties['name'] for p in lpars]
+            assert set(names) == set(exp_names)
 
-            lpars = lpar_mgr.list(full_properties=True)
+    def test_lpar_repr(self):
+        """Test Lpar.__repr__()."""
 
-            assert len(lpars) == len(result['logical-partitions'])
-            for idx, lpar in enumerate(lpars):
-                assert lpar.properties['name'] == \
-                    result['logical-partitions'][idx]['name']
-                assert lpar.uri == \
-                    result['logical-partitions'][idx]['object-uri']
-                assert lpar.full_properties
-                assert lpar.manager == lpar_mgr
+        # Add a faked LPAR
+        faked_lpar = self.add_lpar1()
 
-    def test_activate(self):
-        """
-        This tests the 'Activate Logical Partition' operation.
-        """
         lpar_mgr = self.cpc.lpars
-        with requests_mock.mock() as m:
-            result = {
-                'logical-partitions': [
-                    {
-                        'status': 'not-activated',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-1',
-                        'name': 'LPAR1'
-                    },
-                    {
-                        'status': 'operating',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-2',
-                        'name': 'LPAR2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/logical-partitions', json=result)
+        lpar = lpar_mgr.find(name=faked_lpar.name)
 
-            lpars = lpar_mgr.list(full_properties=False)
-            lpar = lpars[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post("/api/logical-partitions/fake-lpar-id-1/operations/"
-                   "activate", json=result)
-            status = lpar.activate(wait_for_completion=False)
-            assert status == result
+        # Execute the code to be tested
+        repr_str = repr(lpar)
 
-    def test_deactivate(self):
-        """
-        This tests the 'Deactivate Logical Partition' operation.
-        """
+        repr_str = repr_str.replace('\n', '\\n')
+        # We check just the begin of the string:
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=lpar.__class__.__name__,
+                               id=id(lpar)),
+                        repr_str)
+
+    @pytest.mark.parametrize(
+        "lpar_name", [
+            LPAR1_NAME,
+            LPAR2_NAME,
+        ]
+    )
+    @pytest.mark.parametrize(
+        "input_props", [
+            {},
+            {'description': 'New lpar description'},
+            {'acceptable-status': ['operating', 'not-operating'],
+             'description': 'New lpar description'},
+            {'ssc-master-userid': None,
+             'ssc-master-pw': None},
+        ]
+    )
+    def test_lpar_update_properties(self, input_props, lpar_name):
+        """Test Lpar.update_properties()."""
+
+        # Add faked lpars
+        self.add_lpar1()
+        self.add_lpar2()
+
         lpar_mgr = self.cpc.lpars
-        with requests_mock.mock() as m:
-            result = {
-                'logical-partitions': [
-                    {
-                        'status': 'operating',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-1',
-                        'name': 'LPAR1'
-                    },
-                    {
-                        'status': 'operating',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-2',
-                        'name': 'LPAR2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/logical-partitions', json=result)
+        lpar = lpar_mgr.find(name=lpar_name)
 
-            lpars = lpar_mgr.list(full_properties=False)
-            lpar = lpars[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
-            m.post("/api/logical-partitions/fake-lpar-id-1/operations/"
-                   "deactivate", json=result)
-            status = lpar.deactivate(wait_for_completion=False)
-            assert status == result
+        lpar.pull_full_properties()
+        saved_properties = copy.deepcopy(lpar.properties)
 
-    def test_load(self):
-        """
-        This tests the 'Load Logical Partition' operation.
-        """
+        # Execute the code to be tested
+        lpar.update_properties(properties=input_props)
+
+        # Verify that the resource object already reflects the property
+        # updates.
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in lpar.properties
+            prop_value = lpar.properties[prop_name]
+            assert prop_value == exp_prop_value
+
+        # Refresh the resource object and verify that the resource object
+        # still reflects the property updates.
+        lpar.pull_full_properties()
+        for prop_name in saved_properties:
+            if prop_name in input_props:
+                exp_prop_value = input_props[prop_name]
+            else:
+                exp_prop_value = saved_properties[prop_name]
+            assert prop_name in lpar.properties
+            prop_value = lpar.properties[prop_name]
+            assert prop_value == exp_prop_value
+
+    @pytest.mark.parametrize(
+        "initial_profile, profile_kwargs, exp_profile, exp_profile_exc", [
+            ('', dict(),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            (LPAR1_NAME, dict(),
+             LPAR1_NAME, None),
+            (LPAR2_NAME, dict(),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('', dict(activation_profile_name=LPAR1_NAME),
+             LPAR1_NAME, None),
+            (LPAR1_NAME, dict(activation_profile_name=LPAR1_NAME),
+             LPAR1_NAME, None),
+            (LPAR2_NAME, dict(activation_profile_name=LPAR1_NAME),
+             LPAR1_NAME, None),
+            ('', dict(activation_profile_name=LPAR2_NAME),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            (LPAR1_NAME, dict(activation_profile_name=LPAR2_NAME),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            (LPAR2_NAME, dict(activation_profile_name=LPAR2_NAME),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+        ]
+    )
+    @pytest.mark.parametrize(
+        "initial_status, status_kwargs, exp_status, exp_status_exc", [
+
+            ('not-activated', dict(),  # Verify that force has a default
+             'not-operating', None),
+            ('not-activated', dict(force=False),
+             'not-operating', None),
+            ('not-activated', dict(force=True),
+             'not-operating', None),
+
+            ('not-operating', dict(force=False),
+             'not-operating', None),
+            ('not-operating', dict(force=True),
+             'not-operating', None),
+
+            ('operating', dict(),  # Verify that force default is False
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('operating', dict(force=False),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('operating', dict(force=True),
+             'not-operating', None),
+
+            ('exceptions', dict(force=False),
+             'not-operating', None),
+            ('exceptions', dict(force=True),
+             'not-operating', None),
+        ]
+    )
+    def test_lpar_activate(
+            self, initial_status, status_kwargs, exp_status, exp_status_exc,
+            initial_profile, profile_kwargs, exp_profile, exp_profile_exc):
+        """Test Lpar.activate()."""
+
+        # Add a faked LPAR
+        faked_lpar = self.add_lpar1()
+        faked_lpar.properties['status'] = initial_status
+        faked_lpar.properties['next-activation-profile-name'] = initial_profile
+
         lpar_mgr = self.cpc.lpars
-        with requests_mock.mock() as m:
-            result = {
-                'logical-partitions': [
-                    {
-                        'status': 'not-operating',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-1',
-                        'name': 'LPAR1'
-                    },
-                    {
-                        'status': 'operating',
-                        'object-uri': '/api/logical-partitions/fake-lpar-id-2',
-                        'name': 'LPAR2'
-                    }
-                ]
-            }
-            m.get('/api/cpcs/fake-cpc-id-1/logical-partitions', json=result)
+        lpar = lpar_mgr.find(name=faked_lpar.name)
 
-            lpars = lpar_mgr.list(full_properties=False)
-            lpar = lpars[0]
-            result = {
-                "job-reason-code": 0,
-                "job-status-code": 204,
-                "status": "complete"
-            }
+        input_kwargs = dict(status_kwargs, **profile_kwargs)
+        exp_exc = exp_status_exc or exp_profile_exc
 
-            m.post("/api/logical-partitions/fake-lpar-id-1/operations/load",
-                   json=result)
-            status = lpar.load(load_address='5162', wait_for_completion=False)
-            assert status == result
+        if exp_exc is not None:
+
+            with pytest.raises(exp_exc.__class__) as exc_info:
+
+                # Execute the code to be tested
+                lpar.activate(**input_kwargs)
+
+            exc = exc_info.value
+            if isinstance(exp_exc, HTTPError):
+                assert exc.http_status == exp_exc.http_status
+                assert exc.reason == exp_exc.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = lpar.activate(**input_kwargs)
+
+            assert ret is None
+
+            lpar.pull_full_properties()
+            status = lpar.get_property('status')
+            assert status == exp_status
+
+            last_profile_name = lpar.get_property(
+                'last-used-activation-profile')
+            assert last_profile_name == exp_profile
+
+    @pytest.mark.parametrize(
+        "initial_status, input_kwargs, exp_status, exp_exc", [
+
+            ('not-activated', dict(),  # Verify that force has a default
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('not-activated', dict(force=False),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('not-activated', dict(force=True),
+             'not-activated', None),
+
+            ('not-operating', dict(force=False),
+             'not-activated', None),
+            ('not-operating', dict(force=True),
+             'not-activated', None),
+
+            ('operating', dict(),  # Verify that force default is False
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('operating', dict(force=False),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('operating', dict(force=True),
+             'not-activated', None),
+
+            ('exceptions', dict(force=False),
+             'not-activated', None),
+            ('exceptions', dict(force=True),
+             'not-activated', None),
+        ]
+    )
+    def test_lpar_deactivate(
+            self, initial_status, input_kwargs, exp_status, exp_exc):
+        """Test Lpar.deactivate()."""
+
+        # Add a faked LPAR
+        faked_lpar = self.add_lpar1()
+        faked_lpar.properties['status'] = initial_status
+
+        lpar_mgr = self.cpc.lpars
+        lpar = lpar_mgr.find(name=faked_lpar.name)
+
+        if exp_exc is not None:
+
+            with pytest.raises(exp_exc.__class__) as exc_info:
+
+                # Execute the code to be tested
+                lpar.deactivate(**input_kwargs)
+
+            exc = exc_info.value
+            if isinstance(exp_exc, HTTPError):
+                assert exc.http_status == exp_exc.http_status
+                assert exc.reason == exp_exc.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = lpar.deactivate(**input_kwargs)
+
+            assert ret is None
+
+            lpar.pull_full_properties()
+            status = lpar.get_property('status')
+            assert status == exp_status
+
+    @pytest.mark.parametrize(
+        "initial_status, input_kwargs, exp_status, exp_exc", [
+
+            ('not-activated', dict(load_address='5076'),
+             None, HTTPError({'http-status': 409, 'reason': 0})),
+            ('not-activated', dict(load_address='5076', force=False),
+             None, HTTPError({'http-status': 409, 'reason': 0})),
+            ('not-activated', dict(load_address='5076', force=True),
+             None, HTTPError({'http-status': 409, 'reason': 0})),
+
+            ('not-operating', dict(load_address='5076', force=False),
+             'operating', None),
+            ('not-operating', dict(load_address='5076', force=True),
+             'operating', None),
+
+            ('operating', dict(load_address='5076'),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('operating', dict(load_address='5076', force=False),
+             None, HTTPError({'http-status': 500, 'reason': 263})),
+            ('operating', dict(load_address='5076', force=True),
+             'operating', None),
+
+            ('exceptions', dict(load_address='5076', force=False),
+             'operating', None),
+            ('exceptions', dict(load_address='5076', force=True),
+             'operating', None),
+        ]
+    )
+    def test_lpar_load(
+            self, initial_status, input_kwargs, exp_status, exp_exc):
+        """Test Lpar.load()."""
+
+        # Add a faked LPAR
+        faked_lpar = self.add_lpar1()
+        faked_lpar.properties['status'] = initial_status
+
+        lpar_mgr = self.cpc.lpars
+        lpar = lpar_mgr.find(name=faked_lpar.name)
+
+        if exp_exc is not None:
+
+            with pytest.raises(exp_exc.__class__) as exc_info:
+
+                # Execute the code to be tested
+                lpar.load(**input_kwargs)
+
+            exc = exc_info.value
+            if isinstance(exp_exc, HTTPError):
+                assert exc.http_status == exp_exc.http_status
+                assert exc.reason == exp_exc.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = lpar.load(**input_kwargs)
+
+            assert ret is None
+
+            lpar.pull_full_properties()
+            status = lpar.get_property('status')
+            assert status == exp_status
