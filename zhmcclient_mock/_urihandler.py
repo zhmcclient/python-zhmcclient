@@ -148,6 +148,16 @@ class CpcInDpmError(ConflictError):
             message="CPC is in DPM mode: %s" % cpc.uri)
 
 
+class ServerError(HTTPError):
+
+    def __init__(self, method, uri, reason, message):
+        super(ServerError, self).__init__(
+            method, uri,
+            http_status=500,
+            reason=reason,
+            message=message)
+
+
 def parse_query_parms(method, uri, query_str):
     """
     Parse the specified query parms string and return a dictionary of query
@@ -1886,7 +1896,34 @@ class LparActivateHandler(object):
             raise InvalidResourceError(method, uri)
         cpc = lpar.manager.parent
         assert not cpc.dpm_enabled
+
+        status = lpar.properties.get('status', None)
+        force = body.get('force', False) if body else False
+        if status == 'operating' and not force:
+            raise ServerError(method, uri, reason=263,
+                              message="LPAR {!r} could not be activated "
+                              "because the LPAR is in status {} "
+                              "(and force was not specified).".
+                              format(lpar.name, status))
+
+        act_profile_name = body.get('activation-profile-name', None)
+        if not act_profile_name:
+            act_profile_name = lpar.properties.get(
+                'next-activation-profile-name', None)
+        if act_profile_name is None:
+            act_profile_name = ''
+
+        # Perform the check between LPAR name and profile name
+        if act_profile_name != lpar.name:
+            raise ServerError(method, uri, reason=263,
+                              message="LPAR {!r} could not be activated "
+                              "because the name of the image activation "
+                              "profile {!r} is different from the LPAR name.".
+                              format(lpar.name, act_profile_name))
+
+        # Reflect the successful activation in the resource
         lpar.properties['status'] = 'not-operating'
+        lpar.properties['last-used-activation-profile'] = act_profile_name
 
 
 class LparDeactivateHandler(object):
@@ -1904,6 +1941,26 @@ class LparDeactivateHandler(object):
             raise InvalidResourceError(method, uri)
         cpc = lpar.manager.parent
         assert not cpc.dpm_enabled
+
+        status = lpar.properties.get('status', None)
+        force = body.get('force', False) if body else False
+        if status == 'not-activated' and not force:
+            # Note that the current behavior (on EC12) is that force=True
+            # still causes this error to be returned (different behavior
+            # compared to the Activate and Load operations).
+            raise ServerError(method, uri, reason=263,
+                              message="LPAR {!r} could not be deactivated "
+                              "because the LPAR is already deactivated "
+                              "(and force was not specified).".
+                              format(lpar.name))
+        elif status == 'operating' and not force:
+            raise ServerError(method, uri, reason=263,
+                              message="LPAR {!r} could not be deactivated "
+                              "because the LPAR is in status {} "
+                              "(and force was not specified).".
+                              format(lpar.name, status))
+
+        # Reflect the successful deactivation in the resource
         lpar.properties['status'] = 'not-activated'
 
 
@@ -1922,6 +1979,22 @@ class LparLoadHandler(object):
             raise InvalidResourceError(method, uri)
         cpc = lpar.manager.parent
         assert not cpc.dpm_enabled
+
+        status = lpar.properties.get('status', None)
+        force = body.get('force', False) if body else False
+        if status == 'not-activated':
+            raise ConflictError(method, uri, reason=0,
+                                message="LPAR {!r} could not be loaded "
+                                "because the LPAR is in status {}.".
+                                format(lpar.name, status))
+        elif status == 'operating' and not force:
+            raise ServerError(method, uri, reason=263,
+                              message="LPAR {!r} could not be loaded "
+                              "because the LPAR is already loaded "
+                              "(and force was not specified).".
+                              format(lpar.name))
+
+        # Reflect the successful deactivation in the resource
         lpar.properties['status'] = 'operating'
 
 
