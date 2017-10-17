@@ -13,8 +13,12 @@
 # limitations under the License.
 
 """
-A utility class that handles HTTP methods against HMC URIs, based on the
-faked HMC.
+A module with various handler classes for the HTTP methods against HMC URIs,
+based on the faked HMC.
+
+Most handler classes do not need to be documented, but some of them have
+methods that can be mocked in order to provoke non-standard behavior in
+the handling of the HTTP methods.
 """
 
 from __future__ import absolute_import
@@ -26,7 +30,8 @@ from requests.utils import unquote
 
 from ._hmc import InputError
 
-__all__ = ['UriHandler', 'HTTPError', 'URIS']
+__all__ = ['UriHandler', 'LparActivateHandler', 'LparDeactivateHandler',
+           'LparLoadHandler', 'HTTPError', 'URIS']
 
 
 class HTTPError(Exception):
@@ -1882,6 +1887,21 @@ class LparHandler(GenericGetPropertiesHandler,
 
 
 class LparActivateHandler(object):
+    """
+    A handler class for the "Activate Logical Partition" operation.
+    """
+
+    @staticmethod
+    def get_status():
+        """
+        Status retrieval method that returns the status the faked Lpar will
+        have after completion of the the "Activate Logical Partition"
+        operation.
+
+        This method returns the successful status 'not-operating', and can be
+        mocked by testcases to return a different status (e.g. 'exceptions').
+        """
+        return 'not-operating'
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
@@ -1921,12 +1941,27 @@ class LparActivateHandler(object):
                               "profile {!r} is different from the LPAR name.".
                               format(lpar.name, act_profile_name))
 
-        # Reflect the successful activation in the resource
-        lpar.properties['status'] = 'not-operating'
+        # Reflect the activation in the resource
+        lpar.properties['status'] = LparActivateHandler.get_status()
         lpar.properties['last-used-activation-profile'] = act_profile_name
 
 
 class LparDeactivateHandler(object):
+    """
+    A handler class for the "Deactivate Logical Partition" operation.
+    """
+
+    @staticmethod
+    def get_status():
+        """
+        Status retrieval method that returns the status the faked Lpar will
+        have after completion of the the "Deactivate Logical Partition"
+        operation.
+
+        This method returns the successful status 'not-activated', and can be
+        mocked by testcases to return a different status (e.g. 'exceptions').
+        """
+        return 'not-activated'
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
@@ -1960,11 +1995,25 @@ class LparDeactivateHandler(object):
                               "(and force was not specified).".
                               format(lpar.name, status))
 
-        # Reflect the successful deactivation in the resource
-        lpar.properties['status'] = 'not-activated'
+        # Reflect the deactivation in the resource
+        lpar.properties['status'] = LparDeactivateHandler.get_status()
 
 
 class LparLoadHandler(object):
+    """
+    A handler class for the "Load Logical Partition" operation.
+    """
+
+    @staticmethod
+    def get_status():
+        """
+        Status retrieval method that returns the status the faked Lpar will
+        have after completion of the "Load Logical Partition" operation.
+
+        This method returns the successful status 'operating', and can be
+        mocked by testcases to return a different status (e.g. 'exceptions').
+        """
+        return 'operating'
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
@@ -2016,8 +2065,8 @@ class LparLoadHandler(object):
         if load_parameter is None:
             load_parameter = ''
 
-        # Reflect the successful load in the resource
-        lpar.properties['status'] = 'operating'
+        # Reflect the load in the resource
+        lpar.properties['status'] = LparLoadHandler.get_status()
         lpar.properties['last-used-load-address'] = load_address
         lpar.properties['last-used-load-parameter'] = load_parameter
 
