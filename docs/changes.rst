@@ -18,6 +18,7 @@
 Change log
 ----------
 
+
 Version 0.18.0
 ^^^^^^^^^^^^^^
 
@@ -42,6 +43,11 @@ Released: not yet
 **Deprecations:**
 
 **Bug fixes:**
+
+* Fixed a flawed setup of setuptools in Python 2.7 on the Travis CI, where
+  the metadata directory of setuptools existed twice, by adding a script
+  `remove_duplicate_setuptools.py` that removes the moot copy of the metadata
+  directory (issue #434).
 
 **Enhancements:**
 
