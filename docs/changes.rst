@@ -22,7 +22,7 @@ Change log
 Version 0.18.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2017-10-19
 
 **Incompatible changes:**
 
@@ -40,22 +40,12 @@ Released: not yet
     - python-utils  (from progressbar2)
     - wcwidth  (from prompt-toolkit -> click-repl)
 
-**Deprecations:**
-
 **Bug fixes:**
 
 * Fixed a flawed setup of setuptools in Python 2.7 on the Travis CI, where
   the metadata directory of setuptools existed twice, by adding a script
   `remove_duplicate_setuptools.py` that removes the moot copy of the metadata
   directory (issue #434).
-
-**Enhancements:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-  .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.17.0
