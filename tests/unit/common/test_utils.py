@@ -128,7 +128,7 @@ class TestUtilsAssertResources(object):
             exp_resources[0].properties['description'] = 'changed description'
 
         # Execute the code to be tested
-        with pytest.raises(AssertionError) as exc_info:
+        with pytest.raises(AssertionError):
             assert_resources(resources, exp_resources, prop_names)
 
     @pytest.mark.parametrize(
@@ -148,5 +148,5 @@ class TestUtilsAssertResources(object):
         prop_names = exp_resources[0].properties.keys()
 
         # Execute the code to be tested
-        with pytest.raises(AssertionError) as exc_info:
+        with pytest.raises(AssertionError):
             assert_resources(resources, exp_resources, prop_names)
