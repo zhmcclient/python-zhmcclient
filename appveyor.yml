@@ -6,12 +6,12 @@ environment:
     - PYTHON_VERSION: 2.7
       PYTHON_ARCH: 32
       PYTHON_HOME: C:\Python27
-    - PYTHON_VERSION: 2.7
-      PYTHON_ARCH: 64
-      PYTHON_HOME: C:\Python27-x64
-    - PYTHON_VERSION: 3.4
-      PYTHON_ARCH: 32
-      PYTHON_HOME: C:\Python34
+#    - PYTHON_VERSION: 2.7
+#      PYTHON_ARCH: 64
+#      PYTHON_HOME: C:\Python27-x64
+#    - PYTHON_VERSION: 3.4
+#      PYTHON_ARCH: 32
+#      PYTHON_HOME: C:\Python34
 #    - PYTHON_VERSION: 3.4
 #      PYTHON_ARCH: 64
 #      PYTHON_HOME: C:\Python34-x64
@@ -34,6 +34,16 @@ configuration:
   - latest
 
 install:
+
+  - if %APPVEYOR_REPO_BRANCH%.==manual-ci-run. set _NEED_REBASE=true
+  - if %_NEED_REBASE%.==true. git fetch origin master
+  - if %_NEED_REBASE%.==true. git branch master FETCH_HEAD
+  - if %_NEED_REBASE%.==true. git rebase master
+  - git branch -av
+
+  # TODO: Use the _MANUAL_CI_RUN variable in tox.ini to run certain parts only when set
+  - if %APPVEYOR_REPO_BRANCH%.==manual-ci-run. set _MANUAL_CI_RUN=true
+  - if %APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH%.==manual-ci-run. set _MANUAL_CI_RUN=true
 
   # Set PACKAGE_LEVEL for make
   - set PACKAGE_LEVEL=%configuration%

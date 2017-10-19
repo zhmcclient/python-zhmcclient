@@ -30,26 +30,41 @@ matrix:
       python: "3.4"
       env:
         - PACKAGE_LEVEL=minimum
-    - os: linux
-      language: python
-      python: "3.5"
-      env:
-        - PACKAGE_LEVEL=minimum
-      before_install:
-        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
+#    - os: linux
+#      language: python
+#      python: "3.4"
+#      env:
+#        - PACKAGE_LEVEL=latest
+#    - os: linux
+#      language: python
+#      python: "3.5"
+#      env:
+#        - PACKAGE_LEVEL=minimum
+#    - os: linux
+#      language: python
+#      python: "3.5"
+#      env:
+#        - PACKAGE_LEVEL=latest
+#    - os: linux
+#      language: python
+#      python: "3.6"
+#      env:
+#        - PACKAGE_LEVEL=minimum
     - os: linux
       language: python
       python: "3.6"
       env:
         - PACKAGE_LEVEL=latest
-    - os: linux
-      language: python
-      python: "pypy-5.3.1"  # Python 2.7.10
-      env:
-        - PACKAGE_LEVEL=minimum
-      before_install:
-        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
-# TODO: Re-enable osx support once Travis has better OS-X capacity
+#    - os: linux
+#      language: python
+#      python: "pypy-5.3.1"  # Python 2.7.10
+#      env:
+#        - PACKAGE_LEVEL=minimum
+#    - os: linux
+#      language: python
+#      python: "pypy-5.3.1"  # Python 2.7.10
+#      env:
+#        - PACKAGE_LEVEL=latest
 #    - os: osx
 #      language: generic
 #      python:
@@ -62,16 +77,12 @@ matrix:
 #      env:
 #        - PACKAGE_LEVEL=latest
 #        - PYTHON=2
-#      before_install:
-#        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
 #    - os: osx
 #      language: generic
 #      python:
 #      env:
 #        - PACKAGE_LEVEL=minimum
 #        - PYTHON=3
-#      before_install:
-#        - if [[ "$TRAVIS_EVENT_TYPE" != "cron" ]]; then exit 0; fi
 #    - os: osx
 #      language: generic
 #      python:
@@ -79,8 +90,20 @@ matrix:
 #        - PACKAGE_LEVEL=latest
 #        - PYTHON=3
 
+before_install:
+  - if [[ "$TRAVIS_BRANCH" == "manual-ci-run" ]]; then
+      export _NEED_REBASE=true;
+    fi
+  - if [[ -n $_NEED_REBASE ]]; then git fetch origin master; fi
+  - if [[ -n $_NEED_REBASE ]]; then git branch master FETCH_HEAD; fi
+  - if [[ -n $_NEED_REBASE ]]; then git rebase master; fi
+  - git branch -av
+
 # commands to install dependencies
 install:
+  - if [[ "$TRAVIS_BRANCH" == "manual-ci-run" || "$TRAVIS_PULL_REQUEST_BRANCH" == "manual-ci-run" ]]; then
+      export _MANUAL_CI_RUN=true;
+    fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       if [[ "${PYTHON:0:1}" == "2" ]]; then
         export PYTHON_CMD=python;
@@ -124,11 +147,10 @@ install:
 # commands to run builds & tests
 script:
   - make check
+  - if [[ -n $_MANUAL_CI_RUN ]]; then make pylint; fi
   - make test
-  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
-      make build;
-      make builddoc;
-    fi
+  - if [[ -n $_MANUAL_CI_RUN ]]; then make build; fi
+  - if [[ -n $_MANUAL_CI_RUN ]]; then make builddoc; fi
 
 after_success:
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" ]]; then
