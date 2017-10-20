@@ -23,6 +23,7 @@ import time
 import re
 import collections
 import six
+from copy import copy
 try:
     from collections import OrderedDict
 except ImportError:
@@ -340,7 +341,7 @@ class Session(object):
             scheme=_HMC_SCHEME,
             host=self._host,
             port=_HMC_PORT)
-        self._headers = _STD_HEADERS  # dict with standard HTTP headers
+        self._headers = copy(_STD_HEADERS)  # dict with standard HTTP headers
         if session_id is not None:
             # Create a logged-on state (same state as in _do_logon())
             self._session_id = session_id

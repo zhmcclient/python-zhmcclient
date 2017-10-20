@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,12 +19,14 @@ Example unit test for a user of the zhmcclient package.
 from __future__ import absolute_import, print_function
 
 import requests.packages.urllib3
-import unittest
+
 import zhmcclient
 import zhmcclient_mock
 
+requests.packages.urllib3.disable_warnings()
 
-class MyTests(unittest.TestCase):
+
+class TestMy(object):
 
     @staticmethod
     def create_session_1():
@@ -153,40 +154,40 @@ class MyTests(unittest.TestCase):
         Check the faked session and its faked HMC.
         """
 
-        self.assertEqual(self.session.host, 'fake-host')
+        assert self.session.host == 'fake-host'
 
-        self.assertEqual(self.client.version_info(), (1, 8))
+        assert self.client.version_info() == (1, 8)
 
         cpcs = self.client.cpcs.list()
-        self.assertEqual(len(cpcs), 2)
+        assert len(cpcs) == 2
 
         cpc1 = cpcs[0]  # a CPC in classic mode
-        self.assertEqual(cpc1.get_property('name'), 'cpc_1')
-        self.assertFalse(cpc1.dpm_enabled)
+        assert cpc1.get_property('name') == 'cpc_1'
+        assert not cpc1.dpm_enabled
 
         lpars = cpc1.lpars.list()
-        self.assertEqual(len(lpars), 1)
+        assert len(lpars) == 1
         lpar1 = lpars[0]
-        self.assertEqual(lpar1.get_property('name'), 'lpar_1')
+        assert lpar1.get_property('name') == 'lpar_1'
 
         cpc2 = cpcs[1]  # a CPC in DPM mode
-        self.assertEqual(cpc2.get_property('name'), 'cpc_2')
-        self.assertTrue(cpc2.dpm_enabled)
+        assert cpc2.get_property('name') == 'cpc_2'
+        assert cpc2.dpm_enabled
 
         partitions = cpc2.partitions.list()
-        self.assertEqual(len(partitions), 1)
+        assert len(partitions) == 1
         partition1 = partitions[0]
-        self.assertEqual(partition1.get_property('name'), 'partition_1')
+        assert partition1.get_property('name') == 'partition_1'
 
         adapters = cpc2.adapters.list()
-        self.assertEqual(len(adapters), 1)
+        assert len(adapters) == 1
         adapter1 = adapters[0]
-        self.assertEqual(adapter1.get_property('name'), 'osa_1')
+        assert adapter1.get_property('name') == 'osa_1'
 
         ports = adapter1.ports.list()
-        self.assertEqual(len(ports), 1)
+        assert len(ports) == 1
         port1 = ports[0]
-        self.assertEqual(port1.get_property('name'), 'osa_1_port_1')
+        assert port1.get_property('name') == 'osa_1_port_1'
 
     def test_session_1(self):
         self.session = self.create_session_1()
@@ -197,8 +198,3 @@ class MyTests(unittest.TestCase):
         self.session = self.create_session_2()
         self.client = zhmcclient.Client(self.session)
         self.check()
-
-
-if __name__ == '__main__':
-    requests.packages.urllib3.disable_warnings()
-    unittest.main()

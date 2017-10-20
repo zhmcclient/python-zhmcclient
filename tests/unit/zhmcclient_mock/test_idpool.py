@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,30 +19,32 @@ Unit test cases for the _idpool module of the zhmcclient_mock package.
 from __future__ import absolute_import, print_function
 
 import requests.packages.urllib3
-import unittest
+import pytest
 
 from zhmcclient_mock._idpool import IdPool
 
+requests.packages.urllib3.disable_warnings()
 
-class IdPoolTests(unittest.TestCase):
+
+class TestIdPool(object):
     """All tests for class IdPool."""
 
     def test_init_error_1(self):
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             IdPool(7, 6)
 
     def test_invalid_free_error_1(self):
 
         pool = IdPool(5, 5)
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool.free(4)  # not in range
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool.free(5)  # in range but not allocated
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool.free(6)  # not in range
 
     def test_invalid_free_error_2(self):
@@ -70,10 +71,10 @@ class IdPoolTests(unittest.TestCase):
 
         # Verify uniqueness of the ID values
         id_set = set(id_list)
-        self.assertEqual(len(id_set), len(id_list))
+        assert len(id_set) == len(id_list)
 
         # Verify that the pool is exhausted
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool.alloc()
 
     def _test_free_for_lo_hi(self, lowest, highest):
@@ -93,7 +94,7 @@ class IdPoolTests(unittest.TestCase):
             pool.free(id)
 
         # Verify that nothing is used in the pool
-        self.assertEqual(len(pool._used), 0)
+        assert len(pool._used) == 0
 
         # Exhaust the pool
         id_list2 = []
@@ -102,10 +103,10 @@ class IdPoolTests(unittest.TestCase):
             id_list2.append(id)
 
         # Verify that the same ID values came back as last time
-        self.assertEqual(set(id_list1), set(id_list2))
+        assert set(id_list1) == set(id_list2)
 
         # Verify that the pool is exhausted
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool.alloc()
 
     def _test_all_for_lo_hi(self, lowest, highest):
@@ -147,8 +148,3 @@ class IdPoolTests(unittest.TestCase):
         self._test_all_for_lo_hi(11, 20)
         self._test_all_for_lo_hi(11, 21)
         self._test_all_for_lo_hi(11, 22)
-
-
-if __name__ == '__main__':
-    requests.packages.urllib3.disable_warnings()
-    unittest.main()

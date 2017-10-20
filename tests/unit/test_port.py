@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,16 +18,16 @@ Unit tests for _port module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
+# FIXME: Migrate requests_mock to zhmcclient_mock.
 import requests_mock
 
 from zhmcclient import Session, Client
 
 
-class PortTests(unittest.TestCase):
+class TestPort(object):
     """All tests for Port and PortManager classes."""
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session('port-dpm-host', 'port-user',
                                'port-pwd')
         self.client = Client(self.session)
@@ -110,7 +109,7 @@ class PortTests(unittest.TestCase):
             adapters = adapter_mgr.list(full_properties=False)
             self.adapters = adapters
 
-    def tearDown(self):
+    def teardown_method(self):
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             self.session.logoff()
@@ -118,7 +117,7 @@ class PortTests(unittest.TestCase):
     def test_init(self):
         """Test __init__() on PortManager instance in Adapter."""
         port_mgr = self.adapters[0].ports
-        self.assertEqual(port_mgr.adapter, self.adapters[0])
+        assert port_mgr.adapter == self.adapters[0]
 
     def test_list_short_ok(self):
         """
@@ -139,15 +138,15 @@ class PortTests(unittest.TestCase):
                 else:
                     network_uris = result_adapter['network-port-uris']
                     uris = network_uris
-                self.assertEqual(adapter.properties['port-count'], len(uris))
+                assert adapter.properties['port-count'] == len(uris)
             else:
                 uris = []
 
-            self.assertEqual(len(ports), len(uris))
+            assert len(ports) == len(uris)
             for idx, port in enumerate(ports):
-                self.assertTrue(port.properties['element-uri'] in uris)
-                self.assertFalse(port.full_properties)
-                self.assertEqual(port.manager, port_mgr)
+                assert port.properties['element-uri'] in uris
+                assert not port.full_properties
+                assert port.manager == port_mgr
 
     def test_list_full_ok(self):
         """
@@ -177,18 +176,15 @@ class PortTests(unittest.TestCase):
             ports = port_mgr.list(full_properties=True)
             if len(ports) != 0:
                 storage_uris = self.result['adapters'][0]['storage-port-uris']
-                self.assertEqual(adapter.properties['port-count'],
-                                 len(storage_uris))
+                assert adapter.properties['port-count'] == len(storage_uris)
             else:
                 storage_uris = []
 
-            self.assertEqual(len(ports), len(storage_uris))
+            assert len(ports) == len(storage_uris)
             for idx, port in enumerate(ports):
-                self.assertEqual(
-                    port.properties['element-uri'],
-                    storage_uris[idx])
-                self.assertTrue(port.full_properties)
-                self.assertEqual(port.manager, port_mgr)
+                assert port.properties['element-uri'] == storage_uris[idx]
+                assert port.full_properties
+                assert port.manager == port_mgr
 
     def test_list_filter_name_ok(self):
         """
@@ -218,15 +214,14 @@ class PortTests(unittest.TestCase):
             filter_args = {'name': 'Port 0'}
             ports = port_mgr.list(filter_args=filter_args)
 
-            self.assertEqual(len(ports), 1)
+            assert len(ports) == 1
             port = ports[0]
-            self.assertEqual(port.name, 'Port 0')
-            self.assertEqual(
-                port.uri,
-                '/api/adapters/fake-adapter-id-1/storage-ports/0')
-            self.assertEqual(port.properties['name'], 'Port 0')
-            self.assertEqual(port.properties['element-id'], '0')
-            self.assertEqual(port.manager, port_mgr)
+            assert port.name == 'Port 0'
+            assert port.uri == \
+                '/api/adapters/fake-adapter-id-1/storage-ports/0'
+            assert port.properties['name'] == 'Port 0'
+            assert port.properties['element-id'] == '0'
+            assert port.manager == port_mgr
 
     def test_list_filter_elementid_ok(self):
         """
@@ -256,15 +251,14 @@ class PortTests(unittest.TestCase):
             filter_args = {'element-id': '0'}
             ports = port_mgr.list(filter_args=filter_args)
 
-            self.assertEqual(len(ports), 1)
+            assert len(ports) == 1
             port = ports[0]
-            self.assertEqual(port.name, 'Port 0')
-            self.assertEqual(
-                port.uri,
-                '/api/adapters/fake-adapter-id-1/storage-ports/0')
-            self.assertEqual(port.properties['name'], 'Port 0')
-            self.assertEqual(port.properties['element-id'], '0')
-            self.assertEqual(port.manager, port_mgr)
+            assert port.name == 'Port 0'
+            assert port.uri == \
+                '/api/adapters/fake-adapter-id-1/storage-ports/0'
+            assert port.properties['name'] == 'Port 0'
+            assert port.properties['element-id'] == '0'
+            assert port.manager == port_mgr
 
     def test_update_properties(self):
         """
@@ -277,7 +271,3 @@ class PortTests(unittest.TestCase):
             m.post('/api/adapters/fake-adapter-id-1/storage-ports/0',
                    status_code=204)
             port.update_properties(properties={})
-
-
-if __name__ == '__main__':
-    unittest.main()

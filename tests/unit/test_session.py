@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,18 +18,21 @@ Unit tests for _session module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
-import requests
-import requests_mock
 import time
 import json
+import re
+import requests
+import requests_mock
+import mock
+import pytest
 
-from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout
+from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout, \
+    ClientAuthError
 
 
-class SessionTests(unittest.TestCase):
+class TestSession(object):
     """
-    Test the ``Session`` class.
+    All tests for the Session class.
     """
 
     # TODO: Test Session.get() in all variations (including errors)
@@ -50,22 +52,49 @@ class SessionTests(unittest.TestCase):
                        headers={'X-Request-Id': 'fake-request-id'},
                        status_code=204)
 
-    def test_init(self):
+    @pytest.mark.parametrize(
+        "host, userid, password, use_get_password, session_id", [
+            ('fake-host', None, None, False, None),
+            ('fake-host', 'fake-userid', None, False, None),
+            ('fake-host', 'fake-userid', 'fake-pw', False, None),
+            ('fake-host', 'fake-userid', 'fake-pw', True, None),
+        ]
+    )
+    def test_init(self, host, userid, password, use_get_password, session_id):
         """Test initialization of Session object."""
 
-        session = Session('fake-host', 'fake-user', 'fake-pw')
+        # TODO: Add support for input parameter: retry_timeout_config
+        # TODO: Add support for input parameter: time_stats_keeper
 
-        self.assertEqual(session.host, 'fake-host')
-        self.assertEqual(session.userid, 'fake-user')
-        self.assertEqual(session._password, 'fake-pw')
-        base_url = 'https://' + session.host + ':6794'
-        self.assertEqual(session.base_url, base_url)
-        self.assertTrue('Content-type' in session.headers)
-        self.assertTrue('Accept' in session.headers)
-        self.assertEqual(len(session.headers), 2)
-        self.assertIsNone(session.session_id)
-        self.assertTrue('X-API-Session' not in session.headers)
-        self.assertIsNone(session.session)
+        if use_get_password:
+            def get_password(host, userid):
+                pw = 'fake-pw-{}-{}'.format(host, userid)
+                return pw
+        else:
+            get_password = None
+
+        session = Session(host, userid, password, session_id, get_password)
+
+        assert session.host == host
+        assert session.userid == userid
+        assert session._password == password
+        assert session.session_id == session_id
+        assert session.get_password == get_password
+
+        base_url = 'https://{}:6794'.format(session.host)
+        assert session.base_url == base_url
+
+        assert session.headers['Content-type'] == 'application/json'
+        assert session.headers['Accept'] == '*/*'
+
+        if session_id is None:
+            assert session.session is None
+            assert 'X-API-Session' not in session.headers
+            assert len(session.headers) == 2
+        else:
+            assert isinstance(session.session, requests.Session)
+            assert session.headers['X-API-Session'] == session_id
+            assert len(session.headers) == 3
 
     def test_repr(self):
         """Test Session.__repr__()."""
@@ -76,47 +105,100 @@ class SessionTests(unittest.TestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        self.assertRegexpMatches(
-            repr_str,
-            r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.format(
-                classname=session.__class__.__name__,
-                id=id(session)))
+        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
+                        format(classname=session.__class__.__name__,
+                               id=id(session)),
+                        repr_str)
 
-    @requests_mock.mock()
-    def test_logon_logoff(self, m):
-        """Test logon and logoff; this uses post() and delete()."""
+    @pytest.mark.parametrize(
+        "host, userid, password, use_get_password, exp_exc", [
+            ('fake-host', None, None, False, ClientAuthError),
+            ('fake-host', 'fake-userid', None, False, ClientAuthError),
+            ('fake-host', 'fake-userid', 'fake-pw', False, None),
+            ('fake-host', 'fake-userid', 'fake-pw', True, None),
+            ('fake-host', 'fake-userid', None, True, None),
+        ]
+    )
+    def test_logon(
+            self, host, userid, password, use_get_password, exp_exc):
+        """Test Session.logon() (and also Session.is_logon())."""
 
-        self.mock_server_1(m)
+        with requests_mock.Mocker() as m:
 
-        session = Session('fake-host', 'fake-user', 'fake-pw')
+            self.mock_server_1(m)
 
-        self.assertIsNone(session.session_id)
-        self.assertTrue('X-API-Session' not in session.headers)
-        self.assertIsNone(session.session)
+            if use_get_password:
+                get_password = mock.MagicMock()
+                get_password.return_value = \
+                    'fake-pw-{}-{}'.format(host, userid)
+            else:
+                get_password = None
 
-        logged_on = session.is_logon()
+            # Create a session in logged-off state
+            session = Session(host, userid, password, None, get_password)
 
-        self.assertFalse(logged_on)
+            assert session.session_id is None
+            assert 'X-API-Session' not in session.headers
+            assert session.session is None
 
-        session.logon()
+            logged_on = session.is_logon()
+            assert not logged_on
 
-        self.assertEqual(session.session_id, 'fake-session-id')
-        self.assertTrue('X-API-Session' in session.headers)
-        self.assertTrue(isinstance(session.session, requests.Session))
+            if exp_exc:
+                try:
 
-        logged_on = session.is_logon()
+                    # The code to be tested:
+                    session.logon()
 
-        self.assertTrue(logged_on)
+                except exp_exc:
+                    pass
 
-        session.logoff()
+                logged_on = session.is_logon()
+                assert not logged_on
+            else:
 
-        self.assertIsNone(session.session_id)
-        self.assertTrue('X-API-Session' not in session.headers)
-        self.assertIsNone(session.session)
+                # The code to be tested:
+                session.logon()
 
-        logged_on = session.is_logon()
+                assert session.session_id == 'fake-session-id'
+                assert 'X-API-Session' in session.headers
+                assert isinstance(session.session, requests.Session)
 
-        self.assertFalse(logged_on)
+                if get_password:
+                    if password is None:
+                        get_password.assert_called_with(host, userid)
+                        assert session._password == get_password.return_value
+                    else:
+                        get_password.assert_not_called()
+
+                logged_on = session.is_logon()
+                assert logged_on
+
+    def test_logoff(self):
+        """Test Session.logoff() (and also Session.is_logon())."""
+
+        with requests_mock.Mocker() as m:
+
+            self.mock_server_1(m)
+
+            # Create a session in logged-off state
+            session = Session('fake-host', 'fake-userid', 'fake-pw')
+
+            session.logon()
+
+            logged_on = session.is_logon()
+            assert logged_on
+
+            # The code to be tested:
+            session.logoff()
+
+            assert session.session_id is None
+            assert session.session is None
+            assert 'X-API-Session' not in session.headers
+            assert len(session.headers) == 2
+
+            logged_on = session.is_logon()
+            assert not logged_on
 
     def _do_parse_error_logon(self, m, json_content, exp_msg_pattern, exp_line,
                               exp_col):
@@ -140,16 +222,22 @@ class SessionTests(unittest.TestCase):
             r"Response status .*" % \
             exp_msg_pattern
 
-        with self.assertRaisesRegexp(ParseError, exp_pe_pattern) as cm:
+        with pytest.raises(ParseError) as exc_info:
             session.logon()
-        self.assertEqual(cm.exception.line, exp_line)
-        self.assertEqual(cm.exception.column, exp_col)
+        exc = exc_info.value
+
+        assert re.match(exp_pe_pattern, str(exc))
+        assert exc.line == exp_line
+        assert exc.column == exp_col
+
+    # TODO: Merge the next 3 test functions into one that is parametrized
 
     @requests_mock.mock()
-    def test_logon_error_invalid_delim(self, m):
+    def test_logon_error_invalid_delim(self, *args):
         """
         Logon with invalid JSON response that has an invalid delimiter.
         """
+        m = args[0]
         json_content = b'{\n"api-session"; "fake-session-id"\n}'
         exp_msg_pattern = r"Expecting ':' delimiter: .*"
         exp_line = 2
@@ -158,10 +246,11 @@ class SessionTests(unittest.TestCase):
                                    exp_col)
 
     @requests_mock.mock()
-    def test_logon_error_invalid_quotes(self, m):
+    def test_logon_error_invalid_quotes(self, *args):
         """
         Logon with invalid JSON response that incorrectly uses single quotes.
         """
+        m = args[0]
         json_content = b'{\'api-session\': \'fake-session-id\'}'
         exp_msg_pattern = r"Expecting property name enclosed in double " \
             "quotes: .*"
@@ -171,10 +260,11 @@ class SessionTests(unittest.TestCase):
                                    exp_col)
 
     @requests_mock.mock()
-    def test_logon_error_extra_closing(self, m):
+    def test_logon_error_extra_closing(self, *args):
         """
         Logon with invalid JSON response that has an extra closing brace.
         """
+        m = args[0]
         json_content = b'{"api-session": "fake-session-id"}}'
         exp_msg_pattern = r"Extra data: .*"
         exp_line = 1
@@ -217,7 +307,7 @@ class SessionTests(unittest.TestCase):
 
             result = session.get_notification_topics()
 
-            self.assertEqual(result, gnt_result['topics'])
+            assert result == gnt_result['topics']
 
             m.delete('/api/sessions/this-session', status_code=204)
 
@@ -268,18 +358,18 @@ class SessionTests(unittest.TestCase):
                 "Console Configuration Error: " \
                 "Web Services API is not enabled on the HMC."
 
-            with self.assertRaises(HTTPError) as cm:
+            with pytest.raises(HTTPError) as exc_info:
                 session.get(get_uri, logon_required=False)
-            exc = cm.exception
+            exc = exc_info.value
 
-            self.assertEqual(exc.http_status, get_resp_status)
-            self.assertEqual(exc.reason, exp_reason)
-            self.assertEqual(exc.message, exp_message)
-            self.assertTrue(exc.request_uri.endswith(get_uri))
-            self.assertEqual(exc.request_method, 'GET')
+            assert exc.http_status == get_resp_status
+            assert exc.reason == exp_reason
+            assert exc.message == exp_message
+            assert exc.request_uri.endswith(get_uri)
+            assert exc.request_method == 'GET'
 
 
-class JobTests(unittest.TestCase):
+class TestJob(object):
     """
     Test the ``Job`` class.
     """
@@ -299,6 +389,8 @@ class JobTests(unittest.TestCase):
                        headers={'X-Request-Id': 'fake-request-id'},
                        status_code=204)
 
+    # TODO: Add parametrization to the next test function.
+
     def test_init(self):
         """Test initialization of Job object."""
         session = Session('fake-host', 'fake-user', 'fake-pw')
@@ -311,10 +403,12 @@ class JobTests(unittest.TestCase):
 
         job = Job(session, self.job_uri, op_method, op_uri)
 
-        self.assertEqual(job.uri, self.job_uri)
-        self.assertEqual(job.session, session)
-        self.assertEqual(job.op_method, op_method)
-        self.assertEqual(job.op_uri, op_uri)
+        assert job.uri == self.job_uri
+        assert job.session == session
+        assert job.op_method == op_method
+        assert job.op_uri == op_uri
+
+    # TODO: Merge the next 7 test functions into one that is parametrized
 
     def test_check_incomplete(self):
         """Test check_for_completion() with incomplete job."""
@@ -332,8 +426,8 @@ class JobTests(unittest.TestCase):
 
             job_status, op_result = job.check_for_completion()
 
-            self.assertEqual(job_status, 'running')
-            self.assertIsNone(op_result)
+            assert job_status == 'running'
+            assert op_result is None
 
     def test_check_complete_success_noresult(self):
         """Test check_for_completion() with successful complete job without
@@ -355,8 +449,8 @@ class JobTests(unittest.TestCase):
 
             job_status, op_result = job.check_for_completion()
 
-            self.assertEqual(job_status, 'complete')
-            self.assertIsNone(op_result)
+            assert job_status == 'complete'
+            assert op_result is None
 
     def test_check_complete_success_result(self):
         """Test check_for_completion() with successful complete job with a
@@ -381,8 +475,8 @@ class JobTests(unittest.TestCase):
 
             job_status, op_result = job.check_for_completion()
 
-            self.assertEqual(job_status, 'complete')
-            self.assertEqual(op_result, exp_op_result)
+            assert job_status == 'complete'
+            assert op_result == exp_op_result
 
     def test_check_complete_error1(self):
         """Test check_for_completion() with complete job in error (1)."""
@@ -402,12 +496,13 @@ class JobTests(unittest.TestCase):
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri, status_code=204)
 
-            with self.assertRaises(HTTPError) as cm:
+            with pytest.raises(HTTPError) as exc_info:
                 job_status, op_result = job.check_for_completion()
+            exc = exc_info.value
 
-            self.assertEqual(cm.exception.http_status, 500)
-            self.assertEqual(cm.exception.reason, 42)
-            self.assertEqual(cm.exception.message, None)
+            assert exc.http_status == 500
+            assert exc.reason == 42
+            assert exc.message is None
 
     def test_check_complete_error2(self):
         """Test check_for_completion() with complete job in error (2)."""
@@ -427,12 +522,13 @@ class JobTests(unittest.TestCase):
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri, status_code=204)
 
-            with self.assertRaises(HTTPError) as cm:
+            with pytest.raises(HTTPError) as exc_info:
                 job_status, op_result = job.check_for_completion()
+            exc = exc_info.value
 
-            self.assertEqual(cm.exception.http_status, 500)
-            self.assertEqual(cm.exception.reason, 42)
-            self.assertEqual(cm.exception.message, None)
+            assert exc.http_status == 500
+            assert exc.reason == 42
+            assert exc.message is None
 
     def test_check_complete_error3(self):
         """Test check_for_completion() with complete job in error (3)."""
@@ -456,12 +552,13 @@ class JobTests(unittest.TestCase):
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri, status_code=204)
 
-            with self.assertRaises(HTTPError) as cm:
+            with pytest.raises(HTTPError) as exc_info:
                 job_status, op_result = job.check_for_completion()
+            exc = exc_info.value
 
-            self.assertEqual(cm.exception.http_status, 500)
-            self.assertEqual(cm.exception.reason, 42)
-            self.assertEqual(cm.exception.message, 'bla message')
+            assert exc.http_status == 500
+            assert exc.reason == 42
+            assert exc.message == 'bla message'
 
     def test_check_complete_error4(self):
         """Test check_for_completion() with complete job in error (4)."""
@@ -485,12 +582,15 @@ class JobTests(unittest.TestCase):
             m.get(self.job_uri, json=query_job_status_result)
             m.delete(self.job_uri, status_code=204)
 
-            with self.assertRaises(HTTPError) as cm:
+            with pytest.raises(HTTPError) as exc_info:
                 job_status, op_result = job.check_for_completion()
+            exc = exc_info.value
 
-            self.assertEqual(cm.exception.http_status, 500)
-            self.assertEqual(cm.exception.reason, 42)
-            self.assertEqual(cm.exception.message, 'bla message')
+            assert exc.http_status == 500
+            assert exc.reason == 42
+            assert exc.message == 'bla message'
+
+    # TODO: Merge the next 3 test functions into one that is parametrized
 
     def test_wait_complete1_success_result(self):
         """Test wait_for_completion() with successful complete job with a
@@ -515,7 +615,7 @@ class JobTests(unittest.TestCase):
 
             op_result = job.wait_for_completion()
 
-            self.assertEqual(op_result, exp_op_result)
+            assert op_result == exp_op_result
 
     def test_wait_complete3_success_result(self):
         """Test wait_for_completion() with successful complete job with a
@@ -538,7 +638,7 @@ class JobTests(unittest.TestCase):
 
             op_result = job.wait_for_completion()
 
-            self.assertEqual(op_result, exp_op_result)
+            assert op_result == exp_op_result
 
     def test_wait_complete3_timeout(self):
         """Test wait_for_completion() with timeout."""
@@ -577,8 +677,7 @@ class JobTests(unittest.TestCase):
                           "timeout: %s s" % (duration, operation_timeout))
             except OperationTimeout as exc:
                 msg = exc.args[0]
-                self.assertTrue(msg.startswith(
-                    "Waiting for completion of job"))
+                assert msg.startswith("Waiting for completion of job")
 
 
 def result_running_callback(request, context):
@@ -601,7 +700,3 @@ def result_complete_callback(request, context):
     }
     time.sleep(1)
     return json.dumps(job_result_complete)
-
-
-if __name__ == '__main__':
-    unittest.main()

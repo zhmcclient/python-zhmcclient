@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

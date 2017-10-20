@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2016-2017 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,18 +18,18 @@ Unit tests for _virtual_function module.
 
 from __future__ import absolute_import, print_function
 
-import unittest
+# FIXME: Migrate requests_mock to zhmcclient_mock.
 import requests_mock
 
 from zhmcclient import Session, Client, VirtualFunction
 
 
-class VirtualFunctionTests(unittest.TestCase):
+class TestVirtualFunction(object):
     """
     All tests for VirtualFunction and VirtualFunctionManager classes.
     """
 
-    def setUp(self):
+    def setup_method(self):
         self.session = Session('test-dpm-host', 'test-user', 'test-id')
         self.client = Client(self.session)
         with requests_mock.mock() as m:
@@ -108,7 +107,7 @@ class VirtualFunctionTests(unittest.TestCase):
             partitions = partition_mgr.list(full_properties=True)
             self.partition = partitions[0]
 
-    def tearDown(self):
+    def teardown_method(self):
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             self.session.logoff()
@@ -116,7 +115,7 @@ class VirtualFunctionTests(unittest.TestCase):
     def test_init(self):
         """Test __init__() on VirtualFunctionManager instance in Partition."""
         vf_mgr = self.partition.virtual_functions
-        self.assertEqual(vf_mgr.partition, self.partition)
+        assert vf_mgr.partition == self.partition
 
     def test_list_short_ok(self):
         """
@@ -126,18 +125,15 @@ class VirtualFunctionTests(unittest.TestCase):
         vf_mgr = self.partition.virtual_functions
         vfs = vf_mgr.list(full_properties=False)
 
-        self.assertEqual(
-            len(vfs),
-            len(self.partition.properties['virtual-function-uris']))
+        assert len(vfs) == \
+            len(self.partition.properties['virtual-function-uris'])
         for idx, vf in enumerate(vfs):
-            self.assertEqual(
-                vf.properties['element-uri'],
-                self.partition.properties['virtual-function-uris'][idx])
-            self.assertEqual(
-                vf.uri,
-                self.partition.properties['virtual-function-uris'][idx])
-            self.assertFalse(vf.full_properties)
-            self.assertEqual(vf.manager, vf_mgr)
+            assert vf.properties['element-uri'] == \
+                self.partition.properties['virtual-function-uris'][idx]
+            assert vf.uri == \
+                self.partition.properties['virtual-function-uris'][idx]
+            assert not vf.full_properties
+            assert vf.manager == vf_mgr
 
     def test_list_full_ok(self):
         """
@@ -179,18 +175,15 @@ class VirtualFunctionTests(unittest.TestCase):
 
             vfs = vf_mgr.list(full_properties=True)
 
-            self.assertEqual(
-                len(vfs),
-                len(self.partition.properties['virtual-function-uris']))
+            assert len(vfs) == \
+                len(self.partition.properties['virtual-function-uris'])
             for idx, vf in enumerate(vfs):
-                self.assertEqual(
-                    vf.properties['element-uri'],
-                    self.partition.properties['virtual-function-uris'][idx])
-                self.assertEqual(
-                    vf.uri,
-                    self.partition.properties['virtual-function-uris'][idx])
-                self.assertTrue(vf.full_properties)
-                self.assertEqual(vf.manager, vf_mgr)
+                assert vf.properties['element-uri'] == \
+                    self.partition.properties['virtual-function-uris'][idx]
+                assert vf.uri == \
+                    self.partition.properties['virtual-function-uris'][idx]
+                assert vf.full_properties
+                assert vf.manager == vf_mgr
 
     def test_list_filter_name_ok(self):
         """
@@ -233,16 +226,15 @@ class VirtualFunctionTests(unittest.TestCase):
             filter_args = {'name': 'vf2'}
             vfs = vf_mgr.list(filter_args=filter_args)
 
-            self.assertEqual(len(vfs), 1)
+            assert len(vfs) == 1
             vf = vfs[0]
-            self.assertEqual(vf.name, 'vf2')
-            self.assertEqual(
-                vf.uri,
-                '/api/partitions/fake-part-id-1/virtual-functions/'
-                'fake-vf-id-2')
-            self.assertEqual(vf.properties['name'], 'vf2')
-            self.assertEqual(vf.properties['element-id'], 'fake-vf-id-2')
-            self.assertEqual(vf.manager, vf_mgr)
+            assert vf.name == 'vf2'
+            assert vf.uri == \
+                '/api/partitions/fake-part-id-1/virtual-functions/' \
+                'fake-vf-id-2'
+            assert vf.properties['name'] == 'vf2'
+            assert vf.properties['element-id'] == 'fake-vf-id-2'
+            assert vf.manager == vf_mgr
 
     def test_list_filter_elementid_ok(self):
         """
@@ -285,16 +277,15 @@ class VirtualFunctionTests(unittest.TestCase):
             filter_args = {'element-id': 'fake-vf-id-2'}
             vfs = vf_mgr.list(filter_args=filter_args)
 
-            self.assertEqual(len(vfs), 1)
+            assert len(vfs) == 1
             vf = vfs[0]
-            self.assertEqual(vf.name, 'vf2')
-            self.assertEqual(
-                vf.uri,
-                '/api/partitions/fake-part-id-1/virtual-functions/'
-                'fake-vf-id-2')
-            self.assertEqual(vf.properties['name'], 'vf2')
-            self.assertEqual(vf.properties['element-id'], 'fake-vf-id-2')
-            self.assertEqual(vf.manager, vf_mgr)
+            assert vf.name == 'vf2'
+            assert vf.uri == \
+                '/api/partitions/fake-part-id-1/virtual-functions/' \
+                'fake-vf-id-2'
+            assert vf.properties['name'] == 'vf2'
+            assert vf.properties['element-id'] == 'fake-vf-id-2'
+            assert vf.manager == vf_mgr
 
     def test_create(self):
         """
@@ -312,9 +303,9 @@ class VirtualFunctionTests(unittest.TestCase):
 
             vf = vf_mgr.create(properties={})
 
-            self.assertTrue(isinstance(vf, VirtualFunction))
-            self.assertEqual(vf.properties, result)
-            self.assertEqual(vf.uri, result['element-uri'])
+            assert isinstance(vf, VirtualFunction)
+            assert vf.properties == result
+            assert vf.uri == result['element-uri']
 
     def test_delete(self):
         """
@@ -339,7 +330,3 @@ class VirtualFunctionTests(unittest.TestCase):
             m.post('/api/partitions/fake-part-id-1/virtual-functions/'
                    'fake-vf-id-1', status_code=204)
             vf.update_properties(properties={})
-
-
-if __name__ == '__main__':
-    unittest.main()

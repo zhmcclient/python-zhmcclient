@@ -30,7 +30,19 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a flawed setup of setuptools in Python 2.7 on the Travis CI, where
+  the metadata directory of setuptools existed twice, by adding a script
+  `remove_duplicate_setuptools.py` that removes the moot copy of the metadata
+  directory (issue #434).
+
+* Fixed a bug where multiple Session objects shared the same set of
+  HTTP header fields, causing confusion in the logon status.
+
 **Enhancements:**
+
+* Migrated all remaining test cases from unittest to pytest, and started
+  improving the testcases using pytest specific features such as
+  parametrization.
 
 **Known issues:**
 

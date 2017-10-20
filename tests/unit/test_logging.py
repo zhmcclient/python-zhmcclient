@@ -19,8 +19,8 @@ Unit tests for _logging module.
 from __future__ import absolute_import, print_function
 
 import logging
-import unittest
-from testfixtures import log_capture
+import pytest
+from testfixtures import LogCapture
 
 from zhmcclient._logging import logged_api_call, get_logger
 
@@ -126,32 +126,42 @@ _EXP_LOG_MSG_ENTER = "==> %s, args: %.500r, kwargs: %.500r"
 _EXP_LOG_MSG_LEAVE = "<== %s, result: %.1000r"
 
 
+@pytest.fixture()
+def capture():
+    """
+    This way of defining a fixture works around the issue that when
+    using the decorator testfixtures.log_capture() instead, pytest
+    fails with "fixture 'capture' not found".
+    """
+    with LogCapture(level=logging.DEBUG) as log:
+        yield log
+
+
 #
 # Test cases
 #
 
-class TestLoggingDecorator(unittest.TestCase):
+class TestLoggingDecorator(object):
     """All test cases for the @logged_api_call decorator."""
 
     def assert_log_capture(self, log_capture, exp_apifunc):
 
-        self.assertEqual(len(log_capture.records), 2)
+        assert len(log_capture.records) == 2
 
         enter_record = log_capture.records[0]
-        self.assertEqual(enter_record.name, _EXP_LOGGER_NAME)
-        self.assertEqual(enter_record.levelname, _EXP_LOG_LEVEL)
-        self.assertEqual(enter_record.msg, _EXP_LOG_MSG_ENTER)
-        self.assertEqual(enter_record.args[0], exp_apifunc)
+        assert enter_record.name == _EXP_LOGGER_NAME
+        assert enter_record.levelname == _EXP_LOG_LEVEL
+        assert enter_record.msg == _EXP_LOG_MSG_ENTER
+        assert enter_record.args[0] == exp_apifunc
         # We don't check the positional args and keyword args
 
         leave_record = log_capture.records[1]
-        self.assertEqual(leave_record.name, _EXP_LOGGER_NAME)
-        self.assertEqual(leave_record.levelname, _EXP_LOG_LEVEL)
-        self.assertEqual(leave_record.msg, _EXP_LOG_MSG_LEAVE)
-        self.assertEqual(leave_record.args[0], exp_apifunc)
+        assert leave_record.name == _EXP_LOGGER_NAME
+        assert leave_record.levelname == _EXP_LOG_LEVEL
+        assert leave_record.msg == _EXP_LOG_MSG_LEAVE
+        assert leave_record.args[0] == exp_apifunc
         # We don't check the positional args and keyword args
 
-    @log_capture(level=logging.DEBUG)
     def test_1a_global_from_global(self, capture):
         """Simple test calling a decorated global function from a global
         function."""
@@ -160,7 +170,6 @@ class TestLoggingDecorator(unittest.TestCase):
 
         self.assert_log_capture(capture, 'decorated_global_function()')
 
-    @log_capture(level=logging.DEBUG)
     def test_1b_global_from_method(self, capture):
         """Simple test calling a decorated global function from a method."""
 
@@ -168,7 +177,6 @@ class TestLoggingDecorator(unittest.TestCase):
 
         self.assert_log_capture(capture, 'decorated_global_function()')
 
-    @log_capture(level=logging.DEBUG)
     def test_2a_global_inner1_from_global(self, capture):
         """Simple test calling a decorated inner function defined in a global
         function from a global function."""
@@ -180,7 +188,6 @@ class TestLoggingDecorator(unittest.TestCase):
         self.assert_log_capture(capture,
                                 'global1_function.decorated_inner1_function()')
 
-    @log_capture(level=logging.DEBUG)
     def test_2b_global_inner1_from_method(self, capture):
         """Simple test calling a decorated inner function defined in a global
         function from a method."""
@@ -192,7 +199,6 @@ class TestLoggingDecorator(unittest.TestCase):
         self.assert_log_capture(capture,
                                 'global1_function.decorated_inner1_function()')
 
-    @log_capture(level=logging.DEBUG)
     def test_3a_global_inner2_from_global(self, capture):
         """Simple test calling a decorated inner function defined in an inner
         function defined in a global function from a global function."""
@@ -204,7 +210,6 @@ class TestLoggingDecorator(unittest.TestCase):
         self.assert_log_capture(capture,
                                 'inner1_function.decorated_inner2_function()')
 
-    @log_capture(level=logging.DEBUG)
     def test_3b_global_inner1_from_method(self, capture):
         """Simple test calling a decorated inner function defined in an inner
         function defined in a global function from a method."""
@@ -216,7 +221,6 @@ class TestLoggingDecorator(unittest.TestCase):
         self.assert_log_capture(capture,
                                 'inner1_function.decorated_inner2_function()')
 
-    @log_capture(level=logging.DEBUG)
     def test_4a_method_from_global(self, capture):
         """Simple test calling a decorated method from a global function."""
 
@@ -227,7 +231,6 @@ class TestLoggingDecorator(unittest.TestCase):
 
         self.assert_log_capture(capture, 'Decorator1Class.decorated_method()')
 
-    @log_capture(level=logging.DEBUG)
     def test_4b_method_from_method(self, capture):
         """Simple test calling a decorated method from a method."""
 
@@ -238,7 +241,6 @@ class TestLoggingDecorator(unittest.TestCase):
 
         self.assert_log_capture(capture, 'Decorator1Class.decorated_method()')
 
-    @log_capture(level=logging.DEBUG)
     def test_5a_method_from_global(self, capture):
         """Simple test calling a decorated inner function defined in a method
         from a global function."""
@@ -251,7 +253,6 @@ class TestLoggingDecorator(unittest.TestCase):
         self.assert_log_capture(capture,
                                 'method.decorated_inner_function()')
 
-    @log_capture(level=logging.DEBUG)
     def test_5b_method_from_method(self, capture):
         """Simple test calling a decorated inner function defined in a method
         from a method."""
@@ -267,7 +268,7 @@ class TestLoggingDecorator(unittest.TestCase):
     def test_decorated_class(self):
         """Test that using the decorator on a class raises TypeError."""
 
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
 
             @logged_api_call
             class DecoratedClass(object):
@@ -276,7 +277,7 @@ class TestLoggingDecorator(unittest.TestCase):
     def test_decorated_property(self):
         """Test that using the decorator on a property raises TypeError."""
 
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
 
             class Class(object):
 
@@ -286,7 +287,7 @@ class TestLoggingDecorator(unittest.TestCase):
                     return self
 
 
-class TestGetLogger(unittest.TestCase):
+class TestGetLogger(object):
     """All test cases for get_logger()."""
 
     def test_root_logger(self):
@@ -296,11 +297,10 @@ class TestGetLogger(unittest.TestCase):
 
         zhmc_logger = get_logger('')
 
-        self.assertTrue(isinstance(zhmc_logger, logging.Logger))
-        self.assertEqual(zhmc_logger, py_logger)
-        self.assertTrue(len(zhmc_logger.handlers) >= 1,
-                        "Unexpected list of logging handlers: %r" %
-                        zhmc_logger.handlers)
+        assert isinstance(zhmc_logger, logging.Logger)
+        assert zhmc_logger == py_logger
+        assert len(zhmc_logger.handlers) >= 1, \
+            "Unexpected list of logging handlers: %r" % zhmc_logger.handlers
 
     def test_foo_logger(self):
         """Test that get_logger('foo') returns the Python logger 'foo'
@@ -309,8 +309,7 @@ class TestGetLogger(unittest.TestCase):
 
         zhmc_logger = get_logger('foo')
 
-        self.assertTrue(isinstance(zhmc_logger, logging.Logger))
-        self.assertEqual(zhmc_logger, py_logger)
-        self.assertTrue(len(zhmc_logger.handlers) >= 1,
-                        "Unexpected list of logging handlers: %r" %
-                        zhmc_logger.handlers)
+        assert isinstance(zhmc_logger, logging.Logger)
+        assert zhmc_logger == py_logger
+        assert len(zhmc_logger.handlers) >= 1, \
+            "Unexpected list of logging handlers: %r" % zhmc_logger.handlers
