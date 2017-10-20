@@ -4474,11 +4474,13 @@ class TestLparActLoadDeactHandler(object):
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)
         assert lpar1['status'] == 'not-activated'
+        lpar1_name = lpar1['name']
 
         # the function to be tested:
         self.urihandler.post(self.hmc,
                              '/api/logical-partitions/1/operations/activate',
-                             None, True, True)
+                             {'activation-profile-name': lpar1_name},
+                             True, True)
 
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)
@@ -4496,7 +4498,7 @@ class TestLparActLoadDeactHandler(object):
         # the function to be tested:
         self.urihandler.post(self.hmc,
                              '/api/logical-partitions/1/operations/deactivate',
-                             None, True, True)
+                             {'force': True}, True, True)
 
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)

@@ -220,7 +220,8 @@ class Lpar(BaseResource):
     @logged_api_call
     def activate(self, wait_for_completion=True,
                  operation_timeout=None, status_timeout=None,
-                 allow_status_exceptions=False):
+                 allow_status_exceptions=False, activation_profile_name=None,
+                 force=False):
         """
         Activate (start) this LPAR, using the HMC operation "Activate Logical
         Partition".
@@ -275,6 +276,19 @@ class Lpar(BaseResource):
             an additional acceptable end status when `wait_for_completion` is
             set.
 
+          activation_profile_name (:term:`string`):
+            Name of the image :class:`ActivationProfile` to use for activation.
+
+            `None` means that the activation profile specified in the
+            `next-activation-profile-name` property of the LPAR is used.
+
+          force (bool):
+            Boolean controlling whether this operation is permitted when the
+            LPAR is in the "operating" status.
+
+            TBD: What will happen with the LPAR in that case (deactivated then
+            activated? nothing?)
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -297,6 +311,10 @@ class Lpar(BaseResource):
             waiting for the desired LPAR status.
         """
         body = {}
+        if activation_profile_name:
+            body['activation-profile-name'] = activation_profile_name
+        if force:
+            body['force'] = force
         result = self.manager.session.post(
             self.uri + '/operations/activate',
             body,
@@ -312,7 +330,7 @@ class Lpar(BaseResource):
     @logged_api_call
     def deactivate(self, wait_for_completion=True,
                    operation_timeout=None, status_timeout=None,
-                   allow_status_exceptions=False):
+                   allow_status_exceptions=False, force=False):
         """
         De-activate (stop) this LPAR, using the HMC operation "Deactivate
         Logical Partition".
@@ -366,6 +384,13 @@ class Lpar(BaseResource):
             an additional acceptable end status when `wait_for_completion` is
             set.
 
+          force (bool):
+            Boolean controlling whether this operation is permitted when the
+            LPAR is in the "operating" status.
+
+            TBD: What will happen with the LPAR in that case (deactivated then
+            activated? nothing?)
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -387,7 +412,9 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
             waiting for the desired LPAR status.
         """
-        body = {'force': True}
+        body = {}
+        if force:
+            body['force'] = force
         result = self.manager.session.post(
             self.uri + '/operations/deactivate',
             body,
@@ -403,7 +430,7 @@ class Lpar(BaseResource):
     @logged_api_call
     def load(self, load_address, load_parameter=None, wait_for_completion=True,
              operation_timeout=None, status_timeout=None,
-             allow_status_exceptions=False):
+             allow_status_exceptions=False, force=False):
         """
         Load (boot) this LPAR from a load address (boot device), using the HMC
         operation "Load Logical Partition".
@@ -462,6 +489,13 @@ class Lpar(BaseResource):
             an additional acceptable end status when `wait_for_completion` is
             set.
 
+          force (bool):
+            Boolean controlling whether this operation is permitted when the
+            LPAR is in the "operating" status.
+
+            TBD: What will happen with the LPAR in that case (deactivated then
+            activated? nothing?)
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -486,6 +520,8 @@ class Lpar(BaseResource):
         body = {'load-address': load_address}
         if load_parameter:
             body['load-parameter'] = load_parameter
+        if force:
+            body['force'] = force
         result = self.manager.session.post(
             self.uri + '/operations/load',
             body,

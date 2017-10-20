@@ -26,6 +26,11 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The ``Lpar.deactivate()`` method is now non-forceful by default, but can be
+  made to behave like previously by specifying the new ``force`` parameter.
+  In force mode, the deactivation operation is permitted when the LPAR status
+  is "operating".
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -43,6 +48,23 @@ Released: not yet
 * Migrated all remaining test cases from unittest to pytest, and started
   improving the testcases using pytest specific features such as
   parametrization.
+
+* Added support for a ``force`` parameter in the ``Lpar.activate()``,
+  ``Lpar.deactivate()``, and ``Lpar.load()`` methods. It controls whether the
+  operation is permitted when the LPAR status is "operating".
+
+  Note that this changes ``Lpar.deactivate()`` to be non-forceful by default
+  (force=True was hard coded before this change).
+
+* Added support for an ``activation_profile_name`` option in the
+  ``Lpar.activate()`` method, that allows specifying the activation profile
+  to be used. The default is as before: The profile that is specified in the
+  ``next-activation-profile`` property of the ``Lpar`` object.
+
+* Added LPAR status checks in the zhmcclient mock support, so that activate,
+  deactivate and load returns the same errors as the real system when the
+  initial LPAR status is not permitted, or when the activation profile name
+  does not match the LPAR name.
 
 **Known issues:**
 
