@@ -4489,7 +4489,7 @@ class TestLparActLoadDeactHandler(object):
         # the function to be tested:
         self.urihandler.post(self.hmc,
                              '/api/logical-partitions/1/operations/load',
-                             None, True, True)
+                             {'load-address': '5176'}, True, True)
 
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)

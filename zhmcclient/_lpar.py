@@ -428,9 +428,9 @@ class Lpar(BaseResource):
         return result
 
     @logged_api_call
-    def load(self, load_address, load_parameter=None, wait_for_completion=True,
-             operation_timeout=None, status_timeout=None,
-             allow_status_exceptions=False, force=False):
+    def load(self, load_address=None, load_parameter=None,
+             wait_for_completion=True, operation_timeout=None,
+             status_timeout=None, allow_status_exceptions=False, force=False):
         """
         Load (boot) this LPAR from a load address (boot device), using the HMC
         operation "Load Logical Partition".
@@ -452,6 +452,10 @@ class Lpar(BaseResource):
         Parameters:
 
           load_address (:term:`string`): Device number of the boot device.
+            Up to z13, this parameter is required.
+            Starting with z14, this parameter is optional and defaults to the
+            load address specified in the 'last-used-load-address' property of
+            the Lpar.
 
           load_parameter (:term:`string`): Optional load control string.
             If empty string or `None`, it is not passed to the HMC.
@@ -517,7 +521,9 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
             waiting for the desired LPAR status.
         """
-        body = {'load-address': load_address}
+        body = {}
+        if load_address:
+            body['load-address'] = load_address
         if load_parameter:
             body['load-parameter'] = load_parameter
         if force:

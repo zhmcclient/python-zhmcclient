@@ -61,10 +61,14 @@ Released: not yet
   to be used. The default is as before: The profile that is specified in the
   ``next-activation-profile`` property of the ``Lpar`` object.
 
+* Made the ``load_address`` parameter of ``Lpar.load()`` optional in order
+  to support z14. Up to z13, the HMC now returns an error if no load
+  address is specified. Adjusted the zhmcclient mock support accordingly.
+
 * Added LPAR status checks in the zhmcclient mock support, so that activate,
   deactivate and load returns the same errors as the real system when the
   initial LPAR status is not permitted, or when the activation profile name
-  does not match the LPAR name.
+  does not match the LPAR name, or when no load address is specified.
 
 * Improved the testcases for the Lpar and LparManager classes.
 

@@ -1994,8 +1994,32 @@ class LparLoadHandler(object):
                               "(and force was not specified).".
                               format(lpar.name))
 
+        load_address = body.get('load-address', None) if body else None
+        if not load_address:
+            # Starting with z14, this parameter is optional and a last-used
+            # property is available.
+            load_address = lpar.properties.get('last-used-load-address', None)
+        if load_address is None:
+            # TODO: Verify actual error for this case on a z14.
+            raise BadRequestError(method, uri, reason=5,
+                                  message="LPAR {!r} could not be loaded "
+                                  "because a load address is not specified "
+                                  "in the request or in the Lpar last-used "
+                                  "property".
+                                  format(lpar.name))
+
+        load_parameter = body.get('load-parameter', None) if body else None
+        if not load_parameter:
+            # Starting with z14, a last-used property is available.
+            load_parameter = lpar.properties.get(
+                'last-used-load-parameter', None)
+        if load_parameter is None:
+            load_parameter = ''
+
         # Reflect the successful load in the resource
         lpar.properties['status'] = 'operating'
+        lpar.properties['last-used-load-address'] = load_address
+        lpar.properties['last-used-load-parameter'] = load_parameter
 
 
 class ResetActProfilesHandler(object):

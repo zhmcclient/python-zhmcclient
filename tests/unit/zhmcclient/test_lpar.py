@@ -364,6 +364,7 @@ class TestLpar(object):
             assert ret is None
 
             lpar.pull_full_properties()
+
             status = lpar.get_property('status')
             assert status == exp_status
 
@@ -430,47 +431,80 @@ class TestLpar(object):
             assert ret is None
 
             lpar.pull_full_properties()
+
             status = lpar.get_property('status')
             assert status == exp_status
 
     @pytest.mark.parametrize(
-        "initial_status, input_kwargs, exp_status, exp_exc", [
+        "initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc", [
+            (None, dict(),
+             '', None),
+            (None, dict(load_parameter='abcd'),
+             'abcd', None),
+            ('abcd', dict(),
+             'abcd', None),
+            ('fooo', dict(load_parameter='abcd'),
+             'abcd', None),
+        ]
+    )
+    @pytest.mark.parametrize(
+        "initial_loadaddr, loadaddr_kwargs, exp_loadaddr, exp_loadaddr_exc", [
+            (None, dict(),
+             None, HTTPError({'http-status': 400, 'reason': 5})),
+            (None, dict(load_address='5176'),
+             '5176', None),
+            ('5176', dict(),
+             '5176', None),
+            ('1234', dict(load_address='5176'),
+             '5176', None),
+        ]
+    )
+    @pytest.mark.parametrize(
+        "initial_status, status_kwargs, exp_status, exp_status_exc", [
 
-            ('not-activated', dict(load_address='5076'),
+            ('not-activated', dict(),
              None, HTTPError({'http-status': 409, 'reason': 0})),
-            ('not-activated', dict(load_address='5076', force=False),
+            ('not-activated', dict(force=False),
              None, HTTPError({'http-status': 409, 'reason': 0})),
-            ('not-activated', dict(load_address='5076', force=True),
+            ('not-activated', dict(force=True),
              None, HTTPError({'http-status': 409, 'reason': 0})),
 
-            ('not-operating', dict(load_address='5076', force=False),
+            ('not-operating', dict(force=False),
              'operating', None),
-            ('not-operating', dict(load_address='5076', force=True),
+            ('not-operating', dict(force=True),
              'operating', None),
 
-            ('operating', dict(load_address='5076'),
+            ('operating', dict(),
              None, HTTPError({'http-status': 500, 'reason': 263})),
-            ('operating', dict(load_address='5076', force=False),
+            ('operating', dict(force=False),
              None, HTTPError({'http-status': 500, 'reason': 263})),
-            ('operating', dict(load_address='5076', force=True),
+            ('operating', dict(force=True),
              'operating', None),
 
-            ('exceptions', dict(load_address='5076', force=False),
+            ('exceptions', dict(force=False),
              'operating', None),
-            ('exceptions', dict(load_address='5076', force=True),
+            ('exceptions', dict(force=True),
              'operating', None),
         ]
     )
     def test_lpar_load(
-            self, initial_status, input_kwargs, exp_status, exp_exc):
+            self, initial_status, status_kwargs, exp_status, exp_status_exc,
+            initial_loadaddr, loadaddr_kwargs, exp_loadaddr, exp_loadaddr_exc,
+            initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc):
         """Test Lpar.load()."""
 
         # Add a faked LPAR
         faked_lpar = self.add_lpar1()
         faked_lpar.properties['status'] = initial_status
+        faked_lpar.properties['last-used-load-address'] = initial_loadaddr
+        faked_lpar.properties['last-used-load-parameter'] = initial_loadparm
 
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
+
+        input_kwargs = dict(status_kwargs, **loadaddr_kwargs)
+        input_kwargs.update(**loadparm_kwargs)
+        exp_exc = exp_status_exc or exp_loadaddr_exc or exp_loadparm_exc
 
         if exp_exc is not None:
 
@@ -492,5 +526,12 @@ class TestLpar(object):
             assert ret is None
 
             lpar.pull_full_properties()
+
             status = lpar.get_property('status')
             assert status == exp_status
+
+            last_loadaddr = lpar.get_property('last-used-load-address')
+            assert last_loadaddr == exp_loadaddr
+
+            last_loadparm = lpar.get_property('last-used-load-parameter')
+            assert last_loadparm == exp_loadparm
