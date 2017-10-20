@@ -12,7 +12,7 @@ engines:
   radon:
     enabled: true
     config:
-      threshold: "C"
+      threshold: "D"
   fixme:
     enabled: true
     config:
