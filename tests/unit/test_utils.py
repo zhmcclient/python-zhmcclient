@@ -162,7 +162,7 @@ class TestPythonDatetime(object):
         st = time.gmtime(0)
         assert st == epoch_st
 
-    def test_print_gmtime_max(self):
+    def x_test_print_gmtime_max(self):
         """Print the maximum for time.gmtime()."""
         max_ts = find_max_value(time.gmtime, 1)
         max_st = time.gmtime(max_ts)
@@ -170,7 +170,7 @@ class TestPythonDatetime(object):
               format(max_ts, max_st))
         sys.stdout.flush()
 
-    def test_print_fromtimestamp_max(self):
+    def x_test_print_fromtimestamp_max(self):
         """Print the maximum for datetime.fromtimestamp(utc)."""
 
         def datetime_fromtimestamp_utc(ts):
@@ -183,7 +183,7 @@ class TestPythonDatetime(object):
               format(max_ts, max_dt))
         sys.stdout.flush()
 
-    def test_print_datetime_max(self):
+    def x_test_print_datetime_max(self):
         """Print datetime.max."""
         print("\nMax value for Python datetime (datetime.max): {!r}".
               format(datetime.max))
@@ -233,7 +233,7 @@ class TestDatetimeFromTimestamp(object):
         # Verify the result
         assert isinstance(exc_info.value, exc_type)
 
-    def test_print_max_datetime_from_timestamp(self):
+    def x_test_print_max_datetime_from_timestamp(self):
         """Print the maximum for datetime_from_timestamp()."""
         max_ts = find_max_value(datetime_from_timestamp, 1)
         max_dt = datetime_from_timestamp(max_ts)
