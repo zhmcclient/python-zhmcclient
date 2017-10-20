@@ -288,3 +288,20 @@ Faked HMC
 
 .. autoclass:: zhmcclient_mock.FakedBaseResource
    :members:
+
+
+.. _`URI handler`:
+
+URI handler
+-----------
+
+.. automodule:: zhmcclient_mock._urihandler
+
+.. autoclass:: zhmcclient_mock.LparActivateHandler
+   :members: get_status, post
+
+.. autoclass:: zhmcclient_mock.LparDeactivateHandler
+   :members: get_status, post
+
+.. autoclass:: zhmcclient_mock.LparLoadHandler
+   :members: get_status, post

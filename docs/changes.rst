@@ -72,6 +72,11 @@ Released: not yet
 
 * Improved the testcases for the Lpar and LparManager classes.
 
+* Added the ability to mock the resulting status of the faked Lpars in the
+  zhmcclient mock support, for the Activate, Deactivate, and Load operations.
+  Added a new chapter "URI handlers" in section "Mock support" of the
+  documentation, to describe this new ability.
+
 **Known issues:**
 
 * See `list of open issues`_.

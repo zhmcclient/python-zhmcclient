@@ -21,9 +21,11 @@ from __future__ import absolute_import, print_function
 import pytest
 import re
 import copy
+import mock
 
-from zhmcclient import Client, Lpar, HTTPError
-from zhmcclient_mock import FakedSession
+from zhmcclient import Client, Lpar, HTTPError, StatusTimeout
+from zhmcclient_mock import FakedSession, LparActivateHandler, \
+    LparDeactivateHandler, LparLoadHandler
 from tests.common.utils import assert_resources
 
 
@@ -44,6 +46,7 @@ class TestLpar(object):
         """
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.session.retry_timeout_config.status_timeout = 1
         self.client = Client(self.session)
 
         self.faked_cpc = self.session.hmc.cpcs.add({
@@ -301,7 +304,7 @@ class TestLpar(object):
         ]
     )
     @pytest.mark.parametrize(
-        "initial_status, status_kwargs, exp_status, exp_status_exc", [
+        "initial_status, status_kwargs, act_exp_status, exp_status_exc", [
 
             ('not-activated', dict(),  # Verify that force has a default
              'not-operating', None),
@@ -316,9 +319,9 @@ class TestLpar(object):
              'not-operating', None),
 
             ('operating', dict(),  # Verify that force default is False
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'not-operating', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=False),
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'not-operating', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=True),
              'not-operating', None),
 
@@ -326,10 +329,19 @@ class TestLpar(object):
              'not-operating', None),
             ('exceptions', dict(force=True),
              'not-operating', None),
+
+            ('not-activated', dict(),
+             'exceptions', StatusTimeout(None, None, None, None)),
+            ('not-activated', dict(allow_status_exceptions=False),
+             'exceptions', StatusTimeout(None, None, None, None)),
+            ('not-activated', dict(allow_status_exceptions=True),
+             'exceptions', None),
         ]
     )
+    @mock.patch.object(LparActivateHandler, 'get_status')
     def test_lpar_activate(
-            self, initial_status, status_kwargs, exp_status, exp_status_exc,
+            self, get_status_mock,
+            initial_status, status_kwargs, act_exp_status, exp_status_exc,
             initial_profile, profile_kwargs, exp_profile, exp_profile_exc):
         """Test Lpar.activate()."""
 
@@ -342,19 +354,32 @@ class TestLpar(object):
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
         input_kwargs = dict(status_kwargs, **profile_kwargs)
-        exp_exc = exp_status_exc or exp_profile_exc
 
-        if exp_exc is not None:
+        exp_excs = []
+        if exp_status_exc:
+            exp_excs.append(exp_status_exc)
+        if exp_profile_exc:
+            exp_excs.append(exp_profile_exc)
 
-            with pytest.raises(exp_exc.__class__) as exc_info:
+        get_status_mock.return_value = act_exp_status
+
+        if exp_excs:
+
+            with pytest.raises(Exception) as exc_info:
 
                 # Execute the code to be tested
                 lpar.activate(**input_kwargs)
 
             exc = exc_info.value
-            if isinstance(exp_exc, HTTPError):
-                assert exc.http_status == exp_exc.http_status
-                assert exc.reason == exp_exc.reason
+
+            exp_exc_classes = [e.__class__ for e in exp_excs]
+            assert isinstance(exc, tuple(exp_exc_classes))
+
+            if isinstance(exc, HTTPError):
+                exp_httperror = [e for e in exp_excs
+                                 if isinstance(e, HTTPError)][0]
+                assert exc.http_status == exp_httperror.http_status
+                assert exc.reason == exp_httperror.reason
 
         else:
 
@@ -366,19 +391,19 @@ class TestLpar(object):
             lpar.pull_full_properties()
 
             status = lpar.get_property('status')
-            assert status == exp_status
+            assert status == act_exp_status
 
             last_profile_name = lpar.get_property(
                 'last-used-activation-profile')
             assert last_profile_name == exp_profile
 
     @pytest.mark.parametrize(
-        "initial_status, input_kwargs, exp_status, exp_exc", [
+        "initial_status, input_kwargs, act_exp_status, exp_status_exc", [
 
             ('not-activated', dict(),  # Verify that force has a default
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
             ('not-activated', dict(force=False),
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
             ('not-activated', dict(force=True),
              'not-activated', None),
 
@@ -388,9 +413,9 @@ class TestLpar(object):
              'not-activated', None),
 
             ('operating', dict(),  # Verify that force default is False
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=False),
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=True),
              'not-activated', None),
 
@@ -398,10 +423,19 @@ class TestLpar(object):
              'not-activated', None),
             ('exceptions', dict(force=True),
              'not-activated', None),
+
+            ('not-operating', dict(),
+             'exceptions', StatusTimeout(None, None, None, None)),
+            ('not-operating', dict(allow_status_exceptions=False),
+             'exceptions', StatusTimeout(None, None, None, None)),
+            ('not-operating', dict(allow_status_exceptions=True),
+             'exceptions', None),
         ]
     )
+    @mock.patch.object(LparDeactivateHandler, 'get_status')
     def test_lpar_deactivate(
-            self, initial_status, input_kwargs, exp_status, exp_exc):
+            self, get_status_mock,
+            initial_status, input_kwargs, act_exp_status, exp_status_exc):
         """Test Lpar.deactivate()."""
 
         # Add a faked LPAR
@@ -411,17 +445,29 @@ class TestLpar(object):
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
-        if exp_exc is not None:
+        get_status_mock.return_value = act_exp_status
 
-            with pytest.raises(exp_exc.__class__) as exc_info:
+        exp_excs = []
+        if exp_status_exc:
+            exp_excs.append(exp_status_exc)
+
+        if exp_excs:
+
+            with pytest.raises(Exception) as exc_info:
 
                 # Execute the code to be tested
                 lpar.deactivate(**input_kwargs)
 
             exc = exc_info.value
-            if isinstance(exp_exc, HTTPError):
-                assert exc.http_status == exp_exc.http_status
-                assert exc.reason == exp_exc.reason
+
+            exp_exc_classes = [e.__class__ for e in exp_excs]
+            assert isinstance(exc, tuple(exp_exc_classes))
+
+            if isinstance(exc, HTTPError):
+                exp_httperror = [e for e in exp_excs
+                                 if isinstance(e, HTTPError)][0]
+                assert exc.http_status == exp_httperror.http_status
+                assert exc.reason == exp_httperror.reason
 
         else:
 
@@ -433,7 +479,7 @@ class TestLpar(object):
             lpar.pull_full_properties()
 
             status = lpar.get_property('status')
-            assert status == exp_status
+            assert status == act_exp_status
 
     @pytest.mark.parametrize(
         "initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc", [
@@ -460,14 +506,14 @@ class TestLpar(object):
         ]
     )
     @pytest.mark.parametrize(
-        "initial_status, status_kwargs, exp_status, exp_status_exc", [
+        "initial_status, status_kwargs, act_exp_status, exp_status_exc", [
 
             ('not-activated', dict(),
-             None, HTTPError({'http-status': 409, 'reason': 0})),
+             'operating', HTTPError({'http-status': 409, 'reason': 0})),
             ('not-activated', dict(force=False),
-             None, HTTPError({'http-status': 409, 'reason': 0})),
+             'operating', HTTPError({'http-status': 409, 'reason': 0})),
             ('not-activated', dict(force=True),
-             None, HTTPError({'http-status': 409, 'reason': 0})),
+             'operating', HTTPError({'http-status': 409, 'reason': 0})),
 
             ('not-operating', dict(force=False),
              'operating', None),
@@ -475,9 +521,9 @@ class TestLpar(object):
              'operating', None),
 
             ('operating', dict(),
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'operating', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=False),
-             None, HTTPError({'http-status': 500, 'reason': 263})),
+             'operating', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=True),
              'operating', None),
 
@@ -485,10 +531,19 @@ class TestLpar(object):
              'operating', None),
             ('exceptions', dict(force=True),
              'operating', None),
+
+            ('not-operating', dict(),
+             'exceptions', StatusTimeout(None, None, None, None)),
+            ('not-operating', dict(allow_status_exceptions=False),
+             'exceptions', StatusTimeout(None, None, None, None)),
+            ('not-operating', dict(allow_status_exceptions=True),
+             'exceptions', None),
         ]
     )
+    @mock.patch.object(LparLoadHandler, 'get_status')
     def test_lpar_load(
-            self, initial_status, status_kwargs, exp_status, exp_status_exc,
+            self, get_status_mock,
+            initial_status, status_kwargs, act_exp_status, exp_status_exc,
             initial_loadaddr, loadaddr_kwargs, exp_loadaddr, exp_loadaddr_exc,
             initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc):
         """Test Lpar.load()."""
@@ -504,19 +559,34 @@ class TestLpar(object):
 
         input_kwargs = dict(status_kwargs, **loadaddr_kwargs)
         input_kwargs.update(**loadparm_kwargs)
-        exp_exc = exp_status_exc or exp_loadaddr_exc or exp_loadparm_exc
 
-        if exp_exc is not None:
+        exp_excs = []
+        if exp_status_exc:
+            exp_excs.append(exp_status_exc)
+        if exp_loadaddr_exc:
+            exp_excs.append(exp_loadaddr_exc)
+        if exp_loadparm_exc:
+            exp_excs.append(exp_loadparm_exc)
 
-            with pytest.raises(exp_exc.__class__) as exc_info:
+        get_status_mock.return_value = act_exp_status
+
+        if exp_excs:
+
+            with pytest.raises(Exception) as exc_info:
 
                 # Execute the code to be tested
                 lpar.load(**input_kwargs)
 
             exc = exc_info.value
-            if isinstance(exp_exc, HTTPError):
-                assert exc.http_status == exp_exc.http_status
-                assert exc.reason == exp_exc.reason
+
+            exp_exc_classes = [e.__class__ for e in exp_excs]
+            assert isinstance(exc, tuple(exp_exc_classes))
+
+            if isinstance(exc, HTTPError):
+                exp_httperror = [e for e in exp_excs
+                                 if isinstance(e, HTTPError)][0]
+                assert exc.http_status == exp_httperror.http_status
+                assert exc.reason == exp_httperror.reason
 
         else:
 
@@ -528,7 +598,7 @@ class TestLpar(object):
             lpar.pull_full_properties()
 
             status = lpar.get_property('status')
-            assert status == exp_status
+            assert status == act_exp_status
 
             last_loadaddr = lpar.get_property('last-used-load-address')
             assert last_loadaddr == exp_loadaddr
