@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Unit test cases for any common modules for unit testing.
+Unit test cases for the tests/common/utils.py module.
 """
 
 from __future__ import absolute_import, print_function
@@ -23,7 +23,7 @@ import pytest
 from zhmcclient import Client
 from zhmcclient_mock import FakedSession
 
-from ..utils import assert_resources
+from tests.common.utils import assert_resources
 
 
 class TestUtilsAssertResources(object):

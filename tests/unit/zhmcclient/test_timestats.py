@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Tests for time statistics (`_timestats` module).
+Unit tests for _timestats module.
 """
 
 from __future__ import absolute_import, print_function

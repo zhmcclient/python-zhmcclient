@@ -23,7 +23,6 @@ from __future__ import absolute_import, print_function
 
 import json
 import threading
-# FIXME: Migrate mock to zhmcclient_mock.
 from mock import patch
 
 from zhmcclient._notification import NotificationReceiver

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Utility functions for unit tests.
+Utility functions for tests.
 """
 
 
