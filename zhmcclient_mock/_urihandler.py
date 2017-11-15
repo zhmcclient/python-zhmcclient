@@ -945,6 +945,148 @@ class CpcHandler(GenericGetPropertiesHandler,
     pass
 
 
+class CpcSetPowerSaveHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Set CPC Power Save (any CPC mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['power-saving'])
+
+        power_saving = body['power-saving']
+        if power_saving not in ['high-performance', 'low-power', 'custom']:
+            raise BadRequestError(method, uri, reason=7,
+                                  message="Invalid power-saving value: %r" %
+                                  power_saving)
+
+        cpc.properties['cpc-power-saving'] = power_saving
+        cpc.properties['cpc-power-saving-state'] = power_saving
+        cpc.properties['zcpc-power-saving'] = power_saving
+        cpc.properties['zcpc-power-saving-state'] = power_saving
+
+
+class CpcSetPowerCappingHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Set CPC Power Capping (any CPC mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['power-capping-state'])
+
+        power_capping_state = body['power-capping-state']
+        power_cap_current = body.get('power-cap-current', None)
+
+        if power_capping_state not in ['disabled', 'enabled', 'custom']:
+            raise BadRequestError(method, uri, reason=7,
+                                  message="Invalid power-capping-state value: "
+                                  "%r" % power_capping_state)
+
+        if power_capping_state == 'enabled' and power_cap_current is None:
+            raise BadRequestError(method, uri, reason=7,
+                                  message="Power-cap-current must be provided "
+                                  "when enabling power capping")
+
+        cpc.properties['cpc-power-capping-state'] = power_capping_state
+        cpc.properties['cpc-power-cap-current'] = power_cap_current
+        cpc.properties['zcpc-power-capping-state'] = power_capping_state
+        cpc.properties['zcpc-power-cap-current'] = power_cap_current
+
+
+class CpcGetEnergyManagementDataHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: Get CPC Energy Management Data (any CPC mode)."""
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+
+        energy_props = {
+            'cpc-power-cap-allowed':
+                cpc.properties.get('cpc-power-cap-allowed'),
+            'cpc-power-cap-current':
+                cpc.properties.get('cpc-power-cap-current'),
+            'cpc-power-cap-maximum':
+                cpc.properties.get('cpc-power-cap-maximum'),
+            'cpc-power-cap-minimum':
+                cpc.properties.get('cpc-power-cap-minimum'),
+            'cpc-power-capping-state':
+                cpc.properties.get('cpc-power-capping-state'),
+            'cpc-power-consumption':
+                cpc.properties.get('cpc-power-consumption'),
+            'cpc-power-rating':
+                cpc.properties.get('cpc-power-rating'),
+            'cpc-power-save-allowed':
+                cpc.properties.get('cpc-power-save-allowed'),
+            'cpc-power-saving':
+                cpc.properties.get('cpc-power-saving'),
+            'cpc-power-saving-state':
+                cpc.properties.get('cpc-power-saving-state'),
+            'zcpc-ambient-temperature':
+                cpc.properties.get('zcpc-ambient-temperature'),
+            'zcpc-dew-point':
+                cpc.properties.get('zcpc-dew-point'),
+            'zcpc-exhaust-temperature':
+                cpc.properties.get('zcpc-exhaust-temperature'),
+            'zcpc-heat-load':
+                cpc.properties.get('zcpc-heat-load'),
+            'zcpc-heat-load-forced-air':
+                cpc.properties.get('zcpc-heat-load-forced-air'),
+            'zcpc-heat-load-water':
+                cpc.properties.get('zcpc-heat-load-water'),
+            'zcpc-humidity':
+                cpc.properties.get('zcpc-humidity'),
+            'zcpc-maximum-potential-heat-load':
+                cpc.properties.get('zcpc-maximum-potential-heat-load'),
+            'zcpc-maximum-potential-power':
+                cpc.properties.get('zcpc-maximum-potential-power'),
+            'zcpc-power-cap-allowed':
+                cpc.properties.get('zcpc-power-cap-allowed'),
+            'zcpc-power-cap-current':
+                cpc.properties.get('zcpc-power-cap-current'),
+            'zcpc-power-cap-maximum':
+                cpc.properties.get('zcpc-power-cap-maximum'),
+            'zcpc-power-cap-minimum':
+                cpc.properties.get('zcpc-power-cap-minimum'),
+            'zcpc-power-capping-state':
+                cpc.properties.get('zcpc-power-capping-state'),
+            'zcpc-power-consumption':
+                cpc.properties.get('zcpc-power-consumption'),
+            'zcpc-power-rating':
+                cpc.properties.get('zcpc-power-rating'),
+            'zcpc-power-save-allowed':
+                cpc.properties.get('zcpc-power-save-allowed'),
+            'zcpc-power-saving':
+                cpc.properties.get('zcpc-power-saving'),
+            'zcpc-power-saving-state':
+                cpc.properties.get('zcpc-power-saving-state'),
+        }
+        cpc_data = {
+            'error-occurred': False,
+            'object-uri': cpc.uri,
+            'object-id': cpc.oid,
+            'class': 'cpcs',
+            'properties': energy_props,
+        }
+        result = {'objects': [cpc_data]}
+
+        return result
+
+
 class CpcStartHandler(object):
 
     @staticmethod
@@ -2210,6 +2352,12 @@ URIS = (
 
     (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
     (r'/api/cpcs/([^/]+)', CpcHandler),
+    (r'/api/cpcs/([^/]+)/operations/set-cpc-power-save',
+     CpcSetPowerSaveHandler),
+    (r'/api/cpcs/([^/]+)/operations/set-cpc-power-capping',
+     CpcSetPowerCappingHandler),
+    (r'/api/cpcs/([^/]+)/energy-management-data',
+     CpcGetEnergyManagementDataHandler),
 
     (r'/api/services/metrics/context', MetricsContextsHandler),
     (r'/api/services/metrics/context/([^/]+)', MetricsContextHandler),

@@ -77,6 +77,13 @@ Released: not yet
   Added a new chapter "URI handlers" in section "Mock support" of the
   documentation, to describe this new ability.
 
+* Added support for CPC energy management operations:
+
+  - ``Cpc.set_power_save()`` (HMC: "Set CPC Power Save")
+  - ``Cpc.set_power_capping()`` (HMC: "Set CPC Power Capping")
+  - ``Cpc.get_energy_management_properties()`` (HMC: "Get CPC Energy
+    Management Data")
+
 **Known issues:**
 
 * See `list of open issues`_.

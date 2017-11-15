@@ -59,6 +59,7 @@ from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
 from ._logging import get_logger, logged_api_call
+from ._exceptions import ParseError
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -828,3 +829,256 @@ class Cpc(BaseResource):
         all_domains = set(range(0, max_domains))
         free_domains = all_domains - used_domains
         return sorted(list(free_domains))
+
+    @logged_api_call
+    def set_power_save(self, power_saving, wait_for_completion=True,
+                       operation_timeout=None):
+        """
+        Set the power save setting of this CPC.
+
+        The current power save setting in effect for a CPC is described in the
+        "cpc-power-saving" property of the CPC.
+
+        This method performs the HMC operation "Set CPC Power Save". It
+        requires that the feature "Automate/advanced management suite"
+        (FC 0020) is installed and enabled, and fails otherwise.
+
+        This method will also fail if the CPC is under group control.
+
+        Whether a CPC currently allows this method is described in the
+        "cpc-power-save-allowed" property of the CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "Power Save" task.
+
+        Parameters:
+
+          power_saving (:term:`string`):
+            The new power save setting, with the possible values:
+
+            * "high-performance" - The power consumption and performance of
+              the CPC are not reduced. This is the default setting.
+            * "low-power" - Low power consumption for all components of the
+              CPC enabled for power saving.
+            * "custom" - Components may have their own settings changed
+              individually. No component settings are actually changed when
+              this mode is entered.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: See the HTTP status and reason codes of
+            operation "Set CPC Power Save" in the :term:`HMC API` book.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {'power-saving': power_saving}
+        result = self.manager.session.post(
+            self.uri + '/operations/set-cpc-power-save',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        if wait_for_completion:
+            # The HMC API book does not document what the result data of the
+            # completed job is. It turns out that the completed job has this
+            # dictionary as its result data:
+            #    {'message': 'Operation executed successfully'}
+            # We transform that to None.
+            return None
+        return result
+
+    @logged_api_call
+    def set_power_capping(self, power_capping_state, power_cap=None,
+                          wait_for_completion=True, operation_timeout=None):
+        """
+        Set the power capping settings of this CPC. The power capping settings
+        of a CPC define whether or not the power consumption of the CPC is
+        limited and if so, what the limit is. Use this method to limit the
+        peak power consumption of a CPC, or to remove a power consumption
+        limit for a CPC.
+
+        The current power capping settings in effect for a CPC are described in
+        the "cpc-power-capping-state" and "cpc-power-cap-current" properties of
+        the CPC.
+
+        This method performs the HMC operation "Set CPC Power Capping". It
+        requires that the feature "Automate/advanced management suite"
+        (FC 0020) is installed and enabled, and fails otherwise.
+
+        This method will also fail if the CPC is under group control.
+
+        Whether a CPC currently allows this method is described in the
+        "cpc-power-cap-allowed" property of the CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "Power Capping" task.
+
+        Parameters:
+
+          power_capping_state (:term:`string`):
+            The power capping state to be set, with the possible values:
+
+            * "disabled" - The power cap of the CPC is not set and the peak
+              power consumption is not limited. This is the default setting.
+            * "enabled" - The peak power consumption of the CPC is limited to
+              the specified power cap value.
+            * "custom" - Individually configure the components for power
+              capping. No component settings are actually changed when this
+              mode is entered.
+
+          power_cap (:term:`integer`):
+            The power cap value to be set, as a power consumption in Watt. This
+            parameter is required not to be `None` if
+            `power_capping_state="enabled"`.
+
+            The specified value must be between the values of the CPC
+            properties "cpc-power-cap-minimum" and "cpc-power-cap-maximum".
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: See the HTTP status and reason codes of
+            operation "Set CPC Power Save" in the :term:`HMC API` book.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {'power-capping-state': power_capping_state}
+        if power_cap is not None:
+            body['power-cap-current'] = power_cap
+        result = self.manager.session.post(
+            self.uri + '/operations/set-cpc-power-capping',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        if wait_for_completion:
+            # The HMC API book does not document what the result data of the
+            # completed job is. Just in case there is similar behavior to the
+            # "Set CPC Power Save" operation, we transform that to None.
+            # TODO: Verify job result of a completed "Set CPC Power Capping".
+            return None
+        return result
+
+    @logged_api_call
+    def get_energy_management_properties(self):
+        """
+        Return the energy management properties of the CPC.
+
+        The returned energy management properties are a subset of the
+        properties of the CPC resource, and are also available as normal
+        properties of the CPC resource. In so far, there is no new data
+        provided by this method. However, because only a subset of the
+        properties is returned, this method is faster than retrieving the
+        complete set of CPC properties (e.g. via
+        :meth:`~zhmcclient.BaseResource.pull_full_properties`).
+
+        This method performs the HMC operation "Get CPC Energy Management
+        Data", and returns only the energy management properties for this CPC
+        from the operation result. Note that in non-ensemble mode of a CPC, the
+        HMC operation result will only contain data for the CPC alone.
+
+        It requires that the feature "Automate/advanced management suite"
+        (FC 0020) is installed and enabled, and returns empty values for most
+        properties, otherwise.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+
+        Returns:
+
+          dict: A dictionary of properties of the CPC that are related to
+          energy management. For details, see section "Energy management
+          related additional properties" in the data model for the CPC
+          resource in the :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: See the HTTP status and reason codes of
+            operation "Get CPC Energy Management Data" in the :term:`HMC API`
+            book.
+          :exc:`~zhmcclient.ParseError`: Also raised by this method when the
+            JSON response could be parsed but contains inconsistent data.
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        result = self.manager.session.get(self.uri + '/energy-management-data')
+        em_list = result['objects']
+        if len(em_list) != 1:
+            uris = [em_obj['object-uri'] for em_obj in em_list]
+            raise ParseError("Energy management data returned for no resource "
+                             "or for more than one resource: %r" % uris)
+        em_cpc_obj = em_list[0]
+        if em_cpc_obj['object-uri'] != self.uri:
+            raise ParseError("Energy management data returned for an "
+                             "unexpected resource: %r" %
+                             em_cpc_obj['object-uri'])
+        if em_cpc_obj['error-occurred']:
+            raise ParseError("Errors occurred when retrieving energy "
+                             "management data for CPC. Operation result: %r" %
+                             result)
+        cpc_props = em_cpc_obj['properties']
+        return cpc_props
