@@ -513,6 +513,54 @@ Virtual Switches
    .. rubric:: Details
 
 
+.. _`Storage Groups`:
+
+Storage Groups
+-----------------
+
+.. automodule:: zhmcclient._storage_group
+
+.. autoclass:: zhmcclient.StorageGroupManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageGroup
+   :members:
+   :special-members: __str__
+
+
+.. _`Storage Volumes`:
+
+Storage Volumes
+-----------------
+
+.. automodule:: zhmcclient._storage_volume
+
+.. autoclass:: zhmcclient.StorageVolumeManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageVolume
+   :members:
+   :special-members: __str__
+
+
+.. _`Virtual Storage Resources`:
+
+Virtual Storage Resources
+-------------------------
+
+.. automodule:: zhmcclient._virtual_storage_resource
+
+.. autoclass:: zhmcclient.VirtualStorageResourceManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.VirtualStorageResource
+   :members:
+   :special-members: __str__
+
+
 .. _`Console`:
 
 Console

@@ -51,6 +51,7 @@ __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedPortManager', 'FakedPort',
            'FakedVirtualFunctionManager', 'FakedVirtualFunction',
            'FakedVirtualSwitchManager', 'FakedVirtualSwitch',
+           'FakedStorageGroupManager', 'FakedStorageGroup',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
            ]
@@ -761,6 +762,8 @@ class FakedConsole(FakedBaseResource):
         super(FakedConsole, self).__init__(
             manager=manager,
             properties=properties)
+        self._storage_groups = FakedStorageGroupManager(
+            hmc=manager.hmc, console=self)
         self._users = FakedUserManager(hmc=manager.hmc, console=self)
         self._user_roles = FakedUserRoleManager(hmc=manager.hmc, console=self)
         self._user_patterns = FakedUserPatternManager(
@@ -784,6 +787,7 @@ class FakedConsole(FakedBaseResource):
             "  _manager._parent._uri = {parent_uri!r}\n"
             "  _uri = {_uri!r}\n"
             "  _properties = {_properties}\n"
+            "  _storage_groups = {_storage_groups}\n"
             "  _users = {_users}\n"
             "  _user_roles = {_user_roles}\n"
             "  _user_patterns = {_user_patterns}\n"
@@ -799,6 +803,7 @@ class FakedConsole(FakedBaseResource):
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
                 _properties=repr_dict(self.properties, indent=2),
+                _storage_groups=repr_manager(self.storage_groups, indent=2),
                 _users=repr_manager(self.users, indent=2),
                 _user_roles=repr_manager(self.user_roles, indent=2),
                 _user_patterns=repr_manager(self.user_patterns, indent=2),
@@ -809,6 +814,14 @@ class FakedConsole(FakedBaseResource):
                 _unmanaged_cpcs=repr_manager(self.unmanaged_cpcs, indent=2),
             ))
         return ret
+
+    @property
+    def storage_groups(self):
+        """
+        :class:`~zhmcclient_mock.FakedStorageGroupManager`: Access to the faked
+        Storage Group resources of this Console.
+        """
+        return self._storage_groups
 
     @property
     def users(self):
@@ -2513,6 +2526,187 @@ class FakedVirtualSwitch(FakedBaseResource):
             properties=properties)
         if 'connected-vnic-uris' not in self.properties:
             self.properties['connected-vnic-uris'] = []
+
+
+class FakedStorageGroupManager(FakedBaseManager):
+    """
+    A manager for faked StorageGroup resources within a faked Console (see
+    :class:`zhmcclient_mock.FakedConsole`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedStorageGroupManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedStorageGroup,
+            base_uri=self.api_root + '/storage-groups',
+            oid_prop='object-id',
+            uri_prop='object-uri',
+            class_value='storage-group')
+
+    def add(self, properties):
+        """
+        Add a faked StorageGroup resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'storage-group',
+              if not specified.
+            * 'storage-volume-uris' will be auto-generated as an empty array,
+              if not specified.
+            * 'shared' is auto-set to False, if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedStorageGroup`: The faked StorageGroup
+            resource.
+        """
+        return super(FakedStorageGroupManager, self).add(properties)
+
+
+class FakedStorageGroup(FakedBaseResource):
+    """
+    A faked StorageGroup resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedStorageGroup, self).__init__(
+            manager=manager,
+            properties=properties)
+        if 'storage-volume-uris' not in self.properties:
+            self.properties['storage-volume-uris'] = []
+        if 'shared' not in self.properties:
+            self.properties['shared'] = False
+        self._storage_volumes = FakedStorageVolumeManager(
+            hmc=manager.hmc, storage_group=self)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked StorageGroup resource, for
+        debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            "  _storage_volumes = {_storage_volumes}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=2),
+                _storage_volumes=repr_manager(self.storage_volumes, indent=2),
+            ))
+        return ret
+
+    @property
+    def storage_volumes(self):
+        """
+        :class:`~zhmcclient_mock.FakedStorageVolumeManager`: Access to the
+        faked StorageVolume resources of this StorageGroup.
+        """
+        return self._storage_volumes
+
+
+class FakedStorageVolumeManager(FakedBaseManager):
+    """
+    A manager for faked StorageVolume resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, storage_group):
+        super(FakedStorageVolumeManager, self).__init__(
+            hmc=hmc,
+            parent=storage_group,
+            resource_class=FakedStorageVolume,
+            base_uri=self.api_root + '/storage-groups',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='storage-volume')
+
+    def add(self, properties):
+        """
+        Add a faked StorageVolume resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'storage-group',
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedStorageVolume`: The faked StorageVolume
+            resource.
+        """
+        return super(FakedStorageVolumeManager, self).add(properties)
+
+
+class FakedStorageVolume(FakedBaseResource):
+    """
+    A faked StorageVolume resource within a faked StorageGroup (see
+    :class:`zhmcclient_mock.FakedStorageGroup`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedStorageVolume, self).__init__(
+            manager=manager,
+            properties=properties)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked StorageVolume resource,
+        for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=2),
+            ))
+        return ret
 
 
 class FakedMetricsContextManager(FakedBaseManager):

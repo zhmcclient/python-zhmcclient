@@ -71,6 +71,20 @@ Released: not yet
   machine generation. The DPM storage management feature is the first of these
   new firmware features.
 
+* Added support for the DPM storage management feature that is available starting
+  with the z14-ZR1 and LinuxONE Rockhopper II machine generation. This includes
+  new resources like Storage Groups, Storage Volumes, and Virtual Storage Resources.
+  It also includes new methods for managing storage group attachment to Partitions.
+  The new items in the documentation are:
+
+  - In 5.1. CPCs: `list_associated_storage_groups()`, `validate_lun_path()`.
+  - In 5.5. Partitions: `attach_storage_group()`, `detach_storage_group()`,
+    `list_attached_storage_groups()`.
+  - 5.12. Storage Groups
+  - 5.13. Storage Volumes
+  - 5.14. Virtual Storage Resources
+  - In 5.15 Console: `storage_groups`
+
 **Known issues:**
 
 * See `list of open issues`_.

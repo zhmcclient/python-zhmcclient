@@ -27,6 +27,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import get_logger, logged_api_call
 from ._utils import timestamp_from_datetime
+from ._storage_group import StorageGroupManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -186,6 +187,7 @@ class Console(BaseResource):
         super(Console, self).__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):
+        self._storage_groups = None
         self._users = None
         self._user_roles = None
         self._user_patterns = None
@@ -193,6 +195,17 @@ class Console(BaseResource):
         self._tasks = None
         self._ldap_server_definitions = None
         self._unmanaged_cpcs = None
+
+    @property
+    def storage_groups(self):
+        """
+        :class:`~zhmcclient.StorageGroupManager`:
+          Manager object for the Storage Groups in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_groups:
+            self._storage_groups = StorageGroupManager(self)
+        return self._storage_groups
 
     @property
     def users(self):

@@ -257,10 +257,18 @@ class Partition(BaseResource):
         """
         :class:`~zhmcclient.HbaManager`: Access to the :term:`HBAs <HBA>` in
         this Partition.
+
+        If the "dpm-storage-management" feature is enabled, this property is
+        `None`.
         """
         # We do here some lazy loading.
         if not self._hbas:
-            self._hbas = HbaManager(self)
+            try:
+                dpm_sm = self.feature_enabled('dpm-storage-management')
+            except ValueError:
+                dpm_sm = False
+            if not dpm_sm:
+                self._hbas = HbaManager(self)
         return self._hbas
 
     @property
@@ -1041,3 +1049,124 @@ class Partition(BaseResource):
                 'access-mode': access_mode}
         self.manager.session.post(
             self.uri + '/operations/change-crypto-domain-configuration', body)
+
+    @logged_api_call
+    def attach_storage_group(self, storage_group):
+        """
+        Attach a :term:`storage group` to this partition.
+
+        This will cause the :term:`storage volumes <storage volume>` of the
+        storage group to be attached to the partition, instantiating any
+        necessary :term:`virtual storage resource` objects.
+
+        A storage group can be attached to a partition regardless of its
+        fulfillment state. The fulfillment state of its storage volumes
+        and thus of the entire storage group changes as volumes are discovered
+        by DPM, and will eventually reach "complete".
+
+        The CPC must have the "dpm-storage-management" feature enabled.
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to the specified storage group.
+        * Task permission to the "Partition Details" task.
+
+        Parameters:
+
+          storage_group (:class:`~zhmcclient.StorageGroup`):
+            Storage group to be attached. The storage group must not currently
+            be attached to this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'storage-group-uri': storage_group.uri}
+        self.manager.session.post(
+            self.uri + '/operations/attach-storage-group', body)
+
+    @logged_api_call
+    def detach_storage_group(self, storage_group):
+        """
+        Detach a :term:`storage group` from this partition.
+
+        This will cause the :term:`storage volumes <storage volume>` of the
+        storage group to be detached from the partition, removing any
+        :term:`virtual storage resource` objects that had been created upon
+        attachment.
+
+        A storage group can be detached from a partition regardless of its
+        fulfillment state. The fulfillment state of its storage volumes
+        changes as volumes are discovered by DPM.
+
+        The CPC must have the "dpm-storage-management" feature enabled.
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Task permission to the "Partition Details" task.
+
+        Parameters:
+
+          storage_group (:class:`~zhmcclient.StorageGroup`):
+            Storage group to be detached. The storage group must currently
+            be attached to this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'storage-group-uri': storage_group.uri}
+        self.manager.session.post(
+            self.uri + '/operations/detach-storage-group', body)
+
+    @logged_api_call
+    def list_attached_storage_groups(self, full_properties=False):
+        """
+        Return the storage groups that are attached to this partition.
+
+        The CPC must have the "dpm-storage-management" feature enabled.
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Task permission to the "Partition Details" task.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls that the full set of resource properties for each returned
+            storage group is being retrieved, vs. only the following short set:
+            "object-uri", "object-id", "class", "parent".
+
+            TODO: Verify short list of properties.
+
+        Returns:
+
+          List of :class:`~zhmcclient.StorageGroup` objects representing the
+          storage groups that are attached to this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        sg_list = []
+        sg_uris = self.get_property('storage-group-uris')
+        if sg_uris:
+            cpc = self.manager.cpc
+            for sg_uri in sg_uris:
+                sg = cpc.storage_groups.resource_object(sg_uri)
+                sg_list.append(sg)
+                if full_properties:
+                    sg.pull_full_properties()
+        return sg_list

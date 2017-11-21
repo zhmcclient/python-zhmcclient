@@ -60,6 +60,19 @@ This documentation uses a few special terms:
       The HMC gives each newly created session-id a lifetime of 10 hours, and
       expires it after that.
 
+   fulfillment
+      The act of satisfying requests for creation, modification, or deletion of
+      storage volumes in a storage subsystem (i.e. of the actual storage
+      backing a :term:`storage volume` object).
+
+      Storage volume objects have a fulfillment state indicating whether the
+      volume is fulfilled, which means that the request for creation or
+      modification has been carried out and the state of the backing volume is
+      now in sync with the storage volume object.
+
+      :term:`Storage group` objects also have a fulfillment state indicating
+      whether all of its storage volumes are fulfilled.
+
 
 .. _`Special type names`:
 
@@ -244,6 +257,9 @@ Resources scoped to CPCs in DPM mode
 
      For details, see section :ref:`HBAs`.
 
+     HBA resource objects only exist when the "dpm-storage-management" feature
+     is not enabled. See section :ref:`Storage Groups` for details.
+
   Network Adapter
      Short term for an :term:`Adapter` for attaching networks (e.g. OSA-Express
      adapter).
@@ -272,8 +288,28 @@ Resources scoped to CPCs in DPM mode
   Storage Adapter
      Short term for an :term:`Adapter` for attaching storage.
 
+  Storage Group
+     A grouping entity for a set of FCP or ECKD (=FICON)
+     :term:`storage volumes <storage volume>`. A storage group can be attached
+     to a :term:`partition` which will cause its storage volumes to be attached
+     to the partition.
+
+     Storage Group objects exist only when the "dpm-storage-management"
+     feature is enabled on the CPC.
+     For details, see section :ref:`Storage Groups`.
+
   Storage Port
      Short term for a :term:`Port` of a :term:`Storage Adapter`.
+
+  Storage Volume
+     An FCP or ECKD (=FICON) storage volume defined in context of a
+     :term:`storage group`. The life cycle of a storage volume includes being
+     defined but not :term:`fulfilled <fulfillment>`, being fulfilled but not
+     attached, and finally being attached to a :term:`partition`.
+
+     Storage Volume objects exist only when the "dpm-storage-management"
+     feature is enabled on the CPC.
+     For details, see section :ref:`Storage Groups`.
 
   vHBA
      Synonym for :term:`HBA`. In this resource model, HBAs are always
@@ -285,6 +321,18 @@ Resources scoped to CPCs in DPM mode
      :term:`Accelerator Adapter`.
 
      For details, see section :ref:`Virtual functions`.
+
+  Virtual Storage Resource
+     A representation of a storage-related z/Architecture device in a
+     :term:`partition`. For FCP type storage volumes, a Virtual Storage
+     Resource object represents an :term:`HBA` through which the attached
+     storage volume is accessed. For FICON (ECKD) type storage volumes, a
+     Virtual Storage Resource object represents the attached storage volume
+     itself.
+
+     Virtual Storage Resource objects exist only when the
+     "dpm-storage-management" feature is enabled on the CPC.
+     For details, see section :ref:`Storage Groups`.
 
   Virtual Switch
      A virtualized networking switch connecting :term:`NICs <NIC>` with a

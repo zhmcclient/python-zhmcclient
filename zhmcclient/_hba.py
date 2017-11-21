@@ -20,7 +20,11 @@ an :term:`FCP Adapter`. More specifically, an HBA connects a Partition with an
 
 HBA resources are contained in Partition resources.
 
-HBAs only exist in :term:`CPCs <CPC>` that are in DPM mode.
+HBA resources only exist in :term:`CPCs <CPC>` that are in DPM mode and when
+the "dpm-storage-management" feature is not enabled. See section
+:ref:`Storage Groups` for details. When the "dpm-storage-management" feature is
+enabled, :term:`virtual HBAs <HBA>` are represented as
+:term:`Virtual Storage Resource` resources.
 """
 
 from __future__ import absolute_import
