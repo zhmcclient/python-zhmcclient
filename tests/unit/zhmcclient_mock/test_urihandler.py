@@ -46,7 +46,9 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     UserPatternsHandler, UserPatternHandler, \
     PasswordRulesHandler, PasswordRuleHandler, \
     LdapServerDefinitionsHandler, LdapServerDefinitionHandler, \
-    CpcsHandler, CpcHandler, CpcStartHandler, CpcStopHandler, \
+    CpcsHandler, CpcHandler, CpcSetPowerSaveHandler, \
+    CpcSetPowerCappingHandler, CpcGetEnergyManagementDataHandler, \
+    CpcStartHandler, CpcStopHandler, \
     CpcImportProfilesHandler, CpcExportProfilesHandler, \
     CpcExportPortNamesListHandler, \
     MetricsContextsHandler, MetricsContextHandler, \
@@ -2749,6 +2751,186 @@ class TestCpcHandlers(object):
 
         cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
         assert cpc1['description'] == 'updated cpc #1'
+
+
+class TestCpcSetPowerSaveHandler(object):
+    """All tests for class CpcSetPowerSaveHandler."""
+
+    def setup_method(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/set-cpc-power-save',
+             CpcSetPowerSaveHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    @pytest.mark.parametrize(
+        "power_saving, exp_error",
+        [
+            (None, (400, 7)),
+            ('invalid_power_save', (400, 7)),
+            ('high-performance', None),
+            ('low-power', None),
+            ('custom', None),
+        ]
+    )
+    def test_set_power_save(self, power_saving, exp_error):
+
+        operation_body = {
+            'power-saving': power_saving,
+        }
+
+        if exp_error:
+
+            with pytest.raises(HTTPError) as exc_info:
+                # the function to be tested:
+                resp = self.urihandler.post(
+                    self.hmc, '/api/cpcs/1/operations/set-cpc-power-save',
+                    operation_body, True, True)
+
+            exc = exc_info.value
+
+            assert exc.http_status == exp_error[0]
+            assert exc.reason == exp_error[1]
+
+        else:
+
+            # the function to be tested:
+            resp = self.urihandler.post(
+                self.hmc, '/api/cpcs/1/operations/set-cpc-power-save',
+                operation_body, True, True)
+
+            assert resp is None
+
+            cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
+
+            assert cpc1['cpc-power-saving'] == power_saving
+            assert cpc1['zcpc-power-saving'] == power_saving
+
+
+class TestCpcSetPowerCappingHandler(object):
+    """All tests for class CpcSetPowerCappingHandler."""
+
+    def setup_method(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/set-cpc-power-capping',
+             CpcSetPowerCappingHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    @pytest.mark.parametrize(
+        "power_capping_state, power_cap_current, exp_error",
+        [
+            (None, None, (400, 7)),
+            ('enabled', None, (400, 7)),
+            ('enabled', 20000, None),
+            ('disabled', None, None),
+        ]
+    )
+    def test_set_power_capping(self, power_capping_state, power_cap_current,
+                               exp_error):
+
+        operation_body = {
+            'power-capping-state': power_capping_state,
+        }
+        if power_cap_current is not None:
+            operation_body['power-cap-current'] = power_cap_current
+
+        if exp_error:
+
+            with pytest.raises(HTTPError) as exc_info:
+                # the function to be tested:
+                resp = self.urihandler.post(
+                    self.hmc, '/api/cpcs/1/operations/set-cpc-power-capping',
+                    operation_body, True, True)
+
+            exc = exc_info.value
+
+            assert exc.http_status == exp_error[0]
+            assert exc.reason == exp_error[1]
+
+        else:
+
+            # the function to be tested:
+            resp = self.urihandler.post(
+                self.hmc, '/api/cpcs/1/operations/set-cpc-power-capping',
+                operation_body, True, True)
+
+            assert resp is None
+
+            cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
+
+            assert cpc1['cpc-power-capping-state'] == power_capping_state
+            assert cpc1['cpc-power-cap-current'] == power_cap_current
+            assert cpc1['zcpc-power-capping-state'] == power_capping_state
+            assert cpc1['zcpc-power-cap-current'] == power_cap_current
+
+
+class TestCpcGetEnergyManagementDataHandler(object):
+    """All tests for class CpcGetEnergyManagementDataHandler."""
+
+    def setup_method(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/energy-management-data',
+             CpcGetEnergyManagementDataHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    @pytest.mark.parametrize(
+        "cpc_uri, energy_props",
+        [
+            ('/api/cpcs/1', {
+                'cpc-power-consumption': 14423,
+                'cpc-power-rating': 28000,
+                'cpc-power-save-allowed': 'allowed',
+                'cpc-power-saving': 'high-performance',
+                'cpc-power-saving-state': 'high-performance',
+                'zcpc-ambient-temperature': 26.7,
+                'zcpc-dew-point': 8.4,
+                'zcpc-exhaust-temperature': 29.0,
+                'zcpc-heat-load': 49246,
+                'zcpc-heat-load-forced-air': 10370,
+                'zcpc-heat-load-water': 38877,
+                'zcpc-humidity': 31,
+                'zcpc-maximum-potential-heat-load': 57922,
+                'zcpc-maximum-potential-power': 16964,
+                'zcpc-power-consumption': 14423,
+                'zcpc-power-rating': 28000,
+                'zcpc-power-save-allowed': 'under-group-control',
+                'zcpc-power-saving': 'high-performance',
+                'zcpc-power-saving-state': 'high-performance',
+            }),
+        ]
+    )
+    def test_get_energy_management_data(self, cpc_uri, energy_props):
+
+        # Setup the energy properties of the CPC
+        self.urihandler.post(self.hmc, cpc_uri, energy_props, True, True)
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc, cpc_uri + '/operations/energy-management-data', True)
+
+        em_objs = resp['objects']
+        assert len(em_objs) == 1
+
+        cpc_data = em_objs[0]
+        assert cpc_data['object-uri'] == cpc_uri
+        assert cpc_data['object-id'] in cpc_uri
+        assert cpc_data['class'] == 'cpcs'
+        assert cpc_data['error-occurred'] is False
+
+        act_energy_props = cpc_data['properties']
+        for p in energy_props:
+            exp_value = energy_props[p]
+
+            assert p in act_energy_props
+            assert act_energy_props[p] == exp_value
 
 
 class TestCpcStartStopHandler(object):

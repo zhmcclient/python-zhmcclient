@@ -39,6 +39,7 @@ CPC3_OID = 'cpc3-oid'
 HTTPError_404_1 = HTTPError({'http-status': 404, 'reason': 1})
 HTTPError_409_5 = HTTPError({'http-status': 409, 'reason': 5})
 HTTPError_409_4 = HTTPError({'http-status': 409, 'reason': 4})
+HTTPError_400_7 = HTTPError({'http-status': 400, 'reason': 7})
 
 # Names of our faked crypto adapters:
 CRYPTO1_NAME = 'crypto 1'
@@ -978,3 +979,166 @@ class TestCpc(object):
 
         # Verify the result
         assert act_free_domains == exp_free_domains
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, power_saving, exp_error", [
+            (CPC1_NAME, 'high-performance', None),
+            (CPC1_NAME, 'low-power', None),
+            (CPC1_NAME, 'custom', None),
+            (CPC1_NAME, None, HTTPError_400_7),
+            (CPC1_NAME, 'invalid', HTTPError_400_7),
+        ]
+    )
+    def test_cpc_set_power_save(self, cpc_name, power_saving, exp_error,
+                                wait_for_completion):
+        """Test Cpc.set_power_save()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        self.add_cpc(cpc_name)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.set_power_save(
+                    power_saving, wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.set_power_save(
+                power_saving, wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplemented
+
+            cpc.pull_full_properties()
+
+            assert cpc.properties['cpc-power-saving'] == power_saving
+            assert cpc.properties['cpc-power-saving-state'] == power_saving
+            assert cpc.properties['zcpc-power-saving'] == power_saving
+            assert cpc.properties['zcpc-power-saving-state'] == power_saving
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, power_capping_state, power_cap, exp_error", [
+            (CPC1_NAME, 'disabled', None, None),
+            (CPC1_NAME, 'enabled', 20000, None),
+            (CPC1_NAME, 'enabled', None, HTTPError_400_7),
+            (CPC1_NAME, None, None, HTTPError_400_7),
+            (CPC1_NAME, 'invalid', None, HTTPError_400_7),
+        ]
+    )
+    def test_cpc_set_power_capping(self, cpc_name, power_capping_state,
+                                   power_cap, exp_error, wait_for_completion):
+        """Test Cpc.set_power_capping()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        self.add_cpc(cpc_name)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.set_power_capping(
+                    power_capping_state, power_cap,
+                    wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.set_power_capping(
+                power_capping_state, power_cap,
+                wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplemented
+
+            cpc.pull_full_properties()
+
+            assert cpc.properties['cpc-power-capping-state'] == \
+                power_capping_state
+            assert cpc.properties['cpc-power-cap-current'] == power_cap
+            assert cpc.properties['zcpc-power-capping-state'] == \
+                power_capping_state
+            assert cpc.properties['zcpc-power-cap-current'] == power_cap
+
+    @pytest.mark.parametrize(
+        "cpc_name, energy_props", [
+            (CPC1_NAME, {
+                'cpc-power-consumption': 14423,
+                'cpc-power-rating': 28000,
+                'cpc-power-save-allowed': 'allowed',
+                'cpc-power-saving': 'high-performance',
+                'cpc-power-saving-state': 'high-performance',
+                'zcpc-ambient-temperature': 26.7,
+                'zcpc-dew-point': 8.4,
+                'zcpc-exhaust-temperature': 29.0,
+                'zcpc-heat-load': 49246,
+                'zcpc-heat-load-forced-air': 10370,
+                'zcpc-heat-load-water': 38877,
+                'zcpc-humidity': 31,
+                'zcpc-maximum-potential-heat-load': 57922,
+                'zcpc-maximum-potential-power': 16964,
+                'zcpc-power-consumption': 14423,
+                'zcpc-power-rating': 28000,
+                'zcpc-power-save-allowed': 'under-group-control',
+                'zcpc-power-saving': 'high-performance',
+                'zcpc-power-saving-state': 'high-performance',
+            }),
+        ]
+    )
+    def test_cpc_get_energy_management_properties(
+            self, cpc_name, energy_props):
+        """Test Cpc.get_energy_management_properties()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+        faked_cpc.properties.update(energy_props)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        # Execute the code to be tested
+        act_energy_props = cpc.get_energy_management_properties()
+
+        assert isinstance(act_energy_props, dict)
+        cpc.pull_full_properties()
+
+        for p in energy_props:
+            exp_value = energy_props[p]
+
+            # Verify returned energy properties
+            assert p in act_energy_props
+            assert act_energy_props[p] == exp_value
+
+            # Verify consistency of returned energy properties with CPC props
+            assert p in cpc.properties
+            assert cpc.properties[p] == exp_value
