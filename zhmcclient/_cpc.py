@@ -1201,3 +1201,141 @@ class Cpc(BaseResource):
                              result)
         cpc_props = em_cpc_obj['properties']
         return cpc_props
+
+    @logged_api_call
+    def list_associated_storage_groups(
+            self, full_properties=False, filter_args=None):
+        """
+        Return the :term:`storage groups <storage group>` that are associated
+        to this CPC.
+
+        If the CPC does not support the "dpm-storage-management" feature, or
+        does not have it enabled, an empty list is returned.
+
+        Storage groups for which the authenticated user does not have
+        object-access permission are not included.
+
+        Authorization requirements:
+
+        * Object-access permission to any storage groups to be included in the
+          result.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls that the full set of resource properties for each returned
+            storage group is being retrieved, vs. only the following short set:
+            "object-uri", "cpc-uri", "name", "fulfillment-state", and
+            "type".
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen.
+
+            The 'cpc-uri' property is automatically added to the filter
+            arguments and must not be specified in this parameter.
+
+        Returns:
+
+          : A list of :class:`~zhmcclient.StorageGroup` objects.
+
+        Raises:
+
+          ValueError: The filter_args parameter specifies the 'cpc-uri'
+            property
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+
+        if filter_args is None:
+            filter_args = {}
+        else:
+            filter_args = filter_args.copy()
+        if 'cpc-uri' in filter_args:
+            raise ValueError(
+                "The filter_args parameter specifies the 'cpc-uri' property "
+                "with value: %s" % filter_args['cpc-uri'])
+        filter_args['cpc-uri'] = self.uri
+
+        sg_list = self.manager.console.storage_groups.list(
+            full_properties, filter_args)
+
+        return sg_list
+
+    @logged_api_call
+    def validate_lun_path(self, host_wwpn, host_port, wwpn, lun):
+        """
+        Validate if an FCP storage volume on an actual storage subsystem is
+        reachable from this CPC, through a specified host port and using
+        a specified host WWPN.
+
+        This method performs the "Validate LUN Path" HMC operation.
+
+        If the volume is reachable, the method returns. If the volume is not
+        reachable (and no other errors occur), an :exc:`~zhmcclient.HTTPError`
+        is raised, and its :attr:`~zhmcclient.HTTPError.reason` property
+        indicates the reason as follows:
+
+        * 484: Target WWPN cannot be reached.
+        * 485: Target WWPN can be reached, but LUN cannot be reached.
+
+        The CPC must have the "dpm-storage-management" feature enabled.
+
+        Parameters:
+
+          host_wwpn (:term:`string`):
+            World wide port name (WWPN) of the host (CPC),
+            as a hexadecimal number of up to 16 characters in any lexical case.
+
+            This may be the WWPN of the physical storage port, or a WWPN of a
+            virtual HBA. In any case, it must be the kind of WWPN that is used
+            for zoning and LUN masking in the SAN.
+
+          host_port (:class:`~zhmcclient.Port`):
+            Storage port on the CPC that will be used for validating
+            reachability.
+
+          wwpn (:term:`string`):
+            World wide port name (WWPN) of the FCP storage subsystem containing
+            the storage volume,
+            as a hexadecimal number of up to 16 characters in any lexical case.
+
+          lun (:term:`string`):
+            Logical Unit Number (LUN) of the storage volume within its FCP
+            storage subsystem,
+            as a hexadecimal number of up to 16 characters in any lexical case.
+
+        Authorization requirements:
+
+        * Object-access permission to the storage group owning this storage
+          volume.
+        * Task permission to the "Configure Storage - Storage Administrator"
+          task.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+
+        # The operation requires exactly 16 characters in lower case
+        host_wwpn_16 = format(int(host_wwpn, 16), '016x')
+        wwpn_16 = format(int(wwpn, 16), '016x')
+        lun_16 = format(int(lun, 16), '016x')
+
+        body = {
+            'host-world-wide-port-name': host_wwpn_16,
+            'adapter-port-uri': host_port.uri,
+            'target-world-wide-port-name': wwpn_16,
+            'logical-unit-number': lun_16,
+        }
+        self.manager.session.post(
+            self.uri + '/operations/validate-lun-path',
+            body=body)

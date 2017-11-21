@@ -85,6 +85,13 @@ examples:
         - "Crypto 0124 A13B-12"
       #loglevel: info
       #timestats: yes
+   list_storage_groups:
+      hmc: "192.168.111.5"
+      cpcname: DPMSE2
+      #sgname: BigOne
+      #loglevel: info
+      #logmodule: zhmcclient._session
+      #timestats: yes
 
 "192.168.111.5":
    userid: ensadmin

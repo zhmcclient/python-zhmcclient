@@ -1999,6 +1999,237 @@ class VirtualSwitchGetVnicsHandler(object):
         return {'connected-vnic-uris': connected_vnic_uris}
 
 
+class StorageGroupsHandler(object):
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        """Operation: List Storage Groups (always global but with filters)."""
+        query_str = uri_parms[0]
+        filter_args = parse_query_parms(method, uri, query_str)
+        result_storage_groups = []
+        for sg in hmc.consoles.console.storage_groups.list(filter_args):
+            result_sg = {}
+            for prop in sg.properties:
+                if prop in ('object-uri', 'cpc-uri', 'name', 'status',
+                            'fulfillment-state', 'type'):
+                    result_sg[prop] = sg.properties[prop]
+            result_storage_groups.append(result_sg)
+        return {'storage-groups': result_storage_groups}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Create Storage Group."""
+        assert wait_for_completion is True  # async not supported yet
+        check_required_fields(method, uri, body, ['name', 'cpc-uri', 'type'])
+        cpc_uri = body['cpc-uri']
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+
+        # Reflect the result of creating the storage group
+
+        body2 = body.copy()
+        sv_requests = body2.pop('storage-volumes', None)
+        new_storage_group = hmc.consoles.console.storage_groups.add(body2)
+
+        sv_uris = []
+        if sv_requests:
+            for sv_req in sv_requests:
+                check_required_fields(method, uri, sv_req, ['operation'])
+                operation = sv_req['operation']
+                if operation == 'create':
+                    sv_props = sv_req.copy()
+                    del sv_props['operation']
+                    if 'element-uri' in sv_props:
+                        raise BadRequestError(
+                            method, uri, 7,
+                            "The 'element-uri' field in storage-volumes is "
+                            "invalid for the create operation")
+                    sv_uri = new_storage_group.storage_volumes.add(sv_props)
+                    sv_uris.append(sv_uri)
+                else:
+                    raise BadRequestError(
+                        method, uri, 5,
+                        "Invalid value for storage-volumes 'operation' "
+                        "field: %s" % operation)
+
+        return {
+            'object-uri': new_storage_group.uri,
+            'element-uris': sv_uris,
+        }
+
+
+class StorageGroupHandler(GenericGetPropertiesHandler):
+    pass
+
+
+class StorageGroupModifyHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Modify Storage Group Properties."""
+        assert wait_for_completion is True  # async not supported yet
+        # The URI is a POST operation, so we need to construct the SG URI
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            storage_group = hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+
+        # Reflect the result of modifying the storage group
+
+        body2 = body.copy()
+        sv_requests = body2.pop('storage-volumes', None)
+        storage_group.update(body2)
+
+        sv_uris = []
+        if sv_requests:
+            for sv_req in sv_requests:
+                check_required_fields(method, uri, sv_req, ['operation'])
+                operation = sv_req['operation']
+                if operation == 'create':
+                    sv_props = sv_req.copy()
+                    del sv_props['operation']
+                    if 'element-uri' in sv_props:
+                        raise BadRequestError(
+                            method, uri, 7,
+                            "The 'element-uri' field in storage-volumes is "
+                            "invalid for the create operation")
+                    sv_uri = storage_group.storage_volumes.add(sv_props)
+                    sv_uris.append(sv_uri)
+                elif operation == 'modify':
+                    check_required_fields(method, uri, sv_req, ['element-uri'])
+                    sv_uri = sv_req['element-uri']
+                    storage_volume = hmc.lookup_by_uri(sv_uri)
+                    storage_volume.update_properties(sv_props)
+                elif operation == 'delete':
+                    check_required_fields(method, uri, sv_req, ['element-uri'])
+                    sv_uri = sv_req['element-uri']
+                    storage_volume = hmc.lookup_by_uri(sv_uri)
+                    storage_volume.delete()
+                else:
+                    raise BadRequestError(
+                        method, uri, 5,
+                        "Invalid value for storage-volumes 'operation' "
+                        "field: %s" % operation)
+
+        return {
+            'element-uris': sv_uris,  # SVs created, maintaining the order
+        }
+
+
+class StorageGroupDeleteHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Delete Storage Group."""
+        assert wait_for_completion is True  # async not supported yet
+        # The URI is a POST operation, so we need to construct the SG URI
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            storage_group = hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+
+        # TODO: Check that the SG is detached from any partitions
+
+        # Reflect the result of deleting the storage_group
+        storage_group.manager.remove(storage_group.oid)
+
+
+class StorageGroupRequestFulfillmentHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Request Storage Group Fulfillment."""
+        assert wait_for_completion is True  # async not supported yet
+        # The URI is a POST operation, so we need to construct the SG URI
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+
+        # Reflect the result of requesting fulfilment for the storage group
+        pass
+
+
+class StorageGroupAddCandidatePortsHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Add Candidate Adapter Ports to an FCP Storage Group."""
+        assert wait_for_completion is True  # async not supported yet
+        # The URI is a POST operation, so we need to construct the SG URI
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            storage_group = hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+
+        check_required_fields(method, uri, body, ['adapter-port-uris'])
+
+        # TODO: Check that storage group has type FCP
+
+        # Reflect the result of adding the candidate ports
+        candidate_adapter_port_uris = \
+            storage_group.properties['candidate-adapter-port-uris']
+        for ap_uri in body['adapter-port-uris']:
+            if ap_uri in candidate_adapter_port_uris:
+                raise ConflictError(method, uri, 483,
+                                    "Adapter port is already in candidate "
+                                    "list of storage group %s: %s" %
+                                    (storage_group.name, ap_uri))
+            else:
+                candidate_adapter_port_uris.append(ap_uri)
+
+
+class StorageGroupRemoveCandidatePortsHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Remove Candidate Adapter Ports from an FCP Storage
+        Group."""
+        assert wait_for_completion is True  # async not supported yet
+        # The URI is a POST operation, so we need to construct the SG URI
+        storage_group_oid = uri_parms[0]
+        storage_group_uri = '/api/storage-groups/' + storage_group_oid
+        try:
+            storage_group = hmc.lookup_by_uri(storage_group_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+
+        check_required_fields(method, uri, body, ['adapter-port-uris'])
+
+        # TODO: Check that storage group has type FCP
+
+        # Reflect the result of adding the candidate ports
+        candidate_adapter_port_uris = \
+            storage_group.properties['candidate-adapter-port-uris']
+        for ap_uri in body['adapter-port-uris']:
+            if ap_uri not in candidate_adapter_port_uris:
+                raise ConflictError(method, uri, 479,
+                                    "Adapter port is not in candidate "
+                                    "list of storage group %s: %s" %
+                                    (storage_group.name, ap_uri))
+            else:
+                candidate_adapter_port_uris.remove(ap_uri)
+
+
 class LparsHandler(object):
 
     @staticmethod
@@ -2414,6 +2645,19 @@ URIS = (
     (r'/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
     (r'/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
      VirtualSwitchGetVnicsHandler),
+
+    (r'/api/storage-groups(?:\?(.*))?', StorageGroupsHandler),
+    (r'/api/storage-groups/([^/]+)', StorageGroupHandler),
+    (r'/api/storage-groups/([^/]+)/operations/delete',
+     StorageGroupDeleteHandler),
+    (r'/api/storage-groups/([^/]+)/operations/modify',
+     StorageGroupModifyHandler),
+    (r'/api/storage-groups/([^/]+)/operations/request-fulfillment',
+     StorageGroupRequestFulfillmentHandler),
+    (r'/api/storage-groups/([^/]+)/operations/add-candidate-adapter-ports',
+     StorageGroupAddCandidatePortsHandler),
+    (r'/api/storage-groups/([^/]+)/operations/remove-candidate-adapter-ports',
+     StorageGroupRemoveCandidatePortsHandler),
 
     # Only in classic (or ensemble) mode:
 
