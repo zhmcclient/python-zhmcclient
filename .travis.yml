@@ -13,6 +13,15 @@ notifications:
 # and an empty 'python' variable in order to prevent that Travis attempts
 # to install Python.
 # TODO: Figure out how specific versions of Python 3.x can be used with OS-X
+
+# Travis@ibm creates one default job in addition, so we need to overwrite
+# the default job with our first real job, and have matrix.inlucde add to it.
+os: linux
+language: python
+python: "2.7"
+env:
+  - PACKAGE_LEVEL=latest
+
 matrix:
   include:
     - os: linux
@@ -20,11 +29,6 @@ matrix:
       python: "2.7"
       env:
         - PACKAGE_LEVEL=minimum
-    - os: linux
-      language: python
-      python: "2.7"
-      env:
-        - PACKAGE_LEVEL=latest
     - os: linux
       language: python
       python: "3.4"
@@ -135,6 +139,7 @@ install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       virtualenv venv -p $PYTHON_CMD && source venv/bin/activate;
     fi
+  - env |sort |grep TRAVIS_
   - make pyshow
   - $PIP_CMD list
   - make install
