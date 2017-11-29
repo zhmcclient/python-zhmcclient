@@ -97,3 +97,13 @@ examples:
 "192.168.111.209":
    userid: ensadmin
    password: 1234
+
+cpcs:
+
+  P0000P05:
+    description: "EC12"
+    contact: "Joe"
+    hmc_host: "192.168.111.5"
+    hmc_userid: ensadmin
+    hmc_password: 1234
+

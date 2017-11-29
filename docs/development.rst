@@ -126,6 +126,106 @@ The positional arguments of the ``tox`` command are passed to ``py.test`` using
 its ``-k`` option. Invoke ``py.test --help`` for details on the expression
 syntax of its ``-k`` option.
 
+Running function tests against a real HMC and CPC
+-------------------------------------------------
+
+The function tests (in ``tests/function/test_*.py``) can be run against a
+faked HMC/CPC (using the zhmcclient mock support), or against a real HMC/CPC.
+
+By default, the function tests are run against the faked HMC/CPC. To run them
+against a real HMC/CPC, you must:
+
+* Specify the name of the target CPC in the ``ZHMC_TEST_CPC`` environment
+  variable. This environment variable is the control point that decides
+  between using a real HMC/CPC and using the faked environment::
+
+      export ZHMC_TEST_CPC=S67B
+
+* Have an HMC credentials file at location ``examples/hmccreds.yaml`` that
+  specifies the target CPC (among possibly further CPCs) in its ``cpcs`` item::
+
+      cpcs:
+
+        S67B:
+          description: "z13s in DPM mode"
+          contact: "Joe"
+          hmc_host: "10.11.12.13"
+          hmc_userid: myuserid
+          hmc_password: mypassword
+
+        # ... more CPCs
+
+There is an example HMC credentials file in the repo, at
+``examples/example_hmccreds.yaml``. For a description of its format, see
+`Format of the HMC credentials file`_.
+
+Enabling logging for function tests
+-----------------------------------
+
+The function tests always log to stderr. What can be logged are the
+following two components:
+
+* ``api``: Calls to and returns from zhmcclient API functions (at debug level).
+* ``hmc``: Interactions with the HMC (i.e. HTTP requests and responses, at
+  debug level).
+
+By default, the log component and level is set to::
+
+    all=warning
+
+meaning that all components log at warning level or higher.
+
+To set different log levels for the log components, set the ``ZHMC_LOG``
+environment variable as follows::
+
+    export ZHMC_LOG=COMP=LEVEL[,COMP=LEVEL[,...]]
+
+Where:
+
+* ``COMP`` is one of: ``all``, ``api``, ``hmc``.
+* ``LEVEL`` is one of: ``error``, ``warning``, ``info``, ``debug``.
+
+For example, to enable logging of the zhmcclient API calls and the
+interactions with the HMC, use::
+
+    export ZHMC_LOG=api=debug,hmc=debug
+
+or, shorter::
+
+    export ZHMC_LOG=all=debug
+
+Format of the HMC credentials file
+----------------------------------
+
+The HMC credentials file is used for specifying real HMCs/CPCs to be used by
+function tests. Its syntax is YAML, and the ``cpcs`` item relevant for function
+testing has the following structure::
+
+    cpcs:
+
+      "CPC1":
+        description: "z13 test system"
+        contact: "Amy"
+        hmc_host: "10.10.10.11"           # required
+        hmc_userid: "myuser1"             # required
+        hmc_password: "mypassword1"       # required
+
+      "CPC2":
+        description: "z14 development system"
+        contact: "Bob"
+        hmc_host: "10.10.10.12"
+        hmc_userid: "myuser2"
+        hmc_password: "mypassword2"
+
+In the example above, any words in double quotes are data and can change,
+and any words without double quotes are considered keywords and must be
+specified as shown.
+
+"CPC1" and "CPC2" are CPC names that are used to select an entry in the
+file. The entry for a CPC contains data about the HMC managing that CPC,
+with its host, userid and password. If two CPCs are managed by the same
+HMC, there would be two CPC entries with the same HMC data.
+
 
 .. _`Contributing`:
 
