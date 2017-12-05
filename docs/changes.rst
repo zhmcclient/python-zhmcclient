@@ -84,6 +84,9 @@ Released: not yet
   - ``Cpc.get_energy_management_properties()`` (HMC: "Get CPC Energy
     Management Data")
 
+* The zhmcclient package no longer adds a NullHandler to the Python root
+  logger (but still to the zhmcclient.api/.hmc loggers).
+
 **Known issues:**
 
 * See `list of open issues`_.

@@ -79,12 +79,12 @@ def get_logger(name):
     Return a :class:`~py:logging.Logger` object with the specified name.
 
     A :class:`~py:logging.NullHandler` handler is added to the logger if it
-    does not have any handlers yet. This prevents the propagation of log
-    requests up the Python logger hierarchy, and therefore causes this package
-    to be silent by default.
+    does not have any handlers yet and if it is not the Python root logger.
+    This prevents the propagation of log requests up the Python logger
+    hierarchy, and therefore causes this package to be silent by default.
     """
     logger = logging.getLogger(name)
-    if not logger.handlers:
+    if name != '' and not logger.handlers:
         logger.addHandler(logging.NullHandler())
     return logger
 

@@ -115,6 +115,9 @@ test_py_files := \
     $(wildcard $(test_dir)/*/*.py) \
     $(wildcard $(test_dir)/*/*/*.py) \
 
+# Determine whether py.test has the --no-print-logs option.
+pytest_no_log_opt := $(shell py.test --help |grep '\--no-print-logs' >/dev/null; rc=$$?; if [[ $$rc == 0 ]]; then echo '--no-print-logs'; else echo ''; fi)
+
 # Flake8 config file
 flake8_rc_file := setup.cfg
 
@@ -368,6 +371,6 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 
 $(test_log_file): Makefile $(package__py_files) $(test_py_files) .coveragerc
 	rm -fv $@
-	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test -s $(test_dir) --cov $(package_name) --cov zhmcclient_mock --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
+	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test $(pytest_no_log_opt) -s $(test_dir) --cov $(package_name) --cov zhmcclient_mock --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
 	@echo 'Done: Created test log file: $@'

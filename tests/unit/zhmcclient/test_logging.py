@@ -291,25 +291,21 @@ class TestGetLogger(object):
     """All test cases for get_logger()."""
 
     def test_root_logger(self):
-        """Test that get_logger('') returns the Python root logger and has at
-        least one handler."""
+        """Test that get_logger('') returns the Python root logger."""
+
         py_logger = logging.getLogger()
 
         zhmc_logger = get_logger('')
 
-        assert isinstance(zhmc_logger, logging.Logger)
-        assert zhmc_logger == py_logger
-        assert len(zhmc_logger.handlers) >= 1, \
-            "Unexpected list of logging handlers: %r" % zhmc_logger.handlers
+        assert zhmc_logger is py_logger
 
     def test_foo_logger(self):
-        """Test that get_logger('foo') returns the Python logger 'foo'
-        and has at least one handler."""
-        py_logger = logging.getLogger('foo')
+        """Test that get_logger('zhmcclient.foo') returns the same-named
+        Python logger and has at least one handler."""
 
-        zhmc_logger = get_logger('foo')
+        py_logger = logging.getLogger('zhmcclient.foo')
 
-        assert isinstance(zhmc_logger, logging.Logger)
-        assert zhmc_logger == py_logger
-        assert len(zhmc_logger.handlers) >= 1, \
-            "Unexpected list of logging handlers: %r" % zhmc_logger.handlers
+        zhmc_logger = get_logger('zhmcclient.foo')
+
+        assert zhmc_logger is py_logger
+        assert len(zhmc_logger.handlers) >= 1
