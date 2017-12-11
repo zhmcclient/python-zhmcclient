@@ -95,6 +95,10 @@ class FakedBaseResource(object):
                 self.properties[self.manager.uri_prop] = new_uri
             self._uri = self.properties[self.manager.uri_prop]
 
+            if self.manager.class_value:
+                if 'class' not in self.properties:
+                    self.properties['class'] = self.manager.class_value
+
         else:
             self._oid = None
             self._uri = None
@@ -178,6 +182,129 @@ class FakedBaseResource(object):
         """
         self.properties.update(properties)
 
+    def add_resources(self, resources):
+        """
+        Add faked child resources to this resource, from the provided resource
+        definitions.
+
+        Duplicate resource names in the same scope are not permitted.
+
+        Although this method is typically used to initially load the faked
+        HMC with resource state just once, it can be invoked multiple times
+        and can also be invoked on faked resources (e.g. on a faked CPC).
+
+        Parameters:
+
+          resources (dict):
+            resource dictionary with definitions of faked child resources to be
+            added. For an explanation of how the resource dictionary is set up,
+            see the examples below.
+
+            For requirements on and auto-generation of certain resource
+            properties, see the ``add()`` methods of the various faked resource
+            managers (e.g. :meth:`zhmcclient_mock.FakedCpcManager.add`). For
+            example, the object-id or element-id properties and the
+            corresponding uri properties are always auto-generated.
+
+            The resource dictionary specifies a tree of resource managers and
+            resources, in an alternating manner. It starts with the resource
+            managers of child resources of the target resource, which contains
+            a list of those child resources. For an HMC, the CPCs managed by
+            the HMC would be its child resources.
+
+            Each resource specifies its own properties (``properties`` key)
+            and the resource managers for its child resources. For example, the
+            CPC resource specifies its adapter child resources using the
+            ``adapters`` key. The keys for the child resource managers are the
+            attribute names of these resource managers in the parent resource.
+            For example, the ``adapters`` key is named after the
+            :attr:`zhmcclient.Cpc.adapters` attribute (which has the same name
+            as in its corresponding faked CPC resource:
+            :attr:`zhmcclient_mock.FakedCpc.adapters`).
+
+        Raises:
+
+          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+            resources.
+
+        Examples:
+
+          Example for targeting a faked HMC for adding a CPC with one adapter::
+
+              resources = {
+                  'cpcs': [  # name of manager attribute for this resource
+                      {
+                          'properties': {
+                              'name': 'cpc_1',
+                          },
+                          'adapters': [  # name of manager attribute for this
+                                         # resource
+                              {
+                                  'properties': {
+                                      'object-id': '12',
+                                      'name': 'ad_1',
+                                  },
+                                  'ports': [
+                                      {
+                                          'properties': {
+                                              'name': 'port_1',
+                                          }
+                                      },
+                                  ],
+                              },
+                          ],
+                      },
+                  ],
+              }
+
+          Example for targeting a faked CPC for adding an LPAR and a load
+          activation profile::
+
+              resources = {
+                  'lpars': [  # name of manager attribute for this resource
+                      {
+                          'properties': {
+                              # object-id is not provided -> auto-generated
+                              # object-uri is not provided -> auto-generated
+                              'name': 'lpar_1',
+                          },
+                      },
+                  ],
+                  'load_activation_profiles': [  # name of manager attribute
+                      {
+                          'properties': {
+                              # object-id is not provided -> auto-generated
+                              # object-uri is not provided -> auto-generated
+                              'name': 'lpar_1',
+                          },
+                      },
+                  ],
+              }
+
+        """
+        for child_attr in resources:
+            child_list = resources[child_attr]
+            self._process_child_list(self, child_attr, child_list)
+
+    def _process_child_list(self, parent_resource, child_attr, child_list):
+        child_manager = getattr(parent_resource, child_attr, None)
+        if child_manager is None:
+            raise InputError("Invalid child resource type specified in "
+                             "resource dictionary: {}".format(child_attr))
+        for child_dict in child_list:
+            # child_dict is a dict of 'properties' and grand child resources
+            properties = child_dict.get('properties', None)
+            if properties is None:
+                raise InputError("A resource for resource type {} has no"
+                                 "properties specified.".format(child_attr))
+            child_resource = child_manager.add(properties)
+            for grandchild_attr in child_dict:
+                if grandchild_attr == 'properties':
+                    continue
+                grandchild_list = child_dict[grandchild_attr]
+                self._process_child_list(child_resource, grandchild_attr,
+                                         grandchild_list)
+
 
 class FakedBaseManager(object):
     """
@@ -188,13 +315,14 @@ class FakedBaseManager(object):
     next_oid = 1  # next object ID, for auto-generating them
 
     def __init__(self, hmc, parent, resource_class, base_uri, oid_prop,
-                 uri_prop):
+                 uri_prop, class_value):
         self._hmc = hmc
         self._parent = parent
         self._resource_class = resource_class
         self._base_uri = base_uri  # Base URI for resources of this type
         self._oid_prop = oid_prop
         self._uri_prop = uri_prop
+        self._class_value = class_value
 
         # List of Faked{Resource} objects in this faked manager, by object ID
         self._resources = OrderedDict()
@@ -212,6 +340,7 @@ class FakedBaseManager(object):
             "  _base_uri = {_base_uri!r}\n"
             "  _oid_prop = {_oid_prop!r}\n"
             "  _uri_prop = {_uri_prop!r}\n"
+            "  _class_value = {_class_value!r}\n"
             "  _resources = {_resources}\n"
             ")".format(
                 classname=self.__class__.__name__,
@@ -224,6 +353,7 @@ class FakedBaseManager(object):
                 _base_uri=self._base_uri,
                 _oid_prop=self._oid_prop,
                 _uri_prop=self._uri_prop,
+                _class_value=self._class_value,
                 _resources=repr_dict(self._resources, indent=2),
             ))
         return ret
@@ -366,6 +496,15 @@ class FakedBaseManager(object):
         'element-uri').
         """
         return self._uri_prop
+
+    @property
+    def class_value(self):
+        """
+        The value for the "class" property of resources managed by this
+        manager, as defined in the data model for the resource.
+        For example, for LPAR resources this is set to 'logical-partition'.
+        """
+        return self._class_value
 
     def _new_oid(self):
         new_oid = self.next_oid
@@ -532,109 +671,6 @@ class FakedHmc(FakedBaseResource):
         """
         self._enabled = False
 
-    def add_resources(self, resources):
-        """
-        Add faked resources to the faked HMC, from the provided resource
-        definitions.
-
-        Duplicate resource names in the same scope are not permitted.
-
-        Although this method is typically used to initially load the faked
-        HMC with resource state just once, it can be invoked multiple times.
-
-        Parameters:
-
-          resources (dict):
-            resource dictionary with definitions of faked resources to be
-            added. For an explanation of how the resource dictionary is set up,
-            see the example below.
-
-            For requirements on and auto-generation of certain resource
-            properties, see the ``add()`` methods of the various faked resource
-            managers (e.g. :meth:`zhmcclient_mock.FakedCpcManager.add`).
-
-        Raises:
-          :exc:`zhmcclient_mock.InputError`: Some issue with the input
-            resources.
-
-        Example for resource dictionary::
-
-            resources = {
-                'cpcs': [  # name of manager attribute for this resource
-                    {
-                        'properties': {
-                            # object-id is not provided -> auto-generated
-                            # object-uri is not provided -> auto-generated
-                            'name': 'cpc_1',
-                            . . .  # more properties
-                        },
-                        'adapters': [  # name of manager attribute for this
-                                       # resource
-                            {
-                                'properties': {
-                                    'object-id': '123',
-                                    'object-uri': '/api/cpcs/../adapters/123',
-                                    'name': 'ad_1',
-                                    . . .  # more properties
-                                },
-                                'ports': [
-                                    {
-                                        'properties': {
-                                            # element-id is auto-generated
-                                            # element-uri is auto-generated
-                                            'name': 'port_1',
-                                            . . .  # more properties
-                                        }
-                                    },
-                                    . . .  # more Ports
-                                ],
-                            },
-                            . . .  # more Adapters
-                        ],
-                        . . .  # more CPC child resources of other types
-                    },
-                    . . .  # more CPCs
-                ]
-            }
-
-        The resource dictionary specifies a tree of resource managers and
-        resources, in an alternating manner. It starts with the top-level
-        resource managers (``cpcs`` key), which contains a list of CPC
-        resources.
-
-        Each resource specifies its own properties (``properties`` key)
-        and the resource managers for its child resources. For example, the
-        CPC resource specifies its adapter child resources using the
-        ``adapters`` key. The keys for the child resource managers are the
-        attribute names of these resource managers in the parent resource. For
-        example, the ``adapters`` key is named after the
-        :attr:`zhmcclient.Cpc.adapters` attribute (which has the same name
-        as in its corresponding faked CPC resource:
-        :attr:`zhmcclient_mock.FakedCpc.adapters`).
-        """
-        for child_attr in resources:
-            child_list = resources[child_attr]
-            self._process_child_list(self, child_attr, child_list)
-
-    def _process_child_list(self, parent_resource, child_attr, child_list):
-        child_manager = getattr(parent_resource, child_attr, None)
-        if child_manager is None:
-            raise InputError("Invalid child resource type specified in "
-                             "resource dictionary: {}".format(child_attr))
-        for child_dict in child_list:
-            # child_dict is a dict of 'properties' and grand child resources
-            properties = child_dict.get('properties', None)
-            if properties is None:
-                raise InputError("A resource for resource type {} has no"
-                                 "properties specified.".format(child_attr))
-            child_resource = child_manager.add(properties)
-            for grandchild_attr in child_dict:
-                if grandchild_attr == 'properties':
-                    continue
-                grandchild_list = child_dict[grandchild_attr]
-                self._process_child_list(child_resource, grandchild_attr,
-                                         grandchild_list)
-
     def lookup_by_uri(self, uri):
         """
         Look up a faked resource by its object URI, within this faked HMC.
@@ -670,7 +706,8 @@ class FakedConsoleManager(FakedBaseManager):
             resource_class=FakedConsole,
             base_uri=self.api_root + '/console',
             oid_prop=None,  # Console does not have an object ID property
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='console')
 
     def add(self, properties):
         """
@@ -684,6 +721,8 @@ class FakedConsoleManager(FakedBaseManager):
             Special handling and requirements for certain properties:
 
             * 'object-uri' will be auto-generated to '/api/console',
+              if not specified.
+            * 'class' will be auto-generated to 'console',
               if not specified.
 
         Returns:
@@ -830,7 +869,8 @@ class FakedUserManager(FakedBaseManager):
             resource_class=FakedUser,
             base_uri=self.api_root + '/users',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='user')
 
     def add(self, properties):
         """
@@ -846,6 +886,8 @@ class FakedUserManager(FakedBaseManager):
             * 'object-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'user',
               if not specified.
 
         Returns:
@@ -885,7 +927,8 @@ class FakedUserRoleManager(FakedBaseManager):
             resource_class=FakedUserRole,
             base_uri=self.api_root + '/user-roles',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='user-role')
 
     def add(self, properties):
         """
@@ -901,6 +944,8 @@ class FakedUserRoleManager(FakedBaseManager):
             * 'object-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'user-role',
               if not specified.
 
         Returns:
@@ -941,7 +986,8 @@ class FakedUserPatternManager(FakedBaseManager):
             resource_class=FakedUserPattern,
             base_uri=self.api_root + '/console/user-patterns',
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value='user-pattern')
 
     def add(self, properties):
         """
@@ -957,6 +1003,8 @@ class FakedUserPatternManager(FakedBaseManager):
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'user-pattern',
               if not specified.
 
         Returns:
@@ -997,7 +1045,8 @@ class FakedPasswordRuleManager(FakedBaseManager):
             resource_class=FakedPasswordRule,
             base_uri=self.api_root + '/console/password-rules',
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value='password-rule')
 
     def add(self, properties):
         """
@@ -1013,6 +1062,8 @@ class FakedPasswordRuleManager(FakedBaseManager):
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'password-rule',
               if not specified.
 
         Returns:
@@ -1053,7 +1104,8 @@ class FakedTaskManager(FakedBaseManager):
             resource_class=FakedTask,
             base_uri=self.api_root + '/console/tasks',
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value='task')
 
     def add(self, properties):
         """
@@ -1069,6 +1121,8 @@ class FakedTaskManager(FakedBaseManager):
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'task',
               if not specified.
 
         Returns:
@@ -1108,7 +1162,8 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
             resource_class=FakedLdapServerDefinition,
             base_uri=self.api_root + '/console/ldap-server-definitions',
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value='ldap-server-definition')
 
     def add(self, properties):
         """
@@ -1124,6 +1179,8 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'ldap-server-definition',
               if not specified.
 
         Returns:
@@ -1158,14 +1215,16 @@ class FakedActivationProfileManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, cpc, profile_type):
-        activation_profiles = profile_type + '-activation-profiles'
+        ap_uri_segment = profile_type + '-activation-profiles'
+        ap_class_value = profile_type + '-activation-profile'
         super(FakedActivationProfileManager, self).__init__(
             hmc=hmc,
             parent=cpc,
             resource_class=FakedActivationProfile,
-            base_uri=cpc.uri + '/' + activation_profiles,
+            base_uri=cpc.uri + '/' + ap_uri_segment,
             oid_prop='name',  # This is an exception!
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value=ap_class_value)
         self._profile_type = profile_type
 
     def add(self, properties):
@@ -1184,6 +1243,8 @@ class FakedActivationProfileManager(FakedBaseManager):
               resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the OID ('name')
               property, if not specified.
+            * 'class' will be auto-generated to
+              '{profile_type}'-activation-profile', if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedActivationProfile`: The faked
@@ -1230,7 +1291,8 @@ class FakedAdapterManager(FakedBaseManager):
             resource_class=FakedAdapter,
             base_uri=self.api_root + '/adapters',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='adapter')
 
     def add(self, properties):
         """
@@ -1246,6 +1308,8 @@ class FakedAdapterManager(FakedBaseManager):
             * 'object-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'adapter',
               if not specified.
             * 'status' is auto-set to 'active', if not specified.
             * 'adapter-family' or 'type' is required to be specified, in order
@@ -1396,7 +1460,8 @@ class FakedCpcManager(FakedBaseManager):
             resource_class=FakedCpc,
             base_uri=self.api_root + '/cpcs',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='cpc')
 
     def add(self, properties):
         """
@@ -1412,6 +1477,8 @@ class FakedCpcManager(FakedBaseManager):
             * 'object-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'cpc',
               if not specified.
             * 'dpm-enabled' is auto-set to `False`, if not specified.
             * 'is-ensemble-member' is auto-set to `False`, if not specified.
@@ -1581,7 +1648,8 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
             resource_class=FakedUnmanagedCpc,
             base_uri=self.api_root + '/cpcs',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value=None)
 
     def add(self, properties):
         """
@@ -1659,7 +1727,8 @@ class FakedHbaManager(FakedBaseManager):
             resource_class=FakedHba,
             base_uri=partition.uri + '/hbas',
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value='hba')
 
     def add(self, properties):
         """
@@ -1675,6 +1744,8 @@ class FakedHbaManager(FakedBaseManager):
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'hba',
               if not specified.
             * 'adapter-port-uri' identifies the backing FCP port for this HBA
               and is required to be specified.
@@ -1770,7 +1841,8 @@ class FakedLparManager(FakedBaseManager):
             resource_class=FakedLpar,
             base_uri=self.api_root + '/logical-partitions',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='logical-partition')
 
     def add(self, properties):
         """
@@ -1786,6 +1858,8 @@ class FakedLparManager(FakedBaseManager):
             * 'object-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'logical-partition',
               if not specified.
             * 'status' is auto-set to 'not-activated', if not specified.
 
@@ -1828,7 +1902,8 @@ class FakedNicManager(FakedBaseManager):
             resource_class=FakedNic,
             base_uri=partition.uri + '/nics',
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value='nic')
 
     def add(self, properties):
         """
@@ -1844,6 +1919,8 @@ class FakedNicManager(FakedBaseManager):
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'nic',
               if not specified.
             * Either 'network-adapter-port-uri' (for backing ROCE adapters) or
               'virtual-switch-uri'(for backing OSA or Hipersockets adapters) is
@@ -1953,7 +2030,8 @@ class FakedPartitionManager(FakedBaseManager):
             resource_class=FakedPartition,
             base_uri=self.api_root + '/partitions',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='partition')
 
     def add(self, properties):
         """
@@ -1969,6 +2047,8 @@ class FakedPartitionManager(FakedBaseManager):
             * 'object-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'partition',
               if not specified.
             * 'hba-uris' will be auto-generated as an empty array, if not
               specified.
@@ -2172,9 +2252,11 @@ class FakedPortManager(FakedBaseManager):
 
     def __init__(self, hmc, adapter):
         if adapter.adapter_kind == 'network':
-            port_segment = 'network-ports'
+            port_uri_segment = 'network-ports'
+            port_class_value = 'network-port'
         elif adapter.adapter_kind == 'storage':
-            port_segment = 'storage-ports'
+            port_uri_segment = 'storage-ports'
+            port_class_value = 'storage-port'
         else:
             raise AssertionError("FakedAdapter with object-id=%s must be a "
                                  "storage or network adapter to have ports." %
@@ -2183,9 +2265,10 @@ class FakedPortManager(FakedBaseManager):
             hmc=hmc,
             parent=adapter,
             resource_class=FakedPort,
-            base_uri=adapter.uri + '/' + port_segment,
+            base_uri=adapter.uri + '/' + port_uri_segment,
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value=port_class_value)
 
     def add(self, properties):
         """
@@ -2202,6 +2285,8 @@ class FakedPortManager(FakedBaseManager):
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
               if not specified.
+            * 'class' will be auto-generated to 'network-port' or
+              'storage-port', if not specified.
 
             This method also updates the 'network-port-uris' or
             'storage-port-uris' property in the parent Adapter resource, by
@@ -2273,7 +2358,8 @@ class FakedVirtualFunctionManager(FakedBaseManager):
             resource_class=FakedVirtualFunction,
             base_uri=partition.uri + '/virtual-functions',
             oid_prop='element-id',
-            uri_prop='element-uri')
+            uri_prop='element-uri',
+            class_value='virtual-function')
 
     def add(self, properties):
         """
@@ -2289,6 +2375,8 @@ class FakedVirtualFunctionManager(FakedBaseManager):
             * 'element-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'virtual-function',
               if not specified.
             * 'device-number' will be auto-generated with a unique value
               within the partition in the range 0x8000 to 0xFFFF, if not
@@ -2366,7 +2454,8 @@ class FakedVirtualSwitchManager(FakedBaseManager):
             resource_class=FakedVirtualSwitch,
             base_uri=self.api_root + '/virtual-switches',
             oid_prop='object-id',
-            uri_prop='object-uri')
+            uri_prop='object-uri',
+            class_value='virtual-switch')
 
     def add(self, properties):
         """
@@ -2382,6 +2471,8 @@ class FakedVirtualSwitchManager(FakedBaseManager):
             * 'object-id' will be auto-generated with a unique value across
               all instances of this resource type, if not specified.
             * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'virtual-switch',
               if not specified.
             * 'connected-vnic-uris' will be auto-generated as an empty array,
               if not specified.
@@ -2488,7 +2579,8 @@ class FakedMetricsContextManager(FakedBaseManager):
             resource_class=FakedMetricsContext,
             base_uri=self.api_root + '/services/metrics/context',
             oid_prop='fake-id',
-            uri_prop='fake-uri')
+            uri_prop='fake-uri',
+            class_value=None)
         self._metric_group_def_names = []
         self._metric_group_defs = {}  # by group name
         self._metric_value_names = []
