@@ -71,12 +71,12 @@ matrix:
 #      env:
 #        - PACKAGE_LEVEL=minimum
 #        - PYTHON=2
-#    - os: osx
-#      language: generic
-#      python:
-#      env:
-#        - PACKAGE_LEVEL=latest
-#        - PYTHON=2
+    - os: osx
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=latest
+        - PYTHON=2
 #    - os: osx
 #      language: generic
 #      python:
