@@ -15,11 +15,11 @@ notifications:
 # TODO: Figure out how specific versions of Python 3.x can be used with OS-X
 matrix:
   include:
-    - os: linux
-      language: python
-      python: "2.7"
-      env:
-        - PACKAGE_LEVEL=minimum
+#    - os: linux
+#      language: python
+#      python: "2.7"
+#      env:
+#        - PACKAGE_LEVEL=minimum
     - os: linux
       language: python
       python: "2.7"
@@ -65,30 +65,30 @@ matrix:
 #      python: "pypy-5.3.1"  # Python 2.7.10
 #      env:
 #        - PACKAGE_LEVEL=latest
-#    - os: osx
-#      language: generic
-#      python:
-#      env:
-#        - PACKAGE_LEVEL=minimum
-#        - PYTHON=2
     - os: osx
       language: generic
       python:
       env:
-        - PACKAGE_LEVEL=latest
+        - PACKAGE_LEVEL=minimum
         - PYTHON=2
 #    - os: osx
 #      language: generic
 #      python:
 #      env:
-#        - PACKAGE_LEVEL=minimum
-#        - PYTHON=3
+#        - PACKAGE_LEVEL=latest
+#        - PYTHON=2
 #    - os: osx
 #      language: generic
 #      python:
 #      env:
-#        - PACKAGE_LEVEL=latest
+#        - PACKAGE_LEVEL=minimum
 #        - PYTHON=3
+    - os: osx
+      language: generic
+      python:
+      env:
+        - PACKAGE_LEVEL=latest
+        - PYTHON=3
 
 before_install:
   - if [[ "$TRAVIS_BRANCH" == "manual-ci-run" ]]; then
@@ -122,7 +122,7 @@ install:
       if [[ "${PYTHON:0:1}" == "2" ]]; then
         OSX_PYTHON_PKG=python@2;
       else
-        OSX_PYTHON_PKG=python3;
+        OSX_PYTHON_PKG=python;
       fi;
       echo "OSX_PYTHON_PKG=$OSX_PYTHON_PKG";
     fi
@@ -130,11 +130,25 @@ install:
       brew update;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      brew ls --versions $OSX_PYTHON_PKG && brew upgrade $OSX_PYTHON_PKG || brew install $OSX_PYTHON_PKG || brew link --overwrite $OSX_PYTHON_PKG;
-      which $PYTHON_CMD;
-      $PYTHON_CMD --version;
+      brew ls --versions $OSX_PYTHON_PKG;
+      rc=$?;
+      if [[ $rc == 0 ]]; then
+        echo "Upgrading $OSX_PYTHON_PKG";
+        brew upgrade $OSX_PYTHON_PKG;
+      else
+        echo "Installing $OSX_PYTHON_PKG";
+        brew install $OSX_PYTHON_PKG;
+      fi;
+      echo "Unlinking $OSX_PYTHON_PKG";
+      brew unlink $OSX_PYTHON_PKG;
+      echo "Linking $OSX_PYTHON_PKG";
+      brew link --overwrite $OSX_PYTHON_PKG;
+      $PIP_CMD install --upgrade pip setuptools;
+      echo "Checking Python and Pip";
+      which $PYTHON_CMD && which $PIP_CMD;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      $PIP_CMD install virtualenv;
       virtualenv venv -p $PYTHON_CMD && source venv/bin/activate;
     fi
   - make pyshow
