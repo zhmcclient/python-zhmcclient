@@ -76,6 +76,9 @@ try:
         'dpm-system-usage-overview',  # Only in DPM mode
         'partition-usage',  # Only in DPM mode
         'adapter-usage',  # Only in DPM mode
+        'crypto-usage',  # Only in DPM mode
+        'flash-memory-usage',  # Only in DPM mode
+        'roce-usage',  # Only in DPM mode
 
         'virtualization-host-cpu-memory-usage',  # Only in ensemble mode
 
@@ -106,6 +109,8 @@ try:
                 m_type = m_def.type
                 print("      {:30}  {} {}".
                       format(m_name, m_value, m_unit.encode('utf-8')))
+        if not mg.object_values:
+            print("    No resources")
 
     print("Deleting Metrics Context ...")
     mc.delete()

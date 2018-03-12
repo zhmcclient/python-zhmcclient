@@ -320,7 +320,7 @@ class MetricGroupDefinition(_MetricGroupDefinitionTuple):
     information for a metric group.
     """
 
-    def __init__(self, name, resource_class, metric_definitions):
+    def __new__(cls, name, resource_class, metric_definitions):
         """
         Parameters:
 
@@ -338,10 +338,11 @@ class MetricGroupDefinition(_MetricGroupDefinitionTuple):
             dictionary where the key is the metric name and the value is the
             :class:`~zhmcclient.MetricDefinition` object for the metric.
 
-        All these init parameters are also available as same-named attributes.
+        All these parameters are also available as same-named attributes.
         """
-        super(MetricGroupDefinition, self).__init__(
-            name, resource_class, metric_definitions)
+        self = super(MetricGroupDefinition, cls).__new__(
+            cls, name, resource_class, metric_definitions)
+        return self
 
     __slots__ = ()
 
@@ -366,7 +367,7 @@ class MetricDefinition(_MetricDefinitionTuple):
     information for a single metric.
     """
 
-    def __init__(self, index, name, type, unit):
+    def __new__(cls, index, name, type, unit):
         """
         Parameters:
 
@@ -400,9 +401,11 @@ class MetricDefinition(_MetricDefinitionTuple):
           unit (:term:`string`):
             Unit of the metric value.
 
-        All these init parameters are also available as same-named attributes.
+        All these parameters are also available as same-named attributes.
         """
-        super(MetricDefinition, self).__init__(index, name, type, unit)
+        self = super(MetricDefinition, cls).__new__(
+            cls, index, name, type, unit)
+        return self
 
     __slots__ = ()
 
