@@ -9,6 +9,7 @@
 /dist/
 /AUTHORS
 /ChangeLog
+/.pytest_cache/
 .ipynb_checkpoints/
 .coverage
 .venv
