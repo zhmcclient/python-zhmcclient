@@ -55,6 +55,7 @@ endif
 
 # Name of this Python package (top-level Python namespace + Pypi package name)
 package_name := zhmcclient
+mock_package_name := zhmcclient_mock
 
 # Package version (full version, including any pre-release suffixes, e.g. "0.1.0-alpha1")
 # package_version := $(shell $(PYTHON_CMD) -c "import sys, $(package_name); sys.stdout.write($(package_name).__version__)")
@@ -83,8 +84,8 @@ dist_files := $(bdist_file) $(sdist_file)
 package_py_files := \
     $(wildcard $(package_name)/*.py) \
     $(wildcard $(package_name)/*/*.py) \
-    $(wildcard zhmcclient_mock/*.py) \
-    $(wildcard zhmcclient_mock/*/*.py) \
+    $(wildcard $(mock_package_name)/*.py) \
+    $(wildcard $(mock_package_name)/*/*.py) \
 
 # Directory for generated API documentation
 doc_build_dir := build_doc
@@ -274,8 +275,10 @@ pylint: pylint.log
 .PHONY: install
 install: _pip requirements.txt setup.py setup.cfg $(package_py_files)
 	@echo 'Installing runtime requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_level_opts) -r requirements.txt .
-	$(PYTHON_CMD) -c "import zhmcclient; print('Import: ok')"
+	$(PIP_CMD) install $(pip_level_opts) -r requirements.txt
+	$(PIP_CMD) install $(pip_level_opts) -e .
+	$(PYTHON_CMD) -c "import $(package_name); print('ok, version=%r'%$(package_name).__version__)"
+	$(PYTHON_CMD) -c "import $(mock_package_name); print('ok')"
 	@echo 'Done: Installed $(package_name) into current Python environment.'
 	@echo '$@ done.'
 
@@ -371,6 +374,6 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 
 $(test_log_file): Makefile $(package__py_files) $(test_py_files) .coveragerc
 	rm -fv $@
-	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test $(pytest_no_log_opt) -s $(test_dir) --cov $(package_name) --cov zhmcclient_mock --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
+	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test $(pytest_no_log_opt) -s $(test_dir) --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
 	@echo 'Done: Created test log file: $@'
