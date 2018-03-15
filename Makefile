@@ -117,7 +117,7 @@ test_py_files := \
     $(wildcard $(test_dir)/*/*/*.py) \
 
 # Determine whether py.test has the --no-print-logs option.
-pytest_no_log_opt := $(shell py.test --help 2>/dev/null |grep '\--no-print-logs' >/dev/null; rc=$$?; if [[ $$rc == 0 ]]; then echo '--no-print-logs'; else echo ''; fi)
+pytest_no_log_opt := $(shell py.test --help 2>/dev/null |grep '\--no-print-logs' >/dev/null; if [ $$? -eq 0 ]; then echo '--no-print-logs'; else echo ''; fi)
 
 # Flake8 config file
 flake8_rc_file := setup.cfg
@@ -284,7 +284,7 @@ install: _pip requirements.txt setup.py setup.cfg $(package_py_files)
 
 .PHONY: uninstall
 uninstall:
-	bash -c '$(PIP_CMD) show $(package_name) >/dev/null; rc=$$?; if [[ $$rc == 0 ]]; then $(PIP_CMD) uninstall -y $(package_name); fi'
+	bash -c '$(PIP_CMD) show $(package_name) >/dev/null; if [ $$? -eq 0 ]; then $(PIP_CMD) uninstall -y $(package_name); fi'
 	@echo '$@ done.'
 
 .PHONY: test
@@ -315,7 +315,7 @@ upload: uninstall $(dist_files)
 ifeq (,$(findstring .dev,$(package_version)))
 	@echo '==> This will upload $(package_name) version $(package_version) to PyPI!'
 	@echo -n '==> Continue? [yN] '
-	@bash -c 'read answer; if [[ "$$answer" != "y" ]]; then echo "Aborted."; false; fi'
+	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
 	twine upload $(dist_files)
 	@echo 'Done: Uploaded $(package_name) version to PyPI: $(package_version)'
 	@echo '$@ done.'
