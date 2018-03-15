@@ -75,7 +75,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import get_logger, logged_api_call
 from ._exceptions import NotFound
-from ._utils import datetime_from_timestamp
+from ._utils import datetime_from_timestamp, repr_list
 
 __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
            'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
@@ -115,6 +115,48 @@ class MetricsContextManager(BaseManager):
 
         self._client = client
         self._metrics_contexts = []
+
+    def __repr__(self):
+        """
+        Return a string with the state of this manager object, for debug
+        purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _resource_class = {_resource_class!r}\n"
+            "  _class_name = {_class_name!r}\n"
+            "  _session = {_session_classname} at 0x{_session_id:08x}\n"
+            "  _parent = {_parent_classname} at 0x{_parent_id:08x}\n"
+            "  _base_uri = {_base_uri!r}\n"
+            "  _oid_prop = {_oid_prop!r}\n"
+            "  _uri_prop = {_uri_prop!r}\n"
+            "  _name_prop = {_name_prop!r}\n"
+            "  _query_props = {_query_props}\n"
+            "  _list_has_name = {_list_has_name!r}\n"
+            "  _name_uri_cache ={_name_uri_cache!r}\n"
+            "  _client = {_client_classname} at 0x{_client_id:08x}\n"
+            "  _metrics_contexts ={_metrics_contexts!r}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                _resource_class=self._resource_class,
+                _class_name=self._class_name,
+                _session_classname=self._session.__class__.__name__,
+                _session_id=id(self._session),
+                _parent_classname=self._parent.__class__.__name__,
+                _parent_id=id(self._parent),
+                _base_uri=self._base_uri,
+                _oid_prop=self._oid_prop,
+                _uri_prop=self._uri_prop,
+                _name_prop=self._name_prop,
+                _query_props=repr_list(self._query_props, indent=2),
+                _list_has_name=self._list_has_name,
+                _name_uri_cache=self._name_uri_cache,
+                _client_classname=self._client.__class__.__name__,
+                _client_id=id(self._client),
+                _metrics_contexts=self._metrics_contexts,
+            ))
+        return ret
 
     @property
     def client(self):

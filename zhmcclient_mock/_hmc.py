@@ -51,6 +51,7 @@ __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedVirtualFunctionManager', 'FakedVirtualFunction',
            'FakedVirtualSwitchManager', 'FakedVirtualSwitch',
            'FakedMetricsContextManager', 'FakedMetricsContext',
+           'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
            ]
 
 
