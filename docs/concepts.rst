@@ -64,7 +64,7 @@ that HMC:
   +--------------------------+         +---------------------------+
 
 The Python applications can be for example the
-``zhmc`` CLI (provided in the :term:`zhmccli` project), your own Python
+``zhmc`` CLI (provided in the :term:`zhmccli project`), your own Python
 scripts using the zhmcclient API, or long-lived services that perform some
 function. In any case, each Python application in the figure runs in the
 runtime of exactly one Python process.
