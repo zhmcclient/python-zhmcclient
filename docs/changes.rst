@@ -120,6 +120,7 @@ Released: 2017-10-19
 
   This removes the following prerequisite Python packages for the zhmcclient
   package:
+
     - click
     - click-repl
     - click-spinner

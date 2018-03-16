@@ -57,7 +57,7 @@ for a DPM partition::
 When running this example code in one terminal, and stopping or starting
 the partition in another terminal, one can monitor the shutdown or boot
 messages issued by the operating system. The following commands use the
-``zhmc`` CLI provided in the :term:`zhmccli` project to do that:
+``zhmc`` CLI provided in the :term:`zhmccli project` to do that:
 
 .. code-block:: text
 
