@@ -120,7 +120,8 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["tests", ".tox", ".git", "attic", "dist",
+exclude_patterns = ["README.rst", "try", "design",
+                    "tests", ".tox", ".git", "attic", "dist",
                     "build_doc", "zhmcclient.egg-info", ".eggs"]
 
 # The reST default role (used for this markup: `text`) to use for all
