@@ -166,7 +166,7 @@ script:
   - if [[ -n $_MANUAL_CI_RUN ]]; then make pylint; fi
   - make test
   - if [[ -n $_MANUAL_CI_RUN ]]; then make build; fi
-  - if [[ -n $_MANUAL_CI_RUN ]]; then make builddoc; fi
+  - make builddoc
 
 after_success:
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" && -z $_MANUAL_CI_RUN ]]; then
