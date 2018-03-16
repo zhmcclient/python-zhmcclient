@@ -84,6 +84,24 @@ def package_version(filename, varname):
 # Note: We use the full version in both cases (e.g. 'M.N.U' or 'M.N.U.dev0').
 version = package_version('../zhmcclient/_version.py', '__version__')
 
+# Debug information to track down the issue with development
+# versions being built when HEAD is tagged with a release.
+print("Debug: conf.py: Debug information for package version issue")
+print("Debug: conf.py: zhmcclient version: %s" % version)
+print("Debug: conf.py: Executing: git tag")
+os.system('git tag')
+print("Debug: conf.py: Executing: git log --decorate --oneline |grep 'tag:'")
+os.system('git log --decorate --oneline |grep "tag:"')
+print("Debug: conf.py: Executing: pip list |grep zhmc")
+os.system('pip list |grep zhmc')
+print("Debug: conf.py: Executing: ls -al ../zhmcclient.egg-info/")
+os.system('ls -al ../zhmcclient.egg-info/')
+print("Debug: conf.py: Executing: cat ../zhmcclient.egg-info/PKG-INFO |grep '^Version:'")
+os.system('cat ../zhmcclient.egg-info/PKG-INFO |grep "^Version:"')
+print("Debug: conf.py: Executing: cat ../zhmcclient.egg-info/pbr.json")
+os.system('cat ../zhmcclient.egg-info/pbr.json')
+print("\nDebug: conf.py: End of debug information")
+
 # The full version, including alpha/beta/rc tags.
 release = version
 
