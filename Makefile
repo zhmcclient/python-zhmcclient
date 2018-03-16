@@ -58,8 +58,7 @@ package_name := zhmcclient
 mock_package_name := zhmcclient_mock
 
 # Package version (full version, including any pre-release suffixes, e.g. "0.1.0-alpha1")
-# package_version := $(shell $(PYTHON_CMD) -c "import sys, $(package_name); sys.stdout.write($(package_name).__version__)")
-package_version := $(shell $(PYTHON_CMD) -c "from pbr.version import VersionInfo; vi=VersionInfo('zhmcclient'); print(vi.version_string_with_vcs())" 2>/dev/null)
+package_version := $(shell $(PYTHON_CMD) -c "from pbr.version import VersionInfo; vi=VersionInfo('$(package_name)'); print(vi.release_string())" 2>/dev/null)
 
 # Python major version
 python_major_version := $(shell $(PYTHON_CMD) -c "import sys; sys.stdout.write('%s'%sys.version_info[0])")
@@ -187,6 +186,15 @@ help:
 	@echo '  PYTHON_CMD=... - Name of python command. Default: python'
 	@echo '  PIP_CMD=... - Name of pip command. Default: pip'
 
+.PHONY: _check_version
+_check_version:
+ifeq (,$(package_version))
+	@echo 'Error: Package version could not be determine: (requires pbr; run "make develop")'
+	@false
+else
+	@true
+endif
+
 .PHONY: _pip
 _pip:
 	$(PYTHON_CMD) remove_duplicate_setuptools.py
@@ -311,7 +319,7 @@ all: develop install check pylint test build builddoc
 	@echo '$@ done.'
 
 .PHONY: upload
-upload: uninstall $(dist_files)
+upload: _check_version uninstall $(dist_files)
 ifeq (,$(findstring .dev,$(package_version)))
 	@echo '==> This will upload $(package_name) version $(package_version) to PyPI!'
 	@echo -n '==> Continue? [yN] '
@@ -325,7 +333,7 @@ else
 endif
 
 # Distribution archives.
-$(bdist_file): Makefile $(dist_dependent_files)
+$(bdist_file): _check_version Makefile $(dist_dependent_files)
 ifneq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs build
 	$(PYTHON_CMD) setup.py bdist_wheel -d $(dist_dir) --universal
@@ -335,7 +343,7 @@ else
 	@false
 endif
 
-$(sdist_file): Makefile $(dist_dependent_files)
+$(sdist_file): _check_version Makefile $(dist_dependent_files)
 ifneq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs build
 	$(PYTHON_CMD) setup.py sdist -d $(dist_dir)
@@ -345,7 +353,7 @@ else
 	@false
 endif
 
-$(win64_dist_file): Makefile $(dist_dependent_files)
+$(win64_dist_file): _check_version Makefile $(dist_dependent_files)
 ifeq ($(PLATFORM),Windows)
 	rm -Rfv $(package_name).egg-info .eggs build
 	$(PYTHON_CMD) setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
