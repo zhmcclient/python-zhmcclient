@@ -58,6 +58,7 @@ package_name := zhmcclient
 mock_package_name := zhmcclient_mock
 
 # Package version (full version, including any pre-release suffixes, e.g. "0.1.0-alpha1")
+# May end up being empty, if pbr cannot determine the version.
 package_version := $(shell $(PYTHON_CMD) -c "from pbr.version import VersionInfo; vi=VersionInfo('$(package_name)'); print(vi.release_string())" 2>/dev/null)
 
 # Python major version
@@ -199,7 +200,7 @@ endif
 _pip:
 	$(PYTHON_CMD) remove_duplicate_setuptools.py
 	@echo 'Installing/upgrading pip, setuptools, wheel and pbr with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_level_opts) pip setuptools wheel pbr
+	$(PYTHON_CMD) -m pip install $(pip_level_opts) pip setuptools wheel pbr
 
 .PHONY: develop
 develop: _pip dev-requirements.txt requirements.txt
@@ -209,10 +210,6 @@ develop: _pip dev-requirements.txt requirements.txt
 
 .PHONY: build
 build: $(build_files)
-	@echo '$@ done.'
-
-.PHONY: buildwin
-buildwin: $(win64_dist_file)
 	@echo '$@ done.'
 
 .PHONY: builddoc
@@ -282,12 +279,12 @@ pylint: pylint.log
 
 .PHONY: install
 install: _pip requirements.txt setup.py setup.cfg $(package_py_files)
-	@echo 'Installing runtime requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
+	@echo 'Installing $(package_name) (editable) with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
 	$(PIP_CMD) install $(pip_level_opts) -r requirements.txt
-	$(PIP_CMD) install $(pip_level_opts) -e .
+	$(PIP_CMD) install -e .
 	$(PYTHON_CMD) -c "import $(package_name); print('ok, version=%r'%$(package_name).__version__)"
 	$(PYTHON_CMD) -c "import $(mock_package_name); print('ok')"
-	@echo 'Done: Installed $(package_name) into current Python environment.'
+	@echo 'Done: Installed $(package_name)'
 	@echo '$@ done.'
 
 .PHONY: uninstall
@@ -380,7 +377,7 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
-$(test_log_file): Makefile $(package__py_files) $(test_py_files) .coveragerc
+$(test_log_file): Makefile $(package_py_files) $(test_py_files) .coveragerc
 	rm -fv $@
 	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test $(pytest_no_log_opt) -s $(test_dir) --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
