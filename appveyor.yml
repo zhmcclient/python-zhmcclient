@@ -35,7 +35,11 @@ configuration:
 
 install:
 
+  - git --version
   - if %APPVEYOR_REPO_BRANCH%.==manual-ci-run. set _NEED_REBASE=true
+  # This Git version requires user configuration in rebase step
+  - if %_NEED_REBASE%.==true. git config user.name "dummy"
+  - if %_NEED_REBASE%.==true. git config user.email "dummy@dummy"
   - if %_NEED_REBASE%.==true. git fetch origin master
   - if %_NEED_REBASE%.==true. git branch master FETCH_HEAD
   - if %_NEED_REBASE%.==true. git rebase master
