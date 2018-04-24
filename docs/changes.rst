@@ -32,6 +32,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Lowered the minimum version requirements for installing the zhmcclient
+  package, for the packages: requests, pbr, decorator. Added support for
+  tolerating decorator v3.4 in the zhmcclient _logging module.
+
 **Known issues:**
 
 * See `list of open issues`_.
