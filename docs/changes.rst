@@ -32,6 +32,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Docs: Improved the description of installation without Internet access, and
+  considerations on system Python vs. virtual Python environments.
+
 **Known issues:**
 
 * See `list of open issues`_.

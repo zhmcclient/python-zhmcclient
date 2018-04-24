@@ -103,14 +103,38 @@ Installation
 The easiest way to install the zhmcclient package is by using Pip. Pip ensures
 that any dependent Python packages also get installed.
 
-Pip will install the packages into your currently active Python environment
-(that is, your system Python or a virtual Python environment you have set up).
+With Pip, there are three options for where to install a Python package and its
+dependent packages:
 
-Particularly if you intend to use the zhmcclient API, it is beneficial to set
-up a `virtual Python environment`_ for your project, because that leaves your
-system Python installation unchanged, it does not require ``sudo`` rights,
-and last but not least it gives you better control about the installed
-packages and their versions.
+* Into a `virtual Python environment`_. This is done by having the virtual
+  Python environment active, and running the Pip install commands as shown in
+  the following sections.
+
+  This option is recommended if you intend to develop programs using the
+  zhmcclient API, because the packages you install do not interfere with
+  other Python projects you may have.
+
+* Into the system Python, just for the current user. This is done by not
+  having a virtual Python environment active, and by using the ``--user``
+  option on the Pip install commands shown in the following sections.
+
+  This option is recommended if you intend to only use the zhmc CLI, or if
+  you are not concerned about interfering with other Python projects you may
+  have.
+
+* Into the system Python, for all users of the system. This is done by not
+  having a virtual Python environment active, and by using ``sudo`` on the
+  Pip install commands shown in the following sections.
+
+  Be aware that this option will replace the content of existing Python
+  packages, e.g. when a package version is updated. Such updated packages as
+  well as any newly installed Python packages are not known by your operating
+  system installer, so the knowledge of your operating system installer is now
+  out of sync with the actual set of packages in the system Python.
+
+  Therefore, this approach is not recommended and you should apply this
+  approach only after you have thought about how you would maintain these
+  Python packages in the future.
 
 Installation of latest released version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -145,24 +169,75 @@ repositories.
 If you want to install the zhmcclient package on a system that does not have
 Internet access, you can do this by first downloading the zhmcclient package
 and its dependent packages on a download system that does have Internet access,
-making these packages available to the target system, and installing on the
-target system from the downloaded packages.
+transferring these packages to the target system, and installing them on the
+target system from the downloaded packages:
 
-For simplicity, the following example uses a shared file system between the
-download and target systems (but that is not a requirement; you can also copy
-the downloaded files to the target system):
+1. On a system with Internet access, download the zhmcclient package and its
+   dependent packages:
 
-.. code-block:: text
+   .. code-block:: text
 
-    [download]$ pip download zhmcclient
+      [download-system]$ mkdir packages
 
-    [download]$ ls zhmcclient*
-    zhmcclient-0.11.0-py2.py3-none-any.whl
+      [download-system]$ cd packages
 
-    [target]$ ls zhmcclient*
-    zhmcclient-0.11.0-py2.py3-none-any.whl
+      [download-system]$ pip download zhmcclient
+      Collecting zhmcclient
+        Using cached https://files.pythonhosted.org/packages/c3/29/7f0acab22b27ff29453ac87c92a2cbec2b16014b0d32c36fcce1ca285be7/zhmcclient-0.19.0-py2.py3-none-any.whl
+        Saved ./zhmcclient-0.19.0-py2.py3-none-any.whl
+      Collecting stomp.py>=4.1.15 (from zhmcclient)
+      . . .
+      Successfully downloaded zhmcclient stomp.py pytz requests decorator six pbr docopt idna urllib3 certifi chardet
 
-    [target]$ pip install -f . --no-index zhmcclient-0.11.0-py2.py3-none-any.whl
+      [download-system]$ ls -1
+      certifi-2018.4.16-py2.py3-none-any.whl
+      chardet-3.0.4-py2.py3-none-any.whl
+      decorator-4.3.0-py2.py3-none-any.whl
+      docopt-0.6.2.tar.gz
+      idna-2.6-py2.py3-none-any.whl
+      pbr-4.0.2-py2.py3-none-any.whl
+      pytz-2018.4-py2.py3-none-any.whl
+      requests-2.18.4-py2.py3-none-any.whl
+      six-1.11.0-py2.py3-none-any.whl
+      stomp.py-4.1.20.tar.gz
+      urllib3-1.22-py2.py3-none-any.whl
+      zhmcclient-0.19.0-py2.py3-none-any.whl
+
+2. Transfer all downloaded package files to the target system. Note that the
+   package files are binary files.
+
+   The actual files you see in your directory may not be the same ones shown in
+   this section, because new package versions may have been released meanwhile,
+   and new versions may even have different dependent packages.
+
+3. On the target system, install the zhmcclient package in a way that causes
+   Pip not to go out to the Pypi repository on the Internet, and instead
+   resolves its dependencies by using the packages you transferred from the
+   download system into the current directory:
+
+   .. code-block:: text
+
+      [target-system]$ ls -1
+      certifi-2018.4.16-py2.py3-none-any.whl
+      chardet-3.0.4-py2.py3-none-any.whl
+      decorator-4.3.0-py2.py3-none-any.whl
+      docopt-0.6.2.tar.gz
+      idna-2.6-py2.py3-none-any.whl
+      pbr-4.0.2-py2.py3-none-any.whl
+      pytz-2018.4-py2.py3-none-any.whl
+      requests-2.18.4-py2.py3-none-any.whl
+      six-1.11.0-py2.py3-none-any.whl
+      stomp.py-4.1.20.tar.gz
+      urllib3-1.22-py2.py3-none-any.whl
+      zhmcclient-0.19.0-py2.py3-none-any.whl
+
+      [target-system]$ pip install -f . --no-index --upgrade zhmcclient-*.whl
+      Looking in links: .
+      Processing ./zhmcclient-0.19.0-py2.py3-none-any.whl
+      Collecting six>=1.10.0 (from zhmcclient==0.19.0)
+      . . .
+      Installing collected packages: six, pytz, idna, urllib3, certifi, chardet, requests, decorator, docopt, stomp.py, pbr, zhmcclient
+      Successfully installed certifi-2018.4.16 chardet-3.0.4 decorator-4.3.0 docopt-0.6.2 idna-2.6 pbr-4.0.2 pytz-2018.4 requests-2.18.4 six-1.11.0 stomp.py-4.1.20 urllib3-1.22 zhmcclient-0.19.0
 
 Verification of the installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
