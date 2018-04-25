@@ -40,14 +40,14 @@
 pip==9.0.1
 setuptools==33.1.1
 wheel==0.29.0
-pbr==1.10.0
+pbr==1.8.0
 
 
 # Direct dependencies for runtime (must be consistent with requirements.txt)
 
-decorator==4.0.10
+decorator==3.4.0
 pytz==2016.10
-requests==2.12.4
+requests==2.6.0
 six==1.10.0
 stomp.py==4.1.15
 
