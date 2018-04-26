@@ -16,6 +16,7 @@
 import sys
 import os
 import re
+from pbr.version import VersionInfo
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -72,57 +73,39 @@ _short_description = u'Client library for IBM Z Hardware Management Console Web 
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-def package_version(filename, varname):
-    """Return package version string by reading `filename` and retrieving its
-       module-global variable `varnam`."""
-    _locals = {}
-    with open(filename) as fp:
-        exec(fp.read(), None, _locals)
-    return _locals[varname]
-
 # The short X.Y version.
 # Note: We use the full version in both cases (e.g. 'M.N.U' or 'M.N.U.dev0').
-version_pkg = package_version('../zhmcclient/_version.py', '__version__')
-from pbr.version import VersionInfo
 version = VersionInfo('zhmcclient').release_string()
 
 # Debug information to track down the issue with development
 # versions being built when HEAD is tagged with a release.
 print("Debug: conf.py: Debug information for package version issue")
-print("Debug: conf.py: zhmcclient version (via pbr): %s" % version)
-print("Debug: conf.py: zhmcclient version (via pkg): %s" % version_pkg)
+print("Debug: conf.py: zhmcclient version: %s" % version)
 print("Debug: conf.py: pwd: %s" % os.getcwd())
-
 print("Debug: conf.py: Executing: git tag")
 sys.stdout.flush()
 os.system('git tag')
-
 print("Debug: conf.py: Executing: git log --decorate --oneline |grep 'tag:'")
 sys.stdout.flush()
 os.system('git log --decorate --oneline |grep "tag:"')
-
 print("Debug: conf.py: Executing: git log --decorate --oneline |head -40")
 sys.stdout.flush()
 os.system('git log --decorate --oneline |head -40')
-
 print("Debug: conf.py: Executing: pip list |grep zhmc")
 sys.stdout.flush()
 os.system('pip list |grep zhmc')
-
 print("Debug: conf.py: Executing: ls -al ../zhmcclient.egg-info/")
 sys.stdout.flush()
 os.system('ls -al ../zhmcclient.egg-info/')
-
 print("Debug: conf.py: Executing: cat ../zhmcclient.egg-info/PKG-INFO |grep '^Version:'")
 sys.stdout.flush()
 os.system('cat ../zhmcclient.egg-info/PKG-INFO |grep "^Version:"')
-
 print("Debug: conf.py: Executing: cat ../zhmcclient.egg-info/pbr.json")
 sys.stdout.flush()
 os.system('cat ../zhmcclient.egg-info/pbr.json')
-
 print("\nDebug: conf.py: End of debug information")
 sys.stdout.flush()
+# End of Debug information
 
 # The full version, including alpha/beta/rc tags.
 release = version
