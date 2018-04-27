@@ -32,6 +32,23 @@ Released: not yet
 
 **Enhancements:**
 
+**Known issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
+Version 0.19.11
+^^^^^^^^^^^^^^^
+
+Released: 2018-05-14
+
+Note: The version number of this release jumped from 0.19.0 right to 0.19.11,
+for tooling reasons.
+
+**Enhancements:**
+
 * Docs: Improved the description of installation without Internet access, and
   considerations on system Python vs. virtual Python environments.
 
@@ -40,12 +57,6 @@ Released: not yet
   tolerating decorator v3.4 in the zhmcclient _logging module.
 
 * Adjusted development environment to changes in Appveyor CI environment.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.19.0
