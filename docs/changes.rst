@@ -19,7 +19,7 @@ Change log
 ----------
 
 
-Version 0.19.1
+Version 0.19.9
 ^^^^^^^^^^^^^^
 
 Released: 2018-04-27
