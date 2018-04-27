@@ -22,21 +22,11 @@ Change log
 Version 0.19.1
 ^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2018-04-27
 
 **Bug fixes:**
 
-**Enhancements:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+* Adjusted development environment to changes in Appveyor CI environment.
 
 
 Version 0.19.0
