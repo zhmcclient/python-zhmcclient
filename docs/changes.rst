@@ -19,8 +19,8 @@ Change log
 ----------
 
 
-Version 0.20.0
-^^^^^^^^^^^^^^
+Version 0.19.11
+^^^^^^^^^^^^^^^
 
 Released: not yet
 
