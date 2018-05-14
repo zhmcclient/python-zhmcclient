@@ -32,6 +32,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Docs: Streamlined, improved and fixed the description how to release a version
+  and how to start a new version, in the development section of the documentation.
+
 **Known issues:**
 
 * See `list of open issues`_.
