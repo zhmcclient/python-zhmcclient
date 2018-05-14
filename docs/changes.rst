@@ -19,8 +19,8 @@ Change log
 ----------
 
 
-Version 0.20.0
-^^^^^^^^^^^^^^
+Version 0.19.11
+^^^^^^^^^^^^^^^
 
 Released: not yet
 
@@ -38,6 +38,8 @@ Released: not yet
 * Lowered the minimum version requirements for installing the zhmcclient
   package, for the packages: requests, pbr, decorator. Added support for
   tolerating decorator v3.4 in the zhmcclient _logging module.
+
+* Adjusted development environment to changes in Appveyor CI environment.
 
 **Known issues:**
 
