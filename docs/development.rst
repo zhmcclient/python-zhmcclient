@@ -420,7 +420,13 @@ has the remote name ``origin`` in your local clone.
 
 8.  On GitHub, once the checks for this Pull Request succeed:
 
-    * Merge the Pull Request (no review is needed)
+    * Merge the Pull Request (no review is needed).
+
+      Because this updates the ``stable_M.N`` branch, it triggers an RTD docs build of
+      its stable version. However, because the git tag for this version is not assigned
+      yet, this RTD build will show an incorrect version (a dev version based on the
+      previous version tag). This will be fixed in a subsequent step.
+
     * Delete the branch of the Pull Request (``release_M.N.U``)
 
 9.  Checkout the branch you are releasing, update it from upstream, and delete the local
@@ -445,6 +451,9 @@ has the remote name ``origin`` in your local clone.
         git tag $MNU
         git push --tags
 
+    The pushing of the tag triggers another RTD docs build of its stable version, this time
+    with the correct version as defined in the tag.
+
     If the previous commands fail because this tag already exists for some reason, delete
     the tag locally and remotely:
 
@@ -455,12 +464,23 @@ has the remote name ``origin`` in your local clone.
 
     and try again.
 
-11. On GitHub, edit the new tag ``M.N.U``, and create a release description on it. This
+11. On RTD, verify that it shows the correct version for its stable version:
+
+    RTD stable version: https://python-zhmcclient.readthedocs.io/en/stable.
+    
+    If it does not, trigger a build of RTD version "stable" on the RTD project
+    page: 
+
+    RTD build page: https://readthedocs.org/projects/python-zhmcclient/builds/
+
+    Once that build is complete, verify again.
+
+12. On GitHub, edit the new tag ``M.N.U``, and create a release description on it. This
     will cause it to appear in the Release tab.
 
     You can see the tags in GitHub via Code -> Releases -> Tags.
 
-12. Do a fresh install of this version in your active Python environment. This ensures
+13. Do a fresh install of this version in your active Python environment. This ensures
     that 'pbr' determines the correct version. Otherwise, it may determine some development
     version.
 
@@ -469,7 +489,7 @@ has the remote name ``origin`` in your local clone.
         make clobber install
         make help    # Double check that it shows version ``M.N.U``
 
-13. Upload the package to PyPI:
+14. Upload the package to PyPI:
 
     .. code-block:: text
 
@@ -486,12 +506,7 @@ has the remote name ``origin`` in your local clone.
     Verify that the released version arrived on PyPI:
     https://pypi.python.org/pypi/zhmcclient/
 
-    Verify that RTD shows the released version as its stable version:
-    https://python-zhmcclient.readthedocs.io/en/stable/intro.html#versioning.
-    RTD builds the documentation automatically, but it may take a few
-    minutes to do so.
-
-14. If you released the master branch, it needs a new fix stream.
+15. If you released the master branch, it needs a new fix stream.
 
     Create a branch for its fix stream and push it upstream:
 
