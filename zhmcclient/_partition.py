@@ -208,41 +208,6 @@ class PartitionManager(BaseManager):
         self._name_uri_cache.update(name, uri)
         return part
 
-    @logged_api_call
-    def partition_object(self, part_id):
-        """
-        Return a minimalistic :class:`~zhmcclient.Partition` object for a
-        Partition in this CPC.
-
-        This method is an internal helper function and is not normally called
-        by users.
-
-        This object will be connected in the Python object tree representing
-        the resources (i.e. it has this CPC as a parent), and will have the
-        following properties set:
-
-          * `object-uri`
-          * `object-id`
-          * `parent`
-          * `class`
-
-        Parameters:
-
-            part_id (string): `object-id` of the Partition
-
-        Returns:
-
-            :class:`~zhmcclient.Partition`: A Python object representing the
-            Partition.
-        """
-        part_uri = "/api/partitions/" + part_id
-        part_props = {
-            'object-id': part_id,
-            'parent': self.parent.uri,
-            'class': 'partition',
-        }
-        return Partition(self, part_uri, None, part_props)
-
 
 class Partition(BaseResource):
     """

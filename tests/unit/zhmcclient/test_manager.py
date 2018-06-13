@@ -76,6 +76,77 @@ class MyManager(BaseManager):
         return result_list
 
 
+class TestManager0(object):
+    """
+    Tests for the BaseManager class with no initial resources.
+    """
+
+    def setup_method(self):
+        self.session = Session(host='fake-host', userid='fake-user',
+                               password='fake-pw')
+
+    def test_resource_object_oid(self):
+        """
+        Test BaseManager.resource_object() with oid input.
+        """
+
+        res_mgr = MyManager(self.session)
+        res_oid = 'fake-res-id0711'
+
+        # Execute the code to be tested
+        res = res_mgr.resource_object(res_oid)
+
+        res_uri = res_mgr._base_uri + '/' + res_oid
+
+        assert isinstance(res, res_mgr.resource_class)
+        assert res.uri == res_uri
+        assert res.properties[res_mgr._uri_prop] == res_uri
+        assert res.properties[res_mgr._oid_prop] == res_oid
+        assert res.properties['class'] == res_mgr.class_name
+        exp_parent = res_mgr.parent.uri if res_mgr.parent is not None else None
+        assert res.properties['parent'] == exp_parent
+
+    def test_resource_object_uri(self):
+        """
+        Test BaseManager.resource_object() with uri input.
+        """
+
+        res_mgr = MyManager(self.session)
+        res_oid = 'fake-res-id0711'
+        res_uri = '/api/myresources/' + res_oid
+
+        # Execute the code to be tested
+        res = res_mgr.resource_object(res_uri)
+
+        assert isinstance(res, res_mgr.resource_class)
+        assert res.uri == res_uri
+        assert res.properties[res_mgr._uri_prop] == res_uri
+        assert res.properties[res_mgr._oid_prop] == res_oid
+        assert res.properties['class'] == res_mgr.class_name
+        exp_parent = res_mgr.parent.uri if res_mgr.parent is not None else None
+        assert res.properties['parent'] == exp_parent
+
+    def test_resource_object_props(self):
+        """
+        Test BaseManager.resource_object() with additional props.
+        """
+
+        res_mgr = MyManager(self.session)
+        res_oid = 'fake-res-id0711'
+        res_uri = '/api/myresources/' + res_oid
+
+        add_props = {
+            'name': 'abc',
+            'prop1': 123,
+        }
+
+        # Execute the code to be tested
+        res = res_mgr.resource_object(res_uri, add_props)
+
+        assert res.properties['name'] == add_props['name']
+        assert res.properties['prop1'] == add_props['prop1']
+
+
 class TestManager1(object):
     """
     Tests for the BaseManager class with one resource.
