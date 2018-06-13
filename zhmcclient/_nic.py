@@ -235,41 +235,6 @@ class NicManager(BaseManager):
         self._name_uri_cache.update(name, uri)
         return nic
 
-    @logged_api_call
-    def nic_object(self, nic_id):
-        """
-        Return a minimalistic :class:`~zhmcclient.Nic` object for a Nic in this
-        Partition.
-
-        This method is an internal helper function and is not normally called
-        by users.
-
-        This object will be connected in the Python object tree representing
-        the resources (i.e. it has this Partition as a parent), and will have
-        the following properties set:
-
-          * `element-uri`
-          * `element-id`
-          * `parent`
-          * `class`
-
-        Parameters:
-
-            nic_id (string): `element-id` of the Nic
-
-        Returns:
-
-            :class:`~zhmcclient.Nic`: A Python object representing the Nic.
-        """
-        part_uri = self.parent.uri
-        nic_uri = part_uri + "/nics/" + nic_id
-        nic_props = {
-            'element-id': nic_id,
-            'parent': part_uri,
-            'class': 'nic',
-        }
-        return Nic(self, nic_uri, None, nic_props)
-
 
 class Nic(BaseResource):
     """

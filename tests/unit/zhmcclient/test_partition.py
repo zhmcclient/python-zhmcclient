@@ -279,16 +279,19 @@ class TestPartition(object):
                     exp_value = input_props[prop_name]
                     assert value == exp_value
 
-    def test_partitionmanager_partition_object(self):
+    def test_partitionmanager_resource_object(self):
         """
-        Test PartitionManager.partition_object().
+        Test PartitionManager.resource_object().
+
+        This test exists for historical reasons, and by now is covered by the
+        test for BaseManager.resource_object().
         """
         partition_mgr = self.cpc.partitions
 
         partition_oid = 'fake-partition-id42'
 
         # Execute the code to be tested
-        partition = partition_mgr.partition_object(partition_oid)
+        partition = partition_mgr.resource_object(partition_oid)
 
         partition_uri = "/api/partitions/" + partition_oid
 

@@ -231,9 +231,9 @@ class VirtualSwitch(BaseResource):
             try:
                 part = parts[part_id]
             except KeyError:
-                part = self.manager.cpc.partitions.partition_object(part_id)
+                part = self.manager.cpc.partitions.resource_object(part_id)
                 parts[part_id] = part
-            nic = part.nics.nic_object(nic_id)
+            nic = part.nics.resource_object(nic_id)
             nic_list.append(nic)
         return nic_list
 

@@ -561,6 +561,59 @@ class BaseManager(object):
         """
         return self._parent
 
+    def resource_object(self, uri_or_oid, props=None):
+        """
+        Return a minimalistic Python resource object for this resource class,
+        that is scoped to this manager.
+
+        This method is an internal helper function and is not normally called
+        by users.
+
+        The returned resource object will have the following minimal set of
+        properties set automatically:
+
+          * `object-uri`
+          * `object-id`
+          * `parent`
+          * `class`
+
+        Additional properties for the Python resource object can be specified
+        by the caller.
+
+        Parameters:
+
+            uri_or_oid (string): `object-uri` or `object-id` of the resource.
+
+            props (dict): Property values in addition to the minimal list of
+              properties that are set automatically (see above).
+
+        Returns:
+
+            Subclass of :class:`~zhmcclient.BaseResource`: A Python resource
+            object for this resource class.
+        """
+        if uri_or_oid.startswith('/api/'):
+            assert uri_or_oid[-1] != '/'
+            uri = uri_or_oid
+            oid = uri.split('/')[-1]
+        else:
+            assert '/' not in uri_or_oid
+            oid = uri_or_oid
+            uri = '{}/{}'.format(self._base_uri, oid)
+        res_props = {
+            self._oid_prop: oid,
+            'parent': self.parent.uri if self.parent is not None else None,
+            'class': self.class_name,
+        }
+        name = None
+        if props:
+            res_props.update(props)
+            try:
+                name = props[self._name_prop]
+            except KeyError:
+                pass
+        return self.resource_class(self, uri, name, res_props)
+
     @logged_api_call
     def findall(self, **filter_args):
         """

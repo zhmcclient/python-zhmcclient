@@ -593,14 +593,19 @@ class TestNic(object):
         new_nic_list = new_nics_list[0]
         assert new_nic_list.properties['name'] == new_nic_name
 
-    def test_nic_object(self):
-        """Test Nic.Manager.nic_object()."""
+    def test_nicmanager_resource_object(self):
+        """
+        Test NicManager.resource_object().
+
+        This test exists for historical reasons, and by now is covered by the
+        test for BaseManager.resource_object().
+        """
 
         nic_mgr = self.partition.nics
         nic_oid = 'fake-nic-id0711'
 
         # Execute the code to be tested
-        nic = nic_mgr.nic_object(nic_oid)
+        nic = nic_mgr.resource_object(nic_oid)
 
         nic_uri = self.partition.uri + "/nics/" + nic_oid
 
