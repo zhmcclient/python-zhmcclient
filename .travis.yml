@@ -163,7 +163,7 @@ install:
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       $PIP_CMD install virtualenv;
-      virtualenv venv -p $PYTHON_CMD && source venv/bin/activate;
+      virtualenv ../venv -p $PYTHON_CMD && source ../venv/bin/activate;
     fi
   - make pyshow
   - $PIP_CMD list
