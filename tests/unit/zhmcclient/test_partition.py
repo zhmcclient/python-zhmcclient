@@ -32,6 +32,8 @@ PART1_OID = 'part1-oid'
 PART1_NAME = 'part 1'
 PART2_OID = 'part2-oid'
 PART2_NAME = 'part 2'
+PART3_OID = 'part3-oid'
+PART3_NAME = 'part 3'
 
 
 class TestPartition(object):
@@ -92,6 +94,35 @@ class TestPartition(object):
             'initial-memory': 1024,
             'maximum-memory': 2048,
         })
+        return faked_partition
+
+    def add_partition3(self):
+        """Add partition 3 (support for firmware features)."""
+
+        faked_partition = self.faked_cpc.partitions.add({
+            'object-id': PART3_OID,
+            # object-uri will be automatically set
+            'parent': self.faked_cpc.uri,
+            'class': 'partition',
+            'name': PART3_NAME,
+            'description': 'Partition #3',
+            'status': 'active',
+            'type': 'linux',
+            'initial-memory': 1024,
+            'maximum-memory': 2048,
+            'available-features-list': [],
+        })
+        return faked_partition
+
+    def add_partition(self, part_name):
+        """Add a partition (using one of the known names)."""
+
+        if part_name == PART1_NAME:
+            faked_partition = self.add_partition1()
+        elif part_name == PART2_NAME:
+            faked_partition = self.add_partition2()
+        elif part_name == PART3_NAME:
+            faked_partition = self.add_partition3()
         return faked_partition
 
     def test_partitionmanager_initial_attrs(self):
@@ -407,6 +438,144 @@ class TestPartition(object):
         partition3 = partition_mgr.find(name=partition_name)
         description = partition3.get_property('description')
         assert description == 'Third partition'
+
+    @pytest.mark.parametrize(
+        "desc, partition_name, available_features, feature_name, "
+        "exp_feature_enabled, exp_exc", [
+            (
+                "No feature support on the CPC",
+                PART1_NAME,
+                None,
+                'fake-feature1', None, ValueError()
+            ),
+            (
+                "Feature not available on the partition (empty feature list)",
+                PART3_NAME,
+                [],
+                'fake-feature1', None, ValueError()
+            ),
+            (
+                "Feature not available on the part (one other feature avail)",
+                PART3_NAME,
+                [
+                    dict(name='fake-feature-foo', state=True),
+                ],
+                'fake-feature1', None, ValueError()
+            ),
+            (
+                "Feature disabled (the only feature available)",
+                PART3_NAME,
+                [
+                    dict(name='fake-feature1', state=False),
+                ],
+                'fake-feature1', False, None
+            ),
+            (
+                "Feature enabled (the only feature available)",
+                PART3_NAME,
+                [
+                    dict(name='fake-feature1', state=True),
+                ],
+                'fake-feature1', True, None
+            ),
+        ]
+    )
+    def test_partition_feature_enabled(
+            self, desc, partition_name, available_features, feature_name,
+            exp_feature_enabled, exp_exc):
+        """Test Partition.feature_enabled()."""
+
+        # Add a faked Partition
+        faked_partition = self.add_partition(partition_name)
+
+        # Set up the firmware feature list
+        if available_features is not None:
+            faked_partition.properties['available-features-list'] = \
+                available_features
+
+        partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=partition_name)
+
+        if exp_exc:
+            with pytest.raises(exp_exc.__class__):
+
+                # Execute the code to be tested
+                partition.feature_enabled(feature_name)
+
+        else:
+
+            # Execute the code to be tested
+            act_feature_enabled = partition.feature_enabled(feature_name)
+
+            assert act_feature_enabled == exp_feature_enabled
+
+    @pytest.mark.parametrize(
+        "desc, partition_name, available_features, exp_exc", [
+            (
+                "No feature support on the CPC",
+                PART1_NAME,
+                None,
+                ValueError()
+            ),
+            (
+                "Feature not available on the partition (empty feature list)",
+                PART3_NAME,
+                [],
+                None
+            ),
+            (
+                "Feature not available on the part (one other feature avail)",
+                PART3_NAME,
+                [
+                    dict(name='fake-feature-foo', state=True),
+                ],
+                None
+            ),
+            (
+                "Feature disabled (the only feature available)",
+                PART3_NAME,
+                [
+                    dict(name='fake-feature1', state=False),
+                ],
+                None
+            ),
+            (
+                "Feature enabled (the only feature available)",
+                PART3_NAME,
+                [
+                    dict(name='fake-feature1', state=True),
+                ],
+                None
+            ),
+        ]
+    )
+    def test_partition_feature_info(
+            self, desc, partition_name, available_features, exp_exc):
+        """Test Partition.feature_info()."""
+
+        # Add a faked Partition
+        faked_partition = self.add_partition(partition_name)
+
+        # Set up the firmware feature list
+        if available_features is not None:
+            faked_partition.properties['available-features-list'] = \
+                available_features
+
+        partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=partition_name)
+
+        if exp_exc:
+            with pytest.raises(exp_exc.__class__):
+
+                # Execute the code to be tested
+                partition.feature_info()
+
+        else:
+
+            # Execute the code to be tested
+            act_features = partition.feature_info()
+
+            assert act_features == available_features
 
     @pytest.mark.parametrize(
         "partition_name", [
