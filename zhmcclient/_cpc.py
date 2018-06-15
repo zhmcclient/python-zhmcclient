@@ -414,6 +414,89 @@ class Cpc(BaseResource):
         return max_parts
 
     @logged_api_call
+    def feature_enabled(self, feature_name):
+        """
+        Indicates whether the specified feature is enabled for this CPC.
+
+        The HMC must generally support features, and the specified feature must
+        be available for the CPC.
+
+        For a list of available features, see section "Features" in the
+        :term:`HMC API`, or use the :meth:`feature_info` method.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+
+        Parameters:
+
+          feature_name (:term:`string`): The name of the feature.
+
+        Returns:
+
+          bool: `True` if the feature is enabled, or `False` if the feature is
+          disabled (but available).
+
+        Raises:
+
+          :exc:`ValueError`: Features are not supported on the HMC.
+          :exc:`ValueError`: The specified feature is not available for the
+            CPC.
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        feature_list = self.prop('available-features-list', None)
+        if feature_list is None:
+            raise ValueError("Firmware features are not supported on CPC %s" %
+                             self.name)
+        for feature in feature_list:
+            if feature['name'] == feature_name:
+                break
+        else:
+            raise ValueError("Firmware feature %s is not available on CPC %s" %
+                             (feature_name, self.name))
+        return feature['state']
+
+    @logged_api_call
+    def feature_info(self):
+        """
+        Returns information about the features available for this CPC.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+
+        Returns:
+
+          :term:`iterable`:
+            An iterable where each item represents one feature that is
+            available for this CPC.
+
+            Each item is a dictionary with the following items:
+
+            * `name` (:term:`unicode string`): Name of the feature.
+            * `description` (:term:`unicode string`): Short description of
+              the feature.
+            * `state` (bool): Enablement state of the feature (`True` if the
+              enabled, `False` if disabled).
+
+        Raises:
+
+          :exc:`ValueError`: Features are not supported on the HMC.
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        feature_list = self.prop('available-features-list', None)
+        if feature_list is None:
+            raise ValueError("Firmware features are not supported on CPC %s" %
+                             self.name)
+        return feature_list
+
+    @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this CPC.
