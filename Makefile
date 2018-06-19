@@ -59,7 +59,7 @@ mock_package_name := zhmcclient_mock
 
 # Package version (full version, including any pre-release suffixes, e.g. "0.1.0-alpha1")
 # May end up being empty, if pbr cannot determine the version.
-package_version := $(shell $(PYTHON_CMD) -c "from pbr.version import VersionInfo; vi=VersionInfo('$(package_name)'); print(vi.release_string())" 2>/dev/null)
+package_version := $(shell $(PYTHON_CMD) -c "$$(printf 'try:\n from pbr.version import VersionInfo\nexcept ImportError:\n pass\nelse:\n print(VersionInfo(\042$(package_name)\042).release_string())\n')")
 
 # Python major version
 python_major_version := $(shell $(PYTHON_CMD) -c "import sys; sys.stdout.write('%s'%sys.version_info[0])")
