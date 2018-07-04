@@ -516,3 +516,48 @@ class Adapter(BaseResource):
             body['zeroize'] = zeroize
         self.manager.session.post(
             self.uri + '/operations/change-crypto-type', body)
+
+    @logged_api_call
+    def change_adapter_type(self, adapter_type):
+        """
+        Reconfigures an adapter from one type to another, or to ungonfigured.
+        Currently, only storage adapters can be reconfigured, and their adapter
+        type is the supported storage protocol (FCP vs. FICON).
+
+        Storage adapter instances (i.e. :class:`~zhmcclient.Adapter` objects)
+        represent daughter cards on a physical storage card. Current storage
+        cards require both daughter cards to be configured to the same
+        protocol, so changing the type of the targeted adapter will also change
+        the type of the adapter instance that represents the other daughter
+        card on the same physical card. Zhmcclient users that need to determine
+        the related adapter instance can do so by finding the storage adapter
+        with a matching first 9 characters (card ID and slot ID) of their
+        `card-location` property values.
+
+        The targeted adapter and its related adapter on the same storage card
+        must not already have the desired adapter type, they must not be
+        attached to any partition, and they must not have an adapter status
+        of 'exceptions'.
+
+        Authorization requirements:
+
+        * Object-access permission to this Adapter.
+        * Task permission to the "Configure Storage - System Programmer" task.
+
+        Parameters:
+
+          adapter_type (:term:`string`):
+            - ``"fcp"``: FCP (Fibre Channel Protocol)
+            - ``"fc"``: FICON (Fibre Connection) protocol
+            - ``"not-configured"``: No adapter type configured
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'type': adapter_type}
+        self.manager.session.post(
+            self.uri + '/operations/change-adapter-type', body)

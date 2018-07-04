@@ -172,6 +172,48 @@ class TestAdapter(object):
         })
         return faked_adapter
 
+    def add_ficon_fe6sp(self, faked_cpc):
+        """Add a not-configured FICON Express 6S+ adapter to a faked CPC."""
+
+        # Adapter properties that will be auto-set:
+        # - object-uri
+        # - storage-port-uris
+        faked_ficon_adapter = faked_cpc.adapters.add({
+            'object-id': 'fake-ficon6s-oid',
+            'parent': faked_cpc.uri,
+            'class': 'adapter',
+            'name': 'fake-ficon6s-name',
+            'description': 'FICON Express 6S+ #1',
+            'status': 'active',
+            'type': 'not-configured',
+            'adapter-id': '124',
+            'adapter-family': 'ficon',
+            'detected-card-type': 'ficon-express-16s-plus',
+            'card-location': 'vvvv-wwww',
+            'port-count': 1,
+            'state': 'online',
+            'configured-capacity': 254,
+            'used-capacity': 0,
+            'allowed-capacity': 254,
+            'maximum-total-capacity': 254,
+            'channel-path-id': None,
+            'physical-channel-status': 'not-defined',
+        })
+
+        # Port properties that will be auto-set:
+        # - element-uri
+        # Properties in parent adapter that will be auto-set:
+        # - storage-port-uris
+        faked_ficon_adapter.ports.add({
+            'element-id': 'fake-port11-oid',
+            'parent': faked_ficon_adapter.uri,
+            'class': 'storage-port',
+            'index': 0,
+            'name': 'fake-port11-name',
+            'description': 'FICON #1 Port #1',
+        })
+        return faked_ficon_adapter
+
     def add_cpc_z13s(self):
         """Add a CPC #2 of type z13s to the faked HMC."""
 
@@ -496,3 +538,78 @@ class TestAdapter(object):
         assert new_adapter_list.properties['name'] == new_adapter_name
 
     # TODO: Test for Adapter.change_crypto_type()
+
+    @pytest.mark.parametrize(
+        "init_type", ['not-configured', 'fc', 'fcp']
+    )
+    @pytest.mark.parametrize(
+        "new_type", ['not-configured', 'fc', 'fcp']
+    )
+    def test_change_adapter_type_success(self, init_type, new_type):
+        """Test Adapter.change_adapter_type() on ficon adapter with success."""
+
+        faked_cpc = self.faked_cpc
+        faked_adapter = self.add_ficon_fe6sp(faked_cpc)
+
+        # Set the desired initial adapter type for the test
+        faked_adapter.properties['type'] = init_type
+
+        adapter_mgr = self.cpc.adapters
+        adapter = adapter_mgr.find(name=faked_adapter.name)
+
+        if new_type == init_type:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                adapter.change_adapter_type(new_type)
+
+            exc = exc_info.value
+            assert exc.http_status == 400
+            assert exc.reason == 8
+        else:
+
+            # Execute the code to be tested.
+            adapter.change_adapter_type(new_type)
+
+            act_type = adapter.get_property('type')
+            assert act_type == new_type
+
+    @pytest.mark.parametrize(
+        "desc, family, init_type, new_type, exp_exc", [
+            (
+                "Invalid adapter family: 'osa'",
+                'osa', 'osd', None,
+                HTTPError({'http-status': 400, 'reason': 18})
+            ),
+            (
+                "Invalid new type value: 'xxx'",
+                'ficon', 'fcp', 'xxx',
+                HTTPError({'http-status': 400, 'reason': 8})
+            ),
+        ]
+    )
+    def test_change_adapter_type_error(
+            self, desc, family, init_type, new_type, exp_exc):
+        """Test Adapter.change_adapter_type()."""
+
+        faked_cpc = self.faked_cpc
+        if family == 'ficon':
+            faked_adapter = self.add_ficon_fe6sp(faked_cpc)
+        else:
+            assert family == 'osa'
+            faked_adapter = self.add_standard_osa()
+
+        faked_adapter.properties['type'] == init_type
+
+        adapter_mgr = self.cpc.adapters
+        adapter = adapter_mgr.find(name=faked_adapter.name)
+
+        with pytest.raises(exp_exc.__class__) as exc_info:
+
+            # Execute the code to be tested
+            adapter.change_adapter_type(new_type)
+
+        exc = exc_info.value
+        if isinstance(exp_exc, HTTPError):
+            assert exc.http_status == exp_exc.http_status
+            assert exc.reason == exp_exc.reason

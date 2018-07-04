@@ -1340,6 +1340,61 @@ class AdapterChangeCryptoTypeHandler(object):
         adapter.properties['crypto-type'] = crypto_type
 
 
+class AdapterChangeAdapterTypeHandler(object):
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        """Operation: Change Adapter Type (requires DPM mode)."""
+        assert wait_for_completion is True  # HMC operation is synchronous
+        adapter_uri = uri.split('/operations/')[0]
+        try:
+            adapter = hmc.lookup_by_uri(adapter_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        cpc = adapter.manager.parent
+        assert cpc.dpm_enabled
+        check_required_fields(method, uri, body, ['type'])
+
+        new_adapter_type = body['type']
+
+        # Check the validity of the adapter family
+        adapter_family = adapter.properties.get('adapter-family', None)
+        if adapter_family != 'ficon':
+            raise BadRequestError(
+                method, uri, reason=18,
+                message="The adapter type cannot be changed for adapter "
+                        "family: %s" % adapter_family)
+
+        # Check the adapter status
+        adapter_status = adapter.properties.get('status', None)
+        if adapter_status == 'exceptions':
+            raise BadRequestError(
+                method, uri, reason=18,
+                message="The adapter type cannot be changed for adapter "
+                        "status: %s" % adapter_status)
+
+        # Check the validity of the new adapter type
+        if new_adapter_type not in ['fc', 'fcp', 'not-configured']:
+            raise BadRequestError(
+                method, uri, reason=8,
+                message="Invalid new value for 'type' field: %s" %
+                        new_adapter_type)
+
+        # Check that the new adapter type is not already set
+        adapter_type = adapter.properties.get('type', None)
+        if new_adapter_type == adapter_type:
+            raise BadRequestError(
+                method, uri, reason=8,
+                message="New value for 'type' field is already set: %s" %
+                        new_adapter_type)
+
+        # TODO: Reject if adapter is attached to a partition.
+
+        # Reflect the result of changing the adapter type
+        adapter.properties['type'] = new_adapter_type
+
+
 class NetworkPortHandler(GenericGetPropertiesHandler,
                          GenericUpdatePropertiesHandler):
     pass
@@ -2604,6 +2659,8 @@ URIS = (
     (r'/api/adapters/([^/]+)', AdapterHandler),
     (r'/api/adapters/([^/]+)/operations/change-crypto-type',
      AdapterChangeCryptoTypeHandler),
+    (r'/api/adapters/([^/]+)/operations/change-adapter-type',
+     AdapterChangeAdapterTypeHandler),
 
     (r'/api/adapters/([^/]+)/network-ports/([^/]+)', NetworkPortHandler),
 
