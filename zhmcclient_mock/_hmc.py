@@ -1392,7 +1392,7 @@ class FakedAdapter(FakedBaseResource):
             elif type_ == 'hipersockets':
                 self.properties['adapter-family'] = 'hipersockets'
                 self._adapter_kind = 'network'
-            elif type_ == 'fcp':
+            elif type_ in ('fcp', 'fc'):
                 self.properties['adapter-family'] = 'ficon'
                 self._adapter_kind = 'storage'
             elif type_ == 'crypto':

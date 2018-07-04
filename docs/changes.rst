@@ -85,6 +85,10 @@ Released: not yet
   - 5.14. Virtual Storage Resources
   - In 5.15 Console: `storage_groups`
 
+* Added support for changing the type of storage adapters between FICON and FCP,
+  via a new method `Adapter.change_adapter_type()`. This capability was introduced
+  with the z14-ZR1 and LinuxONE Rockhopper II machine generation.
+
 **Known issues:**
 
 * See `list of open issues`_.

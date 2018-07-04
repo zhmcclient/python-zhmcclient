@@ -61,6 +61,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     NicsHandler, NicHandler, \
     VirtualFunctionsHandler, VirtualFunctionHandler, \
     AdaptersHandler, AdapterHandler, AdapterChangeCryptoTypeHandler, \
+    AdapterChangeAdapterTypeHandler, \
     NetworkPortHandler, \
     StoragePortHandler, \
     VirtualSwitchesHandler, VirtualSwitchHandler, \
@@ -3385,6 +3386,55 @@ class TestAdapterChangeCryptoTypeHandler(object):
         resp = self.urihandler.post(
             self.hmc,
             '/api/adapters/4/operations/change-crypto-type',
+            operation_body, True, True)
+
+        assert resp is None
+
+
+class TestAdapterChangeAdapterTypeHandler(object):
+    """All tests for class AdapterChangeAdapterTypeHandler."""
+
+    def setup_method(self):
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
+            (r'/api/adapters/([^/]+)', AdapterHandler),
+            (r'/api/adapters/([^/]+)/operations/change-adapter-type',
+             AdapterChangeAdapterTypeHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_invoke_err_no_body(self):
+
+        # the function to be tested:
+        with pytest.raises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/adapters/2/operations/change-adapter-type',
+                None, True, True)
+
+    def test_invoke_err_no_type_field(self):
+
+        operation_body = {
+            # no 'type' field
+        }
+
+        # the function to be tested:
+        with pytest.raises(HTTPError):
+            self.urihandler.post(
+                self.hmc,
+                '/api/adapters/2/operations/change-adapter-type',
+                operation_body, True, True)
+
+    def test_invoke_ok(self):
+        operation_body = {
+            'type': 'fcp',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc,
+            '/api/adapters/2/operations/change-adapter-type',
             operation_body, True, True)
 
         assert resp is None
