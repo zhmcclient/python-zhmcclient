@@ -19,6 +19,7 @@ Example: Create a metrics context, retrieve metrics and delete metrics context.
 
 import sys
 import yaml
+import time
 import requests.packages.urllib3
 
 import zhmcclient
@@ -88,6 +89,11 @@ try:
     mc = cl.metrics_contexts.create(
         {'anticipated-frequency-seconds': 15,
          'metric-groups': metric_groups})
+
+    sleep_time = 15  # seconds
+
+    print("Sleeping for %s seconds ..." % sleep_time)
+    time.sleep(sleep_time)
 
     print("Retrieving the current metric values ...")
     mr_str = mc.get_metrics()
