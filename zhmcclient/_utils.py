@@ -18,7 +18,8 @@ Utility functions.
 
 from __future__ import absolute_import
 
-import pprint
+import six
+from collections import OrderedDict, Mapping, MutableSequence, Iterable
 from datetime import datetime
 import pytz
 
@@ -44,13 +45,46 @@ def repr_text(text, indent):
 
 def repr_list(_list, indent):
     """Return a debug representation of a list or tuple."""
-    ret = pprint.pformat(_list, indent=indent)
+    # pprint represents lists and tuples in one row if possible. We want one
+    # per row, so we iterate ourselves.
+    if isinstance(_list, MutableSequence):
+        bm = '['
+        em = ']'
+    elif isinstance(_list, Iterable):
+        bm = '('
+        em = ')'
+    else:
+        raise TypeError("Object must be an iterable, but is a %s" %
+                        type(_list))
+    ret = bm + '\n'
+    for value in _list:
+        ret += _indent('%r,\n' % value, 2)
+    ret += em
+    ret = repr_text(ret, indent=indent)
     return ret.lstrip(' ')
 
 
 def repr_dict(_dict, indent):
     """Return a debug representation of a dict or OrderedDict."""
-    ret = pprint.pformat(_dict, indent=indent)
+    # pprint represents OrderedDict objects using the tuple init syntax,
+    # which is not very readable. Therefore, dictionaries are iterated over.
+    if not isinstance(_dict, Mapping):
+        raise TypeError("Object must be a mapping, but is a %s" %
+                        type(_dict))
+    if isinstance(_dict, OrderedDict):
+        kind = 'ordered'
+        ret = '%s {\n' % kind  # non standard syntax for the kind indicator
+        for key in six.iterkeys(_dict):
+            value = _dict[key]
+            ret += _indent('%r: %r,\n' % (key, value), 2)
+    else:  # dict
+        kind = 'sorted'
+        ret = '%s {\n' % kind  # non standard syntax for the kind indicator
+        for key in sorted(six.iterkeys(_dict)):
+            value = _dict[key]
+            ret += _indent('%r: %r,\n' % (key, value), 2)
+    ret += '}'
+    ret = repr_text(ret, indent=indent)
     return ret.lstrip(' ')
 
 
