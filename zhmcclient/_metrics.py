@@ -133,9 +133,9 @@ class MetricsContextManager(BaseManager):
             "  _name_prop = {_name_prop!r}\n"
             "  _query_props = {_query_props}\n"
             "  _list_has_name = {_list_has_name!r}\n"
-            "  _name_uri_cache ={_name_uri_cache!r}\n"
+            "  _name_uri_cache = {_name_uri_cache!r}\n"
             "  _client = {_client_classname} at 0x{_client_id:08x}\n"
-            "  _metrics_contexts ={_metrics_contexts!r}\n"
+            "  _metrics_contexts = {_metrics_contexts}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -154,7 +154,7 @@ class MetricsContextManager(BaseManager):
                 _name_uri_cache=self._name_uri_cache,
                 _client_classname=self._client.__class__.__name__,
                 _client_id=id(self._client),
-                _metrics_contexts=self._metrics_contexts,
+                _metrics_contexts=repr_list(self._metrics_contexts, indent=2),
             ))
         return ret
 

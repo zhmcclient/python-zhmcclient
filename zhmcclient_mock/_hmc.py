@@ -29,7 +29,8 @@ import re
 import copy
 
 from ._idpool import IdPool
-from zhmcclient._utils import repr_dict, repr_manager, timestamp_from_datetime
+from zhmcclient._utils import repr_dict, repr_manager, repr_list, \
+    timestamp_from_datetime
 
 __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedConsoleManager', 'FakedConsole',
@@ -126,7 +127,7 @@ class FakedBaseResource(object):
                 _manager_id=id(self._manager),
                 _oid=self._oid,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=4),
+                _properties=repr_dict(self.properties, indent=2),
             ))
         return ret
 
@@ -633,10 +634,10 @@ class FakedHmc(FakedBaseResource):
             "  hmc_version = {hmc_version!r}\n"
             "  api_version = {api_version!r}\n"
             "  enabled = {enabled!r}\n"
-            "  cpcs = {cpcs!r}\n"
-            "  metrics_contexts = {metrics_contexts!r}\n"
-            "  consoles = {consoles!r}\n"
-            "  all_resources(keys) = {all_resource_keys}\n"
+            "  cpcs = {cpcs}\n"
+            "  metrics_contexts = {metrics_contexts}\n"
+            "  consoles = {consoles}\n"
+            "  all_resources (keys only) = {all_resource_keys}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -644,11 +645,11 @@ class FakedHmc(FakedBaseResource):
                 hmc_version=self.hmc_version,
                 api_version=self.api_version,
                 enabled=self.enabled,
-                cpcs=self.cpcs,
-                metrics_contexts=self.metrics_contexts,
-                consoles=self.consoles,
-                all_resource_keys=repr_dict(self.all_resources.keys(),
-                                            indent=4),
+                cpcs=repr_manager(self.cpcs, indent=2),
+                metrics_contexts=repr_manager(self.metrics_contexts, indent=2),
+                consoles=repr_manager(self.consoles, indent=2),
+                all_resource_keys=repr_list(self.all_resources.keys(),
+                                            indent=2),
             ))
         return ret
 
@@ -768,13 +769,13 @@ class FakedConsole(FakedBaseResource):
             "  _manager._parent._uri = {parent_uri!r}\n"
             "  _uri = {_uri!r}\n"
             "  _properties = {_properties}\n"
-            "  _users ={_users}\n"
-            "  _user_roles ={_user_roles}\n"
-            "  _user_patterns ={_user_patterns}\n"
-            "  _password_rules ={_password_rules}\n"
-            "  _tasks ={_tasks}\n"
-            "  _ldap_server_definitions ={_ldap_server_definitions}\n"
-            "  _unmanaged_cpcs ={_unmanaged_cpcs}\n"
+            "  _users = {_users}\n"
+            "  _user_roles = {_user_roles}\n"
+            "  _user_patterns = {_user_patterns}\n"
+            "  _password_rules = {_password_rules}\n"
+            "  _tasks = {_tasks}\n"
+            "  _ldap_server_definitions = {_ldap_server_definitions}\n"
+            "  _unmanaged_cpcs = {_unmanaged_cpcs}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -782,18 +783,15 @@ class FakedConsole(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=4),
-                _users=repr_manager(repr(self.users), indent=2),
-                _user_roles=repr_manager(repr(self.user_roles), indent=2),
-                _user_patterns=repr_manager(
-                    repr(self.user_patterns), indent=2),
-                _password_rules=repr_manager(
-                    repr(self.password_rules), indent=2),
-                _tasks=repr_manager(repr(self.tasks), indent=2),
+                _properties=repr_dict(self.properties, indent=2),
+                _users=repr_manager(self.users, indent=2),
+                _user_roles=repr_manager(self.user_roles, indent=2),
+                _user_patterns=repr_manager(self.user_patterns, indent=2),
+                _password_rules=repr_manager(self.password_rules, indent=2),
+                _tasks=repr_manager(self.tasks, indent=2),
                 _ldap_server_definitions=repr_manager(
-                    repr(self.ldap_server_definitions), indent=2),
-                _unmanaged_cpcs=repr_manager(
-                    repr(self.unmanaged_cpcs), indent=2),
+                    self.ldap_server_definitions, indent=2),
+                _unmanaged_cpcs=repr_manager(self.unmanaged_cpcs, indent=2),
             ))
         return ret
 
@@ -1407,7 +1405,7 @@ class FakedAdapter(FakedBaseResource):
             "  _manager._parent._uri = {parent_uri!r}\n"
             "  _uri = {_uri!r}\n"
             "  _properties = {_properties}\n"
-            "  _ports ={_ports}\n"
+            "  _ports = {_ports}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -1415,7 +1413,7 @@ class FakedAdapter(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=4),
+                _properties=repr_dict(self.properties, indent=2),
                 _ports=repr_manager(self.ports, indent=2),
             ))
         return ret
@@ -1538,13 +1536,13 @@ class FakedCpc(FakedBaseResource):
             "  _manager._parent._uri = {parent_uri!r}\n"
             "  _uri = {_uri!r}\n"
             "  _properties = {_properties}\n"
-            "  _lpars ={_lpars}\n"
-            "  _partitions ={_partitions}\n"
-            "  _adapters ={_adapters}\n"
-            "  _virtual_switches ={_virtual_switches}\n"
-            "  _reset_activation_profiles ={_reset_activation_profiles}\n"
-            "  _image_activation_profiles ={_image_activation_profiles}\n"
-            "  _load_activation_profiles ={_load_activation_profiles}\n"
+            "  _lpars = {_lpars}\n"
+            "  _partitions = {_partitions}\n"
+            "  _adapters = {_adapters}\n"
+            "  _virtual_switches = {_virtual_switches}\n"
+            "  _reset_activation_profiles = {_reset_activation_profiles}\n"
+            "  _image_activation_profiles = {_image_activation_profiles}\n"
+            "  _load_activation_profiles = {_load_activation_profiles}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -1552,18 +1550,18 @@ class FakedCpc(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=4),
-                _lpars=repr_manager(repr(self.lpars), indent=2),
-                _partitions=repr_manager(repr(self.partitions), indent=2),
-                _adapters=repr_manager(repr(self.adapters), indent=2),
+                _properties=repr_dict(self.properties, indent=2),
+                _lpars=repr_manager(self.lpars, indent=2),
+                _partitions=repr_manager(self.partitions, indent=2),
+                _adapters=repr_manager(self.adapters, indent=2),
                 _virtual_switches=repr_manager(
-                    repr(self.virtual_switches), indent=2),
+                    self.virtual_switches, indent=2),
                 _reset_activation_profiles=repr_manager(
-                    repr(self.reset_activation_profiles), indent=2),
+                    self.reset_activation_profiles, indent=2),
                 _image_activation_profiles=repr_manager(
-                    repr(self.image_activation_profiles), indent=2),
+                    self.image_activation_profiles, indent=2),
                 _load_activation_profiles=repr_manager(
-                    repr(self.load_activation_profiles), indent=2),
+                    self.load_activation_profiles, indent=2),
             ))
         return ret
 
@@ -1707,7 +1705,7 @@ class FakedUnmanagedCpc(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=4),
+                _properties=repr_dict(self.properties, indent=2),
             ))
         return ret
 
@@ -2110,9 +2108,9 @@ class FakedPartition(FakedBaseResource):
             "  _manager._parent._uri = {parent_uri!r}\n"
             "  _uri = {_uri!r}\n"
             "  _properties = {_properties}\n"
-            "  _nics ={_nics}\n"
-            "  _hbas ={_hbas}\n"
-            "  _virtual_functions ={_virtual_functions}\n"
+            "  _nics = {_nics}\n"
+            "  _hbas = {_hbas}\n"
+            "  _virtual_functions = {_virtual_functions}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -2120,11 +2118,11 @@ class FakedPartition(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=4),
-                _nics=repr_manager(repr(self.nics), indent=2),
-                _hbas=repr_manager(repr(self.hbas), indent=2),
+                _properties=repr_dict(self.properties, indent=2),
+                _nics=repr_manager(self.nics, indent=2),
+                _hbas=repr_manager(self.hbas, indent=2),
                 _virtual_functions=repr_manager(
-                    repr(self.virtual_functions), indent=2),
+                    self.virtual_functions, indent=2),
             ))
         return ret
 
@@ -2999,7 +2997,7 @@ class FakedMetricObjectValues(object):
             "{classname} at 0x{id:08x} (\n"
             "  group_name = {s.group_name!r}\n"
             "  resource_uri = {s.resource_uri!r}\n"
-            "  timestamp ={s.timestamp!r}\n"
-            "  values ={s.values!r}\n"
+            "  timestamp = {s.timestamp!r}\n"
+            "  values = {s.values!r}\n"
             ")".format(classname=self.__class__.__name__, id=id(self), s=self))
         return ret

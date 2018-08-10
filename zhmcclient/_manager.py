@@ -274,7 +274,7 @@ class BaseManager(object):
             "  _name_prop = {_name_prop!r}\n"
             "  _query_props = {_query_props}\n"
             "  _list_has_name = {_list_has_name!r}\n"
-            "  _name_uri_cache ={_name_uri_cache!r}\n"
+            "  _name_uri_cache = {_name_uri_cache!r}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
