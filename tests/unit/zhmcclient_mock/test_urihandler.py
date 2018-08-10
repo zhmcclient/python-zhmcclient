@@ -838,6 +838,7 @@ class TestGenericGetPropertiesHandler(object):
             'object-id': '1',
             'object-uri': '/api/cpcs/1',
             'class': 'cpc',
+            'parent': None,
             'name': 'cpc_1',
             'dpm-enabled': False,
             'is-ensemble-member': False,
@@ -980,6 +981,7 @@ class TestConsoleHandler(object):
             'object-uri': '/api/console',
             'name': 'fake_console_name',
             'class': 'console',
+            'parent': None,
         }
         assert console == exp_console
 
@@ -1370,6 +1372,7 @@ class TestUserHandlers(object):
             'object-id': 'fake-user-oid-1',
             'object-uri': '/api/users/fake-user-oid-1',
             'class': 'user',
+            'parent': '/api/console',
             'name': 'fake_user_name_1',
             'description': 'User #1',
             'type': 'system-defined',
@@ -1398,6 +1401,7 @@ class TestUserHandlers(object):
             'object-id': '2',
             'object-uri': '/api/users/2',
             'class': 'user',
+            'parent': '/api/console',
             'name': 'user_2',
             'description': 'User #2',
             'type': 'standard',
@@ -1852,6 +1856,7 @@ class TestUserRoleHandlers(object):
             'object-id': 'fake-user-role-oid-1',
             'object-uri': '/api/user-roles/fake-user-role-oid-1',
             'class': 'user-role',
+            'parent': '/api/console',
             'name': 'fake_user_role_name_1',
             'description': 'User Role #1',
             'type': 'system-defined',
@@ -2246,6 +2251,7 @@ class TestTaskHandlers(object):
             'element-id': 'fake-task-oid-1',
             'element-uri': '/api/console/tasks/fake-task-oid-1',
             'class': 'task',
+            'parent': '/api/console',
             'name': 'fake_task_name_1',
             'description': 'Task #1',
         }
@@ -2307,6 +2313,7 @@ class TestUserPatternHandlers(object):
             'element-uri':
                 '/api/console/user-patterns/fake-user-pattern-oid-1',
             'class': 'user-pattern',
+            'parent': '/api/console',
             'name': 'fake_user_pattern_name_1',
             'description': 'User Pattern #1',
             'pattern': 'fake_user_name_*',
@@ -2461,6 +2468,7 @@ class TestPasswordRuleHandlers(object):
             'element-uri':
                 '/api/console/password-rules/fake-password-rule-oid-1',
             'class': 'password-rule',
+            'parent': '/api/console',
             'name': 'fake_password_rule_name_1',
             'description': 'Password Rule #1',
             'type': 'system-defined',
@@ -2610,6 +2618,7 @@ class TestLdapServerDefinitionHandlers(object):
                 '/api/console/ldap-server-definitions/'
                 'fake-ldap-srv-def-oid-1',
             'class': 'ldap-server-definition',
+            'parent': '/api/console',
             'name': 'fake_ldap_srv_def_name_1',
             'description': 'LDAP Srv Def #1',
             'primary-hostname-ipaddr': '10.11.12.13',
@@ -2742,6 +2751,7 @@ class TestCpcHandlers(object):
             'object-id': '1',
             'object-uri': '/api/cpcs/1',
             'class': 'cpc',
+            'parent': None,
             'name': 'cpc_1',
             'dpm-enabled': False,
             'is-ensemble-member': False,
@@ -3308,6 +3318,7 @@ class TestAdapterHandlers(object):
             'object-id': '1',
             'object-uri': '/api/adapters/1',
             'class': 'adapter',
+            'parent': '/api/cpcs/2',
             'name': 'osa_1',
             'description': 'OSA #1 in CPC #2',
             'status': 'active',
@@ -3400,6 +3411,7 @@ class TestNetworkPortHandlers(object):
             'element-id': '1',
             'element-uri': '/api/adapters/1/network-ports/1',
             'class': 'network-port',
+            'parent': '/api/adapters/1',
             'name': 'osa_1_port_1',
             'description': 'Port #1 of OSA #1',
         }
@@ -3440,6 +3452,7 @@ class TestStoragePortHandlers(object):
             'element-id': '1',
             'element-uri': '/api/adapters/2/storage-ports/1',
             'class': 'storage-port',
+            'parent': '/api/adapters/2',
             'name': 'fcp_2_port_1',
             'description': 'Port #1 of FCP #2',
         }
@@ -3496,6 +3509,7 @@ class TestPartitionHandlers(object):
             'object-id': '1',
             'object-uri': '/api/partitions/1',
             'class': 'partition',
+            'parent': '/api/cpcs/2',
             'name': 'partition_1',
             'description': 'Partition #1 in CPC #2',
             'status': 'stopped',
@@ -3526,6 +3540,7 @@ class TestPartitionHandlers(object):
             'object-id': '2',
             'object-uri': '/api/partitions/2',
             'class': 'partition',
+            'parent': '/api/cpcs/2',
             'name': 'partition_2',
             'status': 'stopped',
             'hba-uris': [],
@@ -4212,6 +4227,7 @@ class TestHbaHandler(object):
             'element-id': '1',
             'element-uri': '/api/partitions/1/hbas/1',
             'class': 'hba',
+            'parent': '/api/partitions/1',
             'name': 'hba_1',
             'description': 'HBA #1 in Partition #1',
             'adapter-port-uri': '/api/adapters/2/storage-ports/1',
@@ -4243,6 +4259,7 @@ class TestHbaHandler(object):
             'element-id': '2',
             'element-uri': '/api/partitions/1/hbas/2',
             'class': 'hba',
+            'parent': '/api/partitions/1',
             'name': 'hba_2',
             'adapter-port-uri': '/api/adapters/2/storage-ports/1',
             'device-number': hba2['device-number'],  # auto-generated
@@ -4367,6 +4384,7 @@ class TestNicHandler(object):
             'element-id': '1',
             'element-uri': '/api/partitions/1/nics/1',
             'class': 'nic',
+            'parent': '/api/partitions/1',
             'name': 'nic_1',
             'description': 'NIC #1 in Partition #1',
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
@@ -4397,6 +4415,7 @@ class TestNicHandler(object):
             'element-id': '2',
             'element-uri': '/api/partitions/1/nics/2',
             'class': 'nic',
+            'parent': '/api/partitions/1',
             'name': 'nic_2',
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
             'device-number': nic2['device-number'],  # auto-generated
@@ -4466,6 +4485,7 @@ class TestVirtualFunctionHandler(object):
             'element-id': '1',
             'element-uri': '/api/partitions/1/virtual-functions/1',
             'class': 'virtual-function',
+            'parent': '/api/partitions/1',
             'name': 'vf_1',
             'description': 'VF #1 in Partition #1',
             'device-number': '3001',
@@ -4497,6 +4517,7 @@ class TestVirtualFunctionHandler(object):
             'element-id': '2',
             'element-uri': '/api/partitions/1/virtual-functions/2',
             'class': 'virtual-function',
+            'parent': '/api/partitions/1',
             'name': 'vf_2',
             'device-number': vf2['device-number'],  # auto-generated
         }
@@ -4571,6 +4592,7 @@ class TestVirtualSwitchHandlers(object):
             'object-id': '1',
             'object-uri': '/api/virtual-switches/1',
             'class': 'virtual-switch',
+            'parent': '/api/cpcs/2',
             'name': 'vswitch_osa_1',
             'description': 'Vswitch for OSA #1 in CPC #2',
             'connected-vnic-uris': [],  # auto-generated
@@ -4649,6 +4671,7 @@ class TestLparHandlers(object):
             'object-id': '1',
             'object-uri': '/api/logical-partitions/1',
             'class': 'logical-partition',
+            'parent': '/api/cpcs/1',
             'name': 'lpar_1',
             'status': 'not-activated',
             'description': 'LPAR #1 in CPC #1',
@@ -4751,6 +4774,7 @@ class TestResetActProfileHandlers(object):
         exp_rap1 = {
             'name': 'r1',
             'class': 'reset-activation-profile',
+            'parent': '/api/cpcs/1',
             'element-uri': '/api/cpcs/1/reset-activation-profiles/r1',
             'description': 'Reset profile #1 in CPC #1',
         }
@@ -4799,6 +4823,7 @@ class TestImageActProfileHandlers(object):
             'name': 'i1',
             'element-uri': '/api/cpcs/1/image-activation-profiles/i1',
             'class': 'image-activation-profile',
+            'parent': '/api/cpcs/1',
             'description': 'Image profile #1 in CPC #1',
         }
         assert iap1 == exp_iap1
@@ -4846,6 +4871,7 @@ class TestLoadActProfileHandlers(object):
             'name': 'L1',
             'element-uri': '/api/cpcs/1/load-activation-profiles/L1',
             'class': 'load-activation-profile',
+            'parent': '/api/cpcs/1',
             'description': 'Load profile #1 in CPC #1',
         }
         assert lap1 == exp_lap1

@@ -101,6 +101,10 @@ class FakedBaseResource(object):
                 if 'class' not in self.properties:
                     self.properties['class'] = self.manager.class_value
 
+            if self.manager.parent:
+                if 'parent' not in self.properties:
+                    self.properties['parent'] = self.manager.parent.uri
+
         else:
             self._oid = None
             self._uri = None

@@ -78,6 +78,7 @@ class TestFakedHmc(object):
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
             'class': 'cpc',
+            'parent': None,
             'dpm-enabled': False,
             'is-ensemble-member': False,
             'status': 'operating',
@@ -104,6 +105,7 @@ class TestFakedHmc(object):
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
             'class': 'cpc',
+            'parent': None,
             'dpm-enabled': False,
             'is-ensemble-member': False,
             'status': 'operating',
@@ -119,6 +121,7 @@ class TestFakedHmc(object):
             'object-id': cpc2.oid,
             'object-uri': cpc2.uri,
             'class': 'cpc',
+            'parent': None,
             'dpm-enabled': False,
             'is-ensemble-member': False,
             'status': 'operating',
@@ -174,6 +177,7 @@ class TestFakedHmc(object):
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
             'class': 'cpc',
+            'parent': None,
             'dpm-enabled': False,
             'is-ensemble-member': False,
             'status': 'operating',
@@ -197,6 +201,7 @@ class TestFakedHmc(object):
             'object-id': adapter1.oid,
             'object-uri': adapter1.uri,
             'class': 'adapter',
+            'parent': cpc1.uri,
             'status': 'active',
             'network-port-uris': [port1.uri],
         })
@@ -209,6 +214,7 @@ class TestFakedHmc(object):
             'element-id': port1.oid,
             'element-uri': port1.uri,
             'class': 'network-port',
+            'parent': adapter1.uri,
         })
         assert isinstance(port1, FakedPort)
         assert port1.properties == port1_out_props
@@ -230,6 +236,7 @@ class TestFakedBase(object):
             'object-id': self.cpc1_oid,
             'object-uri': self.cpc1_uri,
             'class': 'cpc',
+            'parent': None,
             'dpm-enabled': True,
             'is-ensemble-member': False,
             'status': 'service',
@@ -370,6 +377,7 @@ class TestFakedActivationProfile(object):
             'name': resetprofile1.oid,
             'element-uri': resetprofile1.uri,
             'class': 'reset-activation-profile',
+            'parent': cpc1.uri,
         })
         assert isinstance(resetprofile1, FakedActivationProfile)
         assert resetprofile1.properties == resetprofile1_out_props
@@ -386,6 +394,7 @@ class TestFakedActivationProfile(object):
             'name': imageprofile1.oid,
             'element-uri': imageprofile1.uri,
             'class': 'image-activation-profile',
+            'parent': cpc1.uri,
         })
         assert isinstance(imageprofile1, FakedActivationProfile)
         assert imageprofile1.properties == imageprofile1_out_props
@@ -402,6 +411,7 @@ class TestFakedActivationProfile(object):
             'name': loadprofile1.oid,
             'element-uri': loadprofile1.uri,
             'class': 'load-activation-profile',
+            'parent': cpc1.uri,
         })
         assert isinstance(loadprofile1, FakedActivationProfile)
         assert loadprofile1.properties == loadprofile1_out_props
@@ -435,6 +445,7 @@ class TestFakedActivationProfile(object):
             'name': resetprofile2.oid,
             'element-uri': resetprofile2.uri,
             'class': 'reset-activation-profile',
+            'parent': cpc1.uri,
         })
         assert isinstance(resetprofile2, FakedActivationProfile)
         assert resetprofile2.properties == resetprofile2_out_props
@@ -520,6 +531,7 @@ class TestFakedAdapter(object):
             'object-id': adapter1.oid,
             'object-uri': adapter1.uri,
             'class': 'adapter',
+            'parent': cpc1.uri,
             'status': 'active',
             'adapter-family': 'roce',
             'network-port-uris': [],
@@ -558,6 +570,7 @@ class TestFakedAdapter(object):
             'object-id': adapter2.oid,
             'object-uri': adapter2.uri,
             'class': 'adapter',
+            'parent': cpc1.uri,
             'status': 'active',
             'storage-port-uris': [],
         })
@@ -626,6 +639,7 @@ class TestFakedCpc(object):
             'object-id': cpc1.oid,
             'object-uri': cpc1.uri,
             'class': 'cpc',
+            'parent': None,
             'dpm-enabled': False,
             'is-ensemble-member': False,
             'status': 'operating',
@@ -670,6 +684,7 @@ class TestFakedCpc(object):
             'object-id': cpc2.oid,
             'object-uri': cpc2.uri,
             'class': 'cpc',
+            'parent': None,
             'dpm-enabled': False,
             'is-ensemble-member': False,
             'status': 'operating',
@@ -774,6 +789,7 @@ class TestFakedHba(object):
             'element-id': self.hba1_oid,
             'element-uri': hba1.uri,
             'class': 'hba',
+            'parent': partition1.uri,
             'device-number': hba1.properties['device-number'],
             'wwpn': hba1.properties['wwpn'],
         })
@@ -819,6 +835,7 @@ class TestFakedHba(object):
             'element-id': hba2_oid,
             'element-uri': hba2.uri,
             'class': 'hba',
+            'parent': partition1.uri,
         })
         assert isinstance(hba2, FakedHba)
         assert hba2.properties == hba2_out_props
@@ -886,6 +903,7 @@ class TestFakedLpar(object):
             'object-id': lpar1.oid,
             'object-uri': lpar1.uri,
             'class': 'logical-partition',
+            'parent': cpc1.uri,
             'status': 'not-activated',
         })
         assert isinstance(lpar1, FakedLpar)
@@ -919,6 +937,7 @@ class TestFakedLpar(object):
             'object-id': lpar2.oid,
             'object-uri': lpar2.uri,
             'class': 'logical-partition',
+            'parent': cpc1.uri,
             'status': 'not-activated',
         })
         assert isinstance(lpar2, FakedLpar)
@@ -1023,6 +1042,7 @@ class TestFakedNic(object):
             'element-id': self.nic1_oid,
             'element-uri': nic1.uri,
             'class': 'nic',
+            'parent': partition1.uri,
             'device-number': nic1.properties['device-number'],
         })
         assert isinstance(nic1, FakedNic)
@@ -1065,6 +1085,7 @@ class TestFakedNic(object):
             'element-id': nic2_oid,
             'element-uri': nic2.uri,
             'class': 'nic',
+            'parent': partition1.uri,
             'device-number': nic2.properties['device-number'],
         })
         assert isinstance(nic2, FakedNic)
@@ -1149,6 +1170,7 @@ class TestFakedPartition(object):
             'object-id': partition1.oid,
             'object-uri': partition1.uri,
             'class': 'partition',
+            'parent': cpc1.uri,
             'status': 'stopped',
             'hba-uris': [],
             'nic-uris': [],
@@ -1186,6 +1208,7 @@ class TestFakedPartition(object):
             'object-id': partition2.oid,
             'object-uri': partition2.uri,
             'class': 'partition',
+            'parent': cpc1.uri,
             'status': 'stopped',
             'hba-uris': [],
             'nic-uris': [],
@@ -1264,6 +1287,7 @@ class TestFakedPort(object):
             'element-id': port1.oid,
             'element-uri': port1.uri,
             'class': 'network-port',
+            'parent': adapter1.uri,
         })
         assert isinstance(port1, FakedPort)
         assert port1.properties == port1_out_props
@@ -1298,6 +1322,7 @@ class TestFakedPort(object):
             'element-id': port2.oid,
             'element-uri': port2.uri,
             'class': 'network-port',
+            'parent': adapter1.uri,
         })
         assert isinstance(port2, FakedPort)
         assert port2.properties == port2_out_props
@@ -1380,6 +1405,7 @@ class TestFakedVirtualFunction(object):
             'element-id': virtual_function1.oid,
             'element-uri': virtual_function1.uri,
             'class': 'virtual-function',
+            'parent': partition1.uri,
             'device-number': virtual_function1.properties['device-number'],
         })
         assert isinstance(virtual_function1, FakedVirtualFunction)
@@ -1416,6 +1442,7 @@ class TestFakedVirtualFunction(object):
             'element-id': virtual_function2.oid,
             'element-uri': virtual_function2.uri,
             'class': 'virtual-function',
+            'parent': partition1.uri,
             'device-number': virtual_function2.properties['device-number'],
         })
         assert isinstance(virtual_function2, FakedVirtualFunction)
@@ -1486,6 +1513,7 @@ class TestFakedVirtualSwitch(object):
             'object-id': virtual_switch1.oid,
             'object-uri': virtual_switch1.uri,
             'class': 'virtual-switch',
+            'parent': cpc1.uri,
             'connected-vnic-uris': [],
         })
         assert isinstance(virtual_switch1, FakedVirtualSwitch)
@@ -1520,6 +1548,7 @@ class TestFakedVirtualSwitch(object):
             'object-id': virtual_switch2.oid,
             'object-uri': virtual_switch2.uri,
             'class': 'virtual-switch',
+            'parent': cpc1.uri,
             'connected-vnic-uris': [],
         })
         assert isinstance(virtual_switch2, FakedVirtualSwitch)
@@ -1591,6 +1620,7 @@ class TestFakedMetricsContext(object):
         mc_props.update({
             'fake-id': mc.oid,
             'fake-uri': mc.uri,
+            'parent': None,
         })
         assert mc.properties == mc_props
 
