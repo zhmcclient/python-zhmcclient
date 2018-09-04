@@ -63,7 +63,7 @@ urllib3==1.21.1
 # Direct dependencies for development (must be consistent with dev-requirements.txt)
 
 # zhmcclient examples (imports into the example scripts):
-PyYAML==3.12
+PyYAML==3.13
 
 # Unit test (imports into testcases):
 pytest==3.0.5
@@ -146,7 +146,7 @@ pycodestyle==2.2.0
 pyflakes==1.3.0
 Pygments==2.1.3
 python-dateutil==2.6.0
-pyzmq==16.0.2
+pyzmq==16.0.4
 qtconsole==4.2.1
 requests-toolbelt==0.7.0
 scandir==1.5
