@@ -336,7 +336,13 @@ class Cpc(BaseResource):
         '2828': 30,  # zBC12
         '2964': 85,  # z13 / Emperor
         '2965': 40,  # z13s / Rockhopper
-        '3906': 85,  # z14
+        '3906': 85,  # z14 / Emperor II
+        '3907': 40,  # z14-ZR1 / Rockhopper II
+        # Note: From HMC API version 2.24 on, the Cpc object supports a
+        # 'maximum-partitions' property. Because that API version was
+        # introduced while model 3907 was already avbailable, the property is
+        # guaranteed to be available only on models after 3907.
+        # TODO: Exploit the new 'maximum-partitions' property.
     }
 
     @property
@@ -350,17 +356,18 @@ class Cpc(BaseResource):
         partitions or partitions by machine generations supported at the HMC
         API:
 
-        ==================  ==================
-        Machine generation  Maximum partitions
-        ==================  ==================
-        z196                                60
-        z114                                30
-        zEC12                               60
-        zBC12                               30
-        z13 / Emperor                       85
-        z13s / Rockhopper                   40
-        z14                                 85
-        ==================  ==================
+        =========================  ==================
+        Machine generation         Maximum partitions
+        =========================  ==================
+        z196                                      60
+        z114                                      30
+        zEC12                                     60
+        zBC12                                     30
+        z13 / Emperor                             85
+        z13s / Rockhopper                         40
+        z14 / Emperor II                          85
+        z14-ZR1 / Rockhopper II                   40
+        =========================  ==================
 
         Raises:
 

@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Docs: Added missing support statements for the LinuxOne Emperor II machine
+  generations to the documentation (The corresponding z14 was already listed).
+
 **Enhancements:**
 
 * Docs: Streamlined, improved and fixed the description how to release a version
@@ -43,6 +46,12 @@ Released: not yet
     officially declared on Pypi yet for this package).
   - `PyYAML` from 3.12 to 3.13 (see PyYAML issue
     https://github.com/yaml/pyyaml/issues/126).
+
+* Docs: Added support statements for the z14-ZR1 and LinuxONE Rockhopper II
+  machine generations to the documentation.
+
+* Added support for the z14-ZR1 and LinuxONE Rockhopper II machine generations
+  to the `Cpc.maximum_active_partitions()` method.
 
 **Known issues:**
 
