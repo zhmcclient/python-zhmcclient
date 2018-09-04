@@ -350,15 +350,25 @@ class Adapter(BaseResource):
         Integer: The maximum number of crypto domains on this crypto adapter.
 
         The following table shows the maximum number of crypto domains for
-        crypto adapters supported on machines in DPM mode:
+        crypto adapters supported on IBM Z machine generations in DPM mode. The
+        corresponding LinuxONE machine generations are listed in the notes
+        below the table:
 
-        =================  ===================  ===============
-        Adapter type       Machine generation   Maximum domains
-        =================  ===================  ===============
-        Crypto Express 5S  z14 / z13 / Emperor               85
-        Crypto Express 5S  z13s / Rockhopper                 40
-        Crypto Express 6S  z14                               85
-        =================  ===================  ===============
+        =================  =========================  ===============
+        Adapter type       Machine generations        Maximum domains
+        =================  =========================  ===============
+        Crypto Express 5S  z14 (3) / z13 (1)               85
+        Crypto Express 5S  z14-ZR1 (4) / z13s (2)          40
+        Crypto Express 6S  z14 (3)                         85
+        Crypto Express 6S  z14-ZR1 (4)                     40
+        =================  =========================  ===============
+
+        Notes:
+
+        (1) Supported for z13 and LinuxONE Emperor
+        (2) Supported for z13s and LinuxONE Rockhopper
+        (3) Supported for z14 and LinuxONE Emperor II
+        (4) Supported for z14-ZR1 and LinuxONE Rockhopper II
 
         If this adapter is not a crypto adapter, `None` is returned.
 
