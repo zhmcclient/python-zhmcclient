@@ -35,6 +35,14 @@ Released: not yet
 * Docs: Streamlined, improved and fixed the description how to release a version
   and how to start a new version, in the development section of the documentation.
 
+* Added support for Python 3.7. This required increasing the minimum versions
+  of several Python packages in order to pick up their Python 3.7 support:
+  - `pyzmq` from 16.0.2 to 16.0.4 (While 16.0.4 works for this, only
+    17.0.0 declares Python 3.6(!) support on Pypi, and Python 3.7 support is not
+    officially declared on Pypi yet for this package).
+  - `PyYAML` from 3.12 to 3.13 (see PyYAML issue
+    https://github.com/yaml/pyyaml/issues/126).
+
 **Known issues:**
 
 * See `list of open issues`_.
