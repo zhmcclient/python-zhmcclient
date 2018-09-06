@@ -37,6 +37,7 @@ Released: not yet
 
 * Added support for Python 3.7. This required increasing the minimum versions
   of several Python packages in order to pick up their Python 3.7 support:
+
   - `pyzmq` from 16.0.2 to 16.0.4 (While 16.0.4 works for this, only
     17.0.0 declares Python 3.6(!) support on Pypi, and Python 3.7 support is not
     officially declared on Pypi yet for this package).
