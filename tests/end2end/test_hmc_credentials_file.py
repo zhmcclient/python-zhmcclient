@@ -20,6 +20,7 @@ from __future__ import absolute_import, print_function
 
 import requests.packages.urllib3
 
+import pytest
 import zhmcclient
 from tests.common.utils import HmcCredentials, info
 
@@ -40,13 +41,13 @@ class TestHMCCredentialsFile(object):
         cpc_items = self.hmc_creds.get_cpc_items()
 
         if cpc_items is None:
-            info(capsys, "HMC credentials file not found: %r - Skipping "
-                 "format check of HMC credentials file",
-                 self.hmc_creds.filepath)
+            pytest.skip("HMC credentials file not found: %r" %
+                        self.hmc_creds.filepath)
             return
 
         assert len(cpc_items) > 0
 
+    @pytest.mark.skip("Disabled contacting all HMCs in credentials file")
     def test_2_hmcs(self, capsys):
         """
         Check out the HMCs specified in the HMC credentials file.
@@ -56,8 +57,8 @@ class TestHMCCredentialsFile(object):
         cpc_items = self.hmc_creds.get_cpc_items()
 
         if cpc_items is None:
-            info(capsys, "HMC credentials file not found: %r - Skipping the "
-                 "checking of HMCs", self.hmc_creds.filepath)
+            pytest.skip("HMC credentials file not found: %r" %
+                        self.hmc_creds.filepath)
             return
 
         rt_config = zhmcclient.RetryTimeoutConfig(

@@ -257,14 +257,14 @@ def get_test_cpc():
     """
     Return the CPC name of the CPC to be tested.
 
-    This is taken from the value of the 'ZHMC_TEST_CPC' environment variable.
+    This is taken from the value of the 'TESTCPC' environment variable.
     If that variable is not set or empty, `None` is returned.
 
     Returns:
 
       string: Name of CPC to be tested, or `None` if no CPC has been defined.
     """
-    cpc_name = os.environ.get('ZHMC_TEST_CPC', None)
+    cpc_name = os.environ.get('TESTCPC', None)
     return cpc_name
 
 
@@ -337,8 +337,7 @@ def setup_cpc(capsys, hmc_creds, fake_data, rt_config=None):
         cpc_properties = fake_data['cpc_properties']
         cpc_name = cpc_properties['name']
 
-        info(capsys, "Testing with faked CPC %r (ZHMC_TEST_CPC env.var. "
-             "not set)", cpc_name)
+        info(capsys, "Testing with faked CPC %r", cpc_name)
 
         session = zhmcclient_mock.FakedSession(
             fake_data['hmc_host'], fake_data['hmc_name'],

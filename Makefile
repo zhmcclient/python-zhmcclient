@@ -108,13 +108,24 @@ doc_dependent_files := \
 test_dir := tests
 
 # Test log
-test_log_file := test_$(python_version_fn).log
+test_unit_log_file := test_unit_$(python_version_fn).log
+test_end2end_log_file := test_end2end_$(python_version_fn).log
 
 # Source files with test code
-test_py_files := \
-    $(wildcard $(test_dir)/*.py) \
-    $(wildcard $(test_dir)/*/*.py) \
-    $(wildcard $(test_dir)/*/*/*.py) \
+test_unit_py_files := \
+    $(wildcard $(test_dir)/unit/*.py) \
+    $(wildcard $(test_dir)/unit/*/*.py) \
+    $(wildcard $(test_dir)/unit/*/*/*.py) \
+
+test_end2end_py_files := \
+    $(wildcard $(test_dir)/end2end/*.py) \
+    $(wildcard $(test_dir)/end2end/*/*.py) \
+    $(wildcard $(test_dir)/end2end/*/*/*.py) \
+
+test_common_py_files := \
+    $(wildcard $(test_dir)/common/*.py) \
+    $(wildcard $(test_dir)/common/*/*.py) \
+    $(wildcard $(test_dir)/common/*/*/*.py) \
 
 # Determine whether py.test has the --no-print-logs option.
 pytest_no_log_opt := $(shell py.test --help 2>/dev/null |grep '\--no-print-logs' >/dev/null; if [ $$? -eq 0 ]; then echo '--no-print-logs'; else echo ''; fi)
@@ -129,7 +140,9 @@ pylint_rc_file := .pylintrc
 check_py_files := \
     setup.py \
     $(package_py_files) \
-    $(test_py_files) \
+    $(test_unit_py_files) \
+		$(test_end2end_py_files) \
+		$(test_common_py_files) \
     $(wildcard docs/notebooks/*.py) \
     $(wildcard tools/cpcinfo) \
     $(wildcard tools/cpcdata) \
@@ -168,8 +181,11 @@ help:
 	@echo '  install    - Install package in active Python environment'
 	@echo '  check      - Run Flake8 on sources and save results in: flake8.log'
 	@echo '  pylint     - Run PyLint on sources and save results in: pylint.log'
-	@echo '  test       - Run tests (and test coverage) and save results in: $(test_log_file)'
+	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_unit_log_file)'
 	@echo '               Does not include install but depends on it, so make sure install is current.'
+	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
+	@echo '  end2end    - Run end2end tests and save results in: $(test_end2end_log_file)'
+	@echo '               Env.var TESTCPC can be used to specify the name of a real CPC (default: mocked CPC)'
 	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
 	@echo '  build      - Build the distribution files in: $(dist_dir)'
 	@echo '               On Windows, builds: $(win64_dist_file)'
@@ -293,7 +309,7 @@ uninstall:
 	@echo '$@ done.'
 
 .PHONY: test
-test: $(test_log_file)
+test: $(test_unit_log_file)
 	@echo '$@ done.'
 
 .PHONY: clobber
@@ -377,8 +393,13 @@ flake8.log: Makefile $(flake8_rc_file) $(check_py_files)
 	mv -f $@.tmp $@
 	@echo 'Done: Created Flake8 log file: $@'
 
-$(test_log_file): Makefile $(package_py_files) $(test_py_files) .coveragerc
+$(test_unit_log_file): Makefile $(package_py_files) $(test_unit_py_files) $(test_common_py_files) .coveragerc
 	rm -fv $@
-	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test $(pytest_no_log_opt) -s $(test_dir) --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
+	bash -c 'set -o pipefail; PYTHONWARNINGS=default py.test --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts) 2>&1 |tee $@.tmp'
 	mv -f $@.tmp $@
-	@echo 'Done: Created test log file: $@'
+	@echo 'Done: Created unit test log file: $@'
+
+.PHONY:	end2end
+end2end: Makefile $(package_py_files) $(test_end2end_py_files) $(test_common_py_files)
+	py.test $(pytest_no_log_opt) -s $(test_dir)/end2end $(pytest_opts)
+	@echo '$@ done.'
