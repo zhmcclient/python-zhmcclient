@@ -39,6 +39,8 @@ def _indent(text, amount, ch=' '):
 def repr_text(text, indent):
     """Return a debug representation of a multi-line text (e.g. the result
     of another repr...() function)."""
+    if text is None:
+        return 'None'
     ret = _indent(text, amount=indent)
     return ret.lstrip(' ')
 
@@ -47,6 +49,8 @@ def repr_list(_list, indent):
     """Return a debug representation of a list or tuple."""
     # pprint represents lists and tuples in one row if possible. We want one
     # per row, so we iterate ourselves.
+    if _list is None:
+        return 'None'
     if isinstance(_list, MutableSequence):
         bm = '['
         em = ']'
@@ -68,6 +72,8 @@ def repr_dict(_dict, indent):
     """Return a debug representation of a dict or OrderedDict."""
     # pprint represents OrderedDict objects using the tuple init syntax,
     # which is not very readable. Therefore, dictionaries are iterated over.
+    if _dict is None:
+        return 'None'
     if not isinstance(_dict, Mapping):
         raise TypeError("Object must be a mapping, but is a %s" %
                         type(_dict))
@@ -90,6 +96,8 @@ def repr_dict(_dict, indent):
 
 def repr_timestamp(timestamp):
     """Return a debug representation of an HMC timestamp number."""
+    if timestamp is None:
+        return 'None'
     dt = datetime_from_timestamp(timestamp)
     ret = "%d (%s)" % (timestamp,
                        dt.strftime('%Y-%m-%d %H:%M:%S.%f %Z'))

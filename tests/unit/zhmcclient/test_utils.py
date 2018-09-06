@@ -151,6 +151,13 @@ def binary_search(haystack, needle, lo, hi):
     return hi
 
 
+# TODO: Add testcases for repr_text() (currently indirectly tested)
+# TODO: Add testcases for repr_list() (currently indirectly tested)
+# TODO: Add testcases for repr_dict() (currently indirectly tested)
+# TODO: Add testcases for repr_timestamp() (currently indirectly tested)
+# TODO: Add testcases for repr_manager() (currently indirectly tested)
+
+
 class TestPythonDatetime(object):
     """
     Some tests for Python date & time related functions that we use.
