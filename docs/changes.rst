@@ -61,6 +61,9 @@ Released: not yet
   Also, added a `console` property to the `FakedConsoleManager` class in the
   mock support, for the same purpose.
 
+* Added a property `client` to class `CpcManager` for navigating from a `Cpc`
+  object back to the `Client` object which is the top of the resource tree.
+
 **Known issues:**
 
 * See `list of open issues`_.
