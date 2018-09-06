@@ -435,9 +435,10 @@ class TestCpc(object):
         cpc_mgr = self.client.cpcs
 
         # Verify all public properties of the manager object
-        assert cpc_mgr.resource_class == Cpc
-        assert cpc_mgr.session == self.session
+        assert cpc_mgr.resource_class is Cpc
+        assert cpc_mgr.session is self.session
         assert cpc_mgr.parent is None
+        assert cpc_mgr.client is self.client
 
     # TODO: Test for CpcManager.__repr__()
 
