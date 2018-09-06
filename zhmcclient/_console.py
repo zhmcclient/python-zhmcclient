@@ -77,6 +77,7 @@ class ConsoleManager(BaseManager):
             query_props=None,
             list_has_name=False)
         self._client = client
+        self._console = None
 
     @property
     def client(self):
@@ -85,6 +86,28 @@ class ConsoleManager(BaseManager):
           The client defining the scope for this manager.
         """
         return self._client
+
+    @property
+    def console(self):
+        """
+        :class:`~zhmcclient.Console`:
+          The :term:`Console` representing the HMC this client is connected to.
+
+          The returned object is cached, so it is looked up only upon first
+          access to this property.
+
+          The returned object has only the following properties set:
+
+          * 'object-uri'
+
+          Use :meth:`~zhmcclient.BaseResource.get_property` or
+          :meth:`~zhmcclient.BaseResource.prop` to access any properties
+          regardless of whether they are already set or first need to be
+          retrieved.
+        """
+        if self._console is None:
+            self._console = self.list()[0]
+        return self._console
 
     @logged_api_call
     def list(self, full_properties=True, filter_args=None):

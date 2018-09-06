@@ -714,6 +714,17 @@ class FakedConsoleManager(FakedBaseManager):
             oid_prop=None,  # Console does not have an object ID property
             uri_prop='object-uri',
             class_value='console')
+        self._console = None
+
+    @property
+    def console(self):
+        """
+        The faked Console representing the faked HMC (an object of
+        :class:`~zhmcclient_mock.FakedConsole`). The object is cached.
+        """
+        if self._console is None:
+            self._console = self.list()[0]
+        return self._console
 
     def add(self, properties):
         """
