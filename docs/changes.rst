@@ -53,6 +53,14 @@ Released: not yet
 * Added support for the z14-ZR1 and LinuxONE Rockhopper II machine generations
   to the `Cpc.maximum_active_partitions()` method.
 
+* Provided direct access to the (one) `Console` object, from the
+  `ConsoleManager` and `CpcManager` objects, via a new `console` property.
+  This is for convenience and avoids having to code `find()` or `list()` calls.
+  The returned `Console` object is cached in the manager object.
+
+  Also, added a `console` property to the `FakedConsoleManager` class in the
+  mock support, for the same purpose.
+
 **Known issues:**
 
 * See `list of open issues`_.
