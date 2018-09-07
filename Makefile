@@ -143,6 +143,7 @@ check_py_files := \
     $(test_unit_py_files) \
 		$(test_end2end_py_files) \
 		$(test_common_py_files) \
+		$(doc_conf_dir)/conf.py \
     $(wildcard docs/notebooks/*.py) \
     $(wildcard tools/cpcinfo) \
     $(wildcard tools/cpcdata) \
