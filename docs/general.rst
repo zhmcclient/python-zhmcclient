@@ -30,9 +30,35 @@ Session
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Session
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Session
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Job
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Job
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Job
+      :attributes:
+
+   .. rubric:: Details
 
 .. autofunction:: zhmcclient.get_password_interface
 
@@ -46,6 +72,19 @@ Retry / timeout configuration
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.RetryTimeoutConfig
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.RetryTimeoutConfig
+      :attributes:
+
+   .. rubric:: Details
+
 
 .. _`Client`:
 
@@ -57,6 +96,19 @@ Client
 .. autoclass:: zhmcclient.Client
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Client
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Client
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Time Statistics`:
@@ -70,9 +122,35 @@ Time Statistics
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.TimeStatsKeeper
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.TimeStatsKeeper
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.TimeStats
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.TimeStats
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.TimeStats
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Metrics`:
@@ -86,9 +164,35 @@ Metrics
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.MetricsContextManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.MetricsContextManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.MetricsContext
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.MetricsContext
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.MetricsContext
+      :attributes:
+
+   .. rubric:: Details
 
 .. autoclass:: zhmcclient.MetricGroupDefinition
    :members:
@@ -102,13 +206,52 @@ Metrics
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.MetricsResponse
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.MetricsResponse
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.MetricGroupValues
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.MetricGroupValues
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.MetricGroupValues
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.MetricObjectValues
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.MetricObjectValues
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.MetricObjectValues
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Logging`:
@@ -130,61 +273,245 @@ Exceptions
    :members:
    :special-members: __str__
 
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.ConnectionError
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ConnectionError
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ConnectionError
+      :attributes:
+
+   .. rubric:: Details
 
 .. autoclass:: zhmcclient.ConnectTimeout
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ConnectTimeout
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ConnectTimeout
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.ReadTimeout
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ReadTimeout
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ReadTimeout
+      :attributes:
+
+   .. rubric:: Details
 
 .. autoclass:: zhmcclient.RetriesExceeded
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.RetriesExceeded
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.RetriesExceeded
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.AuthError
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.AuthError
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.AuthError
+      :attributes:
+
+   .. rubric:: Details
 
 .. autoclass:: zhmcclient.ClientAuthError
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ClientAuthError
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ClientAuthError
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.ServerAuthError
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ServerAuthError
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ServerAuthError
+      :attributes:
+
+   .. rubric:: Details
 
 .. autoclass:: zhmcclient.ParseError
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ParseError
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ParseError
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.VersionError
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.VersionError
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.VersionError
+      :attributes:
+
+   .. rubric:: Details
 
 .. autoclass:: zhmcclient.HTTPError
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.HTTPError
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.HTTPError
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.OperationTimeout
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.OperationTimeout
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.OperationTimeout
+      :attributes:
+
+   .. rubric:: Details
 
 .. autoclass:: zhmcclient.StatusTimeout
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StatusTimeout
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StatusTimeout
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.NotFound
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.NotFound
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.NotFound
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.NoUniqueMatch
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.NoUniqueMatch
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.NoUniqueMatch
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Constants`:

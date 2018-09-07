@@ -38,7 +38,7 @@ pytest-cov>=2.4.0,<2.6 # BSD
 python-coveralls>=2.9.0 # Apache-2.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
-Sphinx>=1.5.1 # BSD
+Sphinx>=1.6.1 # BSD
 sphinx-git>=10.0.0 # GPL
 GitPython>=2.1.1 # BSD
 
