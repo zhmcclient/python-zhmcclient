@@ -62,9 +62,35 @@ CPCs
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.CpcManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.CpcManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Cpc
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Cpc
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Cpc
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Unmanaged CPCs`:
@@ -78,9 +104,35 @@ Unmanaged CPCs
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.UnmanagedCpcManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.UnmanagedCpcManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.UnmanagedCpc
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.UnmanagedCpc
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.UnmanagedCpc
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Activation profiles`:
@@ -94,9 +146,35 @@ Activation profiles
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ActivationProfileManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ActivationProfileManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.ActivationProfile
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ActivationProfile
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ActivationProfile
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`LPARs`:
@@ -110,9 +188,35 @@ LPARs
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.LparManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.LparManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Lpar
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Lpar
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Lpar
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Partitions`:
@@ -126,9 +230,35 @@ Partitions
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.PartitionManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.PartitionManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Partition
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Partition
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Partition
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Adapters`:
@@ -142,9 +272,35 @@ Adapters
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.AdapterManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.AdapterManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Adapter
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Adapter
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Adapter
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Ports`:
@@ -158,9 +314,35 @@ Ports
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.PortManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.PortManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Port
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Port
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Port
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`NICs`:
@@ -174,9 +356,35 @@ NICs
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.NicManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.NicManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Nic
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Nic
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Nic
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`HBAs`:
@@ -190,9 +398,35 @@ HBAs
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.HbaManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.HbaManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Hba
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Hba
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Hba
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Virtual Functions`:
@@ -206,9 +440,35 @@ Virtual Functions
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.VirtualFunctionManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.VirtualFunctionManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.VirtualFunction
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.VirtualFunction
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.VirtualFunction
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Virtual Switches`:
@@ -222,9 +482,35 @@ Virtual Switches
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.VirtualSwitchManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.VirtualSwitchManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.VirtualSwitch
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.VirtualSwitch
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.VirtualSwitch
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Console`:
@@ -238,9 +524,35 @@ Console
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.ConsoleManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.ConsoleManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Console
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Console
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Console
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`User`:
@@ -254,9 +566,35 @@ User
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.UserManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.UserManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.User
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.User
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.User
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`User Role`:
@@ -270,9 +608,35 @@ User Role
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.UserRoleManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.UserRoleManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.UserRole
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.UserRole
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.UserRole
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`User Pattern`:
@@ -286,9 +650,35 @@ User Pattern
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.UserPatternManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.UserPatternManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.UserPattern
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.UserPattern
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.UserPattern
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Password Rule`:
@@ -302,9 +692,35 @@ Password Rule
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.PasswordRuleManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.PasswordRuleManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.PasswordRule
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.PasswordRule
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.PasswordRule
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Task`:
@@ -318,9 +734,35 @@ Task
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.TaskManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.TaskManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.Task
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.Task
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.Task
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`LDAP Server Definition`:
@@ -334,6 +776,32 @@ LDAP Server Definition
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.LdapServerDefinitionManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.LdapServerDefinitionManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.LdapServerDefinition
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.LdapServerDefinition
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.LdapServerDefinition
+      :attributes:
+
+   .. rubric:: Details

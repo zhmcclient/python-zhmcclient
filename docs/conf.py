@@ -16,7 +16,15 @@
 import sys
 import os
 import re
+import inspect
 from pbr.version import VersionInfo
+
+# Imports used by code for autoautosummary
+from sphinx.ext.autosummary import Autosummary
+from sphinx.ext.autosummary import get_documenter
+from docutils.parsers.rst import directives
+from sphinx.util.inspect import safe_getattr
+from sphinx.util import logging
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -26,7 +34,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.3'
+needs_sphinx = '1.6'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -34,6 +42,7 @@ needs_sphinx = '1.3'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
     'sphinx.ext.todo',
@@ -486,3 +495,138 @@ extlinks = {
   'nbdown': ('https://github.com/zhmcclient/python-zhmcclient/raw/master/docs/notebooks/%s', '')
 }
 
+# -- Support for autoautosummary ----------------------------------------------
+#
+# Idea taken from https://stackoverflow.com/a/30783465/1424462
+#
+
+class AutoAutoSummary(Autosummary):
+    """
+    Sphinx extension that automatically generates a table of public methods or
+    attributes of a class, using the AutoSummary extension.
+    (i.e. each row in the table shows the method or attribute name with a
+    link to the full description, and a one-line brief description).
+
+    Usage in RST source::
+
+        .. autoclass:: path.to.class
+           :<autoclass-options>:
+
+           .. rubric:: Methods
+
+           .. autoautosummary:: path.to.class
+              :methods:
+
+           .. rubric:: Attributes
+
+           .. autoautosummary:: path.to.class
+              :attributes:
+
+           .. rubric:: Details
+
+    """
+
+    option_spec = {
+        'methods': directives.unchanged,
+        'attributes': directives.unchanged
+    }
+    option_spec.update(Autosummary.option_spec)
+
+    required_arguments = 1  # Fully qualified class name
+
+    def __init__(self, *args, **kwargs):
+        self._logger = logging.getLogger(__name__)  # requires Sphinx 1.6.1
+        self._log_prefix = "conf.py/AutoAutoSummary"
+        self._excluded_classes = ['BaseException']
+        super(AutoAutoSummary, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def _get_members(class_obj, member_type, include_in_public=None):
+        """
+        Return class members of the specified type.
+
+        class_obj: Class object.
+
+        member_type: Member type ('method' or 'attribute').
+
+        include_in_public: set/list/tuple with member names that should be
+          included in public members in addition to the public names (those
+          starting without underscore).
+
+        Returns:
+          tuple(public_members, all_members): Names of the class members of
+            the specified member type (public / all).
+        """
+        if not include_in_public:
+            include_in_public = []
+        all_members = []
+        for member_name in dir(class_obj):
+            try:
+                documenter = get_documenter(
+                    safe_getattr(class_obj, member_name),
+                    class_obj)
+            except AttributeError:
+                continue
+            if documenter.objtype == member_type:
+                all_members.append(member_name)
+        public_members = [x for x in all_members
+                  if x in include_in_public or not x.startswith('_')]
+        return public_members, all_members
+
+    def _get_def_class(self, class_obj, member_name):
+        """
+        Return the class object in MRO order that defines a member.
+
+        class_obj: Class object that exposes (but not necessarily defines) the
+          member. I.e. starting point of the search.
+
+        member_name: Name of the member (method or attribute).
+
+        Returns:
+          Class object that defines the member.
+        """
+        member_obj = getattr(class_obj, member_name)
+        for def_class_obj in inspect.getmro(class_obj):
+            if member_name in def_class_obj.__dict__:
+                if def_class_obj.__name__ in self._excluded_classes:
+                    return class_obj  # Fall back to input class
+                return def_class_obj
+        self._logger.warning(
+            "%s: Definition class not found for member %s.%s, "
+            "defaulting to class %s",
+            self._log_prefix, class_obj.__name__, member_name,
+            class_obj.__name__)
+        return class_obj  # Input class is better than nothing
+
+    def run(self):
+        try:
+            full_class_name = str(self.arguments[0])
+            module_name, class_name = full_class_name.rsplit('.', 1)
+            module_obj = __import__(module_name, globals(), locals(),
+                                    [class_name])
+            class_obj = getattr(module_obj, class_name)
+            if 'methods' in self.options:
+                _, methods = self._get_members(
+                    class_obj, 'method', ['__init__'])
+                self.content = [
+                    "~%s.%s" % (
+                        self._get_def_class(class_obj, method).__name__,
+                        method)
+                    for method in methods if not method.startswith('_')
+                ]
+            elif 'attributes' in self.options:
+                _, attributes = self._get_members(class_obj, 'attribute')
+                self.content = [
+                    "~%s.%s" % (
+                        self._get_def_class(class_obj, attrib).__name__,
+                        attrib)
+                    for attrib in attributes if not attrib.startswith('_')
+                ]
+            return super(AutoAutoSummary, self).run()
+        except Exception as exc:
+            self._logger.error(
+                "%s: Internal error: %s: %s",
+                self._log_prefix, exc.__class__.__name__, exc)
+
+def setup(app):
+    app.add_directive('autoautosummary', AutoAutoSummary)
