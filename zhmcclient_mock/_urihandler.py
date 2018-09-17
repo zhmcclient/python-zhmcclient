@@ -2459,6 +2459,7 @@ class LparLoadHandler(object):
 
         status = lpar.properties.get('status', None)
         force = body.get('force', False) if body else False
+        clear_indicator = body.get('clear-indicator', True) if body else True
         if status == 'not-activated':
             raise ConflictError(method, uri, reason=0,
                                 message="LPAR {!r} could not be loaded "
@@ -2494,6 +2495,9 @@ class LparLoadHandler(object):
             load_parameter = ''
 
         # Reflect the load in the resource
+        if clear_indicator:
+            lpar.properties['memory'] = ''
+
         lpar.properties['status'] = LparLoadHandler.get_status()
         lpar.properties['last-used-load-address'] = load_address
         lpar.properties['last-used-load-parameter'] = load_parameter
