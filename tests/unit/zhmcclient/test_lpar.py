@@ -540,12 +540,23 @@ class TestLpar(object):
              'exceptions', None),
         ]
     )
+    @pytest.mark.parametrize(
+        "initial_memory, memory_kwargs, exp_memory, exp_memory_exc", [
+            ('foobar', dict(),
+             '', None),
+            ('foobar', dict(clear_indicator=False),
+             'foobar', None),
+            ('foobar', dict(clear_indicator=True),
+             '', None),
+        ]
+    )
     @mock.patch.object(LparLoadHandler, 'get_status')
     def test_lpar_load(
             self, get_status_mock,
             initial_status, status_kwargs, act_exp_status, exp_status_exc,
             initial_loadaddr, loadaddr_kwargs, exp_loadaddr, exp_loadaddr_exc,
-            initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc):
+            initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc,
+            initial_memory, memory_kwargs, exp_memory, exp_memory_exc):
         """Test Lpar.load()."""
 
         # Add a faked LPAR
@@ -553,12 +564,14 @@ class TestLpar(object):
         faked_lpar.properties['status'] = initial_status
         faked_lpar.properties['last-used-load-address'] = initial_loadaddr
         faked_lpar.properties['last-used-load-parameter'] = initial_loadparm
+        faked_lpar.properties['memory'] = initial_memory
 
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
         input_kwargs = dict(status_kwargs, **loadaddr_kwargs)
         input_kwargs.update(**loadparm_kwargs)
+        input_kwargs.update(**memory_kwargs)
 
         exp_excs = []
         if exp_status_exc:
@@ -567,6 +580,8 @@ class TestLpar(object):
             exp_excs.append(exp_loadaddr_exc)
         if exp_loadparm_exc:
             exp_excs.append(exp_loadparm_exc)
+        if exp_memory_exc:
+            exp_excs.append(exp_memory_exc)
 
         get_status_mock.return_value = act_exp_status
 
@@ -605,3 +620,6 @@ class TestLpar(object):
 
             last_loadparm = lpar.get_property('last-used-load-parameter')
             assert last_loadparm == exp_loadparm
+
+            last_memory = lpar.get_property('memory')
+            assert last_memory == exp_memory
