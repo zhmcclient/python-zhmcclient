@@ -272,7 +272,7 @@ class Lpar(BaseResource):
             :exc:`~zhmcclient.StatusTimeout` is raised.
 
           allow_status_exceptions (bool):
-            Boolean controlling whether LPAR status "ecxeptions" is considered
+            Boolean controlling whether LPAR status "exceptions" is considered
             an additional acceptable end status when `wait_for_completion` is
             set.
 
@@ -380,7 +380,7 @@ class Lpar(BaseResource):
             :exc:`~zhmcclient.StatusTimeout` is raised.
 
           allow_status_exceptions (bool):
-            Boolean controlling whether LPAR status "ecxeptions" is considered
+            Boolean controlling whether LPAR status "exceptions" is considered
             an additional acceptable end status when `wait_for_completion` is
             set.
 
@@ -489,7 +489,7 @@ class Lpar(BaseResource):
             :exc:`~zhmcclient.StatusTimeout` is raised.
 
           allow_status_exceptions (bool):
-            Boolean controlling whether LPAR status "ecxeptions" is considered
+            Boolean controlling whether LPAR status "exceptions" is considered
             an additional acceptable end status when `wait_for_completion` is
             set.
 
