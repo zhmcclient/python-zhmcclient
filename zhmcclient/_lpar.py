@@ -697,6 +697,97 @@ class Lpar(BaseResource):
         return result
 
     @logged_api_call
+    def stop(self, wait_for_completion=True, operation_timeout=None,
+             status_timeout=None, allow_status_exceptions=False):
+        """
+        Stop this LPAR, using the HMC operation "Stop Logical
+        Partition". The stop operation stops the processors from
+        processing instructions.
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the LPAR
+        status has reached the desired value. If `wait_for_completion=True`,
+        this method repeatedly checks the status of the LPAR after the HMC
+        operation has completed, and waits until the status is in the desired
+        state "operating", or if `allow_status_exceptions` was
+        set additionally in the state "exceptions".
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC containing this LPAR.
+        * Object-access permission to this LPAR.
+        * Task permission for the "Stop" task.
+
+        Parameters:
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation, and for the status
+              becoming "operating" (or in addition "exceptions", if
+              `allow_status_exceptions` was set.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status, after the HMC operation has completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.StatusTimeout` is raised.
+
+          allow_status_exceptions (bool):
+            Boolean controlling whether LPAR status "exceptions" is considered
+            an additional acceptable end status when `wait_for_completion` is
+            set.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
+        """
+        body = {}
+        result = self.manager.session.post(
+            self.uri + '/operations/stop',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        if wait_for_completion:
+            statuses = ["operating"]
+            if allow_status_exceptions:
+                statuses.append("exceptions")
+            self.wait_for_status(statuses, status_timeout)
+        return result
+
+    @logged_api_call
     def open_os_message_channel(self, include_refresh_messages=True):
         """
         Open a JMS message channel to this LPAR's operating system, returning
