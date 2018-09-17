@@ -429,8 +429,9 @@ class Lpar(BaseResource):
 
     @logged_api_call
     def load(self, load_address=None, load_parameter=None,
-             wait_for_completion=True, operation_timeout=None,
-             status_timeout=None, allow_status_exceptions=False, force=False):
+             clear_indicator=True, wait_for_completion=True,
+             operation_timeout=None, status_timeout=None,
+             allow_status_exceptions=False, force=False):
         """
         Load (boot) this LPAR from a load address (boot device), using the HMC
         operation "Load Logical Partition".
@@ -459,6 +460,11 @@ class Lpar(BaseResource):
 
           load_parameter (:term:`string`): Optional load control string.
             If empty string or `None`, it is not passed to the HMC.
+
+          clear_indicator (bool):
+            Optional boolean controlling whether the memory should be
+            cleared before performing the load or not cleared. The
+            default value is `True`.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -528,6 +534,8 @@ class Lpar(BaseResource):
             body['load-parameter'] = load_parameter
         if force:
             body['force'] = force
+        if not clear_indicator:
+            body['clear-indicator'] = clear_indicator
         result = self.manager.session.post(
             self.uri + '/operations/load',
             body,
