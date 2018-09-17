@@ -649,3 +649,5 @@ class TestLpar(object):
 
             stored_status = lpar.get_property('stored-status')
             assert stored_status == exp_stored_status
+
+    # TODO: Test for Lpar.scsi_load()
