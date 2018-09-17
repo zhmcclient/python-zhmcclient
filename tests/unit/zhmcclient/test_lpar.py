@@ -506,38 +506,58 @@ class TestLpar(object):
         ]
     )
     @pytest.mark.parametrize(
-        "initial_status, status_kwargs, act_exp_status, exp_status_exc", [
-
+        "initial_status, status_kwargs, act_exp_status, exp_status_exc"
+        ", initial_stored_status, exp_stored_status, exp_store_status_exc", [
             ('not-activated', dict(),
-             'operating', HTTPError({'http-status': 409, 'reason': 0})),
+             'operating', HTTPError({'http-status': 409, 'reason': 0}),
+             None, None, None),
             ('not-activated', dict(force=False),
-             'operating', HTTPError({'http-status': 409, 'reason': 0})),
+             'operating', HTTPError({'http-status': 409, 'reason': 0}),
+             None, None, None),
             ('not-activated', dict(force=True),
-             'operating', HTTPError({'http-status': 409, 'reason': 0})),
+             'operating', HTTPError({'http-status': 409, 'reason': 0}),
+             None, None, None),
 
             ('not-operating', dict(force=False),
-             'operating', None),
+             'operating', None,
+             None, None, None),
             ('not-operating', dict(force=True),
-             'operating', None),
+             'operating', None,
+             None, None, None),
 
             ('operating', dict(),
-             'operating', HTTPError({'http-status': 500, 'reason': 263})),
+             'operating', HTTPError({'http-status': 500, 'reason': 263}),
+             None, None, None),
             ('operating', dict(force=False),
-             'operating', HTTPError({'http-status': 500, 'reason': 263})),
+             'operating', HTTPError({'http-status': 500, 'reason': 263}),
+             None, None, None),
             ('operating', dict(force=True),
-             'operating', None),
+             'operating', None,
+             None, None, None),
 
             ('exceptions', dict(force=False),
-             'operating', None),
+             'operating', None,
+             None, None, None),
             ('exceptions', dict(force=True),
-             'operating', None),
+             'operating', None,
+             None, None, None),
 
             ('not-operating', dict(),
-             'exceptions', StatusTimeout(None, None, None, None)),
+             'exceptions', StatusTimeout(None, None, None, None),
+             None, None, None),
             ('not-operating', dict(allow_status_exceptions=False),
-             'exceptions', StatusTimeout(None, None, None, None)),
+             'exceptions', StatusTimeout(None, None, None, None),
+             None, None, None),
             ('not-operating', dict(allow_status_exceptions=True),
-             'exceptions', None),
+             'exceptions', None,
+             None, None, None),
+
+            ('not-operating', dict(store_status_indicator=False),
+             'operating', None,
+             None, None, None),
+            ('not-operating', dict(store_status_indicator=True),
+             'operating', None,
+             None, 'not-operating', None),
         ]
     )
     @pytest.mark.parametrize(
@@ -556,7 +576,8 @@ class TestLpar(object):
             initial_status, status_kwargs, act_exp_status, exp_status_exc,
             initial_loadaddr, loadaddr_kwargs, exp_loadaddr, exp_loadaddr_exc,
             initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc,
-            initial_memory, memory_kwargs, exp_memory, exp_memory_exc):
+            initial_memory, memory_kwargs, exp_memory, exp_memory_exc,
+            initial_stored_status, exp_stored_status, exp_store_status_exc):
         """Test Lpar.load()."""
 
         # Add a faked LPAR
@@ -582,6 +603,8 @@ class TestLpar(object):
             exp_excs.append(exp_loadparm_exc)
         if exp_memory_exc:
             exp_excs.append(exp_memory_exc)
+        if exp_store_status_exc:
+            exp_excs.append(exp_store_status_exc)
 
         get_status_mock.return_value = act_exp_status
 
@@ -623,3 +646,6 @@ class TestLpar(object):
 
             last_memory = lpar.get_property('memory')
             assert last_memory == exp_memory
+
+            stored_status = lpar.get_property('stored-status')
+            assert stored_status == exp_stored_status
