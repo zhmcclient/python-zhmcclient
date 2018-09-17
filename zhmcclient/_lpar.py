@@ -428,6 +428,147 @@ class Lpar(BaseResource):
         return result
 
     @logged_api_call
+    def scsi_load(self, load_address, wwpn, lun, load_parameter=None,
+                  disk_partition_id=None,
+                  operating_system_specific_load_parameters=None,
+                  boot_record_logical_block_address=None, force=False,
+                  wait_for_completion=True, operation_timeout=None,
+                  status_timeout=None, allow_status_exceptions=False):
+        """
+        Load (boot) this LPAR from a designated SCSI device, using the
+        HMC operation "SCSI Load".
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the LPAR
+        status has reached the desired value. If `wait_for_completion=True`,
+        this method repeatedly checks the status of the LPAR after the HMC
+        operation has completed, and waits until the status is in the desired
+        state "operating", or if `allow_status_exceptions` was
+        set additionally in the state "exceptions".
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC containing this LPAR.
+        * Object-access permission to this LPAR.
+        * Task permission for the "SCSI Load" task.
+
+        Parameters:
+
+          load_address (:term:`string`):
+            Device number of the boot device.
+
+          wwpn (:term:`string`):
+            Worldwide port name (WWPN) of the target SCSI device to be
+            used for this operation, in hexadecimal.
+
+          lun (:term:`string`):
+            Hexadecimal logical unit number (LUN) to be used for the
+            SCSI Load.
+
+          load_parameter (:term:`string`):
+            Optional load control string.  If empty string or `None`,
+            it is not passed to the HMC.
+
+          disk_partition_id (:term:`integer`):
+             Optional disk-partition-id (also called the boot program
+             selector) to be used for the SCSI Load. If `None`, it is
+             not passed to the HMC.
+
+          operating_system_specific_load_parameters (:term:`string`):
+             Optional operating system specific load parameters to be
+             used for the SCSI Load.
+
+          boot_record_logical_block_address (:term:`string`):
+             Optional hexadecimal boot record logical block address to
+             be used for the SCSI Load.
+
+          force (bool):
+            Boolean controlling whether this operation is permitted when the
+            LPAR is in the "operating" status. The default value is `True`.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation, and for the status
+              becoming "operating" (or in addition "exceptions", if
+              `allow_status_exceptions` was set.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status, after the HMC operation has completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.StatusTimeout` is raised.
+
+          allow_status_exceptions (bool):
+            Boolean controlling whether LPAR status "exceptions" is considered
+            an additional acceptable end status when `wait_for_completion` is
+            set.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
+        """
+        body = {}
+        body['load-address'] = load_address
+        body['world-wide-port-name'] = wwpn
+        body['logical-unit-number'] = lun
+        if load_parameter:
+            body['load-parameter'] = load_parameter
+        if disk_partition_id is not None:
+            body['disk-partition-id'] = disk_partition_id
+        if operating_system_specific_load_parameters:
+            body['operating-system-specific-load-parameters'] = \
+                operating_system_specific_load_parameters
+        if boot_record_logical_block_address:
+            body['boot-record-logical-block-address'] = \
+                boot_record_logical_block_address
+        if force:
+            body['force'] = force
+        result = self.manager.session.post(
+            self.uri + '/operations/scsi-load',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        if wait_for_completion:
+            statuses = ["operating"]
+            if allow_status_exceptions:
+                statuses.append("exceptions")
+            self.wait_for_status(statuses, status_timeout)
+        return result
+
+    @logged_api_call
     def load(self, load_address=None, load_parameter=None,
              clear_indicator=True, store_status_indicator=False,
              wait_for_completion=True, operation_timeout=None,
