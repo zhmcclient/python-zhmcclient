@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.6'
+needs_sphinx = '1.7'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -540,8 +540,7 @@ class AutoAutoSummary(Autosummary):
         self._excluded_classes = ['BaseException']
         super(AutoAutoSummary, self).__init__(*args, **kwargs)
 
-    @staticmethod
-    def _get_members(class_obj, member_type, include_in_public=None):
+    def _get_members(self, class_obj, member_type, include_in_public=None):
         """
         Return class members of the specified type.
 
@@ -557,12 +556,17 @@ class AutoAutoSummary(Autosummary):
           tuple(public_members, all_members): Names of the class members of
             the specified member type (public / all).
         """
+        try:
+            app = self.state.document.settings.env.app
+        except AttributeError:
+            app = None
         if not include_in_public:
             include_in_public = []
         all_members = []
         for member_name in dir(class_obj):
             try:
                 documenter = get_documenter(
+                    app,
                     safe_getattr(class_obj, member_name),
                     class_obj)
             except AttributeError:
@@ -599,6 +603,7 @@ class AutoAutoSummary(Autosummary):
         return class_obj  # Input class is better than nothing
 
     def run(self):
+
         try:
             full_class_name = str(self.arguments[0])
             module_name, class_name = full_class_name.rsplit('.', 1)
@@ -622,11 +627,15 @@ class AutoAutoSummary(Autosummary):
                         attrib)
                     for attrib in attributes if not attrib.startswith('_')
                 ]
-            return super(AutoAutoSummary, self).run()
+
         except Exception as exc:
             self._logger.error(
                 "%s: Internal error: %s: %s",
                 self._log_prefix, exc.__class__.__name__, exc)
+
+        finally:
+            return super(AutoAutoSummary, self).run()
+
 
 def setup(app):
     app.add_directive('autoautosummary', AutoAutoSummary)
