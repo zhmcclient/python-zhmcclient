@@ -53,6 +53,9 @@ class HbaManager(BaseManager):
     :class:`~zhmcclient.Partition` object (in DPM mode):
 
     * :attr:`~zhmcclient.Partition.hbas`
+
+    Note that this instance variable will be `None` if the
+    "dpm-storage-management" feature is enabled.
     """
 
     def __init__(self, partition):
