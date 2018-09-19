@@ -255,10 +255,10 @@ class StorageVolumeManager(BaseManager):
             ))
         """
 
-        sv_properties = copy.deepcopy(properties)
-        sv_properties['operation'] = 'create'
+        volreq_obj = copy.deepcopy(properties)
+        volreq_obj['operation'] = 'create'
         body = {
-            'storage-volumes': [sv_properties],
+            'storage-volumes': [volreq_obj],
         }
         if email_to_addresses:
             body['email-to-addresses'] = email_to_addresses
@@ -377,12 +377,14 @@ class StorageVolume(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
 
-        req_properties = {
+        volreq_obj = {
             'operation': 'delete',
             'element-uri': self.uri,
         }
         body = {
-            'storage-volumes': req_properties,
+            'storage-volumes': [
+                volreq_obj
+            ],
         }
         if email_to_addresses:
             body['email-to-addresses'] = email_to_addresses
@@ -400,8 +402,8 @@ class StorageVolume(BaseResource):
                                  "there is no email_to_addresses: %r" %
                                  email_insert)
 
-        self.session.post(
-            self.storage_group.uri + '/operations/modify',
+        self.manager.session.post(
+            self.manager.storage_group.uri + '/operations/modify',
             body=body)
 
         self.manager._name_uri_cache.delete(
@@ -463,11 +465,12 @@ class StorageVolume(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        req_properties = copy.deepcopy(properties)
-        req_properties['operation'] = 'modify'
-        req_properties['element-uri'] = self.uri
+
+        volreq_obj = copy.deepcopy(properties)
+        volreq_obj['operation'] = 'modify'
+        volreq_obj['element-uri'] = self.uri
         body = {
-            'storage-volumes': req_properties,
+            'storage-volumes': [volreq_obj],
         }
         if email_to_addresses:
             body['email-to-addresses'] = email_to_addresses
@@ -485,8 +488,8 @@ class StorageVolume(BaseResource):
                                  "there is no email_to_addresses: %r" %
                                  email_insert)
 
-        self.session.post(
-            self.storage_group.uri + '/operations/modify',
+        self.manager.session.post(
+            self.manager.storage_group.uri + '/operations/modify',
             body=body)
 
         self.properties.update(copy.deepcopy(properties))
