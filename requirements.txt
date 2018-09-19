@@ -10,10 +10,10 @@
 
 # Direct dependencies (except pip, setuptools, wheel):
 
-decorator>=3.4.0 # new BSD
-pbr>=1.8.0 # Apache-2.0
+decorator>=4.0.10 # new BSD
+pbr>=1.10.0 # Apache-2.0
 pytz>=2016.10 # MIT
-requests>=2.6.0,!=2.17.1,!=2.17.2 # Apache-2.0
+requests>=2.12.4,!=2.17.1,!=2.17.2 # Apache-2.0
 six>=1.10.0 # MIT
 stomp.py>=4.1.15 # Apache
 

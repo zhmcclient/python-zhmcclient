@@ -40,14 +40,14 @@
 pip==9.0.1
 setuptools==33.1.1
 wheel==0.29.0
-pbr==1.8.0
 
 
 # Direct dependencies for runtime (must be consistent with requirements.txt)
 
-decorator==3.4.0
+decorator==4.0.10
+pbr==1.10.0
 pytz==2016.10
-requests==2.6.0
+requests==2.12.4
 six==1.10.0
 stomp.py==4.1.15
 
@@ -55,7 +55,7 @@ stomp.py==4.1.15
 # Indirect dependencies for runtime (must be consistent with requirements.txt)
 
 certifi==2016.9.26
-chardet==3.0.2
+chardet==3.0.3
 idna==2.5
 urllib3==1.21.1
 
