@@ -653,3 +653,5 @@ class TestLpar(object):
     # TODO: Test for Lpar.scsi_load()
 
     # TODO: Test for Lpar.stop()
+
+    # TODO: Test for Lpar.reset_clear()
