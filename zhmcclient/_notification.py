@@ -97,7 +97,7 @@ class NotificationReceiver(object):
     originally created.
     """
 
-    def __init__(self, topic, host, userid, password):
+    def __init__(self, topic, host, userid, password, port=DEFAULT_STOMP_PORT):
         """
         Parameters:
 
@@ -116,9 +116,14 @@ class NotificationReceiver(object):
           password (:term:`string`):
             Password of the HMC user to be used.
             Must not be `None`.
+
+          port (:term:`integer`):
+            STOMP TCP port. Defaults to
+            :attr:`~zhmcclient._constants.DEFAULT_STOMP_PORT`.
         """
         self._topic = topic
         self._host = host
+        self._port = port
         self._userid = userid
         self._password = password
 
@@ -136,7 +141,7 @@ class NotificationReceiver(object):
         self._handover_cond = threading.Condition()
 
         self._conn = stomp.Connection(
-            [(self._host, DEFAULT_STOMP_PORT)], use_ssl="SSL")
+            [(self._host, self._port)], use_ssl="SSL")
         listener = _NotificationListener(self._handover_dict,
                                          self._handover_cond)
         self._conn.set_listener('', listener)

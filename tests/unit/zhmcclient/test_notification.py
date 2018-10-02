@@ -37,7 +37,7 @@ class MockedStompConnection(object):
 
     def __init__(self, *args, **kwargs):
         """We ignore the args:
-            [(self._host, _STOMP_PORT)], use_ssl="SSL")
+            [(self._host, self._port)], use_ssl="SSL")
         """
         self._state_connected = False
         self._listener = None
