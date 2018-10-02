@@ -25,6 +25,7 @@ For technical reasons, the online documentation shows these constants in the
 
 __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_CONNECT_RETRIES',
+           'DEFAULT_HMC_PORT',
            'DEFAULT_READ_TIMEOUT',
            'DEFAULT_READ_RETRIES',
            'DEFAULT_MAX_REDIRECTS',
@@ -46,6 +47,9 @@ DEFAULT_CONNECT_TIMEOUT = 30
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 DEFAULT_CONNECT_RETRIES = 3
+
+#: Default HMC port number
+DEFAULT_HMC_PORT = 6794
 
 #: Default HTTP read timeout in seconds,
 #: if not specified in the ``retry_timeout_config`` init argument to
