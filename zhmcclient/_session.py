@@ -257,7 +257,8 @@ class Session(object):
     )
 
     def __init__(self, host, userid=None, password=None, session_id=None,
-                 get_password=None, retry_timeout_config=None):
+                 get_password=None, retry_timeout_config=None,
+                 port=DEFAULT_HMC_PORT):
         """
         Creating a session object will not immediately cause a logon to be
         attempted; the logon is deferred until needed.
@@ -330,8 +331,14 @@ class Session(object):
             of its attributes.
 
             See :ref:`Constants` for the default values.
+
+          port (:term:`integer`):
+            HMC TCP port. Defaults to
+            :attr:`~zhmcclient._constants.DEFAULT_HMC_PORT`.
+            For details, see the :attr:`~zhmcclient.Session.port` property.
         """
         self._host = host
+        self._port = port
         self._userid = userid
         self._password = password
         self._get_password = get_password
@@ -340,7 +347,7 @@ class Session(object):
         self._base_url = "{scheme}://{host}:{port}".format(
             scheme=_HMC_SCHEME,
             host=self._host,
-            port=DEFAULT_HMC_PORT)
+            port=self._port)
         self._headers = copy(_STD_HEADERS)  # dict with standard HTTP headers
         if session_id is not None:
             # Create a logged-on state (same state as in _do_logon())
@@ -384,6 +391,13 @@ class Session(object):
             before the zone ID string, as an additional choice to ``%25``
         """
         return self._host
+
+    @property
+    def port(self):
+        """
+        :term:`integer`: HMC TCP port to be used.
+        """
+        return self._port
 
     @property
     def userid(self):
