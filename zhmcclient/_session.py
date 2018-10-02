@@ -40,7 +40,8 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
     DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME, \
-    HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER
+    HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER, \
+    DEFAULT_HMC_PORT
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
 
@@ -48,7 +49,6 @@ LOG = get_logger(__name__)
 
 HMC_LOG = get_logger(HMC_LOGGER_NAME)
 
-_HMC_PORT = 6794
 _HMC_SCHEME = "https"
 _STD_HEADERS = {
     'Content-type': 'application/json',
@@ -340,7 +340,7 @@ class Session(object):
         self._base_url = "{scheme}://{host}:{port}".format(
             scheme=_HMC_SCHEME,
             host=self._host,
-            port=_HMC_PORT)
+            port=DEFAULT_HMC_PORT)
         self._headers = copy(_STD_HEADERS)  # dict with standard HTTP headers
         if session_id is not None:
             # Create a logged-on state (same state as in _do_logon())
