@@ -27,7 +27,7 @@ import mock
 import pytest
 
 from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout, \
-    ClientAuthError
+    ClientAuthError, DEFAULT_HMC_PORT
 
 
 class TestSession(object):
@@ -53,14 +53,17 @@ class TestSession(object):
                        status_code=204)
 
     @pytest.mark.parametrize(
-        "host, userid, password, use_get_password, session_id", [
-            ('fake-host', None, None, False, None),
-            ('fake-host', 'fake-userid', None, False, None),
-            ('fake-host', 'fake-userid', 'fake-pw', False, None),
-            ('fake-host', 'fake-userid', 'fake-pw', True, None),
+        "host, userid, password, use_get_password, session_id, kwargs", [
+            ('fake-host', None, None, False, None, {}),
+            ('fake-host', 'fake-userid', None, False, None, {}),
+            ('fake-host', 'fake-userid', 'fake-pw', False, None, {}),
+            ('fake-host', 'fake-userid', 'fake-pw', True, None, {}),
+            ('fake-host', 'fake-userid', 'fake-pw', True, None,
+             {'port': 1234}),
         ]
     )
-    def test_init(self, host, userid, password, use_get_password, session_id):
+    def test_init(self, host, userid, password, use_get_password, session_id,
+                  kwargs):
         """Test initialization of Session object."""
 
         # TODO: Add support for input parameter: retry_timeout_config
@@ -73,15 +76,17 @@ class TestSession(object):
         else:
             get_password = None
 
-        session = Session(host, userid, password, session_id, get_password)
+        session = Session(host, userid, password, session_id, get_password,
+                          **kwargs)
 
         assert session.host == host
         assert session.userid == userid
         assert session._password == password
         assert session.session_id == session_id
         assert session.get_password == get_password
+        assert session.port == kwargs.get('port', DEFAULT_HMC_PORT)
 
-        base_url = 'https://{}:6794'.format(session.host)
+        base_url = 'https://{}:{!s}'.format(session.host, session.port)
         assert session.base_url == base_url
 
         assert session.headers['Content-type'] == 'application/json'
