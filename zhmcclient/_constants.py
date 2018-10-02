@@ -28,6 +28,7 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_HMC_PORT',
            'DEFAULT_READ_TIMEOUT',
            'DEFAULT_READ_RETRIES',
+           'DEFAULT_STOMP_PORT',
            'DEFAULT_MAX_REDIRECTS',
            'DEFAULT_OPERATION_TIMEOUT',
            'DEFAULT_STATUS_TIMEOUT',
@@ -61,6 +62,9 @@ DEFAULT_HMC_PORT = 6794
 #: See zhmcclient `issue #249
 #: <https://github.com/zhmcclient/python-zhmcclient/issues/249>`_.
 DEFAULT_READ_TIMEOUT = 3600
+
+#: Default port on which the HMC issues JMS over STOMP messages.
+DEFAULT_STOMP_PORT = 61612
 
 #: Default number of HTTP read retries,
 #: if not specified in the ``retry_timeout_config`` init argument to

@@ -70,14 +70,11 @@ import stomp
 import json
 
 from ._logging import get_logger, logged_api_call
+from ._constants import DEFAULT_STOMP_PORT
 
 __all__ = ['NotificationReceiver']
 
 LOG = get_logger(__name__)
-
-
-# Port on which the HMC issues JMS over STOMP messages:
-_STOMP_PORT = 61612
 
 
 class NotificationReceiver(object):
@@ -139,7 +136,7 @@ class NotificationReceiver(object):
         self._handover_cond = threading.Condition()
 
         self._conn = stomp.Connection(
-            [(self._host, _STOMP_PORT)], use_ssl="SSL")
+            [(self._host, DEFAULT_STOMP_PORT)], use_ssl="SSL")
         listener = _NotificationListener(self._handover_dict,
                                          self._handover_cond)
         self._conn.set_listener('', listener)
