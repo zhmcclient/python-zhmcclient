@@ -22,11 +22,7 @@ Change log
 Version 0.20.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2018-10-24
 
 **Bug fixes:**
 
@@ -88,12 +84,6 @@ Released: not yet
 * Added support for changing the type of storage adapters between FICON and FCP,
   via a new method `Adapter.change_adapter_type()`. This capability was introduced
   with the z14-ZR1 and LinuxONE Rockhopper II machine generation.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.19.11
