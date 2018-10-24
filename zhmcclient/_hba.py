@@ -327,7 +327,7 @@ class Hba(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         body = {'adapter-port-uri': port.uri}
-        self.manager.session.post(self._uri +
-                                  '/operations/reassign-storage-adapter-port',
-                                  body=body)
+        self.manager.session.post(
+            self._uri + '/operations/reassign-storage-adapter-port',
+            body=body)
         self.properties.update(body)

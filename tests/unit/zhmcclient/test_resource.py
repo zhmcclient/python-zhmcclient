@@ -62,7 +62,7 @@ class MyManager(BaseManager):
         # We have this method here just to avoid the warning about
         # an unimplemented abstract method. It is not being used in this
         # set of testcases.
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class ResourceTestCase(object):

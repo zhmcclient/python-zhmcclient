@@ -434,7 +434,7 @@ class TestFakedActivationProfile(object):
         assert len(resetprofiles) == 2
 
         resetprofile2 = [p for p in resetprofiles
-                         if p.properties['name'] ==
+                         if p.properties['name'] ==  # noqa: W504
                          resetprofile2_in_props['name']][0]
 
         assert new_resetprofile.properties == resetprofile2.properties
@@ -1197,7 +1197,7 @@ class TestFakedPartition(object):
         assert len(partitions) == 2
 
         partition2 = [p for p in partitions
-                      if p.properties['name'] ==
+                      if p.properties['name'] ==  # noqa: W504
                       partition2_in_props['name']][0]
 
         assert new_partition.properties == partition2.properties
@@ -1431,7 +1431,7 @@ class TestFakedVirtualFunction(object):
         assert len(virtual_functions) == 2
 
         virtual_function2 = [vf for vf in virtual_functions
-                             if vf.properties['name'] ==
+                             if vf.properties['name'] ==  # noqa: W504
                              virtual_function2_in_props['name']][0]
 
         assert new_virtual_function.properties == virtual_function2.properties
@@ -1537,7 +1537,7 @@ class TestFakedVirtualSwitch(object):
         assert len(virtual_switches) == 2
 
         virtual_switch2 = [p for p in virtual_switches
-                           if p.properties['name'] ==
+                           if p.properties['name'] ==  # noqa: W504
                            virtual_switch2_in_props['name']][0]
 
         assert new_virtual_switch.properties == virtual_switch2.properties

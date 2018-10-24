@@ -172,7 +172,7 @@ class TestConsole(object):
             # may end up to be timing dependent.
             try:
                 self.client.query_api_version()
-            except Error as exc:
+            except Error:
                 pass
             except Exception as exc:
                 pytest.fail(
@@ -210,7 +210,7 @@ class TestConsole(object):
         # is expected to fail.
         try:
             self.client.query_api_version()
-        except Error as exc:
+        except Error:
             pass
         except Exception as exc:
             pytest.fail(
