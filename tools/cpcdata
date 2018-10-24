@@ -205,7 +205,7 @@ def process_hmc(config, hmc_host, hmc_userid, hmc_password):
                 print("Attempting to get HMC version ...")
             client.version_info()
 
-        except zhmcclient.ConnectionError as exc:
+        except zhmcclient.ConnectionError:
             print("Warning: Cannot connect to API on HMC %s" % hmc_host)
             return
 

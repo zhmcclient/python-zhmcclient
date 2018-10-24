@@ -905,7 +905,7 @@ class TestGenericDeleteHandler(object):
     def setup_method(self):
         self.hmc, self.hmc_resources = standard_test_hmc()
         self.uris = (
-            ('/api/console/ldap-server-definitions/([^/]+)',
+            (r'/api/console/ldap-server-definitions/([^/]+)',
              GenericDeleteHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -966,7 +966,7 @@ class TestConsoleHandler(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
+            (r'/api/console', ConsoleHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -994,8 +994,8 @@ class TestConsoleRestartHandler(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
-            ('/api/console/operations/restart', ConsoleRestartHandler),
+            (r'/api/console', ConsoleHandler),
+            (r'/api/console/operations/restart', ConsoleRestartHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1036,8 +1036,8 @@ class TestConsoleShutdownHandler(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
-            ('/api/console/operations/shutdown', ConsoleShutdownHandler),
+            (r'/api/console', ConsoleHandler),
+            (r'/api/console/operations/shutdown', ConsoleShutdownHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1078,8 +1078,8 @@ class TestConsoleMakePrimaryHandler(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
-            ('/api/console/operations/make-primary',
+            (r'/api/console', ConsoleHandler),
+            (r'/api/console/operations/make-primary',
              ConsoleMakePrimaryHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1125,10 +1125,10 @@ class TestConsoleReorderUserPatternsHandler(object):
             console.user_patterns.remove(obj.oid)
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
-            ('/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
-            ('/api/console/user-patterns/([^/]+)', UserPatternHandler),
-            ('/api/console/operations/reorder-user-patterns',
+            (r'/api/console', ConsoleHandler),
+            (r'/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
+            (r'/api/console/user-patterns/([^/]+)', UserPatternHandler),
+            (r'/api/console/operations/reorder-user-patterns',
              ConsoleReorderUserPatternsHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1210,8 +1210,8 @@ class TestConsoleGetAuditLogHandler(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
-            ('/api/console/operations/get-audit-log',
+            (r'/api/console', ConsoleHandler),
+            (r'/api/console/operations/get-audit-log',
              ConsoleGetAuditLogHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1250,8 +1250,8 @@ class TestConsoleGetSecurityLogHandler(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
-            ('/api/console/operations/get-security-log',
+            (r'/api/console', ConsoleHandler),
+            (r'/api/console/operations/get-security-log',
              ConsoleGetSecurityLogHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1290,8 +1290,8 @@ class TestConsoleListUnmanagedCpcsHandler(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console', ConsoleHandler),
-            ('/api/console/operations/list-unmanaged-cpcs(?:\?(.*))?',
+            (r'/api/console', ConsoleHandler),
+            (r'/api/console/operations/list-unmanaged-cpcs(?:\?(.*))?',
              ConsoleListUnmanagedCpcsHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -1329,8 +1329,8 @@ class TestUserHandlers(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console/users(?:\?(.*))?', UsersHandler),
-            ('/api/users/([^/]+)', UserHandler),
+            (r'/api/console/users(?:\?(.*))?', UsersHandler),
+            (r'/api/users/([^/]+)', UserHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1522,12 +1522,12 @@ class TestUserAddUserRoleHandler(object):
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
 
         self.uris = (
-            ('/api/console/users(?:\?(.*))?', UsersHandler),
-            ('/api/users/([^/]+)', UserHandler),
-            ('/api/users/([^/]+)/operations/add-user-role',
+            (r'/api/console/users(?:\?(.*))?', UsersHandler),
+            (r'/api/users/([^/]+)', UserHandler),
+            (r'/api/users/([^/]+)/operations/add-user-role',
              UserAddUserRoleHandler),
-            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
-            ('/api/user-roles/([^/]+)', UserRoleHandler),
+            (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            (r'/api/user-roles/([^/]+)', UserRoleHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1644,14 +1644,14 @@ class TestUserRemoveUserRoleHandler(object):
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
 
         self.uris = (
-            ('/api/console/users(?:\?(.*))?', UsersHandler),
-            ('/api/users/([^/]+)', UserHandler),
-            ('/api/users/([^/]+)/operations/add-user-role',
+            (r'/api/console/users(?:\?(.*))?', UsersHandler),
+            (r'/api/users/([^/]+)', UserHandler),
+            (r'/api/users/([^/]+)/operations/add-user-role',
              UserAddUserRoleHandler),
-            ('/api/users/([^/]+)/operations/remove-user-role',
+            (r'/api/users/([^/]+)/operations/remove-user-role',
              UserRemoveUserRoleHandler),
-            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
-            ('/api/user-roles/([^/]+)', UserRoleHandler),
+            (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            (r'/api/user-roles/([^/]+)', UserRoleHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1812,8 +1812,8 @@ class TestUserRoleHandlers(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
-            ('/api/user-roles/([^/]+)', UserRoleHandler),
+            (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            (r'/api/user-roles/([^/]+)', UserRoleHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -1965,9 +1965,9 @@ class TestUserRoleAddPermissionHandler(object):
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
 
         self.uris = (
-            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
-            ('/api/user-roles/([^/]+)', UserRoleHandler),
-            ('/api/user-roles/([^/]+)/operations/add-permission',
+            (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            (r'/api/user-roles/([^/]+)', UserRoleHandler),
+            (r'/api/user-roles/([^/]+)/operations/add-permission',
              UserRoleAddPermissionHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -2083,11 +2083,11 @@ class TestUserRoleRemovePermissionHandler(object):
         # Has a system-defined User Role (oid=fake-user-role-oid-1)
 
         self.uris = (
-            ('/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
-            ('/api/user-roles/([^/]+)', UserRoleHandler),
-            ('/api/user-roles/([^/]+)/operations/add-permission',
+            (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+            (r'/api/user-roles/([^/]+)', UserRoleHandler),
+            (r'/api/user-roles/([^/]+)/operations/add-permission',
              UserRoleAddPermissionHandler),
-            ('/api/user-roles/([^/]+)/operations/remove-permission',
+            (r'/api/user-roles/([^/]+)/operations/remove-permission',
              UserRoleRemovePermissionHandler),
         )
         self.urihandler = UriHandler(self.uris)
@@ -2205,8 +2205,8 @@ class TestTaskHandlers(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console/tasks(?:\?(.*))?', TasksHandler),
-            ('/api/console/tasks/([^/]+)', TaskHandler),
+            (r'/api/console/tasks(?:\?(.*))?', TasksHandler),
+            (r'/api/console/tasks/([^/]+)', TaskHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -2266,8 +2266,8 @@ class TestUserPatternHandlers(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
-            ('/api/console/user-patterns/([^/]+)', UserPatternHandler),
+            (r'/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
+            (r'/api/console/user-patterns/([^/]+)', UserPatternHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -2421,8 +2421,8 @@ class TestPasswordRuleHandlers(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console/password-rules(?:\?(.*))?', PasswordRulesHandler),
-            ('/api/console/password-rules/([^/]+)', PasswordRuleHandler),
+            (r'/api/console/password-rules(?:\?(.*))?', PasswordRulesHandler),
+            (r'/api/console/password-rules/([^/]+)', PasswordRuleHandler),
         )
         self.urihandler = UriHandler(self.uris)
 
@@ -2566,9 +2566,9 @@ class TestLdapServerDefinitionHandlers(object):
         self.hmc, self.hmc_resources = standard_test_hmc()
 
         self.uris = (
-            ('/api/console/ldap-server-definitions(?:\?(.*))?',
+            (r'/api/console/ldap-server-definitions(?:\?(.*))?',
              LdapServerDefinitionsHandler),
-            ('/api/console/ldap-server-definitions/([^/]+)',
+            (r'/api/console/ldap-server-definitions/([^/]+)',
              LdapServerDefinitionHandler),
         )
         self.urihandler = UriHandler(self.uris)

@@ -229,7 +229,7 @@ def get_password_interface(host, userid):
     Returns:
       string: Password of the userid on the HMC
     """
-    raise NotImplemented
+    raise NotImplementedError
 
 
 class Session(object):
@@ -1324,7 +1324,7 @@ def _result_object(result):
             encoding = 'utf-8'
         try:
             html_uni = result.content.decode(encoding)
-        except LookupError as exc:
+        except LookupError:
             html_uni = result.content.decode()
 
         # We convert to one line to be regexp-friendly.

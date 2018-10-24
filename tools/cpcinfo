@@ -180,7 +180,8 @@ def main():
                 partition_header = ("Name", "Status", "OS Type", "OS Version")
                 partitions = cpc.partitions.list()
                 bar.progress()
-                bar.change_max(bar.current_value + len(partitions) + 1 +
+                bar.change_max(bar.current_value +  # noqa: W504
+                               len(partitions) + 1 +  # noqa: W504
                                (1 if args.adapters else 0))
                 partition_rows = []
                 for partition in sorted(partitions,
@@ -197,7 +198,8 @@ def main():
                 partition_header = ("Name", "Status", "OS Type", "OS Level")
                 partitions = cpc.lpars.list()
                 bar.progress()
-                bar.change_max(bar.current_value + len(partitions) + 1 +
+                bar.change_max(bar.current_value +  # noqa: W504
+                               len(partitions) + 1 +  # noqa: W504
                                (1 if args.adapters else 0))
                 partition_rows = []
                 for partition in sorted(partitions,

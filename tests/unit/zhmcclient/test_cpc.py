@@ -833,7 +833,7 @@ class TestCpc(object):
             if wait_for_completion:
                 assert result is None
             else:
-                raise NotImplemented
+                raise NotImplementedError
 
             cpc.pull_full_properties()
             status = cpc.properties['status']
@@ -882,7 +882,7 @@ class TestCpc(object):
             if wait_for_completion:
                 assert result is None
             else:
-                raise NotImplemented
+                raise NotImplementedError
 
             cpc.pull_full_properties()
             status = cpc.properties['status']
@@ -931,7 +931,7 @@ class TestCpc(object):
             if wait_for_completion:
                 assert result is None
             else:
-                raise NotImplemented
+                raise NotImplementedError
 
     @pytest.mark.parametrize(
         "wait_for_completion", [True]
@@ -976,7 +976,7 @@ class TestCpc(object):
             if wait_for_completion:
                 assert result is None
             else:
-                raise NotImplemented
+                raise NotImplementedError
 
     @pytest.mark.parametrize(
         "cpc_name, exp_error", [
@@ -1180,7 +1180,7 @@ class TestCpc(object):
             if wait_for_completion:
                 assert result is None
             else:
-                raise NotImplemented
+                raise NotImplementedError
 
             cpc.pull_full_properties()
 
@@ -1235,7 +1235,7 @@ class TestCpc(object):
             if wait_for_completion:
                 assert result is None
             else:
-                raise NotImplemented
+                raise NotImplementedError
 
             cpc.pull_full_properties()
 
