@@ -13,14 +13,14 @@
 decorator>=4.0.10 # new BSD
 pbr>=1.10.0 # Apache-2.0
 pytz>=2016.10 # MIT
-requests>=2.12.4,!=2.17.1,!=2.17.2 # Apache-2.0
+requests>=2.20.0 # Apache-2.0
 six>=1.10.0 # MIT
 stomp.py>=4.1.15 # Apache
 
 
 # Indirect dependencies (commented out, only listed to document their license):
 
-# certifi # ISC, from requests>=2.16
-# chardet # LGPL, from requests>=2.16
-# idna # BSD-like, from requests>=2.16
-# urllib3 # MIT, from requests>=2.16
+# certifi # ISC, from requests>=2.20
+# chardet # LGPL, from requests>=2.20
+# idna # BSD-like, from requests>=2.20
+# urllib3 # MIT, from requests>=2.20

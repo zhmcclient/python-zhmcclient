@@ -47,7 +47,7 @@ wheel==0.29.0
 decorator==4.0.10
 pbr==1.10.0
 pytz==2016.10
-requests==2.12.4
+requests==2.20.0
 six==1.10.0
 stomp.py==4.1.15
 
