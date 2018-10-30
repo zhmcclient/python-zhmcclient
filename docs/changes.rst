@@ -30,6 +30,10 @@ Released: not yet
 
 **Bug fixes:**
 
+* Update Requests package to 2.20.0 to fix follwing vulnerability of
+  the National Vulnerability Database:
+  https://nvd.nist.gov/vuln/detail/CVE-2018-18074
+
 **Enhancements:**
 
 **Known issues:**
