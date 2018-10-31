@@ -921,7 +921,7 @@ class Session(object):
             elif result.status_code == 202:
                 if result.content == '':
                     # Some operations (e.g. "Restart Console",
-                    # "Shutdown Console" or "Mount Virtual Media") return 202
+                    # "Shutdown Console" or "Cancel Job") return 202
                     # with no response content.
                     return None
                 else:
