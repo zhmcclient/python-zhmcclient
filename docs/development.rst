@@ -342,7 +342,7 @@ This section shows the steps for releasing a version to `PyPI
 It covers all variants of versions that can be released:
 
 * Releasing the master branch as a new major or minor version (M+1.0.0 or M.N+1.0)
-* Releasing a stable branch as a new update version (M.N.U+1)
+* Releasing a stable branch as a new update (= fix) version (M.N.U+1)
 
 This description assumes that you are authorized to push to the upstream repo
 at https://github.com/zhmcclient/python-zhmcclient and that the upstream repo
@@ -357,7 +357,7 @@ has the remote name ``origin`` in your local clone.
     * ``MN`` - Major and minor version numbers M.N of that full version
     * ``BRANCH`` - Name of the branch to be released
 
-    When releasing the master branch (e.g. as version ``0.19.0``):
+    When releasing the master branch as a new major or minor version (e.g. ``0.19.0``):
 
     .. code-block:: text
 
@@ -365,7 +365,7 @@ has the remote name ``origin`` in your local clone.
         MN=0.19
         BRANCH=master
 
-    When releasing a stable branch (e.g. as version ``0.18.1``):
+    When releasing a stable branch as a new update (=fix) version (e.g. ``0.18.1``):
 
     .. code-block:: text
 
@@ -464,32 +464,22 @@ has the remote name ``origin`` in your local clone.
 
     and try again.
 
-11. On RTD, verify that it shows the correct version for its stable version:
-
-    RTD stable version: https://python-zhmcclient.readthedocs.io/en/stable.
-    
-    If it does not, trigger a build of RTD version "stable" on the RTD project
-    page: 
-
-    RTD build page: https://readthedocs.org/projects/python-zhmcclient/builds/
-
-    Once that build is complete, verify again.
-
-12. On GitHub, edit the new tag ``M.N.U``, and create a release description on it. This
+11. On GitHub, edit the new tag ``M.N.U``, and create a release description on it. This
     will cause it to appear in the Release tab.
 
     You can see the tags in GitHub via Code -> Releases -> Tags.
 
-13. Do a fresh install of this version in your active Python environment. This ensures
+12. Do a fresh install of this version in your active Python environment. This ensures
     that 'pbr' determines the correct version. Otherwise, it may determine some development
     version.
 
     .. code-block:: text
 
+        # workon zhmc... # make sure your virtual environment is active
         make clobber install
         make help    # Double check that it shows version ``M.N.U``
 
-14. Upload the package to PyPI:
+13. Upload the package to PyPI:
 
     .. code-block:: text
 
@@ -506,6 +496,17 @@ has the remote name ``origin`` in your local clone.
     Verify that the released version arrived on PyPI:
     https://pypi.python.org/pypi/zhmcclient/
 
+14. On RTD, verify that it shows the correct version for its stable version:
+
+    RTD stable version: https://python-zhmcclient.readthedocs.io/en/stable.
+
+    If it does not, trigger a build of RTD version "stable" on the RTD project
+    page:
+
+    RTD build page: https://readthedocs.org/projects/python-zhmcclient/builds/
+
+    Once that build is complete, verify again.
+
 15. If you released the master branch, it needs a new fix stream.
 
     Create a branch for its fix stream and push it upstream:
@@ -520,6 +521,12 @@ has the remote name ``origin`` in your local clone.
     `RTD project python-zhmcclient <https://readthedocs.org/projects/python-zhmcclient/versions>`_
     and activate the new version (=branch) ``stable_M.N`` as a version to be
     built.
+
+16. If you released the master branch, a new version should be started
+    as described in :ref:`starting a new version`.
+
+    This may be a new minor version on the same major version, or a new
+    major version.
 
 
 .. _`Starting a new version`:
@@ -641,4 +648,3 @@ has the remote name ``origin`` in your local clone.
         git checkout $BRANCH
         git pull
         git branch -d start_$MNU
-
