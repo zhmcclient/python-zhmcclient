@@ -22,25 +22,13 @@ Change log
 Version 0.21.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2018-10-31
 
 **Bug fixes:**
 
-* Update Requests package to 2.20.0 to fix follwing vulnerability of
+* Update Requests package to 2.20.0 to fix following vulnerability of
   the National Vulnerability Database:
   https://nvd.nist.gov/vuln/detail/CVE-2018-18074
-
-**Enhancements:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.20.0
