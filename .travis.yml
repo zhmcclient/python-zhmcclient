@@ -171,64 +171,49 @@ before_install:
 
 # commands to install dependencies
 install:
+  - which python
+  - python --version
   - if [[ "$TRAVIS_BRANCH" == "manual-ci-run" || "$TRAVIS_PULL_REQUEST_BRANCH" == "manual-ci-run" ]]; then
       export _MANUAL_CI_RUN=true;
     fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      if [[ "${PYTHON:0:1}" == "2" ]]; then
-        export PYTHON_CMD=python;
-        export PIP_CMD=pip;
-      else
-        export PYTHON_CMD=python3;
-        export PIP_CMD=pip3;
-      fi;
-    else
-      export PYTHON_CMD=python;
-      export PIP_CMD=pip;
-    fi;
-    echo "PYTHON_CMD=$PYTHON_CMD";
-    echo "PIP_CMD=$PIP_CMD"
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      if [[ "${PYTHON:0:1}" == "2" ]]; then
-        OSX_PYTHON_PKG=python@2;
-      else
+  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      if [[ ${PYTHON:0:1} == '2' ]]; then
         OSX_PYTHON_PKG=python;
-      fi;
-      echo "OSX_PYTHON_PKG=$OSX_PYTHON_PKG";
-    fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      brew update;
-    fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      brew ls --versions $OSX_PYTHON_PKG;
-      rc=$?;
-      if [[ $rc == 0 ]]; then
-        echo "Upgrading $OSX_PYTHON_PKG";
-        brew upgrade $OSX_PYTHON_PKG;
+        OSX_PYTHON_CMD=python;
       else
-        echo "Installing $OSX_PYTHON_PKG";
-        brew install $OSX_PYTHON_PKG;
+        OSX_PYTHON_PKG=python3;
+        OSX_PYTHON_CMD=python3;
       fi;
-      echo "Unlinking $OSX_PYTHON_PKG";
-      brew unlink $OSX_PYTHON_PKG;
-      echo "Linking $OSX_PYTHON_PKG";
-      brew link --overwrite $OSX_PYTHON_PKG;
-      $PIP_CMD install --upgrade pip setuptools;
-      echo "Checking Python and Pip";
-      which $PYTHON_CMD && which $PIP_CMD;
+      which $OSX_PYTHON_CMD || brew install $OSX_PYTHON_PKG;
     fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      $PIP_CMD install virtualenv;
-      virtualenv ../venv -p $PYTHON_CMD && source ../venv/bin/activate;
+
+  # Reason for setting up a Python virtualenv on OS-X:
+  # Some Ansible scripts are invoked directly from the cloned Ansible repo
+  # directory, so their hashbang is '/usr/bin/env python'. This requires
+  # that the 'python' command and environment is the desired one. On OS-X,
+  # when installing Python 3, only the 'python3' command invokes Python 3,
+  # but the 'python' command invokes Python 2. Therefore, a virtualenv is
+  # needed in which the desired Python version is available as the
+  # 'python'. command. Travis does not set up a virtualenv on its OS-X
+  # machines, so we need to do that here.
+  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      pip install virtualenv;
+      VENV=$HOME/virtualenv/$OSX_PYTHON_CMD;
+      virtualenv -p $OSX_PYTHON_CMD $VENV;
+      source $VENV/bin/activate;
     fi
-  - make pyshow
-  - $PIP_CMD list
+
+  - which python
+  - python --version
+  - which pip
+  - pip --version
+  - pip list
   - make install
-  - $PIP_CMD list
+  - pip list
   - make develop
-  - $PIP_CMD list
-  - $PIP_CMD install python-coveralls
-  - $PIP_CMD list
+  - pip list
+  - pip install python-coveralls
+  - pip list
 
 # commands to run builds & tests
 script:
