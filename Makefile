@@ -37,9 +37,11 @@ ifndef PACKAGE_LEVEL
 endif
 ifeq ($(PACKAGE_LEVEL),minimum)
   pip_level_opts := -c minimum-constraints.txt
+  pip_level_opts_new :=
 else
   ifeq ($(PACKAGE_LEVEL),latest)
     pip_level_opts := --upgrade
+    pip_level_opts_new := --upgrade-strategy eager
   else
     $(error Error: Invalid value for PACKAGE_LEVEL variable: $(PACKAGE_LEVEL))
   endif
@@ -178,8 +180,8 @@ help:
 	@echo 'Package version will be: $(package_version)'
 	@echo 'Uses the currently active Python environment: Python $(python_version_fn)'
 	@echo 'Valid targets are (they do just what is stated, i.e. no automatic prereq targets):'
-	@echo '  develop    - Prepare the development environment by installing prerequisites'
 	@echo '  install    - Install package in active Python environment'
+	@echo '  develop    - Prepare the development environment by installing prerequisites'
 	@echo '  check      - Run Flake8 on sources and save results in: flake8.log'
 	@echo '  pylint     - Run PyLint on sources and save results in: pylint.log'
 	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_unit_log_file)'
@@ -222,7 +224,7 @@ _pip:
 .PHONY: develop
 develop: _pip dev-requirements.txt requirements.txt
 	@echo 'Installing runtime and development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_level_opts) -r dev-requirements.txt
+	$(PIP_CMD) install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
 	@echo '$@ done.'
 
 .PHONY: build
@@ -297,7 +299,7 @@ pylint: pylint.log
 .PHONY: install
 install: _pip requirements.txt setup.py setup.cfg $(package_py_files)
 	@echo 'Installing $(package_name) (editable) with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_level_opts) -r requirements.txt
+	$(PIP_CMD) install $(pip_level_opts) $(pip_level_opts_new) -r requirements.txt
 	$(PIP_CMD) install -e .
 	$(PYTHON_CMD) -c "import $(package_name); print('ok, version=%r'%$(package_name).__version__)"
 	$(PYTHON_CMD) -c "import $(mock_package_name); print('ok')"
