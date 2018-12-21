@@ -32,6 +32,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Added a mitigation for a firmware defect that causes filtering of
+  adapters by adapter-id to return an empty result when the specified
+  adapter-id contains hex digits ('a' to 'f'). See issue #549.
+
 **Known issues:**
 
 * See `list of open issues`_.
