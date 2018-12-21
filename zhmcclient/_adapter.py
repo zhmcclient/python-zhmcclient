@@ -102,7 +102,16 @@ class AdapterManager(BaseManager):
         # for the version of the HMC this session is connected to.
         query_props = [
             'name',
-            'adapter-id',
+
+            # The adapter-id property is supported for filtering, but due to
+            # a firmware defect, adapters with a hex digit in their adapter-id
+            # property are not found. Disabling the property causes it to
+            # be handled via client-side filtering, so that mitigates the
+            # defect.
+            # TODO: Re-enable the property once the defect is fixed and the fix
+            # is rolled out broadly enough.
+            # 'adapter-id',
+
             'adapter-family',
             'type',
             'status',
