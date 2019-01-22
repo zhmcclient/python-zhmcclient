@@ -32,6 +32,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Added support for the new "Zeroize Crypto Domain" operation that allows
+  zeroizing a single crypto domain on a crypto adapter. This operation is
+  supported on z14 GA2 and higher, and the corresponding LinuxOne systems.
+
 **Known issues:**
 
 * See `list of open issues`_.
