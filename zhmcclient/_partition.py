@@ -1051,6 +1051,47 @@ class Partition(BaseResource):
             self.uri + '/operations/change-crypto-domain-configuration', body)
 
     @logged_api_call
+    def zeroize_crypto_domain(self, crypto_adapter, crypto_domain_index):
+        """
+        Zeroize a single crypto domain on a crypto adapter.
+
+        Zeroizing a crypto domain clears the cryptographic keys and
+        non-compliance mode settings in the crypto domain.
+
+        The crypto domain must be attached to this partition in "control-usage"
+        access mode.
+
+        Supported CPC versions: z14 GA2 and above, and the corresponding
+        LinuxOne systems.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition and to the Crypto Adapter.
+        * Task permission to the "Zeroize Crypto Domain" task.
+
+        Parameters:
+
+          crypto_adapter (:class:`~zhmcclient.Adapter`):
+            Crypto adapter with the crypto domain to be zeroized.
+
+          crypto_domain_index (:term:`integer`):
+            Domain index of the crypto domain to be zeroized.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {
+            'crypto-adapter-uri': crypto_adapter.uri,
+            'domain-index': crypto_domain_index
+        }
+        self.manager.session.post(
+            self.uri + '/operations/zeroize-crypto-domain', body)
+
+    @logged_api_call
     def attach_storage_group(self, storage_group):
         """
         Attach a :term:`storage group` to this partition.
