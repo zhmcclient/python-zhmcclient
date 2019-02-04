@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed the list_storage_groups.py example. It used a non-existing property
+  on the Cpc class.
+
 **Enhancements:**
 
 * Added support for the new "Zeroize Crypto Domain" operation that allows

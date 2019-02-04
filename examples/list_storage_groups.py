@@ -101,15 +101,9 @@ if False:
         sys.exit(1)
 
 print("Storage Groups of CPC %s ..." % cpcname)
-storage_groups = cpc.storage_groups.list()
-
-sgname = list_storage_groups.get("sgname", None)
+storage_groups = cpc.list_associated_storage_groups()
 
 for sg in storage_groups:
-
-    if sgname and sg.name != sgname:
-        print("  Skipping storage group: %s" % sg.name)
-        continue
 
     part_names = [p.name for p in sg.list_attached_partitions()]
     part_names_str = ', '.join(part_names) if part_names else "<none>"
@@ -124,25 +118,25 @@ for sg in storage_groups:
         print("Error listing storage volumes of storage group %s:\n"
               "HTTPError: %s" % (sg.name, exc))
         volumes = []
-    for sv in volumes:
-        print("    Storage Volume: %s (oid: %s, uuid: %s, size: %s GiB, "
-              "fulfillment: %s)" %
-              (sv.name, sv.oid, sv.prop('uuid', 'N/A'),
-               sv.get_property('size'), sv.get_property('fulfillment-state')))
 
-    try:
-        vsrs = sg.virtual_storage_resources.list()
-    except zhmcclient.HTTPError as exc:
-        print("Error listing virtual storage resources of storage group %s:\n"
-              "HTTPError: %s" % (sg.name, exc))
-        vsrs = []
-    for vsr in vsrs:
-        port = vsr.adapter_port
-        adapter = port.manager.parent
-        print("    Virtual Storage Resource: %s (devno: %s, "
-              "adapter.port: %s.%s, attached to partition: %s)" %
-              (vsr.name, vsr.get_property('device-number'),
-               adapter.name, port.name, vsr.attached_partition.name))
+    print("    Storage Volumes: %s" % len(volumes))
+
+    if sg.get_property('type') == 'fcp':
+        try:
+            vsrs = sg.virtual_storage_resources.list()
+        except zhmcclient.HTTPError as exc:
+            print("Error listing virtual storage resources of storage group %s:\n"
+                  "HTTPError: %s" % (sg.name, exc))
+            vsrs = []
+        for vsr in vsrs:
+            port = vsr.adapter_port
+            adapter = port.manager.parent
+            print("    Virtual Storage Resource: %s (devno: %s, "
+                  "adapter.port: %s.%s, attached to partition: %s)" %
+                  (vsr.name, vsr.get_property('device-number'),
+                   adapter.name, port.name, vsr.attached_partition.name))
+        else:
+            print("    No Virtual Storage Resources")
 
 session.logoff()
 
