@@ -88,7 +88,6 @@ examples:
    list_storage_groups:
       hmc: "192.168.111.5"
       cpcname: DPMSE2
-      #sgname: BigOne
       #loglevel: info
       #logmodule: zhmcclient._session
       #timestats: yes
@@ -113,4 +112,3 @@ cpcs:
     hmc_host: "192.168.111.5"
     hmc_userid: ensadmin
     hmc_password: 1234
-
