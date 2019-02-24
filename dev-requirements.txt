@@ -17,13 +17,14 @@
 # zhmcclient examples (imports into the example scripts):
 PyYAML>=3.13 # MIT
 
-# Unit test (imports into testcases):
+# Tests (imports into testcases):
 pytest>=3.0.5 # MIT
 mock>=2.0.0 # BSD
 requests-mock>=1.2.0 # Apache-2.0
 testfixtures>=4.13.3 # Apache-2.0
+yamlordereddictloader>=0.4.0
 
-# Unit test (no imports, invoked via py.test script):
+# Tests (no imports, invoked via py.test script):
 
 # TODO: Remove the pinning of the pytest-cov version again once issue
 #       https://github.com/z4r/python-coveralls/issues/66

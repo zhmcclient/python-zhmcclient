@@ -1,0 +1,51 @@
+---
+# HMC definition file for zhmcclient end2end tests
+#
+# This file has the following format:
+#
+# hmcs:                          # Dict of HMC definitions.
+#   NICKNAME1:                   # Nickname of the HMC.
+#     description: TEXT          # Short description of the HMC.
+#                                # Optional, default: empty.
+#     contact: TEXT              # Name of technical contact for the HMC.
+#                                # Optional, default: empty.
+#     access_via: TEXT           # Preconditions to reach the network of the HMC.
+#                                # Optional, default: empty.
+#     hmc_host: TEXT             # IP address or hostname of the HMC.
+#                                # Mandatory.
+#     hmc_userid: TEXT           # Userid for logging on to the HMC.
+#                                # Mandatory.
+#     hmc_password: TEXT         # Password for logging on to the HMC.
+#                                # Mandatory.
+#
+# hmc_groups:                    # Dict of HMC groups (optional).
+#   NICKNAME42:                  # Nickname of HMC group.
+#     - NICKNAME1                # Nicknames of HMCs or HMC groups in that grp.
+#     - NICKNAME2
+
+# Note: This is an example file that should be copied to
+#       hmc_definitions.yaml and modified as needed.
+
+hmcs:
+
+  XYZ:
+    description: "my dev systems"
+    contact: "John Doe"
+    access_via: "VPN to dev network"
+    hmc_host: "10.11.12.13"
+    hmc_userid: ensadmin
+    hmc_password: password
+    cpcs:
+      XYZ1:
+        brand_model: z13
+        dpm: true
+      XYZ2:
+        brand_model: z14
+        dpm: true
+
+  # additional HMCs ...
+
+hmc_groups:
+  default:
+    - XYZ
+  # additional groups ...
