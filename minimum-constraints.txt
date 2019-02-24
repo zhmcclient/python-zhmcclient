@@ -65,13 +65,14 @@ urllib3==1.21.1
 # zhmcclient examples (imports into the example scripts):
 PyYAML==3.13
 
-# Unit test (imports into testcases):
+# Tests (imports into testcases):
 pytest==3.0.5
 mock==2.0.0
 requests-mock==1.2.0
 testfixtures==4.13.3
+yamlordereddictloader==0.4.0
 
-# Unit test (no imports, invoked via py.test script):
+# Tests (no imports, invoked via py.test script):
 pytest-cov==2.4.0
 
 # Coverage reporting (no imports, invoked via coveralls script):
