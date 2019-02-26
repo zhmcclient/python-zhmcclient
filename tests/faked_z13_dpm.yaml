@@ -1,0 +1,57 @@
+---
+# Definition of a faked HMC for zhmcclient testing.
+# The faked HMC represents a single z13 CPC in DPM mode.
+
+faked_client:
+  hmc_host: "fake-host"
+  hmc_name: "fake-hmc"
+  hmc_version: "2.13.1"
+  api_version: "1.8"
+  cpcs:
+    - properties:
+        name: "CPC1"
+        description: "Faked CPC CPC1 (z13 in DPM mode)"
+        machine-type: "2964"
+        status: active
+        dpm-enabled: true
+        is-ensemble-member: false
+        iml-mode: dpm
+      partitions:
+        - properties:
+            name: "PART1"
+            description: "Faked partition PART1 on CPC1"
+            autogenerate-partition-id: true
+            partition-id: 0x41
+            type: linux
+            status: active
+            auto-start: true
+            processor-mode: shared
+            ifl-processors: 2
+            initial-ifl-processing-weight: 20
+            initial-memory: 4096
+            maximum-memory: 4096
+            boot-device: network-adapter
+            boot-network-device: null  # Should be resource URI
+      adapters:
+        - properties:
+            name: "OSA1"
+            description: "Faked OSA adapter OSA1 in CPC1"
+            adapter-id: "108"
+            status: active
+            state: online
+            physical-channel-status: operating
+            type: osd
+            adapter-family: osa
+            detected-card-type: "osa-express-6s-1000base-t"
+            card-location: "A14B-D104J.01-D204J.01"
+            configured-capacity: 63
+            maximum-total-capacity: 1920
+          ports:
+            - properties:
+                name: "Port 0"
+                description: "Faked port 0 of OSA adapter OSA1 in CPC1"
+                index: 0
+            - properties:
+                name: "Port 1"
+                description: "Faked port 1 of OSA adapter OSA1 in CPC1"
+                index: 1
