@@ -9,10 +9,6 @@ faked_client:
   api_version: "1.8"
   cpcs:
     - properties:
-        object-id: "fake-cpc1-oid"
-        # object-uri is set up automatically
-        parent: null
-        class: "cpc"
         name: "CPC1"
         description: "Fake z13 (classic mode)"
         machine-type: "2964"
@@ -22,17 +18,17 @@ faked_client:
         iml-mode: "lpar"
       lpars:
         - properties:
+            name: "LPAR1"
             partition-number: 0x41
             partition-identifier: 0x41
-            name: "LPAR1"
             status: "operating"
             activation-mode: "linux"
             next-activation-profile-name: "LPAR1"
             last-used-activation-profile: "LPAR1"
         - properties:
+            name: "LPAR2"
             partition-number: 0x42
             partition-identifier: 0x42
-            name: "LPAR2"
             status: "not-activated"
             activation-mode: "not-set"
             next-activation-profile-name: "LPAR2"

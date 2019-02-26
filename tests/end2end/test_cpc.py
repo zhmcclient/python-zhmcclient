@@ -62,6 +62,55 @@ def assert_cpc_minimal(cpc, exp_name, exp_prop_names):
         "CPC {0}".format(exp_name)
 
 
+# Printing is disabled by default, rename to test_...() to enable it.
+def disable_test_print_cpcs(hmc_session):  # noqa: F811
+    """
+    Print the CPCs in the HMC definition.
+    """
+    client = zhmcclient.Client(hmc_session)
+    hd = hmc_session.hmc_definition
+
+    print("")
+    print("CPCs for HMC {}".format(hd.nickname))
+
+    for def_name in hd.cpcs:
+        found_cpcs = client.cpcs.list(filter_args=dict(name=def_name),
+                                      full_properties=True)
+        assert len(found_cpcs) == 1
+        found_cpc = found_cpcs[0]
+
+        print("CPC {}:".format(def_name))
+        print(repr(found_cpc))
+
+        if found_cpc.dpm_enabled:
+
+            for partition in found_cpc.partitions.list():
+                print("Partition {}:".format(partition.name))
+                print(repr(partition))
+
+            for adapter in found_cpc.adapters.list():
+                print("Adapter {}:".format(adapter.name))
+                print(repr(adapter))
+
+        else:
+
+            for lpar in found_cpc.lpars.list():
+                print("LPAR {}:".format(lpar.name))
+                print(repr(lpar))
+
+            for reset_profile in found_cpc.reset_activation_profiles.list():
+                print("Reset profile {}:".format(reset_profile.name))
+                print(repr(reset_profile))
+
+            for load_profile in found_cpc.load_activation_profiles.list():
+                print("Reset profile {}:".format(load_profile.name))
+                print(repr(load_profile))
+
+            for image_profile in found_cpc.image_activation_profiles.list():
+                print("Reset profile {}:".format(image_profile.name))
+                print(repr(image_profile))
+
+
 def test_cpc_find_by_name(hmc_session):  # noqa: F811
     """
     Test that all CPCs in the HMC definition can be found using find_by_name().
