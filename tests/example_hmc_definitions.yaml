@@ -1,7 +1,8 @@
 ---
 # HMC definition file for zhmcclient end2end tests
 #
-# This file has the following format:
+# This file can define real HMCs and faked HMCs (using the zhmcclient mock
+# support) and has the following format:
 #
 # hmcs:                          # Dict of HMC definitions.
 #   NICKNAME1:                   # Nickname of the HMC.
@@ -11,20 +12,19 @@
 #                                # Optional, default: empty.
 #     access_via: TEXT           # Preconditions to reach the network of the HMC.
 #                                # Optional, default: empty.
-#     hmc_host: TEXT             # IP address or hostname of the HMC.
-#                                # Mandatory.
-#     hmc_userid: TEXT           # Userid for logging on to the HMC.
-#                                # Mandatory.
-#     hmc_password: TEXT         # Password for logging on to the HMC.
-#                                # Mandatory.
-#
+#     hmc_host: TEXT             # For real HMC: IP address or hostname of the
+#                                # HMC. Mandatory (if real HMC).
+#     hmc_userid: TEXT           # For real HMC: Userid for logging on to the
+#                                # HMC. Mandatory (if real HMC).
+#     hmc_password: TEXT         # For real HMC: Password for logging on to the
+#                                # HMC. Mandatory (if real HMC).
+#     faked_hmc_file: TEXT       # For faked HMC: Path name of fake HMC file,
+#                                # relative to this file.
+#                                # Mandatory (if faked HMC).
 # hmc_groups:                    # Dict of HMC groups (optional).
 #   NICKNAME42:                  # Nickname of HMC group.
 #     - NICKNAME1                # Nicknames of HMCs or HMC groups in that grp.
 #     - NICKNAME2
-
-# Note: This is an example file that should be copied to
-#       hmc_definitions.yaml and modified as needed.
 
 hmcs:
 
@@ -37,10 +37,18 @@ hmcs:
     hmc_password: password
     cpcs:
       XYZ1:
-        brand_model: z13
+        machine_type: "2964"
         dpm: true
       XYZ2:
-        brand_model: z14
+        machine_type: "3906"
+        dpm: true
+
+  FAKED_ABC:
+    description: "an example faked HMC"
+    faked_hmc_file: "faked_abc.yaml"
+    cpcs:
+      ABC1:
+        machine_type: "2964"
         dpm: true
 
   # additional HMCs ...

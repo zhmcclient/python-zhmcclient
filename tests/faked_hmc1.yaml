@@ -1,0 +1,62 @@
+---
+# Definition of a faked HMC for zhmcclient testing.
+# The faked HMC represents a single z13 CPC in classic mode.
+
+faked_client:
+  hmc_host: "fake-host"
+  hmc_name: "fake-hmc"
+  hmc_version: "2.13.1"
+  api_version: "1.8"
+  cpcs:
+    - properties:
+        object-id: "fake-cpc1-oid"
+        # object-uri is set up automatically
+        parent: null
+        class: "cpc"
+        name: "CPC1"
+        description: "Fake z13 (classic mode)"
+        machine-type: "2964"
+        status: "active"
+        dpm-enabled: false
+        is-ensemble-member: false
+        iml-mode: "lpar"
+      lpars:
+        - properties:
+            partition-number: 0x41
+            partition-identifier: 0x41
+            name: "LPAR1"
+            status: "operating"
+            activation-mode: "linux"
+            next-activation-profile-name: "LPAR1"
+            last-used-activation-profile: "LPAR1"
+        - properties:
+            partition-number: 0x42
+            partition-identifier: 0x42
+            name: "LPAR2"
+            status: "not-activated"
+            activation-mode: "not-set"
+            next-activation-profile-name: "LPAR2"
+            last-used-activation-profile: "LPAR2"
+      reset_activation_profiles:
+        - properties:
+            name: "CPC1"
+            iocds-name: "ABC"
+      load_activation_profiles:
+        - properties:
+            name: "LPAR1"
+            ipl-type: "ipltype-standard"
+            ipl-address: "189AB"
+        - properties:
+            name: "LPAR2"
+            ipl-type: "ipltype-scsi"
+            worldwide-port-name: "1234"
+            logical-unit-number: "1234"
+            boot-record-lba: "1234"
+            disk-partition-id: 0
+      image_activation_profiles:
+        - properties:
+            name: "LPAR1"
+            # TODO: Add more properties
+        - properties:
+            name: "LPAR2"
+            # TODO: Add more properties

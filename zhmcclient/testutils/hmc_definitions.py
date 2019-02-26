@@ -154,7 +154,7 @@ class HMCDefinitionFile(object):
             raise ValueError(
                 "HMC with nickname {0!r} not found in HMC definition file "
                 "{1!r}".format(nickname, self._filepath))
-        return HMCDefinition(nickname, hmc_dict)
+        return HMCDefinition(nickname, hmc_dict, self._filepath)
 
     def list_hmcs(self, nickname):
         """
@@ -198,16 +198,24 @@ class HMCDefinition(object):
     managed by the HMC (such as whether they are in DPM mode).
     """
 
-    def __init__(self, nickname, hmc_dict):
+    def __init__(self, nickname, hmc_dict, hmc_filepath):
         self._nickname = nickname
+        self._hmc_filepath = hmc_filepath
         self._description = hmc_dict.get('description', '')
         self._contact = hmc_dict.get('contact', '')
         self._access_via = hmc_dict.get('access_via', '')
-        self._hmc_host = self._required_attr(hmc_dict, 'hmc_host', nickname)
-        self._hmc_userid = self._required_attr(
-            hmc_dict, 'hmc_userid', nickname)
-        self._hmc_password = self._required_attr(
-            hmc_dict, 'hmc_password', nickname)
+        self._faked_hmc_file = hmc_dict.get('faked_hmc_file', None)
+        if self._faked_hmc_file:
+            self._hmc_host = None
+            self._hmc_userid = None
+            self._hmc_password = None
+        else:
+            self._hmc_host = self._required_attr(
+                hmc_dict, 'hmc_host', nickname)
+            self._hmc_userid = self._required_attr(
+                hmc_dict, 'hmc_userid', nickname)
+            self._hmc_password = self._required_attr(
+                hmc_dict, 'hmc_password', nickname)
         self._cpcs = hmc_dict.get('cpcs', dict())
 
     def _required_attr(self, hmc_dict, attr_name, nickname):
@@ -221,9 +229,11 @@ class HMCDefinition(object):
     def __repr__(self):
         return "HMCDefinition(" \
             "nickname={s.nickname!r}, " \
+            "hmc_filepath={s.hmc_filepath!r}, " \
             "description={s.description!r}, " \
             "contact={s.contact!r}, " \
             "access_via={s.access_via!r}, " \
+            "faked_hmc_file={s.faked_hmc_file!r}, " \
             "hmc_host={s.hmc_host!r}, " \
             "hmc_userid={s.hmc_userid!r}, " \
             "hmc_password=..., " \
@@ -237,6 +247,13 @@ class HMCDefinition(object):
         Nickname of the HMC.
         """
         return self._nickname
+
+    @property
+    def hmc_filepath(self):
+        """
+        Path name of the HMC definition file defining this HMC.
+        """
+        return self._hmc_filepath
 
     @property
     def description(self):
@@ -261,9 +278,21 @@ class HMCDefinition(object):
         return self._access_via
 
     @property
+    def faked_hmc_file(self):
+        """
+        Path name of faked HMC file, defining a faked HMC with CPCs to be
+        used for setting up the zhmcclient mock support.
+
+        This property is `None` for real HMCs.
+        """
+        return self._faked_hmc_file
+
+    @property
     def hmc_host(self):
         """
         IP address or hostname of the HMC.
+
+        This property is `None` for faked HMCs.
         """
         return self._hmc_host
 
@@ -271,6 +300,8 @@ class HMCDefinition(object):
     def hmc_userid(self):
         """
         Userid for logging on to the HMC.
+
+        This property is `None` for faked HMCs.
         """
         return self._hmc_userid
 
@@ -278,6 +309,8 @@ class HMCDefinition(object):
     def hmc_password(self):
         """
         Password for logging on to the HMC.
+
+        This property is `None` for faked HMCs.
         """
         return self._hmc_password
 
