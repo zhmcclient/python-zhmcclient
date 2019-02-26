@@ -13,14 +13,25 @@
 # limitations under the License.
 
 import os
+import errno
 import pytest
+import yaml
+import yamlordereddictloader
 import zhmcclient
+import zhmcclient_mock
 from zhmcclient.testutils.hmc_definitions import HMCDefinitionFile, \
     HMCDefinition
 
 # HMC nickname or HMC group nickname in HMC definition file
 TESTHMC = os.getenv('TESTHMC', 'default')
 HMC_DEF_LIST = HMCDefinitionFile().list_hmcs(TESTHMC)
+
+
+class FakedHMCFileError(Exception):
+    """
+    Exception indicating an issue with the faked HMC file.
+    """
+    pass
 
 
 def fixtureid_hmc_definition(fixture_value):
@@ -73,17 +84,54 @@ def hmc_session(request, hmc_definition):
     if skip_msg:
         pytest.skip("Skip reason from earlier attempt: {0}".format(skip_msg))
 
-    # Creating a session does not interact with the HMC (logon is deferred)
-    session = zhmcclient.Session(hd.hmc_host, hd.hmc_userid, hd.hmc_password)
+    if hd.faked_hmc_file:
+        # A faked HMC
 
-    # Check access to the HMC
-    try:
-        session.logon()
-    except zhmcclient.Error as exc:
-        msg = "Cannot log on to HMC {0} at {1} due to {2}: {3}". \
-            format(hd.nickname, hd.hmc_host, exc.__class__.__name__, exc)
-        hd.skip_msg = msg
-        pytest.skip(msg)
+        # Read the faked HMC file
+        filepath = os.path.join(
+            os.path.dirname(hd.hmc_filepath),
+            hd.faked_hmc_file)
+        try:
+            with open(filepath) as fp:
+                try:
+                    data = yaml.load(fp, Loader=yamlordereddictloader.Loader)
+                except (yaml.parser.ParserError,
+                        yaml.scanner.ScannerError) as exc:
+                    raise FakedHMCFileError(
+                        "Invalid YAML syntax in faked HMC file {0!r}: {1} {2}".
+                        format(filepath, exc.__class__.__name__, exc))
+        except IOError as exc:
+            if exc.errno == errno.ENOENT:
+                raise FakedHMCFileError(
+                    "The faked HMC file {0!r} was not found".
+                    format(filepath))
+            else:
+                raise
+
+        client = data['faked_client']
+        session = zhmcclient_mock.FakedSession(
+            client['hmc_host'],
+            client['hmc_name'],
+            client['hmc_version'],
+            client['api_version'])
+        for cpc in client['cpcs']:
+            session.hmc.cpcs.add(cpc['properties'])
+
+    else:
+        # A real HMC
+
+        # Creating a session does not interact with the HMC (logon is deferred)
+        session = zhmcclient.Session(
+            hd.hmc_host, hd.hmc_userid, hd.hmc_password)
+
+        # Check access to the HMC
+        try:
+            session.logon()
+        except zhmcclient.Error as exc:
+            msg = "Cannot log on to HMC {0} at {1} due to {2}: {3}". \
+                format(hd.nickname, hd.hmc_host, exc.__class__.__name__, exc)
+            hd.skip_msg = msg
+            pytest.skip(msg)
 
     hd.skip_msg = None
     session.hmc_definition = hd
