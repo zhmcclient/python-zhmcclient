@@ -87,11 +87,9 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._storage_volume import StorageVolumeManager
 from ._virtual_storage_resource import VirtualStorageResourceManager
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 
 __all__ = ['StorageGroupManager', 'StorageGroup']
-
-LOG = get_logger(__name__)
 
 
 class StorageGroupManager(BaseManager):

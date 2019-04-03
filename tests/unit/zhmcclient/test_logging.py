@@ -18,6 +18,7 @@ Unit tests for _logging module.
 
 from __future__ import absolute_import, print_function
 
+import re
 import logging
 import pytest
 from testfixtures import LogCapture
@@ -122,8 +123,8 @@ def call_from_global(func, *args, **kwargs):
 # Some expected values that are constant
 _EXP_LOGGER_NAME = 'zhmcclient.api'
 _EXP_LOG_LEVEL = 'DEBUG'
-_EXP_LOG_MSG_ENTER = "==> %s, args: %.500r, kwargs: %.500r"
-_EXP_LOG_MSG_LEAVE = "<== %s, result: %.1000r"
+_EXP_LOG_MSG_ENTER_PATTERN = "Called: .*, args: .*, kwargs: .*"
+_EXP_LOG_MSG_LEAVE_PATTERN = "Return: .*, result: .*"
 
 
 @pytest.fixture()
@@ -151,16 +152,14 @@ class TestLoggingDecorator(object):
         enter_record = log_capture.records[0]
         assert enter_record.name == _EXP_LOGGER_NAME
         assert enter_record.levelname == _EXP_LOG_LEVEL
-        assert enter_record.msg == _EXP_LOG_MSG_ENTER
-        assert enter_record.args[0] == exp_apifunc
-        # We don't check the positional args and keyword args
+        assert re.match(_EXP_LOG_MSG_ENTER_PATTERN, enter_record.msg)
+        # We don't check the function name and its pos and kw args
 
         leave_record = log_capture.records[1]
         assert leave_record.name == _EXP_LOGGER_NAME
         assert leave_record.levelname == _EXP_LOG_LEVEL
-        assert leave_record.msg == _EXP_LOG_MSG_LEAVE
-        assert leave_record.args[0] == exp_apifunc
-        # We don't check the positional args and keyword args
+        assert re.match(_EXP_LOG_MSG_LEAVE_PATTERN, leave_record.msg)
+        # We don't check the function name and its pos and kw args
 
     def test_1a_global_from_global(self, capture):
         """Simple test calling a decorated global function from a global

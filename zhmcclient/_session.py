@@ -46,9 +46,7 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
 
-LOG = get_logger(__name__)
-
-HMC_LOG = get_logger(HMC_LOGGER_NAME)
+HMC_LOGGER = get_logger(HMC_LOGGER_NAME)
 
 _HMC_SCHEME = "https"
 _STD_HEADERS = {
@@ -367,15 +365,15 @@ class Session(object):
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
-            "  _host = {s._host!r}\n"
-            "  _userid = {s._userid!r}\n"
-            "  _password = '...'\n"
-            "  _get_password = {s._get_password!r}\n"
-            "  _retry_timeout_config = {s._retry_timeout_config!r}\n"
-            "  _base_url = {s._base_url!r}\n"
-            "  _headers = {s._headers!r}\n"
-            "  _session_id = {s._session_id!r}\n"
-            "  _session = {s._session!r}\n"
+            "  _host={s._host!r},\n"
+            "  _userid={s._userid!r},\n"
+            "  _password='...',\n"
+            "  _get_password={s._get_password!r},\n"
+            "  _retry_timeout_config={s._retry_timeout_config!r},\n"
+            "  _base_url={s._base_url!r},\n"
+            "  _headers={s._headers!r},\n"
+            "  _session_id={s._session_id!r},\n"
+            "  _session={s._session!r}\n"
             ")".format(classname=self.__class__.__name__, id=id(self), s=self))
         return ret
 
@@ -660,9 +658,9 @@ class Session(object):
         if headers and 'X-API-Session' in headers:
             headers = headers.copy()
             headers['X-API-Session'] = '********'
-        HMC_LOG.debug("HMC request: %s %s, headers: %r, "
-                      "content(max.1000): %.1000r",
-                      method, url, headers, content)
+        HMC_LOGGER.debug("Request: %s %s, headers: %r, "
+                         "content(max.1000): %.1000r",
+                         method, url, headers, content)
 
     @staticmethod
     def _log_http_response(method, url, status, headers=None, content=None):
@@ -699,9 +697,9 @@ class Session(object):
         if headers and 'X-API-Session' in headers:
             headers = headers.copy()
             headers['X-API-Session'] = '********'
-        HMC_LOG.debug("HMC response: %s %s, status: %s, headers: %r, "
-                      "content(max.1000): %.1000r",
-                      method, url, status, headers, content)
+        HMC_LOGGER.debug("Respons: %s %s, status: %s, headers: %r, "
+                         "content(max.1000): %.1000r",
+                         method, url, status, headers, content)
 
     @logged_api_call
     def get(self, uri, logon_required=True):

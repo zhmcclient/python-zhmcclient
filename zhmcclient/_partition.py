@@ -41,11 +41,9 @@ from ._exceptions import StatusTimeout
 from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 
 __all__ = ['PartitionManager', 'Partition']
-
-LOG = get_logger(__name__)
 
 
 class PartitionManager(BaseManager):

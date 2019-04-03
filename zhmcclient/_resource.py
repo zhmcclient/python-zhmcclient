@@ -22,12 +22,10 @@ by the HMC.
 from __future__ import absolute_import
 import time
 
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 from ._utils import repr_dict, repr_timestamp
 
 __all__ = ['BaseResource']
-
-LOG = get_logger(__name__)
 
 
 class BaseResource(object):
@@ -317,11 +315,11 @@ class BaseResource(object):
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
-            "  _manager = {_manager_classname} at 0x{_manager_id:08x},\n"
-            "  _uri = {_uri!r},\n"
-            "  _full_properties = {_full_properties!r},\n"
-            "  _properties_timestamp = {_properties_timestamp},\n"
-            "  _properties = {_properties}\n"
+            "  _manager={_manager_classname} at 0x{_manager_id:08x},\n"
+            "  _uri={_uri!r},\n"
+            "  _full_properties={_full_properties!r},\n"
+            "  _properties_timestamp={_properties_timestamp},\n"
+            "  _properties={_properties}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),

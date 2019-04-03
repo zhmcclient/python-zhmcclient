@@ -25,7 +25,7 @@ import time
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 from ._utils import timestamp_from_datetime
 from ._storage_group import StorageGroupManager
 from ._user import UserManager
@@ -38,8 +38,6 @@ from ._unmanaged_cpc import UnmanagedCpcManager
 
 
 __all__ = ['ConsoleManager', 'Console']
-
-LOG = get_logger(__name__)
 
 
 class ConsoleManager(BaseManager):

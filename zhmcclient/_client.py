@@ -23,12 +23,10 @@ import time
 from ._cpc import CpcManager
 from ._console import ConsoleManager
 from ._metrics import MetricsContextManager
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 from ._exceptions import Error, OperationTimeout
 
 __all__ = ['Client']
-
-LOG = get_logger(__name__)
 
 
 class Client(object):

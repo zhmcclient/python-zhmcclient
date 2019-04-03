@@ -13,8 +13,9 @@
 # limitations under the License.
 
 """
-This package supports logging using the standard Python :mod:`py:logging`
-module. The logging support provides two :class:`~py:logging.Logger` objects:
+The zhmcclient supports logging using the standard Python :mod:`py:logging`
+module, using standard Python :class:`~py:logging.Logger` objects with these
+names:
 
 * 'zhmcclient.api' for user-issued calls to zhmcclient API functions, at the
   debug level. Internal calls to API functions are not logged.
@@ -22,11 +23,9 @@ module. The logging support provides two :class:`~py:logging.Logger` objects:
 * 'zhmcclient.hmc' for interactions between zhmcclient and the HMC, at the
   debug level.
 
-In addition, there are loggers for each module with the module name, for
-situations like errors or warnings.
-
-For HMC operations and API calls that contain the HMC password, the password
-is hidden in the log message by replacing it with a few '*' characters.
+For HMC operations and API calls that contain the HMC password or HMC session
+tokens, the password is hidden in the log message by replacing it with a few
+'*' characters.
 
 All these loggers have a null-handler (see :class:`~py:logging.NullHandler`)
 and have no log formatter (see :class:`~py:logging.Formatter`).
@@ -75,6 +74,14 @@ except ImportError:
     from decorator import decorator  # decorate < 4.0
 
 from ._constants import API_LOGGER_NAME
+
+
+def log_escaped(s):
+    """
+    Return the escaped input string, for use in log messages.
+    """
+    return s.replace('\n', ' ').replace('  ', ' ').replace('  ', ' ').\
+        replace('  ', ' ')
 
 
 def get_logger(name):
@@ -154,6 +161,35 @@ def logged_api_call(func):
 
     logger = get_logger(API_LOGGER_NAME)
 
+    def is_external_call():
+        """
+        Return a boolean indicating whether the call to the decorated API
+        function is an external call (vs. b eing an internal call).
+        """
+        try:
+            # We avoid the use of inspect.getouterframes() because it is slow,
+            # and use the pointers up the stack frame, instead.
+
+            log_it_frame = inspect.currentframe()  # this log_it() function
+            log_api_call_frame = log_it_frame.f_back  # the log_api_call() func
+            apifunc_frame = log_api_call_frame.f_back  # the decorated API func
+            apicaller_frame = apifunc_frame.f_back  # caller of API function
+            apicaller_module = inspect.getmodule(apicaller_frame)
+            if apicaller_module is None:
+                apicaller_module_name = "<unknown>"
+            else:
+                apicaller_module_name = apicaller_module.__name__
+        finally:
+            # Recommended way to deal with frame objects to avoid ref cycles
+            del log_it_frame
+            del log_api_call_frame
+            del apifunc_frame
+            del apicaller_frame
+            del apicaller_module
+
+        # Log only if the caller is not from the zhmcclient package
+        return apicaller_module_name.split('.')[0] != 'zhmcclient'
+
     def log_api_call(func, *args, **kwargs):
         """
         Log entry to and exit from the decorated function, at the debug level.
@@ -177,34 +213,19 @@ def logged_api_call(func):
         # Note that in this function, we are in the context where the
         # decorated function is actually called.
 
-        try:
-            # We avoid the use of inspect.getouterframes() because it is slow,
-            # and use the pointers up the stack frame, instead.
+        _log_it = is_external_call() and logger.isEnabledFor(logging.DEBUG)
 
-            this_frame = inspect.currentframe()  # this function here
-            apifunc_frame = this_frame.f_back  # the decorated API function
-            apicaller_frame = apifunc_frame.f_back  # caller of API function
-            apicaller_module = inspect.getmodule(apicaller_frame)
-            if apicaller_module is None:
-                apicaller_module_name = "<unknown>"
-            else:
-                apicaller_module_name = apicaller_module.__name__
-        finally:
-            # Recommended way to deal with frame objects to avoid ref cycles
-            del this_frame
-            del apifunc_frame
-            del apicaller_frame
-            del apicaller_module
+        if _log_it:
+            logger.debug("Called: {}, args: {:.500}, kwargs: {:.500}".
+                         format(apifunc_str, log_escaped(repr(args)),
+                                log_escaped(repr(kwargs))))
 
-        # Log only if the caller is not from our package
-        log_it = (apicaller_module_name.split('.')[0] != 'zhmcclient')
-
-        if log_it:
-            logger.debug("==> %s, args: %.500r, kwargs: %.500r",
-                         apifunc_str, args, kwargs)
         result = func(*args, **kwargs)
-        if log_it:
-            logger.debug("<== %s, result: %.1000r", apifunc_str, result)
+
+        if _log_it:
+            logger.debug("Return: {}, result: {:.1000}".
+                         format(apifunc_str, log_escaped(repr(result))))
+
         return result
 
     if 'decorate' in globals():

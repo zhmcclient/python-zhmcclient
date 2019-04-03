@@ -58,12 +58,10 @@ from ._partition import PartitionManager
 from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 from ._exceptions import ParseError
 
 __all__ = ['CpcManager', 'Cpc']
-
-LOG = get_logger(__name__)
 
 
 class CpcManager(BaseManager):
