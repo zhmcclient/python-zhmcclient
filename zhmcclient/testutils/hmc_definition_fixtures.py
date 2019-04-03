@@ -14,6 +14,7 @@
 
 import os
 import errno
+import logging
 import pytest
 import yaml
 import yamlordereddictloader
@@ -25,6 +26,12 @@ from zhmcclient.testutils.hmc_definitions import HMCDefinitionFile, \
 # HMC nickname or HMC group nickname in HMC definition file
 TESTHMC = os.getenv('TESTHMC', 'default')
 HMC_DEF_LIST = HMCDefinitionFile().list_hmcs(TESTHMC)
+
+# Log file
+TESTLOGFILE = os.getenv('TESTLOGFILE', None)
+LOG_HANDLER = logging.FileHandler(TESTLOGFILE, encoding='utf-8')
+LOG_FORMAT_STRING = '%(asctime)s %(name)s %(levelname)s %(message)s'
+LOG_HANDLER.setFormatter(logging.Formatter(LOG_FORMAT_STRING))
 
 
 class FakedHMCFileError(Exception):
@@ -119,6 +126,19 @@ def hmc_session(request, hmc_definition):
 
     else:
         # A real HMC
+
+        # Enable debug logging if specified
+        if TESTLOGFILE:
+
+            logger = logging.getLogger('zhmcclient.hmc')
+            if LOG_HANDLER not in logger.handlers:
+                logger.addHandler(LOG_HANDLER)
+            logger.setLevel(logging.DEBUG)
+
+            logger = logging.getLogger('zhmcclient.api')
+            if LOG_HANDLER not in logger.handlers:
+                logger.addHandler(LOG_HANDLER)
+            logger.setLevel(logging.DEBUG)
 
         # Creating a session does not interact with the HMC (logon is deferred)
         session = zhmcclient.Session(
