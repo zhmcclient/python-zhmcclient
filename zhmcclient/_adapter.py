@@ -67,12 +67,10 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._port import PortManager
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 from ._utils import repr_dict, repr_manager, repr_timestamp
 
 __all__ = ['AdapterManager', 'Adapter']
-
-LOG = get_logger(__name__)
 
 
 class AdapterManager(BaseManager):
@@ -466,12 +464,12 @@ class Adapter(BaseResource):
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
-            "  _manager = {_manager_classname} at 0x{_manager_id:08x},\n"
-            "  _uri = {_uri!r},\n"
-            "  _full_properties = {_full_properties!r},\n"
-            "  _properties_timestamp = {_properties_timestamp},\n"
-            "  _properties = {_properties}\n"
-            "  _ports(lazy) = {_ports}\n"
+            "  _manager={_manager_classname} at 0x{_manager_id:08x},\n"
+            "  _uri={_uri!r},\n"
+            "  _full_properties={_full_properties!r},\n"
+            "  _properties_timestamp={_properties_timestamp},\n"
+            "  _properties={_properties},\n"
+            "  _ports(lazy)={_ports}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),

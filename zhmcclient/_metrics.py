@@ -73,15 +73,13 @@ import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 from ._exceptions import NotFound
 from ._utils import datetime_from_timestamp, repr_list
 
 __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
            'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
            'MetricObjectValues']
-
-LOG = get_logger(__name__)
 
 
 class MetricsContextManager(BaseManager):
@@ -123,19 +121,19 @@ class MetricsContextManager(BaseManager):
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
-            "  _resource_class = {_resource_class!r}\n"
-            "  _class_name = {_class_name!r}\n"
-            "  _session = {_session_classname} at 0x{_session_id:08x}\n"
-            "  _parent = {_parent_classname} at 0x{_parent_id:08x}\n"
-            "  _base_uri = {_base_uri!r}\n"
-            "  _oid_prop = {_oid_prop!r}\n"
-            "  _uri_prop = {_uri_prop!r}\n"
-            "  _name_prop = {_name_prop!r}\n"
-            "  _query_props = {_query_props}\n"
-            "  _list_has_name = {_list_has_name!r}\n"
-            "  _name_uri_cache = {_name_uri_cache!r}\n"
-            "  _client = {_client_classname} at 0x{_client_id:08x}\n"
-            "  _metrics_contexts = {_metrics_contexts}\n"
+            "  _resource_class={_resource_class!r},\n"
+            "  _class_name={_class_name!r},\n"
+            "  _session={_session_classname} at 0x{_session_id:08x},\n"
+            "  _parent={_parent_classname} at 0x{_parent_id:08x},\n"
+            "  _base_uri={_base_uri!r},\n"
+            "  _oid_prop={_oid_prop!r},\n"
+            "  _uri_prop={_uri_prop!r},\n"
+            "  _name_prop={_name_prop!r},\n"
+            "  _query_props={_query_props},\n"
+            "  _list_has_name={_list_has_name!r},\n"
+            "  _name_uri_cache={_name_uri_cache!r},\n"
+            "  _client={_client_classname} at 0x{_client_id:08x},\n"
+            "  _metrics_contexts={_metrics_contexts},\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),

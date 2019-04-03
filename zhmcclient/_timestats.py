@@ -43,11 +43,9 @@ from __future__ import absolute_import
 import time
 import copy
 
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 
 __all__ = ['TimeStatsKeeper', 'TimeStats']
-
-LOG = get_logger(__name__)
 
 
 class TimeStats(object):

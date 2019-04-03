@@ -69,12 +69,10 @@ import threading
 import stomp
 import json
 
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 from ._constants import DEFAULT_STOMP_PORT
 
 __all__ = ['NotificationReceiver']
-
-LOG = get_logger(__name__)
 
 
 class NotificationReceiver(object):

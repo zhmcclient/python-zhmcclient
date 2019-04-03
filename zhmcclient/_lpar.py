@@ -33,11 +33,9 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._exceptions import StatusTimeout
-from ._logging import get_logger, logged_api_call
+from ._logging import logged_api_call
 
 __all__ = ['LparManager', 'Lpar']
-
-LOG = get_logger(__name__)
 
 
 class LparManager(BaseManager):

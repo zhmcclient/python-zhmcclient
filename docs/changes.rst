@@ -42,6 +42,24 @@ Released: not yet
   zeroizing a single crypto domain on a crypto adapter. This operation is
   supported on z14 GA2 and higher, and the corresponding LinuxOne systems.
 
+* Changes in logging support:
+
+  - Removed the notion of module-specific loggers from the description
+    of the logging chapter, because that was not used at all, and is not
+    expected to be used in the future: Errors are supposed to be raised
+    as exceptions and not logged, and warnings are supposed to be issued
+    as Python warnings and not logged.
+
+  - Escaped newlines to blanks in log messages, so that all log messages
+    are now on a single line.
+
+  - Changed the syntax for zhmcclient.api log messages, to start with
+    "Called:" and "Return:" instead of "==>" and "<==".
+
+  - Changed the syntax for zhmcclient.hmc log messages, to start with
+    "Request:" and "Respons:" instead of "HMC request:" and
+    "HMC response:", in order to have the URLs column-adjusted.
+
 **Known issues:**
 
 * See `list of open issues`_.
