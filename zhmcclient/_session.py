@@ -18,6 +18,7 @@ Session class: A session to the HMC, optionally in context of an HMC user.
 
 from __future__ import absolute_import
 
+import sys
 import json
 import time
 import re
@@ -647,9 +648,18 @@ class Session(object):
             request
         """
         if method == 'POST' and url.endswith('/api/sessions'):
+            # In Python 3 up to 3.5, json.loads() requires unicode strings.
+            if sys.version_info[0] == 3 and sys.version_info[1] in (4, 5) and \
+                    isinstance(content, six.binary_type):
+                content = content.decode('utf-8')
+            # Because zhmcclient has built the request, we are not handling
+            # any JSON parse errors from json.loads().
             content_dict = json.loads(content)
             content_dict['password'] = '********'
-            content = json.dumps(content)
+            content = json.dumps(content_dict)
+        if headers and 'X-API-Session' in headers:
+            headers = headers.copy()
+            headers['X-API-Session'] = '********'
         HMC_LOG.debug("HMC request: %s %s, headers: %r, "
                       "content(max.1000): %.1000r",
                       method, url, headers, content)
@@ -672,6 +682,23 @@ class Session(object):
           content (:term:`string`): HTTP body (aka content) returned in the
             response
         """
+        if method == 'POST' and url.endswith('/api/sessions'):
+            # In Python 3 up to 3.5, json.loads() requires unicode strings.
+            if sys.version_info[0] == 3 and sys.version_info[1] in (4, 5) and \
+                    isinstance(content, six.binary_type):
+                content = content.decode('utf-8')
+            try:
+                content_dict = json.loads(content)
+            except ValueError as exc:
+                content = '"Error: Cannot parse JSON payload of response: ' \
+                    '{}"'.format(exc)
+            else:
+                content_dict['api-session'] = '********'
+                content_dict['session-credential'] = '********'
+                content = json.dumps(content_dict)
+        if headers and 'X-API-Session' in headers:
+            headers = headers.copy()
+            headers['X-API-Session'] = '********'
         HMC_LOG.debug("HMC response: %s %s, status: %s, headers: %r, "
                       "content(max.1000): %.1000r",
                       method, url, status, headers, content)

@@ -33,6 +33,9 @@ Released: not yet
 * Fixed the list_storage_groups.py example. It used a non-existing property
   on the Cpc class.
 
+* Passwords and session tokens are now correctly blanked out in logs.
+  See issue #560.
+
 **Enhancements:**
 
 * Added support for the new "Zeroize Crypto Domain" operation that allows
