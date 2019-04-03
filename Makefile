@@ -186,11 +186,7 @@ help:
 	@echo '  pylint     - Run PyLint on sources and save results in: pylint.log'
 	@echo '  test       - Run unit tests (and test coverage) and save results in: $(test_unit_log_file)'
 	@echo '               Does not include install but depends on it, so make sure install is current.'
-	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
 	@echo '  end2end    - Run end2end tests and save results in: $(test_end2end_log_file)'
-	@echo '               Env.var TESTHMC can be used to specify the nickname of a HMC or group'
-	@echo '               in the HMC definition file tests/hmc_definitions.yaml (default: default)'
-	@echo '               Env.var TESTCASES can be used to specify a py.test expression for its -k option'
 	@echo '  build      - Build the distribution files in: $(dist_dir)'
 	@echo '               On Windows, builds: $(win64_dist_file)'
 	@echo '               On Linux + OSX, builds: $(bdist_file) $(sdist_file)'
@@ -206,6 +202,9 @@ help:
 	@echo '  PACKAGE_LEVEL="latest" - Default: Install latest version of dependent Python packages'
 	@echo '  PYTHON_CMD=... - Name of python command. Default: python'
 	@echo '  PIP_CMD=... - Name of pip command. Default: pip'
+	@echo '  TESTCASES=... - Testcase filter for pytest -k'
+	@echo '  TESTHMC=... - Nickname of HMC to be used in end2end tests. Default: default'
+	@echo '  TESTLOGFILE=... - Enable logging in end2end tests to that file. Default: no logging'
 
 .PHONY: _check_version
 _check_version:

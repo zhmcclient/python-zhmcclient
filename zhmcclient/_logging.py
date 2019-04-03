@@ -52,7 +52,7 @@ Examples:
       handler = logging.StreamHandler()
       format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
       handler.setFormatter(logging.Formatter(format_string))
-      logger = getLogger('zhmcclient.hmc')
+      logger = logging.getLogger('zhmcclient.hmc')
       logger.addHandler(handler)
       logger.setLevel(logging.DEBUG)
 
