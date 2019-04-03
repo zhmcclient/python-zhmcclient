@@ -114,13 +114,13 @@ matrix:
 #      env:
 #        - PACKAGE_LEVEL=latest
 #      cache: pip
-    - os: osx
-      language: generic
-      python:
-      env:
-        - PACKAGE_LEVEL=minimum
-        - PYTHON=2
-      cache: pip
+#    - os: osx
+#      language: generic
+#      python:
+#      env:
+#        - PACKAGE_LEVEL=minimum
+#        - PYTHON=2
+#      cache: pip
 #    - os: osx
 #      language: generic
 #      python:
@@ -135,13 +135,13 @@ matrix:
 #        - PACKAGE_LEVEL=minimum
 #        - PYTHON=3
 #      cache: pip
-    - os: osx
-      language: generic
-      python:
-      env:
-        - PACKAGE_LEVEL=latest
-        - PYTHON=3
-      cache: pip
+#    - os: osx
+#      language: generic
+#      python:
+#      env:
+#        - PACKAGE_LEVEL=latest
+#        - PYTHON=3
+#      cache: pip
 
 before_install:
   - env | sort
