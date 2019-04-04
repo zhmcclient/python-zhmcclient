@@ -22,11 +22,7 @@ Change log
 Version 0.23.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2019-04-04
 
 **Bug fixes:**
 
@@ -59,12 +55,6 @@ Released: not yet
   - Changed the syntax for zhmcclient.hmc log messages, to start with
     "Request:" and "Respons:" instead of "HMC request:" and
     "HMC response:", in order to have the URLs column-adjusted.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.22.0
