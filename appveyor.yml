@@ -3,36 +3,66 @@
 
 environment:
   matrix:
-    - PYTHON_VERSION: 2.7
-      PYTHON_ARCH: 32
-      PYTHON_HOME: C:\Python27
-#    - PYTHON_VERSION: 2.7
-#      PYTHON_ARCH: 64
-#      PYTHON_HOME: C:\Python27-x64
-#    - PYTHON_VERSION: 3.4
-#      PYTHON_ARCH: 32
-#      PYTHON_HOME: C:\Python34
-#    - PYTHON_VERSION: 3.4
-#      PYTHON_ARCH: 64
-#      PYTHON_HOME: C:\Python34-x64
-#    - PYTHON_VERSION: 3.5
-#      PYTHON_ARCH: 32
-#      PYTHON_HOME: C:\Python35
-#    - PYTHON_VERSION: 3.5
-#      PYTHON_ARCH: 64
-#      PYTHON_HOME: C:\Python35-x64
-#    - PYTHON_VERSION: 3.6
-#      PYTHON_ARCH: 32
-#      PYTHON_HOME: C:\Python36
-#    - PYTHON_VERSION: 3.6
-#      PYTHON_ARCH: 64
-#      PYTHON_HOME: C:\Python36-x64
-#    - PYTHON_VERSION: 3.7
-#      PYTHON_ARCH: 32
-#      PYTHON_HOME: C:\Python37
-    - PYTHON_VERSION: 3.7
-      PYTHON_ARCH: 64
-      PYTHON_HOME: C:\Python37-x64
+
+    - TOX_ENV: win64_py27_32
+      UNIX_PATH: none
+      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py27_64
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py34_32
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py34_64
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py35_32
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py35_64
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py36_32
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py36_64
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py37_32
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+    - TOX_ENV: win64_py37_64
+      UNIX_PATH: none
+      PYTHON_CMD: python
+
+# Disabled because python2.7 fails with segmentation fault and because libzmq is needed
+#    - TOX_ENV: cygwin32_py27
+#      UNIX_PATH: C:\cygwin\bin
+#      PYTHON_CMD: python2.7
+
+# TODO: Disabled because libzmq is needed
+#    - TOX_ENV: cygwin64_py27
+#      UNIX_PATH: C:\cygwin64\bin
+#      PYTHON_CMD: python2.7
+
+# TODO: Disabled because libzmq is needed
+#    - TOX_ENV: cygwin64_py36
+#      UNIX_PATH: C:\cygwin64\bin
+#      PYTHON_CMD: python3.6m
+
+# TODO: Disabled because libzmq is needed
+#    - TOX_ENV: msys64_py27
+#      UNIX_PATH: C:\msys64\usr\bin
+#      PYTHON_CMD: python2.7
 
 configuration:
 # These values will become the values of the PACKAGE_LEVEL env.var.
@@ -40,6 +70,12 @@ configuration:
   - latest
 
 install:
+
+  # Examine the environment
+  - ver
+  - set
+  - dir
+  - dir C:\
 
   - git --version
   - if %APPVEYOR_REPO_BRANCH%.==manual-ci-run. set _NEED_REBASE=true
@@ -51,77 +87,27 @@ install:
   - if %_NEED_REBASE%.==true. git rebase master
   - git branch -av
 
-  # TODO: Use the _MANUAL_CI_RUN variable in tox.ini to run certain parts only when set
-  - if %APPVEYOR_REPO_BRANCH%.==manual-ci-run. set _MANUAL_CI_RUN=true
-  - if %APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH%.==manual-ci-run. set _MANUAL_CI_RUN=true
+  - if %APPVEYOR_REPO_BRANCH%.==manual-ci-run. set MANUAL_CI_RUN=true
+  - if %APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH%.==manual-ci-run. set MANUAL_CI_RUN=true
 
   # Set PACKAGE_LEVEL for make
   - set PACKAGE_LEVEL=%configuration%
 
-  # Examine the environment
-  - echo %PATH%
-  - echo %INCLUDE%
-  - echo %LIB%
-  - dir C:\
-  - dir
+  # Add UNIX Python to the path, if desired
+  - 'if not "%UNIX_PATH%"=="none" set PATH=%UNIX_PATH%;%PATH%'
 
-  # Show OS-level packages available for installation via "choco"
-  # Note: "choco" is a Windows installer, similar to "yum" on RHEL.
-  - choco source list
+  # Install GNU make if no UNIX env is set
+  - if "%UNIX_PATH%"=="none" tools\retry choco install -y make
+  - if "%UNIX_PATH%"=="none" where make
+  - if "%UNIX_PATH%"=="none" make --version
 
-  # Add Python
-  #- reg ADD HKCU\Software\Python\PythonCore\%PYTHON_VERSION%\InstallPath /ve /d "%PYTHON_HOME%" /t REG_SZ /f
-  #- reg ADD HKLM\Software\Python\PythonCore\%PYTHON_VERSION%\InstallPath /ve /d "%PYTHON_HOME%" /t REG_SZ /f
-  - set PATH=%PYTHON_HOME%;%PYTHON_HOME%\Scripts;%PATH%
+  - if not "%UNIX_PATH%"=="none" where bash
 
-  ## Install pip via get-pip.py - disabled because pip is already installed
-  #- ps: (new-object System.Net.WebClient).Downloadfile('https://bootstrap.pypa.io/get-pip.py', 'C:\Users\appveyor\get-pip.py')
-  #- ps: Start-Process -FilePath "C:\Python27\python.exe" -ArgumentList "C:\Users\appveyor\get-pip.py" -Wait -Passthru
-
-  # Add CygWin
-  - set PATH=C:\cygwin\bin;%PATH%
-
-  ## Example for installing an OS-level package via "choco":
-  #
-  #- choco install -y <package-name>
-  #- set PATH=<package-path>;%PATH%
-
-  ## Example for manually installing OS-level prereqs:
-  #
-  ## Preparation
-  #- echo set _PWD=%%%%~dp0>tmp_prereq_dir.bat
-  #- call tmp_prereq_dir.bat
-  #- rm tmp_prereq_dir.bat
-  #- set _PREREQ_DIR=prereqs
-  #- set _PREREQ_ABSDIR=%_PWD%%_PREREQ_DIR%
-  #- echo Installing OS-level prereqs into: %_PREREQ_ABSDIR%
-  #- mkdir %_PREREQ_DIR%
-  #
-  ## Install libxml2
-  #- set _PKGFILE=libxml2-2.7.8.win32.zip
-  #- set _PKGDIR=libxml2-2.7.8.win32
-  #- wget -q -P %_PREREQ_DIR% ftp://ftp.zlatkovic.com/libxml/%_PKGFILE%
-  #- unzip -q -d %_PREREQ_DIR% %_PREREQ_DIR%/%_PKGFILE%
-  #- set INCLUDE=%_PREREQ_ABSDIR%\%_PKGDIR%\include;%INCLUDE%
-  #- set LIB=%_PREREQ_ABSDIR%\%_PKGDIR%\lib;%LIB%
-  #- set PATH=%_PREREQ_ABSDIR%\%_PKGDIR%\bin;%PATH%
-
-  # Install tox
-  - pip install tox==2.0.0
-
-  # Verify that the commands used in tox.ini are available
-  - tox --version
-  - make --version
-  - sh --version
-
-  # Verify that the commands used in Makefile are available
-  - bash --version
-  - rm --version
-  - mv --version
-  - find --version
-  - tee --version
-  - pip --version
+  # Examine the Python and Pip commands
+  - where python
   - python --version
+  - where pip
+  - pip --version
 
 # This is not a C# project, build stuff at the test step instead:
 build: false
@@ -129,4 +115,5 @@ build: false
 before_test:
 
 test_script:
-  - tox -e pywin
+  - if "%UNIX_PATH%"=="none" cmd /c "pip install tox & tox -v -e %TOX_ENV%"
+  - if not "%UNIX_PATH%"=="none" bash -c "%PYTHON_CMD% -m ensurepip; which pip; which %PYTHON_CMD%; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; tox -v -e %TOX_ENV%"

@@ -71,7 +71,8 @@ Supported environments
 
 The zhmcclient package is supported in these environments:
 
-* Operating systems: Linux, Windows, OS-X
+* Operating systems: Linux, Windows (native, and with UNIX-like environments),
+  OS-X
 
 * Python versions: 2.7, 3.4, and higher 3.x
 
@@ -259,6 +260,25 @@ installed correctly by importing the package into Python:
 
     $ python -c "import zhmcclient; print('ok')"
     ok
+
+Considerations for Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On Windows, you can run your Python scripts on native Windows or in a UNIX-like
+environment (such as `CygWin`_, `MSYS2`_, Babun, or Gow).
+
+Running Python scripts on native Windows means they run in the Windows command
+processor, and use a Python installed on Windows.
+
+Running Python scripts in a UNIX-like environment means they run in the shell
+of the UNIX-like environment, and use the Python of the UNIX-like environment.
+
+The zhmcclient package can be used in any of these scenarios. It is tested
+on the Appveyor CI on native Windows, with CygWin and with MSYS2.
+
+.. _`CygWin`: https://cygwin.org/
+
+.. _`MSYS2`: https://www.msys2.org/
 
 
 .. _`Setting up the HMC`:
