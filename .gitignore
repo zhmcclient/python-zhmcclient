@@ -15,6 +15,7 @@
 .coverage
 .venv
 .testrepository
+*.done
 *.log
 *.tmp
 tmp.*
