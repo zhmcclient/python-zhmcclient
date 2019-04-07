@@ -48,18 +48,23 @@ environment:
 #    - TOX_ENV: cygwin32_py27
 #      UNIX_PATH: C:\cygwin\bin
 #      PYTHON_CMD: python2.7
+#      PIP_CMD: pip
 
+# TODO: Disabled because python2.7 exits with rc=127 even though which finds it in PATH
 #    - TOX_ENV: cygwin64_py27
 #      UNIX_PATH: C:\cygwin64\bin
 #      PYTHON_CMD: python2.7
+#      PIP_CMD: pip
 
     - TOX_ENV: cygwin64_py36
       UNIX_PATH: C:\cygwin64\bin
       PYTHON_CMD: python3.6m
+      PIP_CMD: pip
 
     - TOX_ENV: msys64_py27
       UNIX_PATH: C:\msys64\usr\bin
       PYTHON_CMD: python2.7
+      PIP_CMD: pip
 
 configuration:
 # These values will become the values of the PACKAGE_LEVEL env.var.
@@ -90,8 +95,11 @@ install:
   # Set PACKAGE_LEVEL for make
   - set PACKAGE_LEVEL=%configuration%
 
+  # For UNIX, reduce the PATH to a minimum (to avoid blanks in directory names)
+  - if not "%UNIX_PATH%"=="none" set PATH=C:\Windows\system32;C:\Windows;C:\ProgramData\chocolatey\bin
+
   # Add UNIX commands to the path (used for bash)
-  - 'if not "%UNIX_PATH%"=="none" set PATH=%UNIX_PATH%;%PATH%'
+  - if not "%UNIX_PATH%"=="none" set PATH=%UNIX_PATH%;%PATH%
 
   # Install GNU make
   - if "%UNIX_PATH%"=="none" tools\retry choco install -y make
@@ -108,13 +116,28 @@ install:
   # Examine the commands needed further down
   - if "%UNIX_PATH%"=="none" where pip
   - if not "%UNIX_PATH%"=="none" where bash
+  - if not "%UNIX_PATH%"=="none" bash --noprofile --norc -c "echo \"PATH=$PATH\""
+  - if not "%UNIX_PATH%"=="none" bash --noprofile --norc -c "set -e; echo \"PYTHON_CMD=%PYTHON_CMD%\"; which -a %PYTHON_CMD%; %PYTHON_CMD% --version"
 
+  # Install Pip, where needed
+  - if "%UNIX_PATH%"=="C:\cygwin\bin" bash --noprofile --norc -c "set -e; %PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel"
+  - if "%UNIX_PATH%"=="C:\cygwin64\bin" bash --noprofile --norc -c "set -e; %PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel"
+  - if "%UNIX_PATH%"=="C:\msys64\usr\bin" set MSYSTEM=MSYS & bash --noprofile --norc -c "set -e; %PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel"
+  # - if not "%UNIX_PATH%"=="none" bash --noprofile --norc -c "set -e; echo \"PIP_CMD=%PIP_CMD%\"; which -a %PIP_CMD%; %PIP_CMD% --version"
+ 
+  # Install Tox
+  - if "%UNIX_PATH%"=="none" cmd /c "pip install tox"
+  - if "%UNIX_PATH%"=="C:\cygwin\bin" bash --noprofile --norc -c "%PYTHON_CMD% -m pip install tox"
+  - if "%UNIX_PATH%"=="C:\cygwin64\bin" bash --noprofile --norc -c "%PYTHON_CMD% -m pip install tox"
+  - if "%UNIX_PATH%"=="C:\msys64\usr\bin" set MSYSTEM=MSYS & bash --noprofile --norc -c "%PIP_CMD% install tox"
+  - if not "%UNIX_PATH%"=="none" bash --noprofile --norc -c "set -e; which -a tox; tox --version"
+  
 build: false
 
 before_test:
 
 test_script:
-  - if "%UNIX_PATH%"=="none" cmd /c "pip install tox & tox -v -e %TOX_ENV%"
-  - if "%UNIX_PATH%"=="C:\cygwin\bin" bash -c "%PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; tox -v -e %TOX_ENV%"
-  - if "%UNIX_PATH%"=="C:\cygwin64\bin" bash -c "%PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; tox -v -e %TOX_ENV%"
-  - if "%UNIX_PATH%"=="C:\msys64\usr\bin" set MSYSTEM=MSYS & bash -c "%PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; export LIBRARY_PATH=/mingw64/lib:/usr/lib:$LIBRARY_PATH; export CPATH=/mingw64/include:/usr/include:$CPATH; export PATH=$PATH:/mingw64/bin; tox -v -e %TOX_ENV%"
+  - if "%UNIX_PATH%"=="none" cmd /c "tox -v -e %TOX_ENV%"
+  - if "%UNIX_PATH%"=="C:\cygwin\bin" bash -c "tox -v -e %TOX_ENV%"
+  - if "%UNIX_PATH%"=="C:\cygwin64\bin" bash -c "tox -v -e %TOX_ENV%"
+  - if "%UNIX_PATH%"=="C:\msys64\usr\bin" set MSYSTEM=MSYS & bash -c "set -e; export LIBRARY_PATH=/mingw64/lib:/usr/lib:$LIBRARY_PATH; export CPATH=/mingw64/include:/usr/include:$CPATH; export PATH=$PATH:/mingw64/bin; tox -v -e %TOX_ENV%"
