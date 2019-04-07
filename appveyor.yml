@@ -40,29 +40,26 @@ environment:
 #      UNIX_PATH: none
 #      PYTHON_CMD: python
 
-    - TOX_ENV: win64_py37_64
-      UNIX_PATH: none
-      PYTHON_CMD: python
+#    - TOX_ENV: win64_py37_64
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
 
-# Disabled because python2.7 fails with segmentation fault and because libzmq is needed
+# TODO: Disabled because python2.7 fails with segmentation fault
 #    - TOX_ENV: cygwin32_py27
 #      UNIX_PATH: C:\cygwin\bin
 #      PYTHON_CMD: python2.7
 
-# TODO: Disabled because libzmq is needed
 #    - TOX_ENV: cygwin64_py27
 #      UNIX_PATH: C:\cygwin64\bin
 #      PYTHON_CMD: python2.7
 
-# TODO: Disabled because libzmq is needed
-#    - TOX_ENV: cygwin64_py36
-#      UNIX_PATH: C:\cygwin64\bin
-#      PYTHON_CMD: python3.6m
+    - TOX_ENV: cygwin64_py36
+      UNIX_PATH: C:\cygwin64\bin
+      PYTHON_CMD: python3.6m
 
-# TODO: Disabled because libzmq is needed
-#    - TOX_ENV: msys64_py27
-#      UNIX_PATH: C:\msys64\usr\bin
-#      PYTHON_CMD: python2.7
+    - TOX_ENV: msys64_py27
+      UNIX_PATH: C:\msys64\usr\bin
+      PYTHON_CMD: python2.7
 
 configuration:
 # These values will become the values of the PACKAGE_LEVEL env.var.
@@ -93,27 +90,31 @@ install:
   # Set PACKAGE_LEVEL for make
   - set PACKAGE_LEVEL=%configuration%
 
-  # Add UNIX Python to the path, if desired
+  # Add UNIX commands to the path (used for bash)
   - 'if not "%UNIX_PATH%"=="none" set PATH=%UNIX_PATH%;%PATH%'
 
-  # Install GNU make if no UNIX env is set
+  # Install GNU make
   - if "%UNIX_PATH%"=="none" tools\retry choco install -y make
   - if "%UNIX_PATH%"=="none" where make
   - if "%UNIX_PATH%"=="none" make --version
 
+  # Install OS-level prerequisite packages for pyzmq Python package
+  # Note. This installs them from 'outside' of the actual UNIX env, which works.
+  - if "%UNIX_PATH%"=="C:\cygwin\bin" C:\cygwin\setup-x86.exe -q -P libzmq-devel,python2-devel,python2-cython,python3-devel,python3-cython
+  - if "%UNIX_PATH%"=="C:\cygwin64\bin" C:\cygwin64\setup-x86_64.exe -q -P libzmq-devel,python2-devel,python2-cython,python3-devel,python3-cython
+  - if "%UNIX_PATH%"=="C:\msys64\usr\bin" C:\msys64\usr\bin\pacman.exe --sync --noconfirm --needed mingw-w64-x86_64-zeromq
+  - if "%UNIX_PATH%"=="C:\msys64\usr\bin" C:\msys64\usr\bin\pacman.exe --sync --noconfirm --needed libcrypt-devel
+
+  # Examine the commands needed further down
+  - if "%UNIX_PATH%"=="none" where pip
   - if not "%UNIX_PATH%"=="none" where bash
 
-  # Examine the Python and Pip commands
-  - where python
-  - python --version
-  - where pip
-  - pip --version
-
-# This is not a C# project, build stuff at the test step instead:
 build: false
 
 before_test:
 
 test_script:
   - if "%UNIX_PATH%"=="none" cmd /c "pip install tox & tox -v -e %TOX_ENV%"
-  - if not "%UNIX_PATH%"=="none" bash -c "%PYTHON_CMD% -m ensurepip; which pip; which %PYTHON_CMD%; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; tox -v -e %TOX_ENV%"
+  - if "%UNIX_PATH%"=="C:\cygwin\bin" bash -c "%PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; tox -v -e %TOX_ENV%"
+  - if "%UNIX_PATH%"=="C:\cygwin64\bin" bash -c "%PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; tox -v -e %TOX_ENV%"
+  - if "%UNIX_PATH%"=="C:\msys64\usr\bin" set MSYSTEM=MSYS & bash -c "%PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel; pip install tox; export LIBRARY_PATH=/mingw64/lib:/usr/lib:$LIBRARY_PATH; export CPATH=/mingw64/include:/usr/include:$CPATH; export PATH=$PATH:/mingw64/bin; tox -v -e %TOX_ENV%"

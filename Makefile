@@ -255,6 +255,7 @@ help:
 
 .PHONY: platform
 platform:
+	@echo "Makefile: Platform information as seen by make:"
 	@echo "Platform: $(PLATFORM)"
 	@echo "Shell used for commands: $(SHELL)"
 	@echo "Shell flags: $(.SHELLFLAGS)"
@@ -268,12 +269,12 @@ platform:
 
 .PHONY: pip_list
 pip_list:
-	@echo "Packages in the active Python environment:"
+	@echo "Makefile: Python packages as seen by make:"
 	$(PIP_CMD) list
 
 .PHONY: env
 env:
-	@echo "Environment as seen by make:"
+	@echo "Makefile: Environment variables as seen by make:"
 	$(ENV)
 
 .PHONY: _check_version
