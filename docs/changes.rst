@@ -26,6 +26,18 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Operations that resulted in HTTP status 403, reason 1 ("The user under which
+  the API request was authenticated does not have the required authority to
+  perform the requested action.") so far raised `ServerAuthError`. However,
+  that exception does not represent that situation properly, because the
+  login user is actually properly authenticated.
+
+  The handling of this case was changed to now raise `HTTPError` instead of
+  `ServerAuthError`.
+
+  This change is incompatible to users of the zhmcclient API that are handling
+  this situation specifically.
+
 **Deprecations:**
 
 **Bug fixes:**
