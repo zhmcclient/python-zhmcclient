@@ -326,7 +326,7 @@ class TestSession(object):
         with requests_mock.mock() as m:
             get_uri = "/api/version"
             get_resp_status = 500
-            get_resp_content_type = 'text/html; charset=ISO-5589-1'
+            get_resp_content_type = 'text/html; charset=utf-8'
             get_resp_headers = {
                 'content-type': get_resp_content_type,
             }
