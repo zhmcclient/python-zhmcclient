@@ -33,7 +33,19 @@ Released: not yet
 * Fixed LookupError on unknown encoding ISO-5589-1 in test_session.py test
   that occurred with latest requests_mock package.
 
+* Increased minimum version of flake8 to 3.7.0 due to difficulties with
+  recognizing certain 'noqa' statements. This required explicitly specifying
+  its dependent pycodestyle and pyflakes packages with their minimum versions,
+  because the dependency management did not work with our minimum
+  package versions.
+
 **Enhancements:**
+
+* Improved end2end test support for zhmcclient and its using projects.
+  The zhmcclient.testutils package already provides some support for end2end
+  tests by users of the zhmcclient package. It is also used by the end2end
+  tests of the zhmcclient package itself. This change improves that support,
+  mainly from a perspective of projects using zhmcclient.
 
 **Known issues:**
 

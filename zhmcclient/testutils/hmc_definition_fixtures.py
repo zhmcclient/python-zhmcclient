@@ -23,15 +23,21 @@ import zhmcclient_mock
 from zhmcclient.testutils.hmc_definitions import HMCDefinitionFile, \
     HMCDefinition
 
-# HMC nickname or HMC group nickname in HMC definition file
+# Nicknames in HMC definition file
+TESTHMCDIR = os.getenv('TESTHMCDIR', 'tests')
+TESTHMCFILE = os.path.join(TESTHMCDIR, 'hmc_definitions.yaml')
 TESTHMC = os.getenv('TESTHMC', 'default')
-HMC_DEF_LIST = HMCDefinitionFile().list_hmcs(TESTHMC)
+HMC_DEF_LIST = HMCDefinitionFile(filepath=TESTHMCFILE).list_hmcs(TESTHMC)
 
 # Log file
 TESTLOGFILE = os.getenv('TESTLOGFILE', None)
-LOG_HANDLER = logging.FileHandler(TESTLOGFILE, encoding='utf-8')
-LOG_FORMAT_STRING = '%(asctime)s %(name)s %(levelname)s %(message)s'
-LOG_HANDLER.setFormatter(logging.Formatter(LOG_FORMAT_STRING))
+if TESTLOGFILE:
+    LOG_HANDLER = logging.FileHandler(TESTLOGFILE, encoding='utf-8')
+    LOG_FORMAT_STRING = '%(asctime)s %(name)s %(levelname)s %(message)s'
+    LOG_HANDLER.setFormatter(logging.Formatter(LOG_FORMAT_STRING))
+else:
+    LOG_HANDLER = None
+    LOG_FORMAT_STRING = None
 
 
 class FakedHMCFileError(Exception):
@@ -128,7 +134,7 @@ def hmc_session(request, hmc_definition):
         # A real HMC
 
         # Enable debug logging if specified
-        if TESTLOGFILE:
+        if LOG_HANDLER:
 
             logger = logging.getLogger('zhmcclient.hmc')
             if LOG_HANDLER not in logger.handlers:
