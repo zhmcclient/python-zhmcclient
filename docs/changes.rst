@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed LookupError on unknown encoding ISO-5589-1 in test_session.py test
+  that occurred with latest requests_mock package.
+
 **Enhancements:**
 
 **Known issues:**
