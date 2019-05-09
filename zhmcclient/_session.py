@@ -780,6 +780,10 @@ class Session(object):
                 # API session token expired: re-logon and retry
                 self._do_logon()
                 return self.get(uri, logon_required)
+            elif reason == 1:
+                # Login user's authentication is fine; this is an authorization
+                # issue, so we don't raise ServerAuthError.
+                raise HTTPError(result_object)
             else:
                 msg = result_object.get('message', None)
                 raise ServerAuthError("HTTP authentication failed: {}".
@@ -980,6 +984,10 @@ class Session(object):
                     # API session token expired: re-logon and retry
                     self._do_logon()
                     return self.post(uri, body, logon_required)
+                elif reason == 1:
+                    # Login user's authentication is fine; this is an
+                    # authorization issue, so we don't raise ServerAuthError.
+                    raise HTTPError(result_object)
                 else:
                     msg = result_object.get('message', None)
                     raise ServerAuthError("HTTP authentication failed: {}".
@@ -1056,6 +1064,10 @@ class Session(object):
                 self._do_logon()
                 self.delete(uri, logon_required)
                 return
+            elif reason == 1:
+                # Login user's authentication is fine; this is an authorization
+                # issue, so we don't raise ServerAuthError.
+                raise HTTPError(result_object)
             else:
                 msg = result_object.get('message', None)
                 raise ServerAuthError("HTTP authentication failed: {}".
