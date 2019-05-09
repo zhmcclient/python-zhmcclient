@@ -87,7 +87,13 @@ GitPython==2.1.1
 pylint==1.6.4 #; python_version == '2.7'
 
 # Flake8 (no imports, invoked via flake8 script):
-flake8==3.2.1
+flake8==3.7.0
+# Note: Flake8 requires pyflakes>=2.1.0 and pycodestyle>=2.5.0, but for reasons
+#       not understood, the resulting installation has pycodestyle 2.2.0,
+#       causing issues. Workaround is to specify these dependencies here.
+pyflakes==2.1.0
+pycodestyle==2.5.0
+
 
 # Twine (no imports, invoked via twine script):
 twine==1.8.1

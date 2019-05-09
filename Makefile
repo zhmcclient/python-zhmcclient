@@ -104,6 +104,18 @@ else
   WHICH = which
 endif
 
+# Directory with hmc_definitions.yaml file for end2end tests
+default_test_hmc_dir := tests
+ifndef TESTHMCDIR
+  TESTHMCDIR := $(default_test_hmc_dir)
+endif
+
+# Nickname of test HMC in hmc_definitions.yaml file for end2end tests
+default_test_hmc := default
+ifndef TESTHMC
+  TESTHMC := $(default_test_hmc)
+endif
+
 # Name of this Python package (top-level Python namespace + Pypi package name)
 package_name := zhmcclient
 mock_package_name := zhmcclient_mock
@@ -243,7 +255,8 @@ help:
 	@echo ""
 	@echo "Environment variables:"
 	@echo "  TESTCASES=... - Testcase filter for pytest -k"
-	@echo "  TESTHMC=... - Nickname of HMC to be used in end2end tests. Default: default"
+	@echo "  TESTHMC=... - Nickname of HMC to be used in end2end tests. Default: $(default_test_hmc)"
+	@echo "  TESTHMCDIR=... - Path name of directory with hmc_definitions.yaml file for end2end tests. Default: $(default_test_hmc_dir)"
 	@echo "  TESTLOGFILE=... - Enable logging in end2end tests to that file. Default: no logging"
 	@echo "  PACKAGE_LEVEL - Package level to be used for installing dependent Python"
 	@echo "      packages in 'install' and 'develop' targets:"
@@ -448,5 +461,5 @@ test: Makefile develop_$(pymn).done $(package_py_files) $(test_unit_py_files) $(
 
 .PHONY:	end2end
 end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files)
-	py.test $(pytest_no_log_opt) -s $(test_dir)/end2end $(pytest_opts)
+	bash -c 'TESTHMCDIR=$(TESTHMCDIR) TESTHMC=$(TESTHMC) py.test $(pytest_no_log_opt) -s $(test_dir)/end2end $(pytest_opts)'
 	@echo "Makefile: $@ done."

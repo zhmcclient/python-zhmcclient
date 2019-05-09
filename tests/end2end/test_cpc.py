@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function
 import requests.packages.urllib3
 import zhmcclient
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
+from zhmcclient.testutils.cpc_fixtures import all_cpcs  # noqa: F401
 
 requests.packages.urllib3.disable_warnings()
 
@@ -63,52 +64,53 @@ def assert_cpc_minimal(cpc, exp_name, exp_prop_names):
 
 
 # Printing is disabled by default, rename to test_...() to enable it.
-def disable_test_print_cpcs(hmc_session):  # noqa: F811
+def disabled_test_print_cpcs(all_cpcs):  # noqa: F811
     """
-    Print the CPCs in the HMC definition.
+    Print some information about the CPCs under test.
     """
-    client = zhmcclient.Client(hmc_session)
-    hd = hmc_session.hmc_definition
+    for cpc in sorted(all_cpcs, key=lambda obj: obj.name):
 
-    print("")
-    print("CPCs for HMC {}".format(hd.nickname))
+        hd = cpc.manager.client.session.hmc_definition
 
-    for def_name in hd.cpcs:
-        found_cpcs = client.cpcs.list(filter_args=dict(name=def_name),
-                                      full_properties=True)
-        assert len(found_cpcs) == 1
-        found_cpc = found_cpcs[0]
+        print("")
+        print("CPC {} on HMC {}:".format(cpc.name, hd.nickname))
 
-        print("CPC {}:".format(def_name))
-        print(repr(found_cpc))
+        if cpc.dpm_enabled:
 
-        if found_cpc.dpm_enabled:
+            print("  Partitions:")
+            partitions = cpc.partitions.list()
+            for partition in sorted(partitions, key=lambda obj: obj.name):
+                print("    {}".format(partition.name))
 
-            for partition in found_cpc.partitions.list():
-                print("Partition {}:".format(partition.name))
-                print(repr(partition))
-
-            for adapter in found_cpc.adapters.list():
-                print("Adapter {}:".format(adapter.name))
-                print(repr(adapter))
+            print("  Adapters:")
+            adapters = cpc.adapters.list()
+            for adapter in sorted(adapters, key=lambda obj: obj.name):
+                print("    {}".format(adapter.name))
 
         else:
 
-            for lpar in found_cpc.lpars.list():
-                print("LPAR {}:".format(lpar.name))
-                print(repr(lpar))
+            print("  LPARs:")
+            lpars = cpc.lpars.list()
+            for lpar in sorted(lpars, key=lambda obj: obj.name):
+                print("    {}".format(lpar.name))
 
-            for reset_profile in found_cpc.reset_activation_profiles.list():
-                print("Reset profile {}:".format(reset_profile.name))
-                print(repr(reset_profile))
+            print("  Reset profiles:")
+            reset_profiles = cpc.reset_activation_profiles.list()
+            for reset_profile in sorted(reset_profiles,
+                                        key=lambda obj: obj.name):
+                print("    {}".format(reset_profile.name))
 
-            for load_profile in found_cpc.load_activation_profiles.list():
-                print("Reset profile {}:".format(load_profile.name))
-                print(repr(load_profile))
+            print("  Load profiles:")
+            load_profiles = cpc.load_activation_profiles.list()
+            for load_profile in sorted(load_profiles,
+                                       key=lambda obj: obj.name):
+                print("    {}".format(load_profile.name))
 
-            for image_profile in found_cpc.image_activation_profiles.list():
-                print("Reset profile {}:".format(image_profile.name))
-                print(repr(image_profile))
+            print("  Image profiles:")
+            image_profiles = cpc.image_activation_profiles.list()
+            for image_profile in sorted(image_profiles,
+                                        key=lambda obj: obj.name):
+                print("    {}".format(image_profile.name))
 
 
 def test_cpc_find_by_name(hmc_session):  # noqa: F811
@@ -120,9 +122,9 @@ def test_cpc_find_by_name(hmc_session):  # noqa: F811
     for def_name in hd.cpcs:
 
         # The code to be tested
-        found_cpc = client.cpcs.find_by_name(def_name)
+        cpc = client.cpcs.find_by_name(def_name)
 
-        assert_cpc_minimal(found_cpc, def_name, PROPS_CPC_MINIMAL)
+        assert_cpc_minimal(cpc, def_name, PROPS_CPC_MINIMAL)
 
 
 def test_cpc_find_with_name(hmc_session):  # noqa: F811
