@@ -49,6 +49,8 @@ Released: not yet
 
 * Improved the show_os_messages.py example.
 
+* Blanked out the session ID value in the log record for logging off.
+
 **Known issues:**
 
 * See `list of open issues`_.
