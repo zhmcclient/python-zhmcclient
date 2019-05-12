@@ -24,6 +24,9 @@ import requests.packages.urllib3
 
 import zhmcclient
 
+# Print metadata for each OS message, before each message
+PRINT_METADATA = False
+
 requests.packages.urllib3.disable_warnings()
 
 if len(sys.argv) != 2:
@@ -58,7 +61,7 @@ if loglevel is not None:
         logmodule = ''  # root logger
     print("Logging for module %s with level %s" % (logmodule, loglevel))
     handler = logging.StreamHandler()
-    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format_string = '%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'
     handler.setFormatter(logging.Formatter(format_string))
     logger = logging.getLogger(logmodule)
     logger.addHandler(handler)
@@ -111,25 +114,34 @@ print("OS message channel topic: %s" % topic)
 
 receiver = zhmcclient.NotificationReceiver(topic, hmc, userid, password)
 print("Showing OS messages (including refresh messages) ...")
+sys.stdout.flush()
 
 try:
     for headers, message in receiver.notifications():
-        print("# HMC notification #%s:" % headers['session-sequence-nr'])
+        # print("# HMC notification #%s:" % headers['session-sequence-nr'])
+        # sys.stdout.flush()
         os_msg_list = message['os-messages']
         for os_msg in os_msg_list:
-            msg_id = os_msg['message-id']
-            held = os_msg['is-held']
-            priority = os_msg['is-priority']
-            prompt = os_msg.get('prompt-text', None)
-            print("# OS message %s (held: %s, priority: %s, prompt: %r):" %
-                  (msg_id, held, priority, prompt))
+            if PRINT_METADATA:
+                msg_id = os_msg['message-id']
+                held = os_msg['is-held']
+                priority = os_msg['is-priority']
+                prompt = os_msg.get('prompt-text', None)
+                print("# OS message %s (held: %s, priority: %s, prompt: %r):" %
+                      (msg_id, held, priority, prompt))
             msg_txt = os_msg['message-text'].strip('\n')
             print(msg_txt)
+            sys.stdout.flush()
 except KeyboardInterrupt:
-    print("Keyboard interrupt: Closing OS message channel...")
+    print("Keyboard interrupt - leaving receiver loop")
+    sys.stdout.flush()
+finally:
+    print("Closing receiver...")
+    sys.stdout.flush()
     receiver.close()
 
 print("Logging off...")
+sys.stdout.flush()
 session.logoff()
 
 if timestats:
