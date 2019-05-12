@@ -35,8 +35,8 @@ for a DPM partition::
 
     topic = partition.open_os_message_channel(include_refresh_messages=True)
 
-    print("Subscribing for OS messages for partition %s on CPC %s..." %
-          (partition.name, cpc.name))
+    print("Subscribing for OS messages for partition %s on CPC %s using "
+          "notifications..." % (partition.name, cpc.name))
 
     receiver = zhmcclient.NotificationReceiver(topic, hmc, userid, password)
 
@@ -49,10 +49,10 @@ for a DPM partition::
                 msg_id = os_msg['message-id']
                 print("OS message #%s:\\n%s" % (msg_id, msg_txt))
     except KeyboardInterrupt:
-        pass
-
-    print("Closing OS message channel...")
-    receiver.close()
+        print("Keyboard Interrupt - Leaving notification receiver loop...")
+    finally:
+        print("Closing notification receiver...")
+        receiver.close()
 
 When running this example code in one terminal, and stopping or starting
 the partition in another terminal, one can monitor the shutdown or boot

@@ -47,6 +47,8 @@ Released: not yet
   tests of the zhmcclient package itself. This change improves that support,
   mainly from a perspective of projects using zhmcclient.
 
+* Improved the show_os_messages.py example.
+
 **Known issues:**
 
 * See `list of open issues`_.
