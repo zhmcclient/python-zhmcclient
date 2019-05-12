@@ -54,6 +54,8 @@ _STD_HEADERS = {
     'Accept': '*/*'
 }
 
+BLANKED_OUT = '********'  # Replacement for blanked out sensitive values
+
 
 def _handle_request_exc(exc, retry_timeout_config):
     """
@@ -231,6 +233,20 @@ def get_password_interface(host, userid):
     raise NotImplementedError
 
 
+def _headers_for_logging(headers):
+    """
+    Return the input headers dict with blanked out values for any headers that
+    carry sensitive information, so that it can be logged or displayed.
+
+    The headers argument is not modified; if it needs to be changed, a copy is
+    made that is changed.
+    """
+    if headers and 'X-API-Session' in headers:
+        headers = headers.copy()
+        headers['X-API-Session'] = BLANKED_OUT
+    return headers
+
+
 class Session(object):
     """
     A session to the HMC, optionally in context of an HMC user.
@@ -363,6 +379,7 @@ class Session(object):
         """
         Return a string with the state of this session, for debug purposes.
         """
+        headers = _headers_for_logging(self.headers)
         ret = (
             "{classname} at 0x{id:08x} (\n"
             "  _host={s._host!r},\n"
@@ -371,10 +388,12 @@ class Session(object):
             "  _get_password={s._get_password!r},\n"
             "  _retry_timeout_config={s._retry_timeout_config!r},\n"
             "  _base_url={s._base_url!r},\n"
-            "  _headers={s._headers!r},\n"
-            "  _session_id={s._session_id!r},\n"
+            "  _headers={headers!r},\n"
+            "  _session_id={blanked_out!r},\n"
             "  _session={s._session!r}\n"
-            ")".format(classname=self.__class__.__name__, id=id(self), s=self))
+            ")".
+            format(classname=self.__class__.__name__, id=id(self), s=self,
+                   headers=headers, blanked_out=BLANKED_OUT))
         return ret
 
     @property
@@ -653,14 +672,11 @@ class Session(object):
             # Because zhmcclient has built the request, we are not handling
             # any JSON parse errors from json.loads().
             content_dict = json.loads(content)
-            content_dict['password'] = '********'
+            content_dict['password'] = BLANKED_OUT
             content = json.dumps(content_dict)
-        if headers and 'X-API-Session' in headers:
-            headers = headers.copy()
-            headers['X-API-Session'] = '********'
         HMC_LOGGER.debug("Request: %s %s, headers: %r, "
                          "content(max.1000): %.1000r",
-                         method, url, headers, content)
+                         method, url, _headers_for_logging(headers), content)
 
     @staticmethod
     def _log_http_response(method, url, status, headers=None, content=None):
@@ -691,15 +707,13 @@ class Session(object):
                 content = '"Error: Cannot parse JSON payload of response: ' \
                     '{}"'.format(exc)
             else:
-                content_dict['api-session'] = '********'
-                content_dict['session-credential'] = '********'
+                content_dict['api-session'] = BLANKED_OUT
+                content_dict['session-credential'] = BLANKED_OUT
                 content = json.dumps(content_dict)
-        if headers and 'X-API-Session' in headers:
-            headers = headers.copy()
-            headers['X-API-Session'] = '********'
         HMC_LOGGER.debug("Respons: %s %s, status: %s, headers: %r, "
                          "content(max.1000): %.1000r",
-                         method, url, status, headers, content)
+                         method, url, status, _headers_for_logging(headers),
+                         content)
 
     @logged_api_call
     def get(self, uri, logon_required=True):
