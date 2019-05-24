@@ -216,7 +216,7 @@ class NotificationReceiver(object):
         """
 
         while True:
-            with self._handover_cond:
+            with self._handover_cond:  # serialize body via lock
 
                 # Wait until MessageListener has a new notification
                 while len(self._handover_dict) == 0:
@@ -256,6 +256,11 @@ class _NotificationListener(object):
     the user. An object of this class is automatically created by the
     :class:`~zhmcclient.NotificationReceiver` class, for its notification
     topic.
+
+    Note: In the stomp examples, this class inherits from
+    stomp.ConnectionListener. However, since that class defines only empty
+    methods and since we want to import the stomp module in a lazy manner,
+    we are not using that class, and stomp does not require us to.
     """
 
     def __init__(self, handover_dict, handover_cond):
@@ -288,7 +293,7 @@ class _NotificationListener(object):
         None).
         """
 
-        with self._handover_cond:
+        with self._handover_cond:  # serialize body via lock
 
             # Wait until receiver has processed the previous notification
             while len(self._handover_dict) > 0:
@@ -327,7 +332,7 @@ class _NotificationListener(object):
             :meth:`~zhmcclient.NotificationReceiver.notifications` method).
         """
 
-        with self._handover_cond:
+        with self._handover_cond:  # serialize body via lock
 
             # Wait until receiver has processed the previous notification
             while len(self._handover_dict) > 0:
