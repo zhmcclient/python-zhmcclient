@@ -66,6 +66,12 @@ Released: not yet
 
 * Blanked out the session ID value in the log record for logging off.
 
+* Changed import of 'stomp' module used for notifications from the HMC, to be
+  lazy, in order to speed up the import of 'zhmcclient' for its users.
+  The 'stomp' module is now imported when the first
+  `zhmcclient.NotificationReceiver` object is created. Also, only the class
+  needed is imported now, instead of the entire module.
+
 **Known issues:**
 
 * See `list of open issues`_.
