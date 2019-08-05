@@ -44,9 +44,7 @@ class MockedStompConnection(object):
         self._connect_userid = None
         self._connect_password = None
         self._connect_wait = None
-        self._subscribe_destination = None
-        self._subscribe_id = None
-        self._subscribe_ack = None
+        self._subscriptions = []  # items: tuple(dest, id, ack)
         self._queued_messages = []  # items: tuple(headers, message_str)
         self._sender_thread = None
 
@@ -70,9 +68,7 @@ class MockedStompConnection(object):
     def subscribe(self, destination, id, ack):
         """Mocks the same-named method of stomp.Connection."""
         assert self._state_connected
-        self._subscribe_destination = destination
-        self._subscribe_id = id
-        self._subscribe_ack = ack
+        self._subscriptions.append((destination, id, ack))
 
     def disconnect(self):
         """Mocks the same-named method of stomp.Connection."""
@@ -123,7 +119,7 @@ def receive_notifications(receiver):
     return msg_items
 
 
-class TestNotification(object):
+class TestNotification_OneTopic(object):
 
     def setup_method(self):
         self.topic = 'fake-topic'
@@ -151,6 +147,51 @@ class TestNotification(object):
     @patch(target='stomp.Connection', new=MockedStompConnection)
     def test_one_message(self):
         receiver = NotificationReceiver(self.topic, self.hmc, self.userid,
+                                        self.password)
+        conn = receiver._conn
+
+        # Add one STOMP message to be sent
+        message_obj = dict(a=1, b=2)
+        conn.mock_add_message(self.std_headers, message_obj)
+
+        conn.mock_start()
+        msg_items = receive_notifications(receiver)
+
+        assert len(msg_items) == 1
+
+        msg0 = msg_items[0]
+        assert msg0[0] == self.std_headers
+        assert msg0[1] == message_obj
+
+
+class TestNotification_TwoTopics(object):
+
+    def setup_method(self):
+        self.topics = ('fake-topic1', 'fake-topic2')
+        self.hmc = 'fake-hmc'
+        self.userid = 'fake-userid'
+        self.password = 'fake-password'
+        self.std_headers = {
+            'notification-type': 'fake-type'
+        }
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_no_messages(self):
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
+                                        self.password)
+
+        conn = receiver._conn
+
+        # We do not add any STOMP messages
+
+        conn.mock_start()
+        msg_items = receive_notifications(receiver)
+
+        assert msg_items == []
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_one_message(self):
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
                                         self.password)
         conn = receiver._conn
 
