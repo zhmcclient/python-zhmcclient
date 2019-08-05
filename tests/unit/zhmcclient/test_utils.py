@@ -203,24 +203,40 @@ class TestDatetimeFromTimestamp(object):
     """
 
     @pytest.mark.parametrize(
+        "tz_name", [None, 'UTC', 'US/Eastern', 'Europe/Berlin']
+    )
+    @pytest.mark.parametrize(
         "datetime_tuple, timestamp", DATETIME_TIMESTAMP_TESTCASES
     )
-    def test_success_datetime_from_timestamp(self, datetime_tuple, timestamp):
+    def test_success_datetime_from_timestamp(
+            self, datetime_tuple, timestamp, tz_name):
         """Test successful calls to datetime_from_timestamp()."""
 
         if os.name == 'nt' and timestamp > TS_3001_LIMIT:
             # Skip this test case, due to the lower limit on Windows
             return
 
-        # Create the expected datetime result (always timezone-aware in UTC)
-        dt_unaware = datetime(*datetime_tuple)
-        exp_dt = pytz.utc.localize(dt_unaware)
+        # Expected result, as timezone-unaware (but implied UTC)
+        exp_dt_unaware = datetime(*datetime_tuple)
 
-        # Execute the code to be tested
-        dt = datetime_from_timestamp(timestamp)
+        # Expected result, as timezone-aware
+        exp_dt = pytz.utc.localize(exp_dt_unaware)
 
-        # Verify the result
-        assert dt == exp_dt
+        if tz_name is None:
+
+            # Execute the code to be tested
+            act_dt = datetime_from_timestamp(timestamp)
+
+        else:
+            tz = pytz.timezone(tz_name)
+
+            # Execute the code to be tested
+            act_dt = datetime_from_timestamp(timestamp, tz)
+
+        # Verify the result.
+        # Note: timezone-aware datetime objects compare equal according to
+        # their effective point in time (e.g. as if normalized to UTC).
+        assert act_dt == exp_dt
 
     @pytest.mark.parametrize(
         "timestamp, exc_type", [
