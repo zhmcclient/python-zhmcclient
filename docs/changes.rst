@@ -72,6 +72,12 @@ Released: not yet
   `zhmcclient.NotificationReceiver` object is created. Also, only the class
   needed is imported now, instead of the entire module.
 
+* Added timezone support to the utility function
+  `zhmcclient.datetime_from_timestamp()`. The desired timezone for the returned
+  object can now be specified as an optional argument, defaulting to UTC for
+  compatibility. This allows displaying HMC timestamps in local time rather
+  than just UTC time.
+
 **Known issues:**
 
 * See `list of open issues`_.

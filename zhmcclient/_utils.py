@@ -109,10 +109,12 @@ def repr_manager(manager, indent):
     return repr_text(repr(manager), indent=indent)
 
 
-def datetime_from_timestamp(ts):
+def datetime_from_timestamp(ts, tzinfo=pytz.utc):
     """
     Convert an :term:`HMC timestamp number <timestamp>` into a
-    :class:`~py:datetime.datetime` object.
+    :class:`~py:datetime.datetime` object. The resulting object will be
+    timezone-aware and will be represented in the specified timezone,
+    defaulting to UTC.
 
     The HMC timestamp number must be non-negative. This means the special
     timestamp value -1 cannot be represented as datetime and will cause
@@ -142,11 +144,25 @@ def datetime_from_timestamp(ts):
 
         Must not be `None`.
 
+      tzinfo (:class:`py:datetime.tzinfo`):
+        Timezone in which the returned object will be represented.
+        This may be any object derived from :class:`py:datetime.tzinfo`,
+        including but not limited to objects returned by
+        :func:`pytz.timezone`.
+
+        Note that this parameter does not affect how the HMC timestamp value is
+        interpreted; i.e. the effective point in time represented by the
+        returned object is not affected. What is affected by this parameter
+        is for example the timezone in which the point in time is shown when
+        printing the returned object.
+
+        Must not be `None`.
+
     Returns:
 
       :class:`~py:datetime.datetime`:
-        Point in time as a timezone-aware Python datetime object for timezone
-        UTC.
+        Point in time as a timezone-aware Python datetime object for the
+        specified timezone.
 
     Raises:
         ValueError
@@ -161,8 +177,10 @@ def datetime_from_timestamp(ts):
             "datetime.".format(ts))
     epoch_seconds = ts // 1000
     delta_microseconds = ts % 1000 * 1000
+    if tzinfo is None:
+        raise ValueError("Timezone must not be None.")
     try:
-        dt = datetime.fromtimestamp(epoch_seconds, pytz.utc)
+        dt = datetime.fromtimestamp(epoch_seconds, tzinfo)
     except (ValueError, OSError) as exc:
         raise ValueError(str(exc))
     dt = dt.replace(microsecond=delta_microseconds)
