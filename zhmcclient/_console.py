@@ -465,7 +465,7 @@ class Console(BaseResource):
         """
         query_parms = self._time_query_parms(begin_time, end_time)
         uri = self.uri + '/operations/get-audit-log' + query_parms
-        result = self.manager.session.post(uri)
+        result = self.manager.session.get(uri)
         return result
 
     @logged_api_call
@@ -510,7 +510,7 @@ class Console(BaseResource):
         """
         query_parms = self._time_query_parms(begin_time, end_time)
         uri = self.uri + '/operations/get-security-log' + query_parms
-        result = self.manager.session.post(uri)
+        result = self.manager.session.get(uri)
         return result
 
     @logged_api_call

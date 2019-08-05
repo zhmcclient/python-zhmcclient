@@ -1219,9 +1219,8 @@ class TestConsoleGetAuditLogHandler(object):
     def test_get_audit_log_success(self):
 
         # the function to be tested:
-        resp = self.urihandler.post(
-            self.hmc, '/api/console/operations/get-audit-log', None, True,
-            True)
+        resp = self.urihandler.get(
+            self.hmc, '/api/console/operations/get-audit-log', True)
 
         assert resp == []
 
@@ -1235,9 +1234,8 @@ class TestConsoleGetAuditLogHandler(object):
         with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
-            self.urihandler.post(
-                self.hmc, '/api/console/operations/get-audit-log', None, True,
-                True)
+            self.urihandler.get(
+                self.hmc, '/api/console/operations/get-audit-log', True)
 
         exc = exc_info.value
         assert exc.reason == 1
@@ -1259,9 +1257,8 @@ class TestConsoleGetSecurityLogHandler(object):
     def test_get_security_log_success_empty(self):
 
         # the function to be tested:
-        resp = self.urihandler.post(
-            self.hmc, '/api/console/operations/get-security-log', None, True,
-            True)
+        resp = self.urihandler.get(
+            self.hmc, '/api/console/operations/get-security-log', True)
 
         assert resp == []
 
@@ -1275,9 +1272,8 @@ class TestConsoleGetSecurityLogHandler(object):
         with pytest.raises(InvalidResourceError) as exc_info:
 
             # the function to be tested:
-            self.urihandler.post(
-                self.hmc, '/api/console/operations/get-security-log', None,
-                True, True)
+            self.urihandler.get(
+                self.hmc, '/api/console/operations/get-security-log', True)
 
         exc = exc_info.value
         assert exc.reason == 1

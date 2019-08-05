@@ -51,6 +51,9 @@ Released: not yet
   because the dependency management did not work with our minimum
   package versions.
 
+* Fixed use of incorrect HTTP method in `Console.get_audit_log()` and
+  `Console.get_security_log()`. See issue #580.
+
 **Enhancements:**
 
 * Improved end2end test support for zhmcclient and its using projects.

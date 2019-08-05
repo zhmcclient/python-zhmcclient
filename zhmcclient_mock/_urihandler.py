@@ -485,10 +485,8 @@ class ConsoleReorderUserPatternsHandler(object):
 class ConsoleGetAuditLogHandler(object):
 
     @staticmethod
-    def post(method, hmc, uri, uri_parms, body, logon_required,
-             wait_for_completion):
+    def get(method, hmc, uri, uri_parms, logon_required):
         """Operation: Get Console Audit Log."""
-        assert wait_for_completion is True  # synchronous operation
         console_uri = '/api/console'
         try:
             hmc.lookup_by_uri(console_uri)
@@ -502,10 +500,8 @@ class ConsoleGetAuditLogHandler(object):
 class ConsoleGetSecurityLogHandler(object):
 
     @staticmethod
-    def post(method, hmc, uri, uri_parms, body, logon_required,
-             wait_for_completion):
+    def get(method, hmc, uri, uri_parms, logon_required):
         """Operation: Get Console Security Log."""
-        assert wait_for_completion is True  # synchronous operation
         console_uri = '/api/console'
         try:
             hmc.lookup_by_uri(console_uri)
