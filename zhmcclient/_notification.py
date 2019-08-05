@@ -76,14 +76,14 @@ __all__ = ['NotificationReceiver']
 
 class NotificationReceiver(object):
     """
-    A class for receiving HMC notifications that are published to a particular
-    single HMC notification topic.
+    A class for receiving HMC notifications that are published to particular
+    HMC notification topics.
 
     **Experimental:** This class is considered experimental at this point, and
     its API may change incompatibly as long as it is experimental.
 
     Creating an object of this class establishes a JMS session with the
-    HMC and subscribes for a particular HMC notification topic.
+    HMC and subscribes for the specified HMC notification topic(s).
 
     Notification topic strings are created by the HMC in context of a
     particular client session (i.e. :class:`~zhmcclient.Session` object).
@@ -94,11 +94,13 @@ class NotificationReceiver(object):
     originally created.
     """
 
-    def __init__(self, topic, host, userid, password, port=DEFAULT_STOMP_PORT):
+    def __init__(self, topic_names, host, userid, password,
+                 port=DEFAULT_STOMP_PORT):
         """
         Parameters:
 
-          topic (:term:`string`): Name of the HMC notification topic.
+          topic_names (:term:`string` or list/tuple thereof): Name(s) of the
+            HMC notification topic(s).
             Must not be `None`.
 
           host (:term:`string`):
@@ -118,7 +120,9 @@ class NotificationReceiver(object):
             STOMP TCP port. Defaults to
             :attr:`~zhmcclient._constants.DEFAULT_STOMP_PORT`.
         """
-        self._topic = topic
+        if not isinstance(topic_names, (list, tuple)):
+            topic_names = [topic_names]
+        self._topic_names = topic_names
         self._host = host
         self._port = port
         self._userid = userid
@@ -149,8 +153,9 @@ class NotificationReceiver(object):
         self._conn.start()
         self._conn.connect(self._userid, self._password, wait=True)
 
-        dest = "/topic/" + topic
-        self._conn.subscribe(destination=dest, id=self._sub_id, ack='auto')
+        for topic_name in self._topic_names:
+            dest = "/topic/" + topic_name
+            self._conn.subscribe(destination=dest, id=self._sub_id, ack='auto')
 
     @logged_api_call
     def notifications(self):
@@ -160,10 +165,18 @@ class NotificationReceiver(object):
 
         Example::
 
-            receiver = zhmcclient.NotificationReceiver(topic, hmc, userid,
-                                                       password)
+            desired_topic_types = ('security-notification',
+                                   'audit-notification')
+            topics = session.get_notification_topics()
+            topic_names = [t['topic-name']
+                           for t in topics
+                           if t['topic-type'] in desired_topic_types]
+
+            receiver = zhmcclient.NotificationReceiver(
+                topic_names, hmc, userid, password)
+
             for headers, message in receiver.notifications():
-                . . .
+                . . . # processing of topic-specific message format
 
         Yields:
 

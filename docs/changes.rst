@@ -78,6 +78,9 @@ Released: not yet
   compatibility. This allows displaying HMC timestamps in local time rather
   than just UTC time.
 
+* Added support for specifying multiple notification topics to
+  `zhmcclient.NotificationReceiver`.
+
 **Known issues:**
 
 * See `list of open issues`_.
