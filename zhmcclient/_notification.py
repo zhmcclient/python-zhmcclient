@@ -66,7 +66,6 @@ messages issued by the operating system. The following commands use the
 """
 
 import threading
-import stomp
 import json
 
 from ._logging import logged_api_call
@@ -138,7 +137,11 @@ class NotificationReceiver(object):
         self._handover_dict = {}
         self._handover_cond = threading.Condition()
 
-        self._conn = stomp.Connection(
+        # Lazy importing for stomp, because it is so slow (ca. 5 sec)
+        if 'Stomp_Connection' not in globals():
+            from stomp import Connection as Stomp_Connection
+
+        self._conn = Stomp_Connection(
             [(self._host, self._port)], use_ssl="SSL")
         listener = _NotificationListener(self._handover_dict,
                                          self._handover_cond)
