@@ -22,7 +22,7 @@ Change log
 Version 0.24.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2019-08-15
 
 **Incompatible changes:**
 
@@ -31,14 +31,10 @@ Released: not yet
   perform the requested action.") so far raised `ServerAuthError`. However,
   that exception does not represent that situation properly, because the
   login user is actually properly authenticated.
-
   The handling of this case was changed to now raise `HTTPError` instead of
   `ServerAuthError`.
-
-  This change is incompatible to users of the zhmcclient API that are handling
-  this situation specifically.
-
-**Deprecations:**
+  This change is only incompatible to users of the zhmcclient API who have
+  code handling this exception specifically.
 
 **Bug fixes:**
 
@@ -80,12 +76,6 @@ Released: not yet
 
 * Added support for specifying multiple notification topics to
   `zhmcclient.NotificationReceiver`.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.23.0
