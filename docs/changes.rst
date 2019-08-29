@@ -37,6 +37,10 @@ Released: not yet
 
 * Docs: Added HMC version 2.14.1 in "Bibliography" and "Introduction" sections.
 
+* Added support for following LPAR operations:
+    Lpar.psw_restart() (HMC: “PSW Restart”)
+    Lpar.scsi_dump() (HMC: “SCSI Dump”)
+
 **Known issues:**
 
 * See `list of open issues`_.
