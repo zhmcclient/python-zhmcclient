@@ -54,3 +54,5 @@ from ._unmanaged_cpc import *          # noqa: F401
 from ._storage_group import *          # noqa: F401
 from ._storage_volume import *         # noqa: F401
 from ._virtual_storage_resource import *        # noqa: F401
+from ._storage_group_template import *          # noqa: F401
+from ._storage_volume_template import *         # noqa: F401

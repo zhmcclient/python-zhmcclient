@@ -561,6 +561,38 @@ Virtual Storage Resources
    :special-members: __str__
 
 
+.. _`Storage Group Templates`:
+
+Storage Group Templates
+-----------------------
+
+.. automodule:: zhmcclient._storage_group_template
+
+.. autoclass:: zhmcclient.StorageGroupTemplateManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageGroupTemplate
+   :members:
+   :special-members: __str__
+
+
+.. _`Storage Volume Templates`:
+
+Storage Volume Templates
+------------------------
+
+.. automodule:: zhmcclient._storage_volume_template
+
+.. autoclass:: zhmcclient.StorageVolumeTemplateManager
+   :members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.StorageVolumeTemplate
+   :members:
+   :special-members: __str__
+
+
 .. _`Console`:
 
 Console
