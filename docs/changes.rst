@@ -20,7 +20,7 @@ Change log
 
 
 Version 0.25.0-dev
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 Released: not yet
 
@@ -30,7 +30,12 @@ Released: not yet
 
 **Bug fixes:**
 
+* Docs: Fixed incorrect statement about HMC version 2.14.0 supporting both
+  GA generations of z14 machines.
+
 **Enhancements:**
+
+* Docs: Added HMC version 2.14.1 in "Bibliography" and "Introduction" sections.
 
 **Known issues:**
 
