@@ -216,9 +216,19 @@ class StorageGroupManager(BaseManager):
         return resource_obj_list
 
     @logged_api_call
-    def create(self, properties):
+    def create(self, properties=None, template=None):
         """
-        Create and configure a storage group.
+        Create and configure a storage group either from input properties or
+        from a :term:`storage group template`.
+
+        The input properties may specify initial storage volumes for the new
+        storage group via the `storage-volumes` property. Additional storage
+        volumes can be added with
+        :meth:`~zhmcclient.StorageGroup.update_properties`.
+
+        A storage group template can also specify initial storage volumes for
+        the new storage group. For details, see
+        :class:`~zhmcclient.StorageGroupTemplate`.
 
         The new storage group will be associated with the CPC identified by the
         `cpc-uri` input property.
@@ -239,6 +249,16 @@ class StorageGroupManager(BaseManager):
             storage group will be associated, and is required to be specified
             in this parameter.
 
+            The 'template-uri' property is not allowed. If you want to create
+            a storage group from a :term:`storage template`, specify the
+            `template` parameter.
+
+            The `properties` and `template` parameters are mutually exclusive.
+
+          template (:class:`~zhmcclient.StorageGroupTemplate`):
+            :term:`storage group template` defining the initial property values
+            for the storage group, including its initial storage volumes.
+
         Returns:
 
           :class:`~zhmcclient.StorageGroup`:
@@ -248,6 +268,7 @@ class StorageGroupManager(BaseManager):
 
         Raises:
 
+          :exc:`ValueError` - Property 'template-uri' is not permitted
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
@@ -255,6 +276,15 @@ class StorageGroupManager(BaseManager):
         """
         if properties is None:
             properties = {}
+
+        if 'template-uri' in properties:
+            raise ValueError(
+                "Property 'template-uri' is not permitted - use the "
+                "'template' parameter to create storage groups from "
+                "templates.")
+
+        if template is not None:
+            properties['template-uri'] = template.uri
 
         result = self.session.post(self._base_uri, body=properties)
         # There should not be overlaps, but just in case there are, the

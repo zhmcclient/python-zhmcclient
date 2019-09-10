@@ -41,6 +41,8 @@ Released: not yet
     Lpar.psw_restart() (HMC: “PSW Restart”)
     Lpar.scsi_dump() (HMC: “SCSI Dump”)
 
+* Added support for Storage Template objects in DPM mode (see issue #589).
+
 **Known issues:**
 
 * See `list of open issues`_.

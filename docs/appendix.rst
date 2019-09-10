@@ -298,6 +298,9 @@ Resources scoped to CPCs in DPM mode
      feature is enabled on the CPC.
      For details, see section :ref:`Storage Groups`.
 
+  Storage Group Template
+     A template for :term:`Storage Groups <Storage Group>`.
+
   Storage Port
      Short term for a :term:`Port` of a :term:`Storage Adapter`.
 
@@ -310,6 +313,9 @@ Resources scoped to CPCs in DPM mode
      Storage Volume objects exist only when the "dpm-storage-management"
      feature is enabled on the CPC.
      For details, see section :ref:`Storage Groups`.
+
+  Storage Volume Template
+     A template for :term:`Storage Volumes <Storage Volume>`.
 
   vHBA
      Synonym for :term:`HBA`. In this resource model, HBAs are always

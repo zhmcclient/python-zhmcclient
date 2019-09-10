@@ -28,6 +28,7 @@ from ._resource import BaseResource
 from ._logging import logged_api_call
 from ._utils import timestamp_from_datetime
 from ._storage_group import StorageGroupManager
+from ._storage_group_template import StorageGroupTemplateManager
 from ._user import UserManager
 from ._user_role import UserRoleManager
 from ._user_pattern import UserPatternManager
@@ -186,6 +187,7 @@ class Console(BaseResource):
 
         # The manager objects for child resources (with lazy initialization):
         self._storage_groups = None
+        self._storage_group_templates = None
         self._users = None
         self._user_roles = None
         self._user_patterns = None
@@ -204,6 +206,18 @@ class Console(BaseResource):
         if not self._storage_groups:
             self._storage_groups = StorageGroupManager(self)
         return self._storage_groups
+
+    @property
+    def storage_group_templates(self):
+        """
+        :class:`~zhmcclient.StorageGroupTemplateManager`:
+          Manager object for the Storage Group Templates in scope of this
+          Console.
+        """
+        # We do here some lazy loading.
+        if not self._storage_group_templates:
+            self._storage_group_templates = StorageGroupTemplateManager(self)
+        return self._storage_group_templates
 
     @property
     def users(self):
