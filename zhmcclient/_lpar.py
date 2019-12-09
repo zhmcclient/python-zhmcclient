@@ -1095,8 +1095,7 @@ class Lpar(BaseResource):
     def psw_restart(self, wait_for_completion=True, operation_timeout=None,
                     status_timeout=None, allow_status_exceptions=False):
         """
-        Restart the first available processor of this LPAR,
-        using the HMC operation "PSW Restart".
+        Restart this LPAR, using the HMC operation "PSW Restart".
 
         This HMC operation has deferred status behavior: If the asynchronous
         job on the HMC is complete, it takes a few seconds until the LPAR
