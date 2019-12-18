@@ -19,14 +19,10 @@ Change log
 ----------
 
 
-Version 0.25.0-dev
-^^^^^^^^^^^^^^^^^^
+Version 0.25.0
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2019-12-18
 
 **Bug fixes:**
 
@@ -38,16 +34,11 @@ Released: not yet
 * Docs: Added HMC version 2.14.1 in "Bibliography" and "Introduction" sections.
 
 * Added support for following LPAR operations:
-    Lpar.psw_restart() (HMC: “PSW Restart”)
-    Lpar.scsi_dump() (HMC: “SCSI Dump”)
+
+  - Lpar.psw_restart() (HMC: “PSW Restart”)
+  - Lpar.scsi_dump() (HMC: “SCSI Dump”)
 
 * Added support for Storage Template objects in DPM mode (see issue #589).
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.24.0
