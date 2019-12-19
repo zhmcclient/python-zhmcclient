@@ -570,7 +570,7 @@ class Lpar(BaseResource):
     def scsi_dump(self, load_address, wwpn, lun, load_parameter=None,
                   disk_partition_id=None,
                   operating_system_specific_load_parameters=None,
-                  boot_record_logical_block_address=None,
+                  boot_record_logical_block_address=None, os_ipl_token=None,
                   wait_for_completion=True, operation_timeout=None,
                   status_timeout=None, allow_status_exceptions=False):
         """
@@ -620,6 +620,9 @@ class Lpar(BaseResource):
           boot_record_logical_block_address (:term:`string`):
              Optional hexadecimal boot record logical block address to
              be used for the SCSI Load.
+
+          os_ipl_token (:term:`string`):
+            Optional hexadecimal value to be used for the SCSI dump.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -689,6 +692,8 @@ class Lpar(BaseResource):
         if boot_record_logical_block_address:
             body['boot-record-logical-block-address'] = \
                 boot_record_logical_block_address
+        if os_ipl_token is not None:
+            body['os-ipl-token'] = os_ipl_token
         result = self.manager.session.post(
             self.uri + '/operations/scsi-dump',
             body,
