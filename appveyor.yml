@@ -44,6 +44,14 @@ environment:
 #      UNIX_PATH: none
 #      PYTHON_CMD: python
 
+#    - TOX_ENV: win64_py38_32
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
+#    - TOX_ENV: win64_py38_64
+#      UNIX_PATH: none
+#      PYTHON_CMD: python
+
 # TODO: Disabled because python2.7 fails with segmentation fault
 #    - TOX_ENV: cygwin32_py27
 #      UNIX_PATH: C:\cygwin\bin
@@ -124,14 +132,14 @@ install:
   - if "%UNIX_PATH%"=="C:\cygwin64\bin" bash --noprofile --norc -c "set -e; %PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel"
   - if "%UNIX_PATH%"=="C:\msys64\usr\bin" set MSYSTEM=MSYS & bash --noprofile --norc -c "set -e; %PYTHON_CMD% -m ensurepip; %PYTHON_CMD% -m pip install --upgrade pip setuptools wheel"
   # - if not "%UNIX_PATH%"=="none" bash --noprofile --norc -c "set -e; echo \"PIP_CMD=%PIP_CMD%\"; which -a %PIP_CMD%; %PIP_CMD% --version"
- 
+
   # Install Tox
   - if "%UNIX_PATH%"=="none" cmd /c "pip install tox"
   - if "%UNIX_PATH%"=="C:\cygwin\bin" bash --noprofile --norc -c "%PYTHON_CMD% -m pip install tox"
   - if "%UNIX_PATH%"=="C:\cygwin64\bin" bash --noprofile --norc -c "%PYTHON_CMD% -m pip install tox"
   - if "%UNIX_PATH%"=="C:\msys64\usr\bin" set MSYSTEM=MSYS & bash --noprofile --norc -c "%PIP_CMD% install tox"
   - if not "%UNIX_PATH%"=="none" bash --noprofile --norc -c "set -e; which -a tox; tox --version"
-  
+
 build: false
 
 before_test:
