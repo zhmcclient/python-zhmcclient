@@ -22,23 +22,11 @@ Change log
 Version 0.25.1
 ^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2019-12-19
 
 **Bug fixes:**
 
 * Added the missing os_ipl_token parameter to Lpar.scsi_dump().
-
-**Enhancements:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.25.0
