@@ -36,6 +36,9 @@ Released: not yet
 * Promoted the development status of the zhmcclient package on Pypi from
   3 - Alpha to 4 - Beta.
 
+* Added support for Python 3.8 to the package metadata and to the Travis and
+  Appveyor and Tox environments. (See issue #596)
+
 **Known issues:**
 
 * See `list of open issues`_.
