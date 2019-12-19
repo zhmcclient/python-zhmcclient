@@ -33,6 +33,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Promoted the development status of the zhmcclient package on Pypi from
+  3 - Alpha to 4 - Beta.
+
 **Known issues:**
 
 * See `list of open issues`_.
