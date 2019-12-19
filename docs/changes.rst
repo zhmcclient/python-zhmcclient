@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Added the missing os_ipl_token parameter to Lpar.scsi_dump().
+
 **Enhancements:**
 
 **Known issues:**
