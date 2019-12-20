@@ -31,6 +31,10 @@ Released: not yet
 
 * Added the missing os_ipl_token parameter to Lpar.scsi_dump().
 
+* Migrated from using the yamlordereddictloader package to using the
+  yamlloader package, because yamlordereddictloader got deprecated.
+  (See issue #605)
+
 **Enhancements:**
 
 * Promoted the development status of the zhmcclient package on Pypi from
