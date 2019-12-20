@@ -74,6 +74,10 @@ The zhmcclient package is supported in these environments:
 * Operating systems: Linux, Windows (native, and with UNIX-like environments),
   OS-X
 
+.. # Keep these Python versions in sync with:
+.. # - python_requires and classifiers in setup.py
+.. # - Version checking in zhmcclient/_version.py
+
 * Python versions: 2.7, 3.4, and higher 3.x
 
 * HMC versions: 2.11.1 and higher
@@ -197,21 +201,20 @@ target system from the downloaded packages:
         Saved ./zhmcclient-0.19.0-py2.py3-none-any.whl
       Collecting stomp.py>=4.1.15 (from zhmcclient)
       . . .
-      Successfully downloaded zhmcclient stomp.py pytz requests decorator six pbr docopt idna urllib3 certifi chardet
+      Successfully downloaded zhmcclient decorator pytz stomp.py six requests docopt urllib3 certifi chardet idna
 
       [download-system]$ ls -1
-      certifi-2018.4.16-py2.py3-none-any.whl
+      certifi-2019.11.28-py2.py3-none-any.whl
       chardet-3.0.4-py2.py3-none-any.whl
-      decorator-4.3.0-py2.py3-none-any.whl
+      decorator-4.4.1-py2.py3-none-any.whl
       docopt-0.6.2.tar.gz
-      idna-2.6-py2.py3-none-any.whl
-      pbr-4.0.2-py2.py3-none-any.whl
-      pytz-2018.4-py2.py3-none-any.whl
-      requests-2.18.4-py2.py3-none-any.whl
-      six-1.11.0-py2.py3-none-any.whl
-      stomp.py-4.1.20.tar.gz
-      urllib3-1.22-py2.py3-none-any.whl
-      zhmcclient-0.19.0-py2.py3-none-any.whl
+      idna-2.8-py2.py3-none-any.whl
+      pytz-2019.3-py2.py3-none-any.whl
+      requests-2.22.0-py2.py3-none-any.whl
+      six-1.13.0-py2.py3-none-any.whl
+      stomp.py-4.1.22.tar.gz
+      urllib3-1.25.7-py2.py3-none-any.whl
+      zhmcclient-0.25.1-py2.py3-none-any.whl
 
 2. Transfer all downloaded package files to the target system. Note that the
    package files are binary files.
@@ -228,26 +231,26 @@ target system from the downloaded packages:
    .. code-block:: text
 
       [target-system]$ ls -1
-      certifi-2018.4.16-py2.py3-none-any.whl
+      certifi-2019.11.28-py2.py3-none-any.whl
       chardet-3.0.4-py2.py3-none-any.whl
-      decorator-4.3.0-py2.py3-none-any.whl
+      decorator-4.4.1-py2.py3-none-any.whl
       docopt-0.6.2.tar.gz
-      idna-2.6-py2.py3-none-any.whl
-      pbr-4.0.2-py2.py3-none-any.whl
-      pytz-2018.4-py2.py3-none-any.whl
-      requests-2.18.4-py2.py3-none-any.whl
-      six-1.11.0-py2.py3-none-any.whl
-      stomp.py-4.1.20.tar.gz
-      urllib3-1.22-py2.py3-none-any.whl
-      zhmcclient-0.19.0-py2.py3-none-any.whl
+      idna-2.8-py2.py3-none-any.whl
+      pytz-2019.3-py2.py3-none-any.whl
+      requests-2.22.0-py2.py3-none-any.whl
+      six-1.13.0-py2.py3-none-any.whl
+      stomp.py-4.1.22.tar.gz
+      urllib3-1.25.7-py2.py3-none-any.whl
+      zhmcclient-0.25.1-py2.py3-none-any.whl
 
       [target-system]$ pip install -f . --no-index --upgrade zhmcclient-*.whl
       Looking in links: .
-      Processing ./zhmcclient-0.19.0-py2.py3-none-any.whl
-      Collecting six>=1.10.0 (from zhmcclient==0.19.0)
       . . .
-      Installing collected packages: six, pytz, idna, urllib3, certifi, chardet, requests, decorator, docopt, stomp.py, pbr, zhmcclient
-      Successfully installed certifi-2018.4.16 chardet-3.0.4 decorator-4.3.0 docopt-0.6.2 idna-2.6 pbr-4.0.2 pytz-2018.4 requests-2.18.4 six-1.11.0 stomp.py-4.1.20 urllib3-1.22 zhmcclient-0.19.0
+      Installing collected packages: decorator, pytz, docopt, stomp.py, six,
+        urllib3, certifi, chardet, idna, requests, zhmcclient
+      Successfully installed certifi-2019.11.28 chardet-3.0.4 decorator-4.4.1
+        docopt-0.6.2 idna-2.8 pytz-2019.3 requests-2.22.0 six-1.13.0
+        stomp.py-4.1.22 urllib3-1.25.7 zhmcclient-0.25.1
 
 Verification of the installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

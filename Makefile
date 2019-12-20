@@ -20,10 +20,8 @@
 #   UNIX-like environments:
 #     uname
 #     rm, find, xargs, cp
-#     The commands listed in pywbem_os_setup.sh
 #   These additional commands are used on native Windows:
 #     del, copy, rmdir
-#     The commands listed in pywbem_os_setup.bat
 # ------------------------------------------------------------------------------
 
 # No built-in rules needed:
@@ -120,9 +118,9 @@ endif
 package_name := zhmcclient
 mock_package_name := zhmcclient_mock
 
-# Package version (full version, including any pre-release suffixes, e.g. "0.1.0-alpha1")
-# May end up being empty, if pbr cannot determine the version.
-package_version = $(shell $(PYTHON_CMD) tools/package_version.py $(package_name))
+# Package version (full version, including any pre-release suffixes, e.g. "0.1.0.dev1")
+# Note: The package version is defined in zhmcclient/_version.py.
+package_version := $(shell $(PYTHON_CMD) setup.py --version)
 
 # Python versions
 python_version := $(shell $(PYTHON_CMD) tools/python_version.py 3)
@@ -190,7 +188,7 @@ test_common_py_files := \
 pytest_no_log_opt := $(shell py.test --help 2>/dev/null |grep '\--no-print-logs' >/dev/null; if [ $$? -eq 0 ]; then echo '--no-print-logs'; else echo ''; fi)
 
 # Flake8 config file
-flake8_rc_file := setup.cfg
+flake8_rc_file := .flake8
 
 # PyLint config file
 pylint_rc_file := .pylintrc
@@ -222,7 +220,7 @@ endif
 
 # Files the distribution archive depends upon.
 dist_dependent_files := \
-    setup.py setup.cfg \
+    setup.py \
     README.rst \
     requirements.txt \
     $(wildcard *.py) \
@@ -293,14 +291,14 @@ env:
 .PHONY: _check_version
 _check_version:
 ifeq (,$(package_version))
-	$(error Package version could not be determined - requires pbr - run "make install")
+	$(error Package version could not be determined)
 endif
 
 pip_upgrade_$(pymn).done: Makefile
 	-$(call RM_FUNC,$@)
 	$(PYTHON_CMD) remove_duplicate_setuptools.py
-	@echo "Installing/upgrading pip, setuptools, wheel and pbr with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
-	$(PYTHON_CMD) -m pip install $(pip_level_opts) pip setuptools wheel pbr
+	@echo "Installing/upgrading pip, setuptools and wheel with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
+	$(PYTHON_CMD) -m pip install $(pip_level_opts) pip setuptools wheel
 	echo "done" >$@
 
 .PHONY: develop
@@ -376,7 +374,7 @@ pylint: pylint_$(pymn).done
 install: install_$(pymn).done
 	@echo "Makefile: $@ done."
 
-install_$(pymn).done: pip_upgrade_$(pymn).done requirements.txt setup.py setup.cfg $(package_py_files)
+install_$(pymn).done: pip_upgrade_$(pymn).done requirements.txt setup.py $(package_py_files)
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PIP_CMD) install $(pip_level_opts) $(pip_level_opts_new) -r requirements.txt

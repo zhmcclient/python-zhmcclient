@@ -17,7 +17,6 @@ import sys
 import os
 import re
 import inspect
-from pbr.version import VersionInfo
 
 # Imports used by code for autoautosummary
 from sphinx.ext.autosummary import Autosummary
@@ -25,6 +24,23 @@ from sphinx.ext.autosummary import get_documenter
 from docutils.parsers.rst import directives
 from sphinx.util.inspect import safe_getattr
 from sphinx.util import logging
+
+
+def get_version(version_file):
+    """
+    Execute the specified version file and return the value of the __version__
+    global variable that is set in the version file.
+
+    Note: Make sure the version file does not depend on any packages in the
+    requirements list of this package (otherwise it cannot be executed in
+    a fresh Python environment).
+    """
+    with open(version_file, 'r') as fp:
+        version_source = fp.read()
+    globals = {}
+    exec(version_source, globals)
+    return globals['__version__']
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -91,14 +107,14 @@ _short_description = u'Client library for IBM Z Hardware Management Console Web 
 
 # The short X.Y version.
 # Note: We use the full version in both cases (e.g. 'M.N.U' or 'M.N.U.dev0').
-version = VersionInfo('zhmcclient').release_string()
+version = get_version(os.path.join('..', 'zhmcclient', '_version.py'))
 
 # The full version, including alpha/beta/rc tags.
 release = version
 
 # Some prints, for extra information
 print("conf.py: pwd: %s" % os.getcwd())
-print("conf.py: zhmcclient version according to pbr: %s" % version)
+print("conf.py: zhmcclient version: %s" % version)
 print("conf.py: Last 5 commits:")
 sys.stdout.flush()
 os.system('git log --decorate --oneline |head -5')

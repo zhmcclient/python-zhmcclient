@@ -383,7 +383,22 @@ has the remote name ``origin`` in your local clone.
         git pull
         git checkout -b release_$MNU
 
-4.  Edit the change log:
+4.  Edit the version file and set the version to be released:
+
+    - `vi zhmcclient/_version.py`
+
+    `__version__ = 'M.N.U'`
+
+    Where `M.N.U` is the version to be released, e.g. `0.18.1`.
+
+    You can verify that this version is picked up by setup.py as follows::
+
+    ```
+    ./setup.py --version
+    0.18.1
+    ```
+
+5.  Edit the change log:
 
     .. code-block:: text
 
@@ -401,7 +416,7 @@ has the remote name ``origin`` in your local clone.
       text for any known issues you want users to know about.
     * Remove all empty list items in that section.
 
-5.  Commit your changes and push them upstream:
+6.  Commit your changes and push them upstream:
 
     .. code-block:: text
 
@@ -409,27 +424,21 @@ has the remote name ``origin`` in your local clone.
         git commit -sm "Release $MNU"
         git push --set-upstream origin release_$MNU
 
-6.  On GitHub, create a Pull Request for branch ``release_$MNU``. This will trigger the
+7.  On GitHub, create a Pull Request for branch ``release_$MNU``. This will trigger the
     CI runs in Travis and Appveyor.
 
     Important: When creating Pull Requests, GitHub by default targets the ``master``
     branch. If you are releasing a stable branch, you need to change the target branch
     of the Pull Request to ``stable_M.N``.
 
-7.  On GitHub, close milestone ``M.N.U``.
+8.  On GitHub, close milestone ``M.N.U``.
 
-8.  On GitHub, once the checks for this Pull Request succeed:
+9.  On GitHub, once the checks for this Pull Request succeed:
 
     * Merge the Pull Request (no review is needed).
-
-      Because this updates the ``stable_M.N`` branch, it triggers an RTD docs build of
-      its stable version. However, because the git tag for this version is not assigned
-      yet, this RTD build will show an incorrect version (a dev version based on the
-      previous version tag). This will be fixed in a subsequent step.
-
     * Delete the branch of the Pull Request (``release_M.N.U``)
 
-9.  Checkout the branch you are releasing, update it from upstream, and delete the local
+10. Checkout the branch you are releasing, update it from upstream, and delete the local
     topic branch you created:
 
     .. code-block:: text
@@ -438,10 +447,7 @@ has the remote name ``origin`` in your local clone.
         git pull
         git branch -d release_$MNU
 
-10. Tag the version:
-
-    Important: This is the basis on which 'pbr' determines the package version. The tag
-    string must be exactly the version string ``M.N.U``.
+11. Tag the version:
 
     Create a tag for the new version and push the tag addition upstream:
 
@@ -451,8 +457,7 @@ has the remote name ``origin`` in your local clone.
         git tag $MNU
         git push --tags
 
-    The pushing of the tag triggers another RTD docs build of its stable version, this time
-    with the correct version as defined in the tag.
+    The pushing of the tag triggers an RTD docs build of its stable version.
 
     If the previous commands fail because this tag already exists for some reason, delete
     the tag locally and remotely:
@@ -464,20 +469,10 @@ has the remote name ``origin`` in your local clone.
 
     and try again.
 
-11. On GitHub, edit the new tag ``M.N.U``, and create a release description on it. This
+12. On GitHub, edit the new tag ``M.N.U``, and create a release description on it. This
     will cause it to appear in the Release tab.
 
     You can see the tags in GitHub via Code -> Releases -> Tags.
-
-12. Do a fresh install of this version in your active Python environment. This ensures
-    that 'pbr' determines the correct version. Otherwise, it may determine some development
-    version.
-
-    .. code-block:: text
-
-        # workon zhmc... # make sure your virtual environment is active
-        make clobber install
-        make help    # Double check that it shows version ``M.N.U``
 
 13. Upload the package to PyPI:
 
@@ -496,7 +491,7 @@ has the remote name ``origin`` in your local clone.
     Verify that the released version arrived on PyPI:
     https://pypi.python.org/pypi/zhmcclient/
 
-14. On RTD, verify that it shows the correct version for its stable version:
+14. On RTD, verify that it shows the version to be released as its stable version:
 
     RTD stable version: https://python-zhmcclient.readthedocs.io/en/stable.
 

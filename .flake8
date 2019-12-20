@@ -1,0 +1,15 @@
+[flake8]
+max_line_length = 80
+
+ignore =
+    # unable to detect undefined names (when using wildcard import)
+    F403
+
+exclude =
+    .git,
+    .tox,
+    __pycache__,
+    *.pyc,
+    docs/conf.py,
+    build_doc,
+    dist
