@@ -39,6 +39,9 @@ Released: not yet
 * Added support for Python 3.8 to the package metadata and to the Travis and
   Appveyor and Tox environments. (See issue #596)
 
+* Dropped the use of the pbr package. The package version is now managed
+  in zhmcclient/_version.py. (See issue #594)
+
 **Known issues:**
 
 * See `list of open issues`_.

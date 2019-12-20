@@ -23,19 +23,16 @@
 #   pip         8.1.2     2016-05-11 (epel)
 #   setuptools  0.9.8     2013-07-25
 #   wheel       0.24.0    2014-07-06 (epel)
-#   pbr         1.8.1     2015-10-07 (epel)
 # * Ubuntu 16.04.03:
 #   Python      2.7.12    2016-11-19
 #   pip         8.1.1     2016-03-17
 #   setuptools  20.7.0    2016-04-10
 #   wheel       0.29.0    2016-02-06
-#   pbr         1.8.0     2015-09-14
 # * Ubuntu 17.04:
 #   Python      2.7.12    2016-11-19
 #   pip         9.0.1     2016-11-06
 #   setuptools  33.1.1    2017-01-16
 #   wheel       0.29.0    2016-02-06
-#   pbr         1.10.0    2016-05-23
 # * Ubuntu 18.04:
 #   Python      2.7.15
 #   Python3     3.6.5
@@ -68,7 +65,6 @@ wheel==0.33.6; python_version >= '3.8'
 # Direct dependencies for runtime (must be consistent with requirements.txt)
 
 decorator==4.0.10
-pbr==1.10.0
 pytz==2016.10
 requests==2.20.0
 six==1.10.0

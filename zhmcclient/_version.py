@@ -13,14 +13,10 @@
 # limitations under the License.
 
 """
-Access to the package version, and check for supported Python versions.
-
-Note: The package version is not defined here, but determined dynamically by
-the `pbr` package from Git information.
+Definition of the package version, and check for supported Python versions.
 """
 
 import sys
-import pbr.version
 
 __all__ = ['__version__']
 
@@ -29,12 +25,14 @@ __all__ = ['__version__']
 #:
 #: Possible formats for this version string are:
 #:
-#: * "M.N.P.devD": Development level D of a not yet released assumed M.N.P
-#:   version
-#: * "M.N.P": A released M.N.P version
-__version__ = pbr.version.VersionInfo('zhmcclient').release_string()
+#: * "M.N.P.dev0": A not yet released version M.N.P
+#: * "M.N.P": A released version M.N.P
+__version__ = '0.26.0.dev0'
 
 # Check supported Python versions
+# Keep these Python versions in sync with:
+# - python_requires and classifiers in setup.py
+# - Section "Supported environments" in docs/intro.rst
 _PYTHON_M = sys.version_info[0]
 _PYTHON_N = sys.version_info[1]
 if _PYTHON_M == 2 and _PYTHON_N < 7:
