@@ -17,7 +17,7 @@ import errno
 import logging
 import pytest
 import yaml
-import yamlordereddictloader
+import yamlloader
 import zhmcclient
 import zhmcclient_mock
 from zhmcclient.testutils.hmc_definitions import HMCDefinitionFile, \
@@ -107,7 +107,7 @@ def hmc_session(request, hmc_definition):
         try:
             with open(filepath) as fp:
                 try:
-                    data = yaml.load(fp, Loader=yamlordereddictloader.Loader)
+                    data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)
                 except (yaml.parser.ParserError,
                         yaml.scanner.ScannerError) as exc:
                     raise FakedHMCFileError(

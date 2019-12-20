@@ -26,7 +26,7 @@ except ImportError:
     from ordereddict import OrderedDict
 import errno
 import yaml
-import yamlordereddictloader
+import yamlloader
 
 THIS_DIR = os.path.dirname(__file__)
 
@@ -56,7 +56,7 @@ class HMCDefinitionFile(object):
         try:
             with open(self._filepath) as fp:
                 try:
-                    data = yaml.load(fp, Loader=yamlordereddictloader.Loader)
+                    data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)
                 except (yaml.parser.ParserError,
                         yaml.scanner.ScannerError) as exc:
                     raise HMCDefinitionFileError(
