@@ -73,8 +73,9 @@ stomp.py==4.1.15
 
 # Indirect dependencies for runtime (must be consistent with requirements.txt)
 
-certifi==2016.9.26
+certifi==2017.4.17
 chardet==3.0.3
+docopt==0.6.2
 idna==2.5
 urllib3==1.21.1
 
