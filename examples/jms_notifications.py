@@ -117,7 +117,6 @@ for topic in topics:
 
 conn = stomp.Connection([(session.host, amqport)], use_ssl="SSL")
 conn.set_listener('', MyListener())
-conn.start()
 conn.connect(userid, password, wait=True)
 
 sub_id = 42  # subscription ID
