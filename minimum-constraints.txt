@@ -68,7 +68,7 @@ decorator==4.0.10
 pytz==2016.10
 requests==2.20.0
 six==1.10.0
-stomp.py==4.1.15
+stomp.py==4.1.21
 
 
 # Indirect dependencies for runtime (must be consistent with requirements.txt)

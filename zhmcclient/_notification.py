@@ -150,7 +150,6 @@ class NotificationReceiver(object):
         listener = _NotificationListener(self._handover_dict,
                                          self._handover_cond)
         self._conn.set_listener('', listener)
-        self._conn.start()
         self._conn.connect(self._userid, self._password, wait=True)
 
         for topic_name in self._topic_names:
