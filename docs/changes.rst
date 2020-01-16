@@ -52,6 +52,9 @@ Released: not yet
 * Dropped the use of the pbr package. The package version is now managed
   in zhmcclient/_version.py. (See issue #594)
 
+* Test: Added support for TESTOPTS env var to Makefile to be able to specify
+  py.test options when invoking make test.
+
 **Known issues:**
 
 * See `list of open issues`_.

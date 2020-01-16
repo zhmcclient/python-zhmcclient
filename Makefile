@@ -206,9 +206,9 @@ check_py_files := \
     $(wildcard tools/cpcdata) \
 
 ifdef TESTCASES
-pytest_opts := -k $(TESTCASES)
+  pytest_opts := $(TESTOPTS) -k $(TESTCASES)
 else
-pytest_opts :=
+  pytest_opts := $(TESTOPTS)
 endif
 
 # Files to be built
@@ -253,6 +253,7 @@ help:
 	@echo ""
 	@echo "Environment variables:"
 	@echo "  TESTCASES=... - Testcase filter for pytest -k"
+	@echo "  TESTOPTS=... - Options for pytest"
 	@echo "  TESTHMC=... - Nickname of HMC to be used in end2end tests. Default: $(default_test_hmc)"
 	@echo "  TESTHMCDIR=... - Path name of directory with hmc_definitions.yaml file for end2end tests. Default: $(default_test_hmc_dir)"
 	@echo "  TESTLOGFILE=... - Enable logging in end2end tests to that file. Default: no logging"
