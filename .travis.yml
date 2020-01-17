@@ -38,30 +38,30 @@ matrix:
     - os: linux
 
   include:
-#    - os: linux
-#      language: python
-#      python: "2.7"
-#      env:
-#        - PACKAGE_LEVEL=minimum
-#      cache: pip
+    - os: linux
+      language: python
+      python: "2.7"
+      env:
+        - PACKAGE_LEVEL=minimum
+      cache: pip
     - os: linux
       language: python
       python: "2.7"
       env:
         - PACKAGE_LEVEL=latest
       cache: pip
-    - os: linux
-      language: python
-      python: "3.4"
-      env:
-        - PACKAGE_LEVEL=minimum
-      cache: pip
 #    - os: linux
 #      language: python
 #      python: "3.4"
 #      env:
-#        - PACKAGE_LEVEL=latest
+#        - PACKAGE_LEVEL=minimum
 #      cache: pip
+    - os: linux
+      language: python
+      python: "3.4"
+      env:
+        - PACKAGE_LEVEL=latest
+      cache: pip
 #    - os: linux
 #      language: python
 #      python: "3.5"
