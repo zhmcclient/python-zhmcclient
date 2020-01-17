@@ -15,7 +15,14 @@
 # Direct dependencies:
 
 # zhmcclient examples (imports into the example scripts):
-PyYAML>=3.13 # MIT
+
+# PyYAML 5.1 has started specifying the supported Python versions but that is
+# not yet properly represented in the package metadata on Pypi.
+PyYAML>=3.13; python_version == '2.7'  # MIT
+PyYAML>=3.13,<5.3; python_version == '3.4'  # PyYAML 5.3 has removed support for Python 3.4
+PyYAML>=3.13; python_version == '3.5'
+PyYAML>=5.1; python_version == '3.6' and python_version == '3.7'
+PyYAML>=5.1.2; python_version >= '3.8'
 
 # Tests (imports into testcases):
 # pytest 5.0.0 has removed support for Python < 3.5

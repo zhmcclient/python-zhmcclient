@@ -35,6 +35,9 @@ Released: not yet
   yamlloader package, because yamlordereddictloader got deprecated.
   (See issue #605)
 
+* Pinned version of PyYAML to <5.3 for Python 3.4 because 5.3 removed support
+  for Python 3.4
+
 **Enhancements:**
 
 * Promoted the development status of the zhmcclient package on Pypi from

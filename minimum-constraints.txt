@@ -83,7 +83,10 @@ urllib3==1.21.1
 # Direct dependencies for development (must be consistent with dev-requirements.txt)
 
 # zhmcclient examples (imports into the example scripts):
-PyYAML==3.13
+PyYAML==3.13; python_version <= '3.5'
+PyYAML==5.1; python_version == '3.6' and python_version == '3.7'
+PyYAML==5.1.2; python_version >= '3.8'
+
 
 # Tests (imports into testcases):
 pytest==4.3.1
