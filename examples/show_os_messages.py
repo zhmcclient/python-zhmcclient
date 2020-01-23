@@ -107,6 +107,10 @@ except zhmcclient.NotFound:
     print("Could not find %s %s on CPC %s" % (partkind, partname, cpcname))
     sys.exit(1)
 
+break_id = show_os_messages.get("breakid", None)
+if break_id:
+    print("Breaking upon receipt of message with ID %s ..." % break_id)
+
 print("Opening OS message channel for %s %s on CPC %s ..." %
       (partkind, partname, cpcname))
 topic = partition.open_os_message_channel(include_refresh_messages=True)
@@ -132,8 +136,13 @@ try:
             msg_txt = os_msg['message-text'].strip('\n')
             print(msg_txt)
             sys.stdout.flush()
+            if msg_id == break_id:
+                raise NameError
 except KeyboardInterrupt:
     print("Keyboard interrupt - leaving receiver loop")
+    sys.stdout.flush()
+except NameError:
+    print("Message with ID %s occurred - leaving receiver loop" % break_id)
     sys.stdout.flush()
 finally:
     print("Closing receiver...")
