@@ -66,6 +66,7 @@ examples:
       partname: PART8
       #loglevel: debug
       #logmodule: zhmcclient._session
+      #breakid: 96547
    metrics:
       hmc: "9.152.150.65"
       #loglevel: debug
