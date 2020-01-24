@@ -385,18 +385,20 @@ has the remote name ``origin`` in your local clone.
 
 4.  Edit the version file and set the version to be released:
 
-    - `vi zhmcclient/_version.py`
+    .. code-block:: text
 
-    `__version__ = 'M.N.U'`
+        vi zhmcclient/_version.py
+
+    ``__version__ = 'M.N.U'``
 
     Where `M.N.U` is the version to be released, e.g. `0.18.1`.
 
-    You can verify that this version is picked up by setup.py as follows::
+    You can verify that this version is picked up by setup.py as follows:
 
-    ```
-    ./setup.py --version
-    0.18.1
-    ```
+    .. code-block:: text
+
+        ./setup.py --version
+        0.18.1
 
 5.  Edit the change log:
 
