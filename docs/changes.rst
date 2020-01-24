@@ -21,11 +21,9 @@ Change log
 Version 0.26.0
 ^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2020-01-24
 
-**Incompatible changes:**
-
-**Deprecations:**
+This version contains all changes from 0.25.1.
 
 **Bug fixes:**
 
@@ -54,12 +52,6 @@ Released: not yet
 
 * Test: Added support for TESTOPTS env var to Makefile to be able to specify
   py.test options when invoking make test.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.25.0
