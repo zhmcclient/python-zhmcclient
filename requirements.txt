@@ -14,8 +14,8 @@ decorator>=4.0.10 # new BSD
 pytz>=2016.10 # MIT
 requests>=2.20.1 # Apache-2.0
 six>=1.10.0 # MIT
-stomp.py>=4.1.21,<5.0.0; python_version == '2.7'  # Apache
-stomp.py>=4.1.21; python_version > '2.7'  # Apache
+stomp.py>=4.1.23,<5.0.0; python_version == '2.7'  # Apache
+stomp.py>=4.1.23; python_version > '2.7'  # Apache
 
 # Indirect dependencies (commented out, only listed to document their license):
 
