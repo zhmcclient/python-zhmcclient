@@ -144,16 +144,16 @@ Possible output when running the script:
 
     Cpc(name=P000S67B, object-uri=/api/cpcs/fa1f2466-12df-311a-804c-4ed2cc1d6564, status=service-required)
 
-Documentation
-=============
+Documentation and Change Log
+============================
 
-The zhmcclient documentation is on RTD:
+For the latest released version on PyPI:
 
-* `Documentation for latest version on Pypi`_
-* `Documentation for master branch in Git repo`_
+* `Documentation`_
+* `Change log`_
 
-.. _Documentation for latest version on Pypi: http://python-zhmcclient.readthedocs.io/en/stable/
-.. _Documentation for master branch in Git repo: http://python-zhmcclient.readthedocs.io/en/latest/
+.. _Documentation: http://python-zhmcclient.readthedocs.io/en/stable/
+.. _Change log: http://python-zhmcclient.readthedocs.io/en/stable/appendix.html#change-log
 
 zhmc CLI
 ========
