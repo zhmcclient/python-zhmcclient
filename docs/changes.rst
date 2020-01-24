@@ -38,6 +38,9 @@ Released: not yet
 * Pinned version of PyYAML to <5.3 for Python 3.4 because 5.3 removed support
   for Python 3.4
 
+* Increased minimum version of stomp.py to 4.1.23 to pick up a fix for
+  hangs during NotificationReceiver.close(). (See issue #572)
+
 **Enhancements:**
 
 * Promoted the development status of the zhmcclient package on Pypi from
