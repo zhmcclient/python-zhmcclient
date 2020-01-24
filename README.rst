@@ -50,24 +50,24 @@ zhmcclient - A pure Python client library for the IBM Z HMC Web Services API
 .. #     :alt: Pypi downloads
 
 .. image:: https://travis-ci.org/zhmcclient/python-zhmcclient.svg?branch=master
-    :target: https://travis-ci.org/zhmcclient/python-zhmcclient
-    :alt: Travis test status (master)
+    :target: https://travis-ci.org/zhmcclient/python-zhmcclient/branches
+    :alt: Travis status
 
-.. image:: https://ci.appveyor.com/api/projects/status/i022iaeu3dao8j5x/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/leopoldjuergen/python-zhmcclient
-    :alt: Appveyor test status (master)
+.. image:: https://ci.appveyor.com/api/projects/status/vn4jnegs4rqf6e6e/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/andy-maier/python-zhmcclient/history
+    :alt: Appveyor status
 
 .. image:: https://readthedocs.org/projects/python-zhmcclient/badge/?version=latest
-    :target: http://python-zhmcclient.readthedocs.io/en/latest/
-    :alt: Docs build status (latest)
+    :target: https://readthedocs.org/projects/python-zhmcclient/builds/
+    :alt: ReadTheDocs status
 
-.. image:: https://img.shields.io/coveralls/zhmcclient/python-zhmcclient.svg
-    :target: https://coveralls.io/r/zhmcclient/python-zhmcclient
-    :alt: Test coverage (master)
+.. image:: https://coveralls.io/repos/github/zhmcclient/python-zhmcclient/badge.svg?branch=master
+    :target: https://coveralls.io/github/zhmcclient/python-zhmcclient?branch=master
+    :alt: Coveralls status
 
 .. image:: https://codeclimate.com/github/zhmcclient/python-zhmcclient/badges/gpa.svg
     :target: https://codeclimate.com/github/zhmcclient/python-zhmcclient
-    :alt: Code Climate
+    :alt: CodeClimate status
 
 .. contents:: Contents:
    :local:
