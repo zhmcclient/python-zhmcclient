@@ -38,54 +38,63 @@ matrix:
     - os: linux
 
   include:
+
     - os: linux
       language: python
       python: "2.7"
       env:
         - PACKAGE_LEVEL=minimum
       cache: pip
+
     - os: linux
       language: python
       python: "2.7"
       env:
         - PACKAGE_LEVEL=latest
       cache: pip
+
 #    - os: linux
 #      language: python
 #      python: "3.4"
 #      env:
 #        - PACKAGE_LEVEL=minimum
 #      cache: pip
+
     - os: linux
       language: python
       python: "3.4"
       env:
         - PACKAGE_LEVEL=latest
       cache: pip
+
 #    - os: linux
 #      language: python
 #      python: "3.5"
 #      env:
 #        - PACKAGE_LEVEL=minimum
 #      cache: pip
+
 #    - os: linux
 #      language: python
 #      python: "3.5"
 #      env:
 #        - PACKAGE_LEVEL=latest
 #      cache: pip
+
 #    - os: linux
 #      language: python
 #      python: "3.6"
 #      env:
 #        - PACKAGE_LEVEL=minimum
 #      cache: pip
+
 #    - os: linux
 #      language: python
 #      python: "3.6"
 #      env:
 #        - PACKAGE_LEVEL=latest
 #      cache: pip
+
 #    - os: linux
 #      dist: xenial
 #      language: python
@@ -93,6 +102,7 @@ matrix:
 #      env:
 #        - PACKAGE_LEVEL=minimum
 #      cache: pip
+
 #    - os: linux
 #      dist: xenial
 #      language: python
@@ -100,6 +110,7 @@ matrix:
 #      env:
 #        - PACKAGE_LEVEL=latest
 #      cache: pip
+
     - os: linux
       dist: xenial
       language: python
@@ -107,6 +118,7 @@ matrix:
       env:
         - PACKAGE_LEVEL=minimum
       cache: pip
+
     - os: linux
       dist: xenial
       language: python
@@ -114,26 +126,31 @@ matrix:
       env:
         - PACKAGE_LEVEL=latest
       cache: pip
+
 #    - os: linux
 #      language: python
 #      python: "pypy"  # currently Python 2.7.13, PyPy 7.1.1
 #      env:
 #        - PACKAGE_LEVEL=minimum
+
 #    - os: linux
 #      language: python
 #      python: "pypy"  # currently Python 2.7.13, PyPy 7.1.1
 #      env:
 #        - PACKAGE_LEVEL=latest
+
 #    - os: linux
 #      language: python
 #      python: "pypy3"  # currently Python 3.6.1, PyPy 7.1.1-beta0
 #      env:
 #        - PACKAGE_LEVEL=minimum
+
 #    - os: linux
 #      language: python
 #      python: "pypy3"  # currently Python 3.6.1, PyPy 7.1.1-beta0
 #      env:
 #        - PACKAGE_LEVEL=latest
+
 #    - os: osx
 #      language: generic
 #      python:
@@ -141,6 +158,7 @@ matrix:
 #        - PACKAGE_LEVEL=minimum
 #        - PYTHON=2
 #      cache: pip
+
 #    - os: osx
 #      language: generic
 #      python:
@@ -148,6 +166,7 @@ matrix:
 #        - PACKAGE_LEVEL=latest
 #        - PYTHON=2
 #      cache: pip
+
 #    - os: osx
 #      language: generic
 #      python:
@@ -155,6 +174,7 @@ matrix:
 #        - PACKAGE_LEVEL=minimum
 #        - PYTHON=3
 #      cache: pip
+
 #    - os: osx
 #      language: generic
 #      python:
