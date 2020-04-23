@@ -5,37 +5,10 @@
 notifications:
   email: false
 
-# We define the job matrix explicitly, in order to minimize the
-# combinations.
-# For OS-X, using an explicit matrix is required, because Travis at
-# this point only has half-baked support for Python on OS-X that does
-# not work. Also, on OS-X, it needs to be invoked with language=generic
-# and an empty 'python' variable in order to prevent that Travis attempts
-# to install Python.
-# TODO: Figure out how specific versions of Python 3.x can be used with OS-X
-
-# When defining the job matrix explicitly, there are Travis environments
-# that produce an additional default job. See these Travis issues:
-#   https://github.com/travis-ci/travis-ci/issues/1228
-#   https://github.com/travis-ci/travis-ci/issues/4681
-#   https://github.com/travis-ci/travis-ci/issues/9843
-# The public Travis does not seem to have this issue anymore,
-# but Travis@IBM does have this issue (as of 9/2018). The workaround for
-# this issue is to define variables globally and to exclude this same
-# variable value in the matrix definition. Experiments have shown that
-# not all variable combinations work. Using a combination of 'language'
-# and 'os' set to the default values works.
-
-# See note about explicit job matrix, above.
-language: ruby
-os: linux
-
-matrix:
-
-  # See note about explicit job matrix, above.
-  exclude:
-    - language: ruby
-    - os: linux
+# We define the job matrix explicitly, in order to have a minimum number of
+# useful combinations. The disabled combinations will be enabled in a specific
+# branch that does not run for every change.
+jobs:
 
   include:
 
@@ -185,21 +158,6 @@ matrix:
 
 before_install:
   - env | sort
-
-  # The following statement is a workaround to leave an OS-X job
-  # when running on Linux. That happens on Travis@IBM which does not
-  # have OS-X support but still runs os=osx on Linux.
-  - if [[ "$TRAVIS_OS_NAME" == "osx" && "$_system_type" == "Linux" ]]; then
-      echo "Exiting from OS-X job running on Linux";
-      exit;
-    fi
-
-  # The following statement is a safety net in case the matrix exclusion
-  # does not work for some reason.
-  - if [[ "$TRAVIS_LANGUAGE" == "ruby" ]]; then
-      echo "Exiting from unwanted default Ruby job";
-      exit;
-    fi
 
   - if [[ "$TRAVIS_BRANCH" == "manual-ci-run" ]]; then
       export _NEED_REBASE=true;
