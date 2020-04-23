@@ -156,6 +156,58 @@ jobs:
 #        - PYTHON=3
 #      cache: pip
 
+# Note: The public Travis specifies the CPU architecture via 'arch', while
+#       Travis@IBM still specifies it via 'os'. Because Travis@IBM does not
+#       yet support 'if', it runs the jobs targeted for the public Travis
+#       using the default CPU architecture (x86_64), which is an extra run
+#       of the same env that already ran, but does not cause a problem.
+#       Because Travis@IBM does not show the CPU architecture in the build
+#       listing, we set an ARCH variable as a replacement. It is not used
+#       otherwise.
+
+# Note: The conditions to distinguish Travis@IBM and the public Travis
+#       should be done using:
+#         if: env(TRAVIS_APP_HOST) = travis-build.whitewater.ibm.com
+#         if: env(TRAVIS_APP_HOST) = build.travis-ci.org
+#       but that does not work, so for now we use:
+#         if: container=docker  # -> Travis@IBM
+
+    - if: env(container) = docker  # Travis@IBM
+      os: linux-s390
+      language: python
+      python: "3.8"
+      env:
+        - PACKAGE_LEVEL=latest
+        - ARCH=s390x
+      cache: pip
+
+    - if: env(container) != docker  # Public Travis
+      arch: s390x
+      os: linux
+      language: python
+      python: "3.8"
+      env:
+        - PACKAGE_LEVEL=latest
+      cache: pip
+
+#    - if: env(container) = docker  # Travis@IBM
+#      os: linux-ppc64le
+#      language: python
+#      python: "3.8"
+#      env:
+#        - PACKAGE_LEVEL=latest
+#        - ARCH=ppc64le
+#      cache: pip
+
+#    - if: env(container) != docker  # Public Travis
+#      arch: ppc64le
+#      os: linux
+#      language: python
+#      python: "3.8"
+#      env:
+#        - PACKAGE_LEVEL=latest
+#      cache: pip
+
 before_install:
   - env | sort
 
