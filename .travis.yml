@@ -156,6 +156,57 @@ jobs:
 #        - PYTHON=3
 #      cache: pip
 
+# Note: The public Travis specifies the CPU architecture via 'arch', while
+#       Travis@IBM still specifies it via 'os'. Because Travis@IBM does not
+#       show the CPU architecture in the build listing, we set an ARCH variable
+#       to show that in the build listing (it is not used otherwise).
+
+# Note: So far it is not possible to distinguish Travis@IBM and the public
+#       Travis in job conditions, because the environment that can be tested
+#       is very restricted (see https://docs.travis-ci.com/user/conditions-v1)
+#       and the build worker has not been set up at the time the condition is
+#       tested.
+#       For now, we use logic that relies on conditions not yet being supported
+#       by Travis@IBM.
+
+    - # Travis@IBM
+      if: false  # ignored by Travis@IBM
+      os: linux-s390
+      language: python
+      python: "3.8"
+      env:
+        - PACKAGE_LEVEL=latest
+        - ARCH=s390x
+      cache: pip
+
+    - # Public Travis
+      arch: s390x  # ignored by Travis@IBM, so it runs default arch
+      os: linux
+      language: python
+      python: "3.8"
+      env:
+        - PACKAGE_LEVEL=latest
+      cache: pip
+
+    - # Travis@IBM
+      if: false  # ignored by Travis@IBM
+      os: linux-ppc64le
+      language: python
+      python: "3.8"
+      env:
+        - PACKAGE_LEVEL=latest
+        - ARCH=ppc64le
+      cache: pip
+
+    - # Public Travis
+      arch: ppc64le  # ignored by Travis@IBM, so it runs default arch
+      os: linux
+      language: python
+      python: "3.8"
+      env:
+        - PACKAGE_LEVEL=latest
+      cache: pip
+
 before_install:
   - env | sort
 
@@ -200,6 +251,14 @@ install:
       virtualenv -p $OSX_PYTHON_CMD $VENV;
       source $VENV/bin/activate;
     fi
+
+  # The following circumvents a permission issue on s390x, see
+  # https://travis-ci.community/t/pip-install-fails-with-permission-error-in-cpu-architecture-s390x/8335
+  # TODO: Remove the circumvention once fixed in Travis on s390x setup.
+  - id
+  - ls -al ~/.cache/pip/wheels || true
+  - if [[ -d ~/.cache/pip/wheels ]]; then sudo chown -Rv $USER:$GROUP ~/.cache/pip/wheels; fi
+  - ls -al ~/.cache/pip/wheels || true
 
   - which python
   - python --version
