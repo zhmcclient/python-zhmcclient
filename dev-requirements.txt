@@ -1,11 +1,10 @@
-# Pip requirements file for development dependencies.
+# Pip requirements file for development.
 #
 # The order of packages is significant, because pip processes them in the order
-# of appearance. Changing the order has an impact on the overall integration
-# process, which may cause wedges in the gate later.
-
-# Make sure that the package versions in minimum-constraints.txt are also
-# the minimum versions required in requirements.txt and dev-requirements.txt.
+# of appearance.
+#
+# Make sure that the minimum versions required in this file are consistent with
+# the minimum versions specified in minimum-constraints.txt.
 
 
 # Runtime dependencies:
@@ -14,135 +13,147 @@
 
 # Direct dependencies:
 
-# zhmcclient examples (imports into the example scripts):
+# PyYAML pulled in by zhmcclient examples and by python-coveralls
+# PyYAML 5.3 fixes narrow build error, and has removed support for Python 3.4
+PyYAML>=5.1; python_version == '2.7'
+PyYAML>=5.1,<5.3; python_version == '3.4'
+PyYAML>=5.1; python_version > '3.4'
 
-# PyYAML 5.1 has started specifying the supported Python versions but that is
-# not yet properly represented in the package metadata on Pypi.
-PyYAML>=3.13; python_version == '2.7'  # MIT
-PyYAML>=3.13,<5.3; python_version == '3.4'  # PyYAML 5.3 has removed support for Python 3.4
-PyYAML>=3.13; python_version == '3.5'
-PyYAML>=5.1; python_version == '3.6' and python_version == '3.7'
-PyYAML>=5.1.2; python_version >= '3.8'
 
-# Tests (imports into testcases):
+# Unit test (imports into testcases):
+packaging>=17.0
+funcsigs>=1.0.2; python_version < '3.3'
 # pytest 5.0.0 has removed support for Python < 3.5
 # pytest 4.3.1 solves an issue on Python 3 with minimum package levels
 pytest>=4.3.1,<5.0.0; python_version < '3.5'
-pytest>=4.3.1; python_version >= '3.5'
+pytest>=4.3.1; python_version >= '3.5' and python_version <= '3.6'
+pytest>=4.4.0; python_version >= '3.7'
+testfixtures>=6.9.0
 mock>=2.0.0 # BSD
-requests-mock>=1.6.0 # Apache-2.0
-testfixtures>=6.9.0 # Apache-2.0
-yamlloader>=0.5.5 # MIT
+# requests: covered in direct deps for installation
+requests-mock>=1.6.0
+requests-toolbelt>=0.7.0
+# pytz: covered in requirements.txt
 
-# Tests (no imports, invoked via py.test script):
+# Unit test (indirect dependencies):
+# Pluggy 0.12.0 has a bug causing pytest plugins to fail loading on py38
+pluggy>=0.7.1; python_version >= '2.7' and python_version <= '3.6'
+pluggy>=0.13.0; python_version >= '3.7'
+# decorator: covered in requirements.txt
+yamlloader>=0.5.5
+backports.statistics>=0.1.0; python_version == '2.7'
+# FormEncode is used for xml comparisons in unit test
+FormEncode>=1.3.1
+
 
 # Coverage reporting (no imports, invoked via coveralls script):
-# Make sure the Python version matches the one used in .travis.yml.
-coverage>=4.5.3; python_version == '3.8'
-python-coveralls>=2.9.2; python_version == '3.8'
+# coverage 5.0 has removed support for py34
+coverage>=4.5.2,<5.0
+# python-coveralls 2.9.2 no longer has requirement coverage==4.0.3.
+python-coveralls>=2.9.2
+pytest-cov>=2.7.0
+# PyYAML: covered in direct deps for development
 
-# TODO: Remove the pinning of the pytest-cov version again once issue
-#       https://github.com/z4r/python-coveralls/issues/66
-#       is resolved.
-#       Background: pytest-cov 2.6.0 has increased the version
-#       requirement for the coverage package from >=3.7.1 to
-#       >=4.4, which is in conflict with the version requirement
-#       defined by the python-coveralls package for coverage==4.0.3.
-pytest-cov>=2.4.0,<2.6 # BSD
+# Safety CI by pyup.io
+safety>=1.8.4
+# dparse 0.5.0 has an infinite recursion issue on Python 2.7,
+#   see https://github.com/pyupio/dparse/issues/46
+dparse>=0.4.1,<0.5.0; python_version == '2.7'
+dparse>=0.4.1; python_version >= '3.4'
+
+# Tox
+tox>=2.5.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
-Sphinx>=1.7.6,<2.0.0; python_version < '3.5'  # BSD
-Sphinx>=1.7.6,<2.0.0; python_version >= '3.5'  # BSD
-# TODO: On py3.5+, Sphinx currently fails, see issue
-#       https://github.com/sphinx-doc/sphinx/issues/6246. Therefore, Sphinx has
-#       been pinned to below 2.0.0 also for py3.5+.
-sphinx-git>=10.1.1 # GPL
-GitPython>=2.1.1 # BSD
+# Keep in sync with rtd-requirements.txt
+Sphinx>=1.7.6
+sphinx-git>=10.1.1
+GitPython>=2.1.1
+sphinxcontrib-fulltoc>=1.2.0
+sphinxcontrib-websupport>=1.1.2
+# Pygments 2.4.0 has removed support for Python 3.4
+Pygments>=2.1.3; python_version == '2.7'
+Pygments>=2.1.3,<2.4.0; python_version == '3.4'
+Pygments>=2.1.3; python_version >= '3.5'
 
-# PyLint (no imports, invoked via pylint script):
-pylint>=1.6.4; python_version == '2.7'
+# PyLint (no imports, invoked via pylint script)
+# Pylint requires astroid
+# Pylint 1.x / astroid 1.x supports py27 and py34/35/36
+# Pylint 2.0 / astroid 2.0 removed py27, added py37
+# Pylint 2.4 / astroid 2.3 removed py34
+pylint>=1.6.4,<2.0.0; python_version == '2.7'
+pylint>=2.2.2,<2.4; python_version == '3.4'
+pylint>=2.4.4; python_version >= '3.5'
+astroid>=1.4.9,<2.0.0; python_version == '2.7'
+astroid>=2.1.0,<2.3; python_version == '3.4'
+astroid>=2.3.3; python_version >= '3.5'
+# Pinning typed-ast to <1.4.0 for Python 3.4 because it started removing
+# Python 3.4 support.
+# Requiring typed-ast>=1.4.0 for Python 3.8 since it addresses compile errors
+# with missing pgenheaders.h and duplicate definition of a struct.
+typed-ast>=1.3.0,<1.4.0; python_version == '3.4' and implementation_name == "cpython"
+typed-ast>=1.3.0; python_version >= '3.5' and python_version < '3.8' and implementation_name == "cpython"
+typed-ast>=1.4.0; python_version >= '3.8' and implementation_name == "cpython"
 
-# Flake8 (no imports, invoked via flake8 script):
-flake8>=3.7.0 # MIT
-# Note: Flake8 requires pyflakes>=2.1.0 and pycodestyle>=2.5.0, but for reasons
-#       not understood, the resulting installation has pycodestyle 2.2.0,
-#       causing issues. Workaround is to specify these dependencies here.
-pyflakes>=2.1.0 # MIT
-pycodestyle>=2.5.0 # MIT
+# Flake8 and dependents (no imports, invoked via flake8 script):
+flake8>=3.7.9
+mccabe>=0.6.0
+pycodestyle>=2.5.0
+# flake8 3.7.9 pins pyflakes<2.2.0, and since pyflakes 2.2.0 was released this needs to be repeated here
+pyflakes>=2.1.0,<2.2.0
+entrypoints>=0.3.0
+functools32>=3.2.3.post2; python_version == '2.7'  # technically: python_version < '3.2'
 
 # Twine (no imports, invoked via twine script):
-twine>=1.8.1 # Apache-2.0
+twine>=1.8.1
+# readme-renderer 25.0 has removed support for Python 3.4
+# readme-renderer 23.0 has made cmarkgfm part of extras (it fails on Cygwin)
+readme-renderer>=23.0; python_version == '2.7'
+readme-renderer>=23.0,<25.0; python_version == '3.4'
+readme-renderer>=23.0; python_version >= '3.5'
 
 # Jupyter Notebook (no imports, invoked via jupyter script):
-jupyter>=1.0.0 # BSD
+# The jupyter package is not installed on Python 3.4 on Windows, because its
+# (indirectly) dependent pywin32 package is not available on Pypi for
+# Python 3.4.
+jupyter>=1.0.0; python_version != '3.4' or sys_platform != 'win32'
+ipython>=5.1.0,<6.0; python_version == '2.7'
+ipython>=6.0,<7.0; python_version == '3.4'
+ipython>=7.0,<7.10; python_version == '3.5'
+ipython>=7.10; python_version >= '3.6'
+ipykernel>=4.5.2
+ipython_genutils>=0.1.0
+ipywidgets>=5.2.2
+jupyter_console>=5.0.0,<6.0.0; python_version <= '3.4'
+jupyter_console>=6.0.0; python_version >= '3.5'
+jupyter_client>=4.4.0
+jupyter_core>=4.2.1
+nbconvert>=5.0.0
+nbformat>=4.2.0
+notebook>=4.3.1
+# Pywin32 is used (at least?) by jupyter.
+# Pywin32 version 226 needs to be excluded, see issue #1946.
+# Pywin32 version 222 is inconsistent in its 32-bit/64-bit support on py37
+# Pywin32 version 225+ provides wheel files for py38, but does not advertise
+# py38 on Pypi. That causes pywin32==225 to fail but pywin32>=225 to work.
+pywin32>=222,!=226; sys_platform == 'win32' and python_version <= '3.6'
+pywin32>=223,!=226; sys_platform == 'win32' and python_version == '3.7'
+# TODO: Re-enable once pywin32 fixes its Python version advertising on Pypi
+#       (see issue #1975).
+# pywin32>=225,!=226; sys_platform == 'win32' and python_version >= '3.8'
+
+# The tornado package is used by ipykernel which is used by jupyter.
+# Tornado 5.0.0 and 5.0.1 rejects installation if the Python ssl module
+# does not have certain symbols required by Tornado. This issue exists for
+# example with Python 2.7.6 on Ubuntu 14.04, but not with Python 2.7.5 on
+# RHEL 7.4. This can be checked with:
+#   python -c "import ssl; ssl.SSLContext; ssl.create_default_context; ssl.match_hostname"
+# Other projects have the same issue:
+#   https://github.com/floydhub/dl-docker/issues/84
+# The following is a circumvention of this issue that nails the tornado
+# version to below 5.0 on Python 2.
+# TODO: Follow up on resolution of this issue.
+tornado<5.0; python_version <= '2.7'
 
 
-# Indirect dependencies (normally commented out, only listed to document their license):
-
-# alabaster # BSD, from Sphinx
-# appnope # BSD, from ipython for darwin -> ipywidgets -> jupyter
-# args # BSD, from clint -> twine<1.9.1
-# astroid # LGPL, from pylint for py=2.7
-# Babel # BSD, from Sphinx
-# backports-abc # PSFL, from tornado -> notebook -> jupyter
-# backports.functools-lru-cache # MIT, from pylint
-# backports.shutil-get-terminal-size # MIT, from ipython -> ipywidgets -> jupyter
-# backports.ssl-match-hostname # PSFL, from tornado -> notebook -> jupyter
-# bleach # Apache, from nbconvert -> jupyter
-# clint # ISCL, from twine<1.9.1
-# configparser # MIT, from pylint and from flake8 for py<3.2
-# coverage # Apache-2.0, from pytest-cov
-# docutils # public domain | Python | 2-Clause BSD | GPL 3, from Sphinx
-# entrypoints # MIT, from nbconvert -> jupyter
-# enum34 # BSD, from astroid
-# funcsigs # Apache, from mock for py<3.3
-# functools32 # PSFL, from jsonschema for py=2.7 -> nbformat -> ipywidgets -> jupyter
-# gitdb2 # BSD, from GitPython
-# html5lib # MIT, from bleach -> nbconvert -> jupyter
-# imagesize # MIT, from Sphinx
-# ipykernel # BSD, from jupyter
-# ipython # BSD, from ipywidgets -> jupyter
-# ipython_genutils # BSD, from notebook -> jupyter
-# ipywidgets # BSD, from jupyter
-# isort # MIT, from pylint
-# Jinja2 # BSD, from Sphinx
-# jsonschema # MIT, from nbformat -> ipywidgets -> jupyter
-# jupyter_client # BSD, from notebook -> jupyter
-# jupyter_console # BSD, from jupyter
-# jupyter_core # BSD, from notebook -> jupyter
-# lazy-object-proxy # BSD, from astroid
-# MarkupSafe # BSD, from Jinja2 -> Sphinx
-# mccabe # MIT, from pylint and from flake8
-# mistune # BSD, from nbconvert -> jupyter
-# nbconvert # BSD, from jupyter
-# nbformat # BSD, from ipywidgets -> jupyter
-# notebook # BSD, from jupyter
-# pandocfilters # BSD, from nbconvert -> jupyter
-# pathlib2 # MIT, from ipython -> ipywidgets -> jupyter
-# pexpect # ISCL, ipython -> ipywidgets -> jupyter
-# pickleshare # MIT, from ipython -> ipywidgets -> jupyter
-# pkginfo # MIT, from twine
-# ptyprocess # ISCL, from terminado -> notebook -> jupyter
-# py # MIT, from pytest
-# pycodestyle # MIT, from flake8
-# pyflakes # MIT, from flake8
-# Pygments # BSD, from Sphinx
-# python-dateutil # BSD, from jupyter-client -> notebook -> jupyter
-# pyzmq #  LGPL + BSD, from jupyter-client -> notebook -> jupyter
-# qtconsole # BSD, from jupyter
-# requests-toolbelt # Apache 2.0, from twine
-# scandir # New BSD, from pathlib2 for py<3.5 -> python_version -> ipython -> ipywidgets -> jupyter
-# simplegeneric # ZPL 2.1, from ipython -> ipywidgets -> jupyter
-# singledispatch # MIT, from pylint
-# smmap2 # BSD, from gitdb2 -> GitPython
-# snowballstemmer # BSD, from Sphinx
-# sphinxcontrib-websupport # BSD, from Sphinx>=1.6.1
-# terminado # BSD, from notebook for non-Windows -> jupyter
-# testpath # MIT, from nbconvert -> jupyter
-# tornado # Apache 2.0, from notebook -> jupyter
-# tqdm # MPL 2.0, MIT, from twine>=1.9.1
-# traitlets # BSD, from ipywidgets -> jupyter
-# typing # PSFL, from Sphinx>=1.6.1 for py<3.5
-# webencodings # BSD, from html5lib -> bleach -> nbconvert -> jupyter
-# widgetsnbextension # BSD, from ipywidgets -> jupyter
-# wrapt # BSD, from astroid
+# Indirect dependencies are not specified in this file unless constraints are needed.
