@@ -10,7 +10,7 @@
 
 # Direct dependencies (except pip, setuptools, wheel):
 
-decorator>=4.0.10 # new BSD
+decorator>=4.0.11 # new BSD
 pytz>=2016.10 # MIT
 requests>=2.20.1 # Apache-2.0
 six>=1.10.0 # MIT
