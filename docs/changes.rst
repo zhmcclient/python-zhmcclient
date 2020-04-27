@@ -36,6 +36,9 @@ Released: not yet
 * Adjusted versions of dependent packages for development environment to
   fix issues on Python 3.4.
 
+* Fixed AttributeError when calling partition.list_attached_storage_groups().
+  (See issue #629)
+
 **Enhancements:**
 
 **Known issues:**
