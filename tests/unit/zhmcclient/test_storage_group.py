@@ -525,7 +525,6 @@ class TestStorageGroup(object):
         assert new_storage_group_list.properties['name'] == \
             new_storage_group_name
 
-    # TODO: Adjust to invoke a SG method
     @pytest.mark.parametrize(
         "initial_status, exp_exc", [
             ('stopped', None),
@@ -539,7 +538,8 @@ class TestStorageGroup(object):
             ('paused', HTTPError({'http-status': 409, 'reason': 1})),
         ]
     )
-    def xtest_storagegroup_start(self, initial_status, exp_exc):
+    @pytest.mark.skip("TODO: Adjust to invoke a SG method")
+    def test_storagegroup_start(self, initial_status, exp_exc):
         """Test StorageGroup.start()."""
 
         # Add a faked storage_group
@@ -573,3 +573,11 @@ class TestStorageGroup(object):
             storage_group.pull_full_properties()
             status = storage_group.get_property('status')
             assert status == 'active'
+
+    # TODO: Test for StorageGroup.list_attached_partitions()
+
+    # TODO: Test for StorageGroup.add_candidate_adapter_ports()
+
+    # TODO: Test for StorageGroup.remove_candidate_adapter_ports()
+
+    # TODO: Test for StorageGroup.list_candidate_adapter_ports()
