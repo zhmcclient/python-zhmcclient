@@ -165,14 +165,11 @@ Installation of latest development version
 
 If you want to install the latest development level of the zhmcclient package
 instead for some reason, you can install directly from the ``master`` branch
-of its Git repository.
-
-The following command installs the latest development level of the zhmcclient
-package into the currently active Python environment:
+of its Git repository::
 
 .. code-block:: text
 
-    $ pip install git+https://github.com/zhmcclient/python-zhmcclient.git@master
+    $ pip install git+https://github.com/zhmcclient/python-zhmcclient.git@master#egg=zhmcclient
 
 Installation on a system without Internet access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
