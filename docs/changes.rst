@@ -54,6 +54,11 @@ This version contains all fixes up to 0.26.1.
   `python -m zhmcclient.debuginfo`.
   (See issue #640)
 
+* Added `discover_fcp()` and `get_connection_report()` methods to the
+  `StorageGroup` resource. Added an example `discover_storage_group.py` that
+  uses the two new methods.
+  (See issue #623)
+
 **Known issues:**
 
 * See `list of open issues`_.

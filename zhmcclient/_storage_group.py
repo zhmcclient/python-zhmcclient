@@ -683,3 +683,134 @@ class StorageGroup(BaseResource):
                     port.pull_full_properties()
 
         return port_list
+
+    @logged_api_call
+    def discover_fcp(
+            self, force_restart=False, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Perform Logical Unit Number (LUN) discovery for this FCP storage group.
+        The corresponding HMC operation is "Start FCP Storage Discovery".
+
+        This operation only applies to storage groups of type "fcp".
+
+        The HMC performs the LUN discovery in an asynchronous job. This method
+        supports waiting for completion of the job and thus the LUN discovery,
+        or returning immediately after the HMC has started the asynchronous job.
+
+        When the LUN discovery is completed, a connection report will have
+        been created that reflects the results of the discovery. The
+        connection report can be retrieved with
+        :meth:`~zhmcclient.StorageGroup.get_connection_report`. It is
+        recommended to retrieve the connection report and verify that it
+        reports correct volumes.
+
+        Authorization requirements:
+
+        * Object-access permission to this storage group.
+        * Task permission to the "Configure Storage - System Programmer" task
+          or to the "Configure Storage - Storage Administrator" task.
+
+        Parameters:
+
+          force_restart (bool):
+            Indicates if there is an in-progress discovery operation for the
+            specified storage group, it should be terminated and started again.
+            If `False` or there is no in-progress discovery operation for the
+            specified storage group, a new one is started.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the asynchronous job performing the LUN discovery.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the LUN discovery. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns nothing.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {
+            'force-restart': force_restart,
+        }
+        result = self.manager.session.post(
+            self.uri + '/operations/start-fcp-storage-discovery',
+            body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        return result
+
+    @logged_api_call
+    def get_connection_report(self):
+        # pylint: disable=line-too-long
+        """
+        Get the latest connection report for this storage group.
+
+        The corresponding HMC operation is "Get Connection Report".
+
+        The connection report is updated when LUN discovery is performed. LUN
+        discovery for FCP storage groups is performed automatically based on
+        certain triggers, and regularly every 10 minutes, and can additionally
+        be triggered with :meth:`~zhmcclient.StorageGroup.discover_fcp`.
+
+        To verify that the correct volumes are reported for an FCP storage
+        group, verify that the property `volumes-configuration-status` has
+        a value of "correct-volumes" for all WWPNs in all FCP subsystems::
+
+            report = storage_group.get_connection_report()
+            for subsys in report['fcp-storage-subsystems']:
+                for config in subsys['storage-configurations']:
+                    if config['volumes-configuration-status'] != "correct-volumes":
+                        # report incorrect volumes
+
+        Authorization requirements:
+
+        * Object-access permission to this storage group.
+        * Task permission to the "Configure Storage - System Programmer" task
+          or to the "Configure Storage - Storage Administrator" task.
+
+        Returns:
+
+          :term:`json object`:
+            A JSON object with the connection report. For details about the
+            items in the JSON object, see section 'Response body contents' in
+            section 'Get Connection Report' in the :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """  # noqa: E501
+        result = self.manager.session.get(
+            self.uri + '/operations/get-connection-report')
+        return result
+
+    # TODO: Add support for "Fulfill FICON Storage Volumes" operation
+
+    # TODO: Add support for "Accept Mismatched FCP Storage Volumes" operation
+
+    # TODO: Add support for "Reject Mismatched FCP Storage Volumes" operation
+
+    # TODO: Add support for "Get Storage Group Histories" operation
