@@ -45,6 +45,9 @@ This version contains all fixes up to 0.26.1.
   version to the new development version.
   (See issue #639)
 
+* Docs: Fixed description of installation from a repo branch.
+  (See issue #638)
+
 **Enhancements:**
 
 **Known issues:**
