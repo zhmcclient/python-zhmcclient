@@ -35,6 +35,9 @@ This version contains all fixes up to 0.26.1.
 * Fixed Travis setup by removing circumventions for old issues that caused
   problems meanwhile.
 
+* Adjusted versions of dependent packages for development environment to
+  fix issues on Python 3.4.
+
 **Enhancements:**
 
 **Known issues:**
