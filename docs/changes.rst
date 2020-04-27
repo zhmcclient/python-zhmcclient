@@ -22,11 +22,7 @@ Change log
 Version 0.26.1
 ^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2020-04-28
 
 **Bug fixes:**
 
@@ -44,12 +40,6 @@ Released: not yet
 * Added an easy way to print debug information for inclusion into issues, via
   `python -m zhmcclient.debuginfo`.
   (See issue #640)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.26.0
