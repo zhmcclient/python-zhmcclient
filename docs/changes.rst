@@ -41,6 +41,10 @@ This version contains all fixes up to 0.26.1.
 * Fixed AttributeError when calling partition.list_attached_storage_groups().
   (See issue #629)
 
+* Docs: Fixed description to start a new version that was missing updating the
+  version to the new development version.
+  (See issue #639)
+
 **Enhancements:**
 
 **Known issues:**

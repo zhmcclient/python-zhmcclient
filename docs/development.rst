@@ -580,7 +580,25 @@ has the remote name ``origin`` in your local clone.
         git pull
         git checkout -b start_$MNU
 
-4.  Edit the change log:
+4.  Edit the version file and set the version to the new version and to
+    development:
+
+    .. code-block:: text
+
+        vi zhmcclient/_version.py
+
+    ``__version__ = 'M.N.U.dev1'``
+
+    Where `M.N.U` is the version to be started.
+
+    You can verify that this version is picked up by setup.py as follows:
+
+    .. code-block:: text
+
+        ./setup.py --version
+        0.20.0.dev1
+
+5.  Edit the change log:
 
     .. code-block:: text
 
@@ -590,7 +608,7 @@ has the remote name ``origin`` in your local clone.
 
     .. code-block:: text
 
-        Version 0.19.0
+        Version 0.20.0
         ^^^^^^^^^^^^^^
 
         Released: not yet
@@ -609,7 +627,7 @@ has the remote name ``origin`` in your local clone.
 
         .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
-5.  Commit your changes and push them upstream:
+6.  Commit your changes and push them upstream:
 
     .. code-block:: text
 
@@ -617,27 +635,27 @@ has the remote name ``origin`` in your local clone.
         git commit -sm "Start $MNU"
         git push --set-upstream origin start_$MNU
 
-6.  On GitHub, create a Pull Request for branch ``start_M.N.U``.
+7.  On GitHub, create a Pull Request for branch ``start_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the ``master``
     branch. If you are starting based on a stable branch, you need to change the
     target branch of the Pull Request to ``stable_M.N``.
 
-7.  On GitHub, create a milestone for the new version ``M.N.U``.
+8.  On GitHub, create a milestone for the new version ``M.N.U``.
 
     You can create a milestone in GitHub via Issues -> Milestones -> New
     Milestone.
 
-8.  On GitHub, go through all open issues and pull requests that still have
+9.  On GitHub, go through all open issues and pull requests that still have
     milestones for previous releases set, and either set them to the new
     milestone, or to have no milestone.
 
-9.  On GitHub, once the checks for this Pull Request succeed:
+10. On GitHub, once the checks for this Pull Request succeed:
 
     * Merge the Pull Request (no review is needed)
     * Delete the branch of the Pull Request (``start_M.N.U``)
 
-10. Checkout the branch the new version is based on, update it from upstream, and
+11. Checkout the branch the new version is based on, update it from upstream, and
     delete the local topic branch you created:
 
     .. code-block:: text
