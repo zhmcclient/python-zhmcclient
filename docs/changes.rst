@@ -50,6 +50,10 @@ This version contains all fixes up to 0.26.1.
 
 **Enhancements:**
 
+* Added an easy way to print debug information for inclusion into issues, via
+  `python -m zhmcclient.debuginfo`.
+  (See issue #640)
+
 **Known issues:**
 
 * See `list of open issues`_.

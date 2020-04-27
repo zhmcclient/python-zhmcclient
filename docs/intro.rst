@@ -498,6 +498,20 @@ open an issue in the `zhmcclient issue tracker`_.
 
 .. _zhmcclient issue tracker: https://github.com/zhmcclient/python-zhmcclient/issues
 
+It is helpful if you include debug information in the issue, that can be printed
+as in the following example:
+
+.. code-block:: bash
+
+    $ python -m zhmcclient.debuginfo
+    OS platform: Darwin 18.7.0
+    CPU architecture: x86_64
+    Python implementation: CPython 3.8.2
+    Python bit size: 64 bit
+    Python unicode size: wide
+    Python version: 3.8.2
+    zhmcclient version: 0.27.0.dev1
+
 
 .. _`License`:
 
