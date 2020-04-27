@@ -165,7 +165,7 @@ Installation of latest development version
 
 If you want to install the latest development level of the zhmcclient package
 instead for some reason, you can install directly from the ``master`` branch
-of its Git repository::
+of its Git repository:
 
 .. code-block:: text
 
