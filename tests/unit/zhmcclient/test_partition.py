@@ -902,3 +902,11 @@ class TestPartition(object):
     # TODO: Test for Partition.decrease_crypto_config()
 
     # TODO: Test for Partition.change_crypto_domain_config()
+
+    # TODO: Test for Partition.zeroize_crypto_domain()
+
+    # TODO: Test for Partition.attach_storage_group()
+
+    # TODO: Test for Partition.detach_storage_group()
+
+    # TODO: Test for Partition.list_attached_storage_groups()

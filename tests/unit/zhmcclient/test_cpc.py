@@ -1463,3 +1463,7 @@ class TestCpc(object):
         for pname, pvalue in exp_cpc_props.items():
             assert pname in cpc.properties
             assert cpc.properties[pname] == pvalue
+
+    # TODO: Test for Cpc.list_associated_storage_groups()
+
+    # TODO: Test for Cpc.validate_lun_path()
