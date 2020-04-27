@@ -32,6 +32,9 @@ This version contains all fixes up to 0.26.1.
 
 **Bug fixes:**
 
+* Fixed Travis setup by removing circumventions for old issues that caused
+  problems meanwhile.
+
 **Enhancements:**
 
 **Known issues:**
