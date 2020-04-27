@@ -33,6 +33,9 @@ Released: not yet
 * Fixed Travis setup by removing circumventions for old issues that caused
   problems meanwhile.
 
+* Adjusted versions of dependent packages for development environment to
+  fix issues on Python 3.4.
+
 **Enhancements:**
 
 **Known issues:**
