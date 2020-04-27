@@ -1202,9 +1202,9 @@ class Partition(BaseResource):
         sg_list = []
         sg_uris = self.get_property('storage-group-uris')
         if sg_uris:
-            cpc = self.manager.cpc
+            console = self.manager.cpc.manager.console
             for sg_uri in sg_uris:
-                sg = cpc.storage_groups.resource_object(sg_uri)
+                sg = console.storage_groups.resource_object(sg_uri)
                 sg_list.append(sg)
                 if full_properties:
                     sg.pull_full_properties()
