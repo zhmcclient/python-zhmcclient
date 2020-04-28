@@ -507,11 +507,8 @@ as in the following example:
 .. code-block:: bash
 
     $ python -m zhmcclient.debuginfo
-    OS platform: Darwin 18.7.0
-    CPU architecture: x86_64
-    Python implementation: CPython 3.8.2
-    Python bit size: 64 bit
-    Python unicode size: wide
+    Operating system: Darwin 18.7.0 on x86_64
+    Python implementation: CPython 3.8.2 (64 bit, wide unicode)
     Python version: 3.8.2
     zhmcclient version: 0.27.0.dev1
 
