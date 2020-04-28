@@ -212,6 +212,7 @@ install:
   - pip list
   - pip install python-coveralls
   - pip list
+  - make platform
 
 # commands to run builds & tests
 script:
@@ -220,6 +221,7 @@ script:
   - make test
   - make build
   - make builddoc
+  - make debuginfo
 
 after_success:
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" && -z $_MANUAL_CI_RUN ]]; then

@@ -24,7 +24,7 @@ Command line usage:
 
 Programmatic usage:
     from zhmclient import debuginfo
-    print(debuginfo.as_dict())
+    info = debuginfo.as_dict()
 """
 
 from __future__ import print_function, absolute_import
@@ -33,10 +33,27 @@ import sys
 import platform
 import ctypes
 
-from . import __version__ as zhmcclient_version
-
+try:
+    from ._version import __version__ as zhmcclient_version
+except Exception as exc:
+    print("Error: zhmcclient.__version__ cannot be imported: {}".format(exc))
+    sys.exit(1)
 
 __all__ = ['as_dict']
+
+
+def version_string(version_info):
+    """
+    Return the 5-tuple version_info as a version string, as follows:
+
+        "1.2.3"  # if version_info[3] == 'final'
+        "1.2.3.alpha.42"  # if version_info[3] != 'final'
+    """
+    major, minor, micro, releaselevel, serial = version_info
+    version_str = '{}.{}.{}'.format(major, minor, micro)
+    if releaselevel != 'final':
+        version_str = '{}.{}.{}'.format(version_str, releaselevel, serial)
+    return version_str
 
 
 def as_dict():
@@ -52,31 +69,28 @@ def as_dict():
     debug_info['cpu_arch'] = platform.machine()
     debug_info['bit_size'] = ctypes.sizeof(ctypes.c_void_p) * 8
 
-    s = b'\\U00010142'
-    c = s.decode('unicode-escape')
-    if len(c) == 1:
+    char_len = len(b'\\U00010142'.decode('unicode-escape'))
+    if char_len == 1:
         debug_info['unicode_size'] = 'wide'
-    elif len(c) == 2:
+    elif char_len == 2:
         debug_info['unicode_size'] = 'narrow'
     else:
         # Should not happen
         debug_info['unicode_size'] = 'unknown'
 
     impl = platform.python_implementation()
-    if impl == 'CPython':
-        impl_version = platform.python_version()
-    elif impl == 'PyPy':
-        impl_version = '{vi.major}.{vi.minor}.{vi.micro}'. \
-            format(vi=sys.pypy_version_info)
-        if sys.pypy_version_info.releaselevel != 'final':
-            impl_version += sys.pypy_version_info.releaselevel
-    elif impl == 'Jython':
-        impl_version = platform.python_version()
-    elif impl == 'IronPython':
-        impl_version = platform.python_version()
-    else:
-        impl_version = 'Unknown'
     debug_info['impl'] = impl
+
+    if impl == 'CPython':
+        impl_version = version_string(sys.version_info)
+    elif impl == 'PyPy':
+        impl_version = version_string(sys.pypy_version_info)
+    elif impl == 'Jython':
+        impl_version = version_string(sys.version_info)  # TODO: Verify
+    elif impl == 'IronPython':
+        impl_version = version_string(sys.version_info)  # TODO: Verify
+    else:
+        impl_version = 'unknown'
     debug_info['impl_version'] = impl_version
 
     debug_info['python_version'] = platform.python_version()
@@ -93,11 +107,10 @@ def main():
 
     d = as_dict()
 
-    print("OS platform: {d[os_name]} {d[os_version]}".format(d=d))
-    print("CPU architecture: {d[cpu_arch]}".format(d=d))
-    print("Python implementation: {d[impl]} {d[impl_version]}".format(d=d))
-    print("Python bit size: {d[bit_size]} bit".format(d=d))
-    print("Python unicode size: {d[unicode_size]}".format(d=d))
+    print("Operating system: {d[os_name]} {d[os_version]} "
+          "on {d[cpu_arch]}".format(d=d))
+    print("Python implementation: {d[impl]} {d[impl_version]} "
+          "({d[bit_size]} bit, {d[unicode_size]} unicode)".format(d=d))
     print("Python version: {d[python_version]}".format(d=d))
     print("zhmcclient version: {d[zhmcclient_version]}".format(d=d))
 

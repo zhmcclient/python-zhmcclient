@@ -249,6 +249,7 @@ help:
 	@echo "  clean      - Remove any temporary files"
 	@echo "  clobber    - Remove any build products"
 	@echo "  platform   - Display the information about the platform as seen by make"
+	@echo "  debuginfo  - Display the debug information for the package"
 	@echo "  env        - Display the environment as seen by make"
 	@echo ""
 	@echo "Environment variables:"
@@ -278,6 +279,11 @@ platform:
 	@echo "Pip command name: $(PIP_CMD)"
 	@echo "Pip command location: $(shell $(WHICH) $(PIP_CMD))"
 	@echo "$(package_name) package version: $(package_version)"
+
+.PHONY: debuginfo
+debuginfo:
+	@echo "Makefile: Debug information:"
+	$(PYTHON_CMD) -m $(package_name).debuginfo
 
 .PHONY: pip_list
 pip_list:
