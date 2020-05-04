@@ -53,6 +53,8 @@ This version contains all fixes up to 0.26.1.
 * Docs: Fixed links to HMC WS API books that have become invalid.
   (See issue #665)
 
+* Fixed empty port list returned by PortManager.list() for CNA adapters.
+
 **Enhancements:**
 
 * Added an easy way to print debug information for inclusion into issues, via

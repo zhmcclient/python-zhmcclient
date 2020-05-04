@@ -263,6 +263,8 @@ class Adapter(BaseResource):
         'osa': 'network-port-uris',
         'roce': 'network-port-uris',
         'hipersockets': 'network-port-uris',
+        'cna': 'network-port-uris',
+        'cloud-network': 'network-port-uris',  # for preliminary driver
     }
 
     # URI segment for port URIs, dependent on adapter family
@@ -271,6 +273,8 @@ class Adapter(BaseResource):
         'osa': 'network-ports',
         'roce': 'network-ports',
         'hipersockets': 'network-ports',
+        'cna': 'network-ports',
+        'cloud-network': 'network-ports',  # for preliminary driver
     }
 
     # Port type, dependent on adapter family
@@ -279,6 +283,8 @@ class Adapter(BaseResource):
         'osa': 'network',
         'roce': 'network',
         'hipersockets': 'network',
+        'cna': 'network',
+        'cloud-network': 'network',  # for preliminary driver
     }
 
     def __init__(self, manager, uri, name=None, properties=None):
