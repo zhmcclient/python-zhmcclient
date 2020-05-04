@@ -32,6 +32,8 @@ Released: not yet
 
 * Test: Fixed missing ffi.h file on CygWin when testing (See issue #655)
 
+* Fixed empty port list returned by PortManager.list() for CNA adapters.
+
 **Enhancements:**
 
 **Known issues:**
