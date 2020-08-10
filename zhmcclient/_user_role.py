@@ -233,6 +233,7 @@ class UserRole(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.delete(self.uri)
         self.manager._name_uri_cache.delete(
             self.properties.get(self.manager._name_prop, None))
@@ -264,6 +265,7 @@ class UserRole(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.post(self.uri, body=properties)
 
         # The name of User Roles cannot be updated. An attempt to do so should
@@ -275,6 +277,7 @@ class UserRole(BaseResource):
     @logged_api_call
     def add_permission(self, permitted_object, include_members=False,
                        view_only=True):
+        # pylint: disable=line-too-long
         """
         Add permission for the specified permitted object(s) to this User Role,
         thereby granting that permission to all users that have this User Role.
@@ -328,6 +331,7 @@ class UserRole(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """  # noqa: E501
+        # pylint: enable=line-too-long
         if isinstance(permitted_object, BaseResource):
             perm_obj = permitted_object.uri
             perm_type = 'object'
@@ -351,6 +355,7 @@ class UserRole(BaseResource):
     @logged_api_call
     def remove_permission(self, permitted_object, include_members=False,
                           view_only=True):
+        # pylint: disable=line-too-long
         """
         Remove permission for the specified permitted object(s) from this User
         Role, thereby no longer granting that permission to all users that have
@@ -405,6 +410,7 @@ class UserRole(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """  # noqa: E501
+        # pylint: enable=line-too-long
         if isinstance(permitted_object, BaseResource):
             perm_obj = permitted_object.uri
             perm_type = 'object'

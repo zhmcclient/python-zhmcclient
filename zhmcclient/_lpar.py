@@ -209,6 +209,7 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.post(self.uri, body=properties)
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.
@@ -432,6 +433,7 @@ class Lpar(BaseResource):
                   boot_record_logical_block_address=None, force=False,
                   wait_for_completion=True, operation_timeout=None,
                   status_timeout=None, allow_status_exceptions=False):
+        # pylint: disable=invalid-name
         """
         Load (boot) this LPAR from a designated SCSI device, using the
         HMC operation "SCSI Load".
@@ -573,6 +575,7 @@ class Lpar(BaseResource):
                   boot_record_logical_block_address=None, os_ipl_token=None,
                   wait_for_completion=True, operation_timeout=None,
                   status_timeout=None, allow_status_exceptions=False):
+        # pylint: disable=invalid-name
         """
         Load a standalone dump program from a designated SCSI device
         in this LPAR, using the HMC operation "SCSI Dump".

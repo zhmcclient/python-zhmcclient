@@ -27,15 +27,14 @@ CPC.
 
 from __future__ import absolute_import
 
-import six
 import re
 from datetime import datetime, timedelta
 import warnings
-from requests.utils import quote
+import six
 
 from ._logging import logged_api_call
 from ._exceptions import NotFound, NoUniqueMatch, HTTPError
-from ._utils import repr_list
+from ._utils import repr_list, append_query_parms
 
 __all__ = ['BaseManager']
 
@@ -91,6 +90,7 @@ class _NameUriCache(object):
             try:
                 return self._uris[name]
             except KeyError:
+                # pylint: disable=protected-access
                 raise NotFound({self._manager._name_prop: name}, self._manager)
 
     def auto_invalidate(self):
@@ -118,6 +118,7 @@ class _NameUriCache(object):
         This is done by invalidating the cache, listing the resources of this
         manager from the HMC, and populating the cache with that information.
         """
+        # pylint: disable=protected-access
         self.invalidate()
         full = not self._manager._list_has_name
         res_list = self._manager.list(full_properties=full)
@@ -131,6 +132,7 @@ class _NameUriCache(object):
         entries for non-empty resource names in that list. Other cache entries
         remain unchanged.
         """
+        # pylint: disable=protected-access
         for res in res_list:
             # We access the properties dictionary, in order to make sure
             # we don't drive additional HMC interactions.
@@ -373,6 +375,7 @@ class BaseManager(object):
             name=props.get(self._name_prop, None),
             properties=props)
 
+        # pylint: disable=protected-access
         resource_obj._full_properties = True
 
         return resource_obj
@@ -403,8 +406,7 @@ class BaseManager(object):
             for prop_name in filter_args:
                 prop_match = filter_args[prop_name]
                 if prop_name in self._query_props:
-                    self._append_query_parms(query_parms, prop_name,
-                                             prop_match)
+                    append_query_parms(query_parms, prop_name, prop_match)
                 else:
                     client_filter_args[prop_name] = prop_match
         query_parms_str = '&'.join(query_parms)
@@ -412,17 +414,6 @@ class BaseManager(object):
             query_parms_str = '?{}'.format(query_parms_str)
 
         return query_parms_str, client_filter_args
-
-    def _append_query_parms(self, query_parms, prop_name, prop_match):
-        if isinstance(prop_match, (list, tuple)):
-            for pm in prop_match:
-                self._append_query_parms(query_parms, prop_name, pm)
-        else:
-            # Just in case, we also escape the property name
-            parm_name = quote(prop_name, safe='')
-            parm_value = quote(str(prop_match), safe='')
-            qp = '{}={}'.format(parm_name, parm_value)
-            query_parms.append(qp)
 
     def _matches_filters(self, obj, filter_args):
         """
@@ -687,9 +678,9 @@ class BaseManager(object):
             except NotFound:
                 return []
             return [obj]
-        else:
-            obj_list = self.list(filter_args=filter_args)
-            return obj_list
+
+        obj_list = self.list(filter_args=filter_args)
+        return obj_list
 
     @logged_api_call
     def find(self, **filter_args):
@@ -766,10 +757,9 @@ class BaseManager(object):
         num_objs = len(obj_list)
         if num_objs == 0:
             raise NotFound(filter_args, self)
-        elif num_objs > 1:
+        if num_objs > 1:
             raise NoUniqueMatch(filter_args, self, obj_list)
-        else:
-            return obj_list[0]
+        return obj_list[0]
 
     def list(self, full_properties=False, filter_args=None):
         """

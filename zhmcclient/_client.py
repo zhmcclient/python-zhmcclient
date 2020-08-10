@@ -214,8 +214,6 @@ class Client(object):
                 self.query_api_version()
             except Error:
                 pass
-            except Exception:
-                raise
             else:
                 break
             if operation_timeout > 0:

@@ -151,6 +151,7 @@ class BaseResource(object):
         object to be updated from the HMC, if it does not yet contain the
         property for the resource name.
         """
+        # pylint: disable=protected-access
         # We avoid storing the name in an instance variable, because it can
         # be modified via update_properties().
         return self.get_property(self.manager._name_prop)

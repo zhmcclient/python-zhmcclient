@@ -76,11 +76,11 @@ except ImportError:
 from ._constants import API_LOGGER_NAME
 
 
-def log_escaped(s):
+def log_escaped(string):
     """
     Return the escaped input string, for use in log messages.
     """
-    return s.replace('\n', ' ').replace('  ', ' ').replace('  ', ' ').\
+    return string.replace('\n', ' ').replace('  ', ' ').replace('  ', ' ').\
         replace('  ', ' ')
 
 
@@ -230,5 +230,4 @@ def logged_api_call(func):
 
     if 'decorate' in globals():
         return decorate(func, log_api_call)
-    else:
-        return decorator(log_api_call, func)
+    return decorator(log_api_call, func)

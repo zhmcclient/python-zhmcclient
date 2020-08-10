@@ -252,6 +252,7 @@ class ActivationProfile(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.post(self.uri, body=properties)
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.

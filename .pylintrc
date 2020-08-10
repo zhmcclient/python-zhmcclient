@@ -71,7 +71,8 @@ disable=I0011,
         too-many-lines, too-many-public-methods,
         too-many-nested-blocks, too-many-return-statements, too-many-arguments,
         wildcard-import, unused-wildcard-import,
-        locally-enabled, superfluous-parens,
+        locally-enabled, superfluous-parens, useless-object-inheritance,
+        consider-using-set-comprehension, unnecessary-pass, useless-return
 
 # Note: The too-many-* messages are excluded temporarily, and should be dealt
 #       with at some point.
@@ -170,11 +171,11 @@ include-naming-hint=no
 # "mixedCaseWithoutUnderscores"; leading underscores for privacy as well as
 # double trailing underscores are allowed.
 # Names matching this expression are compatible with PEP-8.
-function-rgx=_{0,2}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})(__){0,1}$
+function-rgx=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
 # TODO AM: Verify whether two leading underscores are allowed / supported with name mangling.
 
 # Naming hint for function names
-function-name-hint=_{0,2}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})(__){0,1}$
+function-name-hint=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
 
 # Regular expression matching correct variable names.
 #
@@ -248,10 +249,10 @@ inlinevar-name-hint=_{0,1}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{0,29})$
 # allows that class names for callable classes can use function name syntax.
 # This is not reflected in this regexp; callable classes that follow that
 # convention should disable PyLint message C0103.
-class-rgx=_{0,1}[A-Z][a-zA-Z0-9]{1,29}$
+class-rgx=_{0,1}[A-Z][a-zA-Z0-9]{1,39}$
 
 # Naming hint for class names
-class-name-hint=_{0,1}[A-Z][a-zA-Z0-9]{1,29}$
+class-name-hint=_{0,1}[A-Z][a-zA-Z0-9]{1,39}$
 
 # Regular expression matching correct module names.
 #
@@ -269,10 +270,10 @@ module-name-hint=_{0,2}[a-z][a-z0-9_]{0,28}[a-z0-9](__){0,1}$
 # "mixedCaseWithoutUnderscores"; leading underscores for privacy as well as
 # double trailing underscores are allowed.
 # Names matching this expression are compatible with PEP-8.
-method-rgx=_{0,2}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})(__){0,1}$
+method-rgx=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
 
 # Naming hint for method names
-method-name-hint=_{0,2}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})(__){0,1}$
+method-name-hint=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
@@ -345,7 +346,7 @@ logging-modules=logging
 [SIMILARITIES]
 
 # Minimum lines number of a similarity.
-min-similarity-lines=8
+min-similarity-lines=20
 
 # Ignore comments when computing similarities.
 ignore-comments=yes
@@ -354,13 +355,13 @@ ignore-comments=yes
 ignore-docstrings=yes
 
 # Ignore imports when computing similarities.
-ignore-imports=no
+ignore-imports=yes
 
 
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=79
+max-line-length=80
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$

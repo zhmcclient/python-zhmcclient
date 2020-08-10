@@ -18,7 +18,7 @@ Unit tests for _urihandler module of the zhmcclient_mock package.
 
 from __future__ import absolute_import, print_function
 
-import requests.packages.urllib3
+from requests.packages import urllib3
 from datetime import datetime
 # FIXME: Migrate mock to zhmcclient_mock
 from mock import MagicMock
@@ -72,7 +72,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     ImageActProfilesHandler, ImageActProfileHandler, \
     LoadActProfilesHandler, LoadActProfileHandler
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 
 class TestHTTPError(object):

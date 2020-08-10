@@ -225,6 +225,7 @@ class User(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.delete(self.uri)
         self.manager._name_uri_cache.delete(
             self.properties.get(self.manager._name_prop, None))
@@ -258,6 +259,7 @@ class User(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.post(self.uri, body=properties)
 
         # The name of Users cannot be updated. An attempt to do so should cause

@@ -18,12 +18,12 @@ End2end tests for CPCs that do not change anything.
 
 from __future__ import absolute_import, print_function
 
-import requests.packages.urllib3
+from requests.packages import urllib3
 import zhmcclient
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils.cpc_fixtures import all_cpcs  # noqa: F401
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 # Detect machine generation from machine type
 MACHINE_GENERATIONS = {

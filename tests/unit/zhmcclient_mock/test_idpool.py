@@ -18,12 +18,12 @@ Unit tests for _idpool module of the zhmcclient_mock package.
 
 from __future__ import absolute_import, print_function
 
-import requests.packages.urllib3
+from requests.packages import urllib3
 import pytest
 
 from zhmcclient_mock._idpool import IdPool
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 
 class TestIdPool(object):

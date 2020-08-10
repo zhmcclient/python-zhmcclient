@@ -344,6 +344,7 @@ class MetricsContext(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.delete(self.uri)
         self.manager._metrics_contexts.remove(self)
 
@@ -408,6 +409,7 @@ class MetricDefinition(_MetricDefinitionTuple):
     """
 
     def __new__(cls, index, name, type, unit):
+        # pylint: disable=redefined-builtin
         """
         Parameters:
 
@@ -500,11 +502,9 @@ def _metric_value(value_str, metric_type):
         lower_str = value_str.lower()
         if lower_str == 'true':
             return True
-        elif lower_str == 'false':
+        if lower_str == 'false':
             return False
-        else:
-            raise ValueError("Invalid boolean metric value: {!r}".
-                             format(value_str))
+        raise ValueError("Invalid boolean metric value: {!r}".format(value_str))
 
 
 def _metric_unit_from_name(metric_name):
@@ -871,7 +871,7 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise
+                raise AssertionError("No CPC found")
         elif resource_class == 'partition':
             for cpc in self.client.cpcs.list():
                 try:
@@ -881,7 +881,7 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise
+                raise AssertionError("No CPC found")
         elif resource_class == 'adapter':
             for cpc in self.client.cpcs.list():
                 try:
@@ -891,7 +891,7 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise
+                raise AssertionError("No CPC found")
         elif resource_class == 'nic':
             for cpc in self.client.cpcs.list():
                 found = False
@@ -906,7 +906,7 @@ class MetricObjectValues(object):
                 if found:
                     break
             else:
-                raise
+                raise AssertionError("No CPC found")
         else:
             raise ValueError(
                 "Invalid resource class: {!r}".format(resource_class))

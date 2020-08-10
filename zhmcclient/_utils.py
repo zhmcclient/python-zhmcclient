@@ -18,10 +18,14 @@ Utility functions.
 
 from __future__ import absolute_import
 
-import six
-from collections import OrderedDict, Mapping, MutableSequence, Iterable
+try:
+    from collections import OrderedDict, Mapping, MutableSequence, Iterable
+except ImportError:
+    from collections.abc import OrderedDict, Mapping, MutableSequence, Iterable
 from datetime import datetime
+import six
 import pytz
+from requests.utils import quote
 
 __all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
 
@@ -45,49 +49,49 @@ def repr_text(text, indent):
     return ret.lstrip(' ')
 
 
-def repr_list(_list, indent):
+def repr_list(lst, indent):
     """Return a debug representation of a list or tuple."""
     # pprint represents lists and tuples in one row if possible. We want one
     # per row, so we iterate ourselves.
-    if _list is None:
+    if lst is None:
         return 'None'
-    if isinstance(_list, MutableSequence):
+    if isinstance(lst, MutableSequence):
         bm = '['
         em = ']'
-    elif isinstance(_list, Iterable):
+    elif isinstance(lst, Iterable):
         bm = '('
         em = ')'
     else:
         raise TypeError("Object must be an iterable, but is a %s" %
-                        type(_list))
+                        type(lst))
     ret = bm + '\n'
-    for value in _list:
+    for value in lst:
         ret += _indent('%r,\n' % value, 2)
     ret += em
     ret = repr_text(ret, indent=indent)
     return ret.lstrip(' ')
 
 
-def repr_dict(_dict, indent):
+def repr_dict(dct, indent):
     """Return a debug representation of a dict or OrderedDict."""
     # pprint represents OrderedDict objects using the tuple init syntax,
     # which is not very readable. Therefore, dictionaries are iterated over.
-    if _dict is None:
+    if dct is None:
         return 'None'
-    if not isinstance(_dict, Mapping):
+    if not isinstance(dct, Mapping):
         raise TypeError("Object must be a mapping, but is a %s" %
-                        type(_dict))
-    if isinstance(_dict, OrderedDict):
+                        type(dct))
+    if isinstance(dct, OrderedDict):
         kind = 'ordered'
         ret = '%s {\n' % kind  # non standard syntax for the kind indicator
-        for key in six.iterkeys(_dict):
-            value = _dict[key]
+        for key in six.iterkeys(dct):
+            value = dct[key]
             ret += _indent('%r: %r,\n' % (key, value), 2)
     else:  # dict
         kind = 'sorted'
         ret = '%s {\n' % kind  # non standard syntax for the kind indicator
-        for key in sorted(six.iterkeys(_dict)):
-            value = _dict[key]
+        for key in sorted(six.iterkeys(dct)):
+            value = dct[key]
             ret += _indent('%r: %r,\n' % (key, value), 2)
     ret += '}'
     ret = repr_text(ret, indent=indent)
@@ -230,3 +234,18 @@ def timestamp_from_datetime(dt):
     epoch_seconds = (dt - _EPOCH_DT).total_seconds()
     ts = int(epoch_seconds * 1000)
     return ts
+
+
+def append_query_parms(query_parms, prop_name, prop_match):
+    """
+    Append prop_name=prop_match to query_parms. prop_match may be a list.
+    """
+    if isinstance(prop_match, (list, tuple)):
+        for pm in prop_match:
+            append_query_parms(query_parms, prop_name, pm)
+    else:
+        # Just in case, we also escape the property name
+        parm_name = quote(prop_name, safe='')
+        parm_value = quote(str(prop_match), safe='')
+        qp = '{}={}'.format(parm_name, parm_value)
+        query_parms.append(qp)

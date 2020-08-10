@@ -19,12 +19,12 @@ file match reality.
 
 from __future__ import absolute_import, print_function
 
-import requests.packages.urllib3
+from requests.packages import urllib3
 
 import zhmcclient
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 
 def test_cpc_definitions(hmc_session):  # noqa: F811

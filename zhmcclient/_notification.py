@@ -143,6 +143,7 @@ class NotificationReceiver(object):
 
         # Lazy importing for stomp, because it is so slow (ca. 5 sec)
         if 'Stomp_Connection' not in globals():
+            # pylint: disable=import-outside-toplevel
             from stomp import Connection as Stomp_Connection
 
         self._conn = Stomp_Connection(
@@ -304,7 +305,8 @@ class _NotificationListener(object):
             self._handover_dict['message'] = None
             self._handover_cond.notifyAll()
 
-    def on_error(self, headers, message):
+    @staticmethod
+    def on_error(headers, message):
         """
         This event method should never be called, because the HMC does not
         issue JMS errors.
@@ -313,7 +315,8 @@ class _NotificationListener(object):
         :meth:`~zhmcclient.NotificationListener.on_message`.
         """
         raise RuntimeError("Unexpectedly received a JMS error "
-                           "(JMS headers: %r)" % headers)
+                           "(JMS headers: %r, JMS message: %r)" %
+                           (headers, message))
 
     def on_message(self, headers, message):
         """
@@ -342,7 +345,7 @@ class _NotificationListener(object):
             self._handover_dict['headers'] = headers
             try:
                 msg_obj = json.loads(message)
-            except Exception:
+            except Exception:  # pylint: disable=try-except-raise
                 raise  # TODO: Find better exception for this case
             self._handover_dict['message'] = msg_obj
             self._handover_cond.notifyAll()

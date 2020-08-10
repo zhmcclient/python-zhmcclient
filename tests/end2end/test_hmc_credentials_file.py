@@ -18,13 +18,13 @@ Function tests for HMC credentials file.
 
 from __future__ import absolute_import, print_function
 
-import requests.packages.urllib3
+from requests.packages import urllib3
 
 import pytest
 import zhmcclient
 from tests.common.utils import HmcCredentials, info
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 
 class TestHMCCredentialsFile(object):
