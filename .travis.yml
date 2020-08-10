@@ -224,6 +224,6 @@ script:
   - make debuginfo
 
 after_success:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_PYTHON_VERSION" == "2.7" && "$PACKAGE_LEVEL" == "latest" && -z $_MANUAL_CI_RUN ]]; then
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$PACKAGE_LEVEL" == "latest" && -z $_MANUAL_CI_RUN ]]; then
       coveralls;
     fi
