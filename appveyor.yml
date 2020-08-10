@@ -116,8 +116,8 @@ install:
 
   # Install OS-level prerequisite packages for pyzmq Python package
   # Note. This installs them from 'outside' of the actual UNIX env, which works.
-  - if "%UNIX_PATH%"=="C:\cygwin\bin" C:\cygwin\setup-x86.exe -q -P libzmq-devel,python2-devel,python2-cython,python3-devel,python3-cython
-  - if "%UNIX_PATH%"=="C:\cygwin64\bin" C:\cygwin64\setup-x86_64.exe -q -P libzmq-devel,python2-devel,python2-cython,python3-devel,python3-cython
+  - if "%UNIX_PATH%"=="C:\cygwin\bin" C:\cygwin\setup-x86.exe -q -P libffi-devel,libzmq-devel,python2-devel,python2-cython,python3-devel,python3-cython
+  - if "%UNIX_PATH%"=="C:\cygwin64\bin" C:\cygwin64\setup-x86_64.exe -q -P libffi-devel,libzmq-devel,python2-devel,python2-cython,python3-devel,python3-cython
   - if "%UNIX_PATH%"=="C:\msys64\usr\bin" C:\msys64\usr\bin\pacman.exe --sync --noconfirm --needed mingw-w64-x86_64-zeromq
   - if "%UNIX_PATH%"=="C:\msys64\usr\bin" C:\msys64\usr\bin\pacman.exe --sync --noconfirm --needed libcrypt-devel
 

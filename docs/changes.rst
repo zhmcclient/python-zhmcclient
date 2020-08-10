@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Test: Fixed missing ffi.h file on CygWin when testing (See issue #655)
+
 **Enhancements:**
 
 **Known issues:**
