@@ -15,6 +15,8 @@
 .coverage
 .venv
 .testrepository
+MANIFEST
+MANIFEST.in
 *.done
 *.log
 *.tmp

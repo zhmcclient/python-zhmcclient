@@ -89,7 +89,7 @@ wheel==0.33.5; python_version >= '3.8'
 decorator==4.0.10
 pytz==2016.10
 requests==2.20.0
-six==1.10.0
+six==1.14.0
 stomp.py==4.1.23
 
 
@@ -124,7 +124,10 @@ mock==2.0.0
 requests-mock==1.6.0
 requests-toolbelt==0.7.0
 
-
+# Virtualenv
+virtualenv==14.0.0; python_version < '3.5'
+virtualenv==16.1.0; python_version >= '3.5' and python_version < '3.8'
+virtualenv==20.0.0; python_version >= '3.8'  # requires six<2,>=1.12.0
 
 # Unit test (indirect dependencies):
 pluggy==0.7.1; python_version >= '2.7' and python_version <= '3.6'
