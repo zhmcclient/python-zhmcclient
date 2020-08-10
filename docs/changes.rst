@@ -34,7 +34,14 @@ Released: not yet
 
 * Fixed empty port list returned by PortManager.list() for CNA adapters.
 
+* Install: Fixed the broken installation from the source distribution archive
+  on Pypi (see issue #651)
+
 **Enhancements:**
+
+* Test: Added 'make installtest' to the Makefile to test installation of the
+  package into an empty virtualenv using all supported installation methods.
+  Added these install tests to the Travis CI tests. (related to issue #651)
 
 **Known issues:**
 

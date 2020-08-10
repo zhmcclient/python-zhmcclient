@@ -252,6 +252,60 @@ target system from the downloaded packages:
         docopt-0.6.2 idna-2.8 pytz-2019.3 requests-2.22.0 six-1.13.0
         stomp.py-4.1.22 urllib3-1.25.7 zhmcclient-0.25.1
 
+Alternative installation methods and sources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The installation using Pip as shown in the previous sections uses the wheel
+distribution archive from Pypi. This is the fastest installation method and
+source and does not normally need to be changed.
+
+In case you have a need to install from alternative sources, or cannot use
+Pip for some reason, here are some alternative installation methods and
+sources:
+
+* Pip install from wheel distribution archive (the normal case discussed earlier):
+
+  .. code-block:: text
+
+      $ pip install zhmcclient
+
+* Pip install from source distribution archive:
+
+  .. code-block:: text
+
+      # Download the source dist archive (you can also use any other means to get it):
+      $ pip download zhmcclient --no-binary zhmcclient
+
+      # Install from the source dist archive:
+      $ pip install zhmcclient-0.26.1.tar.gz  # adjust version
+
+* setup.py install from unpacked source distribution archive:
+
+  .. code-block:: text
+
+      # Download the source dist archive (you can also use any other means to get it):
+      $ pip download zhmcclient --no-binary zhmcclient
+
+      # Install from the source dist archive:
+      $ tar -xf zhmcclient-0.26.1.tar.gz  # adjust version
+      $ python setup.py install
+
+* Pip install from repo root directory:
+
+  .. code-block:: text
+
+      $ git clone https://github.com/zhmcclient/python-zhmcclient
+      $ cd python-zhmcclient
+      $ pip install .
+
+* setup.py install from repo root directory:
+
+  .. code-block:: text
+
+      $ git clone https://github.com/zhmcclient/python-zhmcclient
+      $ cd python-zhmcclient
+      $ python setup.py install
+
 Verification of the installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
