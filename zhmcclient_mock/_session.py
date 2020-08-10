@@ -21,7 +21,8 @@ from __future__ import absolute_import
 import zhmcclient
 
 from ._hmc import FakedHmc
-from ._urihandler import UriHandler, HTTPError, ConnectionError, URIS
+from ._urihandler import UriHandler, HTTPError, URIS
+from ._urihandler import ConnectionError  # pylint: disable=redefined-builtin
 
 __all__ = ['FakedSession']
 

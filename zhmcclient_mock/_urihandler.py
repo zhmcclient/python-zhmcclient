@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-few-public-methods
+
 """
 A module with various handler classes for the HTTP methods against HMC URIs,
 based on the faked HMC.
@@ -35,6 +37,9 @@ __all__ = ['UriHandler', 'LparActivateHandler', 'LparDeactivateHandler',
 
 
 class HTTPError(Exception):
+    """
+    Exception that will be turned into an HTTP error response message.
+    """
 
     def __init__(self, method, uri, http_status, reason, message):
         self.method = method
@@ -44,6 +49,9 @@ class HTTPError(Exception):
         self.message = message
 
     def response(self):
+        """
+        Return the JSON object for the HTTP error response message.
+        """
         return {
             'request-method': self.method,
             'request-uri': self.uri,
@@ -54,12 +62,20 @@ class HTTPError(Exception):
 
 
 class ConnectionError(Exception):
+    # pylint: disable=redefined-builtin
+    """
+    Indicates a connection error to the faked HMC.
+    This mimics the requests.exception.ConnectionError.
+    """
 
     def __init__(self, message):
         self.message = message
 
 
 class InvalidResourceError(HTTPError):
+    """
+    HTTP error indicating an invalid resource.
+    """
 
     def __init__(self, method, uri, handler_class=None, reason=1,
                  resource_uri=None):
@@ -78,6 +94,9 @@ class InvalidResourceError(HTTPError):
 
 
 class InvalidMethodError(HTTPError):
+    """
+    HTTP error indicating an invalid HTTP method.
+    """
 
     def __init__(self, method, uri, handler_class=None):
         if handler_class is not None:
@@ -93,6 +112,9 @@ class InvalidMethodError(HTTPError):
 
 
 class BadRequestError(HTTPError):
+    """
+    HTTP error indicating an invalid client request (status 400).
+    """
 
     def __init__(self, method, uri, reason, message):
         super(BadRequestError, self).__init__(
@@ -103,6 +125,9 @@ class BadRequestError(HTTPError):
 
 
 class ConflictError(HTTPError):
+    """
+    HTTP error indicating a conflict in the client request (status 409).
+    """
 
     def __init__(self, method, uri, reason, message):
         super(ConflictError, self).__init__(
@@ -154,6 +179,9 @@ class CpcInDpmError(ConflictError):
 
 
 class ServerError(HTTPError):
+    """
+    HTTP error indicating a server error (status 500).
+    """
 
     def __init__(self, method, uri, reason, message):
         super(ServerError, self).__init__(
@@ -244,8 +272,10 @@ def check_valid_cpc_status(method, uri, cpc):
     if status is None:
         # Do nothing if no status is set on the faked CPC
         return
+
     valid_statuses = ['active', 'service-required', 'degraded', 'exceptions']
     if status not in valid_statuses:
+
         if uri.startswith(cpc.uri):
             # The uri targets the CPC (either is the CPC uri or some
             # multiplicity under the CPC uri)
@@ -254,14 +284,14 @@ def check_valid_cpc_status(method, uri, cpc):
                                 "because the targeted CPC {} has a status "
                                 "that is not valid for the operation: {}".
                                 format(cpc.name, status))
-        else:
-            # The uri targets a resource hosted by the CPC
-            raise ConflictError(method, uri, reason=6,
-                                message="The operation cannot be performed "
-                                "because CPC {} hosting the targeted resource "
-                                "has a status that is not valid for the "
-                                "operation: {}".
-                                format(cpc.name, status))
+
+        # The uri targets a resource hosted by the CPC
+        raise ConflictError(method, uri, reason=6,
+                            message="The operation cannot be performed "
+                            "because CPC {} hosting the targeted resource "
+                            "has a status that is not valid for the "
+                            "operation: {}".
+                            format(cpc.name, status))
 
 
 def check_partition_status(method, uri, partition, valid_statuses=None,
@@ -281,9 +311,11 @@ def check_partition_status(method, uri, partition, valid_statuses=None,
     if status is None:
         # Do nothing if no status is set on the faked partition
         return
+
     if valid_statuses and status not in valid_statuses or \
             invalid_statuses and status in invalid_statuses:
         if uri.startswith(partition.uri):
+
             # The uri targets the partition (either is the partition uri or
             # some multiplicity under the partition uri)
             raise ConflictError(method, uri, reason=1,
@@ -292,15 +324,15 @@ def check_partition_status(method, uri, partition, valid_statuses=None,
                                 "status that is not valid for the operation: "
                                 "{}".
                                 format(partition.name, status))
-        else:
-            # The uri targets a resource hosted by the partition
-            raise ConflictError(method, uri,
-                                reason=1,  # Note: 6 not used for partitions
-                                message="The operation cannot be performed "
-                                "because partition {} hosting the targeted "
-                                "resource has a status that is not valid for "
-                                "the operation: {}".
-                                format(partition.name, status))
+
+        # The uri targets a resource hosted by the partition
+        raise ConflictError(method, uri,
+                            reason=1,  # Note: 6 not used for partitions
+                            message="The operation cannot be performed "
+                            "because partition {} hosting the targeted "
+                            "resource has a status that is not valid for "
+                            "the operation: {}".
+                            format(partition.name, status))
 
 
 class UriHandler(object):
@@ -317,6 +349,9 @@ class UriHandler(object):
             self._uri_handlers.append(tup)
 
     def handler(self, uri, method):
+        """
+        Return the handler function for an URI and HTTP method.
+        """
         for uri_pattern, handler_class in self._uri_handlers:
             m = uri_pattern.match(uri)
             if m:
@@ -325,6 +360,9 @@ class UriHandler(object):
         raise InvalidResourceError(method, uri)
 
     def get(self, hmc, uri, logon_required):
+        """
+        Process a HTTP GET method on a URI.
+        """
         if not hmc.enabled:
             raise ConnectionError("HMC is not enabled.")
         handler_class, uri_parms = self.handler(uri, 'GET')
@@ -333,6 +371,9 @@ class UriHandler(object):
         return handler_class.get('GET', hmc, uri, uri_parms, logon_required)
 
     def post(self, hmc, uri, body, logon_required, wait_for_completion):
+        """
+        Process a HTTP POST method on a URI.
+        """
         if not hmc.enabled:
             raise ConnectionError("HMC is not enabled.")
         handler_class, uri_parms = self.handler(uri, 'POST')
@@ -342,6 +383,9 @@ class UriHandler(object):
                                   logon_required, wait_for_completion)
 
     def delete(self, hmc, uri, logon_required):
+        """
+        Process a HTTP DELETE method on a URI.
+        """
         if not hmc.enabled:
             raise ConnectionError("HMC is not enabled.")
         handler_class, uri_parms = self.handler(uri, 'DELETE')
@@ -351,9 +395,13 @@ class UriHandler(object):
 
 
 class GenericGetPropertiesHandler(object):
+    """
+    Handler class for generic get of resource properties.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Get <resource> Properties."""
         try:
             resource = hmc.lookup_by_uri(uri)
@@ -363,10 +411,14 @@ class GenericGetPropertiesHandler(object):
 
 
 class GenericUpdatePropertiesHandler(object):
+    """
+    Handler class for generic update of resource properties.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Update <resource> Properties."""
         assert wait_for_completion is True  # async not supported yet
         try:
@@ -377,9 +429,13 @@ class GenericUpdatePropertiesHandler(object):
 
 
 class GenericDeleteHandler(object):
+    """
+    Handler class for generic delete of a resource.
+    """
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete <resource>."""
         try:
             resource = hmc.lookup_by_uri(uri)
@@ -389,9 +445,14 @@ class GenericDeleteHandler(object):
 
 
 class VersionHandler(object):
+    """
+    Handler class for operation: Get version.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get version."""
         api_major, api_minor = hmc.api_version.split('.')
         return {
             'hmc-name': hmc.hmc_name,
@@ -402,14 +463,21 @@ class VersionHandler(object):
 
 
 class ConsoleHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on Console resource.
+    """
     pass
 
 
 class ConsoleRestartHandler(object):
+    """
+    Handler class for Console operation: Restart Console.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Restart Console."""
         assert wait_for_completion is True  # synchronous operation
         console_uri = '/api/console'
@@ -425,10 +493,14 @@ class ConsoleRestartHandler(object):
 
 
 class ConsoleShutdownHandler(object):
+    """
+    Handler class for Console operation: Shutdown Console.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Shutdown Console."""
         assert wait_for_completion is True  # synchronous operation
         console_uri = '/api/console'
@@ -442,10 +514,14 @@ class ConsoleShutdownHandler(object):
 
 
 class ConsoleMakePrimaryHandler(object):
+    """
+    Handler class for Console operation: Make Console Primary.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Make Console Primary."""
         assert wait_for_completion is True  # synchronous operation
         console_uri = '/api/console'
@@ -458,10 +534,14 @@ class ConsoleMakePrimaryHandler(object):
 
 
 class ConsoleReorderUserPatternsHandler(object):
+    """
+    Handler class for Console operation: Reorder User Patterns.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Reorder User Patterns."""
         assert wait_for_completion is True  # synchronous operation
         console_uri = '/api/console'
@@ -476,16 +556,20 @@ class ConsoleReorderUserPatternsHandler(object):
         for obj in objs:
             obj_by_uri[obj.uri] = obj
         # Perform the reordering in the faked HMC:
-        for uri in new_order_uris:
-            obj = obj_by_uri[uri]
+        for _uri in new_order_uris:
+            obj = obj_by_uri[_uri]
             console.user_patterns.remove(obj.oid)  # remove from old position
             console.user_patterns.add(obj.properties)  # append to end
 
 
 class ConsoleGetAuditLogHandler(object):
+    """
+    Handler class for Console operation: Get Console Audit Log.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Get Console Audit Log."""
         console_uri = '/api/console'
         try:
@@ -498,9 +582,13 @@ class ConsoleGetAuditLogHandler(object):
 
 
 class ConsoleGetSecurityLogHandler(object):
+    """
+    Handler class for Console operation: Get Console Security Log.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Get Console Security Log."""
         console_uri = '/api/console'
         try:
@@ -513,9 +601,13 @@ class ConsoleGetSecurityLogHandler(object):
 
 
 class ConsoleListUnmanagedCpcsHandler(object):
+    """
+    Handler class for Console operation: List Unmanaged CPCs.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Unmanaged CPCs."""
         query_str = uri_parms[0]
         try:
@@ -535,9 +627,13 @@ class ConsoleListUnmanagedCpcsHandler(object):
 
 
 class UsersHandler(object):
+    """
+    Handler class for HTTP methods on set of User resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Users."""
         query_str = uri_parms[0]
         try:
@@ -557,6 +653,7 @@ class UsersHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create User."""
         assert wait_for_completion is True  # synchronous operation
         try:
@@ -573,11 +670,15 @@ class UsersHandler(object):
 
 class UserHandler(GenericGetPropertiesHandler,
                   GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single User resource.
+    """
 
     # TODO: Add post() for Update User that rejects name update
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete User."""
         try:
             user = hmc.lookup_by_uri(uri)
@@ -595,10 +696,14 @@ class UserHandler(GenericGetPropertiesHandler,
 
 
 class UserAddUserRoleHandler(object):
+    """
+    Handler class for operation: Add User Role to User.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Add User Role to User."""
         assert wait_for_completion is True  # synchronous operation
         user_oid = uri_parms[0]
@@ -625,10 +730,14 @@ class UserAddUserRoleHandler(object):
 
 
 class UserRemoveUserRoleHandler(object):
+    """
+    Handler class for operation: Remove User Role from User.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Remove User Role from User."""
         assert wait_for_completion is True  # synchronous operation
         user_oid = uri_parms[0]
@@ -659,9 +768,13 @@ class UserRemoveUserRoleHandler(object):
 
 
 class UserRolesHandler(object):
+    """
+    Handler class for HTTP methods on set of UserRole resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List User Roles."""
         query_str = uri_parms[0]
         try:
@@ -681,6 +794,7 @@ class UserRolesHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create User Role."""
         assert wait_for_completion is True  # synchronous operation
         try:
@@ -702,16 +816,23 @@ class UserRolesHandler(object):
 class UserRoleHandler(GenericGetPropertiesHandler,
                       GenericUpdatePropertiesHandler,
                       GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single UserRole resource.
+    """
     pass
     # TODO: Add post() for Update UserRole that rejects name update
     # TODO: Add delete() for Delete UserRole that rejects system-defined type
 
 
 class UserRoleAddPermissionHandler(object):
+    """
+    Handler class for operation: Add Permission to User Role.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Add Permission to User Role."""
         assert wait_for_completion is True  # synchronous operation
         user_role_oid = uri_parms[0]
@@ -740,10 +861,14 @@ class UserRoleAddPermissionHandler(object):
 
 
 class UserRoleRemovePermissionHandler(object):
+    """
+    Handler class for operation: Remove Permission from User Role.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Remove Permission from User Role."""
         assert wait_for_completion is True  # synchronous operation
         user_role_oid = uri_parms[0]
@@ -771,9 +896,13 @@ class UserRoleRemovePermissionHandler(object):
 
 
 class TasksHandler(object):
+    """
+    Handler class for HTTP methods on set of Task resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Tasks."""
         query_str = uri_parms[0]
         try:
@@ -792,13 +921,20 @@ class TasksHandler(object):
 
 
 class TaskHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on single Task resource.
+    """
     pass
 
 
 class UserPatternsHandler(object):
+    """
+    Handler class for HTTP methods on set of UserPattern resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List User Patterns."""
         query_str = uri_parms[0]
         try:
@@ -818,6 +954,7 @@ class UserPatternsHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create User Pattern."""
         assert wait_for_completion is True  # synchronous operation
         try:
@@ -834,13 +971,20 @@ class UserPatternsHandler(object):
 class UserPatternHandler(GenericGetPropertiesHandler,
                          GenericUpdatePropertiesHandler,
                          GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single UserPattern resource.
+    """
     pass
 
 
 class PasswordRulesHandler(object):
+    """
+    Handler class for HTTP methods on set of PasswordRule resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Password Rules."""
         query_str = uri_parms[0]
         try:
@@ -860,6 +1004,7 @@ class PasswordRulesHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create Password Rule."""
         assert wait_for_completion is True  # synchronous operation
         try:
@@ -874,14 +1019,21 @@ class PasswordRulesHandler(object):
 class PasswordRuleHandler(GenericGetPropertiesHandler,
                           GenericUpdatePropertiesHandler,
                           GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single PasswordRule resource.
+    """
     pass
     # TODO: Add post() for Update PasswordRule that rejects name update
 
 
 class LdapServerDefinitionsHandler(object):
+    """
+    Handler class for HTTP methods on set of LdapServerDefinition resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List LDAP Server Definitions."""
         query_str = uri_parms[0]
         try:
@@ -901,6 +1053,7 @@ class LdapServerDefinitionsHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create LDAP Server Definition."""
         assert wait_for_completion is True  # synchronous operation
         try:
@@ -915,14 +1068,21 @@ class LdapServerDefinitionsHandler(object):
 class LdapServerDefinitionHandler(GenericGetPropertiesHandler,
                                   GenericUpdatePropertiesHandler,
                                   GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single LdapServerDefinition resource.
+    """
     pass
     # TODO: Add post() for Update LdapServerDefinition that rejects name update
 
 
 class CpcsHandler(object):
+    """
+    Handler class for HTTP methods on set of Cpc resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List CPCs."""
         query_str = uri_parms[0]
         result_cpcs = []
@@ -938,14 +1098,21 @@ class CpcsHandler(object):
 
 class CpcHandler(GenericGetPropertiesHandler,
                  GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single Cpc resource.
+    """
     pass
 
 
 class CpcSetPowerSaveHandler(object):
+    """
+    Handler class for operation: Set CPC Power Save.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Set CPC Power Save (any CPC mode)."""
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
@@ -968,10 +1135,14 @@ class CpcSetPowerSaveHandler(object):
 
 
 class CpcSetPowerCappingHandler(object):
+    """
+    Handler class for operation: Set CPC Power Capping.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Set CPC Power Capping (any CPC mode)."""
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
@@ -1001,9 +1172,13 @@ class CpcSetPowerCappingHandler(object):
 
 
 class CpcGetEnergyManagementDataHandler(object):
+    """
+    Handler class for operation: Get CPC Energy Management Data.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Get CPC Energy Management Data (any CPC mode)."""
         cpc_oid = uri_parms[0]
         try:
@@ -1084,10 +1259,14 @@ class CpcGetEnergyManagementDataHandler(object):
 
 
 class CpcStartHandler(object):
+    """
+    Handler class for operation: Start CPC.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Start CPC (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
@@ -1101,10 +1280,14 @@ class CpcStartHandler(object):
 
 
 class CpcStopHandler(object):
+    """
+    Handler class for operation: Stop CPC.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Stop CPC (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
@@ -1118,10 +1301,14 @@ class CpcStopHandler(object):
 
 
 class CpcImportProfilesHandler(object):
+    """
+    Handler class for operation: Import Profiles.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Import Profiles (requires classic mode)."""
         assert wait_for_completion is True  # no async
         cpc_oid = uri_parms[0]
@@ -1136,10 +1323,14 @@ class CpcImportProfilesHandler(object):
 
 
 class CpcExportProfilesHandler(object):
+    """
+    Handler class for operation: Export Profiles.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Export Profiles (requires classic mode)."""
         assert wait_for_completion is True  # no async
         cpc_oid = uri_parms[0]
@@ -1154,10 +1345,14 @@ class CpcExportProfilesHandler(object):
 
 
 class CpcExportPortNamesListHandler(object):
+    """
+    Handler class for operation: Export WWPN List.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Export WWPN List (requires DPM mode)."""
         assert wait_for_completion is True  # this operation is always synchr.
         cpc_oid = uri_parms[0]
@@ -1202,10 +1397,14 @@ class CpcExportPortNamesListHandler(object):
 
 
 class MetricsContextsHandler(object):
+    """
+    Handler class for HTTP methods on set of MetricsContext resources.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create Metrics Context."""
         assert wait_for_completion is True  # always synchronous
         check_required_fields(method, uri, body,
@@ -1219,9 +1418,13 @@ class MetricsContextsHandler(object):
 
 
 class MetricsContextHandler(object):
+    """
+    Handler class for HTTP methods on single MetricsContext resource.
+    """
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete Metrics Context."""
         try:
             metrics_context = hmc.lookup_by_uri(uri)
@@ -1231,6 +1434,7 @@ class MetricsContextHandler(object):
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Get Metrics."""
         try:
             metrics_context = hmc.lookup_by_uri(uri)
@@ -1241,9 +1445,13 @@ class MetricsContextHandler(object):
 
 
 class AdaptersHandler(object):
+    """
+    Handler class for HTTP methods on set of Adapter resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Adapters of a CPC (empty result if not in DPM
         mode)."""
         cpc_oid = uri_parms[0]
@@ -1266,6 +1474,7 @@ class AdaptersHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create Hipersocket (requires DPM mode)."""
         assert wait_for_completion is True
         cpc_oid = uri_parms[0]
@@ -1294,9 +1503,13 @@ class AdaptersHandler(object):
 
 class AdapterHandler(GenericGetPropertiesHandler,
                      GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single Adapter resource.
+    """
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete Hipersocket (requires DPM mode)."""
         try:
             adapter = hmc.lookup_by_uri(uri)
@@ -1308,10 +1521,14 @@ class AdapterHandler(GenericGetPropertiesHandler,
 
 
 class AdapterChangeCryptoTypeHandler(object):
+    """
+    Handler class for operation: Change Crypto Type.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Change Crypto Type (requires DPM mode)."""
         assert wait_for_completion is True  # HMC operation is synchronous
         adapter_uri = uri.split('/operations/')[0]
@@ -1337,10 +1554,14 @@ class AdapterChangeCryptoTypeHandler(object):
 
 
 class AdapterChangeAdapterTypeHandler(object):
+    """
+    Handler class for operation: Change Adapter Type.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Change Adapter Type (requires DPM mode)."""
         assert wait_for_completion is True  # HMC operation is synchronous
         adapter_uri = uri.split('/operations/')[0]
@@ -1360,7 +1581,7 @@ class AdapterChangeAdapterTypeHandler(object):
             raise BadRequestError(
                 method, uri, reason=18,
                 message="The adapter type cannot be changed for adapter "
-                        "family: %s" % adapter_family)
+                "family: %s" % adapter_family)
 
         # Check the adapter status
         adapter_status = adapter.properties.get('status', None)
@@ -1368,14 +1589,14 @@ class AdapterChangeAdapterTypeHandler(object):
             raise BadRequestError(
                 method, uri, reason=18,
                 message="The adapter type cannot be changed for adapter "
-                        "status: %s" % adapter_status)
+                "status: %s" % adapter_status)
 
         # Check the validity of the new adapter type
         if new_adapter_type not in ['fc', 'fcp', 'not-configured']:
             raise BadRequestError(
                 method, uri, reason=8,
                 message="Invalid new value for 'type' field: %s" %
-                        new_adapter_type)
+                new_adapter_type)
 
         # Check that the new adapter type is not already set
         adapter_type = adapter.properties.get('type', None)
@@ -1383,7 +1604,7 @@ class AdapterChangeAdapterTypeHandler(object):
             raise BadRequestError(
                 method, uri, reason=8,
                 message="New value for 'type' field is already set: %s" %
-                        new_adapter_type)
+                new_adapter_type)
 
         # TODO: Reject if adapter is attached to a partition.
 
@@ -1393,18 +1614,28 @@ class AdapterChangeAdapterTypeHandler(object):
 
 class NetworkPortHandler(GenericGetPropertiesHandler,
                          GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single NetworkPort resource.
+    """
     pass
 
 
 class StoragePortHandler(GenericGetPropertiesHandler,
                          GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single StoragePort resource.
+    """
     pass
 
 
 class PartitionsHandler(object):
+    """
+    Handler class for HTTP methods on set of Partition resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Partitions of a CPC (empty result if not in DPM
         mode)."""
         cpc_oid = uri_parms[0]
@@ -1429,6 +1660,7 @@ class PartitionsHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create Partition (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
@@ -1451,12 +1683,16 @@ class PartitionsHandler(object):
 
 class PartitionHandler(GenericGetPropertiesHandler,
                        GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single Partition resource.
+    """
 
     # TODO: Add check_valid_cpc_status() in Update Partition Properties
     # TODO: Add check_partition_status(transitional) in Update Partition Props
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete Partition."""
         try:
             partition = hmc.lookup_by_uri(uri)
@@ -1473,10 +1709,14 @@ class PartitionHandler(GenericGetPropertiesHandler,
 
 
 class PartitionStartHandler(object):
+    """
+    Handler class for operation: Start Partition.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Start Partition (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1497,10 +1737,14 @@ class PartitionStartHandler(object):
 
 
 class PartitionStopHandler(object):
+    """
+    Handler class for operation: Stop Partition.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Stop Partition (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1525,10 +1769,14 @@ class PartitionStopHandler(object):
 
 
 class PartitionScsiDumpHandler(object):
+    """
+    Handler class for operation: Dump Partition.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Dump Partition (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1553,10 +1801,14 @@ class PartitionScsiDumpHandler(object):
 
 
 class PartitionPswRestartHandler(object):
+    """
+    Handler class for operation: Perform PSW Restart.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Perform PSW Restart (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1577,10 +1829,14 @@ class PartitionPswRestartHandler(object):
 
 
 class PartitionMountIsoImageHandler(object):
+    """
+    Handler class for operation: Mount ISO Image.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Mount ISO Image (requires DPM mode)."""
         assert wait_for_completion is True  # synchronous operation
         partition_oid = uri_parms[0]
@@ -1617,11 +1873,15 @@ class PartitionMountIsoImageHandler(object):
 
 
 class PartitionUnmountIsoImageHandler(object):
+    """
+    Handler class for operation: Unmount ISO Image.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
-        """Operation: Perform PSW Restart (requires DPM mode)."""
+        # pylint: disable=unused-argument
+        """Operation: Unmount ISO Image (requires DPM mode)."""
         assert wait_for_completion is True  # synchronous operation
         partition_oid = uri_parms[0]
         partition_uri = '/api/partitions/' + partition_oid
@@ -1666,10 +1926,14 @@ def ensure_crypto_config(partition):
 
 
 class PartitionIncreaseCryptoConfigHandler(object):
+    """
+    Handler class for operation: Increase Crypto Configuration.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Increase Crypto Configuration (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1694,19 +1958,23 @@ class PartitionIncreaseCryptoConfigHandler(object):
         # so we assume that the input is fine (e.g. no invalid adapters) and
         # we just add it.
 
-        for uri in add_adapter_uris:
-            if uri not in adapter_uris:
-                adapter_uris.append(uri)
+        for _uri in add_adapter_uris:
+            if _uri not in adapter_uris:
+                adapter_uris.append(_uri)
         for dc in add_domain_configs:
             if dc not in domain_configs:
                 domain_configs.append(dc)
 
 
 class PartitionDecreaseCryptoConfigHandler(object):
+    """
+    Handler class for operation: Decrease Crypto Configuration.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Decrease Crypto Configuration (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1731,9 +1999,9 @@ class PartitionDecreaseCryptoConfigHandler(object):
         # so we assume that the input is fine (e.g. no invalid adapters) and
         # we just remove it.
 
-        for uri in remove_adapter_uris:
-            if uri in adapter_uris:
-                adapter_uris.remove(uri)
+        for _uri in remove_adapter_uris:
+            if _uri in adapter_uris:
+                adapter_uris.remove(_uri)
         for remove_di in remove_domain_indexes:
             for i, dc in enumerate(domain_configs):
                 if dc['domain-index'] == remove_di:
@@ -1741,10 +2009,14 @@ class PartitionDecreaseCryptoConfigHandler(object):
 
 
 class PartitionChangeCryptoConfigHandler(object):
+    """
+    Handler class for operation: Change Crypto Configuration.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Change Crypto Configuration (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1761,7 +2033,7 @@ class PartitionChangeCryptoConfigHandler(object):
         check_required_fields(method, uri, body,
                               ['domain-index', 'access-mode'])
 
-        adapter_uris, domain_configs = ensure_crypto_config(partition)
+        _, domain_configs = ensure_crypto_config(partition)
 
         change_domain_index = body['domain-index']
         change_access_mode = body['access-mode']
@@ -1770,16 +2042,20 @@ class PartitionChangeCryptoConfigHandler(object):
         # so we assume that the input is fine (e.g. no invalid domain indexes)
         # and we just change it.
 
-        for i, dc in enumerate(domain_configs):
+        for dc in domain_configs:
             if dc['domain-index'] == change_domain_index:
                 dc['access-mode'] = change_access_mode
 
 
 class HbasHandler(object):
+    """
+    Handler class for HTTP methods on set of Hba resources.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create HBA (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_uri = re.sub('/hbas$', '', uri)
@@ -1820,12 +2096,16 @@ class HbasHandler(object):
 
 class HbaHandler(GenericGetPropertiesHandler,
                  GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single Hba resource.
+    """
 
     # TODO: Add check_valid_cpc_status() in Update HBA Properties
     # TODO: Add check_partition_status(transitional) in Update HBA Properties
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete HBA (requires DPM mode)."""
         try:
             hba = hmc.lookup_by_uri(uri)
@@ -1842,10 +2122,14 @@ class HbaHandler(GenericGetPropertiesHandler,
 
 
 class HbaReassignPortHandler(object):
+    """
+    Handler class for operation: Reassign Storage Adapter Port.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Reassign Storage Adapter Port (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_oid = uri_parms[0]
@@ -1870,10 +2154,14 @@ class HbaReassignPortHandler(object):
 
 
 class NicsHandler(object):
+    """
+    Handler class for HTTP methods on set of Nic resources.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create NIC (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_uri = re.sub('/nics$', '', uri)
@@ -1920,10 +2208,10 @@ class NicsHandler(object):
             raise BadRequestError(
                 method, uri, reason=5,
                 message="The input properties for creating a NIC {!r} in "
-                        "partition {!r} must specify either the "
-                        "'network-adapter-port-uri' or the "
-                        "'virtual-switch-uri' property.".
-                        format(nic_name, partition.name))
+                "partition {!r} must specify either the "
+                "'network-adapter-port-uri' or the "
+                "'virtual-switch-uri' property.".
+                format(nic_name, partition.name))
 
         # We have ensured that the vswitch exists, so no InputError handling
         new_nic = partition.nics.add(body)
@@ -1933,12 +2221,16 @@ class NicsHandler(object):
 
 class NicHandler(GenericGetPropertiesHandler,
                  GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single Nic resource.
+    """
 
     # TODO: Add check_valid_cpc_status() in Update NIC Properties
     # TODO: Add check_partition_status(transitional) in Update NIC Properties
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete NIC (requires DPM mode)."""
         try:
             nic = hmc.lookup_by_uri(uri)
@@ -1955,10 +2247,14 @@ class NicHandler(GenericGetPropertiesHandler,
 
 
 class VirtualFunctionsHandler(object):
+    """
+    Handler class for HTTP methods on set of VirtualFunction resources.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create Virtual Function (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
         partition_uri = re.sub('/virtual-functions$', '', uri)
@@ -1979,12 +2275,16 @@ class VirtualFunctionsHandler(object):
 
 class VirtualFunctionHandler(GenericGetPropertiesHandler,
                              GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single VirtualFunction resource.
+    """
 
     # TODO: Add check_valid_cpc_status() in Update VF Properties
     # TODO: Add check_partition_status(transitional) in Update VF Properties
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: Delete Virtual Function (requires DPM mode)."""
         try:
             vf = hmc.lookup_by_uri(uri)
@@ -2001,9 +2301,13 @@ class VirtualFunctionHandler(GenericGetPropertiesHandler,
 
 
 class VirtualSwitchesHandler(object):
+    """
+    Handler class for HTTP methods on set of VirtualSwitch resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Virtual Switches of a CPC (empty result if not in
         DPM mode)."""
         cpc_oid = uri_parms[0]
@@ -2026,14 +2330,21 @@ class VirtualSwitchesHandler(object):
 
 class VirtualSwitchHandler(GenericGetPropertiesHandler,
                            GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single VirtualSwitch resource.
+    """
     pass
 
 
 class VirtualSwitchGetVnicsHandler(object):
+    """
+    Handler class for operation: Get Connected VNICs of a Virtual Switch.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Get Connected VNICs of a Virtual Switch
         (requires DPM mode)."""
         assert wait_for_completion is True  # async not supported yet
@@ -2051,9 +2362,13 @@ class VirtualSwitchGetVnicsHandler(object):
 
 
 class StorageGroupsHandler(object):
+    """
+    Handler class for HTTP methods on set of StorageGroup resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Storage Groups (always global but with filters)."""
         query_str = uri_parms[0]
         filter_args = parse_query_parms(method, uri, query_str)
@@ -2070,6 +2385,7 @@ class StorageGroupsHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Create Storage Group."""
         assert wait_for_completion is True  # async not supported yet
         check_required_fields(method, uri, body, ['name', 'cpc-uri', 'type'])
@@ -2116,14 +2432,21 @@ class StorageGroupsHandler(object):
 
 
 class StorageGroupHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on single StorageGroup resource.
+    """
     pass
 
 
 class StorageGroupModifyHandler(object):
+    """
+    Handler class for operation: Modify Storage Group Properties.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Modify Storage Group Properties."""
         assert wait_for_completion is True  # async not supported yet
         # The URI is a POST operation, so we need to construct the SG URI
@@ -2177,10 +2500,14 @@ class StorageGroupModifyHandler(object):
 
 
 class StorageGroupDeleteHandler(object):
+    """
+    Handler class for operation: Delete Storage Group.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Delete Storage Group."""
         assert wait_for_completion is True  # async not supported yet
         # The URI is a POST operation, so we need to construct the SG URI
@@ -2198,10 +2525,14 @@ class StorageGroupDeleteHandler(object):
 
 
 class StorageGroupRequestFulfillmentHandler(object):
+    """
+    Handler class for operation: Request Storage Group Fulfillment.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Request Storage Group Fulfillment."""
         assert wait_for_completion is True  # async not supported yet
         # The URI is a POST operation, so we need to construct the SG URI
@@ -2217,10 +2548,15 @@ class StorageGroupRequestFulfillmentHandler(object):
 
 
 class StorageGroupAddCandidatePortsHandler(object):
+    """
+    Handler class for operation: Add Candidate Adapter Ports to an FCP Storage
+    Group.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Add Candidate Adapter Ports to an FCP Storage Group."""
         assert wait_for_completion is True  # async not supported yet
         # The URI is a POST operation, so we need to construct the SG URI
@@ -2244,15 +2580,19 @@ class StorageGroupAddCandidatePortsHandler(object):
                                     "Adapter port is already in candidate "
                                     "list of storage group %s: %s" %
                                     (storage_group.name, ap_uri))
-            else:
-                candidate_adapter_port_uris.append(ap_uri)
+            candidate_adapter_port_uris.append(ap_uri)
 
 
 class StorageGroupRemoveCandidatePortsHandler(object):
+    """
+    Handler class for operation: Remove Candidate Adapter Ports from an FCP
+    Storage Group.
+    """
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Remove Candidate Adapter Ports from an FCP Storage
         Group."""
         assert wait_for_completion is True  # async not supported yet
@@ -2277,14 +2617,17 @@ class StorageGroupRemoveCandidatePortsHandler(object):
                                     "Adapter port is not in candidate "
                                     "list of storage group %s: %s" %
                                     (storage_group.name, ap_uri))
-            else:
-                candidate_adapter_port_uris.remove(ap_uri)
+            candidate_adapter_port_uris.remove(ap_uri)
 
 
 class LparsHandler(object):
+    """
+    Handler class for HTTP methods on set of Lpar resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Logical Partitions of CPC (empty result in DPM
         mode."""
         cpc_oid = uri_parms[0]
@@ -2307,6 +2650,9 @@ class LparsHandler(object):
 
 class LparHandler(GenericGetPropertiesHandler,
                   GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single Lpar resource.
+    """
     pass
 
 
@@ -2330,6 +2676,7 @@ class LparActivateHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Activate Logical Partition (requires classic mode)."""
         assert wait_for_completion is True  # async not supported yet
         lpar_oid = uri_parms[0]
@@ -2390,6 +2737,7 @@ class LparDeactivateHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Deactivate Logical Partition (requires classic mode)."""
         assert wait_for_completion is True  # async not supported yet
         lpar_oid = uri_parms[0]
@@ -2412,7 +2760,7 @@ class LparDeactivateHandler(object):
                               "because the LPAR is already deactivated "
                               "(and force was not specified).".
                               format(lpar.name))
-        elif status == 'operating' and not force:
+        if status == 'operating' and not force:
             raise ServerError(method, uri, reason=263,
                               message="LPAR {!r} could not be deactivated "
                               "because the LPAR is in status {} "
@@ -2442,6 +2790,7 @@ class LparLoadHandler(object):
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
+        # pylint: disable=unused-argument
         """Operation: Load Logical Partition (requires classic mode)."""
         assert wait_for_completion is True  # async not supported yet
         lpar_oid = uri_parms[0]
@@ -2463,7 +2812,7 @@ class LparLoadHandler(object):
                                 message="LPAR {!r} could not be loaded "
                                 "because the LPAR is in status {}.".
                                 format(lpar.name, status))
-        elif status == 'operating' and not force:
+        if status == 'operating' and not force:
             raise ServerError(method, uri, reason=263,
                               message="LPAR {!r} could not be loaded "
                               "because the LPAR is already loaded "
@@ -2506,9 +2855,13 @@ class LparLoadHandler(object):
 
 
 class ResetActProfilesHandler(object):
+    """
+    Handler class for HTTP methods on set of ResetActProfile resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Reset Activation Profiles (requires classic
         mode)."""
         cpc_oid = uri_parms[0]
@@ -2531,13 +2884,20 @@ class ResetActProfilesHandler(object):
 
 class ResetActProfileHandler(GenericGetPropertiesHandler,
                              GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single ResetActProfile resource.
+    """
     pass
 
 
 class ImageActProfilesHandler(object):
+    """
+    Handler class for HTTP methods on set of ImageActProfile resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Image Activation Profiles (requires classic
         mode)."""
         cpc_oid = uri_parms[0]
@@ -2560,13 +2920,20 @@ class ImageActProfilesHandler(object):
 
 class ImageActProfileHandler(GenericGetPropertiesHandler,
                              GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single ImageActProfile resource.
+    """
     pass
 
 
 class LoadActProfilesHandler(object):
+    """
+    Handler class for HTTP methods on set of LoadActProfile resources.
+    """
 
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
         """Operation: List Load Activation Profiles (requires classic mode)."""
         cpc_oid = uri_parms[0]
         query_str = uri_parms[1]
@@ -2588,6 +2955,9 @@ class LoadActProfilesHandler(object):
 
 class LoadActProfileHandler(GenericGetPropertiesHandler,
                             GenericUpdatePropertiesHandler):
+    """
+    Handler class for HTTP methods on single LoadActProfile resource.
+    """
     pass
 
 

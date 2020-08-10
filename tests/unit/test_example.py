@@ -18,12 +18,12 @@ Example unit test for a user of the zhmcclient package.
 
 from __future__ import absolute_import, print_function
 
-import requests.packages.urllib3
+from requests.packages import urllib3
 
 import zhmcclient
 import zhmcclient_mock
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 
 class TestMy(object):

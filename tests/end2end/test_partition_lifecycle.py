@@ -19,12 +19,12 @@ Function tests for partition lifecycle.
 from __future__ import absolute_import, print_function
 
 import pytest
-import requests.packages.urllib3
+from requests.packages import urllib3
 
 import zhmcclient
 from tests.common.utils import HmcCredentials, info, setup_cpc, setup_logging
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 
 class TestPartitionLifecycle(object):

@@ -91,11 +91,12 @@ class IdPool(object):
         """
         if not self._free:
             self._expand()
-        id = self._free.pop()
-        self._used.add(id)
-        return id
+        _id = self._free.pop()
+        self._used.add(_id)
+        return _id
 
     def free(self, id):
+        # pylint: disable=redefined-builtin
         """
         Free an ID value.
 
@@ -107,6 +108,7 @@ class IdPool(object):
         self._free_impl(id, fail_if_not_allocated=True)
 
     def free_if_allocated(self, id):
+        # pylint: disable=redefined-builtin
         """
         Free an ID value, if it is currently allocated.
 
@@ -115,6 +117,10 @@ class IdPool(object):
         self._free_impl(id, fail_if_not_allocated=False)
 
     def _free_impl(self, id, fail_if_not_allocated):
+        # pylint: disable=redefined-builtin
+        """
+        Implementation of free.
+        """
         if id in self._used:
             self._used.remove(id)
             self._free.add(id)

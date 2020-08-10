@@ -19,12 +19,12 @@ Function tests for storage groups and their child resources.
 from __future__ import absolute_import, print_function
 
 import pytest
-import requests.packages.urllib3
+from requests.packages import urllib3
 
 import zhmcclient
 from tests.common.utils import HmcCredentials, info, setup_cpc
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 
 @pytest.mark.skip('TODO: Enable and fix issues')

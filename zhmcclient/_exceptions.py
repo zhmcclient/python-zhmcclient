@@ -35,15 +35,6 @@ class Error(Exception):
     Derived from :exc:`~py:exceptions.Exception`.
     """
 
-    def __init__(self, *args):
-        # Parameters:
-        #   *args:
-        #     A list of input arguments for the exception object.
-        #     The derived classes define more specific parameters.
-        #     These input arguments will be available as tuple items in the
-        #     ``args`` instance variable of the exception object.
-        super(Error, self).__init__(*args)
-
     def str_def(self):
         """
         Interface definition for the corresponding method derived exception
@@ -59,6 +50,7 @@ class Error(Exception):
 
 
 class ConnectionError(Error):
+    # pylint: disable=redefined-builtin
     """
     This exception indicates a problem with the connection to the HMC, below
     the HTTP level. HTTP errors are indicated via :exc:`~zhmcclient.HTTPError`.
@@ -333,6 +325,7 @@ class RetriesExceeded(ConnectionError):
 
 
 class AuthError(Error):
+    # pylint: disable=abstract-method
     """
     This exception indicates erors related to authentication.
 
@@ -341,15 +334,7 @@ class AuthError(Error):
 
     Derived from :exc:`~zhmcclient.Error`.
     """
-
-    def __init__(self, *args):
-        # Parameters:
-        #   *args:
-        #     A list of input arguments for the exception object.
-        #     The derived classes define more specific parameters.
-        #     These input arguments will be available as tuple items in the
-        #     ``args`` instance variable of the exception object.
-        super(AuthError, self).__init__(*args)
+    pass
 
 
 class ClientAuthError(AuthError):
@@ -361,6 +346,7 @@ class ClientAuthError(AuthError):
     """
 
     def __init__(self, msg):
+        # pylint: disable=useless-super-delegation
         """
         Parameters:
 
@@ -440,6 +426,7 @@ class ServerAuthError(AuthError):
                       self.details.http_status, self.details.reason)
 
     def str_def(self):
+        # pylint: disable=line-too-long
         """
         :term:`string`: The exception as a string in a Python definition-style
         format, e.g. for parsing by scripts:
@@ -448,6 +435,7 @@ class ServerAuthError(AuthError):
 
             classname={}; request_method={}; request_uri={}; http_status={}; reason={}; message={};
         """  # noqa: E501
+        # pylint: enable=line-too-long
         return "classname={!r}; request_method={!r}; request_uri={!r}; " \
             "http_status={!r}; reason={!r}; message={!r};". \
             format(self.__class__.__name__, self.details.request_method,
@@ -790,6 +778,7 @@ class HTTPError(Error):
                       self.message, self.request_method, self.request_uri)
 
     def str_def(self):
+        # pylint: disable=line-too-long
         """
         :term:`string`: The exception as a string in a Python definition-style
         format, e.g. for parsing by scripts:
@@ -798,6 +787,7 @@ class HTTPError(Error):
 
             classname={}; request_method={}; request_uri={}; http_status={}; reason={}; message={};
         """  # noqa: E501
+        # pylint: enable=line-too-long
         return "classname={!r}; request_method={!r}; request_uri={!r}; " \
             "http_status={!r}; reason={!r}; message={!r};". \
             format(self.__class__.__name__, self.request_method,
@@ -938,6 +928,7 @@ class StatusTimeout(Error):
                    self.desired_statuses, self.status_timeout)
 
     def str_def(self):
+        # pylint: disable=line-too-long
         """
         :term:`string`: The exception as a string in a Python definition-style
         format, e.g. for parsing by scripts:
@@ -946,6 +937,7 @@ class StatusTimeout(Error):
 
             classname={}; actual_status={}; desired_statuses={}; status_timeout={}; message={};
         """  # noqa: E501
+        # pylint: enable=line-too-long
         return "classname={!r}; actual_status={!r}; desired_statuses={!r}; " \
             "status_timeout={!r}; message={!r};". \
             format(self.__class__.__name__, self.actual_status,
@@ -1049,6 +1041,7 @@ class NoUniqueMatch(Error):
                       self.resource_uris)
 
     def str_def(self):
+        # pylint: disable=line-too-long
         """
         :term:`string`: The exception as a string in a Python definition-style
         format, e.g. for parsing by scripts:
@@ -1057,6 +1050,7 @@ class NoUniqueMatch(Error):
 
             classname={}; resource_classname={}; filter_args={}; parent_classname={}; manager_name={}; message={}; resource_uris={}
         """  # noqa: E501
+        # pylint: enable=line-too-long
         parent = self.manager.parent
         return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
                "parent_classname={!r}; parent_name={!r}; message={!r}; " \
@@ -1145,6 +1139,7 @@ class NotFound(Error):
                       parent.name if parent else None)
 
     def str_def(self):
+        # pylint: disable=line-too-long
         """
         :term:`string`: The exception as a string in a Python definition-style
         format, e.g. for parsing by scripts:
@@ -1153,6 +1148,7 @@ class NotFound(Error):
 
             classname={}; resource_classname={}; filter_args={}; parent_classname={}; parent_name={}; message={};
         """  # noqa: E501
+        # pylint: enable=line-too-long
         parent = self.manager.parent
         return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
                "parent_classname={!r}; parent_name={!r}; message={!r};". \

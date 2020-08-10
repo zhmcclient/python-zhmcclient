@@ -24,13 +24,14 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
-import six
 import re
 import copy
+import six
 
-from ._idpool import IdPool
 from zhmcclient._utils import repr_dict, repr_manager, repr_list, \
     timestamp_from_datetime
+
+from ._idpool import IdPool
 
 __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedConsoleManager', 'FakedConsole',
@@ -66,6 +67,7 @@ class InputError(Exception):
     """
 
     def __init__(self, message):
+        # pylint: disable=useless-super-delegation
         super(InputError, self).__init__(message)
 
 
@@ -294,6 +296,9 @@ class FakedBaseResource(object):
             self._process_child_list(self, child_attr, child_list)
 
     def _process_child_list(self, parent_resource, child_attr, child_list):
+        """
+        Add properties of child resources.
+        """
         child_manager = getattr(parent_resource, child_attr, None)
         if child_manager is None:
             raise InputError("Invalid child resource type specified in "
@@ -514,6 +519,9 @@ class FakedBaseManager(object):
         return self._class_value
 
     def _new_oid(self):
+        """
+        Return a new OID.
+        """
         new_oid = self.next_oid
         self.next_oid += 1
         return str(new_oid)
@@ -627,7 +635,7 @@ class FakedHmc(FakedBaseResource):
         # Flat list of all Faked{Resource} objs in this faked HMC, by URI:
         self.all_resources = {}
 
-        self.enable()
+        self._enabled = True
 
     def __repr__(self):
         """
@@ -728,6 +736,7 @@ class FakedConsoleManager(FakedBaseManager):
         return self._console
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Console resource.
 
@@ -900,6 +909,7 @@ class FakedUserManager(FakedBaseManager):
             class_value='user')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked User resource.
 
@@ -958,6 +968,7 @@ class FakedUserRoleManager(FakedBaseManager):
             class_value='user-role')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked User Role resource.
 
@@ -1017,6 +1028,7 @@ class FakedUserPatternManager(FakedBaseManager):
             class_value='user-pattern')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked User Pattern resource.
 
@@ -1076,6 +1088,7 @@ class FakedPasswordRuleManager(FakedBaseManager):
             class_value='password-rule')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Password Rule resource.
 
@@ -1135,6 +1148,7 @@ class FakedTaskManager(FakedBaseManager):
             class_value='task')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Task resource.
 
@@ -1193,6 +1207,7 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
             class_value='ldap-server-definition')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked LDAP Server Definition resource.
 
@@ -1255,6 +1270,7 @@ class FakedActivationProfileManager(FakedBaseManager):
         self._profile_type = profile_type
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Activation Profile resource.
 
@@ -1322,6 +1338,7 @@ class FakedAdapterManager(FakedBaseManager):
             class_value='adapter')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Adapter resource.
 
@@ -1491,6 +1508,7 @@ class FakedCpcManager(FakedBaseManager):
             class_value='cpc')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked CPC resource.
 
@@ -1679,6 +1697,7 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
             class_value=None)
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked unmanaged CPC resource.
 
@@ -1872,6 +1891,7 @@ class FakedLparManager(FakedBaseManager):
             class_value='logical-partition')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked LPAR resource.
 
@@ -2061,6 +2081,7 @@ class FakedPartitionManager(FakedBaseManager):
             class_value='partition')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Partition resource.
 
@@ -2485,6 +2506,7 @@ class FakedVirtualSwitchManager(FakedBaseManager):
             class_value='virtual-switch')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Virtual Switch resource.
 
@@ -2548,6 +2570,7 @@ class FakedStorageGroupManager(FakedBaseManager):
             class_value='storage-group')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked StorageGroup resource.
 
@@ -2648,6 +2671,7 @@ class FakedStorageVolumeManager(FakedBaseManager):
             class_value='storage-volume')
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked StorageVolume resource.
 
@@ -2795,6 +2819,7 @@ class FakedMetricsContextManager(FakedBaseManager):
         self._metric_values = {}  # by group name
 
     def add(self, properties):
+        # pylint: disable=useless-super-delegation
         """
         Add a faked Metrics Context resource.
 
@@ -3096,7 +3121,7 @@ class FakedMetricsContext(FakedBaseResource):
                 resp_lines.append(
                     str(timestamp_from_datetime(mo_val.timestamp)))
                 v_list = []
-                for n, v in mo_val.values:
+                for _, v in mo_val.values:
                     if isinstance(v, six.string_types):
                         v_str = '"{}"'.format(v)
                     else:
@@ -3111,6 +3136,7 @@ class FakedMetricsContext(FakedBaseResource):
 
 
 class FakedMetricGroupDefinition(object):
+    # pylint: disable=too-few-public-methods
     """
     A faked metric group definition (of one metric group).
 
@@ -3165,6 +3191,7 @@ class FakedMetricGroupDefinition(object):
 
 
 class FakedMetricObjectValues(object):
+    # pylint: disable=too-few-public-methods
     """
     Faked metric values for one resource and one metric group.
 

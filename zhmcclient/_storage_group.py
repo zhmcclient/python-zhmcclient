@@ -88,6 +88,7 @@ from ._resource import BaseResource
 from ._storage_volume import StorageVolumeManager
 from ._virtual_storage_resource import VirtualStorageResourceManager
 from ._logging import logged_api_call
+from ._utils import append_query_parms
 
 __all__ = ['StorageGroupManager', 'StorageGroup']
 
@@ -408,9 +409,9 @@ class StorageGroup(BaseResource):
 
         query_parms = []
         if name is not None:
-            self.manager._append_query_parms(query_parms, 'name', name)
+            append_query_parms(query_parms, 'name', name)
         if status is not None:
-            self.manager._append_query_parms(query_parms, 'status', status)
+            append_query_parms(query_parms, 'status', status)
         query_parms_str = '&'.join(query_parms)
         if query_parms_str:
             query_parms_str = '?{}'.format(query_parms_str)
@@ -492,6 +493,7 @@ class StorageGroup(BaseResource):
         self.manager.session.post(
             uri=self.uri + '/operations/delete', body=body)
 
+        # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
             self.properties.get(self.manager._name_prop, None))
 
@@ -529,6 +531,7 @@ class StorageGroup(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         uri = '{}/operations/modify'.format(self.uri)
         self.manager.session.post(uri, body=properties)
         is_rename = self.manager._name_prop in properties

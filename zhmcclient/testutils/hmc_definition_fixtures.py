@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Pytest fixtures for mocked HMCs.
+"""
+
+from __future__ import absolute_import
+
 import os
 import errno
 import logging
@@ -20,8 +26,8 @@ import yaml
 import yamlloader
 import zhmcclient
 import zhmcclient_mock
-from zhmcclient.testutils.hmc_definitions import HMCDefinitionFile, \
-    HMCDefinition
+
+from .hmc_definitions import HMCDefinitionFile, HMCDefinition
 
 # Nicknames in HMC definition file
 TESTHMCDIR = os.getenv('TESTHMCDIR', 'tests')
@@ -79,6 +85,7 @@ def hmc_definition(request):
     scope='module'
 )
 def hmc_session(request, hmc_definition):
+    # pylint: disable=redefined-outer-name,unused-argument
     """
     Pytest fixture representing the set of `zhmcclient.Session` objects to use
     for the end2end tests.
@@ -118,8 +125,7 @@ def hmc_session(request, hmc_definition):
                 raise FakedHMCFileError(
                     "The faked HMC file {0!r} was not found".
                     format(filepath))
-            else:
-                raise
+            raise
 
         client = data['faked_client']
         session = zhmcclient_mock.FakedSession(

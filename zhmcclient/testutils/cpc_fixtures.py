@@ -12,9 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Pytest fixtures for CPCs.
+"""
+
+from __future__ import absolute_import
+
 import pytest
 import zhmcclient
-from zhmcclient.testutils.hmc_definition_fixtures import hmc_session  # noqa: F401, E501
+
+# pylint: disable=unused-import
+from .hmc_definition_fixtures import hmc_session  # noqa: F401, E501
 
 
 def fixtureid_cpc(fixture_value):
@@ -35,6 +43,7 @@ def fixtureid_cpc(fixture_value):
     ids=fixtureid_cpc
 )
 def one_cpc(request, hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
     """
     Fixture representing a single, arbitrary CPC managed by the HMC.
 
@@ -53,6 +62,7 @@ def one_cpc(request, hmc_session):  # noqa: F811
     ids=fixtureid_cpc
 )
 def all_cpcs(request, hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
     """
     Fixture representing the set of all CPCs managed by the HMC.
 

@@ -23,7 +23,7 @@ from __future__ import absolute_import
 
 from ._version import *       # noqa: F401
 from ._constants import *     # noqa: F401
-from ._exceptions import *    # noqa: F401
+from ._exceptions import *    # noqa: F401 pylint: disable=redefined-builtin
 from ._manager import *       # noqa: F401
 from ._resource import *      # noqa: F401
 from ._logging import *       # noqa: F401

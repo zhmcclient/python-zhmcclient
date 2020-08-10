@@ -455,7 +455,7 @@ class Cpc(BaseResource):
         else:
             raise ValueError("Firmware feature %s is not available on CPC %s" %
                              (feature_name, self.name))
-        return feature['state']
+        return feature['state']  # pylint: disable=undefined-loop-variable
 
     @logged_api_call
     def feature_info(self):
@@ -518,6 +518,7 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.post(self.uri, body=properties)
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.

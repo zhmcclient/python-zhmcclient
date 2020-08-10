@@ -33,11 +33,7 @@ import sys
 import platform
 import ctypes
 
-try:
-    from ._version import __version__ as zhmcclient_version
-except Exception as exc:
-    print("Error: zhmcclient.__version__ cannot be imported: {}".format(exc))
-    sys.exit(1)
+import zhmcclient
 
 __all__ = ['as_dict']
 
@@ -84,6 +80,7 @@ def as_dict():
     if impl == 'CPython':
         impl_version = version_string(sys.version_info)
     elif impl == 'PyPy':
+        # pylint: disable=no-member
         impl_version = version_string(sys.pypy_version_info)
     elif impl == 'Jython':
         impl_version = version_string(sys.version_info)  # TODO: Verify
@@ -95,7 +92,8 @@ def as_dict():
 
     debug_info['python_version'] = platform.python_version()
 
-    debug_info['zhmcclient_version'] = zhmcclient_version
+    # pylint: disable=no-member
+    debug_info['zhmcclient_version'] = zhmcclient.__version__
 
     return debug_info
 
@@ -107,12 +105,14 @@ def main():
 
     d = as_dict()
 
+    # pylint: disable=invalid-format-index
     print("Operating system: {d[os_name]} {d[os_version]} "
           "on {d[cpu_arch]}".format(d=d))
     print("Python implementation: {d[impl]} {d[impl_version]} "
           "({d[bit_size]} bit, {d[unicode_size]} unicode)".format(d=d))
     print("Python version: {d[python_version]}".format(d=d))
     print("zhmcclient version: {d[zhmcclient_version]}".format(d=d))
+    # pylint: enable=invalid-format-index
 
 
 if __name__ == '__main__':

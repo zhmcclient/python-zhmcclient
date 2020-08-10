@@ -291,6 +291,7 @@ class StorageGroupTemplate(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         self.manager.session.delete(uri=self.uri)
         self.manager._name_uri_cache.delete(
             self.properties.get(self.manager._name_prop, None))
@@ -330,6 +331,7 @@ class StorageGroupTemplate(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        # pylint: disable=protected-access
         uri = '{}/operations/modify'.format(self.uri)
         self.manager.session.post(uri, body=properties)
         is_rename = self.manager._name_prop in properties

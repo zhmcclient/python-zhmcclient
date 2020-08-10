@@ -23,18 +23,19 @@ import json
 import time
 import re
 import collections
-import six
 from copy import copy
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+import six
 import requests
 from requests.packages import urllib3
 
 from ._exceptions import HTTPError, ServerAuthError, ClientAuthError, \
-    ConnectionError, ParseError, ConnectTimeout, ReadTimeout, \
-    RetriesExceeded, OperationTimeout
+    ParseError, ConnectTimeout, ReadTimeout, RetriesExceeded, OperationTimeout
+from ._exceptions import ConnectionError  # pylint: disable=redefined-builtin
+
 from ._timestats import TimeStatsKeeper
 from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
@@ -66,15 +67,14 @@ def _handle_request_exc(exc, retry_timeout_config):
         raise ConnectTimeout(_request_exc_message(exc), exc,
                              retry_timeout_config.connect_timeout,
                              retry_timeout_config.connect_retries)
-    elif isinstance(exc, requests.exceptions.ReadTimeout):
+    if isinstance(exc, requests.exceptions.ReadTimeout):
         raise ReadTimeout(_request_exc_message(exc), exc,
                           retry_timeout_config.read_timeout,
                           retry_timeout_config.read_retries)
-    elif isinstance(exc, requests.exceptions.RetryError):
+    if isinstance(exc, requests.exceptions.RetryError):
         raise RetriesExceeded(_request_exc_message(exc), exc,
                               retry_timeout_config.connect_retries)
-    else:
-        raise ConnectionError(_request_exc_message(exc), exc)
+    raise ConnectionError(_request_exc_message(exc), exc)
 
 
 def _request_exc_message(exc):
@@ -115,6 +115,7 @@ def _request_exc_message(exc):
 
 
 class RetryTimeoutConfig(object):
+    # pylint: disable=too-few-public-methods
     """
     A configuration setting that specifies verious retry counts and timeout
     durations.
@@ -618,7 +619,7 @@ class Session(object):
         """
         Return a new `requests.Session` object.
         """
-        retry = requests.packages.urllib3.Retry(
+        retry = urllib3.Retry(
             total=None,
             connect=retry_timeout_config.connect_retries,
             read=retry_timeout_config.read_retries,
@@ -773,24 +774,22 @@ class Session(object):
 
         if result.status_code == 200:
             return _result_object(result)
-        elif result.status_code == 403:
+        if result.status_code == 403:
             result_object = _result_object(result)
             reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
                 self._do_logon()
                 return self.get(uri, logon_required)
-            elif reason == 1:
+            if reason == 1:
                 # Login user's authentication is fine; this is an authorization
                 # issue, so we don't raise ServerAuthError.
                 raise HTTPError(result_object)
-            else:
-                msg = result_object.get('message', None)
-                raise ServerAuthError("HTTP authentication failed: {}".
-                                      format(msg), HTTPError(result_object))
-        else:
-            result_object = _result_object(result)
-            raise HTTPError(result_object)
+            msg = result_object.get('message', None)
+            raise ServerAuthError("HTTP authentication failed: {}".
+                                  format(msg), HTTPError(result_object))
+        result_object = _result_object(result)
+        raise HTTPError(result_object)
 
     @logged_api_call
     def post(self, uri, body=None, logon_required=True,
@@ -958,44 +957,48 @@ class Session(object):
 
             if result.status_code in (200, 201):
                 return _result_object(result)
-            elif result.status_code == 204:
+
+            if result.status_code == 204:
                 # No content
                 return None
-            elif result.status_code == 202:
+
+            if result.status_code == 202:
                 if result.content == '':
                     # Some operations (e.g. "Restart Console",
                     # "Shutdown Console" or "Cancel Job") return 202
                     # with no response content.
                     return None
-                else:
-                    # This is the most common case to return 202: An
-                    # asynchronous job has been started.
-                    result_object = _result_object(result)
-                    job_uri = result_object['job-uri']
-                    job = Job(self, job_uri, 'POST', uri)
-                    if wait_for_completion:
-                        return job.wait_for_completion(operation_timeout)
-                    else:
-                        return job
-            elif result.status_code == 403:
+
+                # This is the most common case to return 202: An
+                # asynchronous job has been started.
+                result_object = _result_object(result)
+                job_uri = result_object['job-uri']
+                job = Job(self, job_uri, 'POST', uri)
+                if wait_for_completion:
+                    return job.wait_for_completion(operation_timeout)
+                return job
+
+            if result.status_code == 403:
                 result_object = _result_object(result)
                 reason = result_object.get('reason', None)
                 if reason == 5:
                     # API session token expired: re-logon and retry
                     self._do_logon()
                     return self.post(uri, body, logon_required)
-                elif reason == 1:
+
+                if reason == 1:
                     # Login user's authentication is fine; this is an
                     # authorization issue, so we don't raise ServerAuthError.
                     raise HTTPError(result_object)
-                else:
-                    msg = result_object.get('message', None)
-                    raise ServerAuthError("HTTP authentication failed: {}".
-                                          format(msg),
-                                          HTTPError(result_object))
-            else:
-                result_object = _result_object(result)
-                raise HTTPError(result_object)
+
+                msg = result_object.get('message', None)
+                raise ServerAuthError("HTTP authentication failed: {}".
+                                      format(msg),
+                                      HTTPError(result_object))
+
+            result_object = _result_object(result)
+            raise HTTPError(result_object)
+
         finally:
             if wait_for_completion:
                 stats_total.end()
@@ -1056,7 +1059,8 @@ class Session(object):
 
         if result.status_code in (200, 204):
             return
-        elif result.status_code == 403:
+
+        if result.status_code == 403:
             result_object = _result_object(result)
             reason = result_object.get('reason', None)
             if reason == 5:
@@ -1064,17 +1068,18 @@ class Session(object):
                 self._do_logon()
                 self.delete(uri, logon_required)
                 return
-            elif reason == 1:
+
+            if reason == 1:
                 # Login user's authentication is fine; this is an authorization
                 # issue, so we don't raise ServerAuthError.
                 raise HTTPError(result_object)
-            else:
-                msg = result_object.get('message', None)
-                raise ServerAuthError("HTTP authentication failed: {}".
-                                      format(msg), HTTPError(result_object))
-        else:
-            result_object = _result_object(result)
-            raise HTTPError(result_object)
+
+            msg = result_object.get('message', None)
+            raise ServerAuthError("HTTP authentication failed: {}".
+                                  format(msg), HTTPError(result_object))
+
+        result_object = _result_object(result)
+        raise HTTPError(result_object)
 
     @logged_api_call
     def get_notification_topics(self):
@@ -1364,7 +1369,8 @@ def _result_object(result):
                        result.request.method, result.request.url,
                        result.status_code, content_type, result.encoding,
                        _text_repr(result.text, 1000)))
-    elif content_type.startswith('text/html'):
+
+    if content_type.startswith('text/html'):
         # We are in some error situation. The HMC returns HTML content
         # for some 5xx status codes. We try to deal with it somehow,
         # but we are not going as far as real HTML parsing.
@@ -1414,18 +1420,18 @@ def _result_object(result):
             'request-method': result.request.method,
         }
         return result_obj
-    elif content_type.startswith('application/vnd.ibm-z-zmanager-metrics'):
+
+    if content_type.startswith('application/vnd.ibm-z-zmanager-metrics'):
         content_bytes = result.content
         assert isinstance(content_bytes, six.binary_type)
         return content_bytes.decode('utf-8')  # as a unicode object
-    else:
-        raise ParseError(
-            "Unknown content type in HTTP response: {}. "
-            "HTTP request: {} {}. "
-            "Response status {}. "
-            "Response content-type: {!r}. "
-            "Content (max.1000, decoded using {}): {}".
-            format(content_type,
-                   result.request.method, result.request.url,
-                   result.status_code, content_type, result.encoding,
-                   _text_repr(result.text, 1000)))
+
+    raise ParseError(
+        "Unknown content type in HTTP response: {}. "
+        "HTTP request: {} {}. "
+        "Response status {}. "
+        "Content (max.1000, decoded using {}): {}".
+        format(content_type,
+               result.request.method, result.request.url,
+               result.status_code, result.encoding,
+               _text_repr(result.text, 1000)))

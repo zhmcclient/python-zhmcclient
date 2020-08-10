@@ -193,6 +193,9 @@ flake8_rc_file := .flake8
 # PyLint config file
 pylint_rc_file := .pylintrc
 
+# PyLint additional options
+pylint_opts := --disable=fixme
+
 # Source files for check (with PyLint and Flake8)
 check_py_files := \
     setup.py \
@@ -381,7 +384,7 @@ pylint: pylint_$(pymn).done
 install: install_$(pymn).done
 	@echo "Makefile: $@ done."
 
-install_$(pymn).done: pip_upgrade_$(pymn).done requirements.txt setup.py $(package_py_files)
+install_$(pymn).done: pip_upgrade_$(pymn).done requirements.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PIP_CMD) install $(pip_level_opts) $(pip_level_opts_new) -r requirements.txt
@@ -446,12 +449,16 @@ endif
 
 # TODO: Once PyLint has no more errors, remove the dash "-"
 pylint_$(pymn).done: develop_$(pymn).done Makefile $(pylint_rc_file) $(check_py_files)
-ifeq ($(python_m_version), 2)
-	-$(call RM_FUNC,$@)
-	-pylint --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
-	echo "done" >$@
+ifeq ($(python_m_version),2)
+	@echo "Makefile: Warning: Skipping Pylint on Python $(python_version)" >&2
 else
-	@echo "Info: PyLint requires Python 2; skipping this step on Python $(python_m_version)"
+ifeq ($(python_mn_version),3.4)
+	@echo "Makefile: Warning: Skipping Pylint on Python $(python_version)" >&2
+else
+	-$(call RM_FUNC,$@)
+	-pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
+	echo "done" >$@
+endif
 endif
 
 flake8_$(pymn).done: develop_$(pymn).done Makefile $(flake8_rc_file) $(check_py_files)

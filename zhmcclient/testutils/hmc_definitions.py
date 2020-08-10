@@ -53,6 +53,9 @@ class HMCDefinitionFile(object):
         self._load_file()
 
     def _load_file(self):
+        """
+        Load the HMC definition file.
+        """
         try:
             with open(self._filepath) as fp:
                 try:
@@ -69,45 +72,52 @@ class HMCDefinitionFile(object):
                     "The HMC definition file {0!r} was not found; "
                     "copy it from {1!r}".
                     format(self._filepath, EXAMPLE_HMC_FILE))
-            else:
-                raise
-        else:
-            if data is None:
-                raise HMCDefinitionFileError(
-                    "The HMC definition file {0!r} is empty".
-                    format(self._filepath))
-            if not isinstance(data, OrderedDict):
-                raise HMCDefinitionFileError(
-                    "The HMC definition file {0!r} must contain a "
-                    "dictionary at the top level, but contains {1}".
-                    format(self._filepath, type(data)))
+            raise
 
-            if 'hmcs' not in data:
-                raise HMCDefinitionFileError(
-                    "The HMC definition file {0!r} does not define a "
-                    "'hmcs' item, but items: {1}".
-                    format(self._filepath, data.keys()))
-            hmcs = data.get('hmcs')
-            if not isinstance(hmcs, OrderedDict):
-                raise HMCDefinitionFileError(
-                    "'hmcs' in HMC definition file {0!r} "
-                    "must be a dictionary, but is a {1}".
-                    format(self._filepath, type(hmcs)))
-            self._hmcs.update(hmcs)
+        if data is None:
+            raise HMCDefinitionFileError(
+                "The HMC definition file {0!r} is empty".
+                format(self._filepath))
 
-            hmc_groups = data.get('hmc_groups', OrderedDict())
-            if not isinstance(hmc_groups, OrderedDict):
-                raise HMCDefinitionFileError(
-                    "'hmc_groups' in HMC definition file {0!r} "
-                    "must be a dictionary, but is a {1}".
-                    format(self._filepath, type(hmc_groups)))
-            for hmc_nick in hmc_groups:
-                visited_hmc_nicks = list()
-                self._check_hmc_group(hmc_nick, hmc_groups, hmcs,
-                                      visited_hmc_nicks)
-            self._hmc_groups.update(hmc_groups)
+        if not isinstance(data, OrderedDict):
+            raise HMCDefinitionFileError(
+                "The HMC definition file {0!r} must contain a "
+                "dictionary at the top level, but contains {1}".
+                format(self._filepath, type(data)))
+
+        if 'hmcs' not in data:
+            raise HMCDefinitionFileError(
+                "The HMC definition file {0!r} does not define a "
+                "'hmcs' item, but items: {1}".
+                format(self._filepath, data.keys()))
+
+        hmcs = data.get('hmcs')
+        if not isinstance(hmcs, OrderedDict):
+            raise HMCDefinitionFileError(
+                "'hmcs' in HMC definition file {0!r} "
+                "must be a dictionary, but is a {1}".
+                format(self._filepath, type(hmcs)))
+
+        self._hmcs.update(hmcs)
+
+        hmc_groups = data.get('hmc_groups', OrderedDict())
+        if not isinstance(hmc_groups, OrderedDict):
+            raise HMCDefinitionFileError(
+                "'hmc_groups' in HMC definition file {0!r} "
+                "must be a dictionary, but is a {1}".
+                format(self._filepath, type(hmc_groups)))
+
+        for hmc_nick in hmc_groups:
+            visited_hmc_nicks = list()
+            self._check_hmc_group(hmc_nick, hmc_groups, hmcs,
+                                  visited_hmc_nicks)
+
+        self._hmc_groups.update(hmc_groups)
 
     def _check_hmc_group(self, hmc_nick, hmc_groups, hmcs, visited_hmc_nicks):
+        """
+        Check the HMC group specified in hmc_nick.
+        """
         visited_hmc_nicks.append(hmc_nick)
         hmc_group = hmc_groups[hmc_nick]
         if not isinstance(hmc_group, list):
@@ -164,7 +174,8 @@ class HMCDefinitionFile(object):
         """
         if nickname in self._hmcs:
             return [self.get_hmc(nickname)]
-        elif nickname in self._hmc_groups:
+
+        if nickname in self._hmc_groups:
             hmc_list = list()  # of HMCDefinition objects
             hmc_nick_list = list()  # of HMC nicknames
             for item_nick in self._hmc_groups[nickname]:
@@ -173,17 +184,29 @@ class HMCDefinitionFile(object):
                         hmc_list.append(hd)
                         hmc_nick_list.append(hd.nickname)
             return hmc_list
-        else:
-            raise ValueError(
-                "HMC group or HMC with nickname {0!r} not found in "
-                "HMC definition file {1!r}".
-                format(nickname, self._filepath))
+
+        raise ValueError(
+            "HMC group or HMC with nickname {0!r} not found in "
+            "HMC definition file {1!r}".
+            format(nickname, self._filepath))
 
     def list_all_hmcs(self):
         """
         Return a list of all HMCs in the HMC definition file.
         """
         return [self.get_hmc(nickname) for nickname in self._hmcs]
+
+
+def _required_attr(hmc_dict, attr_name, nickname):
+    """
+    Return a required attribute.
+    """
+    try:
+        return hmc_dict[attr_name]
+    except KeyError:
+        raise HMCDefinitionFileError(
+            "Required HMC attribute is missing in definition of HMC "
+            "{0}: {1}".format(nickname, attr_name))
 
 
 class HMCDefinition(object):
@@ -210,21 +233,11 @@ class HMCDefinition(object):
             self._hmc_userid = None
             self._hmc_password = None
         else:
-            self._hmc_host = self._required_attr(
-                hmc_dict, 'hmc_host', nickname)
-            self._hmc_userid = self._required_attr(
-                hmc_dict, 'hmc_userid', nickname)
-            self._hmc_password = self._required_attr(
-                hmc_dict, 'hmc_password', nickname)
+            self._hmc_host = _required_attr(hmc_dict, 'hmc_host', nickname)
+            self._hmc_userid = _required_attr(hmc_dict, 'hmc_userid', nickname)
+            self._hmc_password = _required_attr(hmc_dict, 'hmc_password',
+                                                nickname)
         self._cpcs = hmc_dict.get('cpcs', dict())
-
-    def _required_attr(self, hmc_dict, attr_name, nickname):
-        try:
-            return hmc_dict[attr_name]
-        except KeyError:
-            raise HMCDefinitionFileError(
-                "Required HMC attribute is missing in definition of HMC "
-                "{0}: {1}".format(nickname, attr_name))
 
     def __repr__(self):
         return "HMCDefinition(" \
