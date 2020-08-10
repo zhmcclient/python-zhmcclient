@@ -55,6 +55,9 @@ This version contains all fixes up to 0.26.1.
 
 * Fixed empty port list returned by PortManager.list() for CNA adapters.
 
+* Install: Fixed the broken installation from the source distribution archive
+  on Pypi (see issue #651)
+
 **Enhancements:**
 
 * Added an easy way to print debug information for inclusion into issues, via
@@ -80,6 +83,10 @@ This version contains all fixes up to 0.26.1.
 
 * Changed the theme of the documentation on RTD from classic to sphinx_rtd_theme
   (See issue #668)
+
+* Test: Added 'make installtest' to the Makefile to test installation of the
+  package into an empty virtualenv using all supported installation methods.
+  Added these install tests to the Travis CI tests. (related to issue #651)
 
 **Known issues:**
 

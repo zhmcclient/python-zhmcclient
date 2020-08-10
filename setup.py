@@ -89,6 +89,7 @@ setuptools.setup(
         'zhmcclient',
         'zhmcclient_mock'
     ],
+    include_package_data=True,  # Includes MANIFEST.in files into sdist (only)
     scripts=[
         'tools/cpcinfo',
         'tools/cpcdata',
