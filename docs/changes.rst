@@ -48,6 +48,8 @@ This version contains all fixes up to 0.26.1.
 * Docs: Fixed description of installation from a repo branch.
   (See issue #638)
 
+* Test: Fixed missing ffi.h file on CygWin when testing (See issue #655)
+
 **Enhancements:**
 
 * Added an easy way to print debug information for inclusion into issues, via
