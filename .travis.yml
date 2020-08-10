@@ -278,6 +278,7 @@ script:
   - make check
   - if [[ -n $_MANUAL_CI_RUN ]]; then make pylint; fi
   - make test
+  - make installtest
   - make build
   - make builddoc
   - make debuginfo
