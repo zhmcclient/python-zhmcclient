@@ -61,6 +61,10 @@ This version contains all fixes up to 0.26.1.
   uses the two new methods.
   (See issue #623)
 
+* Test: Running coveralls for all Python versions in order to cover Python
+  version-specific code. The coveralls.io web site consolidates these runs
+  properly into a single result.
+
 **Known issues:**
 
 * See `list of open issues`_.
