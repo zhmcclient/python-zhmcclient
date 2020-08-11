@@ -50,6 +50,9 @@ This version contains all fixes up to 0.26.1.
 
 * Test: Fixed missing ffi.h file on CygWin when testing (See issue #655)
 
+* Docs: Fixed links to HMC WS API books that have become invalid.
+  (See issue #665)
+
 **Enhancements:**
 
 * Added an easy way to print debug information for inclusion into issues, via
@@ -64,6 +67,14 @@ This version contains all fixes up to 0.26.1.
 * Test: Running coveralls for all Python versions in order to cover Python
   version-specific code. The coveralls.io web site consolidates these runs
   properly into a single result.
+
+* Docs: Added links to HMC WS APi and Operations books for z15.
+  (Related to issue #665)
+
+**Cleanup**
+
+* Docs: Removed link to "KVM for IBM z Systems - System Administration" book,
+  because the product is no longer supported. (Related to issue #665)
 
 **Known issues:**
 
