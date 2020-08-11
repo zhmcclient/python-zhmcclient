@@ -76,6 +76,9 @@ This version contains all fixes up to 0.26.1.
 * Docs: Removed link to "KVM for IBM z Systems - System Administration" book,
   because the product is no longer supported. (Related to issue #665)
 
+* Changed the theme of the documentation on RTD from classic to sphinx_rtd_theme
+  (See issue #668)
+
 **Known issues:**
 
 * See `list of open issues`_.
