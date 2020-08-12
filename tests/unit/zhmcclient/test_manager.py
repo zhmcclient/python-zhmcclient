@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 """
 Unit tests for _manager module.
 """
@@ -82,6 +84,11 @@ class TestManager0(object):
     """
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session(host='fake-host', userid='fake-user',
                                password='fake-pw')
 
@@ -153,6 +160,11 @@ class TestManager1(object):
     """
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session(host='fake-host', userid='fake-user',
                                password='fake-pw')
         self.manager = MyManager(self.session)
@@ -255,6 +267,11 @@ class TestManager2(object):
     """
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session(host='fake-host', userid='fake-user',
                                password='fake-pw')
         self.manager = MyManager(self.session)
@@ -463,13 +480,22 @@ class TestManager2(object):
 class TestNameUriCache(object):
     """All tests for the _NameUriCache class."""
 
-    def assert_datetime_near(self, dt1, dt2, max_delta=0.1):
+    @staticmethod
+    def assert_datetime_near(dt1, dt2, max_delta=0.1):
+        """
+        Assert that the two times are equal within a delta.
+        """
         delta = abs(dt2 - dt1).total_seconds()
         assert delta <= max_delta, \
             "Datetime values are %s s apart, maximum is %s s" % \
             (delta, max_delta)
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session(host='fake-host', userid='fake-user',
                                password='fake-pw')
         self.manager = MyManager(self.session)

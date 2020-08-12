@@ -18,9 +18,9 @@ Unit tests for _adapter module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import copy
 import re
+import pytest
 
 from zhmcclient import Client, Adapter, NotFound, HTTPError
 from zhmcclient_mock import FakedSession
@@ -39,9 +39,12 @@ class TestAdapter(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in DPM mode without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -146,7 +149,8 @@ class TestAdapter(object):
         })
         return faked_hs2
 
-    def add_crypto_ce5s(self, faked_cpc):
+    @staticmethod
+    def add_crypto_ce5s(faked_cpc):
         """Add a Crypto Express 5S adapter to a faked CPC."""
 
         # Adapter properties that will be auto-set:
@@ -172,7 +176,8 @@ class TestAdapter(object):
         })
         return faked_adapter
 
-    def add_ficon_fe6sp(self, faked_cpc):
+    @staticmethod
+    def add_ficon_fe6sp(faked_cpc):
         """Add a not-configured FICON Express 6S+ adapter to a faked CPC."""
 
         # Adapter properties that will be auto-set:
@@ -407,6 +412,7 @@ class TestAdapter(object):
 
     def _one_test_max_crypto_domains(self, faked_cpc, faked_adapter,
                                      exp_max_domains):
+        """Test Adapter.maximum_crypto_domains on a CPC"""
 
         cpc = self.client.cpcs.find(name=faked_cpc.name)
         adapter = cpc.adapters.find(name=faked_adapter.name)
@@ -590,6 +596,7 @@ class TestAdapter(object):
     )
     def test_change_adapter_type_error(
             self, desc, family, init_type, new_type, exp_exc):
+        # pylint: disable=unused-argument
         """Test Adapter.change_adapter_type()."""
 
         faked_cpc = self.faked_cpc

@@ -36,6 +36,7 @@ class MockedStompConnection(object):
     """
 
     def __init__(self, *args, **kwargs):
+        # pylint: disable=unused-argument
         """We ignore the args:
             [(self._host, self._port)], use_ssl="SSL")
         """
@@ -49,6 +50,7 @@ class MockedStompConnection(object):
         self._sender_thread = None
 
     def set_listener(self, name, listener):
+        # pylint: disable=unused-argument
         """Mocks the same-named method of stomp.Connection."""
         assert not self._state_connected
         self._listener = listener
@@ -66,6 +68,7 @@ class MockedStompConnection(object):
         self._connect_wait = wait
 
     def subscribe(self, destination, id, ack):
+        # pylint: disable=redefined-builtin
         """Mocks the same-named method of stomp.Connection."""
         assert self._state_connected
         self._subscriptions.append((destination, id, ack))
@@ -102,12 +105,20 @@ class MockedStompConnection(object):
 
 
 def receiver_run(receiver, msg_items):
+    """
+    Receiver function that will be run in a thread.
+    It invokes the receiver until out of notifications, then return them as a
+    list.
+    """
     for headers, message in receiver.notifications():
         msg_items.append((headers, message))
     return msg_items
 
 
 def receive_notifications(receiver):
+    """
+    Start a thread running the receiver function and wait for its completion.
+    """
     msg_items = []
     receiver_thread = threading.Thread(target=receiver_run,
                                        args=(receiver, msg_items))
@@ -119,9 +130,17 @@ def receive_notifications(receiver):
     return msg_items
 
 
-class TestNotification_OneTopic(object):
+class TestNotificationOneTopic(object):
+    """
+    Test class for one notification topic.
+    """
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.topic = 'fake-topic'
         self.hmc = 'fake-hmc'
         self.userid = 'fake-userid'
@@ -132,29 +151,33 @@ class TestNotification_OneTopic(object):
 
     @patch(target='stomp.Connection', new=MockedStompConnection)
     def test_no_messages(self):
+        """Test function for not receiving any notification."""
+
         receiver = NotificationReceiver(self.topic, self.hmc, self.userid,
                                         self.password)
-
-        conn = receiver._conn
+        conn = receiver._conn  # pylint: disable=protected-access
 
         # We do not add any STOMP messages
 
-        conn.mock_start()
+        conn.mock_start()  # pylint: disable=no-member
         msg_items = receive_notifications(receiver)
 
         assert msg_items == []
 
     @patch(target='stomp.Connection', new=MockedStompConnection)
     def test_one_message(self):
+        """Test function for receiving one notification."""
+
         receiver = NotificationReceiver(self.topic, self.hmc, self.userid,
                                         self.password)
-        conn = receiver._conn
+        conn = receiver._conn  # pylint: disable=protected-access
 
         # Add one STOMP message to be sent
         message_obj = dict(a=1, b=2)
+        # pylint: disable=no-member
         conn.mock_add_message(self.std_headers, message_obj)
 
-        conn.mock_start()
+        conn.mock_start()  # pylint: disable=no-member
         msg_items = receive_notifications(receiver)
 
         assert len(msg_items) == 1
@@ -164,9 +187,17 @@ class TestNotification_OneTopic(object):
         assert msg0[1] == message_obj
 
 
-class TestNotification_TwoTopics(object):
+class TestNotificationTwoTopics(object):
+    """
+    Test class for two notification topics.
+    """
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.topics = ('fake-topic1', 'fake-topic2')
         self.hmc = 'fake-hmc'
         self.userid = 'fake-userid'
@@ -177,29 +208,33 @@ class TestNotification_TwoTopics(object):
 
     @patch(target='stomp.Connection', new=MockedStompConnection)
     def test_no_messages(self):
+        """Test function for not receiving any notification."""
+
         receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
                                         self.password)
-
-        conn = receiver._conn
+        conn = receiver._conn  # pylint: disable=protected-access
 
         # We do not add any STOMP messages
 
-        conn.mock_start()
+        conn.mock_start()  # pylint: disable=no-member
         msg_items = receive_notifications(receiver)
 
         assert msg_items == []
 
     @patch(target='stomp.Connection', new=MockedStompConnection)
     def test_one_message(self):
+        """Test function for receiving one notification."""
+
         receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
                                         self.password)
-        conn = receiver._conn
+        conn = receiver._conn  # pylint: disable=protected-access
 
         # Add one STOMP message to be sent
         message_obj = dict(a=1, b=2)
+        # pylint: disable=no-member
         conn.mock_add_message(self.std_headers, message_obj)
 
-        conn.mock_start()
+        conn.mock_start()  # pylint: disable=no-member
         msg_items = receive_notifications(receiver)
 
         assert len(msg_items) == 1

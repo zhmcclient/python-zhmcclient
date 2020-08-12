@@ -18,9 +18,9 @@ Unit tests for _password_rule module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, HTTPError, NotFound, PasswordRule
 from zhmcclient_mock import FakedSession
@@ -32,9 +32,12 @@ class TestPasswordRule(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked Console without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -50,6 +53,9 @@ class TestPasswordRule(object):
         self.console = self.client.consoles.find(name=self.faked_console.name)
 
     def add_password_rule(self, name, type_):
+        """
+        Add a faked password rule object to the faked Console and return it.
+        """
         faked_password_rule = self.faked_console.password_rules.add({
             'element-id': 'oid-{}'.format(name),
             # element-uri will be automatically set
@@ -62,6 +68,9 @@ class TestPasswordRule(object):
         return faked_password_rule
 
     def add_user(self, name, type_):
+        """
+        Add a faked user object to the faked Console and return it.
+        """
         faked_user = self.faked_console.users.add({
             'object-id': 'oid-{}'.format(name),
             # object-uri will be automatically set
@@ -74,7 +83,7 @@ class TestPasswordRule(object):
         })
         return faked_user
 
-    def test_password_rule_manager_repr(self):
+    def test_pr_manager_repr(self):
         """Test PasswordRuleManager.__repr__()."""
 
         password_rule_mgr = self.console.password_rules
@@ -89,7 +98,7 @@ class TestPasswordRule(object):
                                id=id(password_rule_mgr)),
                         repr_str)
 
-    def test_password_rule_manager_initial_attrs(self):
+    def test_pr_manager_initial_attrs(self):
         """Test initial attributes of PasswordRuleManager."""
 
         password_rule_mgr = self.console.password_rules
@@ -121,7 +130,7 @@ class TestPasswordRule(object):
              ['a']),
         ]
     )
-    def test_password_rule_manager_list(
+    def test_pr_manager_list(
             self, filter_args, exp_names, full_properties_kwargs, prop_names):
         """Test PasswordRuleManager.list()."""
 
@@ -154,8 +163,7 @@ class TestPasswordRule(object):
              None),
         ]
     )
-    def test_password_rule_manager_create(self, input_props, exp_prop_names,
-                                          exp_exc):
+    def test_pr_manager_create(self, input_props, exp_prop_names, exp_exc):
         """Test PasswordRuleManager.create()."""
 
         password_rule_mgr = self.console.password_rules
@@ -194,7 +202,7 @@ class TestPasswordRule(object):
                     exp_value = input_props[prop_name]
                     assert value == exp_value
 
-    def test_password_rule_repr(self):
+    def test_pr_repr(self):
         """Test PasswordRule.__repr__()."""
 
         faked_password_rule1 = self.add_password_rule(
@@ -222,7 +230,7 @@ class TestPasswordRule(object):
              None),
         ]
     )
-    def test_password_rule_delete(self, input_props, exp_exc):
+    def test_pr_delete(self, input_props, exp_exc):
         """Test PasswordRule.delete()."""
 
         faked_password_rule = self.add_password_rule(
@@ -256,7 +264,7 @@ class TestPasswordRule(object):
             with pytest.raises(NotFound) as exc_info:
                 password_rule_mgr.find(name=faked_password_rule.name)
 
-    def test_password_rule_delete_create_same_name(self):
+    def test_pr_delete_create_same_name(self):
         """Test PasswordRule.delete() followed by create() with same name."""
 
         password_rule_name = 'faked_a'
@@ -295,7 +303,7 @@ class TestPasswordRule(object):
             {'description': 'New Password Rule description'},
         ]
     )
-    def test_password_rule_update_properties(self, input_props):
+    def test_pr_update_properties(self, input_props):
         """Test PasswordRule.update_properties()."""
 
         password_rule_name = 'faked_a'

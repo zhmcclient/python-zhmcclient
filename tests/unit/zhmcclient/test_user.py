@@ -18,9 +18,9 @@ Unit tests for _user module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, HTTPError, NotFound, User
 from zhmcclient_mock import FakedSession
@@ -32,9 +32,12 @@ class TestUser(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked Console without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -50,6 +53,9 @@ class TestUser(object):
         self.console = self.client.consoles.find(name=self.faked_console.name)
 
     def add_user(self, name, type_):
+        """
+        Add a faked user object to the faked Console and return it.
+        """
         faked_user = self.faked_console.users.add({
             'object-id': 'oid-{}'.format(name),
             # object-uri will be automatically set
@@ -63,6 +69,9 @@ class TestUser(object):
         return faked_user
 
     def add_user_role(self, name, type_):
+        """
+        Add a faked user role object to the faked Console and return it.
+        """
         faked_user_role = self.faked_console.user_roles.add({
             'object-id': 'oid-{}'.format(name),
             # object-uri will be automatically set

@@ -30,6 +30,11 @@ class TestVirtualFunction(object):
     """
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session('test-dpm-host', 'test-user', 'test-id')
         self.client = Client(self.session)
         with requests_mock.mock() as m:
@@ -108,6 +113,9 @@ class TestVirtualFunction(object):
             self.partition = partitions[0]
 
     def teardown_method(self):
+        """
+        Teardown that is called by pytest after each test method.
+        """
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             self.session.logoff()

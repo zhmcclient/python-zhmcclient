@@ -23,10 +23,10 @@ import sys
 import argparse
 from getpass import getpass
 from datetime import datetime
-import requests.packages.urllib3
+from platform import python_version
+from requests.packages import urllib3
 from tabulate import tabulate
 import progressbar
-from platform import python_version
 
 import zhmcclient
 
@@ -39,7 +39,7 @@ def parse_args():
     """
 
     prog = "cpcinfo"  # Name of this program, used for help etc.
-    version = zhmcclient.__version__
+    version = zhmcclient.__version__  # pylint: disable=no-member
     usage = '%(prog)s [options] hmc [cpcname ...]'
     desc = 'Display information about CPCs.'
     epilog = """
@@ -117,31 +117,49 @@ class ProgressBar(object):
                                             max_value=max_value)
 
     def progress(self):
+        """
+        Function called to advance the progress bar one step.
+        """
         self._current += 1
         self._bar.update(self._current)
 
     @property
     def current_value(self):
+        """
+        The current value of the progress bar.
+        """
         return self._current
 
     def change_max(self, max_value):
+        """
+        Adjust the max value of the progress bar.
+        """
         self._max = max_value
         self._bar = progressbar.ProgressBar(widgets=self._widgets,
                                             initial_value=self._current,
                                             max_value=self._max)
 
     def start(self):
+        """
+        Start the progress bar.
+        """
         self._bar.start()
 
     def finish(self):
+        """
+        Finish the progress bar.
+        """
         self._bar.finish()
 
 
 def main():
+    """
+    Main routine.
+    """
 
     args = parse_args()
 
-    requests.packages.urllib3.disable_warnings()
+    urllib3.disable_warnings()
 
     try:
         print("Using HMC %s with userid %s" % (args.hmc, args.user))
@@ -171,18 +189,18 @@ def main():
             print("\nRetrieving CPC %s ..." % cpc.prop('name'))
             sys.stdout.flush()
 
-            bar = ProgressBar(max_value=30)
-            bar.start()
+            probar = ProgressBar(max_value=30)
+            probar.start()
 
             if cpc.dpm_enabled:
-                bar.progress()  # dpm_enabled performs "Get CPC Properties"
+                probar.progress()  # dpm_enabled performs "Get CPC Properties"
                 partitions_kind = "Partitions"
                 partition_header = ("Name", "Status", "OS Type", "OS Version")
                 partitions = cpc.partitions.list()
-                bar.progress()
-                bar.change_max(bar.current_value +  # noqa: W504
-                               len(partitions) + 1 +  # noqa: W504
-                               (1 if args.adapters else 0))
+                probar.progress()
+                probar.change_max(probar.current_value +  # noqa: W504
+                                  len(partitions) + 1 +  # noqa: W504
+                                  (1 if args.adapters else 0))
                 partition_rows = []
                 for partition in sorted(partitions,
                                         key=lambda p: p.prop('name', '')):
@@ -190,17 +208,17 @@ def main():
                            partition.prop('status'),
                            partition.prop('os-type'),
                            partition.prop('os-version'))
-                    bar.progress()
+                    probar.progress()
                     partition_rows.append(row)
             else:
-                bar.progress()
+                probar.progress()
                 partitions_kind = "LPARs"
                 partition_header = ("Name", "Status", "OS Type", "OS Level")
                 partitions = cpc.lpars.list()
-                bar.progress()
-                bar.change_max(bar.current_value +  # noqa: W504
-                               len(partitions) + 1 +  # noqa: W504
-                               (1 if args.adapters else 0))
+                probar.progress()
+                probar.change_max(probar.current_value +  # noqa: W504
+                                  len(partitions) + 1 +  # noqa: W504
+                                  (1 if args.adapters else 0))
                 partition_rows = []
                 for partition in sorted(partitions,
                                         key=lambda p: p.prop('name', '')):
@@ -208,16 +226,16 @@ def main():
                            partition.prop('status'),
                            partition.prop('os-type'),
                            partition.prop('os-level'))
-                    bar.progress()
+                    probar.progress()
                     partition_rows.append(row)
 
             machine_gen = "z" + cpc.prop('se-version').split('.')[1]
-            bar.progress()
+            probar.progress()
 
             if args.adapters:
                 adapter_header = ("Location", "Card", "Type", "Ports")
                 adapters = cpc.adapters.list()
-                bar.progress()
+                probar.progress()
                 adapter_rows = []
                 for adapter in sorted(adapters,
                                       key=lambda p: p.prop('card-location',
@@ -228,7 +246,7 @@ def main():
                            adapter.prop('port-count'))
                     adapter_rows.append(row)
 
-            bar.finish()
+            probar.finish()
 
             print("CPC %s" % cpc.prop('name'))
             print("  Machine:  %s-%s (%s)" % (cpc.prop('machine-type'),

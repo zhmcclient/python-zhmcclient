@@ -37,6 +37,7 @@ def decorated_global_function():
 
 
 def global1_function():
+    """An undecorated function at the global (module) level."""
 
     @logged_api_call
     def decorated_inner1_function():
@@ -47,12 +48,15 @@ def global1_function():
 
 
 def get_decorated_inner1_function():
+    """Return the decorated inner function."""
     return global1_function()
 
 
 def global2_function():
+    """An undecorated function at the global (module) level."""
 
     def inner1_function():
+        """An undecorated function at the inner 1 level."""
 
         @logged_api_call
         def decorated_inner2_function():
@@ -66,10 +70,13 @@ def global2_function():
 
 
 def get_decorated_inner2_function():
+    """Return the decorated inner 2 function."""
     return global2_function()
 
 
 class Decorator1Class(object):
+    # pylint: disable=too-few-public-methods
+    """A class that has a decorated method."""
 
     @logged_api_call
     def decorated_method(self):
@@ -78,9 +85,11 @@ class Decorator1Class(object):
 
 
 class Decorator2Class(object):
+    """A class that has a decorated method inside a method."""
 
     @staticmethod
     def method():
+        """A method."""
 
         @logged_api_call
         def decorated_inner_function():
@@ -91,6 +100,7 @@ class Decorator2Class(object):
 
     @staticmethod
     def get_decorated_inner_function():
+        """Return the decorated inner function."""
         return Decorator2Class.method()
 
 
@@ -99,6 +109,10 @@ class Decorator2Class(object):
 #
 
 class CallerClass(object):
+    # pylint: disable=too-few-public-methods
+    """
+    A supporting class.
+    """
 
     @staticmethod
     def call_from_method(func, *args, **kwargs):
@@ -142,169 +156,191 @@ def capture():
 # Test cases
 #
 
-class TestLoggingDecorator(object):
-    """All test cases for the @logged_api_call decorator."""
+def assert_log_capture(log_capture, exp_apifunc):
+    # pylint: disable=unused-argument
+    # Note: exp_apifunc is shown when pytest displays a traceback.
+    """
+    Assert that the log capture is as expected.
+    """
+    assert len(log_capture.records) == 2
 
-    def assert_log_capture(self, log_capture, exp_apifunc):
+    enter_record = log_capture.records[0]
+    assert enter_record.name == _EXP_LOGGER_NAME
+    assert enter_record.levelname == _EXP_LOG_LEVEL
+    assert re.match(_EXP_LOG_MSG_ENTER_PATTERN, enter_record.msg)
+    # We don't check the function name and its pos and kw args
 
-        assert len(log_capture.records) == 2
+    leave_record = log_capture.records[1]
+    assert leave_record.name == _EXP_LOGGER_NAME
+    assert leave_record.levelname == _EXP_LOG_LEVEL
+    assert re.match(_EXP_LOG_MSG_LEAVE_PATTERN, leave_record.msg)
+    # We don't check the function name and its pos and kw args
 
-        enter_record = log_capture.records[0]
-        assert enter_record.name == _EXP_LOGGER_NAME
-        assert enter_record.levelname == _EXP_LOG_LEVEL
-        assert re.match(_EXP_LOG_MSG_ENTER_PATTERN, enter_record.msg)
-        # We don't check the function name and its pos and kw args
 
-        leave_record = log_capture.records[1]
-        assert leave_record.name == _EXP_LOGGER_NAME
-        assert leave_record.levelname == _EXP_LOG_LEVEL
-        assert re.match(_EXP_LOG_MSG_LEAVE_PATTERN, leave_record.msg)
-        # We don't check the function name and its pos and kw args
+def test_1a_global_from_global(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated global function from a global
+    function."""
 
-    def test_1a_global_from_global(self, capture):
-        """Simple test calling a decorated global function from a global
-        function."""
+    call_from_global(decorated_global_function)
 
-        call_from_global(decorated_global_function)
+    assert_log_capture(capture, 'decorated_global_function()')
 
-        self.assert_log_capture(capture, 'decorated_global_function()')
 
-    def test_1b_global_from_method(self, capture):
-        """Simple test calling a decorated global function from a method."""
+def test_1b_global_from_method(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated global function from a method."""
 
-        CallerClass().call_from_method(decorated_global_function)
+    CallerClass().call_from_method(decorated_global_function)
 
-        self.assert_log_capture(capture, 'decorated_global_function()')
+    assert_log_capture(capture, 'decorated_global_function()')
 
-    def test_2a_global_inner1_from_global(self, capture):
-        """Simple test calling a decorated inner function defined in a global
-        function from a global function."""
 
-        decorated_inner1_function = get_decorated_inner1_function()
+def test_2a_global_inner1_from_global(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated inner function defined in a global
+    function from a global function."""
 
-        call_from_global(decorated_inner1_function)
+    decorated_inner1_function = get_decorated_inner1_function()
 
-        self.assert_log_capture(capture,
-                                'global1_function.decorated_inner1_function()')
+    call_from_global(decorated_inner1_function)
 
-    def test_2b_global_inner1_from_method(self, capture):
-        """Simple test calling a decorated inner function defined in a global
-        function from a method."""
+    assert_log_capture(capture, 'global1_function.decorated_inner1_function()')
 
-        decorated_inner1_function = get_decorated_inner1_function()
 
-        CallerClass().call_from_method(decorated_inner1_function)
+def test_2b_global_inner1_from_method(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated inner function defined in a global
+    function from a method."""
 
-        self.assert_log_capture(capture,
-                                'global1_function.decorated_inner1_function()')
+    decorated_inner1_function = get_decorated_inner1_function()
 
-    def test_3a_global_inner2_from_global(self, capture):
-        """Simple test calling a decorated inner function defined in an inner
-        function defined in a global function from a global function."""
+    CallerClass().call_from_method(decorated_inner1_function)
 
-        decorated_inner2_function = get_decorated_inner2_function()
+    assert_log_capture(capture, 'global1_function.decorated_inner1_function()')
 
-        call_from_global(decorated_inner2_function)
 
-        self.assert_log_capture(capture,
-                                'inner1_function.decorated_inner2_function()')
+def test_3a_global_inner2_from_global(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated inner function defined in an inner
+    function defined in a global function from a global function."""
 
-    def test_3b_global_inner1_from_method(self, capture):
-        """Simple test calling a decorated inner function defined in an inner
-        function defined in a global function from a method."""
+    decorated_inner2_function = get_decorated_inner2_function()
 
-        decorated_inner2_function = get_decorated_inner2_function()
+    call_from_global(decorated_inner2_function)
 
-        CallerClass().call_from_method(decorated_inner2_function)
+    assert_log_capture(capture, 'inner1_function.decorated_inner2_function()')
 
-        self.assert_log_capture(capture,
-                                'inner1_function.decorated_inner2_function()')
 
-    def test_4a_method_from_global(self, capture):
-        """Simple test calling a decorated method from a global function."""
+def test_3b_global_inner1_from_method(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated inner function defined in an inner
+    function defined in a global function from a method."""
 
-        decorated_method = Decorator1Class.decorated_method
-        d = Decorator1Class()
+    decorated_inner2_function = get_decorated_inner2_function()
 
-        call_from_global(decorated_method, d)
+    CallerClass().call_from_method(decorated_inner2_function)
 
-        self.assert_log_capture(capture, 'Decorator1Class.decorated_method()')
+    assert_log_capture(capture, 'inner1_function.decorated_inner2_function()')
 
-    def test_4b_method_from_method(self, capture):
-        """Simple test calling a decorated method from a method."""
 
-        decorated_method = Decorator1Class.decorated_method
-        d = Decorator1Class()
+def test_4a_method_from_global(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated method from a global function."""
 
-        CallerClass().call_from_method(decorated_method, d)
+    decorated_method = Decorator1Class.decorated_method
+    d = Decorator1Class()
 
-        self.assert_log_capture(capture, 'Decorator1Class.decorated_method()')
+    call_from_global(decorated_method, d)
 
-    def test_5a_method_from_global(self, capture):
-        """Simple test calling a decorated inner function defined in a method
-        from a global function."""
+    assert_log_capture(capture, 'Decorator1Class.decorated_method()')
 
-        decorated_inner_function = \
-            Decorator2Class.get_decorated_inner_function()
 
-        call_from_global(decorated_inner_function)
+def test_4b_method_from_method(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated method from a method."""
 
-        self.assert_log_capture(capture,
-                                'method.decorated_inner_function()')
+    decorated_method = Decorator1Class.decorated_method
+    d = Decorator1Class()
 
-    def test_5b_method_from_method(self, capture):
-        """Simple test calling a decorated inner function defined in a method
-        from a method."""
+    CallerClass().call_from_method(decorated_method, d)
 
-        decorated_inner_function = \
-            Decorator2Class.get_decorated_inner_function()
+    assert_log_capture(capture, 'Decorator1Class.decorated_method()')
 
-        CallerClass().call_from_method(decorated_inner_function)
 
-        self.assert_log_capture(capture,
-                                'method.decorated_inner_function()')
+def test_5a_method_from_global(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated inner function defined in a method
+    from a global function."""
 
-    def test_decorated_class(self):
-        """Test that using the decorator on a class raises TypeError."""
+    decorated_inner_function = \
+        Decorator2Class.get_decorated_inner_function()
 
-        with pytest.raises(TypeError):
+    call_from_global(decorated_inner_function)
+
+    assert_log_capture(capture, 'method.decorated_inner_function()')
+
+
+def test_5b_method_from_method(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated inner function defined in a method
+    from a method."""
+
+    decorated_inner_function = \
+        Decorator2Class.get_decorated_inner_function()
+
+    CallerClass().call_from_method(decorated_inner_function)
+
+    assert_log_capture(capture, 'method.decorated_inner_function()')
+
+
+def test_decorated_class():
+    # pylint: disable=unused-variable
+    """Test that using the decorator on a class raises TypeError."""
+
+    with pytest.raises(TypeError):
+
+        @logged_api_call
+        class DecoratedClass(object):
+            # pylint: disable=too-few-public-methods
+            """A decorated class"""
+            pass
+
+
+def test_decorated_property():
+    # pylint: disable=unused-variable
+    """Test that using the decorator on a property raises TypeError."""
+
+    with pytest.raises(TypeError):
+
+        class Class(object):
+            # pylint: disable=too-few-public-methods
+            """A class with a decorated property"""
 
             @logged_api_call
-            class DecoratedClass(object):
-                pass
-
-    def test_decorated_property(self):
-        """Test that using the decorator on a property raises TypeError."""
-
-        with pytest.raises(TypeError):
-
-            class Class(object):
-
-                @logged_api_call
-                @property
-                def decorated_property(self):
-                    return self
+            @property
+            def decorated_property(self):
+                """A decorated property"""
+                return self
 
 
-class TestGetLogger(object):
-    """All test cases for get_logger()."""
+def test_root_logger():
+    """Test that get_logger('') returns the Python root logger."""
 
-    def test_root_logger(self):
-        """Test that get_logger('') returns the Python root logger."""
+    py_logger = logging.getLogger()
 
-        py_logger = logging.getLogger()
+    zhmc_logger = get_logger('')
 
-        zhmc_logger = get_logger('')
+    assert zhmc_logger is py_logger
 
-        assert zhmc_logger is py_logger
 
-    def test_foo_logger(self):
-        """Test that get_logger('zhmcclient.foo') returns the same-named
-        Python logger and has at least one handler."""
+def test_foo_logger():
+    """Test that get_logger('zhmcclient.foo') returns the same-named
+    Python logger and has at least one handler."""
 
-        py_logger = logging.getLogger('zhmcclient.foo')
+    py_logger = logging.getLogger('zhmcclient.foo')
 
-        zhmc_logger = get_logger('zhmcclient.foo')
+    zhmc_logger = get_logger('zhmcclient.foo')
 
-        assert zhmc_logger is py_logger
-        assert len(zhmc_logger.handlers) >= 1
+    assert zhmc_logger is py_logger
+    assert len(zhmc_logger.handlers) >= 1

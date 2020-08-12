@@ -18,9 +18,9 @@ Unit tests for _cpc module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, Cpc, HTTPError
 from zhmcclient_mock import FakedSession
@@ -52,7 +52,7 @@ CPC1_UNUSED_CRYPTO_DOMAINS = list(range(4, CPC1_MAX_CRYPTO_DOMAINS))
 GET_FREE_CRYPTO_DOMAINS_ENVIRONMENTS = {
     'env0-example': {
         'desc': "The example from the description of method "
-        "Cpc.get_free_crypto_domains()",
+                "Cpc.get_free_crypto_domains()",
         'cpc_name': CPC1_NAME,
         'adapter_names': [
             CRYPTO1_NAME,
@@ -99,7 +99,7 @@ GET_FREE_CRYPTO_DOMAINS_ENVIRONMENTS = {
     },
     'env1-ocdu': {
         'desc': "Overlapped control of domains, but disjoint usage "
-        "on all adapters",
+                "on all adapters",
         'cpc_name': CPC1_NAME,
         'adapter_names': [
             CRYPTO1_NAME,
@@ -169,7 +169,8 @@ GET_FREE_CRYPTO_DOMAINS_ENVIRONMENTS = {
     },
     'env3-dcou': {
         'desc': "Disjoint control of domains, but overlapping usage on all "
-        "adapters (this prevents activating the partitions at the same time)",
+                "adapters (this prevents activating the partitions at the "
+                "same time)",
         'cpc_name': CPC1_NAME,
         'adapter_names': [
             CRYPTO1_NAME,
@@ -322,8 +323,11 @@ class TestCpc(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -392,7 +396,8 @@ class TestCpc(object):
             raise ValueError("Invalid value for cpc_name: %s" % cpc_name)
         return faked_cpc
 
-    def add_crypto_adapter(self, faked_cpc, adapter_name):
+    @staticmethod
+    def add_crypto_adapter(faked_cpc, adapter_name):
         """Add a faked crypto adapter to a faked CPC."""
 
         if adapter_name == CRYPTO1_NAME:
@@ -430,7 +435,8 @@ class TestCpc(object):
                              adapter_name)
         return faked_crypto_adapter
 
-    def add_partition(self, faked_cpc, part_name):
+    @staticmethod
+    def add_partition(faked_cpc, part_name):
         """Add a faked partition to a faked CPC, with standard properties."""
 
         faked_partition = faked_cpc.partitions.add({
@@ -650,6 +656,7 @@ class TestCpc(object):
     def test_cpc_feature_enabled(
             self, desc, cpc_name, available_features, feature_name,
             exp_feature_enabled, exp_exc):
+        # pylint: disable=unused-argument
         """Test Cpc.feature_enabled()."""
 
         # Add a faked CPC
@@ -718,6 +725,7 @@ class TestCpc(object):
     )
     def test_cpc_feature_info(
             self, desc, cpc_name, available_features, exp_exc):
+        # pylint: disable=unused-argument
         """Test Cpc.feature_info()."""
 
         # Add a faked CPC
@@ -1271,7 +1279,7 @@ class TestCpc(object):
             }),
         ]
     )
-    def test_cpc_get_energy_management_properties(
+    def test_cpc_get_energy_mgmt_props(
             self, cpc_name, energy_props):
         """Test Cpc.get_energy_management_properties()."""
 

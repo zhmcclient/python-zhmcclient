@@ -18,9 +18,9 @@ Unit tests for _storage_group module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, Cpc, StorageGroup, StorageGroupManager, \
     StorageVolumeManager, VirtualStorageResourceManager, HTTPError, \
@@ -43,9 +43,12 @@ class TestStorageGroup(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in DPM mode without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.14.1', '1.9')
         self.client = Client(self.session)
@@ -112,7 +115,7 @@ class TestStorageGroup(object):
         })
         return faked_storage_group
 
-    def test_storagegroupmanager_initial_attrs(self):
+    def test_sm_initial_attrs(self):
         """Test initial attributes of StorageGroupManager."""
 
         storage_group_mgr = self.console.storage_groups
@@ -127,7 +130,7 @@ class TestStorageGroup(object):
 
     # TODO: Test for StorageGroupManager.__repr__()
 
-    testcases_storagegroupmanager_list_full_properties = (
+    testcases_sm_list_full_properties = (
         "full_properties_kwargs, prop_names", [
             (dict(),
              ['object-uri', 'cpc-uri', 'name', 'fulfillment-state', 'type']),
@@ -139,9 +142,9 @@ class TestStorageGroup(object):
     )
 
     @pytest.mark.parametrize(
-        *testcases_storagegroupmanager_list_full_properties
+        *testcases_sm_list_full_properties
     )
-    def test_storagegroupmanager_list_full_properties(
+    def test_sm_list_full_properties(
             self, full_properties_kwargs, prop_names):
         """Test StorageGroupManager.list() with full_properties."""
 
@@ -157,7 +160,7 @@ class TestStorageGroup(object):
 
         assert_resources(storage_groups, exp_faked_storage_groups, prop_names)
 
-    testcases_storagegroupmanager_list_filter_args = (
+    testcases_sm_list_filter_args = (
         "filter_args, exp_names", [
             ({'object-id': SG1_OID},
              [SG1_NAME]),
@@ -217,9 +220,9 @@ class TestStorageGroup(object):
     )
 
     @pytest.mark.parametrize(
-        *testcases_storagegroupmanager_list_filter_args
+        *testcases_sm_list_filter_args
     )
-    def test_storagegroupmanager_list_filter_args(
+    def test_sm_list_filter_args(
             self, filter_args, exp_names):
         """Test StorageGroupManager.list() with filter_args."""
 
@@ -237,7 +240,7 @@ class TestStorageGroup(object):
             names = [p.properties['name'] for p in storage_groups]
             assert set(names) == set(exp_names)
 
-    testcases_storagegroupmanager_create_no_volumes = (
+    testcases_sm_create_no_volumes = (
         "input_props, exp_prop_names, exp_exc", [
             ({},
              None,
@@ -257,9 +260,9 @@ class TestStorageGroup(object):
     )
 
     @pytest.mark.parametrize(
-        *testcases_storagegroupmanager_create_no_volumes
+        *testcases_sm_create_no_volumes
     )
-    def test_storagegroupmanager_create(
+    def test_sm_create(
             self, input_props, exp_prop_names, exp_exc):
         """Test StorageGroupManager.create()."""
 
@@ -304,7 +307,7 @@ class TestStorageGroup(object):
                     exp_value = input_props[prop_name]
                     assert value == exp_value
 
-    def test_storagegroupmanager_resource_object(self):
+    def test_sm_resource_object(self):
         """
         Test StorageGroupManager.resource_object().
 
@@ -341,7 +344,7 @@ class TestStorageGroup(object):
         assert storage_group.properties['class'] == 'storage-group'
         assert storage_group.properties['parent'] == self.console.uri
 
-    def test_storagegroup_repr(self):
+    def test_sg_repr(self):
         """Test StorageGroup.__repr__()."""
 
         # Add a faked storage_group
@@ -360,7 +363,7 @@ class TestStorageGroup(object):
                                id=id(storage_group)),
                         repr_str)
 
-    def test_storagegroup_delete_non_associated(self):
+    def test_sg_delete_non_associated(self):
         """Test StorageGroup.delete() of non-associated storage group."""
 
         # Add a faked storage group to be tested and another one
@@ -378,7 +381,7 @@ class TestStorageGroup(object):
         with pytest.raises(NotFound):
             storage_group_mgr.find(name=faked_storage_group.name)
 
-    def test_storagegroup_delete_create_same_name(self):
+    def test_sg_delete_create_same(self):
         """Test StorageGroup.delete() followed by create() with same name."""
 
         # Add a faked storage_group to be tested and another one
@@ -408,14 +411,14 @@ class TestStorageGroup(object):
         description = storage_group3.get_property('description')
         assert description == 'Third storage_group'
 
-    testcases_storagegroup_update_properties_sgs = (
+    testcases_sg_update_properties_sgs = (
         "storage_group_name", [
             SG1_NAME,
             SG2_NAME,
         ]
     )
 
-    testcases_storagegroup_update_properties_props = (
+    testcases_sg_update_properties_props = (
         "input_props", [
             {},
             {'description': 'New storage_group description'},
@@ -425,12 +428,12 @@ class TestStorageGroup(object):
     )
 
     @pytest.mark.parametrize(
-        *testcases_storagegroup_update_properties_sgs
+        *testcases_sg_update_properties_sgs
     )
     @pytest.mark.parametrize(
-        *testcases_storagegroup_update_properties_props
+        *testcases_sg_update_properties_props
     )
-    def test_storagegroup_update_properties(
+    def test_sg_update_properties(
             self, input_props, storage_group_name):
         """Test StorageGroup.update_properties()."""
 
@@ -470,7 +473,7 @@ class TestStorageGroup(object):
             prop_value = storage_group.properties[prop_name]
             assert prop_value == exp_prop_value
 
-    def test_storagegroup_update_name(self):
+    def test_sg_update_name(self):
         """
         Test StorageGroup.update_properties() with 'name' property.
         """

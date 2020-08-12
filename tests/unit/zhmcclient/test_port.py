@@ -28,6 +28,11 @@ class TestPort(object):
     """All tests for Port and PortManager classes."""
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session('port-dpm-host', 'port-user',
                                'port-pwd')
         self.client = Client(self.session)
@@ -110,6 +115,9 @@ class TestPort(object):
             self.adapters = adapters
 
     def teardown_method(self):
+        """
+        Teardown that is called by pytest after each test method.
+        """
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             self.session.logoff()
@@ -143,7 +151,7 @@ class TestPort(object):
                 uris = []
 
             assert len(ports) == len(uris)
-            for idx, port in enumerate(ports):
+            for _, port in enumerate(ports):
                 assert port.properties['element-uri'] in uris
                 assert not port.full_properties
                 assert port.manager == port_mgr

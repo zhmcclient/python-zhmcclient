@@ -18,9 +18,9 @@ Unit tests for _ldap_srv_def module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, HTTPError, NotFound, LdapServerDefinition
 from zhmcclient_mock import FakedSession
@@ -33,9 +33,12 @@ class TestLdapServerDefinition(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked Console without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -51,6 +54,11 @@ class TestLdapServerDefinition(object):
         self.console = self.client.consoles.find(name=self.faked_console.name)
 
     def add_ldap_srv_def(self, name):
+        """
+        Add a faked LDAPServerDefinition object to the faked Console
+        and return it.
+        """
+
         faked_ldap_srv_def = self.faked_console.ldap_server_definitions.add({
             'element-id': 'oid-{}'.format(name),
             # element-uri will be automatically set
@@ -237,7 +245,7 @@ class TestLdapServerDefinition(object):
             with pytest.raises(NotFound) as exc_info:
                 ldap_srv_def_mgr.find(name=faked_ldap_srv_def.name)
 
-    def test_ldap_srv_def_delete_create_same_name(self):
+    def test_ldap_delete_create_same(self):
         """Test LdapServerDefinition.delete() followed by create() with same
         name."""
 

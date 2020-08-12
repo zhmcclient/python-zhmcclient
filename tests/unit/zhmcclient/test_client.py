@@ -24,118 +24,118 @@ from zhmcclient import Client, CpcManager, MetricsContextManager
 from zhmcclient_mock import FakedSession
 
 
-class TestClient(object):
-    """All tests for Client classes."""
+@pytest.mark.parametrize(
+    "hmc_name, hmc_version, api_version", [
+        ('fake-hmc', '2.13.1', '1.8'),
+    ]
+)
+def test_client_initial_attrs(hmc_name, hmc_version, api_version):
+    """Test initial attributes of Client."""
 
-    @pytest.mark.parametrize(
-        "hmc_name, hmc_version, api_version", [
-            ('fake-hmc', '2.13.1', '1.8'),
-        ]
-    )
-    def test_client_initial_attrs(self, hmc_name, hmc_version, api_version):
-        """Test initial attributes of Client."""
+    session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
 
-        session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
+    # Execute the code to be tested
+    client = Client(session)
 
-        # Execute the code to be tested
-        client = Client(session)
+    assert client.session is session
+    assert isinstance(client.cpcs, CpcManager)
+    assert client.cpcs.session is session
+    assert isinstance(client.metrics_contexts, MetricsContextManager)
+    assert client.metrics_contexts.session is session
+    assert client.metrics_contexts.client is client
 
-        assert client.session is session
-        assert isinstance(client.cpcs, CpcManager)
-        assert client.cpcs.session is session
-        assert isinstance(client.metrics_contexts, MetricsContextManager)
-        assert client.metrics_contexts.session is session
-        assert client.metrics_contexts.client is client
 
-    @pytest.mark.parametrize(
-        "hmc_name, hmc_version, api_version", [
-            ('fake-hmc1', '2.13.1', '1.8'),
-            ('fake-hmc2', '2.14.0', '2.20'),
-        ]
-    )
-    def test_version_info(self, hmc_name, hmc_version, api_version):
-        """All tests for Client.version_info()."""
+@pytest.mark.parametrize(
+    "hmc_name, hmc_version, api_version", [
+        ('fake-hmc1', '2.13.1', '1.8'),
+        ('fake-hmc2', '2.14.0', '2.20'),
+    ]
+)
+def test_version_info(hmc_name, hmc_version, api_version):
+    """All tests for Client.version_info()."""
 
-        session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
+    session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
 
-        # Client object under test
-        client = Client(session)
+    # Client object under test
+    client = Client(session)
 
-        # Execute the code to be tested
-        version_info = client.version_info()
+    # Execute the code to be tested
+    version_info = client.version_info()
 
-        exp_version_info = tuple([int(v) for v in api_version.split('.')])
+    exp_version_info = tuple([int(v) for v in api_version.split('.')])
 
-        assert version_info == exp_version_info
+    assert version_info == exp_version_info
 
-    @pytest.mark.parametrize(
-        "hmc_name, hmc_version, api_version", [
-            ('fake-hmc1', '2.13.1', '1.8'),
-            ('fake-hmc2', '2.14.0', '2.20'),
-        ]
-    )
-    def test_query_api_version(self, hmc_name, hmc_version, api_version):
-        """All tests for Client.query_api_version()."""
 
-        session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
+@pytest.mark.parametrize(
+    "hmc_name, hmc_version, api_version", [
+        ('fake-hmc1', '2.13.1', '1.8'),
+        ('fake-hmc2', '2.14.0', '2.20'),
+    ]
+)
+def test_query_api_version(hmc_name, hmc_version, api_version):
+    """All tests for Client.query_api_version()."""
 
-        # Client object under test
-        client = Client(session)
+    session = FakedSession('fake-host', hmc_name, hmc_version, api_version)
 
-        # Execute the code to be tested
-        api_version_info = client.query_api_version()
+    # Client object under test
+    client = Client(session)
 
-        api_major_version = int(api_version.split('.')[0])
-        api_minor_version = int(api_version.split('.')[1])
+    # Execute the code to be tested
+    api_version_info = client.query_api_version()
 
-        exp_api_version_info = {
-            'api-major-version': api_major_version,
-            'api-minor-version': api_minor_version,
-            'hmc-version': hmc_version,
-            'hmc-name': hmc_name,
-        }
+    api_major_version = int(api_version.split('.')[0])
+    api_minor_version = int(api_version.split('.')[1])
 
-        assert api_version_info == exp_api_version_info
+    exp_api_version_info = {
+        'api-major-version': api_major_version,
+        'api-minor-version': api_minor_version,
+        'hmc-version': hmc_version,
+        'hmc-name': hmc_name,
+    }
 
-    @pytest.mark.parametrize(
-        "resources, exp_exc, exp_inventory", [
-            (None,
-             Exception,
-             None
-             ),
-            ([],
-             None,
-             {}  # TODO: Add expected inventory
-             ),
-            (['partition'],
-             None,
-             {}  # TODO: Add expected inventory
-             ),
-        ]
-    )
-    def xtest_get_inventory(self, resources, exp_exc, exp_inventory):
-        """All tests for Client.get_inventory()."""
+    assert api_version_info == exp_api_version_info
 
-        # TODO: Enable once mock support for Client.get_inventory() is there
 
-        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+@pytest.mark.parametrize(
+    "resources, exp_exc, exp_inventory", [
+        (None,
+         Exception,
+         None
+         ),
+        ([],
+         None,
+         {}  # TODO: Add expected inventory
+         ),
+        (['partition'],
+         None,
+         {}  # TODO: Add expected inventory
+         ),
+    ]
+)
+def xtest_get_inventory(resources, exp_exc, exp_inventory):
+    """All tests for Client.get_inventory()."""
 
-        # Client object under test
-        client = Client(session)
+    # TODO: Enable once mock support for Client.get_inventory() is there
 
-        # TODO: Set up inventory from expected inventory
+    session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
 
-        if exp_exc:
-            try:
+    # Client object under test
+    client = Client(session)
 
-                # Execute the code to be tested
-                client.get_inventory(resources)
+    # TODO: Set up inventory from expected inventory
 
-            except exp_exc:
-                pass
-        else:
+    if exp_exc:
+        try:
 
             # Execute the code to be tested
-            inventory = client.get_inventory(resources)
+            client.get_inventory(resources)
 
-            assert inventory == exp_inventory
+        except exp_exc:
+            pass
+    else:
+
+        # Execute the code to be tested
+        inventory = client.get_inventory(resources)
+
+        assert inventory == exp_inventory
