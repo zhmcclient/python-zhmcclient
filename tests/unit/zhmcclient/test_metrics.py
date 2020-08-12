@@ -18,8 +18,8 @@ Unit tests for _metrics module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
+import pytest
 
 from zhmcclient import Client, MetricsContext, HTTPError, NotFound
 from zhmcclient_mock import FakedSession, FakedMetricGroupDefinition
@@ -43,9 +43,12 @@ class TestMetricsContext(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in DPM mode without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -117,7 +120,7 @@ class TestMetricsContext(object):
         metricscontext = self.client.metrics_contexts.create(mc_props)
         return metricscontext
 
-    def test_metricscontextmanager_initial_attrs(self):
+    def test_mcm_initial_attrs(self):
         """Test initial attributes of MetricsContextManager."""
 
         metricscontext_mgr = self.client.metrics_contexts
@@ -140,7 +143,7 @@ class TestMetricsContext(object):
              ['anticipated-frequency-seconds', 'metric-groups']),
         ]
     )
-    def test_metricscontextmanager_list_full_properties(
+    def test_mcm_list_full_properties(
             self, full_properties_kwargs, prop_names):
         """Test MetricsContextManager.list() with full_properties."""
 
@@ -219,7 +222,7 @@ class TestMetricsContext(object):
         ]
     )
     @pytest.mark.skip  # TODO: Test for MetricsContextManager.list() w/ filter
-    def test_metricscontextmanager_list_filter_args(
+    def test_mcm_list_filter_args(
             self, filter_args, exp_names):
         """Test MetricsContextManager.list() with filter_args."""
 
@@ -269,7 +272,7 @@ class TestMetricsContext(object):
         ]
     )
     @pytest.mark.skip  # TODO: Test for MetricsContextManager.create()
-    def test_metricscontextmanager_create(
+    def test_mcm_create(
             self, input_props, exp_prop_names, exp_exc):
         """Test MetricsContextManager.create()."""
 
@@ -314,7 +317,7 @@ class TestMetricsContext(object):
                     assert value == exp_value
 
     @pytest.mark.skip  # TODO: Test for MetricsContextManager.__repr__()
-    def test_metricscontext_repr(self):
+    def test_mc_repr(self):
         """Test MetricsContext.__repr__()."""
 
         # Add a faked metrics context
@@ -348,7 +351,7 @@ class TestMetricsContext(object):
         ]
     )
     @pytest.mark.skip  # TODO: Test for MetricsContext.delete()
-    def test_metricscontext_delete(self, initial_status, exp_exc):
+    def test_mc_delete(self, initial_status, exp_exc):
         """Test MetricsContext.delete()."""
 
         # Add a faked metrics context

@@ -29,6 +29,11 @@ class TestVirtualSwitch(object):
     """All tests for VirtualSwitch and VirtualSwitchManager classes."""
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session('vswitch-dpm-host', 'vswitch-user',
                                'vswitch-pwd')
         self.client = Client(self.session)
@@ -55,6 +60,9 @@ class TestVirtualSwitch(object):
             self.cpc = cpcs[0]
 
     def teardown_method(self):
+        """
+        Teardown that is called by pytest after each test method.
+        """
         with requests_mock.mock() as m:
             m.delete('/api/sessions/this-session', status_code=204)
             self.session.logoff()

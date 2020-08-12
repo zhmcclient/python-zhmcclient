@@ -25,9 +25,9 @@ import sys
 import logging
 import argparse
 from datetime import datetime
-import requests.packages.urllib3
-import yaml
 from platform import python_version
+from requests.packages import urllib3
+import yaml
 
 import zhmcclient
 
@@ -99,8 +99,10 @@ CSV_FIELDS = (
 
 
 def main():
-
-    requests.packages.urllib3.disable_warnings()
+    """
+    Main function.
+    """
+    urllib3.disable_warnings()
     args = parse_args()
     config_file = args.config_file
 
@@ -178,7 +180,9 @@ def main():
 
 
 def process_hmc(config, hmc_host, hmc_userid, hmc_password):
-
+    """
+    Process the HMC and display info about it.
+    """
     if config.verbose:
         print("Processing HMC %s" % hmc_host)
 
@@ -229,6 +233,9 @@ def process_hmc(config, hmc_host, hmc_userid, hmc_password):
 
 
 def process_cpc(config, cpc, hmc_host):
+    """
+    Process the CPC and display info about it.
+    """
 
     if config.verbose:
         print("Attempting to list partitions on CPC %s ..." % cpc.prop('name'))
@@ -269,6 +276,10 @@ def process_cpc(config, cpc, hmc_host):
 
 
 def print_cpc_as_text(config, cpc_info):
+    # pylint: disable=unused-argument
+    """
+    Print info about the CPC as text.
+    """
 
     print("CPC {name} managed by HMC {hmc}:".format(**cpc_info))
 
@@ -297,6 +308,9 @@ def print_cpc_as_text(config, cpc_info):
 
 
 def print_cpc_as_csv(config, cpc_info):
+    """
+    Print info about the CPC as CSV.
+    """
 
     if config.csv_file:
         with open(config.csv_file, "a") as fp:
@@ -307,6 +321,9 @@ def print_cpc_as_csv(config, cpc_info):
 
 
 def print_csv_header(config):
+    """
+    Print CSV header.
+    """
 
     if config.csv_file:
         if not os.path.isfile(config.csv_file):
@@ -330,7 +347,7 @@ def parse_args():
     In case of argument errors, print an error message and exit.
     """
 
-    version = zhmcclient.__version__
+    version = zhmcclient.__version__  # pylint: disable=no-member
     usage = "%(prog)s [options] CONFIGFILE"
     desc = "Gather data about all CPCs managed by a set of HMCs. The data " \
         "is displayed and optionally written to a CSV-formatted spreadsheet."
@@ -421,6 +438,9 @@ Notes:
 
 
 class ConfigError(Exception):
+    """
+    Indicates an issue in the config file.
+    """
     pass
 
 
@@ -460,8 +480,7 @@ def model_name(cpc):
         _model_name = None
     if _model_name:
         return _model_name
-    else:
-        return "unknown"
+    return "unknown"
 
 
 def max_partitions(cpc):
@@ -475,8 +494,7 @@ def max_partitions(cpc):
         max_parts = None
     if max_parts:
         return max_parts
-    else:
-        return "?"
+    return "?"
 
 
 def defined_partitions(partitions):

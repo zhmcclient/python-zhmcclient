@@ -18,9 +18,9 @@ Unit tests for _hba module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, Hba, HTTPError, NotFound
 from zhmcclient_mock import FakedSession
@@ -44,10 +44,13 @@ class TestHba(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in DPM mode with one
         partition that has no HBAs.
         Add one FCP adapter and port.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)

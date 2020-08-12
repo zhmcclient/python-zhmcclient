@@ -88,13 +88,12 @@ sphinx-rtd-theme>=0.5.0
 # Pylint 1.x / astroid 1.x supports py27 and py34/35/36
 # Pylint 2.0 / astroid 2.0 removed py27, added py37
 # Pylint 2.4 / astroid 2.3 removed py34
-# TODO: Pinned pylint to <2.5.0 due to issues in 2.5.0 - remove in a while
 pylint>=1.6.4,<2.0.0; python_version == '2.7'
 pylint>=2.2.2,<2.4; python_version == '3.4'
-pylint>=2.4.4,<2.5.0; python_version >= '3.5'
+pylint>=2.4.4; python_version >= '3.5'
 astroid>=1.4.9,<2.0.0; python_version == '2.7'
 astroid>=2.1.0,<2.3; python_version == '3.4'
-astroid>=2.3.3,<2.4.0; python_version >= '3.5'
+astroid>=2.3.3; python_version >= '3.5'
 # Pinning typed-ast to <1.4.0 for Python 3.4 because it started removing
 # Python 3.4 support.
 # Requiring typed-ast>=1.4.0 for Python 3.8 since it addresses compile errors

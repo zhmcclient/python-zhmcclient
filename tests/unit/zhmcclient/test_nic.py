@@ -18,9 +18,9 @@ Unit tests for _nic module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, Nic, HTTPError, NotFound
 from zhmcclient_mock import FakedSession
@@ -46,11 +46,14 @@ class TestNic(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in DPM mode with one
         partition that has no NICs.
         Add one OSA adapter, port and vswitch, for tests with OSA-backed NICs.
         Add one ROSE adapter and port, for tests with ROCE-backed NICs.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)

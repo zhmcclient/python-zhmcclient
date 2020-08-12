@@ -18,8 +18,8 @@ Unit tests for _task module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
+import pytest
 
 from zhmcclient import Client, Task
 from zhmcclient_mock import FakedSession
@@ -31,9 +31,12 @@ class TestTask(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked Console without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -49,6 +52,9 @@ class TestTask(object):
         self.console = self.client.consoles.find(name=self.faked_console.name)
 
     def add_task(self, name, view_only=True):
+        """
+        Add a faked task object to the faked Console and return it.
+        """
         faked_task = self.faked_console.tasks.add({
             'element-id': 'oid-{}'.format(name),
             # element-uri will be automatically set

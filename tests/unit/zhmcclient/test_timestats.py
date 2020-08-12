@@ -55,269 +55,277 @@ def measure(stats, duration):
     return end - begin
 
 
-class TestTimeStats(object):
-    """All tests for TimeStatsKeeper and TimeStats."""
+def test_timestatskeeper_enabling():
+    """Test enabling and disabling."""
 
-    def test_enabling(self):
-        """Test enabling and disabling."""
+    keeper = TimeStatsKeeper()
 
-        keeper = TimeStatsKeeper()
+    assert not keeper.enabled, \
+        "Verify that initial state is disabled"
 
-        assert not keeper.enabled, \
-            "Verify that initial state is disabled"
+    keeper.disable()
+    assert not keeper.enabled, \
+        "Verify that disabling a disabled keeper works"
 
-        keeper.disable()
-        assert not keeper.enabled, \
-            "Verify that disabling a disabled keeper works"
+    keeper.enable()
+    assert keeper.enabled, \
+        "Verify that enabling a disabled keeper works"
 
-        keeper.enable()
-        assert keeper.enabled, \
-            "Verify that enabling a disabled keeper works"
+    keeper.enable()
+    assert keeper.enabled, \
+        "Verify that enabling an enabled keeper works"
 
-        keeper.enable()
-        assert keeper.enabled, \
-            "Verify that enabling an enabled keeper works"
+    keeper.disable()
+    assert not keeper.enabled, \
+        "Verify that disabling an enabled keeper works"
 
-        keeper.disable()
-        assert not keeper.enabled, \
-            "Verify that disabling an enabled keeper works"
 
-    def test_get(self):
-        """Test getting time statistics."""
+def test_timestatskeeper_get():
+    """Test getting time statistics."""
 
-        keeper = TimeStatsKeeper()
-        snapshot_length = len(keeper.snapshot())
-        assert snapshot_length == 0, \
-            "Verify that initial state has no time statistics. " \
-            "Actual number = %d" % snapshot_length
+    keeper = TimeStatsKeeper()
+    snapshot_length = len(keeper.snapshot())
+    assert snapshot_length == 0, \
+        "Verify that initial state has no time statistics. " \
+        "Actual number = %d" % snapshot_length
 
-        stats = keeper.get_stats('foo')
-        snapshot_length = len(keeper.snapshot())
-        assert snapshot_length == 0, \
-            "Verify that getting a new stats with a disabled keeper results " \
-            "in no time statistics. Actual number = %d" % snapshot_length
-        assert stats.keeper == keeper
-        assert stats.name == "disabled"  # stats for disabled keeper
+    stats = keeper.get_stats('foo')
+    snapshot_length = len(keeper.snapshot())
+    assert snapshot_length == 0, \
+        "Verify that getting a new stats with a disabled keeper results " \
+        "in no time statistics. Actual number = %d" % snapshot_length
+    assert stats.keeper == keeper
+    assert stats.name == "disabled"  # stats for disabled keeper
+    assert stats.count == 0
+    assert stats.avg_time == 0
+    assert stats.min_time == float('inf')
+    assert stats.max_time == 0
+
+    keeper.enable()
+
+    stats = keeper.get_stats('foo')
+    snapshot_length = len(keeper.snapshot())
+    assert snapshot_length == 1, \
+        "Verify that getting a new stats with an enabled keeper results " \
+        "in one time statistics. Actual number = %d" % snapshot_length
+
+    assert stats.keeper == keeper
+    assert stats.name == 'foo'
+    assert stats.count == 0
+    assert stats.avg_time == 0
+    assert stats.min_time == float('inf')
+    assert stats.max_time == 0
+
+    keeper.get_stats('foo')
+    snapshot_length = len(keeper.snapshot())
+    assert snapshot_length == 1, \
+        "Verify that getting an existing stats with an enabled keeper " \
+        "results in the same number of time statistics. " \
+        "Actual number = %d" % snapshot_length
+
+
+def test_timestatskeeper_measure_enabled():
+    """Test measuring time with enabled keeper."""
+
+    keeper = TimeStatsKeeper()
+    keeper.enable()
+
+    # TimeStatsKeeper on Windows has only a precision of 1/60 sec
+    duration = 1.6
+    delta = duration / 10.0
+
+    stats = keeper.get_stats('foo')
+    dur = measure(stats, duration)
+
+    stats_dict = keeper.snapshot()
+    for op_name in stats_dict:
+        stats = stats_dict[op_name]
+        assert stats.count == 1
+        assert time_abs_delta(stats.avg_time, dur) < delta, \
+            "avg time: actual: %f, expected: %f, delta: %f" % \
+            (stats.avg_time, dur, delta)
+        assert time_abs_delta(stats.min_time, dur) < delta, \
+            "min time: actual: %f, expected: %f, delta: %f" % \
+            (stats.min_time, dur, delta)
+        assert time_abs_delta(stats.max_time, dur) < delta, \
+            "max time: actual: %f, expected: %f, delta: %f" % \
+            (stats.max_time, dur, delta)
+
+    stats.reset()
+    assert stats.count == 0
+    assert stats.avg_time == 0
+    assert stats.min_time == float('inf')
+    assert stats.max_time == 0
+
+
+def test_timestatskeeper_measure_disabled():
+    """Test measuring time with disabled keeper."""
+
+    keeper = TimeStatsKeeper()
+
+    duration = 0.2
+
+    stats = keeper.get_stats('foo')
+    assert stats.name == 'disabled'
+
+    stats.begin()
+    time.sleep(duration)
+    stats.end()
+
+    stats_dict = keeper.snapshot()
+    for op_name in stats_dict:
+        stats = stats_dict[op_name]
         assert stats.count == 0
         assert stats.avg_time == 0
         assert stats.min_time == float('inf')
         assert stats.max_time == 0
 
-        keeper.enable()
 
-        stats = keeper.get_stats('foo')
-        snapshot_length = len(keeper.snapshot())
-        assert snapshot_length == 1, \
-            "Verify that getting a new stats with an enabled keeper results " \
-            "in one time statistics. Actual number = %d" % snapshot_length
+def test_timestatskeeper_snapshot():
+    """Test that snapshot() takes a stable snapshot."""
 
-        assert stats.keeper == keeper
-        assert stats.name == 'foo'
-        assert stats.count == 0
-        assert stats.avg_time == 0
-        assert stats.min_time == float('inf')
-        assert stats.max_time == 0
+    keeper = TimeStatsKeeper()
+    keeper.enable()
 
-        keeper.get_stats('foo')
-        snapshot_length = len(keeper.snapshot())
-        assert snapshot_length == 1, \
-            "Verify that getting an existing stats with an enabled keeper " \
-            "results in the same number of time statistics. " \
-            "Actual number = %d" % snapshot_length
+    duration = 0.2
 
-    def test_measure_enabled(self):
-        """Test measuring time with enabled keeper."""
+    stats = keeper.get_stats('foo')
 
-        keeper = TimeStatsKeeper()
-        keeper.enable()
+    # produce a first data item
+    stats.begin()
+    time.sleep(duration)
+    stats.end()
 
-        # TimeStatsKeeper on Windows has only a precision of 1/60 sec
-        duration = 1.6
-        delta = duration / 10.0
+    # take the snapshot
+    snap_stats_dict = keeper.snapshot()
 
-        stats = keeper.get_stats('foo')
-        dur = measure(stats, duration)
+    # produce a second data item
+    stats.begin()
+    time.sleep(duration)
+    stats.end()
 
-        stats_dict = keeper.snapshot()
-        for op_name in stats_dict:
-            stats = stats_dict[op_name]
-            assert stats.count == 1
-            assert time_abs_delta(stats.avg_time, dur) < delta, \
-                "avg time: actual: %f, expected: %f, delta: %f" % \
-                (stats.avg_time, dur, delta)
-            assert time_abs_delta(stats.min_time, dur) < delta, \
-                "min time: actual: %f, expected: %f, delta: %f" % \
-                (stats.min_time, dur, delta)
-            assert time_abs_delta(stats.max_time, dur) < delta, \
-                "max time: actual: %f, expected: %f, delta: %f" % \
-                (stats.max_time, dur, delta)
+    # verify that only the first data item is in the snapshot
+    for op_name in snap_stats_dict:
+        snap_stats = snap_stats_dict[op_name]
+        assert snap_stats.count == 1
 
-        stats.reset()
-        assert stats.count == 0
-        assert stats.avg_time == 0
-        assert stats.min_time == float('inf')
-        assert stats.max_time == 0
+    # verify that both data items are in the original stats object
+    assert stats.count == 2
 
-    def test_measure_disabled(self):
-        """Test measuring time with disabled keeper."""
 
-        keeper = TimeStatsKeeper()
+def test_timestatskeeper_measure_avg_min_max():
+    """Test measuring avg min max values."""
 
-        duration = 0.2
+    keeper = TimeStatsKeeper()
+    keeper.enable()
 
-        stats = keeper.get_stats('foo')
-        assert stats.name == 'disabled'
+    # TimeStatsKeeper on Windows has only a precision of 1/60 sec
+    durations = (0.6, 1.2, 1.5)
+    delta = 0.08
+    count = len(durations)
 
-        stats.begin()
-        time.sleep(duration)
+    stats = keeper.get_stats('foo')
+    m_durations = []
+    for duration in durations:
+        m_durations.append(measure(stats, duration))
+
+    min_dur = min(m_durations)
+    max_dur = max(m_durations)
+    avg_dur = sum(m_durations) / float(count)
+
+    stats_dict = keeper.snapshot()
+    for op_name in stats_dict:
+        stats = stats_dict[op_name]
+        assert stats.count == 3
+        assert time_abs_delta(stats.avg_time, avg_dur) < delta, \
+            "avg time: actual: %f, expected: %f, delta: %f" % \
+            (stats.avg_time, avg_dur, delta)
+        assert time_abs_delta(stats.min_time, min_dur) < delta, \
+            "min time: actual: %f, expected: %f, delta: %f" % \
+            (stats.min_time, min_dur, delta)
+        assert time_abs_delta(stats.max_time, max_dur) < delta, \
+            "max time: actual: %f, expected: %f, delta: %f" % \
+            (stats.max_time, max_dur, delta)
+
+
+def test_timestatskeeper_only_end():
+    """Test that invoking end() before begin() has ever been called raises
+    a RuntimeError exception."""
+
+    keeper = TimeStatsKeeper()
+    keeper.enable()
+    stats = keeper.get_stats('foo')
+
+    with pytest.raises(RuntimeError):
         stats.end()
 
-        stats_dict = keeper.snapshot()
-        for op_name in stats_dict:
-            stats = stats_dict[op_name]
-            assert stats.count == 0
-            assert stats.avg_time == 0
-            assert stats.min_time == float('inf')
-            assert stats.max_time == 0
 
-    def test_snapshot(self):
-        """Test that snapshot() takes a stable snapshot."""
+def test_timestatskeeper_end_after_end():
+    """Test that invoking end() after a begin/end sequence raises
+    a RuntimeError exception."""
 
-        keeper = TimeStatsKeeper()
-        keeper.enable()
+    keeper = TimeStatsKeeper()
+    keeper.enable()
+    stats = keeper.get_stats('foo')
 
-        duration = 0.2
+    stats.begin()
+    time.sleep(0.01)
+    stats.end()
 
-        stats = keeper.get_stats('foo')
-
-        # produce a first data item
-        stats.begin()
-        time.sleep(duration)
+    with pytest.raises(RuntimeError):
         stats.end()
 
-        # take the snapshot
-        snap_stats_dict = keeper.snapshot()
 
-        # produce a second data item
-        stats.begin()
-        time.sleep(duration)
-        stats.end()
+def test_timestatskeeper_str_empty():
+    """Test TimestatsKeeper.__str__() for an empty enabled keeper."""
 
-        # verify that only the first data item is in the snapshot
-        for op_name in snap_stats_dict:
-            snap_stats = snap_stats_dict[op_name]
-            assert snap_stats.count == 1
+    keeper = TimeStatsKeeper()
+    keeper.enable()
+    s = str(keeper)
+    assert s == PRINT_HEADER
 
-        # verify that both data items are in the original stats object
-        assert stats.count == 2
 
-    def test_measure_avg_min_max(self):
-        """Test measuring avg min max values."""
+def test_timestatskeeper_str_disabled():
+    """Test TimestatsKeeper.__str__() for a disabled keeper."""
 
-        keeper = TimeStatsKeeper()
-        keeper.enable()
+    keeper = TimeStatsKeeper()
+    s = str(keeper)
+    assert s == PRINT_HEADER_DISABLED
 
-        # TimeStatsKeeper on Windows has only a precision of 1/60 sec
-        durations = (0.6, 1.2, 1.5)
-        delta = 0.08
-        count = len(durations)
 
-        stats = keeper.get_stats('foo')
-        m_durations = []
-        for duration in durations:
-            m_durations.append(measure(stats, duration))
+def test_timestatskeeper_str_one():
+    """Test TimestatsKeeper.__str__() for an enabled keeper with one data
+    item."""
 
-        min_dur = min(m_durations)
-        max_dur = max(m_durations)
-        avg_dur = sum(m_durations) / float(count)
+    keeper = TimeStatsKeeper()
+    keeper.enable()
 
-        stats_dict = keeper.snapshot()
-        for op_name in stats_dict:
-            stats = stats_dict[op_name]
-            assert stats.count == 3
-            assert time_abs_delta(stats.avg_time, avg_dur) < delta, \
-                "avg time: actual: %f, expected: %f, delta: %f" % \
-                (stats.avg_time, avg_dur, delta)
-            assert time_abs_delta(stats.min_time, min_dur) < delta, \
-                "min time: actual: %f, expected: %f, delta: %f" % \
-                (stats.min_time, min_dur, delta)
-            assert time_abs_delta(stats.max_time, max_dur) < delta, \
-                "max time: actual: %f, expected: %f, delta: %f" % \
-                (stats.max_time, max_dur, delta)
+    duration = 0.1
 
-    def test_only_end(self):
-        """Test that invoking end() before begin() has ever been called raises
-        a RuntimeError exception."""
+    stats = keeper.get_stats('foo')
 
-        keeper = TimeStatsKeeper()
-        keeper.enable()
-        stats = keeper.get_stats('foo')
+    # produce a data item
+    stats.begin()
+    time.sleep(duration)
+    stats.end()
 
-        with pytest.raises(RuntimeError):
-            stats.end()
+    s = str(keeper)
+    assert s.startswith(PRINT_HEADER), \
+        "Unexpected str(keeper): %r" % s
+    num_lines = len(s.split('\n'))
+    assert num_lines == 3, \
+        "Unexpected str(keeper): %r" % s
 
-    def test_end_after_end(self):
-        """Test that invoking end() after a begin/end sequence raises
-        a RuntimeError exception."""
 
-        keeper = TimeStatsKeeper()
-        keeper.enable()
-        stats = keeper.get_stats('foo')
+def test_timestats_str():
+    """Test Timestats.__str__()."""
 
-        stats.begin()
-        time.sleep(0.01)
-        stats.end()
+    keeper = TimeStatsKeeper()
+    timestats = TimeStats(keeper, "foo")
 
-        with pytest.raises(RuntimeError):
-            stats.end()
-
-    def test_str_empty(self):
-        """Test TimestatsKeeper.__str__() for an empty enabled keeper."""
-
-        keeper = TimeStatsKeeper()
-        keeper.enable()
-        s = str(keeper)
-        assert s == PRINT_HEADER
-
-    def test_str_disabled(self):
-        """Test TimestatsKeeper.__str__() for a disabled keeper."""
-
-        keeper = TimeStatsKeeper()
-        s = str(keeper)
-        assert s == PRINT_HEADER_DISABLED
-
-    def test_str_one(self):
-        """Test TimestatsKeeper.__str__() for an enabled keeper with one data
-        item."""
-
-        keeper = TimeStatsKeeper()
-        keeper.enable()
-
-        duration = 0.1
-
-        stats = keeper.get_stats('foo')
-
-        # produce a data item
-        stats.begin()
-        time.sleep(duration)
-        stats.end()
-
-        s = str(keeper)
-        assert s.startswith(PRINT_HEADER), \
-            "Unexpected str(keeper): %r" % s
-        num_lines = len(s.split('\n'))
-        assert num_lines == 3, \
-            "Unexpected str(keeper): %r" % s
-
-    def test_ts_str(self):
-        """Test Timestats.__str__()."""
-
-        keeper = TimeStatsKeeper()
-        timestats = TimeStats(keeper, "foo")
-
-        s = str(timestats)
-        assert s.startswith("TimeStats:"), \
-            "Unexpected str(timestats): %r" % s
-        num_lines = len(s.split('\n'))
-        assert num_lines == 1, \
-            "Unexpected str(timestats): %r" % s
+    s = str(timestats)
+    assert s.startswith("TimeStats:"), \
+        "Unexpected str(timestats): %r" % s
+    num_lines = len(s.split('\n'))
+    assert num_lines == 1, \
+        "Unexpected str(timestats): %r" % s

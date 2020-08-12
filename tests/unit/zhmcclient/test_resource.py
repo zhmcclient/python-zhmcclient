@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=protected-access
+
 """
 Unit tests for _resource module.
 """
@@ -33,6 +35,7 @@ class MyResource(BaseResource):
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
     def __init__(self, manager, uri, name, properties):
+        # pylint: disable=useless-super-delegation
         super(MyResource, self).__init__(manager, uri, name, properties)
 
 
@@ -71,6 +74,11 @@ class ResourceTestCase(object):
     """
 
     def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = Session(host='fake-host')
         self.mgr = MyManager(self.session)
         self.uri = self.mgr._base_uri + '/deadbeef-beef-beef-beef-deadbeefbeef'
@@ -78,7 +86,8 @@ class ResourceTestCase(object):
         self.uri_prop = 'fake-uri-prop'  # same as in MyManager
         self.name_prop = 'fake-name-prop'  # same as in MyManager
 
-    def assert_properties(self, resource, exp_props):
+    @staticmethod
+    def assert_properties(resource, exp_props):
         """
         Assert that the properties of a resource object are as expected.
         """

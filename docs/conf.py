@@ -13,15 +13,20 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+# pylint: disable=invalid-name
+
+"""
+Config file for Sphinx.
+"""
+
 import sys
 import os
-import re
 import inspect
 
 # Imports used by code for autoautosummary
+from docutils.parsers.rst import directives
 from sphinx.ext.autosummary import Autosummary
 from sphinx.ext.autosummary import get_documenter
-from docutils.parsers.rst import directives
 from sphinx.util.inspect import safe_getattr
 from sphinx.util import logging
 
@@ -37,9 +42,9 @@ def get_version(version_file):
     """
     with open(version_file, 'r') as fp:
         version_source = fp.read()
-    globals = {}
-    exec(version_source, globals)
-    return globals['__version__']
+    _globals = {}
+    exec(version_source, _globals)  # pylint: disable=exec-used
+    return _globals['__version__']
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -92,11 +97,12 @@ else:
 
 # General information about the project.
 project = u'zhmcclient'
-copyright = u'IBM'
+copyright = u'IBM'  # pylint: disable=redefined-builtin
 author = u'zhmcclient team'
 
 # The short description of the package.
-_short_description = u'Client library for IBM Z Hardware Management Console Web Services API'
+_short_description = u'Client library for IBM Z Hardware Management Console ' \
+    u'Web Services API'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -329,17 +335,17 @@ htmlhelp_basename = project+'_doc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-'papersize': 'a4paper',
+    # The paper size ('letterpaper' or 'a4paper').
+    'papersize': 'a4paper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 
-# Latex figure (float) alignment
-#'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -468,9 +474,9 @@ autodoc_mock_imports = []
 #       to datatypes of function parameters can be controlled.
 #
 intersphinx_mapping = {
-  'py': ('https://docs.python.org/3/', None), # agnostic to Python version
-  'py2': ('https://docs.python.org/2', None), # specific to Python 2
-  'py3': ('https://docs.python.org/3', None), # specific to Python 3
+    'py': ('https://docs.python.org/3/', None), # agnostic to Python version
+    'py2': ('https://docs.python.org/2', None), # specific to Python 2
+    'py3': ('https://docs.python.org/3', None), # specific to Python 3
 }
 
 intersphinx_cache_limit = 5
@@ -515,8 +521,10 @@ intersphinx_cache_limit = 5
 # results in the link caption "this issue".
 
 extlinks = {
-  'nbview': ('http://nbviewer.jupyter.org/github/zhmcclient/python-zhmcclient/blob/master/docs/notebooks/%s', ''),
-  'nbdown': ('https://github.com/zhmcclient/python-zhmcclient/raw/master/docs/notebooks/%s', '')
+    'nbview': ('http://nbviewer.jupyter.org/github/zhmcclient/'
+               'python-zhmcclient/blob/master/docs/notebooks/%s', ''),
+    'nbdown': ('https://github.com/zhmcclient/python-zhmcclient/'
+               'raw/master/docs/notebooks/%s', '')
 }
 
 # -- Support for autoautosummary ----------------------------------------------
@@ -598,7 +606,7 @@ class AutoAutoSummary(Autosummary):
             if documenter.objtype == member_type:
                 all_members.append(member_name)
         public_members = [x for x in all_members
-                  if x in include_in_public or not x.startswith('_')]
+                          if x in include_in_public or not x.startswith('_')]
         return public_members, all_members
 
     def _get_def_class(self, class_obj, member_name):
@@ -627,6 +635,9 @@ class AutoAutoSummary(Autosummary):
         return class_obj  # Input class is better than nothing
 
     def run(self):
+        """
+        Run the extension.
+        """
 
         try:
             full_class_name = str(self.arguments[0])
@@ -652,7 +663,7 @@ class AutoAutoSummary(Autosummary):
                     for attrib in attributes if not attrib.startswith('_')
                 ]
 
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self._logger.error(
                 "%s: Internal error: %s: %s",
                 self._log_prefix, exc.__class__.__name__, exc)
@@ -662,4 +673,7 @@ class AutoAutoSummary(Autosummary):
 
 
 def setup(app):
+    """
+    Called by Sphinx. Registers the AutoAutoSummary extension.
+    """
     app.add_directive('autoautosummary', AutoAutoSummary)

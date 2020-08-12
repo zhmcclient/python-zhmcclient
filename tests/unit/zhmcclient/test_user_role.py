@@ -18,10 +18,10 @@ Unit tests for _user_role module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
 import six
+import pytest
 
 from zhmcclient import Client, HTTPError, NotFound, BaseResource, UserRole
 from zhmcclient_mock import FakedSession
@@ -33,9 +33,12 @@ class TestUserRole(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked Console without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -51,6 +54,9 @@ class TestUserRole(object):
         self.console = self.client.consoles.find(name=self.faked_console.name)
 
     def add_user_role(self, name, type_):
+        """
+        Add a faked user role object to the faked Console and return it.
+        """
         faked_user_role = self.faked_console.user_roles.add({
             'object-id': 'oid-{}'.format(name),
             # object-uri will be automatically set

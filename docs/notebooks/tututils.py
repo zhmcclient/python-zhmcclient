@@ -17,12 +17,12 @@ Utility module for the Jupyter notebooks used as tutorials.
 """
 
 import getpass
-import requests
 import six
+from requests.packages import urllib3
 
 import zhmcclient
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 USERID = None
 PASSWORD = None

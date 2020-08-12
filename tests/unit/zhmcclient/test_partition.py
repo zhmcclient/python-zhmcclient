@@ -18,9 +18,9 @@ Unit tests for _partition module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, Partition, HTTPError, NotFound
 from zhmcclient_mock import FakedSession
@@ -41,9 +41,12 @@ class TestPartition(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in DPM mode without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -125,7 +128,7 @@ class TestPartition(object):
             faked_partition = self.add_partition3()
         return faked_partition
 
-    def test_partitionmanager_initial_attrs(self):
+    def test_pm_initial_attrs(self):
         """Test initial attributes of PartitionManager."""
 
         partition_mgr = self.cpc.partitions
@@ -148,7 +151,7 @@ class TestPartition(object):
              None),
         ]
     )
-    def test_partitionmanager_list_full_properties(
+    def test_pm_list_full_properties(
             self, full_properties_kwargs, prop_names):
         """Test PartitionManager.list() with full_properties."""
 
@@ -222,7 +225,7 @@ class TestPartition(object):
              []),
         ]
     )
-    def test_partitionmanager_list_filter_args(self, filter_args, exp_names):
+    def test_pm_list_filter_args(self, filter_args, exp_names):
         """Test PartitionManager.list() with filter_args."""
 
         # Add two faked partitions
@@ -268,8 +271,7 @@ class TestPartition(object):
              None),
         ]
     )
-    def test_partitionmanager_create(self, input_props, exp_prop_names,
-                                     exp_exc):
+    def test_pm_create(self, input_props, exp_prop_names, exp_exc):
         """Test PartitionManager.create()."""
 
         partition_mgr = self.cpc.partitions
@@ -310,7 +312,7 @@ class TestPartition(object):
                     exp_value = input_props[prop_name]
                     assert value == exp_value
 
-    def test_partitionmanager_resource_object(self):
+    def test_pm_resource_object(self):
         """
         Test PartitionManager.resource_object().
 
@@ -483,6 +485,7 @@ class TestPartition(object):
     def test_partition_feature_enabled(
             self, desc, partition_name, available_features, feature_name,
             exp_feature_enabled, exp_exc):
+        # pylint: disable=unused-argument
         """Test Partition.feature_enabled()."""
 
         # Add a faked Partition
@@ -551,6 +554,7 @@ class TestPartition(object):
     )
     def test_partition_feature_info(
             self, desc, partition_name, available_features, exp_exc):
+        # pylint: disable=unused-argument
         """Test Partition.feature_info()."""
 
         # Add a faked Partition

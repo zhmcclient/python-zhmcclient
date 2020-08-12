@@ -18,9 +18,9 @@ Unit tests for _user_pattern module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
+import pytest
 
 from zhmcclient import Client, HTTPError, NotFound, UserPattern
 from zhmcclient_mock import FakedSession
@@ -32,9 +32,12 @@ class TestUserPattern(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked Console without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -50,6 +53,9 @@ class TestUserPattern(object):
         self.console = self.client.consoles.find(name=self.faked_console.name)
 
     def add_user_pattern(self, name, pattern, type_, user_template_uri):
+        """
+        Add a faked user pattern object to the faked Console and return it.
+        """
         faked_user_pattern = self.faked_console.user_patterns.add({
             'element-id': 'oid-{}'.format(name),
             # element-uri will be automatically set
@@ -65,6 +71,9 @@ class TestUserPattern(object):
         return faked_user_pattern
 
     def add_user(self, name, type_):
+        """
+        Add a faked user object to the faked Console and return it.
+        """
         faked_user = self.faked_console.users.add({
             'object-id': 'oid-{}'.format(name),
             # object-uri will be automatically set
@@ -77,7 +86,7 @@ class TestUserPattern(object):
         })
         return faked_user
 
-    def test_user_pattern_manager_repr(self):
+    def test_upm_repr(self):
         """Test UserPatternManager.__repr__()."""
 
         user_pattern_mgr = self.console.user_patterns
@@ -92,7 +101,7 @@ class TestUserPattern(object):
                                id=id(user_pattern_mgr)),
                         repr_str)
 
-    def test_user_pattern_manager_initial_attrs(self):
+    def test_upm_initial_attrs(self):
         """Test initial attributes of UserPatternManager."""
 
         user_pattern_mgr = self.console.user_patterns
@@ -124,7 +133,7 @@ class TestUserPattern(object):
              ['a']),
         ]
     )
-    def test_user_pattern_manager_list(
+    def test_upm_list(
             self, filter_args, exp_names, full_properties_kwargs, prop_names):
         """Test UserPatternManager.list()."""
 
@@ -190,8 +199,7 @@ class TestUserPattern(object):
              None),
         ]
     )
-    def test_user_pattern_manager_create(self, input_props, exp_prop_names,
-                                         exp_exc):
+    def test_upm_create(self, input_props, exp_prop_names, exp_exc):
         """Test UserPatternManager.create()."""
 
         faked_user_template = self.add_user(name='tpl', type_='template')
@@ -233,7 +241,7 @@ class TestUserPattern(object):
                     exp_value = input_props[prop_name]
                     assert value == exp_value
 
-    def test_user_pattern_repr(self):
+    def test_up_repr(self):
         """Test UserPattern.__repr__()."""
 
         faked_user1 = self.add_user(name='a', type_='standard')
@@ -264,7 +272,7 @@ class TestUserPattern(object):
              None),
         ]
     )
-    def test_user_pattern_delete(self, input_props, exp_exc):
+    def test_up_delete(self, input_props, exp_exc):
         """Test UserPattern.delete()."""
 
         faked_user_pattern = self.add_user_pattern(
@@ -300,7 +308,7 @@ class TestUserPattern(object):
             with pytest.raises(NotFound) as exc_info:
                 user_pattern_mgr.find(name=faked_user_pattern.name)
 
-    def test_user_pattern_delete_create_same_name(self):
+    def test_up_delete_create_same(self):
         """Test UserPattern.delete() followed by create() with same name."""
 
         user_pattern_name = 'faked_a'
@@ -346,7 +354,7 @@ class TestUserPattern(object):
             {'description': 'New user pattern description'},
         ]
     )
-    def test_user_pattern_update_properties(self, input_props):
+    def test_up_update_properties(self, input_props):
         """Test UserPattern.update_properties()."""
 
         user_pattern_name = 'faked_a'

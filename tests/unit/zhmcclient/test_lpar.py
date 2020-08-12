@@ -18,10 +18,10 @@ Unit tests for _lpar module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
 import copy
 import mock
+import pytest
 
 from zhmcclient import Client, Lpar, HTTPError, StatusTimeout
 from zhmcclient_mock import FakedSession, LparActivateHandler, \
@@ -41,9 +41,12 @@ class TestLpar(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in classic mode without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.session.retry_timeout_config.status_timeout = 1
@@ -578,6 +581,7 @@ class TestLpar(object):
             initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc,
             initial_memory, memory_kwargs, exp_memory, exp_memory_exc,
             initial_stored_status, exp_stored_status, exp_store_status_exc):
+        # pylint: disable=unused-argument
         """Test Lpar.load()."""
 
         # Add a faked LPAR

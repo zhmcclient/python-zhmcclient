@@ -18,12 +18,12 @@ Unit tests for _utils module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import os
 import sys
 from datetime import datetime, MAXYEAR
 import time
 import pytz
+import pytest
 
 from zhmcclient._utils import datetime_from_timestamp, timestamp_from_datetime
 
@@ -110,6 +110,7 @@ def find_max_value(test_func, initial_value):
 
 
 class FailsArray:
+    # pylint: disable=too-few-public-methods
     """
     An array that when accessed at an index returns 1 if the array value at
     that index causes an exception to be raised when passed to a test function,
@@ -130,7 +131,7 @@ class FailsArray:
         """
         try:
             self.test_func(test_value)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             return 1
         return 0
 
@@ -158,163 +159,161 @@ def binary_search(haystack, needle, lo, hi):
 # TODO: Add testcases for repr_manager() (currently indirectly tested)
 
 
-class TestPythonDatetime(object):
-    """
-    Some tests for Python date & time related functions that we use.
-    """
+# Some tests for Python date & time related functions that we use.
 
-    def test_gmtime_epoch(self):
-        """Test that time.gmtime() is based upon the UNIX epoch."""
-        epoch_st = time.struct_time([1970, 1, 1, 0, 0, 0, 3, 1, 0])
-        st = time.gmtime(0)
-        assert st == epoch_st
-
-    def x_test_print_gmtime_max(self):
-        """Print the maximum for time.gmtime()."""
-        max_ts = find_max_value(time.gmtime, 1)
-        max_st = time.gmtime(max_ts)
-        print("\nMax Unix timestamp value for Python time.gmtime(): {} ({!r})".
-              format(max_ts, max_st))
-        sys.stdout.flush()
-
-    def x_test_print_fromtimestamp_max(self):
-        """Print the maximum for datetime.fromtimestamp(utc)."""
-
-        def datetime_fromtimestamp_utc(ts):
-            return datetime.fromtimestamp(ts, pytz.utc)
-
-        max_ts = find_max_value(datetime_fromtimestamp_utc, 1)
-        max_dt = datetime_fromtimestamp_utc(max_ts)
-        print("\nMax Unix timestamp value for Python "
-              "datetime.fromtimestamp(utc): {} ({!r})".
-              format(max_ts, max_dt))
-        sys.stdout.flush()
-
-    def x_test_print_datetime_max(self):
-        """Print datetime.max."""
-        print("\nMax value for Python datetime (datetime.max): {!r}".
-              format(datetime.max))
-        sys.stdout.flush()
+def test_gmtime_epoch():
+    """Test that time.gmtime() is based upon the UNIX epoch."""
+    epoch_st = time.struct_time([1970, 1, 1, 0, 0, 0, 3, 1, 0])
+    st = time.gmtime(0)
+    assert st == epoch_st
 
 
-class TestDatetimeFromTimestamp(object):
-    """
-    All tests for the datetime_from_timestamp() function.
-    """
-
-    @pytest.mark.parametrize(
-        "tz_name", [None, 'UTC', 'US/Eastern', 'Europe/Berlin']
-    )
-    @pytest.mark.parametrize(
-        "datetime_tuple, timestamp", DATETIME_TIMESTAMP_TESTCASES
-    )
-    def test_success_datetime_from_timestamp(
-            self, datetime_tuple, timestamp, tz_name):
-        """Test successful calls to datetime_from_timestamp()."""
-
-        if os.name == 'nt' and timestamp > TS_3001_LIMIT:
-            # Skip this test case, due to the lower limit on Windows
-            return
-
-        # Expected result, as timezone-unaware (but implied UTC)
-        exp_dt_unaware = datetime(*datetime_tuple)
-
-        # Expected result, as timezone-aware
-        exp_dt = pytz.utc.localize(exp_dt_unaware)
-
-        if tz_name is None:
-
-            # Execute the code to be tested
-            act_dt = datetime_from_timestamp(timestamp)
-
-        else:
-            tz = pytz.timezone(tz_name)
-
-            # Execute the code to be tested
-            act_dt = datetime_from_timestamp(timestamp, tz)
-
-        # Verify the result.
-        # Note: timezone-aware datetime objects compare equal according to
-        # their effective point in time (e.g. as if normalized to UTC).
-        assert act_dt == exp_dt
-
-    @pytest.mark.parametrize(
-        "timestamp, exc_type", [
-            (None, ValueError),
-            (-1, ValueError),
-            (TS_MAX + 1, ValueError),
-        ]
-    )
-    def test_error_datetime_from_timestamp(self, timestamp, exc_type):
-        """Test failing calls to datetime_from_timestamp()."""
-
-        with pytest.raises(Exception) as exc_info:
-
-            # Execute the code to be tested
-            datetime_from_timestamp(timestamp)
-
-        # Verify the result
-        assert isinstance(exc_info.value, exc_type)
-
-    def x_test_print_max_datetime_from_timestamp(self):
-        """Print the maximum for datetime_from_timestamp()."""
-        max_ts = find_max_value(datetime_from_timestamp, 1)
-        max_dt = datetime_from_timestamp(max_ts)
-        print("\nMax HMC timestamp value for zhmcclient."
-              "datetime_from_timestamp(): {} ({!r})".format(max_ts, max_dt))
-        sys.stdout.flush()
+def x_test_print_gmtime_max():
+    """Print the maximum for time.gmtime()."""
+    max_ts = find_max_value(time.gmtime, 1)
+    max_st = time.gmtime(max_ts)
+    print("\nMax Unix timestamp value for Python time.gmtime(): {} ({!r})".
+          format(max_ts, max_st))
+    sys.stdout.flush()
 
 
-class TestTimestampFromDatetime(object):
-    """
-    All tests for the timestamp_from_datetime() function.
-    """
+def x_test_print_fromtimestamp_max():
+    """Print the maximum for datetime.fromtimestamp(utc)."""
 
-    @pytest.mark.parametrize(
-        "tz_name", [None, 'UTC', 'US/Eastern', 'Europe/Berlin']
-    )
-    @pytest.mark.parametrize(
-        "datetime_tuple, timestamp", DATETIME_TIMESTAMP_TESTCASES
-    )
-    def test_success(self, datetime_tuple, timestamp, tz_name):
-        """Test successful calls to timestamp_from_datetime()."""
+    def datetime_fromtimestamp_utc(ts):
+        return datetime.fromtimestamp(ts, pytz.utc)
 
-        # Create a timezone-naive datetime object
-        dt = datetime(*datetime_tuple)
-        offset = 0  # because of default UTC
+    max_ts = find_max_value(datetime_fromtimestamp_utc, 1)
+    max_dt = datetime_fromtimestamp_utc(max_ts)
+    print("\nMax Unix timestamp value for Python "
+          "datetime.fromtimestamp(utc): {} ({!r})".
+          format(max_ts, max_dt))
+    sys.stdout.flush()
 
-        if tz_name is not None:
-            # Make the datetime object timezone-aware
-            tz = pytz.timezone(tz_name)
-            offset = tz.utcoffset(dt).total_seconds()
-            dt = tz.localize(dt)
 
-        exp_ts = timestamp - offset * 1000
+def x_test_print_datetime_max():
+    """Print datetime.max."""
+    print("\nMax value for Python datetime (datetime.max): {!r}".
+          format(datetime.max))
+    sys.stdout.flush()
+
+
+# All tests for the datetime_from_timestamp() function.
+
+@pytest.mark.parametrize(
+    "tz_name", [None, 'UTC', 'US/Eastern', 'Europe/Berlin']
+)
+@pytest.mark.parametrize(
+    "datetime_tuple, timestamp", DATETIME_TIMESTAMP_TESTCASES
+)
+def test_success_datetime_from_timestamp(
+        datetime_tuple, timestamp, tz_name):
+    """Test successful calls to datetime_from_timestamp()."""
+
+    if os.name == 'nt' and timestamp > TS_3001_LIMIT:
+        # Skip this test case, due to the lower limit on Windows
+        return
+
+    # Expected result, as timezone-unaware (but implied UTC)
+    exp_dt_unaware = datetime(*datetime_tuple)
+
+    # Expected result, as timezone-aware
+    exp_dt = pytz.utc.localize(exp_dt_unaware)
+
+    if tz_name is None:
 
         # Execute the code to be tested
-        ts = timestamp_from_datetime(dt)
+        act_dt = datetime_from_timestamp(timestamp)
 
-        # Verify the result
-        assert ts == exp_ts
+    else:
+        tz = pytz.timezone(tz_name)
 
-    @pytest.mark.parametrize(
-        "datetime_, exc_type", [
-            (None, ValueError),
-        ]
-    )
-    def test_error(self, datetime_, exc_type):
-        """Test failing calls to timestamp_from_datetime()."""
+        # Execute the code to be tested
+        act_dt = datetime_from_timestamp(timestamp, tz)
 
-        with pytest.raises(Exception) as exc_info:
+    # Verify the result.
+    # Note: timezone-aware datetime objects compare equal according to
+    # their effective point in time (e.g. as if normalized to UTC).
+    assert act_dt == exp_dt
 
-            # Execute the code to be tested
-            timestamp_from_datetime(datetime_)
 
-        # Verify the result
-        assert isinstance(exc_info.value, exc_type)
+@pytest.mark.parametrize(
+    "timestamp, exc_type", [
+        (None, ValueError),
+        (-1, ValueError),
+        (TS_MAX + 1, ValueError),
+    ]
+)
+def test_error_datetime_from_timestamp(timestamp, exc_type):
+    """Test failing calls to datetime_from_timestamp()."""
 
-    def test_datetime_max(self):
-        """Test timestamp_from_datetime() with datetime.max."""
+    with pytest.raises(Exception) as exc_info:
 
-        # The test is that it does not raise an exception:
-        timestamp_from_datetime(datetime.max)
+        # Execute the code to be tested
+        datetime_from_timestamp(timestamp)
+
+    # Verify the result
+    assert isinstance(exc_info.value, exc_type)
+
+
+def x_test_print_max_datetime_from_timestamp():
+    """Print the maximum for datetime_from_timestamp()."""
+    max_ts = find_max_value(datetime_from_timestamp, 1)
+    max_dt = datetime_from_timestamp(max_ts)
+    print("\nMax HMC timestamp value for zhmcclient."
+          "datetime_from_timestamp(): {} ({!r})".format(max_ts, max_dt))
+    sys.stdout.flush()
+
+
+# All tests for the timestamp_from_datetime() function.
+
+@pytest.mark.parametrize(
+    "tz_name", [None, 'UTC', 'US/Eastern', 'Europe/Berlin']
+)
+@pytest.mark.parametrize(
+    "datetime_tuple, timestamp", DATETIME_TIMESTAMP_TESTCASES
+)
+def test_success(datetime_tuple, timestamp, tz_name):
+    """Test successful calls to timestamp_from_datetime()."""
+
+    # Create a timezone-naive datetime object
+    dt = datetime(*datetime_tuple)
+    offset = 0  # because of default UTC
+
+    if tz_name is not None:
+        # Make the datetime object timezone-aware
+        tz = pytz.timezone(tz_name)
+        offset = tz.utcoffset(dt).total_seconds()
+        dt = tz.localize(dt)
+
+    exp_ts = timestamp - offset * 1000
+
+    # Execute the code to be tested
+    ts = timestamp_from_datetime(dt)
+
+    # Verify the result
+    assert ts == exp_ts
+
+
+@pytest.mark.parametrize(
+    "datetime_, exc_type", [
+        (None, ValueError),
+    ]
+)
+def test_error(datetime_, exc_type):
+    """Test failing calls to timestamp_from_datetime()."""
+
+    with pytest.raises(Exception) as exc_info:
+
+        # Execute the code to be tested
+        timestamp_from_datetime(datetime_)
+
+    # Verify the result
+    assert isinstance(exc_info.value, exc_type)
+
+
+def test_datetime_max():
+    """Test timestamp_from_datetime() with datetime.max."""
+
+    # The test is that it does not raise an exception:
+    timestamp_from_datetime(datetime.max)

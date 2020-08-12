@@ -18,8 +18,8 @@ Unit tests for _console module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import re
+import pytest
 
 from zhmcclient import Client, Error, Console, UserManager, UserRoleManager, \
     UserPatternManager, PasswordRuleManager, TaskManager, \
@@ -33,9 +33,12 @@ class TestConsole(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked Console without any
         child resources.
         """
+        # pylint: disable=attribute-defined-outside-init
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
@@ -174,7 +177,7 @@ class TestConsole(object):
                 self.client.query_api_version()
             except Error:
                 pass
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 pytest.fail(
                     "Unexpected non-zhmcclient exception during "
                     "query_api_version() after HMC restart: %s" % exc)
@@ -212,7 +215,7 @@ class TestConsole(object):
             self.client.query_api_version()
         except Error:
             pass
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             pytest.fail(
                 "Unexpected non-zhmcclient exception during "
                 "query_api_version() after HMC shutdown: %s" % exc)

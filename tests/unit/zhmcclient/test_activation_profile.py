@@ -18,9 +18,9 @@ Unit tests for _activation_profile module.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 import copy
 import re
+import pytest
 
 from zhmcclient import Client, ActivationProfile
 from zhmcclient_mock import FakedSession
@@ -34,9 +34,13 @@ class TestActivationProfile(object):
 
     def setup_method(self):
         """
+        Setup that is called by pytest before each test method.
+
         Set up a faked session, and add a faked CPC in classic mode,
         and add two faked activation profiles of each type.
         """
+        # pylint: disable=attribute-defined-outside-init
+
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
 
