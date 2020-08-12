@@ -19,14 +19,10 @@ Change log
 ----------
 
 
-Version 0.26.2.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.26.2
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2020-08-12
 
 **Bug fixes:**
 
@@ -42,12 +38,6 @@ Released: not yet
 * Test: Added 'make installtest' to the Makefile to test installation of the
   package into an empty virtualenv using all supported installation methods.
   Added these install tests to the Travis CI tests. (related to issue #651)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.26.1
