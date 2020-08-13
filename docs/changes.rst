@@ -61,6 +61,9 @@ This version contains all fixes up to 0.26.1.
 * Test: Pinned 'pyrsistent' package (used by jupyter notebook) to <0.16.0 on
   Python 2.7 and to <0.15.0 on Python 3.4.
 
+* Test: Fixed issue where virtualenv on pypy3 created env one level higher.
+  (see issue #673)
+
 **Enhancements:**
 
 * Added an easy way to print debug information for inclusion into issues, via

@@ -139,7 +139,17 @@ function make_virtualenv()
   else
     virtualenv_debug_opts=""
   fi
-  run "virtualenv -p $python_cmd_path $virtualenv_debug_opts $envdir" "Creating virtualenv: $envdir"
+  $PYTHON_CMD -m venv -h >/dev/null 2>&1
+  venv_rc=$?
+  if [[ "$venv_rc" == "0" ]]; then
+    run "$PYTHON_CMD -m venv $envdir" "Creating virtualenv using venv: $envdir"
+  else
+    if [[ "$DEBUG" == "true" ]]; then
+      echo "Debug: Output of virtualenv py_info script"
+      $PYTHON_CMD -m virtualenv.discovery.py_info
+    fi
+    run "virtualenv -p $python_cmd_path $virtualenv_debug_opts $envdir" "Creating virtualenv using virtualenv: $envdir"
+  fi
   if [[ "$DEBUG" == "true" ]]; then
     echo "Debug: Listing files in $envdir/bin"
     ls -al $envdir/bin
