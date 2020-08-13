@@ -109,7 +109,7 @@ setuptools.setup(
     url='https://github.com/zhmcclient/python-zhmcclient',
     project_urls={
         'Bug Tracker': 'https://github.com/zhmcclient/python-zhmcclient/issues',
-        'Documentation': 'https://zhmcclient.readthedocs.io/en/stable/',
+        'Documentation': 'https://python-zhmcclient.readthedocs.io/en/latest/',
         'Source Code': 'https://github.com/zhmcclient/python-zhmcclient',
     },
 
