@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=attribute-defined-outside-init
+
 """
 Function tests for partition lifecycle.
 """
@@ -58,7 +60,7 @@ class TestPartitionLifecycle(object):
     def test_crud(self, capsys):
         """Create, read, update and delete a partition."""
 
-        cpc_name, session, client, cpc, faked_cpc = \
+        _, session, _, cpc, _ = \
             setup_cpc(capsys, self.hmc_creds, self.fake_data)
 
         part_name = self.NAME_PREFIX + 'test_crud.part1'

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=attribute-defined-outside-init
+
 """
 Unit test cases for the tests/common/utils.py module.
 """
@@ -30,10 +32,17 @@ class TestUtilsAssertResources(object):
     """All tests for utils.assert_resources()."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked session (including HMC) and client.
+        """
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
 
     def add_cpcs(self):
+        """Add faked CPCs to the faked HMC."""
+
         faked_cpc1 = self.session.hmc.cpcs.add({
             'object-id': 'fake-cpc1-oid',
             # object-uri is auto-generated

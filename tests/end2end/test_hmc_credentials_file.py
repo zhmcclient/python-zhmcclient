@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=attribute-defined-outside-init
+
 """
 Function tests for HMC credentials file.
 """
@@ -33,9 +35,15 @@ class TestHMCCredentialsFile(object):
     """
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Sets up HMC Credentials.
+        """
         self.hmc_creds = HmcCredentials()
 
     def test_1_format(self, capsys):
+        # pylint: disable=unused-argument
         """Test the format of the HMC credentials file."""
 
         cpc_items = self.hmc_creds.get_cpc_items()

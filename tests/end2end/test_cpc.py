@@ -20,7 +20,9 @@ from __future__ import absolute_import, print_function
 
 from requests.packages import urllib3
 import zhmcclient
+# pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
+# pylint: disable=unused-import
 from zhmcclient.testutils.cpc_fixtures import all_cpcs  # noqa: F401
 
 urllib3.disable_warnings()
@@ -51,6 +53,9 @@ PROPS_CPC_MINIMAL = ['object-uri', 'name']
 
 
 def assert_cpc_minimal(cpc, exp_name, exp_prop_names):
+    """
+    Check a Cpc object.
+    """
     act_prop_names = cpc.properties.keys()
 
     for prop_name in exp_prop_names:
@@ -65,6 +70,7 @@ def assert_cpc_minimal(cpc, exp_name, exp_prop_names):
 
 # Printing is disabled by default, rename to test_...() to enable it.
 def disabled_test_print_cpcs(all_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
     """
     Print some information about the CPCs under test.
     """
@@ -114,6 +120,7 @@ def disabled_test_print_cpcs(all_cpcs):  # noqa: F811
 
 
 def test_cpc_find_by_name(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
     """
     Test that all CPCs in the HMC definition can be found using find_by_name().
     """
@@ -128,6 +135,7 @@ def test_cpc_find_by_name(hmc_session):  # noqa: F811
 
 
 def test_cpc_find_with_name(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
     """
     Test that all CPCs in the HMC definition can be found using find()
     with the name as a filter argument.
@@ -143,6 +151,7 @@ def test_cpc_find_with_name(hmc_session):  # noqa: F811
 
 
 def test_cpc_findall_with_name(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
     """
     Test that all CPCs in the HMC definition can be found using findall()
     with the name as a filter argument.
@@ -160,6 +169,7 @@ def test_cpc_findall_with_name(hmc_session):  # noqa: F811
 
 
 def test_cpc_list_with_name(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
     """
     Test that all CPCs in the HMC definition can be found using list()
     with the name as a filter argument.
@@ -184,6 +194,7 @@ def test_cpc_list_with_name(hmc_session):  # noqa: F811
 
 
 def test_cpc_list_with_name_full(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
     """
     Test that all CPCs in the HMC definition can be found using list()
     with full properties and the name as a filter argument.

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=attribute-defined-outside-init
+
 """
 Function tests for storage groups and their child resources.
 """
@@ -77,7 +79,7 @@ class TestStorageGroups(object):
     def test_stogrp_crud(self, capsys):
         """Create, read, update and delete a storage group."""
 
-        cpc_name, session, client, cpc, faked_cpc = \
+        _, session, client, cpc, faked_cpc = \
             setup_cpc(capsys, self.hmc_creds, self.fake_data)
 
         if not self.dpm_storage_management_enabled(cpc):
@@ -173,7 +175,7 @@ class TestStorageGroups(object):
     def test_stovol_crud(self, capsys):
         """Create, read, update and delete a storage volume in a sto.grp."""
 
-        cpc_name, session, client, cpc, faked_cpc = \
+        _, session, client, cpc, faked_cpc = \
             setup_cpc(capsys, self.hmc_creds, self.fake_data)
 
         if not self.dpm_storage_management_enabled(cpc):
