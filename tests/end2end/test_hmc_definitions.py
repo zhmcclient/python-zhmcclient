@@ -22,12 +22,14 @@ from __future__ import absolute_import, print_function
 from requests.packages import urllib3
 
 import zhmcclient
+# pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
 
 urllib3.disable_warnings()
 
 
 def test_cpc_definitions(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
     """
     Test that the HMC manages the CPCs in the HMC definition and that they
     have the attributes defined there.

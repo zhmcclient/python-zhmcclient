@@ -18,10 +18,11 @@ Utility functions.
 
 from __future__ import absolute_import
 
+from collections import OrderedDict
 try:
-    from collections.abc import OrderedDict, Mapping, MutableSequence, Iterable
+    from collections.abc import Mapping, MutableSequence, Iterable
 except ImportError:
-    from collections import OrderedDict, Mapping, MutableSequence, Iterable
+    from collections import Mapping, MutableSequence, Iterable
 from datetime import datetime
 import six
 import pytz

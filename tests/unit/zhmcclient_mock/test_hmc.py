@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,attribute-defined-outside-init
 
 """
 Unit tests for _hmc module of the zhmcclient_mock package.
@@ -44,12 +44,19 @@ class TestFakedHmc(object):
     """All tests for the zhmcclient_mock.FakedHmc class."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC with attributes set but no child resourcs.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
-    def test_repr(self):
+    def test_hmc_repr(self):
         """Test FakedHmc.__repr__()."""
+
         hmc = self.hmc
 
+        # the function to be tested:
         repr_str = repr(hmc)
 
         repr_str = repr_str.replace('\n', '\\n')
@@ -58,18 +65,20 @@ class TestFakedHmc(object):
                         format(classname=hmc.__class__.__name__, id=id(hmc)),
                         repr_str)
 
-    def test_hmc(self):
+    def test_hmc_attrs(self):
+        """Test FakedHmc attributes."""
+
         assert self.hmc.hmc_name == 'fake-hmc'
         assert self.hmc.hmc_version == '2.13.1'
         assert self.hmc.api_version == '1.8'
         assert isinstance(self.hmc.cpcs, FakedCpcManager)
 
-        # the function to be tested:
         cpcs = self.hmc.cpcs.list()
-
         assert len(cpcs) == 0
 
     def test_hmc_1_cpc(self):
+        """Test FakedHmc, adding and listing one CPC."""
+
         cpc1_in_props = {'name': 'cpc1'}
 
         # the function to be tested:
@@ -97,6 +106,8 @@ class TestFakedHmc(object):
         assert cpc1.manager == self.hmc.cpcs
 
     def test_hmc_2_cpcs(self):
+        """Test FakedHmc, adding and listing two CPCs."""
+
         cpc1_in_props = {'name': 'cpc1'}
 
         # the function to be tested:
@@ -145,7 +156,9 @@ class TestFakedHmc(object):
         assert cpc2.properties == cpc2_out_props
         assert cpc2.manager == self.hmc.cpcs
 
-    def test_res_dict(self):
+    def test_hmc_add_resources(self):
+        """Test FakedHmc.add_resources()."""
+
         cpc1_in_props = {'name': 'cpc1'}
         adapter1_in_props = {'name': 'osa1', 'adapter-family': 'hipersockets'}
         port1_in_props = {'name': 'osa1_1'}
@@ -227,6 +240,11 @@ class TestFakedBase(object):
     """All tests for the FakedBaseManager and FakedBaseResource classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has one managed CPC.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.cpc1_oid = '42-abc-543'
@@ -258,6 +276,7 @@ class TestFakedBase(object):
 
     def test_resource_repr(self):
         """Test FakedBaseResource.__repr__()."""
+
         resource = self.cpc_resource
 
         repr_str = repr(resource)
@@ -271,6 +290,7 @@ class TestFakedBase(object):
 
     def test_manager_repr(self):
         """Test FakedBaseManager.__repr__()."""
+
         manager = self.cpc_manager
 
         repr_str = repr(manager)
@@ -310,6 +330,12 @@ class TestFakedActivationProfile(object):
     FakedActivationProfile classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC in classic mode with some
+        activation profiles.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.resetprofile1_in_props = {'name': 'resetprofile1'}
@@ -336,6 +362,7 @@ class TestFakedActivationProfile(object):
 
     def test_profiles_attr(self):
         """Test CPC '*_activation_profiles' attributes."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -365,6 +392,7 @@ class TestFakedActivationProfile(object):
 
     def test_profiles_list(self):
         """Test list() of FakedActivationProfileManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -421,6 +449,7 @@ class TestFakedActivationProfile(object):
 
     def test_profiles_add(self):
         """Test add() of FakedActivationProfileManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         resetprofiles = cpc1.reset_activation_profiles.list()
@@ -458,6 +487,7 @@ class TestFakedActivationProfile(object):
 
     def test_profiles_remove(self):
         """Test remove() of FakedActivationProfileManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         resetprofiles = cpc1.reset_activation_profiles.list()
@@ -478,6 +508,11 @@ class TestFakedAdapter(object):
     """All tests for the FakedAdapterManager and FakedAdapter classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with one ROCE adapter.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.adapter1_in_props = {'name': 'adapter1', 'type': 'roce'}
@@ -496,6 +531,7 @@ class TestFakedAdapter(object):
 
     def test_adapter_repr(self):
         """Test FakedAdapter.__repr__()."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
@@ -512,6 +548,7 @@ class TestFakedAdapter(object):
 
     def test_adapters_attr(self):
         """Test CPC 'adapters' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -520,6 +557,7 @@ class TestFakedAdapter(object):
 
     def test_adapters_list(self):
         """Test list() of FakedAdapterManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -547,6 +585,7 @@ class TestFakedAdapter(object):
 
     def test_adapters_add(self):
         """Test add() of FakedAdapterManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
@@ -582,6 +621,7 @@ class TestFakedAdapter(object):
 
     def test_adapters_remove(self):
         """Test remove() of FakedAdapterManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
@@ -599,6 +639,11 @@ class TestFakedCpc(object):
     """All tests for the FakedCpcManager and FakedCpc classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         rd = {
@@ -613,6 +658,7 @@ class TestFakedCpc(object):
 
     def test_cpc_repr(self):
         """Test FakedCpc.__repr__()."""
+
         cpcs = self.hmc.cpcs.list()
         cpc = cpcs[0]
 
@@ -626,6 +672,7 @@ class TestFakedCpc(object):
 
     def test_cpcs_attr(self):
         """Test HMC 'cpcs' attribute."""
+
         assert isinstance(self.hmc.cpcs, FakedCpcManager)
         assert re.match(r'/api/cpcs', self.hmc.cpcs.base_uri)
 
@@ -664,6 +711,7 @@ class TestFakedCpc(object):
 
     def test_cpcs_add(self):
         """Test add() of FakedCpcManager."""
+
         cpcs = self.hmc.cpcs.list()
         assert len(cpcs) == 1
 
@@ -697,6 +745,7 @@ class TestFakedCpc(object):
 
     def test_cpcs_remove(self):
         """Test remove() of FakedCpcManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         assert len(cpcs) == 1
@@ -712,6 +761,12 @@ class TestFakedHba(object):
     """All tests for the FakedHbaManager and FakedHba classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with an FCP adapter, and a partition
+        that has an HBA.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.adapter1_oid = '747-abc-12345'
@@ -765,6 +820,7 @@ class TestFakedHba(object):
 
     def test_hbas_attr(self):
         """Test Partition 'hbas' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -776,6 +832,7 @@ class TestFakedHba(object):
 
     def test_hbas_list(self):
         """Test list() of FakedHbaManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -801,6 +858,7 @@ class TestFakedHba(object):
 
     def test_hbas_add(self):
         """Test add() of FakedHbaManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -845,6 +903,7 @@ class TestFakedHba(object):
 
     def test_hbas_remove(self):
         """Test remove() of FakedHbaManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -866,6 +925,11 @@ class TestFakedLpar(object):
     """All tests for the FakedLparManager and FakedLpar classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with an LPAR.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.lpar1_in_props = {'name': 'lpar1'}
@@ -884,6 +948,7 @@ class TestFakedLpar(object):
 
     def test_lpars_attr(self):
         """Test CPC 'lpars' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -892,6 +957,7 @@ class TestFakedLpar(object):
 
     def test_lpars_list(self):
         """Test list() of FakedLparManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -914,6 +980,7 @@ class TestFakedLpar(object):
 
     def test_lpars_add(self):
         """Test add() of FakedLparManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         lpars = cpc1.lpars.list()
@@ -948,6 +1015,7 @@ class TestFakedLpar(object):
 
     def test_lpars_remove(self):
         """Test remove() of FakedLparManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         lpars = cpc1.lpars.list()
@@ -965,6 +1033,12 @@ class TestFakedNic(object):
     """All tests for the FakedNicManager and FakedNic classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with a ROCE adapter and one
+        partition that has a NIC.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.adapter1_oid = '380-xyz-12345'
@@ -1018,6 +1092,7 @@ class TestFakedNic(object):
 
     def test_nics_attr(self):
         """Test Partition 'nics' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1029,6 +1104,7 @@ class TestFakedNic(object):
 
     def test_nics_list(self):
         """Test list() of FakedNicManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1053,6 +1129,7 @@ class TestFakedNic(object):
 
     def test_nics_add(self):
         """Test add() of FakedNicManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1096,6 +1173,7 @@ class TestFakedNic(object):
 
     def test_nics_remove(self):
         """Test remove() of FakedNicManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1117,6 +1195,11 @@ class TestFakedPartition(object):
     """All tests for the FakedPartitionManager and FakedPartition classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with a partition.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
@@ -1135,6 +1218,7 @@ class TestFakedPartition(object):
 
     def test_partition_repr(self):
         """Test FakedPartition.__repr__()."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1151,6 +1235,7 @@ class TestFakedPartition(object):
 
     def test_partitions_attr(self):
         """Test CPC 'partitions' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -1159,6 +1244,7 @@ class TestFakedPartition(object):
 
     def test_partitions_list(self):
         """Test list() of FakedPartitionManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -1184,6 +1270,7 @@ class TestFakedPartition(object):
 
     def test_partitions_add(self):
         """Test add() of FakedPartitionManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1222,6 +1309,7 @@ class TestFakedPartition(object):
 
     def test_partitions_remove(self):
         """Test remove() of FakedPartitionManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1239,6 +1327,11 @@ class TestFakedPort(object):
     """All tests for the FakedPortManager and FakedPort classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with an OSA adapter with one Port.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.adapter1_in_props = {'name': 'adapter1', 'adapter-family': 'osa'}
@@ -1263,6 +1356,7 @@ class TestFakedPort(object):
 
     def test_ports_attr(self):
         """Test Adapter 'ports' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
@@ -1274,6 +1368,7 @@ class TestFakedPort(object):
 
     def test_ports_list(self):
         """Test list() of FakedPortManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
@@ -1297,6 +1392,7 @@ class TestFakedPort(object):
 
     def test_ports_add(self):
         """Test add() of FakedPortManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
@@ -1332,6 +1428,7 @@ class TestFakedPort(object):
 
     def test_ports_remove(self):
         """Test remove() of FakedPortManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         adapters = cpc1.adapters.list()
@@ -1355,6 +1452,12 @@ class TestFakedVirtualFunction(object):
     classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with a partition that has a virtual
+        function.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
@@ -1379,7 +1482,8 @@ class TestFakedVirtualFunction(object):
         self.hmc.add_resources(rd)
 
     def test_virtual_functions_attr(self):
-        """Test CPC 'virtual_functions' attribute."""
+        """Test Partition 'virtual_functions' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1392,6 +1496,7 @@ class TestFakedVirtualFunction(object):
 
     def test_virtual_functions_list(self):
         """Test list() of FakedVirtualFunctionManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1416,6 +1521,7 @@ class TestFakedVirtualFunction(object):
 
     def test_virtual_functions_add(self):
         """Test add() of FakedVirtualFunctionManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1453,6 +1559,7 @@ class TestFakedVirtualFunction(object):
 
     def test_virtual_functions_remove(self):
         """Test remove() of FakedVirtualFunctionManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         partitions = cpc1.partitions.list()
@@ -1475,6 +1582,11 @@ class TestFakedVirtualSwitch(object):
     classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with a virtual switch.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.virtual_switch1_in_props = {'name': 'virtual_switch1'}
@@ -1493,6 +1605,7 @@ class TestFakedVirtualSwitch(object):
 
     def test_virtual_switches_attr(self):
         """Test CPC 'virtual_switches' attribute."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -1502,6 +1615,7 @@ class TestFakedVirtualSwitch(object):
 
     def test_virtual_switches_list(self):
         """Test list() of FakedVirtualSwitchManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
 
@@ -1524,6 +1638,7 @@ class TestFakedVirtualSwitch(object):
 
     def test_virtual_switches_add(self):
         """Test add() of FakedVirtualSwitchManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         virtual_switches = cpc1.virtual_switches.list()
@@ -1559,6 +1674,7 @@ class TestFakedVirtualSwitch(object):
 
     def test_virtual_switches_remove(self):
         """Test remove() of FakedVirtualSwitchManager."""
+
         cpcs = self.hmc.cpcs.list()
         cpc1 = cpcs[0]
         virtual_switches = cpc1.virtual_switches.list()
@@ -1577,6 +1693,11 @@ class TestFakedMetricsContext(object):
     classes."""
 
     def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with a partition.
+        """
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
@@ -1594,8 +1715,9 @@ class TestFakedMetricsContext(object):
         }
         self.hmc.add_resources(rd)
 
-    def test_metrics_contexts_attr(self):
+    def test_mcm_attr(self):
         """Test faked HMC 'metrics_contexts' attribute."""
+
         faked_hmc = self.hmc
 
         assert isinstance(faked_hmc.metrics_contexts,
@@ -1603,8 +1725,9 @@ class TestFakedMetricsContext(object):
         assert re.match(r'/api/services/metrics/context',
                         faked_hmc.metrics_contexts.base_uri)
 
-    def test_metrics_contexts_add(self):
+    def test_mcm_add(self):
         """Test add() of FakedMetricsContextManager."""
+
         faked_hmc = self.hmc
 
         mc_in_props = {
@@ -1626,10 +1749,12 @@ class TestFakedMetricsContext(object):
         })
         assert mc.properties == mc_props
 
-    def test_metrics_contexts_add_get_mg_def(self):
-        """Test add_metric_group_definition(), get_metric_group_definition(),
+    def test_mcm_add_get_mg_def(self):
+        """
+        Test add_metric_group_definition(), get_metric_group_definition(),
         and get_metric_group_definition_names() of
-        FakedMetricsContextManager."""
+        FakedMetricsContextManager.
+        """
 
         faked_hmc = self.hmc
         mc_mgr = faked_hmc.metrics_contexts
@@ -1675,9 +1800,11 @@ class TestFakedMetricsContext(object):
         mg_def_names = mc_mgr.get_metric_group_definition_names()
         assert list(mg_def_names) == [mg_name]
 
-    def test_metrics_contexts_add_get_metric_values(self):
-        """Test add_metric_values(), get_metric_values(), and
-        get_metric_values_group_names() of FakedMetricsContextManager."""
+    def test_mcm_add_get_metric_values(self):
+        """
+        Test add_metric_values(), get_metric_values(), and
+        get_metric_values_group_names() of FakedMetricsContextManager.
+        """
 
         faked_hmc = self.hmc
         mc_mgr = faked_hmc.metrics_contexts
@@ -1734,7 +1861,7 @@ class TestFakedMetricsContext(object):
         mo_vals = mc_mgr.get_metric_values(mg_name)
         assert list(mo_vals) == [mo_val_input, mo_val2_input]
 
-    def test_metrics_context_get_mg_defs(self):
+    def test_mc_get_mg_defs(self):
         """Test get_metric_group_definitions() of FakedMetricsContext."""
 
         faked_hmc = self.hmc
@@ -1786,7 +1913,7 @@ class TestFakedMetricsContext(object):
         # Verify the returned M.G.Defs
         assert list(mg_defs) == exp_mg_defs
 
-    def test_metrics_context_get_mg_infos(self):
+    def test_mc_get_mg_infos(self):
         """Test get_metric_group_infos() of FakedMetricsContext."""
 
         faked_hmc = self.hmc
@@ -1864,7 +1991,7 @@ class TestFakedMetricsContext(object):
         # Verify the returned M.G.Defs
         assert list(mg_infos) == exp_mg_infos
 
-    def test_metrics_context_get_m_values(self):
+    def test_mc_get_m_values(self):
         """Test get_metric_values() of FakedMetricsContext."""
 
         faked_hmc = self.hmc
@@ -1914,7 +2041,7 @@ class TestFakedMetricsContext(object):
         assert mv[0] == mg_name
         assert mv[1] == exp_mo_vals
 
-    def test_metrics_context_get_m_values_response(self):
+    def test_mc_get_m_values_response(self):
         """Test get_metric_values_response() of FakedMetricsContext."""
 
         faked_hmc = self.hmc
@@ -2003,49 +2130,43 @@ class TestFakedMetricsContext(object):
             format(mv_resp, exp_mv_resp)
 
 
-class TestFakedMetricGroupDefinition(object):
-    """All tests for the FakedMetricGroupDefinition class."""
+def test_mgd_attr():
+    """Test attributes of a FakedMetricGroupDefinition object."""
 
-    def test_metric_group_definition_attr(self):
-        """Test attributes of a FakedMetricGroupDefinition object."""
+    in_kwargs = {
+        'name': 'partition-usage',
+        'types': [
+            ('metric-1', 'string-metric'),
+            ('metric-2', 'integer-metric'),
+        ]
+    }
 
-        in_kwargs = {
-            'name': 'partition-usage',
-            'types': [
-                ('metric-1', 'string-metric'),
-                ('metric-2', 'integer-metric'),
-            ]
-        }
+    # the function to be tested:
+    new_mgd = FakedMetricGroupDefinition(**in_kwargs)
 
-        # the function to be tested:
-        new_mgd = FakedMetricGroupDefinition(**in_kwargs)
-
-        assert new_mgd.name == in_kwargs['name']
-        assert new_mgd.types == in_kwargs['types']
-        assert new_mgd.types is not in_kwargs['types']  # was copied
+    assert new_mgd.name == in_kwargs['name']
+    assert new_mgd.types == in_kwargs['types']
+    assert new_mgd.types is not in_kwargs['types']  # was copied
 
 
-class TestFakedMetricObjectValues(object):
-    """All tests for the FakedMetricObjectValues class."""
+def test_mov_attr():
+    """Test attributes of a FakedMetricObjectValues object."""
 
-    def test_metric_object_values_attr(self):
-        """Test attributes of a FakedMetricObjectValues object."""
+    in_kwargs = {
+        'group_name': 'partition-usage',
+        'resource_uri': '/api/partitions/fake-oid',
+        'timestamp': datetime.now(),
+        'values': [
+            ('metric-1', "a"),
+            ('metric-2', 5),
+        ]
+    }
 
-        in_kwargs = {
-            'group_name': 'partition-usage',
-            'resource_uri': '/api/partitions/fake-oid',
-            'timestamp': datetime.now(),
-            'values': [
-                ('metric-1', "a"),
-                ('metric-2', 5),
-            ]
-        }
+    # the function to be tested:
+    new_mov = FakedMetricObjectValues(**in_kwargs)
 
-        # the function to be tested:
-        new_mov = FakedMetricObjectValues(**in_kwargs)
-
-        assert new_mov.group_name == in_kwargs['group_name']
-        assert new_mov.resource_uri == in_kwargs['resource_uri']
-        assert new_mov.timestamp == in_kwargs['timestamp']
-        assert new_mov.values == in_kwargs['values']
-        assert new_mov.values is not in_kwargs['values']  # was copied
+    assert new_mov.group_name == in_kwargs['group_name']
+    assert new_mov.resource_uri == in_kwargs['resource_uri']
+    assert new_mov.timestamp == in_kwargs['timestamp']
+    assert new_mov.values == in_kwargs['values']
+    assert new_mov.values is not in_kwargs['values']  # was copied

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=attribute-defined-outside-init
+
 """
 Function tests for activation profile handling.
 """
@@ -128,7 +130,7 @@ class TestActivationProfiles(object):
     def test_ap_lf(self, capsys, profile_type):
         """List and find activation profiles."""
 
-        cpc_name, session, client, cpc, faked_cpc = \
+        _, session, _, cpc, faked_cpc = \
             setup_cpc(capsys, self.hmc_creds, self.fake_data)
 
         if faked_cpc:

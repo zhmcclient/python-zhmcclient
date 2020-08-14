@@ -18,8 +18,8 @@ Utility functions for tests.
 
 import sys
 import os
-import yaml
 import logging
+import yaml
 
 import zhmcclient
 import zhmcclient_mock
@@ -396,8 +396,8 @@ def print_logger(logger):
         print("Debug:   Handler %s:" % type(handler))
         print("Debug:     handler level: %s (%s)" %
               (handler.level, logging.getLevelName(handler.level)))
-        format = getattr(handler.formatter, '_fmt', None)
-        print("Debug:     handler format: %r" % format)
+        _fmt = getattr(handler.formatter, '_fmt', None)
+        print("Debug:     handler format: %r" % _fmt)
 
 
 def setup_logging():

@@ -621,7 +621,6 @@ class AutoAutoSummary(Autosummary):
         Returns:
           Class object that defines the member.
         """
-        member_obj = getattr(class_obj, member_name)
         for def_class_obj in inspect.getmro(class_obj):
             if member_name in def_class_obj.__dict__:
                 if def_class_obj.__name__ in self._excluded_classes:
