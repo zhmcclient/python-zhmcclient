@@ -82,6 +82,10 @@ This version contains all fixes up to 0.26.1.
 * Docs: Added links to HMC WS APi and Operations books for z15.
   (Related to issue #665)
 
+* Added the z15 machine types 8561 and 8562 for detecting the maximum number
+  of partitions, and started exploiting the new 'maximum-partitions' property
+  of the CPC for this purpose.
+
 **Cleanup**
 
 * Docs: Removed link to "KVM for IBM z Systems - System Administration" book,

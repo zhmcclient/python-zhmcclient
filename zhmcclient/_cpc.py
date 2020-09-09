@@ -356,6 +356,12 @@ class Cpc(BaseResource):
         """
         return self.prop('dpm-enabled', False)
 
+    # Note: From HMC API version 2.24 on (i.e. starting with 8561), the Cpc
+    # object supports a 'maximum-partitions' property, but only in DPM mode.
+    # Therefore, we need to continue maintaining max partitions for all future
+    # machine types.
+
+    # Machine types with same max partitions for all models:
     _MAX_PARTITIONS_BY_MACHINE_TYPE = {
         '2817': 60,  # z196
         '2818': 30,  # z114
@@ -365,11 +371,15 @@ class Cpc(BaseResource):
         '2965': 40,  # z13s / Rockhopper
         '3906': 85,  # z14 / Emperor II
         '3907': 40,  # z14-ZR1 / Rockhopper II
-        # Note: From HMC API version 2.24 on, the Cpc object supports a
-        # 'maximum-partitions' property. Because that API version was
-        # introduced while model 3907 was already avbailable, the property is
-        # guaranteed to be available only on models after 3907.
-        # TODO: Exploit the new 'maximum-partitions' property.
+    }
+
+    # Machine types with different max partitions across their models:
+    _MAX_PARTITIONS_BY_MACHINE_TYPE_MODEL = {
+        ('8561', 'T01'): 85,  # z15
+        ('8561', 'LT1'): 85,  # z15
+        ('8562', 'GT2'): 85,  # z15 (85 is an exception for 8562)
+        ('8562', 'T02'): 40,  # z15
+        ('8562', 'LT2'): 40,  # z15
     }
 
     @property
@@ -393,7 +403,9 @@ class Cpc(BaseResource):
         z13 / Emperor                             85
         z13s / Rockhopper                         40
         z14 / Emperor II                          85
-        z14-ZR1 / Rockhopper II                   40
+        z14-ZR1 / -LR1                            40
+        z15-T01 / -LT1 / -GT2                     85
+        z15-T02 / -LT2                            40
         =========================  ==================
 
         Raises:
@@ -405,11 +417,21 @@ class Cpc(BaseResource):
           :exc:`ValueError`: Unknown machine type
         """
         machine_type = self.get_property('machine-type')
+        machine_model = self.get_property('machine-model')
         try:
-            max_parts = self._MAX_PARTITIONS_BY_MACHINE_TYPE[machine_type]
+            return self._MAX_PARTITIONS_BY_MACHINE_TYPE[machine_type]
         except KeyError:
-            raise ValueError("Unknown machine type: {!r}".format(machine_type))
-        return max_parts
+            pass
+        try:
+            return self._MAX_PARTITIONS_BY_MACHINE_TYPE_MODEL[
+                (machine_type, machine_model)]
+        except KeyError:
+            pass
+        try:
+            return self.get_property('maximum-partitions')
+        except KeyError:
+            raise ValueError("Unknown machine type/model: {}-{}".
+                             format(machine_type, machine_model))
 
     @logged_api_call
     def feature_enabled(self, feature_name):
