@@ -61,6 +61,7 @@ class TestAdapter(object):
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'machine-type': '2964',  # z13
+            'machine-model': 'N10',
         })
         self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
 
@@ -235,6 +236,7 @@ class TestAdapter(object):
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
             'machine-type': '2965',  # z13s
+            'machine-model': 'N10',
         })
         return faked_cpc
 

@@ -348,6 +348,7 @@ class TestCpc(object):
                 'is-ensemble-member': False,
                 'iml-mode': 'dpm',
                 'machine-type': '2965',
+                'machine-model': 'N10',
             })
         elif cpc_name == CPC2_NAME:
             faked_cpc = self.session.hmc.cpcs.add({
@@ -362,6 +363,7 @@ class TestCpc(object):
                 'is-ensemble-member': False,
                 'iml-mode': 'lpar',
                 'machine-type': '2965',
+                'machine-model': 'N10',
             })
         elif cpc_name == CPC3_NAME:
             faked_cpc = self.session.hmc.cpcs.add({
@@ -376,6 +378,7 @@ class TestCpc(object):
                 'is-ensemble-member': False,
                 'iml-mode': 'lpar',
                 'machine-type': '2827',
+                'machine-model': 'H43',
             })
         elif cpc_name == CPC4_NAME:
             faked_cpc = self.session.hmc.cpcs.add({
@@ -390,6 +393,7 @@ class TestCpc(object):
                 'is-ensemble-member': False,
                 'iml-mode': 'dpm',
                 'machine-type': '3607',
+                'machine-model': 'LR1',
                 'available-features-list': [],
             })
         else:
