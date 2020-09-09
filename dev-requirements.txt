@@ -139,6 +139,9 @@ jupyter_core>=4.2.1; python_version != '3.4' or sys_platform != 'win32'
 nbconvert>=5.0.0; python_version != '3.4' or sys_platform != 'win32'
 nbformat>=4.2.0; python_version != '3.4' or sys_platform != 'win32'
 notebook>=4.3.1; python_version != '3.4' or sys_platform != 'win32'
+pyrsistent>=0.14.0,<0.16.0; python_version == '2.7'
+pyrsistent>=0.14.0,<0.15.0; python_version == '3.4' and sys_platform != 'win32'
+pyrsistent>=0.14.0; python_version >= '3.5'
 
 # Pywin32 is used (at least?) by jupyter.
 # Pywin32 version 226 needs to be excluded, see issue #1946.
