@@ -19,6 +19,26 @@ Change log
 ----------
 
 
+Version 0.27.1.dev1
+^^^^^^^^^^^^^^^^^^^
+
+Released: not yet
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Known issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
 Version 0.27.0
 ^^^^^^^^^^^^^^
 
