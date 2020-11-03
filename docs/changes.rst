@@ -54,6 +54,9 @@ Released: not yet
 * Added support for operations for managing temporary processor capacity:
   `Cpc.add_temporary_capacity()` and `Cpc.remove_temporary_capacity()`.
 
+* Added support for status timeout in `Partition.stop()` that waits for partition
+  stop to reach desired status.
+
 * Test: Resolved remaining Pylint issues and enforcing no issues from now on
   (issue #661).
 

@@ -450,7 +450,8 @@ class Partition(BaseResource):
         return result
 
     @logged_api_call
-    def stop(self, wait_for_completion=True, operation_timeout=None):
+    def stop(self, wait_for_completion=True, operation_timeout=None,
+             status_timeout=None):
         """
         Stop (deactivate) this Partition, using the HMC operation "Stop
         Partition".
@@ -480,6 +481,15 @@ class Partition(BaseResource):
             `wait_for_completion=True`, a
             :exc:`~zhmcclient.OperationTimeout` is raised.
 
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the partition
+            has reached the desired status, after the HMC operation has
+            completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.StatusTimeout` is raised.
+
         Returns:
 
           :class:`py:dict` or :class:`~zhmcclient.Job`:
@@ -499,11 +509,16 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
+            waiting for the desired partition status.
         """
         result = self.manager.session.post(
             self.uri + '/operations/stop',
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
+        if wait_for_completion:
+            statuses = ["stopped"]
+            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
