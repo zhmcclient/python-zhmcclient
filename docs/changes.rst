@@ -186,6 +186,7 @@ Released: 2019-08-15
 
 **Enhancements:**
 
+* Added support for status timeout in partition stop that waits for partition stop to reach desired status.
 * Improved end2end test support for zhmcclient and its using projects.
   The zhmcclient.testutils package already provides some support for end2end
   tests by users of the zhmcclient package. It is also used by the end2end
