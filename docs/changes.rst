@@ -32,6 +32,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Migrated from Travis and Appveyor to GitHub Actions. This required several
+  changes in package dependencies for development.
+
 **Cleanup:**
 
 **Known issues:**
