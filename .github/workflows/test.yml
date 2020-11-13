@@ -1,0 +1,159 @@
+# This GitHub workflow will setup and run various kinds of tests with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: test
+
+on:
+  # schedule:
+  # # minute hour day_of_month month day_of_week
+  # - cron:  '10 21 * * 0'  # Every sunday at 21:10 UTC
+  push:
+    branches: [ master, stable_0.27 ]
+  pull_request:
+    branches: [ master, stable_0.27 ]
+
+jobs:
+
+  test:
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      # # The matrix for the all-environment pull request:
+      # matrix:
+      #   os: [ubuntu-latest, macos-latest, windows-latest]
+      #   python-version: [2.7, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9]
+      #   package_level: [minimum, latest]
+      #   exclude:
+      #   - os: macos-latest
+      #     python-version: 3.4
+      #     package_level: minimum
+      #   - os: macos-latest
+      #     python-version: 3.4
+      #     package_level: latest
+      #   - os: windows-latest
+      #     python-version: 3.4
+      #     package_level: minimum
+      #   - os: windows-latest
+      #     python-version: 3.4
+      #     package_level: latest
+      # The matrix for normal pull requests:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [2.7, 3.4, 3.9]
+        package_level: [minimum, latest]
+        include:
+        - os: macos-latest
+          python-version: 3.9
+          package_level: latest
+        - os: windows-latest
+          python-version: 3.8
+          package_level: minimum
+        - os: windows-latest
+          python-version: 3.9
+          package_level: minimum
+        - os: windows-latest
+          python-version: 3.9
+          package_level: latest
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Rebase manual-ci-run to master
+      if: ${{ github.head_ref == 'manual-ci-run' }}
+      run: |
+        echo "Fetching and defining master:"
+        git fetch origin master
+        git branch master FETCH_HEAD
+        echo "Log back to master:"
+        git log master~..HEAD --oneline --decorate
+        echo "Rebasing to master:"
+        git rebase master
+        echo "Log back to master:"
+        git log master~..HEAD --oneline --decorate
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Display initial Python packages
+      run: |
+        echo "Installed Python packages:"
+        pip list
+    - name: Display platform and env vars
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make platform env
+    - name: Install the package and its dependents
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make install
+        echo "Installed Python packages:"
+        pip list
+    - name: Development setup
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make develop
+        echo "Installed Python packages:"
+        pip list
+    - name: Run build
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make build
+    - name: Run builddoc
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make builddoc
+    - name: Run check
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make check
+    - name: Run pylint
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make pylint
+    - name: Run test
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        # TESTCASES: test_cim_obj.py
+      run: |
+        make test
+    - name: Send coverage result to coveralls.io
+      shell: bash -l {0}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_PARALLEL: true
+        COVERALLS_FLAG_NAME: "${{ matrix.os }},${{ matrix.python-version }},${{ matrix.package_level }}"
+      run: |
+        if ! [[ ${{ matrix.python-version }} =~ (3.4) ]]; then coveralls; fi
+    - name: Run installtest
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make installtest
+    - name: Run debuginfo
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make debuginfo
+
+  test_finish:
+    needs: test
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+    - name: Install coveralls
+      run: |
+        pip3 install --upgrade coveralls
+    - name: Send coverage finish to coveralls.io
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        coveralls --finish
