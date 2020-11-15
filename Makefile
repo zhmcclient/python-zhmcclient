@@ -214,6 +214,12 @@ else
   pytest_opts := $(TESTOPTS)
 endif
 
+ifeq ($(python_mn_version),3.4)
+  pytest_cov_opts :=
+else
+  pytest_cov_opts := --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html
+endif
+
 # Files to be built
 ifeq ($(PLATFORM),Windows_native)
 build_files := $(bdist_file) $(sdist_file) $(win64_dist_file)
@@ -491,7 +497,7 @@ flake8_$(pymn).done: develop_$(pymn).done Makefile $(flake8_rc_file) $(check_py_
 
 .PHONY: test
 test: Makefile develop_$(pymn).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) .coveragerc
-	py.test --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html $(pytest_opts)
+	py.test --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."
 
 .PHONY: installtest

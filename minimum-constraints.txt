@@ -138,10 +138,11 @@ yamlloader==0.5.5
 FormEncode==1.3.1
 
 # Coverage reporting (no imports, invoked via coveralls script):
-coverage==4.5.2
-python-coveralls==2.9.2
-pytest-cov==2.7.0
-# PyYAML: covered in direct deps for development
+# We exclude Python 3.4 from coverage testing and reporting.
+coverage==5.0; python_version == '2.7' or python_version >= '3.5'
+pytest-cov==2.7.0; python_version == '2.7' or python_version >= '3.5'
+git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
+coveralls==2.1.2; python_version >= '3.5'
 
 # Safety CI by pyup.io
 safety==1.8.4
