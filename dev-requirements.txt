@@ -53,11 +53,13 @@ FormEncode>=1.3.1
 
 
 # Coverage reporting (no imports, invoked via coveralls script):
+# We exclude Python 3.4 from coverage testing and reporting.
 # coverage 5.0 has removed support for py34
-coverage>=4.5.2,<5.0
-# python-coveralls 2.9.2 no longer has requirement coverage==4.0.3.
-python-coveralls>=2.9.2
-pytest-cov>=2.7.0
+coverage>=5.0; python_version == '2.7' or python_version >= '3.5'
+pytest-cov>=2.7.0; python_version == '2.7' or python_version >= '3.5'
+# coveralls 2.0 has removed support for Python 2.7 and 3.4
+git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
+coveralls>=2.1.2; python_version >= '3.5'
 # PyYAML: covered in direct deps for development
 
 # Safety CI by pyup.io
