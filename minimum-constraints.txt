@@ -145,8 +145,10 @@ git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveral
 coveralls==2.1.2; python_version >= '3.5'
 
 # Safety CI by pyup.io
-safety==1.8.4
-dparse==0.4.1
+safety==1.8.7; python_version <= '3.4'
+safety==1.9.0; python_version >= '3.5'
+dparse==0.4.1; python_version <= '3.4'
+dparse==0.5.1; python_version >= '3.5'
 
 # Tox
 tox==2.5.0
