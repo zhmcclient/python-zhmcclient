@@ -63,11 +63,14 @@ coveralls>=2.1.2; python_version >= '3.5'
 # PyYAML: covered in direct deps for development
 
 # Safety CI by pyup.io
-safety>=1.8.4
+# safety 1.9.0 removed support for Python 2.7 and 3.4 (and now also enforces that)
+safety>=1.8.7,<1.9.0; python_version <= '3.4'
+safety>=1.9.0; python_version >= '3.5'
 # dparse 0.5.0 has an infinite recursion issue on Python 2.7,
 #   see https://github.com/pyupio/dparse/issues/46
 dparse>=0.4.1,<0.5.0; python_version == '2.7'
-dparse>=0.4.1; python_version >= '3.4'
+dparse>=0.4.1; python_version == '3.4'
+dparse>=0.5.1; python_version >= '3.5'
 
 # Tox
 tox>=2.5.0
