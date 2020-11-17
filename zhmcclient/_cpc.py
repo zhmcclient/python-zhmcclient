@@ -1360,3 +1360,182 @@ class Cpc(BaseResource):
         self.manager.session.post(
             self.uri + '/operations/validate-lun-path',
             body=body)
+
+    @logged_api_call
+    def add_temporary_capacity(
+            self, record_id, software_model=None, processor_info=None,
+            test=False, force=False):
+        """
+        Add temporary processors to the CPC or increase temporary model
+        capacity of the CPC.
+
+        This method performs the "Add Temporary Capacity" HMC operation.
+
+        If the request would exceed the processor capacity that is installed on
+        the CPC or the limits of the capacity record, the operation will fail,
+        unless the `force` parameter is `True`.
+
+        Parameters:
+
+          record_id (:term:`string`):
+            The ID of the capacity record to be used for any updates of the
+            processor capacity.
+
+          software_model (:term:`string`):
+            The name of the software model to be activated for the CPC.
+            This must be one of the software models defined within the
+            specified capacity record. The software model implies the number
+            of general purpose processors that will be active once the
+            operation succeeds.
+
+            If `None`, the software model and the number of general purpose
+            processors of the CPC will remain unchanged.
+
+          processor_info (dict):
+            The number of specialty processors to be added to the CPC.
+
+            If `None`, the number of specialty processors of the CPC will
+            remain unchanged.
+
+            Each item in the dictionary identifies the number of one type of
+            specialty processor. The key of the item must be a string
+            specifying the type of specialty processor ('aap', 'cbp', 'icf',
+            'ifl', 'iip', 'sap'), and the value of the item must be an integer
+            specifying the number of processors of that type to be added.
+
+            If an item for a type of specialty processor is not provided, or
+            if the value of the item is `None`, the number of specialty
+            processors of that type will remain unchanged.
+
+          test (bool):
+            Indicates whether test (`True`) or real (`False`) resources should
+            be activated. Test resources are automatically deactivated after
+            24h.
+
+          force (bool):
+            `True` indicates that the operation should proceed if not enough
+            processors are available. `True` is permitted only for CBU, CPE
+            and loaner capacity records.
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC.
+        * Task permission to the "Perform Model Conversion" task.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+
+        body = {
+            'record-id': record_id,
+            'force': force,
+            'test': test,
+        }
+        if software_model:
+            body['software-model'] = software_model
+        if processor_info:
+            pi = []
+            for ptype, pvalue in processor_info.items():
+                pi_item = {
+                    'processor-type': ptype,
+                }
+                if pvalue is not None:
+                    pi_item['num-processor-steps'] = pvalue
+                pi.append(pi_item)
+            body['processor-info'] = pi
+
+        self.manager.session.post(
+            self.uri + '/operations/add-temp-capacity',
+            body=body)
+
+    @logged_api_call
+    def remove_temporary_capacity(
+            self, record_id, software_model=None, processor_info=None):
+        """
+        Remove temporary processors from the CPC or decrease temporary model
+        capacity of the CPC.
+
+        This method performs the "Remove Temporary Capacity" HMC operation.
+
+        You can only remove activated resources for the specific offering.
+        You cannot remove dedicated engines or the last processor of a processor
+        type. If you remove resources back to the base configuration, the
+        capacity record activation is completed. That is, if you remove the
+        last temporary processor, your capacity record is deactivated. For a
+        CBU and On/Off CoD record, to add resources again, you must use another
+        :meth:`add_temporary_capacity` operation. For an On/Off CoD test or
+        CPE record, once the record is deactivated, it is no longer available
+        for use. You can then delete the record.
+
+        After removal of the resources, the capacity record remains as an
+        installed record. If you want a record deleted, you must manually
+        delete the record on the "Installed Records" page in the HMC GUI.
+
+        Parameters:
+
+          record_id (:term:`string`):
+            The ID of the capacity record to be used for any updates of the
+            processor capacity.
+
+          software_model (:term:`string`):
+            The name of the software model to be activated for the CPC.
+            This must be one of the software models defined within the
+            specified capacity record. The software model implies the number
+            of general purpose processors that will be active once the
+            operation succeeds.
+
+            If `None`, the software model and the number of general purpose
+            processors of the CPC will remain unchanged.
+
+          processor_info (dict):
+            The number of specialty processors to be removed from the CPC.
+
+            If `None`, the number of specialty processors of the CPC will
+            remain unchanged.
+
+            Each item in the dictionary identifies the number of one type of
+            specialty processor. The key of the item must be a string
+            specifying the type of specialty processor ('aap', 'cbp', 'icf',
+            'ifl', 'iip', 'sap'), and the value of the item must be an integer
+            specifying the number of processors of that type to be removed.
+
+            If an item for a type of specialty processor is not provided, or
+            if the value of the item is `None`, the number of specialty
+            processors of that type will remain unchanged.
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC.
+        * Task permission to the "Perform Model Conversion" task.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+
+        body = {
+            'record-id': record_id,
+        }
+        if software_model:
+            body['software-model'] = software_model
+        if processor_info:
+            pi = []
+            for ptype, pvalue in processor_info.items():
+                pi_item = {
+                    'processor-type': ptype,
+                }
+                if pvalue is not None:
+                    pi_item['num-processor-steps'] = pvalue
+                pi.append(pi_item)
+            body['processor-info'] = pi
+
+        self.manager.session.post(
+            self.uri + '/operations/remove-temp-capacity',
+            body=body)

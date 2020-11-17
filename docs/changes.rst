@@ -35,6 +35,9 @@ Released: not yet
 * Migrated from Travis and Appveyor to GitHub Actions. This required several
   changes in package dependencies for development.
 
+* Added support for operations for managing temporary processor capacity:
+  `Cpc.add_temporary_capacity()` and `Cpc.remove_temporary_capacity()`.
+
 **Cleanup:**
 
 **Known issues:**

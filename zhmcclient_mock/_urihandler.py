@@ -1396,6 +1396,143 @@ class CpcExportPortNamesListHandler(object):
         }
 
 
+CPC_PROPNAME_FROM_PROCTYPE = {
+    'sap': 'processor-count-service-assist',
+    'aap': 'processor-count-aap',
+    'ifl': 'processor-count-ifl',
+    'icf': 'processor-count-icf',
+    'iip': 'processor-count-iip',
+    'cbp': 'processor-count-cbp',
+}
+
+
+class CpcAddTempCapacityHandler(object):
+    """
+    Handler class for operation: Add Temporary Capacity.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Add Temporary Capacity."""
+        assert wait_for_completion is True  # no async
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['record-id', 'test'])
+        # record_id = body['record-id']  # TODO: Implement
+        # test = body['test']  # TODO: Implement
+        # force = body.get('force', False)  # TODO: Implement
+        software_model = body.get('software-model', None)
+        processor_info = body.get('processor-info', None)
+        if software_model is not None:
+            current_software_model = \
+                cpc.properties['software-model-permanent-plus-temporary']
+            if current_software_model is not None:
+                raise BadRequestError(
+                    method, uri, reason=277,
+                    message="Cannot activate temporary software model {} "
+                    "because temporary software model {} is already active".
+                    format(software_model, current_software_model))
+            # We accept any software model, and imply the desired total number
+            # of general purpose processors from the last two digits.
+            pnum = int(software_model[1:])
+            pname = 'processor-count-general-purpose'
+            ptype = 'cp'
+            if pnum < cpc.properties[pname]:
+                raise BadRequestError(
+                    method, uri, reason=276,
+                    message="Cannot activate temporary software model {} "
+                    "because its target number of {} {} processors is below "
+                    "the current number of {} {} processors".
+                    format(software_model, pnum, ptype, cpc.properties[pname],
+                           ptype))
+            cpc.properties[pname] = pnum
+            cpc.properties['software-model-permanent-plus-temporary'] = \
+                software_model
+        if processor_info is not None:
+            for pitem in processor_info:
+                ptype = pitem['processor-type']
+                psteps = pitem.get('num-processor-steps', None)
+                if ptype not in CPC_PROPNAME_FROM_PROCTYPE:
+                    raise BadRequestError(
+                        method, uri, reason=276,
+                        message="Invalid processor type {} was specified in a "
+                        "processor-info entry".format(ptype))
+                pname = CPC_PROPNAME_FROM_PROCTYPE[ptype]
+                if psteps is not None:
+                    # TODO: Check against installed number of processors
+                    cpc.properties[pname] += psteps
+
+
+class CpcRemoveTempCapacityHandler(object):
+    """
+    Handler class for operation: Remove Temporary Capacity.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Remove Temporary Capacity."""
+        assert wait_for_completion is True  # no async
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        check_required_fields(method, uri, body, ['record-id'])
+        # record_id = body['record-id']  # TODO: Implement
+        software_model = body.get('software-model', None)
+        processor_info = body.get('processor-info', None)
+        if software_model is not None:
+            current_software_model = \
+                cpc.properties['software-model-permanent-plus-temporary']
+            if current_software_model is None:
+                raise BadRequestError(
+                    method, uri, reason=277,
+                    message="Cannot deactivate temporary software model {} "
+                    "because no temporary software model is currently active".
+                    format(software_model))
+            # We accept any software model, and imply the desired total number
+            # of general purpose processors from the last two digits.
+            pnum = int(software_model[1:])
+            pname = 'processor-count-general-purpose'
+            ptype = 'cp'
+            if pnum > cpc.properties[pname]:
+                raise BadRequestError(
+                    method, uri, reason=276,
+                    message="Cannot activate temporary software model {} "
+                    "because its target number of {} {} processors is above "
+                    "the current number of {} {} processors".
+                    format(software_model, pnum, ptype, cpc.properties[pname],
+                           ptype))
+            cpc.properties[pname] = pnum
+            cpc.properties['software-model-permanent-plus-temporary'] = None
+        if processor_info is not None:
+            for pitem in processor_info:
+                ptype = pitem['processor-type']
+                psteps = pitem.get('num-processor-steps', None)
+                if ptype not in CPC_PROPNAME_FROM_PROCTYPE:
+                    raise BadRequestError(
+                        method, uri, reason=276,
+                        message="Invalid processor type {} was specified in a "
+                        "processor-info entry".format(ptype))
+                pname = CPC_PROPNAME_FROM_PROCTYPE[ptype]
+                if psteps is not None:
+                    if cpc.properties[pname] - psteps < 1:
+                        raise BadRequestError(
+                            method, uri, reason=276,
+                            message="Cannot reduce the number of {} {} "
+                            "processors by {} because at least one processor "
+                            "must remain.".
+                            format(cpc.properties[pname], ptype, psteps))
+                    cpc.properties[pname] -= psteps
+
+
 class MetricsContextsHandler(object):
     """
     Handler class for HTTP methods on set of MetricsContext resources.
@@ -3098,6 +3235,11 @@ URIS = (
      CpcImportProfilesHandler),
     (r'/api/cpcs/([^/]+)/operations/export-profiles',
      CpcExportProfilesHandler),
+
+    (r'/api/cpcs/([^/]+)/operations/add-temp-capacity',
+     CpcAddTempCapacityHandler),
+    (r'/api/cpcs/([^/]+)/operations/remove-temp-capacity',
+     CpcRemoveTempCapacityHandler),
 
     (r'/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
     (r'/api/logical-partitions/([^/]+)', LparHandler),
