@@ -38,6 +38,27 @@ CPC3_OID = 'cpc3-oid'
 CPC4_NAME = 'cpc 4'  # z14-ZR1 in DPM mode
 CPC4_OID = 'cpc4-oid'
 
+# Additional CPC properties for temporary capacity tests
+CPC1_CAPACITY_PROPS = {
+    'is-on-off-cod-installed': True,
+    'is-on-off-cod-enabled': True,
+    'is-on-off-cod-activated': False,
+    'on-off-cod-activation-date': None,
+    'software-model-permanent': '700',
+    'software-model-permanent-plus-billable': '700',
+    'software-model-permanent-plus-temporary': None,
+    # 'msu-permanent': TBD,
+    # 'msu-permanen-plus-billable': TBD,
+    # 'msu-permanent-plus-temporary': TBD,
+    'processor-count-general-purpose': 7,
+    'processor-count-service-assist': 6,
+    'processor-count-aap': 5,
+    'processor-count-ifl': 4,
+    'processor-count-icf': 3,
+    'processor-count-iip': 2,
+    'processor-count-cbp2': 1,
+}
+
 HTTPError_404_1 = HTTPError({'http-status': 404, 'reason': 1})
 HTTPError_409_5 = HTTPError({'http-status': 409, 'reason': 5})
 HTTPError_409_4 = HTTPError({'http-status': 409, 'reason': 4})
@@ -316,6 +337,16 @@ GET_FREE_CRYPTO_DOMAINS_SUCCESS_TESTCASES = [
         [0, 2, 3] + CPC1_UNUSED_CRYPTO_DOMAINS,
     ),
 ]
+
+
+def updated(dict1, dict2):
+    """
+    Return a copy of dict1 that is updated with dict2. This allows specifying
+    testcase structures more easily.
+    """
+    dictres = dict1.copy()
+    dictres.update(dict2)
+    return dictres
 
 
 class TestCpc(object):
@@ -1310,3 +1341,125 @@ class TestCpc(object):
             # Verify consistency of returned energy properties with CPC props
             assert p in cpc.properties
             assert cpc.properties[p] == exp_value
+
+    @pytest.mark.parametrize(
+        "cpc_name, cpc_props, input_kwargs, exp_cpc_props", [
+            (
+                CPC1_NAME,
+                CPC1_CAPACITY_PROPS,
+                dict(
+                    record_id='caprec1',
+                ),
+                CPC1_CAPACITY_PROPS,
+            ),
+            (
+                CPC1_NAME,
+                CPC1_CAPACITY_PROPS,
+                dict(
+                    record_id='caprec1',
+                    software_model='710',
+                ),
+                updated(
+                    CPC1_CAPACITY_PROPS, {
+                        'software-model-permanent-plus-temporary': '710',
+                        'processor-count-general-purpose': 10,
+                    }
+                ),
+            ),
+            (
+                CPC1_NAME,
+                CPC1_CAPACITY_PROPS,
+                dict(
+                    record_id='caprec1',
+                    processor_info=dict(ifl=1),
+                ),
+                updated(
+                    CPC1_CAPACITY_PROPS, {
+                        'processor-count-ifl': 5,
+                    }
+                ),
+            ),
+        ]
+    )
+    def test_cpc_add_temporary_capacity(
+            self, cpc_name, cpc_props, input_kwargs, exp_cpc_props):
+        """Test Cpc.add_temporary_capacity()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+        faked_cpc.properties.update(cpc_props)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        # Execute the code to be tested
+        cpc.add_temporary_capacity(**input_kwargs)
+
+        cpc.pull_full_properties()
+
+        for pname, pvalue in exp_cpc_props.items():
+            assert pname in cpc.properties
+            assert cpc.properties[pname] == pvalue
+
+    @pytest.mark.parametrize(
+        "cpc_name, cpc_props, input_kwargs, exp_cpc_props", [
+            (
+                CPC1_NAME,
+                CPC1_CAPACITY_PROPS,
+                dict(
+                    record_id='caprec1',
+                ),
+                CPC1_CAPACITY_PROPS,
+            ),
+            (
+                CPC1_NAME,
+                updated(
+                    CPC1_CAPACITY_PROPS, {
+                        'software-model-permanent-plus-temporary': '710',
+                        'processor-count-general-purpose': 10,
+                    }
+                ),
+                dict(
+                    record_id='caprec1',
+                    software_model='705',
+                ),
+                updated(
+                    CPC1_CAPACITY_PROPS, {
+                        'processor-count-general-purpose': 5,
+                    }
+                ),
+            ),
+            (
+                CPC1_NAME,
+                CPC1_CAPACITY_PROPS,
+                dict(
+                    record_id='caprec1',
+                    processor_info=dict(ifl=1),
+                ),
+                updated(
+                    CPC1_CAPACITY_PROPS, {
+                        'processor-count-ifl': 3,
+                    }
+                ),
+            ),
+        ]
+    )
+    def test_cpc_remove_temporary_capacity(
+            self, cpc_name, cpc_props, input_kwargs, exp_cpc_props):
+        """Test Cpc.remove_temporary_capacity()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+        faked_cpc.properties.update(cpc_props)
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        # Execute the code to be tested
+        cpc.remove_temporary_capacity(**input_kwargs)
+
+        cpc.pull_full_properties()
+
+        for pname, pvalue in exp_cpc_props.items():
+            assert pname in cpc.properties
+            assert cpc.properties[pname] == pvalue
