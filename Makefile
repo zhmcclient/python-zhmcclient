@@ -328,7 +328,7 @@ develop: develop_$(pymn).done
 develop_$(pymn).done: pip_upgrade_$(pymn).done install_$(pymn).done dev-requirements.txt requirements.txt
 	-$(call RM_FUNC,$@)
 	@echo 'Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
-	$(PIP_CMD) install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
+	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
 	echo "done" >$@
 
 .PHONY: build
@@ -397,8 +397,8 @@ install: install_$(pymn).done
 install_$(pymn).done: pip_upgrade_$(pymn).done requirements.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
-	$(PIP_CMD) install $(pip_level_opts) $(pip_level_opts_new) -r requirements.txt
-	$(PIP_CMD) install -e .
+	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r requirements.txt
+	$(PYTHON_CMD) -m pip install -e .
 	$(PYTHON_CMD) -c "import $(package_name); print('ok, version={}'.format($(package_name).__version__))"
 	$(PYTHON_CMD) -c "import $(mock_package_name); print('ok')"
 	echo "done" >$@
