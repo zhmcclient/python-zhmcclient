@@ -174,5 +174,7 @@ pywin32>=223,!=226; sys_platform == 'win32' and python_version == '3.7'
 # TODO: Follow up on resolution of this issue.
 tornado<5.0; python_version <= '2.7'
 
+pyzmq>=16.0.4; python_version <= '3.8'
+pyzmq>=20.0.0; python_version >= '3.9'
 
 # Indirect dependencies are not specified in this file unless constraints are needed.

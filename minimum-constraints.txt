@@ -220,6 +220,9 @@ pywin32==223; sys_platform == 'win32' and python_version == '3.7'
 #       (see issue #1975).
 # pywin32==225; sys_platform == 'win32' and python_version >= '3.8'
 
+pyzmq==16.0.4; python_version <= '3.8'
+pyzmq==20.0.0; python_version >= '3.9'
+
 # Indirect dependencies for develop (not in dev-requirements.txt)
 
 alabaster==0.7.9
@@ -252,7 +255,6 @@ pkginfo==1.4.1
 ptyprocess==0.5.1
 py==1.5.1
 python-dateutil==2.6.0
-pyzmq==16.0.4
 qtconsole==4.2.1
 scandir==1.9.0
 simplegeneric==0.8.1
