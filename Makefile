@@ -467,7 +467,7 @@ $(bdist_file) $(sdist_file): _check_version Makefile MANIFEST.in $(dist_included
 	$(PYTHON_CMD) setup.py sdist -d $(dist_dir) bdist_wheel -d $(dist_dir) --universal
 
 $(win64_dist_file): _check_version Makefile MANIFEST.in $(dist_included_files)
-ifeq ($(PLATFORM),Windows)
+ifeq ($(PLATFORM),Windows_native)
 	-$(call RM_FUNC,MANIFEST)
 	-$(call RMDIR_FUNC,build $(package_name).egg-info-INFO .eggs)
 	$(PYTHON_CMD) setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
