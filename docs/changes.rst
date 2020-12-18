@@ -32,6 +32,8 @@ Released: not yet
 
 * Test: Increased time tolerance for time-based tests.
 
+* Docs: Added z15 to supported environments (issue #684).
+
 **Enhancements:**
 
 * Migrated from Travis and Appveyor to GitHub Actions. This required several
