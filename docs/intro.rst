@@ -95,7 +95,8 @@ HMC version  HMC API version  HMC API book            Machine generations
 2.13.0       1.6              :term:`HMC API 2.13.0`  z196 to z13 (1) and z114 to zBC12
 2.13.1       1.7, 2.1 - 2.2   :term:`HMC API 2.13.1`  z196 to z13 (1) and z114 to z13s (2)
 2.14.0       2.20 - 2.25      :term:`HMC API 2.14.0`  z196 to z14 (3) and z114 to z13s (2)
-2.14.1       2.35 - 2.37      :term:`HMC API 2.14.1`  z196 to z14 (3) and z114 to z14-ZR1 (4)
+2.14.1       2.35 - 2.40      :term:`HMC API 2.14.1`  z196 to z14 (3) and z114 to z14-ZR1 (4)
+2.15.0       3.1 - 3.4        :term:`HMC API 2.15.0`  z196 to z15 (5) and z114 to z14-ZR1 (4)
 ===========  ===============  ======================  =========================================
 
 Notes:
@@ -104,6 +105,7 @@ Notes:
 (2) Supported for z13s and LinuxONE Rockhopper
 (3) Supported for z14 and LinuxONE Emperor II
 (4) Supported for z14-ZR1 and LinuxONE Rockhopper II
+(5) Supported for z15 and LinuxONE III
 
 
 .. _`Installation`:
