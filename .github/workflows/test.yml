@@ -4,9 +4,10 @@
 name: test
 
 on:
-  # schedule:
-  # # minute hour day_of_month month day_of_week
-  # - cron:  '10 21 * * 0'  # Every sunday at 21:10 UTC
+  schedule:
+    # The schedule event always (and only) runs on the master branch.
+    - # cron (in UTC): minute hour day_of_month month day_of_week
+      cron: '30 06 * * SUN'
   push:
     branches: [ master, stable_0.27 ]
   pull_request:
@@ -14,64 +15,88 @@ on:
 
 jobs:
 
+  set_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.select_matrix.outputs.matrix }}
+    steps:
+    - name: "Select matrix"
+      id: select_matrix
+      # Select full matrix when scheduled, and normal matrix otherwise.
+      # The matrix is defined as a JSON string.
+      # TODO: Find a way to define this with less escapes.
+      run: |
+        if [[ "${{ github.event_name }}" == "schedule" ]]; then \
+          echo "::set-output name=matrix::{ \
+            \"os\": [ \"ubuntu-latest\", \"macos-latest\", \"windows-latest\" ], \
+            \"python-version\": [ \"2.7\", \"3.4\", \"3.5\", \"3.6\", \"3.7\", \"3.8\", \"3.9\" ], \
+            \"package_level\": [ \"minimum\", \"latest\" ], \
+            \"exclude\": [ \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.4\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.4\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.4\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.4\", \
+                \"package_level\": \"latest\" \
+              } \
+          }"; \
+        else \
+          echo "::set-output name=matrix::{ \
+            \"os\": [ \"ubuntu-latest\" ], \
+            \"python-version\": [ \"2.7\", \"3.4\", \"3.9\" ], \
+            \"package_level\": [ \"minimum\", \"latest\" ], \
+            \"include\": [ \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.9\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.8\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.9\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.9\", \
+                \"package_level\": \"latest\" \
+              } \
+            ] \
+          }"; \
+        fi
+    - name: Show matrix in JSON
+      run: echo '${{ steps.select_matrix.outputs.matrix }}'
+
   test:
+    needs: set_matrix
     strategy:
       fail-fast: false
       max-parallel: 20
-      # # The matrix for the all-environment pull request:
-      # matrix:
-      #   os: [ubuntu-latest, macos-latest, windows-latest]
-      #   python-version: [2.7, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9]
-      #   package_level: [minimum, latest]
-      #   exclude:
-      #   - os: macos-latest
-      #     python-version: 3.4
-      #     package_level: minimum
-      #   - os: macos-latest
-      #     python-version: 3.4
-      #     package_level: latest
-      #   - os: windows-latest
-      #     python-version: 3.4
-      #     package_level: minimum
-      #   - os: windows-latest
-      #     python-version: 3.4
-      #     package_level: latest
-      # The matrix for normal pull requests:
-      matrix:
-        os: [ubuntu-latest]
-        python-version: [2.7, 3.4, 3.9]
-        package_level: [minimum, latest]
-        include:
-        - os: macos-latest
-          python-version: 3.9
-          package_level: latest
-        - os: windows-latest
-          python-version: 3.8
-          package_level: minimum
-        - os: windows-latest
-          python-version: 3.9
-          package_level: minimum
-        - os: windows-latest
-          python-version: 3.9
-          package_level: latest
+      matrix: ${{ fromJson(needs.set_matrix.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    - name: Rebase manual-ci-run to master
-      if: ${{ github.head_ref == 'manual-ci-run' }}
-      run: |
-        echo "Fetching and defining master:"
-        git fetch origin master
-        git branch master FETCH_HEAD
-        echo "Log back to master:"
-        git log master~..HEAD --oneline --decorate
-        echo "Rebasing to master:"
-        git rebase master
-        echo "Log back to master:"
-        git log master~..HEAD --oneline --decorate
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
