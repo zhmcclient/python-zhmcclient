@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Test: Increased time tolerance for time-based tests.
+
 **Enhancements:**
 
 * Migrated from Travis and Appveyor to GitHub Actions. This required several

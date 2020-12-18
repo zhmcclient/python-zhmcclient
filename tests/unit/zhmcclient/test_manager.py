@@ -481,7 +481,7 @@ class TestNameUriCache(object):
     """All tests for the _NameUriCache class."""
 
     @staticmethod
-    def assert_datetime_near(dt1, dt2, max_delta=0.1):
+    def assert_datetime_near(dt1, dt2, max_delta=0.5):
         """
         Assert that the two times are equal within a delta.
         """
