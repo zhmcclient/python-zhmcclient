@@ -141,7 +141,7 @@ FormEncode==1.3.1
 # We exclude Python 3.4 from coverage testing and reporting.
 coverage==5.0; python_version == '2.7' or python_version >= '3.5'
 pytest-cov==2.7.0; python_version == '2.7' or python_version >= '3.5'
-git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
+# handled by dev-requirements.txt: git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
 coveralls==2.1.2; python_version >= '3.5'
 
 # Safety CI by pyup.io
