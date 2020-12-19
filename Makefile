@@ -205,8 +205,6 @@ check_py_files := \
 		$(test_common_py_files) \
 		$(doc_conf_dir)/conf.py \
     $(wildcard docs/notebooks/*.py) \
-    $(wildcard tools/cpcinfo) \
-    $(wildcard tools/cpcdata) \
 
 ifdef TESTCASES
   pytest_opts := $(TESTOPTS) -k $(TESTCASES)
@@ -477,7 +475,6 @@ else
 	@false
 endif
 
-# TODO: Once PyLint has no more errors, remove the dash "-"
 pylint_$(pymn).done: develop_$(pymn).done Makefile $(pylint_rc_file) $(check_py_files)
 ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping Pylint on Python $(python_version)" >&2
@@ -486,7 +483,7 @@ ifeq ($(python_mn_version),3.4)
 	@echo "Makefile: Warning: Skipping Pylint on Python $(python_version)" >&2
 else
 	-$(call RM_FUNC,$@)
-	-pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
+	pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
 	echo "done" >$@
 endif
 endif

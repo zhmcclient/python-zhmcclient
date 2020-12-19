@@ -220,7 +220,7 @@ class UserPatternManager(BaseManager):
         body = {
             'user-pattern-uris': [up.uri for up in user_patterns]
         }
-        self.manager.session.post(
+        self.session.post(
             '/api/console/operations/reorder-user-patterns',
             body=body)
 

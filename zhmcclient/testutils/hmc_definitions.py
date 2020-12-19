@@ -250,7 +250,6 @@ class HMCDefinition(object):
             "hmc_host={s.hmc_host!r}, " \
             "hmc_userid={s.hmc_userid!r}, " \
             "hmc_password=..., " \
-            "cert_file={s.cert_file!r}, " \
             "cpcs={s.cpcs!r})". \
             format(s=self)
 

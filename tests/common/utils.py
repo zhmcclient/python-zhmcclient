@@ -68,9 +68,12 @@ def assert_resources(resources, exp_resources, prop_names):
     for res in resources:
 
         # Search for the corresponding expected profile
-        for exp_res in exp_resources:
-            if exp_res.uri == res.uri:
+        exp_res = None
+        for _exp_res in exp_resources:
+            if _exp_res.uri == res.uri:
+                exp_res = _exp_res
                 break
+        assert exp_res is not None
 
         # Assert the specified property names
         if prop_names is None:

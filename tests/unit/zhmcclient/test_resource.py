@@ -192,8 +192,9 @@ class TestInit(ResourceTestCase):
         except TypeError:
             pass
         else:
-            self.fail("TypeError was not raised when initializing resource "
-                      "with invalid properties: %r" % init_props)
+            raise AssertionError(
+                "TypeError was not raised when initializing resource "
+                "with invalid properties: %r" % init_props)
 
     def test_str(self):
         """Test BaseResource.__str__()."""
@@ -333,9 +334,9 @@ class TestPropertyDel(ResourceTestCase):
         except KeyError:
             pass
         else:
-            self.fail("KeyError was not raised when deleting invalid key %r "
-                      "in resource properties %r" %
-                      (invalid_key, org_init_props))
+            raise AssertionError(
+                "KeyError was not raised when deleting invalid key %r "
+                "in resource properties %r" % (invalid_key, org_init_props))
 
     def test_clear(self):
         """Test clearing the properties in a resource object."""
