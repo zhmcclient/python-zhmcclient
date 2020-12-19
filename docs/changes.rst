@@ -26,6 +26,9 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Removed the installed scripts `cpcdata` and `cpcinfo` and added them as
+  `cpcdata.py` and `cpcinfo.py` to the examples folder.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -34,6 +37,15 @@ Released: not yet
 
 * Docs: Added z15 to supported environments (issue #684).
 
+* Fixed an AttributeError in `UserPatternManager.reorder()`
+  (related to issue #661).
+
+* Test: Fixed an AttributeError in test utilities class `HMCDefinition`
+  (related to issue #661).
+
+* Test: Fixed incorrect assignment in adapter test
+  (related to issue #661).
+
 **Enhancements:**
 
 * Migrated from Travis and Appveyor to GitHub Actions. This required several
@@ -41,6 +53,9 @@ Released: not yet
 
 * Added support for operations for managing temporary processor capacity:
   `Cpc.add_temporary_capacity()` and `Cpc.remove_temporary_capacity()`.
+
+* Test: Resolved remaining Pylint issues and enforcing no issues from now on
+  (issue #661).
 
 **Cleanup:**
 

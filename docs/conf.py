@@ -667,8 +667,7 @@ class AutoAutoSummary(Autosummary):
                 "%s: Internal error: %s: %s",
                 self._log_prefix, exc.__class__.__name__, exc)
 
-        finally:
-            return super(AutoAutoSummary, self).run()
+        return super(AutoAutoSummary, self).run()
 
 
 def setup(app):

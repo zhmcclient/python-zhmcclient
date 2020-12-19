@@ -166,6 +166,7 @@ class MetricsContextManager(BaseManager):
 
     @logged_api_call
     def list(self, full_properties=False):
+        # pylint: disable=arguments-differ
         """
         List the :term:`Metrics Context` resources that were created through
         this manager object.

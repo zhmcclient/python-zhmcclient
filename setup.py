@@ -90,10 +90,6 @@ setuptools.setup(
         'zhmcclient_mock'
     ],
     include_package_data=True,  # Includes MANIFEST.in files into sdist (only)
-    scripts=[
-        'tools/cpcinfo',
-        'tools/cpcdata',
-    ],
     install_requires=install_requires,
     dependency_links=dependency_links,
 

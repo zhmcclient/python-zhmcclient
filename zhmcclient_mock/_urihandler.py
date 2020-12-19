@@ -42,6 +42,7 @@ class HTTPError(Exception):
     """
 
     def __init__(self, method, uri, http_status, reason, message):
+        super(HTTPError, self).__init__()
         self.method = method
         self.uri = uri
         self.http_status = http_status
@@ -69,6 +70,7 @@ class ConnectionError(Exception):
     """
 
     def __init__(self, message):
+        super(ConnectionError, self).__init__()
         self.message = message
 
 

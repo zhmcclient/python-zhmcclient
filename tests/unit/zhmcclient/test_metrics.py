@@ -237,6 +237,8 @@ class TestMetricsContext(object):
         metricscontext_mgr = self.client.metrics_contexts
 
         # Execute the code to be tested
+        # TODO: Remove pylint disable once supported
+        # pylint: disable=unexpected-keyword-arg
         metricscontexts = metricscontext_mgr.list(filter_args=filter_args)
 
         names = [p.properties['name'] for p in metricscontexts]

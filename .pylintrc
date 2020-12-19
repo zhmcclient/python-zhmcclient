@@ -72,7 +72,9 @@ disable=I0011,
         too-many-nested-blocks, too-many-return-statements, too-many-arguments,
         wildcard-import, unused-wildcard-import,
         locally-enabled, superfluous-parens, useless-object-inheritance,
-        consider-using-set-comprehension, unnecessary-pass, useless-return
+        consider-using-set-comprehension, unnecessary-pass, useless-return,
+        raise-missing-from, super-with-arguments,
+        duplicate-string-formatting-argument
 
 # Note: The too-many-* messages are excluded temporarily, and should be dealt
 #       with at some point.
@@ -346,13 +348,13 @@ logging-modules=logging
 [SIMILARITIES]
 
 # Minimum lines number of a similarity.
-min-similarity-lines=20
+min-similarity-lines=50
 
 # Ignore comments when computing similarities.
-ignore-comments=yes
+ignore-comments=no
 
 # Ignore docstrings when computing similarities.
-ignore-docstrings=yes
+ignore-docstrings=no
 
 # Ignore imports when computing similarities.
 ignore-imports=yes

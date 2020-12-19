@@ -61,8 +61,8 @@ class TestStorageGroups(object):
             })
         # setup_logging()
 
-    @classmethod
-    def dpm_storage_management_enabled(self, cpc):
+    @staticmethod
+    def dpm_storage_management_enabled(cpc):
         """
         Return boolean indicating whether the "DPM Storage Management" feature
         is enabled for the specified CPC.
@@ -215,6 +215,7 @@ class TestStorageGroups(object):
         }
 
         # TODO: Remove this tempfix when fixed:
+        # pylint: disable=using-constant-test
         if True:
             info(capsys, "Tempfix: Volume does not support 'cpc-uri' "
                  "property; Omitting it in Create Volume.")

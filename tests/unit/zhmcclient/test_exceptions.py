@@ -80,6 +80,7 @@ def func_args(arg_values, arg_names):
 
 
 class MyError(Error):
+    # pylint: disable=abstract-method
     """
     Concrete class to get instances of abstract base class ``Error``.
 

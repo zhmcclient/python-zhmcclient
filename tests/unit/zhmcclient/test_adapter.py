@@ -608,7 +608,7 @@ class TestAdapter(object):
             assert family == 'osa'
             faked_adapter = self.add_standard_osa()
 
-        faked_adapter.properties['type'] == init_type
+        faked_adapter.properties['type'] = init_type
 
         adapter_mgr = self.cpc.adapters
         adapter = adapter_mgr.find(name=faked_adapter.name)
