@@ -157,7 +157,7 @@ jobs:
         COVERALLS_PARALLEL: true
         COVERALLS_FLAG_NAME: "${{ matrix.os }},${{ matrix.python-version }},${{ matrix.package_level }}"
       run: |
-        if ! [[ ${{ matrix.python-version }} =~ (3.4) ]]; then coveralls; fi
+        if ! [[ ${{ matrix.python-version }} =~ (3.4) ]]; then coveralls -v; fi
     - name: Run installtest
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
@@ -181,4 +181,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        coveralls --finish
+        coveralls -v --finish
