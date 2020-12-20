@@ -19,17 +19,15 @@ Change log
 ----------
 
 
-Version 0.28.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.28.0
+^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2020-12-20
 
 **Incompatible changes:**
 
 * Removed the installed scripts `cpcdata` and `cpcinfo` and added them as
   `cpcdata.py` and `cpcinfo.py` to the examples folder.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -59,14 +57,6 @@ Released: not yet
 
 * Test: Resolved remaining Pylint issues and enforcing no issues from now on
   (issue #661).
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.27.0
