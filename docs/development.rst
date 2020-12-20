@@ -388,19 +388,7 @@ local clone of the zhmc-ansible-modules Git repo.
         MN=0.8
         BRANCH=stable_${MN}
 
-2.  When releasing based on the master branch, create and push a new stable
-    branch for the same minor version:
-
-    .. code-block:: sh
-
-        git checkout master
-        git pull
-        git checkout -b stable_${MN}
-        git push --set-upstream origin stable_${MN}
-
-    Note that no GitHub Pull Request is created for any ``stable_*`` branch.
-
-3.  Create a topic branch for the version that is being released:
+2.  Create a topic branch for the version that is being released:
 
     .. code-block:: sh
 
@@ -408,7 +396,7 @@ local clone of the zhmc-ansible-modules Git repo.
         git pull
         git checkout -b release_${MNU}
 
-4.  Edit the version file:
+3.  Edit the version file:
 
     .. code-block:: sh
 
@@ -420,7 +408,7 @@ local clone of the zhmc-ansible-modules Git repo.
 
         __version__ = 'M.N.U'
 
-5.  Edit the change log:
+4.  Edit the change log:
 
     .. code-block:: sh
 
@@ -438,7 +426,7 @@ local clone of the zhmc-ansible-modules Git repo.
       add text for any known issues you want users to know about.
     * Remove all empty list items.
 
-6.  When releasing based on the master branch, edit the GitHub workflow file
+5.  When releasing based on the master branch, edit the GitHub workflow file
     ``test.yml``:
 
     .. code-block:: sh
@@ -458,7 +446,7 @@ local clone of the zhmc-ansible-modules Git repo.
           pull_request:
             branches: [ master, stable_M.N ]
 
-7.  Commit your changes and push the topic branch to the remote repo:
+6.  Commit your changes and push the topic branch to the remote repo:
 
     .. code-block:: sh
 
@@ -466,20 +454,20 @@ local clone of the zhmc-ansible-modules Git repo.
         git commit -asm "Release ${MNU}"
         git push --set-upstream origin release_${MNU}
 
-8.  On GitHub, create a Pull Request for branch ``release_M.N.U``. This will
+7.  On GitHub, create a Pull Request for branch ``release_M.N.U``. This will
     trigger the CI runs.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
     change the target branch of the Pull Request to ``stable_M.N``.
 
-9.  On GitHub, close milestone ``M.N.U``.
+8.  On GitHub, close milestone ``M.N.U``.
 
-10. On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
+9.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
     have succeeded, merge the Pull Request (no review is needed). This
     automatically deletes the branch on GitHub.
 
-11. Add a new tag for the version that is being released and push it to
+10. Add a new tag for the version that is being released and push it to
     the remote repo. Clean up the local repo:
 
     .. code-block:: sh
@@ -489,6 +477,17 @@ local clone of the zhmc-ansible-modules Git repo.
         git tag -f ${MNU}
         git push -f --tags
         git branch -d release_${MNU}
+
+11. When releasing based on the master branch, create and push a new stable
+    branch for the same minor version:
+
+    .. code-block:: sh
+
+        git checkout -b stable_${MN}
+        git push --set-upstream origin stable_${MN}
+        git checkout ${BRANCH}
+
+    Note that no GitHub Pull Request is created for any ``stable_*`` branch.
 
 12. On GitHub, edit the new tag ``M.N.U``, and create a release description on
     it. This will cause it to appear in the Release tab.
