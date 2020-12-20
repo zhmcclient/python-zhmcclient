@@ -52,6 +52,7 @@ jobs:
                 \"python-version\": \"3.4\", \
                 \"package_level\": \"latest\" \
               } \
+            ] \
           }"; \
         else \
           echo "::set-output name=matrix::{ \
