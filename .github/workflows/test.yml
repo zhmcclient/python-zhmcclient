@@ -26,7 +26,7 @@ jobs:
       # otherwise. The matrix is defined as a JSON string.
       # TODO: Find a way to define this with less escapes.
       run: |
-        if [[ "${{ github.event_name }}" == "schedule" || ${{ github.head_ref }} =~ ^release_.* ]]; then \
+        if [[ "${{ github.event_name }}" == "schedule" || "${{ github.head_ref }}" =~ ^release_ ]]; then \
           echo "::set-output name=matrix::{ \
             \"os\": [ \"ubuntu-latest\", \"macos-latest\", \"windows-latest\" ], \
             \"python-version\": [ \"2.7\", \"3.4\", \"3.5\", \"3.6\", \"3.7\", \"3.8\", \"3.9\" ], \
