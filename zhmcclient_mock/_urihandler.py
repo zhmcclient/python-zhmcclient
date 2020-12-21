@@ -1939,6 +1939,37 @@ class PartitionScsiDumpHandler(object):
         return {}
 
 
+class PartitionStartDumpProgramHandler(object):
+    """
+    Handler class for operation: Start Dump Program.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Start Dump Program (requires DPM mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        partition_oid = uri_parms[0]
+        partition_uri = '/api/partitions/' + partition_oid
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            raise InvalidResourceError(method, uri)
+        cpc = partition.manager.parent
+        assert cpc.dpm_enabled
+        check_valid_cpc_status(method, uri, cpc)
+        check_partition_status(method, uri, partition,
+                               valid_statuses=['active', 'degraded', 'paused',
+                                               'terminated'])
+        check_required_fields(method, uri, body,
+                              ['dump-program-info',
+                               'dump-program-type'])
+
+        # We don't reflect the dump in the mock state.
+        return {}
+
+
 class PartitionPswRestartHandler(object):
     """
     Handler class for operation: Perform PSW Restart.
@@ -3187,6 +3218,8 @@ URIS = (
     (r'/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
     (r'/api/partitions/([^/]+)/operations/scsi-dump',
      PartitionScsiDumpHandler),
+    (r'/api/partitions/([^/]+)/operations/start-dump-program',
+     PartitionStartDumpProgramHandler),
     (r'/api/partitions/([^/]+)/operations/psw-restart',
      PartitionPswRestartHandler),
     (r'/api/partitions/([^/]+)/operations/mount-iso-image(?:\?(.*))?',

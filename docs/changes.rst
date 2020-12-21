@@ -34,6 +34,13 @@ Released: not yet
 
 **Enhancements:**
 
+* Added a new `Partition.start_dump_program()` method that performs the HMC
+  operation 'Start Dump Program'. That operation is supported on CPCs in DPM
+  mode that have the DPM storage management feature (i.e. z14 and later) and
+  complements the 'Dump Partition' HMC operation that is supported only on
+  CPCs in DPM mode that do not have the DPM storage management feature
+  (i.e. z13 and earlier). (issue #705).
+
 **Cleanup:**
 
 **Known issues:**

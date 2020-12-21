@@ -587,6 +587,9 @@ class Partition(BaseResource):
         device and starting its execution, using the HMC operation
         'Dump Partition'.
 
+        This operation requires that the CPC does not have the storage
+        management feature (i.e. is a z13 or earlier).
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -639,6 +642,74 @@ class Partition(BaseResource):
         """
         result = self.manager.session.post(
             self.uri + '/operations/scsi-dump',
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout,
+            body=parameters)
+        return result
+
+    @logged_api_call
+    def start_dump_program(self, parameters, wait_for_completion=True,
+                           operation_timeout=None):
+        """
+        Dump this Partition, by loading a standalone dump program from a storage
+        volume and starting its execution, using the HMC operation
+        'Start Dump Program'.
+
+        This operation requires that the CPC has the storage management feature
+        (i.e. is a z14 or later).
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Dump Partition" task.
+
+        Parameters:
+
+          parameters (dict): Input parameters for the operation.
+            Allowable input parameters are defined in section
+            'Request body contents' in section 'Start Dump Program' in the
+            :term:`HMC API` book.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          :class:`py:dict` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns an empty
+            :class:`py:dict` object.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        result = self.manager.session.post(
+            self.uri + '/operations/start-dump-program',
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout,
             body=parameters)

@@ -822,6 +822,27 @@ class TestPartition(object):
 
         assert ret == {}
 
+    def test_partition_start_dump_program(self):
+        """Test Partition.start_dump_program()."""
+
+        # Add a faked partition
+        faked_partition = self.add_partition1()
+
+        partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=faked_partition.name)
+
+        parameters = {
+            'dump-program-type': 'storage',
+            'dump-program-info': {
+                'storage-volume-uri': 'sv1'  # dummy
+            },
+        }
+
+        # Execute the code to be tested.
+        ret = partition.start_dump_program(parameters=parameters)
+
+        assert ret == {}
+
     # TODO: Re-enable test_partition_psw_restart() once supported in hdlr
     def xtest_partition_psw_restart(self):
         """Test Partition.psw_restart()."""
