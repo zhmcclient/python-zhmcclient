@@ -39,7 +39,8 @@ Released: not yet
   mode that have the DPM storage management feature (i.e. z14 and later) and
   complements the 'Dump Partition' HMC operation that is supported only on
   CPCs in DPM mode that do not have the DPM storage management feature
-  (i.e. z13 and earlier). (issue #705).
+  (i.e. z13 and earlier). Mock support for the 'Start Dump Program' operation
+  was also added. (issue #705).
 
 **Cleanup:**
 
