@@ -56,6 +56,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     MetricsContextsHandler, MetricsContextHandler, \
     PartitionsHandler, PartitionHandler, PartitionStartHandler, \
     PartitionStopHandler, PartitionScsiDumpHandler, \
+    PartitionStartDumpProgramHandler, \
     PartitionPswRestartHandler, PartitionMountIsoImageHandler, \
     PartitionUnmountIsoImageHandler, PartitionIncreaseCryptoConfigHandler, \
     PartitionDecreaseCryptoConfigHandler, PartitionChangeCryptoConfigHandler, \
@@ -4621,6 +4622,101 @@ class TestPartitionScsiDumpHandler(object):
         # the function to be tested:
         resp = self.urihandler.post(
             self.hmc, '/api/partitions/1/operations/scsi-dump',
+            operation_body, True, True)
+
+        assert resp == {}
+
+
+class TestPartitionStartDumpProgramHandler(object):
+    """
+    All tests for class PartitionStartDumpProgramHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        PartitionStartDumpProgramHandler and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/partitions/([^/]+)/operations/start-dump-program',
+             PartitionStartDumpProgramHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_part_dumpprog_err_no_body(self):
+        """
+        Test POST partition start-dump-program, with missing request body.
+        """
+
+        # the function to be tested:
+        with pytest.raises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/start-dump-program',
+                None, True, True)
+
+    def test_part_dumpprog_err_missing_fields_1(self):
+        """
+        Test POST partition start-dump-program, with missing
+        'dump-program-info' and 'dump-program-type' fields in request body.
+        """
+
+        operation_body = {
+            # missing: 'dump-program-info'
+            # missing: 'dump-program-type'
+        }
+
+        # the function to be tested:
+        with pytest.raises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/start-dump-program',
+                operation_body, True, True)
+
+    def test_part_dumpprog_err_status(self):
+        """
+        Test POST partition start-dump-program, with partition in invalid
+        status 'stopped'.
+        """
+
+        operation_body = {
+            'dump-program-type': 'storage',
+            'dump-program-info': {
+                'storage-volume-uri': 'sv1'  # dummy
+            },
+        }
+
+        # Set the partition status to an invalid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'stopped'
+
+        # the function to be tested:
+        with pytest.raises(HTTPError):
+            self.urihandler.post(
+                self.hmc, '/api/partitions/1/operations/start-dump-program',
+                operation_body, True, True)
+
+    def test_part_scsidump(self):
+        """
+        Test POST partition scsi-dump, successful.
+        """
+
+        operation_body = {
+            'dump-program-type': 'storage',
+            'dump-program-info': {
+                'storage-volume-uri': 'sv1'  # dummy
+            },
+        }
+
+        # Set the partition status to a valid status for this operation
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1['status'] = 'active'
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/partitions/1/operations/start-dump-program',
             operation_body, True, True)
 
         assert resp == {}
