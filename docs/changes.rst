@@ -32,6 +32,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Mitigated the coveralls HTTP status 422 by pinning coveralls-python to
+  <3.0.0.
+
 **Enhancements:**
 
 * Added a new `Partition.start_dump_program()` method that performs the HMC
