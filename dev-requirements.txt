@@ -178,4 +178,9 @@ pyzmq>=20.0.0; python_version >= '3.9'
 tabulate>=0.8.1
 progressbar2>=3.12.0
 
+# Package dependency management tools (not used by any make rules)
+pipdeptree>=2.0.0
+pip-check-reqs>=2.0.4,<2.1.1; python_version == '2.7'
+pip-check-reqs>=2.0.4; python_version >= '3.4'
+
 # Indirect dependencies are not specified in this file unless constraints are needed.
