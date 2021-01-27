@@ -63,12 +63,12 @@ jobs:
               { \
                 \"os\": \"macos-latest\", \
                 \"python-version\": \"3.9\", \
-                \"package_level\": \"latest\" \
+                \"package_level\": \"minimum\" \
               }, \
               { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.8\", \
-                \"package_level\": \"minimum\" \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.9\", \
+                \"package_level\": \"latest\" \
               }, \
               { \
                 \"os\": \"windows-latest\", \
