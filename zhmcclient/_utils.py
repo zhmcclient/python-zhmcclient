@@ -187,7 +187,9 @@ def datetime_from_timestamp(ts, tzinfo=pytz.utc):
     try:
         dt = datetime.fromtimestamp(epoch_seconds, tzinfo)
     except (ValueError, OSError) as exc:
-        raise ValueError(str(exc))
+        new_exc = ValueError(str(exc))
+        new_exc.__cause__ = None
+        raise new_exc  # ValueError
     dt = dt.replace(microsecond=delta_microseconds)
     return dt
 

@@ -2005,9 +2005,11 @@ class FakedNicManager(FakedBaseManager):
             try:
                 vswitch = self.hmc.lookup_by_uri(vswitch_uri)
             except KeyError:
-                raise InputError("The virtual switch specified in the "
-                                 "'virtual-switch-uri' property does not "
-                                 "exist: {!r}".format(vswitch_uri))
+                new_exc = InputError("The virtual switch specified in the "
+                                     "'virtual-switch-uri' property does not "
+                                     "exist: {!r}".format(vswitch_uri))
+                new_exc.__cause__ = None
+                raise new_exc  # InputError
             connected_uris = vswitch.properties['connected-vnic-uris']
             if new_nic.uri not in connected_uris:
                 connected_uris.append(new_nic.uri)

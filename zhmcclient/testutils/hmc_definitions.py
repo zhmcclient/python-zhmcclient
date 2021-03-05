@@ -62,16 +62,20 @@ class HMCDefinitionFile(object):
                     data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)
                 except (yaml.parser.ParserError,
                         yaml.scanner.ScannerError) as exc:
-                    raise HMCDefinitionFileError(
+                    new_exc = HMCDefinitionFileError(
                         "Invalid YAML syntax in HMC definition file "
                         "{0!r}: {1} {2}".
                         format(self._filepath, exc.__class__.__name__, exc))
+                    new_exc.__cause__ = None
+                    raise new_exc  # HMCDefinitionFileError
         except IOError as exc:
             if exc.errno == errno.ENOENT:
-                raise HMCDefinitionFileError(
+                new_exc = HMCDefinitionFileError(
                     "The HMC definition file {0!r} was not found; "
                     "copy it from {1!r}".
                     format(self._filepath, EXAMPLE_HMC_FILE))
+                new_exc.__cause__ = None
+                raise new_exc  # HMCDefinitionFileError
             raise
 
         if data is None:
@@ -161,9 +165,11 @@ class HMCDefinitionFile(object):
         try:
             hmc_dict = self._hmcs[nickname]
         except KeyError:
-            raise ValueError(
+            new_exc = ValueError(
                 "HMC with nickname {0!r} not found in HMC definition file "
                 "{1!r}".format(nickname, self._filepath))
+            new_exc.__cause__ = None
+            raise new_exc  # ValueError
         return HMCDefinition(nickname, hmc_dict, self._filepath)
 
     def list_hmcs(self, nickname):
@@ -204,9 +210,11 @@ def _required_attr(hmc_dict, attr_name, nickname):
     try:
         return hmc_dict[attr_name]
     except KeyError:
-        raise HMCDefinitionFileError(
+        new_exc = HMCDefinitionFileError(
             "Required HMC attribute is missing in definition of HMC "
             "{0}: {1}".format(nickname, attr_name))
+        new_exc.__cause__ = None
+        raise new_exc  # HMCDefinitionFileError
 
 
 class HMCDefinition(object):

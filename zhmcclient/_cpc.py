@@ -430,8 +430,10 @@ class Cpc(BaseResource):
         try:
             return self.get_property('maximum-partitions')
         except KeyError:
-            raise ValueError("Unknown machine type/model: {}-{}".
-                             format(machine_type, machine_model))
+            new_exc = ValueError("Unknown machine type/model: {}-{}".
+                                 format(machine_type, machine_model))
+            new_exc.__cause__ = None
+            raise new_exc  # ValueError
 
     @logged_api_call
     def feature_enabled(self, feature_name):

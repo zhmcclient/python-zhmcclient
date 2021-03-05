@@ -359,7 +359,9 @@ class UriHandler(object):
             if m:
                 uri_parms = m.groups()
                 return handler_class, uri_parms
-        raise InvalidResourceError(method, uri)
+        new_exc = InvalidResourceError(method, uri)
+        new_exc.__cause__ = None
+        raise new_exc  # zhmcclient_mock.InvalidResourceError
 
     def get(self, hmc, uri, logon_required):
         """
@@ -408,7 +410,9 @@ class GenericGetPropertiesHandler(object):
         try:
             resource = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         return resource.properties
 
 
@@ -426,7 +430,9 @@ class GenericUpdatePropertiesHandler(object):
         try:
             resource = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         resource.update(body)
 
 
@@ -442,7 +448,9 @@ class GenericDeleteHandler(object):
         try:
             resource = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         resource.manager.remove(resource.oid)
 
 
@@ -486,7 +494,9 @@ class ConsoleRestartHandler(object):
         try:
             hmc.lookup_by_uri(console_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         hmc.disable()
         time.sleep(5)
         hmc.enable()
@@ -509,7 +519,9 @@ class ConsoleShutdownHandler(object):
         try:
             hmc.lookup_by_uri(console_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         hmc.disable()
         # Note: The HTTP status 202 that the real HMC operation returns, is
         # not visible for the caller of FakedSession (or Session).
@@ -530,7 +542,9 @@ class ConsoleMakePrimaryHandler(object):
         try:
             hmc.lookup_by_uri(console_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         # Nothing to do, as long as the faked HMC does not need to know whether
         # it is primary or alternate.
 
@@ -550,7 +564,9 @@ class ConsoleReorderUserPatternsHandler(object):
         try:
             console = hmc.lookup_by_uri(console_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['user-pattern-uris'])
         new_order_uris = body['user-pattern-uris']
         objs = console.user_patterns.list()
@@ -577,7 +593,9 @@ class ConsoleGetAuditLogHandler(object):
         try:
             hmc.lookup_by_uri(console_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         resp = []
         # TODO: Add the ability to return audit log entries in mock support.
         return resp
@@ -596,7 +614,9 @@ class ConsoleGetSecurityLogHandler(object):
         try:
             hmc.lookup_by_uri(console_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         resp = []
         # TODO: Add the ability to return security log entries in mock support.
         return resp
@@ -615,7 +635,9 @@ class ConsoleListUnmanagedCpcsHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         result_ucpcs = []
         filter_args = parse_query_parms(method, uri, query_str)
@@ -641,7 +663,9 @@ class UsersHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_users = []
         filter_args = parse_query_parms(method, uri, query_str)
         for user in console.users.list(filter_args):
@@ -661,7 +685,9 @@ class UsersHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body,
                               ['name', 'type', 'authentication-type'])
         # TODO: There are some more input properties that are required under
@@ -685,7 +711,9 @@ class UserHandler(GenericGetPropertiesHandler,
         try:
             user = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         # Check user type
         type_ = user.properties['type']
         if type_ == 'pattern-based':
@@ -713,7 +741,9 @@ class UserAddUserRoleHandler(object):
         try:
             user = hmc.lookup_by_uri(user_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['user-role-uri'])
         user_type = user.properties['type']
         if user_type in ('pattern-based', 'system-defined'):
@@ -725,7 +755,9 @@ class UserAddUserRoleHandler(object):
         try:
             hmc.lookup_by_uri(user_role_uri)
         except KeyError:
-            raise InvalidResourceError(method, user_role_uri, reason=2)
+            new_exc = InvalidResourceError(method, user_role_uri, reason=2)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if user.properties.get('user-roles', None) is None:
             user.properties['user-roles'] = []
         user.properties['user-roles'].append(user_role_uri)
@@ -747,7 +779,9 @@ class UserRemoveUserRoleHandler(object):
         try:
             user = hmc.lookup_by_uri(user_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['user-role-uri'])
         user_type = user.properties['type']
         if user_type in ('pattern-based', 'system-defined'):
@@ -759,7 +793,9 @@ class UserRemoveUserRoleHandler(object):
         try:
             user_role = hmc.lookup_by_uri(user_role_uri)
         except KeyError:
-            raise InvalidResourceError(method, user_role_uri, reason=2)
+            new_exc = InvalidResourceError(method, user_role_uri, reason=2)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if user.properties.get('user-roles', None) is None \
                 or user_role_uri not in user.properties['user-roles']:
             raise ConflictError(
@@ -782,7 +818,9 @@ class UserRolesHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_user_roles = []
         filter_args = parse_query_parms(method, uri, query_str)
         for user_role in console.user_roles.list(filter_args):
@@ -802,7 +840,9 @@ class UserRolesHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['name'])
         properties = copy.deepcopy(body)
         if 'type' in properties:
@@ -842,7 +882,9 @@ class UserRoleAddPermissionHandler(object):
         try:
             user_role = hmc.lookup_by_uri(user_role_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body,
                               ['permitted-object', 'permitted-object-type'])
         # Reject if User Role is system-defined:
@@ -878,7 +920,9 @@ class UserRoleRemovePermissionHandler(object):
         try:
             user_role = hmc.lookup_by_uri(user_role_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body,
                               ['permitted-object', 'permitted-object-type'])
         # Reject if User Role is system-defined:
@@ -910,7 +954,9 @@ class TasksHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_tasks = []
         filter_args = parse_query_parms(method, uri, query_str)
         for task in console.tasks.list(filter_args):
@@ -942,7 +988,9 @@ class UserPatternsHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_user_patterns = []
         filter_args = parse_query_parms(method, uri, query_str)
         for user_pattern in console.user_patterns.list(filter_args):
@@ -962,7 +1010,9 @@ class UserPatternsHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body,
                               ['name', 'pattern', 'type', 'retention-time',
                                'user-template-uri'])
@@ -992,7 +1042,9 @@ class PasswordRulesHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_password_rules = []
         filter_args = parse_query_parms(method, uri, query_str)
         for password_rule in console.password_rules.list(filter_args):
@@ -1012,7 +1064,9 @@ class PasswordRulesHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['name'])
         new_password_rule = console.password_rules.add(body)
         return {'element-uri': new_password_rule.uri}
@@ -1041,7 +1095,9 @@ class LdapServerDefinitionsHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_ldap_srv_defs = []
         filter_args = parse_query_parms(method, uri, query_str)
         for ldap_srv_def in console.ldap_server_definitions.list(filter_args):
@@ -1061,7 +1117,9 @@ class LdapServerDefinitionsHandler(object):
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['name'])
         new_ldap_srv_def = console.ldap_server_definitions.add(body)
         return {'element-uri': new_ldap_srv_def.uri}
@@ -1121,7 +1179,9 @@ class CpcSetPowerSaveHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['power-saving'])
 
         power_saving = body['power-saving']
@@ -1151,7 +1211,9 @@ class CpcSetPowerCappingHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['power-capping-state'])
 
         power_capping_state = body['power-capping-state']
@@ -1186,7 +1248,9 @@ class CpcGetEnergyManagementDataHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         energy_props = {
             'cpc-power-cap-allowed':
@@ -1275,7 +1339,9 @@ class CpcStartHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         cpc.properties['status'] = 'active'
@@ -1296,7 +1362,9 @@ class CpcStopHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         cpc.properties['status'] = 'not-operating'
@@ -1317,7 +1385,9 @@ class CpcImportProfilesHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if cpc.dpm_enabled:
             raise CpcInDpmError(method, uri, cpc)
         check_required_fields(method, uri, body, ['profile-area'])
@@ -1339,7 +1409,9 @@ class CpcExportProfilesHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if cpc.dpm_enabled:
             raise CpcInDpmError(method, uri, cpc)
         check_required_fields(method, uri, body, ['profile-area'])
@@ -1361,7 +1433,9 @@ class CpcExportPortNamesListHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         check_required_fields(method, uri, body, ['partitions'])
@@ -1423,7 +1497,9 @@ class CpcAddTempCapacityHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['record-id', 'test'])
         # record_id = body['record-id']  # TODO: Implement
         # test = body['test']  # TODO: Implement
@@ -1485,7 +1561,9 @@ class CpcRemoveTempCapacityHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['record-id'])
         # record_id = body['record-id']  # TODO: Implement
         software_model = body.get('software-model', None)
@@ -1568,7 +1646,9 @@ class MetricsContextHandler(object):
         try:
             metrics_context = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         hmc.metrics_contexts.remove(metrics_context.oid)
 
     @staticmethod
@@ -1578,7 +1658,9 @@ class MetricsContextHandler(object):
         try:
             metrics_context = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result = metrics_context.get_metric_values_response()
         return result
 
@@ -1598,7 +1680,9 @@ class AdaptersHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_adapters = []
         if cpc.dpm_enabled:
             filter_args = parse_query_parms(method, uri, query_str)
@@ -1620,7 +1704,9 @@ class AdaptersHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         check_required_fields(method, uri, body, ['name'])
@@ -1636,7 +1722,9 @@ class AdaptersHandler(object):
         try:
             new_adapter = cpc.adapters.add(body2)
         except InputError as exc:
-            raise BadRequestError(method, uri, reason=5, message=str(exc))
+            new_exc = BadRequestError(method, uri, reason=5, message=str(exc))
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.BadRequestError
         return {'object-uri': new_adapter.uri}
 
 
@@ -1653,7 +1741,9 @@ class AdapterHandler(GenericGetPropertiesHandler,
         try:
             adapter = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = adapter.manager.parent
         assert cpc.dpm_enabled
         adapter.manager.remove(adapter.oid)
@@ -1674,7 +1764,9 @@ class AdapterChangeCryptoTypeHandler(object):
         try:
             adapter = hmc.lookup_by_uri(adapter_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = adapter.manager.parent
         assert cpc.dpm_enabled
         check_required_fields(method, uri, body, ['crypto-type'])
@@ -1707,7 +1799,9 @@ class AdapterChangeAdapterTypeHandler(object):
         try:
             adapter = hmc.lookup_by_uri(adapter_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = adapter.manager.parent
         assert cpc.dpm_enabled
         check_required_fields(method, uri, body, ['type'])
@@ -1782,7 +1876,9 @@ class PartitionsHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         # Reflect the result of listing the partition
         result_partitions = []
@@ -1806,7 +1902,9 @@ class PartitionsHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
@@ -1836,7 +1934,9 @@ class PartitionHandler(GenericGetPropertiesHandler,
         try:
             partition = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -1863,7 +1963,9 @@ class PartitionStartHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -1891,7 +1993,9 @@ class PartitionStopHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -1923,7 +2027,9 @@ class PartitionScsiDumpHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -1955,7 +2061,9 @@ class PartitionStartDumpProgramHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -1986,7 +2094,9 @@ class PartitionPswRestartHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2014,7 +2124,9 @@ class PartitionMountIsoImageHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2026,15 +2138,19 @@ class PartitionMountIsoImageHandler(object):
         try:
             image_name = query_parms['image-name']
         except KeyError:
-            raise BadRequestError(
+            new_exc = BadRequestError(
                 method, uri, reason=1,
                 message="Missing required URI query parameter 'image-name'")
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.BadRequestError
         try:
             ins_file_name = query_parms['ins-file-name']
         except KeyError:
-            raise BadRequestError(
+            new_exc = BadRequestError(
                 method, uri, reason=1,
                 message="Missing required URI query parameter 'ins-file-name'")
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.BadRequestError
 
         # Reflect the effect of mounting in the partition properties
         partition.properties['boot-iso-image-name'] = image_name
@@ -2058,7 +2174,9 @@ class PartitionUnmountIsoImageHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2111,7 +2229,9 @@ class PartitionIncreaseCryptoConfigHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2152,7 +2272,9 @@ class PartitionDecreaseCryptoConfigHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2194,7 +2316,9 @@ class PartitionChangeCryptoConfigHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2232,7 +2356,9 @@ class HbasHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2251,13 +2377,17 @@ class HbasHandler(object):
         try:
             hmc.lookup_by_uri(adapter_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri, reason=2,
-                                       resource_uri=adapter_uri)
+            new_exc = InvalidResourceError(method, uri, reason=2,
+                                           resource_uri=adapter_uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         try:
             hmc.lookup_by_uri(port_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri, reason=6,
-                                       resource_uri=port_uri)
+            new_exc = InvalidResourceError(method, uri, reason=6,
+                                           resource_uri=port_uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         new_hba = partition.hbas.add(body)
 
@@ -2280,7 +2410,9 @@ class HbaHandler(GenericGetPropertiesHandler,
         try:
             hba = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = hba.manager.parent
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
@@ -2309,7 +2441,9 @@ class HbaReassignPortHandler(object):
         try:
             hba = hmc.lookup_by_uri(hba_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = hmc.lookup_by_uri(partition_uri)  # assert it exists
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
@@ -2338,7 +2472,9 @@ class NicsHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2359,20 +2495,26 @@ class NicsHandler(object):
             try:
                 hmc.lookup_by_uri(adapter_uri)
             except KeyError:
-                raise InvalidResourceError(method, uri, reason=2,
-                                           resource_uri=adapter_uri)
+                new_exc = InvalidResourceError(method, uri, reason=2,
+                                               resource_uri=adapter_uri)
+                new_exc.__cause__ = None
+                raise new_exc  # zhmcclient_mock.InvalidResourceError
             try:
                 hmc.lookup_by_uri(port_uri)
             except KeyError:
-                raise InvalidResourceError(method, uri, reason=6,
-                                           resource_uri=port_uri)
+                new_exc = InvalidResourceError(method, uri, reason=6,
+                                               resource_uri=port_uri)
+                new_exc.__cause__ = None
+                raise new_exc  # zhmcclient_mock.InvalidResourceError
         elif 'virtual-switch-uri' in body:
             vswitch_uri = body['virtual-switch-uri']
             try:
                 hmc.lookup_by_uri(vswitch_uri)
             except KeyError:
-                raise InvalidResourceError(method, uri, reason=2,
-                                           resource_uri=vswitch_uri)
+                new_exc = InvalidResourceError(method, uri, reason=2,
+                                               resource_uri=vswitch_uri)
+                new_exc.__cause__ = None
+                raise new_exc  # zhmcclient_mock.InvalidResourceError
         else:
             nic_name = body.get('name', None)
             raise BadRequestError(
@@ -2405,7 +2547,9 @@ class NicHandler(GenericGetPropertiesHandler,
         try:
             nic = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = nic.manager.parent
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
@@ -2431,7 +2575,9 @@ class VirtualFunctionsHandler(object):
         try:
             partition = hmc.lookup_by_uri(partition_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
         check_valid_cpc_status(method, uri, cpc)
@@ -2459,7 +2605,9 @@ class VirtualFunctionHandler(GenericGetPropertiesHandler,
         try:
             vf = hmc.lookup_by_uri(uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = vf.manager.parent
         cpc = partition.manager.parent
         assert cpc.dpm_enabled
@@ -2485,7 +2633,9 @@ class VirtualSwitchesHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_vswitches = []
         if cpc.dpm_enabled:
             filter_args = parse_query_parms(method, uri, query_str)
@@ -2523,7 +2673,9 @@ class VirtualSwitchGetVnicsHandler(object):
         try:
             vswitch = hmc.lookup_by_uri(vswitch_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = vswitch.manager.parent
         assert cpc.dpm_enabled
 
@@ -2563,7 +2715,9 @@ class StorageGroupsHandler(object):
         try:
             cpc = hmc.lookup_by_uri(cpc_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
@@ -2625,7 +2779,9 @@ class StorageGroupModifyHandler(object):
         try:
             storage_group = hmc.lookup_by_uri(storage_group_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         # Reflect the result of modifying the storage group
 
@@ -2686,7 +2842,9 @@ class StorageGroupDeleteHandler(object):
         try:
             storage_group = hmc.lookup_by_uri(storage_group_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         # TODO: Check that the SG is detached from any partitions
 
@@ -2711,7 +2869,9 @@ class StorageGroupRequestFulfillmentHandler(object):
         try:
             hmc.lookup_by_uri(storage_group_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         # Reflect the result of requesting fulfilment for the storage group
         pass
@@ -2735,7 +2895,9 @@ class StorageGroupAddCandidatePortsHandler(object):
         try:
             storage_group = hmc.lookup_by_uri(storage_group_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         check_required_fields(method, uri, body, ['adapter-port-uris'])
 
@@ -2772,7 +2934,9 @@ class StorageGroupRemoveCandidatePortsHandler(object):
         try:
             storage_group = hmc.lookup_by_uri(storage_group_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         check_required_fields(method, uri, body, ['adapter-port-uris'])
 
@@ -2805,7 +2969,9 @@ class LparsHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_lpars = []
         if not cpc.dpm_enabled:
             filter_args = parse_query_parms(method, uri, query_str)
@@ -2854,7 +3020,9 @@ class LparActivateHandler(object):
         try:
             lpar = hmc.lookup_by_uri(lpar_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = lpar.manager.parent
         assert not cpc.dpm_enabled
 
@@ -2915,7 +3083,9 @@ class LparDeactivateHandler(object):
         try:
             lpar = hmc.lookup_by_uri(lpar_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = lpar.manager.parent
         assert not cpc.dpm_enabled
 
@@ -2968,7 +3138,9 @@ class LparLoadHandler(object):
         try:
             lpar = hmc.lookup_by_uri(lpar_uri)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = lpar.manager.parent
         assert not cpc.dpm_enabled
 
@@ -3039,7 +3211,9 @@ class ResetActProfilesHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
         filter_args = parse_query_parms(method, uri, query_str)
@@ -3075,7 +3249,9 @@ class ImageActProfilesHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
         filter_args = parse_query_parms(method, uri, query_str)
@@ -3110,7 +3286,9 @@ class LoadActProfilesHandler(object):
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
-            raise InvalidResourceError(method, uri)
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
         filter_args = parse_query_parms(method, uri, query_str)
