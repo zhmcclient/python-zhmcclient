@@ -173,11 +173,10 @@ include-naming-hint=no
 # "mixedCaseWithoutUnderscores"; leading underscores for privacy as well as
 # double trailing underscores are allowed.
 # Names matching this expression are compatible with PEP-8.
-function-rgx=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
-# TODO AM: Verify whether two leading underscores are allowed / supported with name mangling.
+function-rgx=(_{0,1}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})|__[a-z_]+__)$
 
 # Naming hint for function names
-function-name-hint=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
+function-name-hint=(_{0,1}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})|__[a-z_]+__)$
 
 # Regular expression matching correct variable names.
 #
@@ -196,20 +195,20 @@ variable-name-hint=_{0,1}([A-Z]([A-Z0-9_]{0,38}[A-Z0-9])?|[a-z]([a-z0-9_]{0,38}[
 # The expression below allows "UPPER_CASE_WITH_UNDERSCORES"; leading underscores
 # for privacy are allowed.
 # Names matching this expression are compatible with PEP-8.
-const-rgx=(_{0,1}[A-Z][A-Z0-9_]{0,38}[A-Z0-9]|(__.*__))$
+const-rgx=(_{0,1}[A-Z][A-Z0-9_]{0,38}[A-Z0-9]|__[a-z_]+__)$
 
 # Naming hint for constant names
-const-name-hint=(_{0,1}[A-Z][A-Z0-9_]{0,38}[A-Z0-9]|(__.*__))$
+const-name-hint=(_{0,1}[A-Z][A-Z0-9_]{0,38}[A-Z0-9]|__[a-z_]+__)$
 
 # Regular expression matching correct attribute names.
 #
 # The expression below allows "lower_case_with_underscores" and
 # "mixedCaseWithoutUnderscores"; leading underscores for privacy are allowed.
 # Names matching this expression are compatible with PEP-8.
-attr-rgx=_{0,2}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})$
+attr-rgx=(_{0,1}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})|__[a-z_]+__)$
 
 # Naming hint for attribute names
-attr-name-hint=_{0,2}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})$
+attr-name-hint=(_{0,1}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})|__[a-z_]+__)$
 
 # Regular expression matching correct argument names.
 #
@@ -229,10 +228,10 @@ argument-name-hint=([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})_{0,1}$
 # and "lower_case_with_underscores" and "mixedCaseWithoutUnderscores" for
 # other variables; leading underscores for privacy are allowed.
 # Names matching this expression are compatible with PEP-8.
-class-attribute-rgx=_{0,2}([A-Z][A-Z0-9_]{0,38}[A-Z0-9]|[a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{0,39}|(__.*__))$
+class-attribute-rgx=_{0,2}([A-Z][A-Z0-9_]{0,38}[A-Z0-9]|[a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{0,39}|__[a-z_]+__)$
 
 # Naming hint for class attribute names
-class-attribute-name-hint=_{0,2}([A-Z][A-Z0-9_]{0,38}[A-Z0-9]|[a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{0,39}|(__.*__))$
+class-attribute-name-hint=_{0,2}([A-Z][A-Z0-9_]{0,38}[A-Z0-9]|[a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{0,39}|__[a-z_]+__)$
 
 # Regular expression matching correct inline iteration names.
 #
@@ -261,10 +260,10 @@ class-name-hint=_{0,1}[A-Z][a-zA-Z0-9]{1,39}$
 # The expression below allows "lower_case_with_underscores"; leading underscores
 # for privacy as well as double trailing underscores are allowed.
 # Names matching this expression are compatible with PEP-8.
-module-rgx=_{0,2}[a-z][a-z0-9_]{0,28}[a-z0-9](__){0,1}$
+module-rgx=(_{0,1}[a-z][a-z0-9_]{0,28}[a-z0-9]|__[a-z_]+__)$
 
 # Naming hint for module names
-module-name-hint=_{0,2}[a-z][a-z0-9_]{0,28}[a-z0-9](__){0,1}$
+module-name-hint=(_{0,1}[a-z][a-z0-9_]{0,28}[a-z0-9]|__[a-z_]+__)$
 
 # Regular expression matching correct method names.
 #
@@ -272,10 +271,10 @@ module-name-hint=_{0,2}[a-z][a-z0-9_]{0,28}[a-z0-9](__){0,1}$
 # "mixedCaseWithoutUnderscores"; leading underscores for privacy as well as
 # double trailing underscores are allowed.
 # Names matching this expression are compatible with PEP-8.
-method-rgx=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
+method-rgx=(_{0,1}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})|__[a-z_]+__)$
 
 # Naming hint for method names
-method-name-hint=_{0,2}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})(__){0,1}$
+method-name-hint=(_{0,1}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})|__[a-z_]+__)$
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
