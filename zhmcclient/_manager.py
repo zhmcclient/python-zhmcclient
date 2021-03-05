@@ -91,7 +91,10 @@ class _NameUriCache(object):
                 return self._uris[name]
             except KeyError:
                 # pylint: disable=protected-access
-                raise NotFound({self._manager._name_prop: name}, self._manager)
+                new_exc = NotFound(
+                    {self._manager._name_prop: name}, self._manager)
+                new_exc.__cause__ = None
+                raise new_exc  # zhmcclient.NotFound
 
     def auto_invalidate(self):
         """

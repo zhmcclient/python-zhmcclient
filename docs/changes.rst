@@ -51,6 +51,11 @@ Released: not yet
 * Improved display of `zhmcclient.HTTPError` exceptions by adding the 'stack'
   field if present. (issue #716)
 
+* Suppressed exceptions that were caught and a new exception was raised
+  in the except clause, by setting `__cause__ = None` on the new exception.
+  This avoids lengthy and unnecessary tracebacks that contain the message
+  'Another exception occurred when handling ...'. (issue #715)
+
 **Cleanup:**
 
 **Known issues:**

@@ -492,8 +492,11 @@ def _metric_value(value_str, metric_type):
         try:
             return metric_type(value_str)
         except ValueError:
-            raise ValueError("Invalid {} metric value: {!r}".
-                             format(metric_type.__class__.__name__, value_str))
+            new_exc = ValueError(
+                "Invalid {} metric value: {!r}".
+                format(metric_type.__class__.__name__, value_str))
+            new_exc.__cause__ = None
+            raise new_exc  # ValueError
     elif metric_type is six.text_type:
         # In Python 3, decode('unicode_escape) requires bytes, so we need
         # to encode to bytes. This also works in Python 2.

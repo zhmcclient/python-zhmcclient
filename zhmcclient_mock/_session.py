@@ -150,9 +150,13 @@ class FakedSession(zhmcclient.Session):
         try:
             return self._urihandler.get(self._hmc, uri, logon_required)
         except HTTPError as exc:
-            raise zhmcclient.HTTPError(exc.response())
+            new_exc = zhmcclient.HTTPError(exc.response())
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.HTTPError
         except ConnectionError as exc:
-            raise zhmcclient.ConnectionError(exc.message, None)
+            new_exc = zhmcclient.ConnectionError(exc.message, None)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.ConnectionError
 
     def post(self, uri, body=None, logon_required=True,
              wait_for_completion=True, operation_timeout=None):
@@ -263,9 +267,13 @@ class FakedSession(zhmcclient.Session):
             return self._urihandler.post(self._hmc, uri, body, logon_required,
                                          wait_for_completion)
         except HTTPError as exc:
-            raise zhmcclient.HTTPError(exc.response())
+            new_exc = zhmcclient.HTTPError(exc.response())
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.HTTPError
         except ConnectionError as exc:
-            raise zhmcclient.ConnectionError(exc.message, None)
+            new_exc = zhmcclient.ConnectionError(exc.message, None)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.ConnectionError
 
     def delete(self, uri, logon_required=True):
         """
@@ -299,6 +307,10 @@ class FakedSession(zhmcclient.Session):
         try:
             self._urihandler.delete(self._hmc, uri, logon_required)
         except HTTPError as exc:
-            raise zhmcclient.HTTPError(exc.response())
+            new_exc = zhmcclient.HTTPError(exc.response())
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.HTTPError
         except ConnectionError as exc:
-            raise zhmcclient.ConnectionError(exc.message, None)
+            new_exc = zhmcclient.ConnectionError(exc.message, None)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.ConnectionError

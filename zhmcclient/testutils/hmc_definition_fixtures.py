@@ -117,14 +117,18 @@ def hmc_session(request, hmc_definition):
                     data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)
                 except (yaml.parser.ParserError,
                         yaml.scanner.ScannerError) as exc:
-                    raise FakedHMCFileError(
+                    new_exc = FakedHMCFileError(
                         "Invalid YAML syntax in faked HMC file {0!r}: {1} {2}".
                         format(filepath, exc.__class__.__name__, exc))
+                    new_exc.__cause__ = None
+                    raise new_exc  # FakedHMCFileError
         except IOError as exc:
             if exc.errno == errno.ENOENT:
-                raise FakedHMCFileError(
+                new_exc = FakedHMCFileError(
                     "The faked HMC file {0!r} was not found".
                     format(filepath))
+                new_exc.__cause__ = None
+                raise new_exc  # FakedHMCFileError
             raise
 
         client = data['faked_client']

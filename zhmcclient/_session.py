@@ -1365,7 +1365,7 @@ def _result_object(result):
         try:
             return result.json(object_pairs_hook=OrderedDict)
         except ValueError as exc:
-            raise ParseError(
+            new_exc = ParseError(
                 "JSON parse error in HTTP response: {}. "
                 "HTTP request: {} {}. "
                 "Response status {}. "
@@ -1375,6 +1375,8 @@ def _result_object(result):
                        result.request.method, result.request.url,
                        result.status_code, content_type, result.encoding,
                        _text_repr(result.text, 1000)))
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.ParseError
 
     if content_type.startswith('text/html'):
         # We are in some error situation. The HMC returns HTML content
