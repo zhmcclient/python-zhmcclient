@@ -45,6 +45,12 @@ Released: not yet
   (i.e. z13 and earlier). Mock support for the 'Start Dump Program' operation
   was also added. (issue #705).
 
+* Improved zhmcclient HMC logging in error cases by not truncating the HTTP
+  response content for HTTP status 400 and higher. (issue #717)
+
+* Improved display of `zhmcclient.HTTPError` exceptions by adding the 'stack'
+  field if present. (issue #716)
+
 **Cleanup:**
 
 **Known issues:**

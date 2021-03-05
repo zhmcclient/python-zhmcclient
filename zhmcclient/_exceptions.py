@@ -763,9 +763,10 @@ class HTTPError(Error):
         """
         Return a human readable string representation of this exception object.
         """
-        return "{},{}: {} [{} {}]".\
+        stack_txt = ' stack={!r}'.format(self.stack) if self.stack else ''
+        return "{},{}: {} [{} {}]{}".\
                format(self.http_status, self.reason, self.message,
-                      self.request_method, self.request_uri)
+                      self.request_method, self.request_uri, stack_txt)
 
     def __repr__(self):
         """
@@ -773,9 +774,10 @@ class HTTPError(Error):
         purposes.
         """
         return "{}(http_status={!r}, reason={!r}, message={!r}, " \
-               "request_method={!r}, request_uri={!r}, ...)". \
+               "request_method={!r}, request_uri={!r}, stack={!r}, ...)". \
                format(self.__class__.__name__, self.http_status, self.reason,
-                      self.message, self.request_method, self.request_uri)
+                      self.message, self.request_method, self.request_uri,
+                      self.stack)
 
     def str_def(self):
         # pylint: disable=line-too-long

@@ -711,10 +711,16 @@ class Session(object):
                 content_dict['api-session'] = BLANKED_OUT
                 content_dict['session-credential'] = BLANKED_OUT
                 content = json.dumps(content_dict)
-        HMC_LOGGER.debug("Respons: %s %s, status: %s, headers: %r, "
-                         "content(max.1000): %.1000r",
+        if status >= 400:
+            content_label = 'content'
+            content_msg = content
+        else:
+            trunc = 1000
+            content_label = 'content(first {})'.format(trunc)
+            content_msg = content[0:trunc]
+        HMC_LOGGER.debug("Respons: %s %s, status: %s, headers: %r, %s: %r",
                          method, url, status, _headers_for_logging(headers),
-                         content)
+                         content_label, content_msg)
 
     @logged_api_call
     def get(self, uri, logon_required=True):
