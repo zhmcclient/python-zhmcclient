@@ -867,7 +867,8 @@ class MetricObjectValues(object):
             filter_args = {'object-uri': resource_uri}
             resource = self.client.cpcs.find(**filter_args)
         elif resource_class == 'logical-partition':
-            for cpc in self.client.cpcs.list():
+            cpc_list = self.client.cpcs.list()
+            for cpc in cpc_list:
                 try:
                     filter_args = {'object-uri': resource_uri}
                     resource = cpc.lpars.find(**filter_args)
@@ -875,9 +876,13 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise AssertionError("No CPC found")
+                raise AssertionError(
+                    "{} with URI {} not found in CPCs {}".
+                    format(resource_class, resource_uri,
+                           ', '.join([cpc.name for cpc in cpc_list])))
         elif resource_class == 'partition':
-            for cpc in self.client.cpcs.list():
+            cpc_list = self.client.cpcs.list()
+            for cpc in cpc_list:
                 try:
                     filter_args = {'object-uri': resource_uri}
                     resource = cpc.partitions.find(**filter_args)
@@ -885,9 +890,13 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise AssertionError("No CPC found")
+                raise AssertionError(
+                    "{} with URI {} not found in CPCs {}".
+                    format(resource_class, resource_uri,
+                           ', '.join([cpc.name for cpc in cpc_list])))
         elif resource_class == 'adapter':
-            for cpc in self.client.cpcs.list():
+            cpc_list = self.client.cpcs.list()
+            for cpc in cpc_list:
                 try:
                     filter_args = {'object-uri': resource_uri}
                     resource = cpc.adapters.find(**filter_args)
@@ -895,9 +904,13 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise AssertionError("No CPC found")
+                raise AssertionError(
+                    "{} with URI {} not found in CPCs {}".
+                    format(resource_class, resource_uri,
+                           ', '.join([cpc.name for cpc in cpc_list])))
         elif resource_class == 'nic':
-            for cpc in self.client.cpcs.list():
+            cpc_list = self.client.cpcs.list()
+            for cpc in cpc_list:
                 found = False
                 for partition in cpc.partitions.list():
                     try:
@@ -910,7 +923,10 @@ class MetricObjectValues(object):
                 if found:
                     break
             else:
-                raise AssertionError("No CPC found")
+                raise AssertionError(
+                    "{} with URI {} not found in the partitions of CPCs {}".
+                    format(resource_class, resource_uri,
+                           ', '.join([cpc.name for cpc in cpc_list])))
         else:
             raise ValueError(
                 "Invalid resource class: {!r}".format(resource_class))
