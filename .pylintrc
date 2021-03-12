@@ -74,7 +74,8 @@ disable=I0011,
         locally-enabled, superfluous-parens, useless-object-inheritance,
         consider-using-set-comprehension, unnecessary-pass, useless-return,
         raise-missing-from, super-with-arguments,
-        duplicate-string-formatting-argument, consider-using-generator
+        duplicate-string-formatting-argument, consider-using-generator,
+        use-a-generator
 
 # Note: The too-many-* messages are excluded temporarily, and should be dealt
 #       with at some point.
