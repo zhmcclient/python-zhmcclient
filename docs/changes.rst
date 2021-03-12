@@ -56,6 +56,9 @@ Released: not yet
   This avoids lengthy and unnecessary tracebacks that contain the message
   'Another exception occurred when handling ...'. (issue #715)
 
+* Improved the information in assertion errors in the metrics support.
+  (zhmc-prometheus-exporter issue #113)
+
 **Cleanup:**
 
 **Known issues:**
