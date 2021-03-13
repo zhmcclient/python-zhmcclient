@@ -59,6 +59,9 @@ Released: not yet
 * Improved the information in assertion errors in the metrics support.
   (zhmc-prometheus-exporter issue #113)
 
+* Blanked out value of 'x-api-session' field (Session ID) in error responses.
+  (zhmccli issue #136)
+
 **Cleanup:**
 
 **Known issues:**

@@ -665,19 +665,31 @@ class Session(object):
           content (:term:`string`): HTTP body (aka content) used for the
             request
         """
-        if method == 'POST' and url.endswith('/api/sessions'):
-            # In Python 3 up to 3.5, json.loads() requires unicode strings.
-            if sys.version_info[0] == 3 and sys.version_info[1] in (4, 5) and \
-                    isinstance(content, six.binary_type):
-                content = content.decode('utf-8')
-            # Because zhmcclient has built the request, we are not handling
-            # any JSON parse errors from json.loads().
-            content_dict = json.loads(content)
-            content_dict['password'] = BLANKED_OUT
-            content = json.dumps(content_dict)
-        HMC_LOGGER.debug("Request: %s %s, headers: %r, "
-                         "content(max.1000): %.1000r",
-                         method, url, _headers_for_logging(headers), content)
+
+        if content is not None:
+            try:
+                content_dict = json2dict(content)
+            except ValueError as exc:
+                content = '"Error: Cannot parse JSON payload of request: ' \
+                    '{}"'.format(exc)
+            else:
+                if 'password' in content_dict:
+                    content_dict['password'] = BLANKED_OUT
+                content = dict2json(content_dict)
+            trunc = 1000
+            if len(content) > trunc:
+                content_label = 'content(first {})'.format(trunc)
+                content_msg = content[0:trunc]
+            else:
+                content_label = 'content'
+                content_msg = content
+        else:
+            content_label = 'content'
+            content_msg = content
+
+        HMC_LOGGER.debug("Request: %s %s, headers: %r, %s: %r",
+                         method, url, _headers_for_logging(headers),
+                         content_label, content_msg)
 
     @staticmethod
     def _log_http_response(method, url, status, headers=None, content=None):
@@ -697,27 +709,38 @@ class Session(object):
           content (:term:`string`): HTTP body (aka content) returned in the
             response
         """
-        if method == 'POST' and url.endswith('/api/sessions'):
-            # In Python 3 up to 3.5, json.loads() requires unicode strings.
-            if sys.version_info[0] == 3 and sys.version_info[1] in (4, 5) and \
-                    isinstance(content, six.binary_type):
-                content = content.decode('utf-8')
+
+        if content is not None:
             try:
-                content_dict = json.loads(content)
+                content_dict = json2dict(content)
             except ValueError as exc:
                 content = '"Error: Cannot parse JSON payload of response: ' \
                     '{}"'.format(exc)
             else:
-                content_dict['api-session'] = BLANKED_OUT
-                content_dict['session-credential'] = BLANKED_OUT
-                content = json.dumps(content_dict)
-        if status >= 400:
+                if 'request-headers' in content_dict:
+                    headers_dict = content_dict['request-headers']
+                    if 'x-api-session' in headers_dict:
+                        headers_dict['x-api-session'] = BLANKED_OUT
+                if 'api-session' in content_dict:
+                    content_dict['api-session'] = BLANKED_OUT
+                if 'session-credential' in content_dict:
+                    content_dict['session-credential'] = BLANKED_OUT
+                content = dict2json(content_dict)
+            if status >= 400:
+                content_label = 'content'
+                content_msg = content
+            else:
+                trunc = 1000
+                if len(content) > trunc:
+                    content_label = 'content(first {})'.format(trunc)
+                    content_msg = content[0:trunc]
+                else:
+                    content_label = 'content'
+                    content_msg = content
+        else:
             content_label = 'content'
             content_msg = content
-        else:
-            trunc = 1000
-            content_label = 'content(first {})'.format(trunc)
-            content_msg = content[0:trunc]
+
         HMC_LOGGER.debug("Respons: %s %s, status: %s, headers: %r, %s: %r",
                          method, url, status, _headers_for_logging(headers),
                          content_label, content_msg)
@@ -1443,3 +1466,38 @@ def _result_object(result):
                result.request.method, result.request.url,
                result.status_code, result.encoding,
                _text_repr(result.text, 1000)))
+
+
+def json2dict(json_str):
+    """
+    Convert a JSON string into a dict.
+
+    Parameters:
+      json_str(string): Unicode or binary string in JSON format.
+
+    Returns:
+      dict: JSON string converted to a dict.
+
+    Raises:
+      ValueError: Cannot parse JSON string
+    """
+    # In Python 3 up to 3.5, json.loads() requires unicode strings.
+    if sys.version_info[0] == 3 and sys.version_info[1] in (4, 5) and \
+            isinstance(json_str, six.binary_type):
+        json_str = json_str.decode('utf-8')
+    json_dict = json.loads(json_str)  # May raise ValueError
+    return json_dict
+
+
+def dict2json(json_dict):
+    """
+    Convert a dict into a JSON string.
+
+    Parameters:
+      json_dict(dict): The dict.
+
+    Returns:
+      dict: The dict converted to a Unicode JSON string.
+    """
+    json_str = json.dumps(json_dict)
+    return json_str
