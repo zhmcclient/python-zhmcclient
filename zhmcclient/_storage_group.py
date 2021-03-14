@@ -251,7 +251,7 @@ class StorageGroupManager(BaseManager):
             in this parameter.
 
             The 'template-uri' property is not allowed. If you want to create
-            a storage group from a :term:`storage template`, specify the
+            a storage group from a :term:`storage group template`, specify the
             `template` parameter.
 
             The `properties` and `template` parameters are mutually exclusive.

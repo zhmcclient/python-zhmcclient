@@ -524,9 +524,35 @@ Storage Groups
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageGroupManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageGroupManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.StorageGroup
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageGroup
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageGroup
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Storage Volumes`:
@@ -540,9 +566,35 @@ Storage Volumes
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageVolumeManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageVolumeManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.StorageVolume
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageVolume
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageVolume
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Virtual Storage Resources`:
@@ -556,9 +608,35 @@ Virtual Storage Resources
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.VirtualStorageResourceManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.VirtualStorageResourceManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.VirtualStorageResource
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.VirtualStorageResource
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.VirtualStorageResource
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Storage Group Templates`:
@@ -572,9 +650,35 @@ Storage Group Templates
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageGroupTemplateManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageGroupTemplateManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.StorageGroupTemplate
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageGroupTemplate
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageGroupTemplate
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Storage Volume Templates`:
@@ -588,9 +692,35 @@ Storage Volume Templates
    :members:
    :special-members: __str__
 
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageVolumeTemplateManager
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageVolumeTemplateManager
+      :attributes:
+
+   .. rubric:: Details
+
 .. autoclass:: zhmcclient.StorageVolumeTemplate
    :members:
    :special-members: __str__
+
+   .. rubric:: Methods
+
+   .. autoautosummary:: zhmcclient.StorageVolumeTemplate
+      :methods:
+      :nosignatures:
+
+   .. rubric:: Attributes
+
+   .. autoautosummary:: zhmcclient.StorageVolumeTemplate
+      :attributes:
+
+   .. rubric:: Details
 
 
 .. _`Console`:

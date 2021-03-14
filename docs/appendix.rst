@@ -468,5 +468,3 @@ Related projects
 
    zhmccli package
       `zhmccli package on Pypi <https://pypi.python.org/pypi/zhmccli>`_
-
-.. include:: changes.rst
