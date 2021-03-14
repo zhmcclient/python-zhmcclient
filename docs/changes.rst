@@ -35,6 +35,13 @@ Released: not yet
 * Mitigated the coveralls HTTP status 422 by pinning coveralls-python to
   <3.0.0.
 
+* Docs: Removed outdated reference to KVM for IBM z Systems Admin book that
+  was used as a second example in the Introduction section.
+
+* Docs: Added the missing Methods and Attributes tables to the description of
+  resources related to the storage management feature (e,g. StorageGroup).
+  (issue #708)
+
 **Enhancements:**
 
 * Added a new `Partition.start_dump_program()` method that performs the HMC
@@ -63,6 +70,9 @@ Released: not yet
   (zhmccli issue #136)
 
 **Cleanup:**
+
+* Docs: Moved change log up one level to avoid Sphinx warning about duplicate
+  labels.
 
 **Known issues:**
 

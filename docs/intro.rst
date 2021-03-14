@@ -411,10 +411,6 @@ accordingly:
 
 For details, see the :term:`HMC Operations Guide`.
 
-A step-by-step description for a similar use case can be found in chapter 11,
-section "Enabling the System z HMC to work the Pacemaker STONITH Agent", in the
-:term:`KVM for IBM z Systems V1.1.2 System Administration` book.
-
 
 .. _`Examples`:
 
