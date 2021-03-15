@@ -666,22 +666,26 @@ class Session(object):
             request
         """
 
+        content_msg = None
         if content is not None:
+            content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
-            except ValueError as exc:
-                content = '"Error: Cannot parse JSON payload of request: ' \
-                    '{}"'.format(exc)
+            except ValueError:
+                # If the content is not JSON, we assume it does not contain
+                # structured data such as a password or session IDs.
+                pass
             else:
                 if 'password' in content_dict:
                     content_dict['password'] = BLANKED_OUT
                 content = dict2json(content_dict)
-            trunc = 1000
-            if len(content) > trunc:
-                content_label = 'content(first {})'.format(trunc)
-                content_msg = content[0:trunc]
+            trunc = 30000
+            if content_len > trunc:
+                content_label = 'content(first {} B of {} B)'. \
+                    format(trunc, content_len)
+                content_msg = content[0:trunc] + '...(truncated)'
             else:
-                content_label = 'content'
+                content_label = 'content({} B)'.format(content_len)
                 content_msg = content
         else:
             content_label = 'content'
@@ -711,11 +715,14 @@ class Session(object):
         """
 
         if content is not None:
+            content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
-            except ValueError as exc:
-                content = '"Error: Cannot parse JSON payload of response: ' \
-                    '{}"'.format(exc)
+            except ValueError:
+                # If the content is not JSON (e.g. response from metrics
+                # context retrieval), we assume it does not contain structured
+                # data such as a password or session IDs.
+                pass
             else:
                 if 'request-headers' in content_dict:
                     headers_dict = content_dict['request-headers']
@@ -730,12 +737,13 @@ class Session(object):
                 content_label = 'content'
                 content_msg = content
             else:
-                trunc = 1000
-                if len(content) > trunc:
-                    content_label = 'content(first {})'.format(trunc)
-                    content_msg = content[0:trunc]
+                trunc = 30000
+                if content_len > trunc:
+                    content_label = 'content(first {} B of {} B)'. \
+                        format(trunc, content_len)
+                    content_msg = content[0:trunc] + '...(truncated)'
                 else:
-                    content_label = 'content'
+                    content_label = 'content({} B)'.format(len(content))
                     content_msg = content
         else:
             content_label = 'content'
