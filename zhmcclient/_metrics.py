@@ -73,8 +73,13 @@ import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._cpc import Cpc
+from ._lpar import Lpar
+from ._partition import Partition
+from ._adapter import Adapter
+from ._nic import Nic
 from ._logging import logged_api_call
-from ._exceptions import NotFound
+from ._exceptions import NotFound, MetricsResourceNotFound
 from ._utils import datetime_from_timestamp, repr_list
 
 __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
@@ -854,8 +859,9 @@ class MetricObjectValues(object):
 
         Raises:
 
-          :exc:`~zhmcclient.NotFound`: No resource found for this URI in the
-            management scope of the HMC.
+          :exc:`~zhmcclient.MetricsResourceNotFound`: The resource for the
+          resource URI of the resource these metric values apply to, was not
+          found on the HMC.
         """
         if self._resource is not None:
             return self._resource
@@ -864,11 +870,21 @@ class MetricObjectValues(object):
         resource_uri = self.resource_uri
 
         if resource_class == 'cpc':
+            cpc_managers = [self.client]
             filter_args = {'object-uri': resource_uri}
-            resource = self.client.cpcs.find(**filter_args)
+            try:
+                resource = self.client.cpcs.find(**filter_args)
+            except NotFound:
+                raise MetricsResourceNotFound(
+                    "{} with URI {} not found on HMC {}".
+                    format(resource_class, resource_uri,
+                           self.client.session.host),
+                    Cpc, cpc_managers)
         elif resource_class == 'logical-partition':
+            lpar_managers = []
             cpc_list = self.client.cpcs.list()
             for cpc in cpc_list:
+                lpar_managers.append(cpc.lpars)
                 try:
                     filter_args = {'object-uri': resource_uri}
                     resource = cpc.lpars.find(**filter_args)
@@ -876,13 +892,16 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise AssertionError(
+                raise MetricsResourceNotFound(
                     "{} with URI {} not found in CPCs {}".
                     format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])))
+                           ', '.join([cpc.name for cpc in cpc_list])),
+                    Lpar, lpar_managers)
         elif resource_class == 'partition':
             cpc_list = self.client.cpcs.list()
+            partition_managers = []
             for cpc in cpc_list:
+                partition_managers.append(cpc.partitions)
                 try:
                     filter_args = {'object-uri': resource_uri}
                     resource = cpc.partitions.find(**filter_args)
@@ -890,13 +909,16 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise AssertionError(
+                raise MetricsResourceNotFound(
                     "{} with URI {} not found in CPCs {}".
                     format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])))
+                           ', '.join([cpc.name for cpc in cpc_list])),
+                    Partition, partition_managers)
         elif resource_class == 'adapter':
             cpc_list = self.client.cpcs.list()
+            adapter_managers = []
             for cpc in cpc_list:
+                adapter_managers.append(cpc.adapters)
                 try:
                     filter_args = {'object-uri': resource_uri}
                     resource = cpc.adapters.find(**filter_args)
@@ -904,15 +926,18 @@ class MetricObjectValues(object):
                 except NotFound:
                     pass  # Try next CPC
             else:
-                raise AssertionError(
+                raise MetricsResourceNotFound(
                     "{} with URI {} not found in CPCs {}".
                     format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])))
+                           ', '.join([cpc.name for cpc in cpc_list])),
+                    Adapter, adapter_managers)
         elif resource_class == 'nic':
             cpc_list = self.client.cpcs.list()
+            nic_managers = []
             for cpc in cpc_list:
                 found = False
                 for partition in cpc.partitions.list():
+                    nic_managers.append(partition.nics)
                     try:
                         filter_args = {'element-uri': resource_uri}
                         resource = partition.nics.find(**filter_args)
@@ -923,10 +948,11 @@ class MetricObjectValues(object):
                 if found:
                     break
             else:
-                raise AssertionError(
+                raise MetricsResourceNotFound(
                     "{} with URI {} not found in the partitions of CPCs {}".
                     format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])))
+                           ', '.join([cpc.name for cpc in cpc_list])),
+                    Nic, nic_managers)
         else:
             raise ValueError(
                 "Invalid resource class: {!r}".format(resource_class))
