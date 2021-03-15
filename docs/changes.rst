@@ -53,7 +53,8 @@ Released: not yet
   was also added. (issue #705).
 
 * Improved zhmcclient HMC logging in error cases by not truncating the HTTP
-  response content for HTTP status 400 and higher. (issue #717)
+  response content for HTTP status 400 and higher. (issue #717) Also the
+  truncation limit was icreased to 30000 to accomodate most HMC responses.
 
 * Improved display of `zhmcclient.HTTPError` exceptions by adding the 'stack'
   field if present. (issue #716)
@@ -68,8 +69,8 @@ Released: not yet
   be raised when accessing the `MetricObjectValues.resource` property.
   (zhmc-prometheus-exporter issue #113)
 
-* Blanked out value of 'x-api-session' field (Session ID) in error responses.
-  (zhmccli issue #136)
+* Blanked out value of 'x-api-session' field (Session ID) when logging error
+  responses. (zhmccli issue #136)
 
 **Cleanup:**
 
