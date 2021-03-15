@@ -7,7 +7,7 @@ on:
   schedule:
     # The schedule event always (and only) runs on the master branch.
     - # cron (in UTC): minute hour day_of_month month day_of_week
-      cron: '30 06 * * SUN'
+      cron: '00 04 * * SUN'
   push:
     branches: [ master, stable_0.28 ]
   pull_request:
