@@ -63,7 +63,9 @@ Released: not yet
   This avoids lengthy and unnecessary tracebacks that contain the message
   'Another exception occurred when handling ...'. (issue #715)
 
-* Improved the information in assertion errors in the metrics support.
+* Improved the handling of resource not found errors during metrics processing
+  by adding a new `zhmcclient.MetricsResourceNotFound` exception that may now
+  be raised when accessing the `MetricObjectValues.resource` property.
   (zhmc-prometheus-exporter issue #113)
 
 * Blanked out value of 'x-api-session' field (Session ID) in error responses.

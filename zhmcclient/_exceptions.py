@@ -22,7 +22,8 @@ import re
 __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'RetriesExceeded', 'AuthError', 'ClientAuthError',
            'ServerAuthError', 'ParseError', 'VersionError', 'HTTPError',
-           'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound']
+           'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound',
+           'MetricsResourceNotFound']
 
 
 class Error(Exception):
@@ -1160,3 +1161,68 @@ class NotFound(Error):
                       parent.__class__.__name__ if parent else None,
                       parent.name if parent else None,
                       self.args[0])
+
+
+class MetricsResourceNotFound(Error):
+    # pylint: disable=redefined-builtin
+    """
+    This exception indicates that the resource referenced by a metric object
+    value was not found on the HMC.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, msg, resource_class, managers):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          resource_class (:class:`~zhmcclient.BaseResource`):
+            The zhmcclient resource class of the resource that was not found.
+
+          managers (list of :class:`~zhmcclient.BaseManager`):
+            List of zhmcclient resource managers that were searched for the
+            resource.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        super(MetricsResourceNotFound, self).__init__(msg)
+        self._resource_class = resource_class
+        self._managers = managers
+
+    @property
+    def resource_class(self):
+        """
+        The zhmcclient resource class of the resource that was not found.
+        """
+        return self._resource_class
+
+    @property
+    def managers(self):
+        """
+        List of zhmcclient resource managers that were searched for the
+        resource
+        """
+        return self._managers
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}". \
+               format(self.__class__.__name__, self.args[0])
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}
+        """
+        return "classname={!r}; message={!r}". \
+            format(self.__class__.__name__, self.args[0])
