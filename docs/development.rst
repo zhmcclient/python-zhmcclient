@@ -347,11 +347,11 @@ It covers all variants of versions that can be released:
   minor version
 
 This description assumes that you are authorized to push to the remote repo
-at https://github.com/zhmcclient/zhmc-ansible-modules and that the remote repo
+at https://github.com/zhmcclient/python-zhmcclient and that the remote repo
 has the remote name ``origin`` in your local clone.
 
 Any commands in the following steps are executed in the main directory of your
-local clone of the zhmc-ansible-modules Git repo.
+local clone of the python-zhmcclient Git repo.
 
 1.  Set shell variables for the version that is being released and the branch
     it is based on:
@@ -535,11 +535,11 @@ This section covers all variants of new versions:
   minor version
 
 This description assumes that you are authorized to push to the remote repo
-at https://github.com/zhmcclient/zhmc-ansible-modules and that the remote repo
+at https://github.com/zhmcclient/python-zhmcclient and that the remote repo
 has the remote name ``origin`` in your local clone.
 
 Any commands in the following steps are executed in the main directory of your
-local clone of the zhmc-ansible-modules Git repo.
+local clone of the python-zhmcclient Git repo.
 
 1.  Set shell variables for the version that is being started and the branch it
     is based on:
