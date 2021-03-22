@@ -17,24 +17,13 @@ jobs:
     if: ${{ github.event.workflow_run.event == 'schedule' }}
     steps:
 
-    - name: Post success to Slack
-      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    - name: Post status to Slack
       run: |
         run_id=$(echo "${{ github.event.workflow_run.url }}" | rev | cut -d '/' -f 1 | rev)
         run_url="https://github.com/${{ github.repository }}/actions/runs/$run_id"
         branch="${{ github.event.workflow_run.head_branch }}"
         branch_url="https://github.com/${{ github.repository }}/commits/$branch"
         repo_url="https://github.com/${{ github.repository }}/actions/workflows/test.yml"
-        json="{ \"text\": \":white_check_mark: <$repo_url|${{ github.repository }}>: Scheduled test succeeded with run <$run_url|$run_id> on branch <$branch_url|$branch>\" }"
-        curl -s -d "payload=$json" ${{ secrets.SLACK_HOOK }}
-
-    - name: Post failure to Slack
-      if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-      run: |
-        run_id=$(echo "${{ github.event.workflow_run.url }}" | rev | cut -d '/' -f 1 | rev)
-        run_url="https://github.com/${{ github.repository }}/actions/runs/$run_id"
-        branch="${{ github.event.workflow_run.head_branch }}"
-        branch_url="https://github.com/${{ github.repository }}/commits/$branch"
-        repo_url="https://github.com/${{ github.repository }}/actions/workflows/test.yml"
-        json="{ \"text\": \":x: <$repo_url|${{ github.repository }}>: Scheduled test failed with run <$run_url|$run_id> on branch <$branch_url|$branch>\" }"
+        emoji=$(if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then echo ":white_check_mark:"; else echo ":x:"; fi)
+        json="{ \"text\": \"$emoji <$repo_url|${{ github.repository }}>: Scheduled test status: ${{ github.event.workflow_run.conclusion }} with run <$run_url|$run_id> on branch <$branch_url|$branch>\" }"
         curl -s -d "payload=$json" ${{ secrets.SLACK_HOOK }}
