@@ -8,6 +8,8 @@ on:
     # The schedule event always (and only) runs on the master branch.
     - # cron (in UTC): minute hour day_of_month month day_of_week
       cron: '00 04 * * SUN'
+    - # TODO: Remove this temporary schedule once it has been verified
+      cron: '15 19 * * MON'
   push:
     branches: [ master, stable_0.28 ]
   pull_request:
