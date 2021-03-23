@@ -149,7 +149,7 @@ For the latest released version on PyPI:
 * `Change log`_
 
 .. _Documentation: http://python-zhmcclient.readthedocs.io/en/stable/
-.. _Change log: http://python-zhmcclient.readthedocs.io/en/stable/appendix.html#change-log
+.. _Change log: http://python-zhmcclient.readthedocs.io/en/stable/changes.html
 
 zhmc CLI
 ========
