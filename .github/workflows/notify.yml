@@ -1,6 +1,12 @@
 # This GitHub workflow will send a notification to Slack when a scheduled test
 # workflow completes.
 
+# There needs to be a GitHub secret named "SLACK_HOOK" that is set to the
+# incoming webhook URL for Slack. That webhook is tied to a Slack channel, so
+# this workflow does not select the channel and relies on that default.
+# Instructions to set up Slack for incoming webhooks are here:
+# https://api.slack.com/messaging/webhooks.
+
 name: notify
 
 on:
