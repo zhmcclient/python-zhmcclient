@@ -31,5 +31,5 @@ jobs:
         branch_url="https://github.com/${{ github.repository }}/commits/$branch"
         repo_url="https://github.com/${{ github.repository }}/actions/workflows/test.yml"
         emoji=$(if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then echo ":white_check_mark:"; else echo ":x:"; fi)
-        json="{ \"text\": \"$emoji <$repo_url|${{ github.repository }}>: Scheduled test status: ${{ github.event.workflow_run.conclusion }} with run <$run_url|$run_id> on branch <$branch_url|$branch>\" }"
+        json="{ \"text\": \"$emoji <$repo_url|${{ github.repository }}>: Scheduled run <$run_url|$run_id> on branch <$branch_url|$branch>: ${{ github.event.workflow_run.conclusion }}\" }"
         curl -s -d "payload=$json" ${{ secrets.SLACK_HOOK }}
