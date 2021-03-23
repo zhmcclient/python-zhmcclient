@@ -19,16 +19,10 @@ Change log
 ----------
 
 
-Version 0.29.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.29.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 0.28.x.
-
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-03-23
 
 **Bug fixes:**
 
@@ -76,12 +70,6 @@ Released: not yet
 
 * Docs: Moved change log up one level to avoid Sphinx warning about duplicate
   labels.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.28.0
