@@ -432,7 +432,8 @@ class Lpar(BaseResource):
                   operating_system_specific_load_parameters=None,
                   boot_record_logical_block_address=None, force=False,
                   wait_for_completion=True, operation_timeout=None,
-                  status_timeout=None, allow_status_exceptions=False):
+                  status_timeout=None, allow_status_exceptions=False,
+                  secure_boot=False):
         # pylint: disable=invalid-name
         """
         Load (boot) this LPAR from a designated SCSI device, using the
@@ -484,7 +485,7 @@ class Lpar(BaseResource):
 
           force (bool):
             Boolean controlling whether this operation is permitted when the
-            LPAR is in the "operating" status. The default value is `True`.
+            LPAR is in the "operating" status.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -518,6 +519,11 @@ class Lpar(BaseResource):
             Boolean controlling whether LPAR status "exceptions" is considered
             an additional acceptable end status when `wait_for_completion` is
             set.
+
+          secure_boot (bool):
+            Bollean controlling whether the system checks the software
+            signature of what is loaded against what the distributor signed it
+            with. Requires z15 or later.
 
         Returns:
 
@@ -556,6 +562,8 @@ class Lpar(BaseResource):
                 boot_record_logical_block_address
         if force:
             body['force'] = force
+        if secure_boot:
+            body['secure-boot'] = secure_boot
         result = self.manager.session.post(
             self.uri + '/operations/scsi-load',
             body,
@@ -574,7 +582,8 @@ class Lpar(BaseResource):
                   operating_system_specific_load_parameters=None,
                   boot_record_logical_block_address=None, os_ipl_token=None,
                   wait_for_completion=True, operation_timeout=None,
-                  status_timeout=None, allow_status_exceptions=False):
+                  status_timeout=None, allow_status_exceptions=False,
+                  force=False):
         # pylint: disable=invalid-name
         """
         Load a standalone dump program from a designated SCSI device
@@ -660,6 +669,10 @@ class Lpar(BaseResource):
             an additional acceptable end status when `wait_for_completion` is
             set.
 
+          force (bool):
+            Boolean controlling whether this operation is permitted when the
+            LPAR is in the "operating" status.
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -697,6 +710,8 @@ class Lpar(BaseResource):
                 boot_record_logical_block_address
         if os_ipl_token is not None:
             body['os-ipl-token'] = os_ipl_token
+        if force:
+            body['force'] = force
         result = self.manager.session.post(
             self.uri + '/operations/scsi-dump',
             body,
