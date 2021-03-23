@@ -58,6 +58,7 @@ from ._partition import PartitionManager
 from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
+from ._capacity_group import CapacityGroupManager
 from ._logging import logged_api_call
 from ._exceptions import ParseError
 
@@ -230,6 +231,7 @@ class Cpc(BaseResource):
         self._partitions = None
         self._adapters = None
         self._virtual_switches = None
+        self._capacity_groups = None
         self._reset_activation_profiles = None
         self._image_activation_profiles = None
         self._load_activation_profiles = None
@@ -277,6 +279,17 @@ class Cpc(BaseResource):
         if not self._virtual_switches:
             self._virtual_switches = VirtualSwitchManager(self)
         return self._virtual_switches
+
+    @property
+    def capacity_groups(self):
+        """
+        :class:`~zhmcclient.CapacityGroupManager`: Access to the
+        :term:`Capacity Groups <Capacity Group>` in this CPC.
+        """
+        # We do here some lazy loading.
+        if not self._capacity_groups:
+            self._capacity_groups = CapacityGroupManager(self)
+        return self._capacity_groups
 
     @property
     def vswitches(self):

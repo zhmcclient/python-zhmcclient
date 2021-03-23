@@ -2954,6 +2954,215 @@ class StorageGroupRemoveCandidatePortsHandler(object):
             candidate_adapter_port_uris.remove(ap_uri)
 
 
+class CapacityGroupsHandler(object):
+    """
+    Handler class for HTTP methods on set of CapacityGroup resources.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Capacity Groups (always global but with filters)."""
+        cpc_oid = uri_parms[0]
+        cpc_uri = '/api/cpcs/' + cpc_oid
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        query_str = uri_parms[1]
+        filter_args = parse_query_parms(method, uri, query_str)
+        result_capacity_groups = []
+        for cg in cpc.capacity_groups.list(filter_args):
+            result_cg = {}
+            for prop in cg.properties:
+                if prop in ('element-uri', 'name'):
+                    result_cg[prop] = cg.properties[prop]
+            result_capacity_groups.append(result_cg)
+        return {'capacity-groups': result_capacity_groups}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Capacity Group."""
+        assert wait_for_completion is True  # async not supported yet
+        check_required_fields(method, uri, body, ['name'])
+        cpc_oid = uri_parms[0]
+        cpc_uri = '/api/cpcs/' + cpc_oid
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+
+        # Reflect the result of creating the capacity group
+        new_capacity_group = cpc.capacity_groups.add(body)
+
+        return {
+            'element-uri': new_capacity_group.uri
+        }
+
+
+class CapacityGroupHandler(GenericGetPropertiesHandler,
+                           GenericUpdatePropertiesHandler,
+                           GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single CapacityGroup resource.
+    """
+
+    @staticmethod
+    def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Delete Capacity Group."""
+        try:
+            capacity_group = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        # Check that Capacity Group is empty
+        partition_uris = capacity_group.properties['partition-uris']
+        if partition_uris:
+            raise ConflictError(
+                method, uri, reason=110,
+                message="Capacity group {!r} is not empty and contains "
+                "partitions with URIs {!r}".
+                format(capacity_group.name, partition_uris))
+
+        # Delete the mocked resource
+        capacity_group.manager.remove(capacity_group.oid)
+
+
+class CapacityGroupAddPartitionHandler(object):
+    """
+    Handler class for operation: Add Partition to Capacity Group.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Add Partition to Capacity Group."""
+        assert wait_for_completion is True  # async not supported yet
+
+        # The URI is a POST operation, so we need to construct the CG URI
+        cpc_oid = uri_parms[0]
+        cpc_uri = '/api/cpcs/' + cpc_oid
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        cg_oid = uri_parms[1]
+        cg_uri = cpc_uri + '/capacity-groups/' + cg_oid
+
+        try:
+            capacity_group = hmc.lookup_by_uri(cg_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=150)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        check_required_fields(method, uri, body, ['partition-uri'])
+
+        # Check the partition exists
+        partition_uri = body['partition-uri']
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=2)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        # Check the partition is in shared processor mode
+        processor_mode = partition.properties.get('processor-mode', 'shared')
+        if processor_mode != 'shared':
+            raise ConflictError(method, uri, 170,
+                                "Partition %s is in %s processor mode" %
+                                (partition.name, processor_mode))
+
+        # Check the partition is not in this capacity group
+        partition_uris = capacity_group.properties['partition-uris']
+        if partition.uri in partition_uris:
+            raise ConflictError(method, uri, 130,
+                                "Partition %s is already a member of "
+                                "this capacity group %s" %
+                                (partition.name, capacity_group.name))
+
+        # Check the partition is not in any other capacity group
+        for cg in cpc.capacity_groups.list():
+            if partition.uri in cg.properties['partition-uris']:
+                raise ConflictError(method, uri, 120,
+                                    "Partition %s is already a member of "
+                                    "another capacity group %s" %
+                                    (partition.name, cg.name))
+
+        # Reflect the result of adding the partition to the capacity group
+        capacity_group.properties['partition-uris'].append(partition.uri)
+
+
+class CapacityGroupRemovePartitionHandler(object):
+    """
+    Handler class for operation: Remove Partition from Capacity Group.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Remove Partition from Capacity Group."""
+        assert wait_for_completion is True  # async not supported yet
+
+        # The URI is a POST operation, so we need to construct the CG URI
+        cpc_oid = uri_parms[0]
+        cpc_uri = '/api/cpcs/' + cpc_oid
+        try:
+            hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        cg_oid = uri_parms[1]
+        cg_uri = cpc_uri + '/capacity-groups/' + cg_oid
+
+        try:
+            capacity_group = hmc.lookup_by_uri(cg_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri, reason=150)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        check_required_fields(method, uri, body, ['partition-uri'])
+
+        # Check the partition exists
+        partition_uri = body['partition-uri']
+        try:
+            partition = hmc.lookup_by_uri(partition_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        # Check the partition is in this capacity group
+        partition_uris = capacity_group.properties['partition-uris']
+        if partition.uri not in partition_uris:
+            raise ConflictError(method, uri, 140,
+                                "Partition %s is not a member of "
+                                "capacity group %s" %
+                                (partition.name, capacity_group.name))
+
+        # Reflect the result of removing the partition from the capacity group
+        capacity_group.properties['partition-uris'].remove(partition.uri)
+
+
 class LparsHandler(object):
     """
     Handler class for HTTP methods on set of Lpar resources.
@@ -3441,6 +3650,13 @@ URIS = (
      StorageGroupAddCandidatePortsHandler),
     (r'/api/storage-groups/([^/]+)/operations/remove-candidate-adapter-ports',
      StorageGroupRemoveCandidatePortsHandler),
+
+    (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?', CapacityGroupsHandler),
+    (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)', CapacityGroupHandler),
+    (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)/operations/add-partition',
+     CapacityGroupAddPartitionHandler),
+    (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)/operations/remove-partition',
+     CapacityGroupRemovePartitionHandler),
 
     # Only in classic (or ensemble) mode:
 
