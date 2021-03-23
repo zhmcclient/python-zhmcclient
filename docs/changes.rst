@@ -35,7 +35,14 @@ Released: not yet
 * Docs: Properties of classes are now shown in the Attributes summary table
   of the class. (issue #726)
 
+* Docs: Fixed the incorrect default value documented for the `force` parameter
+  of `Lpar.scsi_load()`. The correct default is `False`. (part of issue #748).
+
 **Enhancements:**
+
+* Added an optional parameter `secure_boot` to `Lpar.scsi_load()` (issue #748).
+
+* Added an optional parameter `force` to `Lpar.scsi_dump()` (issue #748).
 
 **Cleanup:**
 
