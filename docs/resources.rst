@@ -60,37 +60,15 @@ CPCs
 
 .. autoclass:: zhmcclient.CpcManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.CpcManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.CpcManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Cpc
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Cpc
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Cpc
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Unmanaged CPCs`:
@@ -102,37 +80,15 @@ Unmanaged CPCs
 
 .. autoclass:: zhmcclient.UnmanagedCpcManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.UnmanagedCpcManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.UnmanagedCpcManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.UnmanagedCpc
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.UnmanagedCpc
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.UnmanagedCpc
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Activation profiles`:
@@ -144,37 +100,15 @@ Activation profiles
 
 .. autoclass:: zhmcclient.ActivationProfileManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.ActivationProfileManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.ActivationProfileManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.ActivationProfile
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.ActivationProfile
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.ActivationProfile
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`LPARs`:
@@ -186,37 +120,15 @@ LPARs
 
 .. autoclass:: zhmcclient.LparManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.LparManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.LparManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Lpar
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Lpar
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Lpar
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Partitions`:
@@ -228,37 +140,15 @@ Partitions
 
 .. autoclass:: zhmcclient.PartitionManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.PartitionManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.PartitionManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Partition
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Partition
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Partition
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Adapters`:
@@ -270,37 +160,15 @@ Adapters
 
 .. autoclass:: zhmcclient.AdapterManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.AdapterManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.AdapterManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Adapter
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Adapter
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Adapter
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Ports`:
@@ -312,37 +180,15 @@ Ports
 
 .. autoclass:: zhmcclient.PortManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.PortManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.PortManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Port
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Port
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Port
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`NICs`:
@@ -354,37 +200,15 @@ NICs
 
 .. autoclass:: zhmcclient.NicManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.NicManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.NicManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Nic
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Nic
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Nic
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`HBAs`:
@@ -396,37 +220,15 @@ HBAs
 
 .. autoclass:: zhmcclient.HbaManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.HbaManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.HbaManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Hba
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Hba
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Hba
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Virtual Functions`:
@@ -438,37 +240,15 @@ Virtual Functions
 
 .. autoclass:: zhmcclient.VirtualFunctionManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.VirtualFunctionManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.VirtualFunctionManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.VirtualFunction
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.VirtualFunction
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.VirtualFunction
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Virtual Switches`:
@@ -480,37 +260,15 @@ Virtual Switches
 
 .. autoclass:: zhmcclient.VirtualSwitchManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.VirtualSwitchManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.VirtualSwitchManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.VirtualSwitch
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.VirtualSwitch
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.VirtualSwitch
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Storage Groups`:
@@ -522,37 +280,15 @@ Storage Groups
 
 .. autoclass:: zhmcclient.StorageGroupManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageGroupManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageGroupManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.StorageGroup
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageGroup
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageGroup
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Storage Volumes`:
@@ -564,37 +300,15 @@ Storage Volumes
 
 .. autoclass:: zhmcclient.StorageVolumeManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageVolumeManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageVolumeManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.StorageVolume
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageVolume
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageVolume
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Virtual Storage Resources`:
@@ -606,37 +320,15 @@ Virtual Storage Resources
 
 .. autoclass:: zhmcclient.VirtualStorageResourceManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.VirtualStorageResourceManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.VirtualStorageResourceManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.VirtualStorageResource
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.VirtualStorageResource
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.VirtualStorageResource
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Storage Group Templates`:
@@ -648,37 +340,15 @@ Storage Group Templates
 
 .. autoclass:: zhmcclient.StorageGroupTemplateManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageGroupTemplateManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageGroupTemplateManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.StorageGroupTemplate
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageGroupTemplate
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageGroupTemplate
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Storage Volume Templates`:
@@ -690,37 +360,15 @@ Storage Volume Templates
 
 .. autoclass:: zhmcclient.StorageVolumeTemplateManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageVolumeTemplateManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageVolumeTemplateManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.StorageVolumeTemplate
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.StorageVolumeTemplate
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.StorageVolumeTemplate
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Console`:
@@ -732,37 +380,15 @@ Console
 
 .. autoclass:: zhmcclient.ConsoleManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.ConsoleManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.ConsoleManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Console
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Console
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Console
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`User`:
@@ -774,37 +400,15 @@ User
 
 .. autoclass:: zhmcclient.UserManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.UserManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.UserManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.User
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.User
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.User
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`User Role`:
@@ -816,37 +420,15 @@ User Role
 
 .. autoclass:: zhmcclient.UserRoleManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.UserRoleManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.UserRoleManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.UserRole
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.UserRole
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.UserRole
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`User Pattern`:
@@ -858,37 +440,15 @@ User Pattern
 
 .. autoclass:: zhmcclient.UserPatternManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.UserPatternManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.UserPatternManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.UserPattern
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.UserPattern
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.UserPattern
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Password Rule`:
@@ -900,37 +460,15 @@ Password Rule
 
 .. autoclass:: zhmcclient.PasswordRuleManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.PasswordRuleManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.PasswordRuleManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.PasswordRule
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.PasswordRule
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.PasswordRule
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`Task`:
@@ -942,37 +480,15 @@ Task
 
 .. autoclass:: zhmcclient.TaskManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.TaskManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.TaskManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.Task
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.Task
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.Task
-      :attributes:
-
-   .. rubric:: Details
 
 
 .. _`LDAP Server Definition`:
@@ -984,34 +500,12 @@ LDAP Server Definition
 
 .. autoclass:: zhmcclient.LdapServerDefinitionManager
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.LdapServerDefinitionManager
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.LdapServerDefinitionManager
-      :attributes:
-
-   .. rubric:: Details
 
 .. autoclass:: zhmcclient.LdapServerDefinition
    :members:
+   :autosummary:
+   :autosummary-inherited-members:
    :special-members: __str__
-
-   .. rubric:: Methods
-
-   .. autoautosummary:: zhmcclient.LdapServerDefinition
-      :methods:
-      :nosignatures:
-
-   .. rubric:: Attributes
-
-   .. autoautosummary:: zhmcclient.LdapServerDefinition
-      :attributes:
-
-   .. rubric:: Details

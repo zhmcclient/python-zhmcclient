@@ -32,6 +32,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Docs: Properties of classes are now shown in the Attributes summary table
+  of the class. (issue #726)
+
 **Enhancements:**
 
 **Cleanup:**
