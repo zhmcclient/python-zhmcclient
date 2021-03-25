@@ -107,7 +107,7 @@ urllib3==1.23
 # PyYAML pulled in by zhmcclient examples and by python-coveralls
 PyYAML==5.3; python_version == '2.7'
 PyYAML==5.1; python_version >= '3.4' and python_version < '3.8'
-PyYAML==5.1.2; python_version >= '3.8'
+PyYAML==5.4; python_version >= '3.8'
 
 # Unit test (imports into testcases):
 packaging==17.0
