@@ -36,6 +36,7 @@ from zhmcclient_mock._hmc import FakedHmc, \
     FakedPortManager, FakedPort, \
     FakedVirtualFunctionManager, FakedVirtualFunction, \
     FakedVirtualSwitchManager, FakedVirtualSwitch, \
+    FakedCapacityGroupManager, FakedCapacityGroup, \
     FakedMetricsContextManager, FakedMetricsContext, \
     FakedMetricGroupDefinition, FakedMetricObjectValues
 
@@ -702,6 +703,7 @@ class TestFakedCpc(object):
         assert isinstance(cpc1.partitions, FakedPartitionManager)
         assert isinstance(cpc1.adapters, FakedAdapterManager)
         assert isinstance(cpc1.virtual_switches, FakedVirtualSwitchManager)
+        assert isinstance(cpc1.capacity_groups, FakedCapacityGroupManager)
         assert isinstance(cpc1.reset_activation_profiles,
                           FakedActivationProfileManager)
         assert isinstance(cpc1.image_activation_profiles,
@@ -919,6 +921,9 @@ class TestFakedHba(object):
         assert len(hbas) == 0
 
     # TODO: Add testcases for updating 'hba-uris' parent property
+
+
+# TODO: Add unit tests for FakedCapacityGroup/Manager.
 
 
 class TestFakedLpar(object):
@@ -1686,6 +1691,119 @@ class TestFakedVirtualSwitch(object):
 
         virtual_switches = cpc1.virtual_switches.list()
         assert len(virtual_switches) == 0
+
+
+class TestFakedCapacityGroup(object):
+    """All tests for the FakedCapacityGroupManager and FakedCapacityGroup
+    classes."""
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a faked HMC that has a CPC with a capacity group.
+        """
+        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        self.cpc1_in_props = {'name': 'cpc1'}
+        self.capacity_group1_in_props = {'name': 'capacity_group1'}
+        rd = {
+            'cpcs': [
+                {
+                    'properties': self.cpc1_in_props,
+                    'capacity_groups': [
+                        {'properties': self.capacity_group1_in_props},
+                    ],
+                },
+            ]
+        }
+        # This already uses add() of FakedCapacityGroupManager:
+        self.hmc.add_resources(rd)
+
+    def test_capacity_groups_attr(self):
+        """Test CPC 'capacity_groups' attribute."""
+
+        cpcs = self.hmc.cpcs.list()
+        cpc1 = cpcs[0]
+
+        assert isinstance(cpc1.capacity_groups, FakedCapacityGroupManager)
+        assert re.match(cpc1.uri + '/capacity-groups',
+                        cpc1.capacity_groups.base_uri)
+
+    def test_capacity_groups_list(self):
+        """Test list() of FakedCapacityGroupManager."""
+
+        cpcs = self.hmc.cpcs.list()
+        cpc1 = cpcs[0]
+
+        # the function to be tested:
+        capacity_groups = cpc1.capacity_groups.list()
+
+        assert len(capacity_groups) == 1
+        capacity_group1 = capacity_groups[0]
+        capacity_group1_out_props = self.capacity_group1_in_props.copy()
+        capacity_group1_out_props.update({
+            'element-id': capacity_group1.oid,
+            'element-uri': capacity_group1.uri,
+            'class': 'capacity-group',
+            'parent': cpc1.uri,
+            'partition-uris': [],
+            'capping-enabled': False,
+        })
+        assert isinstance(capacity_group1, FakedCapacityGroup)
+        assert capacity_group1.properties == capacity_group1_out_props
+        assert capacity_group1.manager == cpc1.capacity_groups
+
+    def test_capacity_groups_add(self):
+        """Test add() of FakedCapacityGroupManager."""
+
+        cpcs = self.hmc.cpcs.list()
+        cpc1 = cpcs[0]
+        capacity_groups = cpc1.capacity_groups.list()
+        assert len(capacity_groups) == 1
+
+        capacity_group2_in_props = {'name': 'capacity_group2'}
+
+        # the function to be tested:
+        new_capacity_group = cpc1.capacity_groups.add(
+            capacity_group2_in_props)
+
+        capacity_groups = cpc1.capacity_groups.list()
+        assert len(capacity_groups) == 2
+
+        capacity_group2 = [p for p in capacity_groups
+                           if p.properties['name'] ==  # noqa: W504
+                           capacity_group2_in_props['name']][0]
+
+        assert new_capacity_group.properties == capacity_group2.properties
+        assert new_capacity_group.manager == capacity_group2.manager
+
+        capacity_group2_out_props = capacity_group2_in_props.copy()
+        capacity_group2_out_props.update({
+            'element-id': capacity_group2.oid,
+            'element-uri': capacity_group2.uri,
+            'class': 'capacity-group',
+            'parent': cpc1.uri,
+            'partition-uris': [],
+            'capping-enabled': False,
+        })
+        assert isinstance(capacity_group2, FakedCapacityGroup)
+        assert capacity_group2.properties == capacity_group2_out_props
+        assert capacity_group2.manager == cpc1.capacity_groups
+
+    def test_capacity_groups_remove(self):
+        """Test remove() of FakedCapacityGroupManager."""
+
+        cpcs = self.hmc.cpcs.list()
+        cpc1 = cpcs[0]
+        capacity_groups = cpc1.capacity_groups.list()
+        capacity_group1 = capacity_groups[0]
+        assert len(capacity_groups) == 1
+
+        # the function to be tested:
+        cpc1.capacity_groups.remove(capacity_group1.oid)
+
+        capacity_groups = cpc1.capacity_groups.list()
+        assert len(capacity_groups) == 0
 
 
 class TestFakedMetricsContext(object):

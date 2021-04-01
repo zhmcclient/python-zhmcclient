@@ -55,6 +55,7 @@ __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedStorageGroupManager', 'FakedStorageGroup',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
+           'FakedCapacityGroupManager', 'FakedCapacityGroup',
            ]
 
 
@@ -1555,12 +1556,15 @@ class FakedCpc(FakedBaseResource):
         self._adapters = FakedAdapterManager(hmc=manager.hmc, cpc=self)
         self._virtual_switches = FakedVirtualSwitchManager(
             hmc=manager.hmc, cpc=self)
+        self._capacity_groups = FakedCapacityGroupManager(
+            hmc=manager.hmc, cpc=self)
         self._reset_activation_profiles = FakedActivationProfileManager(
             hmc=manager.hmc, cpc=self, profile_type='reset')
         self._image_activation_profiles = FakedActivationProfileManager(
             hmc=manager.hmc, cpc=self, profile_type='image')
         self._load_activation_profiles = FakedActivationProfileManager(
             hmc=manager.hmc, cpc=self, profile_type='load')
+
         if 'dpm-enabled' not in self.properties:
             self.properties['dpm-enabled'] = False
         if 'is-ensemble-member' not in self.properties:
@@ -1586,6 +1590,7 @@ class FakedCpc(FakedBaseResource):
             "  _partitions = {_partitions}\n"
             "  _adapters = {_adapters}\n"
             "  _virtual_switches = {_virtual_switches}\n"
+            "  _capacity_groups = {_capacity_groups}\n"
             "  _reset_activation_profiles = {_reset_activation_profiles}\n"
             "  _image_activation_profiles = {_image_activation_profiles}\n"
             "  _load_activation_profiles = {_load_activation_profiles}\n"
@@ -1602,6 +1607,8 @@ class FakedCpc(FakedBaseResource):
                 _adapters=repr_manager(self.adapters, indent=2),
                 _virtual_switches=repr_manager(
                     self.virtual_switches, indent=2),
+                _capacity_groups=repr_manager(
+                    self.capacity_groups, indent=2),
                 _reset_activation_profiles=repr_manager(
                     self.reset_activation_profiles, indent=2),
                 _image_activation_profiles=repr_manager(
@@ -1651,6 +1658,14 @@ class FakedCpc(FakedBaseResource):
         faked Virtual Switch resources of this CPC.
         """
         return self._virtual_switches
+
+    @property
+    def capacity_groups(self):
+        """
+        :class:`~zhmcclient_mock.FakedCapacityGroupManager`: Access to the
+        faked Capacity Group resources of this CPC.
+        """
+        return self._capacity_groups
 
     @property
     def reset_activation_profiles(self):
@@ -2716,6 +2731,93 @@ class FakedStorageVolume(FakedBaseResource):
         """
         Return a string with the state of this faked StorageVolume resource,
         for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self.properties, indent=2),
+            ))
+        return ret
+
+
+class FakedCapacityGroupManager(FakedBaseManager):
+    """
+    A manager for faked CapacityGroup resources within a faked Cpc (see
+    :class:`zhmcclient_mock.FakedCpc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, cpc):
+        super(FakedCapacityGroupManager, self).__init__(
+            hmc=hmc,
+            parent=cpc,
+            resource_class=FakedCapacityGroup,
+            base_uri=cpc.uri + '/capacity-groups',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='capacity-group')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked CapacityGroup resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'capacity-group',
+              if not specified.
+            * 'capping-enabled' will be set to False.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedCapacityGroup`: The faked CapacityGroup
+            resource.
+        """
+        return super(FakedCapacityGroupManager, self).add(properties)
+
+
+class FakedCapacityGroup(FakedBaseResource):
+    """
+    A faked CapacityGroup resource within a faked Cpc (see
+    :class:`zhmcclient_mock.FakedCpc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedCapacityGroup, self).__init__(
+            manager=manager,
+            properties=properties)
+        if 'capping-enabled' not in self.properties:
+            self.properties['capping-enabled'] = False
+        if 'partition-uris' not in self.properties:
+            self.properties['partition-uris'] = []
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked CapacityGroup resource, for
+        debug purposes.
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"

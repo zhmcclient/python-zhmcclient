@@ -69,6 +69,8 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     StoragePortHandler, \
     VirtualSwitchesHandler, VirtualSwitchHandler, \
     VirtualSwitchGetVnicsHandler, \
+    CapacityGroupsHandler, CapacityGroupHandler, \
+    CapacityGroupAddPartitionHandler, CapacityGroupRemovePartitionHandler, \
     LparsHandler, LparHandler, LparActivateHandler, LparDeactivateHandler, \
     LparLoadHandler, \
     ResetActProfilesHandler, ResetActProfileHandler, \
@@ -969,6 +971,15 @@ def standard_test_hmc():
                             'object-id': '1',
                             'name': 'vswitch_osa_1',
                             'description': 'Vswitch for OSA #1 in CPC #2',
+                        },
+                    },
+                ],
+                'capacity_groups': [
+                    {
+                        'properties': {
+                            'element-id': '1',
+                            'name': 'capacity_group1',
+                            'description': 'Capacity Group #1',
                         },
                     },
                 ],
@@ -5872,6 +5883,152 @@ class TestVirtualSwitchGetVnicsHandler(object):
             'connected-vnic-uris': connected_nic_uris,
         }
         assert resp == exp_resp
+
+
+class TestCapacityGroupHandlers(object):
+    """
+    All tests for classes CapacityGroupsHandler and CapacityGroupHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        CapacityGroupsHandler and CapacityGroupHandler.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?',
+             CapacityGroupsHandler),
+            (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)',
+             CapacityGroupHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_cgm_list(self):
+        """
+        Test GET capacity groups (list).
+        """
+
+        # the function to be tested:
+        cgs = self.urihandler.get(self.hmc, '/api/cpcs/2/capacity-groups',
+                                  True)
+
+        exp_cgs = {  # properties reduced to those returned by List
+            'capacity-groups': [
+                {
+                    'element-uri': '/api/cpcs/2/capacity-groups/1',
+                    'name': 'capacity_group1',
+                    # status not set in resource -> not in response
+                },
+            ]
+        }
+        assert cgs == exp_cgs
+
+    def test_cg_get(self):
+        """
+        Test GET capacity group.
+        """
+
+        # the function to be tested:
+        cg1 = self.urihandler.get(self.hmc, '/api/cpcs/2/capacity-groups/1',
+                                  True)
+
+        exp_cg1 = {
+            'element-id': '1',
+            'element-uri': '/api/cpcs/2/capacity-groups/1',
+            'class': 'capacity-group',
+            'parent': '/api/cpcs/2',
+            'name': 'capacity_group1',
+            'description': 'Capacity Group #1',
+            'capping-enabled': False,
+            'partition-uris': [],  # auto-generated
+        }
+        assert cg1 == exp_cg1
+
+
+class TestCapacityGroupAddPartitionHandler(object):
+    """
+    All tests for class CapacityGroupAddPartitionHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        CapacityGroupAddPartitionHandler and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?',
+             CapacityGroupsHandler),
+            (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)/operations/'
+             'add-partition',
+             CapacityGroupAddPartitionHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_cg_add_partition(self):
+        """
+        Test POST capacity group add-partitions (to empty capacity group).
+        """
+
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1_uri = partition1['object-uri']
+
+        # The function to be tested:
+        self.urihandler.post(
+            self.hmc,
+            '/api/cpcs/2/capacity-groups/1/operations/add-partition',
+            {'partition-uri': partition1_uri},
+            True, True)
+
+
+class TestCapacityGroupRemovePartitionHandler(object):
+    """
+    All tests for class CapacityGroupRemovePartitionHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        CapacityGroupRemovePartitionHandler and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/partitions/([^/]+)', PartitionHandler),
+            (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?',
+             CapacityGroupsHandler),
+            (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)/operations/'
+             'remove-partition',
+             CapacityGroupRemovePartitionHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_cg_remove_partition(self):
+        """
+        Test POST capacity group remove-partitions (from empty capacity group).
+        """
+
+        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
+        partition1_uri = partition1['object-uri']
+
+        with pytest.raises(ConflictError) as exc_info:
+
+            # The function to be tested:
+            self.urihandler.post(
+                self.hmc,
+                '/api/cpcs/2/capacity-groups/1/operations/remove-partition',
+                {'partition-uri': partition1_uri},
+                True, True)
+
+        exc = exc_info.value
+        assert exc.reason == 140
 
 
 class TestLparHandlers(object):

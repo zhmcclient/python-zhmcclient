@@ -93,6 +93,11 @@ Released: 2021-03-23
 * Blanked out value of 'x-api-session' field (Session ID) when logging error
   responses. (zhmccli issue #136)
 
+* Added support for Capacity Groups in DPM mode, by adding resource classes
+  `zhmcclient.CapacityGroup` and `zhmcclient.CapacityGroupManager` and a
+  property `zhmcclient.Cpc.capacity_groups` for accessing them.
+  (issue #734)
+
 **Cleanup:**
 
 * Docs: Moved change log up one level to avoid Sphinx warning about duplicate

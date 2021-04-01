@@ -371,6 +371,26 @@ Storage Volume Templates
    :special-members: __str__
 
 
+.. _`Capacity Groups`:
+
+Capacity Groups
+-----------------
+
+.. automodule:: zhmcclient._capacity_group
+
+.. autoclass:: zhmcclient.CapacityGroupManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.CapacityGroup
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Console`:
 
 Console
