@@ -19,16 +19,10 @@ Change log
 ----------
 
 
-Version 0.30.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.30.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 0.29.x.
-
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-04-06
 
 **Bug fixes:**
 
@@ -47,14 +41,6 @@ Released: not yet
 * Added an optional parameter `secure_boot` to `Lpar.scsi_load()` (issue #748).
 
 * Added an optional parameter `force` to `Lpar.scsi_dump()` (issue #748).
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.29.0
