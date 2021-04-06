@@ -38,6 +38,10 @@ Released: not yet
 * Docs: Fixed the incorrect default value documented for the `force` parameter
   of `Lpar.scsi_load()`. The correct default is `False`. (part of issue #748).
 
+* Fixed StatusTimeout when activating an LPAR that goes straight to status
+  "operating", by adding "operating" as a valid target value for the
+  operational status. (issue #755)
+
 **Enhancements:**
 
 * Added an optional parameter `secure_boot` to `Lpar.scsi_load()` (issue #748).
