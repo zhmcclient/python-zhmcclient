@@ -107,7 +107,7 @@ The quick way:
 
 For more details, see the `Installation section`_ in the documentation.
 
-.. _Installation section: http://python-zhmcclient.readthedocs.io/en/stable/intro.html#installation
+.. _Installation section: http://python-zhmcclient.readthedocs.io/en/latest/intro.html#installation
 
 Quickstart
 ===========
@@ -148,8 +148,8 @@ For the latest released version on PyPI:
 * `Documentation`_
 * `Change log`_
 
-.. _Documentation: http://python-zhmcclient.readthedocs.io/en/stable/
-.. _Change log: http://python-zhmcclient.readthedocs.io/en/stable/changes.html
+.. _Documentation: http://python-zhmcclient.readthedocs.io/en/latest/
+.. _Change log: http://python-zhmcclient.readthedocs.io/en/latest/changes.html
 
 zhmc CLI
 ========
@@ -173,7 +173,7 @@ Contributing
 For information on how to contribute to this project, see the
 `Development section`_ in the documentation.
 
-.. _Development section: http://python-zhmcclient.readthedocs.io/en/stable/development.html
+.. _Development section: http://python-zhmcclient.readthedocs.io/en/latest/development.html
 
 License
 =======

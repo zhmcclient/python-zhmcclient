@@ -105,9 +105,9 @@ setuptools.setup(
     url='https://github.com/zhmcclient/python-zhmcclient',
     project_urls={
         'Bug Tracker': 'https://github.com/zhmcclient/python-zhmcclient/issues',
-        'Documentation': 'https://python-zhmcclient.readthedocs.io/en/latest/',
+        'Documentation': 'https://python-zhmcclient.readthedocs.io/en/stable/',
         'Change Log':
-            'https://python-zhmcclient.readthedocs.io/en/latest/changes.html',
+            'https://python-zhmcclient.readthedocs.io/en/stable/changes.html',
     },
 
     options={'bdist_wheel': {'universal': True}},
@@ -133,6 +133,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ]
 )
