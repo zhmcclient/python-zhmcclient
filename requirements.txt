@@ -20,8 +20,10 @@ requests>=2.20.1,<2.22.0; python_version == '3.4'  # Apache-2.0
 requests>=2.20.1; python_version >= '3.5'  # Apache-2.0
 six>=1.14.0 # MIT
 # stomp.py 5.0.0 (now deleted) and 6.0.0 removed support for Python 2.7, 3.4 and 3.5
+# stomp.py 6.1.0 on Pypi contained older code than v6.1.0 in the repo -> will be yanked on Pypi
+# stomp.py 6.1.1 broke compatibility -> will be yanked on Pypi and re-released as 7.0.0
 stomp.py>=4.1.23,<5.0.0; python_version <= '3.5'  # Apache
-stomp.py>=4.1.23; python_version >= '3.6'  # Apache
+stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version >= '3.6'  # Apache
 
 # Indirect dependencies (commented out, only listed to document their license):
 
