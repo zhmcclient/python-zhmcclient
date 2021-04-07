@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a missing argument in 'NotificationListener.on_message()' by pinning
+  stomp.py such that 6.1.0 and 6.1.1 are excluded. (issue #763)
+
 **Enhancements:**
 
 **Cleanup:**
