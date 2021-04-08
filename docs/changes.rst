@@ -19,29 +19,15 @@ Change log
 ----------
 
 
-Version 0.30.1.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.30.1
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-04-08
 
 **Bug fixes:**
 
 * Fixed a missing argument in 'NotificationListener.on_message()' by pinning
   stomp.py such that 6.1.0 and 6.1.1 are excluded. (issue #763)
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.30.0
