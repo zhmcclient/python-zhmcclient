@@ -228,7 +228,7 @@ class User(BaseResource):
         # pylint: disable=protected-access
         self.manager.session.delete(self.uri)
         self.manager._name_uri_cache.delete(
-            self.properties.get(self.manager._name_prop, None))
+            self._properties.get(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties):
@@ -266,7 +266,7 @@ class User(BaseResource):
         # HTTPError to be raised in the POST above, so we assert that here,
         # because we omit the extra code for handling name updates:
         assert self.manager._name_prop not in properties
-        self.properties.update(copy.deepcopy(properties))
+        self._properties.update(copy.deepcopy(properties))
 
     @logged_api_call
     def add_user_role(self, user_role):

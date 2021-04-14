@@ -28,6 +28,12 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The 'properties' attribute of the resource classes (e.g. 'Partition') now
+  is an immutable 'DictView' object in order to enforce the stated rule that
+  that callers must not modify the properties dictionary. If your code used to
+  make such modifications nevertheless, it will now get a 'TypeError' or
+  'AttributeError' exception, dependent on the nature of the modification.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -36,6 +42,11 @@ Released: not yet
   stomp.py such that 6.1.0 and 6.1.1 are excluded. (issue #763)
 
 **Enhancements:**
+
+* The 'properties' attribute of the resource classes (e.g. 'Partition') now
+  is an immutable 'DictView' object provided by the 'immutable-views' package,
+  in order to enforce the stated rule that that callers must not modify the
+  properties dictionary of resource objects.
 
 **Cleanup:**
 

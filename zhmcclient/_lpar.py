@@ -214,7 +214,7 @@ class Lpar(BaseResource):
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.
         assert self.manager._name_prop not in properties
-        self.properties.update(copy.deepcopy(properties))
+        self._properties.update(copy.deepcopy(properties))
 
     @logged_api_call
     def activate(self, wait_for_completion=True,
