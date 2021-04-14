@@ -282,7 +282,7 @@ class MetricsContext(BaseResource):
         """
         # Dictionary of MetricGroupDefinition objects, by metric group name
         metric_group_definitions = dict()
-        for mg_info in self.properties['metric-group-infos']:
+        for mg_info in self._properties['metric-group-infos']:
             mg_name = mg_info['group-name']
             mg_def = MetricGroupDefinition(
                 name=mg_name,

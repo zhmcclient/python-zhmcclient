@@ -23,6 +23,8 @@ from __future__ import absolute_import, print_function
 import time
 import re
 from collections import OrderedDict
+from immutable_views import DictView
+import pytest
 
 from zhmcclient import BaseResource, BaseManager, Session
 
@@ -92,8 +94,8 @@ class ResourceTestCase(object):
         Assert that the properties of a resource object are as expected.
         """
 
-        # Check that the properties member is a dict
-        assert isinstance(resource.properties, dict)
+        # Check the properties member type
+        assert isinstance(resource.properties, DictView)
 
         # Verify that the resource properties are as expected
         assert len(resource.properties) == len(exp_props), \
@@ -242,14 +244,15 @@ class TestPropertySet(ResourceTestCase):
         }
         res_props = {
             self.uri_prop: self.uri,
-            'prop1': 'abc',
-            'prop2': 100042,
         }
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key, value in set_props.items():
-            res.properties[key] = value
+            # Since zhmcclient 0.31.0, the 'properties' attribute has type
+            # DictView which prevents modifications to the dictionary.
+            with pytest.raises(TypeError):
+                res.properties[key] = value
 
         self.assert_properties(res, res_props)
 
@@ -264,14 +267,16 @@ class TestPropertySet(ResourceTestCase):
         }
         res_props = {
             self.uri_prop: self.uri,
-            'prop1': 'abc',
-            'prop2': 100042,
+            'prop1': 42,
         }
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key, value in set_props.items():
-            res.properties[key] = value
+            # Since zhmcclient 0.31.0, the 'properties' attribute has type
+            # DictView which prevents modifications to the dictionary.
+            with pytest.raises(TypeError):
+                res.properties[key] = value
 
         self.assert_properties(res, res_props)
 
@@ -288,13 +293,17 @@ class TestPropertyDel(ResourceTestCase):
         del_keys = ('prop1',)
         res_props = {
             self.uri_prop: self.uri,
+            'prop1': 'abc',
             'prop2': 100042,
         }
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key in del_keys:
-            del res.properties[key]
+            # Since zhmcclient 0.31.0, the 'properties' attribute has type
+            # DictView which prevents modifications to the dictionary.
+            with pytest.raises(TypeError):
+                del res.properties[key]
 
         self.assert_properties(res, res_props)
 
@@ -307,12 +316,17 @@ class TestPropertyDel(ResourceTestCase):
         del_keys = ('prop1', 'prop2')
         res_props = {
             self.uri_prop: self.uri,
+            'prop1': 'abc',
+            'prop2': 100042,
         }
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key in del_keys:
-            del res.properties[key]
+            # Since zhmcclient 0.31.0, the 'properties' attribute has type
+            # DictView which prevents modifications to the dictionary.
+            with pytest.raises(TypeError):
+                del res.properties[key]
 
         self.assert_properties(res, res_props)
 
@@ -322,21 +336,20 @@ class TestPropertyDel(ResourceTestCase):
             'prop1': 'abc',
             'prop2': 100042,
         }
-        org_init_props = dict(init_props)
+        res_props = {
+            self.uri_prop: self.uri,
+            'prop1': 'abc',
+            'prop2': 100042,
+        }
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         invalid_key = 'inv1'
-        try:
-
+        # Rejection of deletion is checked byfore invalid key is checked.
+        with pytest.raises(TypeError):
             del res.properties[invalid_key]
 
-        except KeyError:
-            pass
-        else:
-            raise AssertionError(
-                "KeyError was not raised when deleting invalid key %r "
-                "in resource properties %r" % (invalid_key, org_init_props))
+        self.assert_properties(res, res_props)
 
     def test_clear(self):
         """Test clearing the properties in a resource object."""
@@ -344,12 +357,20 @@ class TestPropertyDel(ResourceTestCase):
             'prop1': 'abc',
             'prop2': 100042,
         }
+        res_props = {
+            self.uri_prop: self.uri,
+            'prop1': 'abc',
+            'prop2': 100042,
+        }
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
-        res.properties.clear()
+        # Since zhmcclient 0.31.0, the 'properties' attribute has type
+        # DictView which prevents modifications to the dictionary.
+        with pytest.raises(AttributeError):
+            res.properties.clear()
 
-        assert len(res.properties) == 0
+        self.assert_properties(res, res_props)
 
 
 class TestManagerDivideFilter(ResourceTestCase):
