@@ -406,7 +406,7 @@ class StorageVolume(BaseResource):
 
         # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
-            self.properties.get(self.manager._name_prop, None))
+            self._properties.get(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties, email_to_addresses=None,
@@ -491,7 +491,7 @@ class StorageVolume(BaseResource):
             self.manager.storage_group.uri + '/operations/modify',
             body=body)
 
-        self.properties.update(copy.deepcopy(properties))
+        self._properties.update(copy.deepcopy(properties))
 
     @logged_api_call
     def indicate_fulfillment_ficon(self, control_unit, unit_address):

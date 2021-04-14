@@ -37,6 +37,12 @@ Released: not yet
   CA certificates in the Python 'certifi' package. This can be controlled with
   a new 'verify_cert' init parameter to the 'zhmcclient.Session' class. (issue #779)
 
+* The 'properties' attribute of the resource classes (e.g. 'Partition') now
+  is an immutable 'DictView' object in order to enforce the stated rule that
+  that callers must not modify the properties dictionary. If your code used to
+  make such modifications nevertheless, it will now get a 'TypeError' or
+  'AttributeError' exception, dependent on the nature of the modification.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -72,6 +78,11 @@ Released: not yet
 * Docs: Added a section "Troubleshooting" to appendix of the documentation that
   currently lists two cases of communication related issues.
   (related to issue #779)
+
+* The 'properties' attribute of the resource classes (e.g. 'Partition') now
+  is an immutable 'DictView' object provided by the 'immutable-views' package,
+  in order to enforce the stated rule that that callers must not modify the
+  properties dictionary of resource objects.
 
 **Cleanup:**
 

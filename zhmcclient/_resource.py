@@ -21,6 +21,7 @@ by the HMC.
 
 from __future__ import absolute_import
 import time
+from immutable_views import DictView
 
 from ._logging import logged_api_call
 from ._utils import repr_dict, repr_timestamp
@@ -95,40 +96,42 @@ class BaseResource(object):
     @property
     def properties(self):
         """
-        dict:
-          The properties of this resource that are currently present in this
-          Python object.
-          Will not be `None`.
+        :class:`iv:immutable_views.DictView`: The properties of this resource
+        that are currently present in this Python object, as a dictionary.
 
           * Key: Name of the property.
           * Value: Value of the property.
 
-          See the respective 'Data model' sections in the :term:`HMC API` book
-          for a description of the resources along with their properties.
+        The returned :class:`iv:immutable_views.DictView` object is an immutable
+        dictionary view that behaves like a standard Python :class:`dict`
+        except that it prevents any modifications to the dictionary.
 
-          The dictionary contains either the full set of resource properties,
-          or a subset thereof, or can be empty in some cases.
+        See the respective 'Data model' sections in the :term:`HMC API` book
+        for a description of the resources along with their properties.
 
-          Because the presence of properties in this dictionary depends on the
-          situation, the purpose of this dictionary is only for iterating
-          through the resource properties that are currently present.
+        The dictionary contains either the full set of resource properties,
+        or a subset thereof, or can be empty in some cases.
 
-          Specific resource properties should be accessed via:
+        Because the presence of properties in this dictionary depends on the
+        situation, the purpose of this dictionary is only for iterating
+        through the resource properties that are currently present.
 
-          * The resource name, via the :attr:`~zhmcclient.BaseResource.name`
-            attribute.
-          * The resource URI, via the :attr:`~zhmcclient.BaseResource.uri`
-            attribute.
-          * Any resource property, via the
-            :meth:`~zhmcclient.BaseResource.get_property` or
-            :meth:`~zhmcclient.BaseResource.prop` methods.
+        Specific resource properties should be accessed via:
 
-        The properties in this dictionary are mutable. However, the properties
-        of the actual manageable resources may or may not be mutable.
-        Mutability for each resource property is indicated with the 'w'
-        qualifier in its data model in the :term:`HMC API` book.
+        * The resource name, via the :attr:`~zhmcclient.BaseResource.name`
+          attribute.
+        * The resource URI, via the :attr:`~zhmcclient.BaseResource.uri`
+          attribute.
+        * Any resource property, via the
+          :meth:`~zhmcclient.BaseResource.get_property` or
+          :meth:`~zhmcclient.BaseResource.prop` methods.
+
+        Updates to property values can be done via the ``update_properties()``
+        method of the resource class. Which properties can be updated
+        is indicated with the 'w' qualifier in the data model of the resource
+        in the :term:`HMC API` book.
         """
-        return self._properties
+        return DictView(self._properties)
 
     @property
     def uri(self):
