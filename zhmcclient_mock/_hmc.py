@@ -89,25 +89,25 @@ class FakedBaseResource(object):
             if self.manager.oid_prop is None:
                 self._oid = None
             else:
-                if self.manager.oid_prop not in self.properties:
+                if self.manager.oid_prop not in self._properties:
                     new_oid = self.manager._new_oid()
-                    self.properties[self.manager.oid_prop] = new_oid
-                self._oid = self.properties[self.manager.oid_prop]
+                    self._properties[self.manager.oid_prop] = new_oid
+                self._oid = self._properties[self.manager.oid_prop]
 
-            if self.manager.uri_prop not in self.properties:
+            if self.manager.uri_prop not in self._properties:
                 new_uri = self.manager.base_uri
                 if self.oid is not None:
                     new_uri += '/' + self.oid
-                self.properties[self.manager.uri_prop] = new_uri
-            self._uri = self.properties[self.manager.uri_prop]
+                self._properties[self.manager.uri_prop] = new_uri
+            self._uri = self._properties[self.manager.uri_prop]
 
             if self.manager.class_value:
-                if 'class' not in self.properties:
-                    self.properties['class'] = self.manager.class_value
+                if 'class' not in self._properties:
+                    self._properties['class'] = self.manager.class_value
 
             if self.manager.parent:
-                if 'parent' not in self.properties:
-                    self.properties['parent'] = self.manager.parent.uri
+                if 'parent' not in self._properties:
+                    self._properties['parent'] = self.manager.parent.uri
 
         else:
             self._oid = None
@@ -135,7 +135,7 @@ class FakedBaseResource(object):
                 _manager_id=id(self._manager),
                 _oid=self._oid,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
             ))
         return ret
 
@@ -190,7 +190,7 @@ class FakedBaseResource(object):
             Resource properties to be updated. Any other properties remain
             unchanged.
         """
-        self.properties.update(properties)
+        self._properties.update(properties)
 
     def add_resources(self, resources):
         """
@@ -812,7 +812,7 @@ class FakedConsole(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
                 _storage_groups=repr_manager(self.storage_groups, indent=2),
                 _users=repr_manager(self.users, indent=2),
                 _user_roles=repr_manager(self.user_roles, indent=2),
@@ -1389,35 +1389,35 @@ class FakedAdapter(FakedBaseResource):
             manager=manager,
             properties=properties)
         # TODO: Maybe move this stuff into AdapterManager.add()?
-        if 'adapter-family' in self.properties:
-            family = self.properties['adapter-family']
+        if 'adapter-family' in self._properties:
+            family = self._properties['adapter-family']
             if family in ('osa', 'roce', 'hipersockets'):
                 self._adapter_kind = 'network'
             elif family in ('ficon',):
                 self._adapter_kind = 'storage'
             else:
                 self._adapter_kind = 'other'
-        elif 'type' in self.properties:
+        elif 'type' in self._properties:
             # because 'type' is more specific than 'adapter-family', we can
             # auto-set 'adapter-family' from 'type'.
-            type_ = self.properties['type']
+            type_ = self._properties['type']
             if type_ in ('osd', 'osm'):
-                self.properties['adapter-family'] = 'osa'
+                self._properties['adapter-family'] = 'osa'
                 self._adapter_kind = 'network'
             elif type_ == 'roce':
-                self.properties['adapter-family'] = 'roce'
+                self._properties['adapter-family'] = 'roce'
                 self._adapter_kind = 'network'
             elif type_ == 'hipersockets':
-                self.properties['adapter-family'] = 'hipersockets'
+                self._properties['adapter-family'] = 'hipersockets'
                 self._adapter_kind = 'network'
             elif type_ in ('fcp', 'fc'):
-                self.properties['adapter-family'] = 'ficon'
+                self._properties['adapter-family'] = 'ficon'
                 self._adapter_kind = 'storage'
             elif type_ == 'crypto':
-                self.properties['adapter-family'] = 'crypto'
+                self._properties['adapter-family'] = 'crypto'
                 self._adapter_kind = 'other'
             elif type_ == 'zedc':
-                self.properties['adapter-family'] = 'accelerator'
+                self._properties['adapter-family'] = 'accelerator'
                 self._adapter_kind = 'other'
             else:
                 raise InputError("FakedAdapter with object-id=%s has an "
@@ -1428,17 +1428,17 @@ class FakedAdapter(FakedBaseResource):
                              "'adapter-family' or 'type' property specified." %
                              self.oid)
         if self.adapter_kind == 'network':
-            if 'network-port-uris' not in self.properties:
-                self.properties['network-port-uris'] = []
+            if 'network-port-uris' not in self._properties:
+                self._properties['network-port-uris'] = []
             self._ports = FakedPortManager(hmc=manager.hmc, adapter=self)
         elif self.adapter_kind == 'storage':
-            if 'storage-port-uris' not in self.properties:
-                self.properties['storage-port-uris'] = []
+            if 'storage-port-uris' not in self._properties:
+                self._properties['storage-port-uris'] = []
             self._ports = FakedPortManager(hmc=manager.hmc, adapter=self)
         else:
             self._ports = None
-        if 'status' not in self.properties:
-            self.properties['status'] = 'active'
+        if 'status' not in self._properties:
+            self._properties['status'] = 'active'
 
     def __repr__(self):
         """
@@ -1459,7 +1459,7 @@ class FakedAdapter(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
                 _ports=repr_manager(self.ports, indent=2),
             ))
         return ret
@@ -1565,15 +1565,15 @@ class FakedCpc(FakedBaseResource):
         self._load_activation_profiles = FakedActivationProfileManager(
             hmc=manager.hmc, cpc=self, profile_type='load')
 
-        if 'dpm-enabled' not in self.properties:
-            self.properties['dpm-enabled'] = False
-        if 'is-ensemble-member' not in self.properties:
-            self.properties['is-ensemble-member'] = False
-        if 'status' not in self.properties:
+        if 'dpm-enabled' not in self._properties:
+            self._properties['dpm-enabled'] = False
+        if 'is-ensemble-member' not in self._properties:
+            self._properties['is-ensemble-member'] = False
+        if 'status' not in self._properties:
             if self.dpm_enabled:
-                self.properties['status'] = 'active'
+                self._properties['status'] = 'active'
             else:
-                self.properties['status'] = 'operating'
+                self._properties['status'] = 'operating'
 
     def __repr__(self):
         """
@@ -1601,7 +1601,7 @@ class FakedCpc(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
                 _lpars=repr_manager(self.lpars, indent=2),
                 _partitions=repr_manager(self.partitions, indent=2),
                 _adapters=repr_manager(self.adapters, indent=2),
@@ -1625,7 +1625,7 @@ class FakedCpc(FakedBaseResource):
 
         This returns the value of the 'dpm-enabled' property.
         """
-        return self.properties['dpm-enabled']
+        return self._properties['dpm-enabled']
 
     @property
     def lpars(self):
@@ -1767,7 +1767,7 @@ class FakedUnmanagedCpc(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
             ))
         return ret
 
@@ -1944,8 +1944,8 @@ class FakedLpar(FakedBaseResource):
         super(FakedLpar, self).__init__(
             manager=manager,
             properties=properties)
-        if 'status' not in self.properties:
-            self.properties['status'] = 'not-activated'
+        if 'status' not in self._properties:
+            self._properties['status'] = 'not-activated'
 
 
 class FakedNicManager(FakedBaseManager):
@@ -2148,14 +2148,14 @@ class FakedPartition(FakedBaseResource):
         super(FakedPartition, self).__init__(
             manager=manager,
             properties=properties)
-        if 'hba-uris' not in self.properties:
-            self.properties['hba-uris'] = []
-        if 'nic-uris' not in self.properties:
-            self.properties['nic-uris'] = []
-        if 'virtual-function-uris' not in self.properties:
-            self.properties['virtual-function-uris'] = []
-        if 'status' not in self.properties:
-            self.properties['status'] = 'stopped'
+        if 'hba-uris' not in self._properties:
+            self._properties['hba-uris'] = []
+        if 'nic-uris' not in self._properties:
+            self._properties['nic-uris'] = []
+        if 'virtual-function-uris' not in self._properties:
+            self._properties['virtual-function-uris'] = []
+        if 'status' not in self._properties:
+            self._properties['status'] = 'stopped'
         self._nics = FakedNicManager(hmc=manager.hmc, partition=self)
         self._hbas = FakedHbaManager(hmc=manager.hmc, partition=self)
         self._virtual_functions = FakedVirtualFunctionManager(
@@ -2184,7 +2184,7 @@ class FakedPartition(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
                 _nics=repr_manager(self.nics, indent=2),
                 _hbas=repr_manager(self.hbas, indent=2),
                 _virtual_functions=repr_manager(
@@ -2563,8 +2563,8 @@ class FakedVirtualSwitch(FakedBaseResource):
         super(FakedVirtualSwitch, self).__init__(
             manager=manager,
             properties=properties)
-        if 'connected-vnic-uris' not in self.properties:
-            self.properties['connected-vnic-uris'] = []
+        if 'connected-vnic-uris' not in self._properties:
+            self._properties['connected-vnic-uris'] = []
 
 
 class FakedStorageGroupManager(FakedBaseManager):
@@ -2628,10 +2628,10 @@ class FakedStorageGroup(FakedBaseResource):
         super(FakedStorageGroup, self).__init__(
             manager=manager,
             properties=properties)
-        if 'storage-volume-uris' not in self.properties:
-            self.properties['storage-volume-uris'] = []
-        if 'shared' not in self.properties:
-            self.properties['shared'] = False
+        if 'storage-volume-uris' not in self._properties:
+            self._properties['storage-volume-uris'] = []
+        if 'shared' not in self._properties:
+            self._properties['shared'] = False
         self._storage_volumes = FakedStorageVolumeManager(
             hmc=manager.hmc, storage_group=self)
 
@@ -2654,7 +2654,7 @@ class FakedStorageGroup(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
                 _storage_volumes=repr_manager(self.storage_volumes, indent=2),
             ))
         return ret
@@ -2745,7 +2745,7 @@ class FakedStorageVolume(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
             ))
         return ret
 
@@ -2809,10 +2809,10 @@ class FakedCapacityGroup(FakedBaseResource):
         super(FakedCapacityGroup, self).__init__(
             manager=manager,
             properties=properties)
-        if 'capping-enabled' not in self.properties:
-            self.properties['capping-enabled'] = False
-        if 'partition-uris' not in self.properties:
-            self.properties['partition-uris'] = []
+        if 'capping-enabled' not in self._properties:
+            self._properties['capping-enabled'] = False
+        if 'partition-uris' not in self._properties:
+            self._properties['partition-uris'] = []
 
     def __repr__(self):
         """
@@ -2832,7 +2832,7 @@ class FakedCapacityGroup(FakedBaseResource):
                 manager_id=id(self._manager),
                 parent_uri=self._manager.parent.uri,
                 _uri=self._uri,
-                _properties=repr_dict(self.properties, indent=2),
+                _properties=repr_dict(self._properties, indent=2),
             ))
         return ret
 
@@ -3136,7 +3136,7 @@ class FakedMetricsContext(FakedBaseResource):
           iterable of :class:~zhmcclient.FakedMetricGroupDefinition`: The faked
             metric group definitions, in the order they had been added.
         """
-        group_names = self.properties.get('metric-groups', None)
+        group_names = self._properties.get('metric-groups', None)
         if not group_names:
             group_names = self.manager.get_metric_group_definition_names()
         mg_defs = []
@@ -3190,7 +3190,7 @@ class FakedMetricsContext(FakedBaseResource):
             values (:class:~zhmcclient.FakedMetricObjectValues`):
               The metric values for one resource at one point in time.
         """
-        group_names = self.properties.get('metric-groups', None)
+        group_names = self._properties.get('metric-groups', None)
         if not group_names:
             group_names = self.manager.get_metric_values_group_names()
         ret = []
