@@ -22,6 +22,72 @@ This section contains information that is referenced from other sections,
 and that does not really need to be read in sequence.
 
 
+.. _`Troubleshooting`:
+
+Troubleshooting
+---------------
+
+This section describes a few issues and how to address them.
+
+ConnectionError with SSLV3_ALERT_HANDSHAKE_FAILURE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Symptom: The 'zhmcclient' package raises a :exc:`zhmcclient.ConnectionError`
+exception with the following message:
+
+.. code-block:: text
+
+    [SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1123)
+
+The root cause is very likely that the HMC is set to TLS 1.2 only and has
+disabled SSLv3 compatibility, and the OpenSSL package used by the Python on your
+client system does not support TLS 1.2 yet.
+
+To check which OpenSSL version is used by the Python on your client system,
+issue this command (sample output is shown):
+
+.. code-block:: bash
+
+    $ python -c "import ssl; print(ssl.OPENSSL_VERSION)"
+    OpenSSL 1.1.1i  8 Dec 2020
+
+using the Python you have used when the 'zhmcclient' package raised the
+exception.
+
+To have support for TLS 1.2 you need OpenSSL version 1.0.1 or higher.
+
+See also the :ref:`Security` section.
+
+ConnectionError with CERTIFICATE_VERIFY_FAILED: self signed certificate
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Symptom: The 'zhmcclient' package raises a :exc:`zhmcclient.ConnectionError`
+exception with the following message:
+
+.. code-block:: text
+
+    [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self signed certificate (_ssl.c:1125)
+
+The root cause is that the HMC is set up to use a self-signed certificate
+and the client has used ``verify_cert=True`` in the :class:`zhmcclient.Session`
+initialization, which is the default. That causes the client to use the
+Python 'certifi' package for verification of the server certificate and the
+'certifi' package rejects self-signed certificates. The 'certifi' package
+uses the certificates from the
+`Mozilla Included CA Certificate List <https://wiki.mozilla.org/CA/Included_Certificates>`_
+for verifying the server certificate.
+
+The issue can be temporarily circumvented by specifying ``verify_cert=False``,
+which disables the verification of the server certificate. Since that makes
+the connection vulnerable to man-in-the-middle attacks, it should be done
+only as a temporary circumvention.
+
+The solution is to have your HMC administrator obtain a proper CA-verifyable
+certificate and to install that in the HMC.
+
+See also the :ref:`Security` section.
+
+
 .. _`BaseManager`:
 .. _`BaseResource`:
 .. _`Base classes for resources`:
@@ -454,6 +520,9 @@ Bibliography
    HMC Operations Guide 2.15.0
        `Hardware Management Console Operations Guide (Version 2.15.0) <https://www.ibm.com/support/pages/node/6018724>`_
        (covers both GA1 and GA2)
+
+   HMC Security
+       `Hardware Management Console Security <https://www.ibm.com/support/pages/node/6017320>`_
 
 
 .. _`Related projects`:

@@ -37,6 +37,16 @@ Released: not yet
 
 **Enhancements:**
 
+* Added a 'verify_cert' init parameter to the 'zhmcclient.Session' class to
+  enable verificatin of the server certificate presented by the HMC during
+  SSL/TLS handshake.
+
+* Docs: Added a section "Security" to the documentation that describes security
+  related aspects in the communication between the zhmcclient and the HMC.
+
+* Docs: Added a section "Troubleshooting" to appendix of the documentation that
+  currently lists two cases of communication related issues.
+
 **Cleanup:**
 
 **Known issues:**
