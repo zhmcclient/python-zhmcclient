@@ -29,6 +29,9 @@ import pytest
 from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout, \
     ClientAuthError, DEFAULT_HMC_PORT
 
+# Default value for the 'verify_cert' parameter of the Session class:
+DEFAULT_VERIFY_CERT = False
+
 
 # TODO: Test Session.get() in all variations (including errors)
 # TODO: Test Session.post() in all variations (including errors)
@@ -55,6 +58,8 @@ def mock_server_1(m):
         ('fake-host', 'fake-userid', 'fake-pw', True, None, {}),
         ('fake-host', 'fake-userid', 'fake-pw', True, None,
          {'port': 1234}),
+        ('fake-host', 'fake-userid', 'fake-pw', True, None,
+         {'verify_cert': True}),
     ]
 )
 def test_session_init(
@@ -81,6 +86,7 @@ def test_session_init(
     assert session.session_id == session_id
     assert session.get_password == get_password
     assert session.port == kwargs.get('port', DEFAULT_HMC_PORT)
+    assert session.verify_cert == kwargs.get('verify_cert', DEFAULT_VERIFY_CERT)
 
     base_url = 'https://{}:{!s}'.format(session.host, session.port)
     assert session.base_url == base_url

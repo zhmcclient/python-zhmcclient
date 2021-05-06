@@ -274,7 +274,8 @@ class Session(object):
 
     def __init__(self, host, userid=None, password=None, session_id=None,
                  get_password=None, retry_timeout_config=None,
-                 port=DEFAULT_HMC_PORT):
+                 port=DEFAULT_HMC_PORT, verify_cert=False):
+        # pylint: disable=line-too-long
         """
         Creating a session object will not immediately cause a logon to be
         attempted; the logon is deferred until needed.
@@ -352,11 +353,31 @@ class Session(object):
             HMC TCP port. Defaults to
             :attr:`~zhmcclient._constants.DEFAULT_HMC_PORT`.
             For details, see the :attr:`~zhmcclient.Session.port` property.
-        """
+
+          verify_cert (bool or :term:`string`):
+            Controls whether and how the client verifies the server certificate
+            presented by the HMC during SSL/TLS handshake:
+
+            * `False`: Do not verify the server certificate. Since that makes
+              the connection vulnerable to man-in-the-middle attacks, it should
+              not be used in production environments.
+
+            * `True`: Verify the server certificate using the certificates
+              in the
+              `Mozilla Included CA Certificate List <https://wiki.mozilla.org/CA/Included_Certificates>`_.
+
+            * :term:`string`: Path name of a CA_BUNDLE certificate file or
+              directory to be used for verifying the server certificate.
+
+            For details, see the :ref:`Security` section.
+        """  # noqa: E501
+        # pylint: enable=line-too-long
+
         self._host = host
         self._port = port
         self._userid = userid
         self._password = password
+        self._verify_cert = verify_cert
         self._get_password = get_password
         self._retry_timeout_config = self.default_rt_config.override_with(
             retry_timeout_config)
@@ -386,6 +407,7 @@ class Session(object):
             "  _host={s._host!r},\n"
             "  _userid={s._userid!r},\n"
             "  _password='...',\n"
+            "  _verify_cert={s._verify_cert!r},\n"
             "  _get_password={s._get_password!r},\n"
             "  _retry_timeout_config={s._retry_timeout_config!r},\n"
             "  _base_url={s._base_url!r},\n"
@@ -427,6 +449,16 @@ class Session(object):
         performed.
         """
         return self._userid
+
+    @property
+    def verify_cert(self):
+        """
+        bool or :term:`string`: Controls whether and how the client verifies
+        server certificate presented by the HMC during SSL/TLS handshake.
+
+        For details, see the same-named init parameter.
+        """
+        return self._verify_cert
 
     @property
     def get_password(self):
@@ -620,7 +652,7 @@ class Session(object):
         Return a new `requests.Session` object.
         """
         retry = urllib3.Retry(
-            total=None,
+            total=retry_timeout_config.connect_retries,
             connect=retry_timeout_config.connect_retries,
             read=retry_timeout_config.read_retries,
             method_whitelist=retry_timeout_config.method_whitelist,
@@ -798,7 +830,7 @@ class Session(object):
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
         try:
-            result = req.get(url, headers=self.headers, verify=False,
+            result = req.get(url, headers=self.headers, verify=self.verify_cert,
                              timeout=req_timeout)
         except requests.exceptions.RequestException as exc:
             _handle_request_exc(exc, self.retry_timeout_config)
@@ -979,10 +1011,12 @@ class Session(object):
             try:
                 if data is None:
                     result = req.post(url, headers=headers,
-                                      verify=False, timeout=req_timeout)
+                                      verify=self.verify_cert,
+                                      timeout=req_timeout)
                 else:
                     result = req.post(url, data=data, headers=headers,
-                                      verify=False, timeout=req_timeout)
+                                      verify=self.verify_cert,
+                                      timeout=req_timeout)
             except requests.exceptions.RequestException as exc:
                 _handle_request_exc(exc, self.retry_timeout_config)
             finally:
@@ -1083,8 +1117,8 @@ class Session(object):
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
         try:
-            result = req.delete(url, headers=self.headers, verify=False,
-                                timeout=req_timeout)
+            result = req.delete(url, headers=self.headers,
+                                verify=self.verify_cert, timeout=req_timeout)
         except requests.exceptions.RequestException as exc:
             _handle_request_exc(exc, self.retry_timeout_config)
         finally:
