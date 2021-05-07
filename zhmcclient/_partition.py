@@ -139,6 +139,32 @@ class PartitionManager(BaseManager):
         if resource_obj:
             resource_obj_list.append(resource_obj)
             # It already has full properties
+
+        elif full_properties:
+                props_list = self.cpc.manager.client.get_inventory(
+                    resources=['partition'])
+                if props_list:
+                    for props in props_list:
+
+                        # We get the partitions of all CPCs -> skip them
+                        cpc_uri = props['parent']
+                        if cpc_uri != self.cpc.uri:
+                            continue
+
+                        # We get the partition's child elements as well -> skip
+                        if props['class'] != 'partition':
+                            continue
+
+                        resource_obj = self.resource_class(
+                            manager=self,
+                            uri=props[self._uri_prop],
+                            name=props.get(self._name_prop, None),
+                            properties=props)
+                        resource_obj._full_properties = True
+
+                        if self._matches_filters(resource_obj, filter_args):
+                            resource_obj_list.append(resource_obj)
+
         else:
             query_parms, client_filters = self._divide_filter_args(filter_args)
 
