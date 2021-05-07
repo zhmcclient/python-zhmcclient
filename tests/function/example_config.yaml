@@ -1,0 +1,17 @@
+# Example config file for zhmcclient function tests.
+
+# This is a YAML file that specifies the target HMC and other options for the
+# zhmcclient function tests.
+
+general:
+  loglevel: warning
+  logmodule: zhmcclient
+  timestats: no
+
+run_hmcinfo:
+  hmc: "9.10.11.12"
+  hmcinfo_file: run_hmcinfo.json
+
+"9.10.11.12":
+   userid: hmcuser
+   password: hmcpass
