@@ -23,7 +23,8 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'RetriesExceeded', 'AuthError', 'ClientAuthError',
            'ServerAuthError', 'ParseError', 'VersionError', 'HTTPError',
            'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound',
-           'MetricsResourceNotFound']
+           'MetricsResourceNotFound', 'NotificationError',
+           'NotificationJMSError', 'NotificationParseError']
 
 
 class Error(Exception):
@@ -1225,4 +1226,146 @@ class MetricsResourceNotFound(Error):
             classname={}; message={}
         """
         return "classname={!r}; message={!r}". \
+            format(self.__class__.__name__, self.args[0])
+
+
+class NotificationError(Error):
+    """
+    Abstract base class for exceptions raised by
+    :class:`~zhmcclient.NotificationListener`.
+
+    Exceptions of this class are not raised; only derived exceptions are
+    raised.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def str_def(self):
+        """
+        Interface definition for the corresponding method derived exception
+        classes.
+
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts.
+
+        For the exact format returned by derived exception classes, see the
+        same-named methods there.
+        """
+        raise NotImplementedError
+
+
+class NotificationJMSError(NotificationError):
+    """
+    This exception indicates that a JMS error was returned by the HMC in
+    the notification protocol.
+
+    Derived from :exc:`~zhmcclient.NotificationError`.
+    """
+
+    def __init__(self, msg, jms_headers, jms_message):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+            This is either the 'message' item from the JMS headers if present,
+            or a generic message.
+
+          jms_headers (dict):
+            The JMS headers returned by the HMC.
+
+          jms_message (:term:`string`):
+            The JMS message body returned by the HMC.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        super(NotificationJMSError, self).__init__(msg)
+        self._jms_headers = jms_headers
+        self._jms_message = jms_message
+
+    @property
+    def jms_headers(self):
+        """
+        dict: The JMS headers returned by the HMC.
+        """
+        return self._jms_headers
+
+    @property
+    def jms_message(self):
+        """
+        :term:`string`: The JMS message body returned by the HMC.
+        """
+        return self._jms_message
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, jms_headers={!r}, jms_message={!r})". \
+            format(self.__class__.__name__, self.args[0], self.jms_headers,
+                   self.jms_message)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}
+        """
+        return "classname={!r}; message={!r};". \
+            format(self.__class__.__name__, self.args[0])
+
+
+class NotificationParseError(NotificationError):
+    """
+    This exception indicates that the message body of a JMS message could not
+    be parsed as JSON format.
+
+    Derived from :exc:`~zhmcclient.NotificationError`.
+    """
+
+    def __init__(self, msg, jms_message):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+          jms_message (:term:`string`):
+            The JMS message body returned by the HMC.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        super(NotificationParseError, self).__init__(msg)
+        self._jms_message = jms_message
+
+    @property
+    def jms_message(self):
+        """
+        :term:`string`: The JMS message body returned by the HMC.
+        """
+        return self._jms_message
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, jms_message={!r})". \
+            format(self.__class__.__name__, self.args[0], self.jms_message)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}
+        """
+        return "classname={!r}; message={!r};". \
             format(self.__class__.__name__, self.args[0])

@@ -25,7 +25,7 @@ import pytest
 from zhmcclient import Error, ConnectTimeout, ReadTimeout, \
     RetriesExceeded, AuthError, ClientAuthError, ServerAuthError, ParseError, \
     VersionError, HTTPError, OperationTimeout, StatusTimeout, NoUniqueMatch, \
-    NotFound, Client
+    NotFound, Client, NotificationJMSError, NotificationParseError
 from zhmcclient import ConnectionError  # pylint: disable=redefined-builtin
 from zhmcclient_mock import FakedSession
 
@@ -1547,3 +1547,180 @@ class TestNotFound(object):
         assert str_def.find(' parent_name={!r};'.
                             format(manager.parent.name)) >= 0
         assert str_def.find(' message=') >= 0
+
+
+@pytest.mark.parametrize(
+    # Input and expected arguments.
+    "args", [
+        # (msg, jms_headers, jms_message)
+        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+    ]
+)
+@pytest.mark.parametrize(
+    # Whether each input arg is passed as pos.arg (None) or keyword arg
+    # (arg name), or is defaulted (omitted from right).
+    "arg_names", [
+        (None, None, None),
+        ('msg', 'jms_headers', 'jms_message'),
+    ]
+)
+def test_notijmserror_initial_attrs(arg_names, args):
+    """Test initial attributes of NotificationJMSError."""
+
+    msg, jms_headers, jms_message = args
+    posargs, kwargs = func_args(args, arg_names)
+
+    # Execute the code to be tested
+    exc = NotificationJMSError(*posargs, **kwargs)
+
+    assert isinstance(exc, Error)
+    assert len(exc.args) == 1
+    assert exc.args[0] == msg
+    assert exc.jms_headers == jms_headers
+    assert exc.jms_message == jms_message
+
+
+@pytest.mark.parametrize(
+    "msg, jms_headers, jms_message", [
+        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+    ]
+)
+def test_notijmserror_repr(msg, jms_headers, jms_message):
+    """All tests for NotificationJMSError.__repr__()."""
+
+    exc = NotificationJMSError(msg, jms_headers, jms_message)
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    repr_str = repr(exc)
+
+    # We check the one-lined string just roughly
+    repr_str = repr_str.replace('\n', '\\n')
+    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+
+@pytest.mark.parametrize(
+    "msg, jms_headers, jms_message", [
+        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+    ]
+)
+def test_notijmserror_str(msg, jms_headers, jms_message):
+    """All tests for NotificationJMSError.__str__()."""
+
+    exc = NotificationJMSError(msg, jms_headers, jms_message)
+
+    exp_str = str(exc.args[0])
+
+    # Execute the code to be tested
+    str_str = str(exc)
+
+    assert str_str == exp_str
+
+
+@pytest.mark.parametrize(
+    "msg, jms_headers, jms_message", [
+        ("fake msg", dict(message='jms error msg1'), 'jms error msg2'),
+    ]
+)
+def test_notijmserror_str_def(msg, jms_headers, jms_message):
+    """All tests for NotificationJMSError.str_def()."""
+
+    exc = NotificationJMSError(msg, jms_headers, jms_message)
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    str_def = exc.str_def()
+
+    str_def = ' ' + str_def
+    assert str_def.find(' classname={!r};'.format(classname)) >= 0
+    assert str_def.find(' message={!r};'.format(msg)) >= 0
+
+
+@pytest.mark.parametrize(
+    # Input and expected arguments.
+    "args", [
+        # (msg, jms_message)
+        ("fake msg", dict(bla='bla1')),
+    ]
+)
+@pytest.mark.parametrize(
+    # Whether each input arg is passed as pos.arg (None) or keyword arg
+    # (arg name), or is defaulted (omitted from right).
+    "arg_names", [
+        (None, None),
+        ('msg', 'jms_message'),
+    ]
+)
+def test_notiparseerror_initial_attrs(arg_names, args):
+    """Test initial attributes of NotificationParseError."""
+
+    msg, jms_message = args
+    posargs, kwargs = func_args(args, arg_names)
+
+    # Execute the code to be tested
+    exc = NotificationParseError(*posargs, **kwargs)
+
+    assert isinstance(exc, Error)
+    assert len(exc.args) == 1
+    assert exc.args[0] == msg
+    assert exc.jms_message == jms_message
+
+
+@pytest.mark.parametrize(
+    "msg, jms_message", [
+        ("fake msg", dict(bla='bla1')),
+    ]
+)
+def test_notiparseerror_repr(msg, jms_message):
+    """All tests for NotificationParseError.__repr__()."""
+
+    exc = NotificationParseError(msg, jms_message)
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    repr_str = repr(exc)
+
+    # We check the one-lined string just roughly
+    repr_str = repr_str.replace('\n', '\\n')
+    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+
+
+@pytest.mark.parametrize(
+    "msg, jms_message", [
+        ("fake msg", dict(bla='bla1')),
+    ]
+)
+def test_notiparseerror_str(msg, jms_message):
+    """All tests for NotificationParseError.__str__()."""
+
+    exc = NotificationParseError(msg, jms_message)
+
+    exp_str = str(exc.args[0])
+
+    # Execute the code to be tested
+    str_str = str(exc)
+
+    assert str_str == exp_str
+
+
+@pytest.mark.parametrize(
+    "msg, jms_message", [
+        ("fake msg", dict(bla='bla1')),
+    ]
+)
+def test_notiparseerror_str_def(msg, jms_message):
+    """All tests for NotificationParseError.str_def()."""
+
+    exc = NotificationParseError(msg, jms_message)
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    str_def = exc.str_def()
+
+    str_def = ' ' + str_def
+    assert str_def.find(' classname={!r};'.format(classname)) >= 0
+    assert str_def.find(' message={!r};'.format(msg)) >= 0
