@@ -48,6 +48,8 @@ for a DPM partition::
                 msg_txt = os_msg['message-text'].strip('\\n')
                 msg_id = os_msg['message-id']
                 print("OS message #%s:\\n%s" % (msg_id, msg_txt))
+    except zhmcclient.NotificationError as exc:
+        print("Notification Error: {}".format(exc))
     except KeyboardInterrupt:
         print("Keyboard Interrupt - Leaving notification receiver loop...")
     finally:
@@ -70,6 +72,7 @@ import json
 
 from ._logging import logged_api_call
 from ._constants import DEFAULT_STOMP_PORT
+from ._exceptions import NotificationJMSError, NotificationParseError
 
 __all__ = ['NotificationReceiver']
 
@@ -214,6 +217,12 @@ class NotificationReceiver(object):
             for each notification type within section "Notification message
             formats" in chapter 4. "Asynchronous notification" in the
             :term:`HMC API` book.
+
+        Raises:
+            :exc:`~zhmcclient.NotificationJMSError`: Received JMS error from
+              the HMC.
+            :exc:`~zhmcclient.NotificationParseError`: Cannot parse JMS message
+              body as JSON.
         """
 
         while True:
@@ -227,13 +236,37 @@ class NotificationReceiver(object):
                     return
 
                 # Process the notification
-                yield (self._handover_dict['headers'],
-                       self._handover_dict['message'])
+                headers = self._handover_dict['headers']
+                message = self._handover_dict['message']
+                msgtype = self._handover_dict['msgtype']
+
+                if msgtype == 'error':
+                    if 'message' in headers:
+                        # Not sure that is always the case, but it was the case
+                        # in issue #770.
+                        details = ": {}".format(headers['message'].strip())
+                    else:
+                        details = ""
+                    raise NotificationJMSError(
+                        "Received JMS error from HMC{}".format(details),
+                        headers, message)
+
+                try:
+                    msg_obj = json.loads(message)
+                except Exception as exc:
+                    raise NotificationParseError(
+                        "Cannot convert JMS message body to JSON: {}: {}".
+                        format(exc.__class__.__name__, exc),
+                        message)
+
+                yield headers, msg_obj
+
+                del self._handover_dict['headers']
+                del self._handover_dict['message']
+                del self._handover_dict['msgtype']
 
                 # Indicate to MessageListener that we are ready for next
                 # notification
-                del self._handover_dict['headers']
-                del self._handover_dict['message']
                 self._handover_cond.notifyAll()
 
     @logged_api_call
@@ -303,20 +336,38 @@ class _NotificationListener(object):
             # Indicate to receiver that there is a termination notification
             self._handover_dict['headers'] = None  # terminate receiver
             self._handover_dict['message'] = None
+            self._handover_dict['msgtype'] = 'disconnected'
             self._handover_cond.notifyAll()
 
-    @staticmethod
-    def on_error(headers, message):
+    def on_error(self, headers, message):
         """
-        This event method should never be called, because the HMC does not
-        issue JMS errors.
+        Event method that gets called when this listener has received a JMS
+        error. This happens for example when the client registers for a
+        non-existing topic.
 
-        For parameters, see
-        :meth:`~zhmcclient.NotificationListener.on_message`.
+        Parameters:
+
+          headers (dict): JMS message headers, as described for `headers` tuple
+            item returned by the
+            :meth:`~zhmcclient.NotificationReceiver.notifications` method.
+
+          message (string): JMS message body as a string, which contains a
+            serialized JSON object. The JSON object is described in the
+            `message` tuple item returned by the
+            :meth:`~zhmcclient.NotificationReceiver.notifications` method).
         """
-        raise RuntimeError("Unexpectedly received a JMS error "
-                           "(JMS headers: %r, JMS message: %r)" %
-                           (headers, message))
+
+        with self._handover_cond:  # serialize body via lock
+
+            # Wait until receiver has processed the previous notification
+            while len(self._handover_dict) > 0:
+                self._handover_cond.wait(self._wait_timeout)
+
+            # Indicate to receiver that there is a new notification
+            self._handover_dict['headers'] = headers
+            self._handover_dict['message'] = message
+            self._handover_dict['msgtype'] = 'error'
+            self._handover_cond.notifyAll()
 
     def on_message(self, headers, message):
         """
@@ -343,9 +394,6 @@ class _NotificationListener(object):
 
             # Indicate to receiver that there is a new notification
             self._handover_dict['headers'] = headers
-            try:
-                msg_obj = json.loads(message)
-            except Exception:  # pylint: disable=try-except-raise
-                raise  # TODO: Find better exception for this case
-            self._handover_dict['message'] = msg_obj
+            self._handover_dict['message'] = message
+            self._handover_dict['msgtype'] = 'message'
             self._handover_cond.notifyAll()

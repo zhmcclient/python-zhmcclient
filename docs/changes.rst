@@ -26,12 +26,22 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Method 'NotificationReceiver.notifications()' now raises JMS errors returned
+  by the HMC as a new exception 'NotificationJMSError'. JSON parse errors
+  are now raised as a new exception 'NotificationParseError'. Both new
+  exceptions are based on a new base exception 'NotificationError'. (issue #770)
+
 **Deprecations:**
 
 **Bug fixes:**
 
 * Fixed a package dependency issue when setting up the development environment
   with the "pywinpty" package on Python 2.7 and Windows. (issue #772)
+
+* JMS errors returned by the HMC are now handled by raising a new exception
+  'NotificationJMSError' in the 'NotificationReceiver.notifications()' method.
+  Previously, an exception was raised in the thread running the notification
+  receiver, rendering it unusable after that had happened. (issue #770)
 
 **Enhancements:**
 
