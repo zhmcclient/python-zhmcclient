@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a package dependency issue when setting up the development environment
+  with the "pywinpty" package on Python 2.7 and Windows. (issue #772)
+
 **Enhancements:**
 
 **Cleanup:**
