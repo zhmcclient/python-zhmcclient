@@ -206,3 +206,8 @@ pip-check-reqs>=2.0.4,<2.1.1; python_version == '2.7'
 pip-check-reqs>=2.0.4; python_version >= '3.4'
 
 # Indirect dependencies are not specified in this file unless constraints are needed.
+
+# The pywinpty package on Pypi does not have metadata for required python or
+# dependent packages. On py27/windows/, versions >=1.0 fail to install because
+# they pull in the "maturin" package which requires py>=35. See issue #772.
+pywinpty>=0.5,<1.0; os_name == "nt" and python_version == '2.7'
