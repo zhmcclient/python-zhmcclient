@@ -35,6 +35,9 @@ Released: not yet
 * Fixed a missing argument in 'NotificationListener.on_message()' by pinning
   stomp.py such that 6.1.0 and 6.1.1 are excluded. (issue #763)
 
+* Fixed a package dependency issue when setting up the development environment
+  with the "pywinpty" package on Python 2.7 and Windows. (issue #772)
+
 **Enhancements:**
 
 * Added a 'verify_cert' init parameter to the 'zhmcclient.Session' class to
