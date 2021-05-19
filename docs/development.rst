@@ -476,7 +476,8 @@ local clone of the python-zhmcclient Git repo.
         git pull
         git tag -f ${MNU}
         git push -f --tags
-        git branch -d release_${MNU}
+        git branch -D release_${MNU}
+        git branch -D -r origin/release_${MNU}
 
 11. When releasing based on the master branch, create and push a new stable
     branch for the same minor version:
@@ -499,7 +500,7 @@ local clone of the python-zhmcclient Git repo.
     * Go to https://readthedocs.org/projects/python-zhmcclient/versions/
       and log in.
 
-    * Activate the new version ``M.N.U``.
+    * Activate the new version ``M.N.U`` (it should be automatically active)
 
       This triggers a build of that version. Verify that the build succeeds
       and that new version is shown in the version selection popup at
@@ -517,7 +518,7 @@ local clone of the python-zhmcclient Git repo.
     the same version twice to PyPI.
 
     Verify that the released version arrived on PyPI at
-    https://pypi.python.org/pypi/python-zhmcclient/
+    https://pypi.python.org/pypi/zhmcclient/
 
 
 .. _`Starting a new version`:
@@ -663,4 +664,5 @@ local clone of the python-zhmcclient Git repo.
 
         git checkout ${BRANCH}
         git pull
-        git branch -d start_${MNU}
+        git branch -D start_${MNU}
+        git branch -D -r origin/start_${MNU}
