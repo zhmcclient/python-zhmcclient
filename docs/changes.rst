@@ -19,10 +19,10 @@ Change log
 ----------
 
 
-Version 0.30.2.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.30.2
+^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2021-05-19
 
 **Incompatible changes:**
 
@@ -30,8 +30,6 @@ Released: not yet
   by the HMC as a new exception 'NotificationJMSError'. JSON parse errors
   are now raised as a new exception 'NotificationParseError'. Both new
   exceptions are based on a new base exception 'NotificationError'. (issue #770)
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -42,16 +40,6 @@ Released: not yet
   'NotificationJMSError' in the 'NotificationReceiver.notifications()' method.
   Previously, an exception was raised in the thread running the notification
   receiver, rendering it unusable after that had happened. (issue #770)
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.30.1
