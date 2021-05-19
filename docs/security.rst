@@ -22,6 +22,8 @@ This section contains information about the security of the communication
 between the 'zhmcclient' client and the HMC.
 
 
+.. _`HMC Web Services API`:
+
 HMC Web Services API
 --------------------
 
@@ -53,33 +55,74 @@ You can display the OpenSSL version used by Python using this command:
     $ python -c "import ssl; print(ssl.OPENSSL_VERSION)"
     OpenSSL 1.1.1i  8 Dec 2020
 
-Server certificate
-^^^^^^^^^^^^^^^^^^
 
-By default, the HMC is configured with a self-signed certificate at its
-Web Services API. Self-signed certificates are rejected by the 'certifi' package.
-The HMC should be configured to use a proper CA-verifyable certificate. This
-can be done in the HMC task "Certificate Management".
-See also the :term:`HMC Security` book and Chapter 3 "Invoking API operations"
-in the :term:`HMC API` book.
+.. _`HMC certificate`:
 
-The 'zhmcclient' package provides a control knob for the verification of the
-server certificate presented by the HMC during SSL/TLS handshake via the
-``verify_cert`` init parameter of the :class:`zhmcclient.Session` class, which
-can be set to:
+HMC certificate
+^^^^^^^^^^^^^^^
 
-* `False`: Do not verify the server certificate. Since that makes
-  the connection vulnerable to man-in-the-middle attacks, it should not be
-  used in production environments.
+By default, the HMC is configured with a self-signed certificate. That is the
+X.509 certificate presented by the HMC as the server certificate during SSL/TLS
+handshake at its Web Services API.
 
-* `True`: Verify the server certificate using the certificates provided by the
-  `Python 'certifi' package <https://pypi.org/project/certifi/>`_,
-  which are the certificates in the
-  `Mozilla Included CA Certificate List <https://wiki.mozilla.org/CA/Included_Certificates>`_.
+Starting with version 0.31, the zhmcclient will reject self-signed certificates
+by default.
 
-* :term:`string`: Path name of a CA_BUNDLE certificate file or directory to be
-  used for verifying the server certificate. For details, see
-  `SSL Cert Verification <https://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_.
+The HMC should be configured to use a CA-verifiable certificate. This can be
+done in the HMC task "Certificate Management". See also the :term:`HMC Security`
+book and Chapter 3 "Invoking API operations" in the :term:`HMC API` book.
+
+Starting with version 0.31, the zhmcclient provides a control knob for the
+verification of the HMC certificate via the ``verify_cert`` init parameter of
+the :class:`zhmcclient.Session` class. That init parameter can be set to:
+
+* `False`: Do not verify the HMC certificate. Not verifying the HMC certificate
+  means the zhmcclient will not detect hostname mismatches, expired
+  certificates, revoked certificates, or otherwise invalid certificates. Since
+  this mode makes the connection vulnerable to man-in-the-middle attacks, it
+  is insecure and should not be used in production environments.
+
+* `True` (default): Verify the HMC certificate using the CA certificates from
+  the first of these locations:
+
+  - The file or directory in the ``REQUESTS_CA_BUNDLE`` env.var, if set
+  - The file or directory in the ``CURL_CA_BUNDLE`` env.var, if set
+  - The `Python 'certifi' package <https://pypi.org/project/certifi/>`_
+    (which contains the
+    `Mozilla Included CA Certificate List <https://wiki.mozilla.org/CA/Included_Certificates>`_).
+
+* :term:`string`: Path name of a certificate file or directory. Verify the HMC
+  certificate using the CA certificates in that file or directory.
+
+If a certificate file is specified (using any of the ways listed above), that
+file must be in PEM format and must contain all CA certificates that are
+supposed to be used.  Usually they are in the order from leaf to root, but
+that is not a hard requirement. The single certificates are concatenated
+in the file.
+
+If a certificate directory is specified (using any of the ways listed above),
+it must contain PEM files with all CA certificates that are supposed to be used,
+and copies of the PEM files or symbolic links to them in the hashed format
+created by the OpenSSL command ``c_rehash``.
+
+An X.509 certificate in PEM format is base64-encoded, begins with the line
+``-----BEGIN CERTIFICATE-----``, and ends with the line
+``-----END CERTIFICATE-----``.
+More information about the PEM format is for example on this
+`www.ssl.com page <https://www.ssl.com/guide/pem-der-crt-and-cer-x-509-encodings-and-conversions>`_
+or in this `serverfault.com answer <https://serverfault.com/a/9717/330351>`_.
+
+Since the zhmcclient package uses the 'requests' package for the communication
+with the Web Services API of the HMC, the behavior described above actually
+comes from the 'requests' package. Unfortunately, its documentation about
+certificate verification is somewhat brief, see
+`SSL Cert Verification <https://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_.
+
+Note that setting the ``REQUESTS_CA_BUNDLE`` or ``CURL_CA_BUNDLE`` environment
+variables influences other programs that use these variables, too.
+
+
+.. _`Cipher suites`:
 
 Cipher suites
 ^^^^^^^^^^^^^
@@ -129,6 +172,8 @@ Brief expansion of the output field names used by this command:
 * Enc = Encryption
 * Mac = Message Authentication Code
 
+
+.. _`HMC Web Services API notifications`:
 
 HMC Web Services API notifications
 ----------------------------------

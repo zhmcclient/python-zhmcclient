@@ -72,17 +72,16 @@ The root cause is that the HMC is set up to use a self-signed certificate
 and the client has used ``verify_cert=True`` in the :class:`zhmcclient.Session`
 initialization, which is the default. That causes the client to use the
 Python 'certifi' package for verification of the server certificate and the
-'certifi' package rejects self-signed certificates. The 'certifi' package
-uses the certificates from the
+'certifi' package provides the CA certificates from the
 `Mozilla Included CA Certificate List <https://wiki.mozilla.org/CA/Included_Certificates>`_
-for verifying the server certificate.
+which does not include the self-signed certificate.
 
 The issue can be temporarily circumvented by specifying ``verify_cert=False``,
 which disables the verification of the server certificate. Since that makes
 the connection vulnerable to man-in-the-middle attacks, it should be done
 only as a temporary circumvention.
 
-The solution is to have your HMC administrator obtain a proper CA-verifyable
+The solution is to have your HMC administrator obtain a CA-verifiable
 certificate and to install that in the HMC.
 
 See also the :ref:`Security` section.

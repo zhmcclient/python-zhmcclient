@@ -33,6 +33,10 @@ Released: not yet
   are now raised as a new exception 'NotificationParseError'. Both new
   exceptions are based on a new base exception 'NotificationError'. (issue #770)
 
+* By default, the zhmcclient now verifies the HMC certificate using the
+  CA certificates in the Python 'certifi' package. This can be controlled with
+  a new 'verify_cert' init parameter to the 'zhmcclient.Session' class. (issue #779)
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -51,14 +55,17 @@ Released: not yet
 **Enhancements:**
 
 * Added a 'verify_cert' init parameter to the 'zhmcclient.Session' class to
-  enable verificatin of the server certificate presented by the HMC during
-  SSL/TLS handshake.
+  enable verification of the server certificate presented by the HMC during
+  SSL/TLS handshake. By default, the certificate is validated against
+  the CA certificates provided in the Python 'certifi' package. (issue #779)
 
 * Docs: Added a section "Security" to the documentation that describes security
   related aspects in the communication between the zhmcclient and the HMC.
+  (related to issue #779)
 
 * Docs: Added a section "Troubleshooting" to appendix of the documentation that
   currently lists two cases of communication related issues.
+  (related to issue #779)
 
 **Cleanup:**
 

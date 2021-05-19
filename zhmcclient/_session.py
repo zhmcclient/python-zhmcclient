@@ -274,7 +274,7 @@ class Session(object):
 
     def __init__(self, host, userid=None, password=None, session_id=None,
                  get_password=None, retry_timeout_config=None,
-                 port=DEFAULT_HMC_PORT, verify_cert=False):
+                 port=DEFAULT_HMC_PORT, verify_cert=True):
         # pylint: disable=line-too-long
         """
         Creating a session object will not immediately cause a logon to be
@@ -358,18 +358,28 @@ class Session(object):
             Controls whether and how the client verifies the server certificate
             presented by the HMC during SSL/TLS handshake:
 
-            * `False`: Do not verify the server certificate. Since that makes
-              the connection vulnerable to man-in-the-middle attacks, it should
-              not be used in production environments.
+            * `False`: Do not verify the HMC certificate. Not verifying the HMC
+              certificate means the zhmcclient will not detect hostname
+              mismatches, expired certificates, revoked certificates, or
+              otherwise invalid certificates. Since this mode makes the
+              connection vulnerable to man-in-the-middle attacks, it is insecure
+              and should not be used in production environments.
 
-            * `True`: Verify the server certificate using the certificates
-              in the
-              `Mozilla Included CA Certificate List <https://wiki.mozilla.org/CA/Included_Certificates>`_.
+            * `True`: Verify the HMC certificate using the CA certificates from
+              the first of these locations:
 
-            * :term:`string`: Path name of a CA_BUNDLE certificate file or
-              directory to be used for verifying the server certificate.
+              - The file or directory in the REQUESTS_CA_BUNDLE env.var, if set
+              - The file or directory in the CURL_CA_BUNDLE env.var, if set
+              - The Python 'certifi' package (which contains the
+                `Mozilla Included CA Certificate List <https://wiki.mozilla.org/CA/Included_Certificates>`_).
 
-            For details, see the :ref:`Security` section.
+            * :term:`string`: Path name of a certificate file or directory.
+              Verify the HMC certificate using the CA certificates in that file
+              or directory.
+
+            For details, see the :ref:`HMC certificate` section.
+
+            *Added in version 0.31*
         """  # noqa: E501
         # pylint: enable=line-too-long
 
