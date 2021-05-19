@@ -30,7 +30,7 @@ from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout, \
     ClientAuthError, DEFAULT_HMC_PORT
 
 # Default value for the 'verify_cert' parameter of the Session class:
-DEFAULT_VERIFY_CERT = False
+DEFAULT_VERIFY_CERT = True
 
 
 # TODO: Test Session.get() in all variations (including errors)
