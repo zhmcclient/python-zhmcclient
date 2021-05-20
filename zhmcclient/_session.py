@@ -705,11 +705,13 @@ class Session(object):
           headers (iterable): HTTP headers used for the request
 
           content (:term:`string`): HTTP body (aka content) used for the
-            request
+            request (byte string or unicode string)
         """
 
         content_msg = None
         if content is not None:
+            if isinstance(content, six.binary_type):
+                content = content.decode('utf-8')
             content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
@@ -753,10 +755,12 @@ class Session(object):
           headers (iterable): HTTP headers returned in the response
 
           content (:term:`string`): HTTP body (aka content) returned in the
-            response
+            response (byte string or unicode string)
         """
 
         if content is not None:
+            if isinstance(content, six.binary_type):
+                content = content.decode('utf-8')
             content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
@@ -1532,7 +1536,7 @@ def json2dict(json_str):
     Convert a JSON string into a dict.
 
     Parameters:
-      json_str(string): Unicode or binary string in JSON format.
+      json_str (string): Unicode or binary string in JSON format.
 
     Returns:
       dict: JSON string converted to a dict.
@@ -1553,10 +1557,11 @@ def dict2json(json_dict):
     Convert a dict into a JSON string.
 
     Parameters:
-      json_dict(dict): The dict.
+      json_dict (dict): The dict.
 
     Returns:
-      dict: The dict converted to a Unicode JSON string.
+      unicode string (py3) or byte string (py2): Dict converted to a JSON
+      string.
     """
     json_str = json.dumps(json_dict)
     return json_str
