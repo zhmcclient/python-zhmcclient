@@ -48,6 +48,8 @@ Released: not yet
   Previously, an exception was raised in the thread running the notification
   receiver, rendering it unusable after that had happened. (issue #770)
 
+* Fixed a TypeError for concatenating str and bytes. (issue #782)
+
 **Enhancements:**
 
 * Added a 'verify_cert' init parameter to the 'zhmcclient.Session' class to
