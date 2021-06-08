@@ -842,7 +842,9 @@ class Session(object):
         try:
             result = req.get(url, headers=self.headers, verify=self.verify_cert,
                              timeout=req_timeout)
-        except requests.exceptions.RequestException as exc:
+        # Note: The requests method may raise OSError/IOError in case of
+        # HMC certificate validation issues (e.g. incorrect cert path)
+        except (requests.exceptions.RequestException, IOError, OSError) as exc:
             _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
@@ -1027,7 +1029,10 @@ class Session(object):
                     result = req.post(url, data=data, headers=headers,
                                       verify=self.verify_cert,
                                       timeout=req_timeout)
-            except requests.exceptions.RequestException as exc:
+            # Note: The requests method may raise OSError/IOError in case of
+            # HMC certificate validation issues (e.g. incorrect cert path)
+            except (requests.exceptions.RequestException, IOError, OSError) \
+                    as exc:
                 _handle_request_exc(exc, self.retry_timeout_config)
             finally:
                 stats.end()
@@ -1129,7 +1134,9 @@ class Session(object):
         try:
             result = req.delete(url, headers=self.headers,
                                 verify=self.verify_cert, timeout=req_timeout)
-        except requests.exceptions.RequestException as exc:
+        # Note: The requests method may raise OSError/IOError in case of
+        # HMC certificate validation issues (e.g. incorrect cert path)
+        except (requests.exceptions.RequestException, IOError, OSError) as exc:
             _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
