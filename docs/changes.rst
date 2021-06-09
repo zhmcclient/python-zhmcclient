@@ -59,6 +59,10 @@ Released: not yet
   SSL/TLS handshake. By default, the certificate is validated against
   the CA certificates provided in the Python 'certifi' package. (issue #779)
 
+* Added catching of OSError/IOError exceptions raised by the 'requests' package
+  for certain certificate validation failures, re-raising such exceptions as a
+  pywbem.ConnectionError.
+
 * Docs: Added a section "Security" to the documentation that describes security
   related aspects in the communication between the zhmcclient and the HMC.
   (related to issue #779)
