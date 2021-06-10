@@ -19,12 +19,12 @@ Change log
 ----------
 
 
-Version 0.31.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.31.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 0.30.x.
+This version contains all fixes up to version 0.30.2.
 
-Released: not yet
+Released: 2021-06-10
 
 **Incompatible changes:**
 
@@ -42,8 +42,6 @@ Released: not yet
   that callers must not modify the properties dictionary. If your code used to
   make such modifications nevertheless, it will now get a 'TypeError' or
   'AttributeError' exception, dependent on the nature of the modification.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -83,14 +81,6 @@ Released: not yet
   is an immutable 'DictView' object provided by the 'immutable-views' package,
   in order to enforce the stated rule that that callers must not modify the
   properties dictionary of resource objects.
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.30.0
