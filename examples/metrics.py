@@ -70,6 +70,9 @@ try:
 
     metric_groups = [
 
+        # Please edit this section so it contains only the metric groups
+        # that mnatch the operational mode of the targeted CPC.
+
         'cpc-usage-overview',  # Only in classic mode
         'logical-partition-usage',  # Only in classic mode
         'channel-usage',  # Only in classic mode
@@ -81,7 +84,9 @@ try:
         'flash-memory-usage',  # Only in DPM mode
         'roce-usage',  # Only in DPM mode
 
-        'virtualization-host-cpu-memory-usage',  # Only in ensemble mode
+        'environmental-power-status',  # In any mode, starting with z15
+
+        # 'virtualization-host-cpu-memory-usage',  # Only in ensemble mode
 
     ]
 
@@ -111,10 +116,8 @@ try:
             for m_name in ov.metrics:
                 m_value = ov.metrics[m_name]
                 m_def = mg_def.metric_definitions[m_name]
-                m_unit = m_def.unit
-                m_type = m_def.type
-                print("      {:30}  {} {}".
-                      format(m_name, m_value, m_unit.encode('utf-8')))
+                m_unit = m_def.unit or ''
+                print("      {:30}  {} {}".format(m_name, m_value, m_unit))
         if not mg.object_values:
             print("    No resources")
 
