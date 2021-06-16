@@ -43,7 +43,7 @@ The basic usage of the metrics API is shown in this example:
     # Display the metric values:
     print("Current metric values:")
     mr = zhmcclient.MetricsResponse(mc, mr_str)
-    for mg in mr.metric_groups:
+    for mg in mr.metric_group_values:
         mg_name = mg.name
         mg_def = mc.metric_group_definitions[mg_name]
         print("  Metric group: {}".format(mg_name))
@@ -54,10 +54,10 @@ The basic usage of the metrics API is shown in this example:
             for m_name in ov.metrics:
                 m_value = ov.metrics[m_name]
                 m_def = mg_def.metric_definitions[m_name]
-                m_unit = m_def.unit
-                m_type = m_def.type
-                print("      {:30}  {} {}".
-                      format(m_name, m_value, m_unit.encode('utf-8')))
+                m_unit = m_def.unit or ''
+                print("      {:30}  {} {}".format(m_name, m_value, m_unit))
+        if not mg.object_values:
+            print("    No resources")
 
     # Delete the Metrics Context:
     mc.delete()
