@@ -32,6 +32,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Examples: Fixed errors in and improved metrics examples.
+
 **Enhancements:**
 
 **Cleanup:**
