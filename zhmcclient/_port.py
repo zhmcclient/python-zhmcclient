@@ -27,6 +27,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
+from ._utils import matches_filters
 
 __all__ = ['PortManager', 'Port']
 
@@ -150,7 +151,7 @@ class PortManager(BaseManager):
                 name=None,
                 properties=None)
 
-            if self._matches_filters(resource_obj, filter_args):
+            if matches_filters(resource_obj, filter_args):
                 resource_obj_list.append(resource_obj)
                 if full_properties:
                     resource_obj.pull_full_properties()

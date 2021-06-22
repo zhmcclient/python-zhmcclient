@@ -61,6 +61,7 @@ from ._virtual_switch import VirtualSwitchManager
 from ._capacity_group import CapacityGroupManager
 from ._logging import logged_api_call
 from ._exceptions import ParseError
+from ._utils import matches_filters, divide_filter_args
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -173,7 +174,8 @@ class CpcManager(BaseManager):
             resource_obj_list.append(resource_obj)
             # It already has full properties
         else:
-            query_parms, client_filters = self._divide_filter_args(filter_args)
+            query_parms, client_filters = divide_filter_args(
+                self._query_props, filter_args)
 
             resources_name = 'cpcs'
             uri = '/api/{}{}'.format(resources_name, query_parms)
@@ -189,7 +191,7 @@ class CpcManager(BaseManager):
                         name=props.get(self._name_prop, None),
                         properties=props)
 
-                    if self._matches_filters(resource_obj, client_filters):
+                    if matches_filters(resource_obj, client_filters):
                         resource_obj_list.append(resource_obj)
                         if full_properties:
                             resource_obj.pull_full_properties()

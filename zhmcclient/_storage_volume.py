@@ -45,6 +45,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
+from ._utils import matches_filters, divide_filter_args
 
 __all__ = ['StorageVolumeManager', 'StorageVolume']
 
@@ -145,7 +146,8 @@ class StorageVolumeManager(BaseManager):
             resource_obj_list.append(resource_obj)
             # It already has full properties
         else:
-            query_parms, client_filters = self._divide_filter_args(filter_args)
+            query_parms, client_filters = divide_filter_args(
+                self._query_props, filter_args)
 
             resources_name = 'storage-volumes'
             uri = '{}/{}{}'.format(self.storage_group.uri, resources_name,
@@ -162,7 +164,7 @@ class StorageVolumeManager(BaseManager):
                         name=props.get(self._name_prop, None),
                         properties=props)
 
-                    if self._matches_filters(resource_obj, client_filters):
+                    if matches_filters(resource_obj, client_filters):
                         resource_obj_list.append(resource_obj)
                         if full_properties:
                             resource_obj.pull_full_properties()

@@ -37,7 +37,6 @@ from ._task import TaskManager
 from ._ldap_server_definition import LdapServerDefinitionManager
 from ._unmanaged_cpc import UnmanagedCpcManager
 
-
 __all__ = ['ConsoleManager', 'Console']
 
 
