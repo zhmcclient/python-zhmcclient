@@ -650,6 +650,98 @@ class ConsoleListUnmanagedCpcsHandler(object):
         return {'cpcs': result_ucpcs}
 
 
+class ConsoleListPermittedPartitionsHandler(object):
+    """
+    Handler class for Console operation: List Permitted Partitions (DPM).
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Permitted Partitions."""
+        query_str = uri_parms[0]
+        filter_args = parse_query_parms(method, uri, query_str)
+
+        result_partitions = []
+        for cpc in hmc.cpcs.list():
+
+            # Reflect the result of listing the partition
+            if cpc.dpm_enabled:
+
+                # Apply the CPC name filter, if specified
+                if filter_args and 'cpc-name' in filter_args:
+                    if not re.match(filter_args['cpc-name'], cpc.name):
+                        continue
+                    del filter_args['cpc-name']
+
+                for partition in cpc.partitions.list(filter_args):
+                    result_partition = {}
+                    result_partition['object-uri'] = \
+                        partition.properties.get('object-uri', None)
+                    result_partition['name'] = \
+                        partition.properties.get('name', None)
+                    result_partition['type'] = \
+                        partition.properties.get('type', None)
+                    result_partition['status'] = \
+                        partition.properties.get('status', None)
+                    result_partition['has-unacceptable-status'] = \
+                        partition.properties.get(
+                            'has-unacceptable-status', None)
+                    result_partition['cpc-name'] = cpc.name
+                    result_partition['cpc-object-uri'] = cpc.uri
+                    result_partition['se-version'] = \
+                        cpc.properties.get('se-version', None)
+                    result_partitions.append(result_partition)
+
+        return {'partitions': result_partitions}
+
+
+class ConsoleListPermittedLparsHandler(object):
+    """
+    Handler class for Console operation: List Permitted LPARs (classic).
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Permitted LPARs."""
+        query_str = uri_parms[0]
+        filter_args = parse_query_parms(method, uri, query_str)
+
+        result_lpars = []
+        for cpc in hmc.cpcs.list():
+
+            # Reflect the result of listing the partition
+            if not cpc.dpm_enabled:
+
+                # Apply the CPC name filter, if specified
+                if filter_args and 'cpc-name' in filter_args:
+                    if not re.match(filter_args['cpc-name'], cpc.name):
+                        continue
+                    del filter_args['cpc-name']
+
+                for lpar in cpc.lpars.list(filter_args):
+                    result_lpar = {}
+                    result_lpar['object-uri'] = \
+                        lpar.properties.get('object-uri', None)
+                    result_lpar['name'] = \
+                        lpar.properties.get('name', None)
+                    result_lpar['activation-mode'] = \
+                        lpar.properties.get('activation-mode', None)
+                    result_lpar['status'] = \
+                        lpar.properties.get('status', None)
+                    result_lpar['has-unacceptable-status'] = \
+                        lpar.properties.get(
+                            'has-unacceptable-status', None)
+                    result_lpar['cpc-name'] = cpc.name
+                    result_lpar['cpc-object-uri'] = cpc.uri
+                    result_lpar['se-version'] = \
+                        cpc.properties.get('se-version', None)
+                    result_lpars.append(result_lpar)
+
+        return {'logical-partitions': result_lpars}
+
+
 class UsersHandler(object):
     """
     Handler class for HTTP methods on set of User resources.
@@ -3540,6 +3632,10 @@ URIS = (
      ConsoleGetSecurityLogHandler),
     (r'/api/console/operations/list-unmanaged-cpcs(?:\?(.*))?',
      ConsoleListUnmanagedCpcsHandler),
+    (r'/api/console/operations/list-permitted-partitions(?:\?(.*))?',
+     ConsoleListPermittedPartitionsHandler),
+    (r'/api/console/operations/list-permitted-logical-partitions(?:\?(.*))?',
+     ConsoleListPermittedLparsHandler),
 
     (r'/api/console/users(?:\?(.*))?', UsersHandler),
     (r'/api/users/([^/]+)', UserHandler),

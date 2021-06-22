@@ -36,6 +36,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Added support for 'Console.list_permitted_partitions()' and
+  'Console.list_permitted_lpars()'. These methods require HMC 2.14.0 or later.
+  (issue #793)
+
 **Cleanup:**
 
 **Known issues:**
