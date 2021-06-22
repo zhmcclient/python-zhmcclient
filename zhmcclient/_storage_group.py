@@ -88,7 +88,7 @@ from ._resource import BaseResource
 from ._storage_volume import StorageVolumeManager
 from ._virtual_storage_resource import VirtualStorageResourceManager
 from ._logging import logged_api_call
-from ._utils import append_query_parms
+from ._utils import append_query_parms, matches_filters, divide_filter_args
 
 __all__ = ['StorageGroupManager', 'StorageGroup']
 
@@ -194,7 +194,8 @@ class StorageGroupManager(BaseManager):
             resource_obj_list.append(resource_obj)
             # It already has full properties
         else:
-            query_parms, client_filters = self._divide_filter_args(filter_args)
+            query_parms, client_filters = divide_filter_args(
+                self._query_props, filter_args)
             uri = '{}{}'.format(self._base_uri, query_parms)
 
             result = self.session.get(uri)
@@ -208,7 +209,7 @@ class StorageGroupManager(BaseManager):
                         name=props.get(self._name_prop, None),
                         properties=props)
 
-                    if self._matches_filters(resource_obj, client_filters):
+                    if matches_filters(resource_obj, client_filters):
                         resource_obj_list.append(resource_obj)
                         if full_properties:
                             resource_obj.pull_full_properties()

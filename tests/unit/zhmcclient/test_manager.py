@@ -29,6 +29,7 @@ import pytest
 from zhmcclient import BaseResource, BaseManager, Session, NotFound, \
     NoUniqueMatch
 from zhmcclient._manager import _NameUriCache
+from zhmcclient._utils import matches_filters
 
 
 class MyResource(BaseResource):
@@ -72,7 +73,7 @@ class MyManager(BaseManager):
         # filtering on top of it.
         result_list = []
         for res in self._list_resources:
-            if not filter_args or self._matches_filters(res, filter_args):
+            if not filter_args or matches_filters(res, filter_args):
                 result_list.append(res)
         self._list_called += 1
         return result_list

@@ -18,6 +18,7 @@ Utility functions.
 
 from __future__ import absolute_import
 
+import re
 from collections import OrderedDict
 try:
     from collections.abc import Mapping, MutableSequence, Iterable
@@ -252,3 +253,152 @@ def append_query_parms(query_parms, prop_name, prop_match):
         parm_value = quote(str(prop_match), safe='')
         qp = '{}={}'.format(parm_name, parm_value)
         query_parms.append(qp)
+
+
+def divide_filter_args(query_props, filter_args):
+    """
+    Divide the filter arguments into filter query parameters for filtering
+    on the server side, and the remaining client-side filters.
+
+    Parameters:
+
+      query_props (iterable of strings):
+        Names of resource properties that are supported as filter query
+        parameters in the WS API operation (i.e. server-side filtering).
+
+        May be `None`.
+
+        If the support for a resource property changes within the set of
+        HMC versions that support this type of resource, this list must
+        represent the version of the HMC this session is connected to.
+
+      filter_args (dict):
+        Filter arguments that narrow the list of returned resources to
+        those that match the specified filter arguments. For details, see
+        :ref:`Filtering`.
+
+        `None` causes no filtering to happen, i.e. all resources are
+        returned.
+
+    Returns:
+
+      : tuple (query_parms_str, client_filter_args)
+    """
+    query_parms = []  # query parameter strings
+    client_filter_args = {}
+
+    if filter_args is not None:
+        for prop_name in filter_args:
+            prop_match = filter_args[prop_name]
+            if prop_name in query_props:
+                append_query_parms(query_parms, prop_name, prop_match)
+            else:
+                client_filter_args[prop_name] = prop_match
+    query_parms_str = '&'.join(query_parms)
+    if query_parms_str:
+        query_parms_str = '?{}'.format(query_parms_str)
+
+    return query_parms_str, client_filter_args
+
+
+def matches_filters(obj, filter_args):
+    """
+    Return a boolean indicating whether a resource object matches a set
+    of filter arguments.
+
+    This is used for client-side filtering.
+
+    Depending on the properties specified in the filter arguments, this
+    method retrieves the resource properties from the HMC.
+
+    Parameters:
+
+      obj (BaseResource):
+        Resource object.
+
+      filter_args (dict):
+        Filter arguments. For details, see :ref:`Filtering`.
+        `None` causes the resource to always match.
+
+    Returns:
+
+      bool: Boolean indicating whether the resource object matches the
+        filter arguments.
+    """
+    if filter_args is not None:
+        for prop_name in filter_args:
+            prop_match = filter_args[prop_name]
+            if not matches_prop(obj, prop_name, prop_match):
+                return False
+    return True
+
+
+def matches_prop(obj, prop_name, prop_match):
+    """
+    Return a boolean indicating whether a resource object matches with
+    a single property against a property match value.
+
+    This is used for client-side filtering.
+
+    Depending on the specified property, this method retrieves the resource
+    properties from the HMC.
+
+    Parameters:
+
+      obj (BaseResource):
+        Resource object.
+
+      prop_match:
+        Property match value that is used to match the actual value of
+        the specified property against, as follows:
+
+        - If the match value is a list or tuple, this method is invoked
+          recursively to find whether one or more match values inthe list
+          match.
+
+        - Else if the property is of string type, its value is matched by
+          interpreting the match value as a regular expression.
+
+        - Else the property value is matched by exact value comparison
+          with the match value.
+
+    Returns:
+
+      bool: Boolean indicating whether the resource object matches w.r.t.
+        the specified property and the match value.
+    """
+    if isinstance(prop_match, (list, tuple)):
+        # List items are logically ORed, so one matching item suffices.
+        for pm in prop_match:
+            if matches_prop(obj, prop_name, pm):
+                return True
+    else:
+        # Some lists of resources do not have all properties, for example
+        # Hipersocket adapters do not have a "card-location" property.
+        # If a filter property does not exist on a resource, the resource
+        # does not match.
+        try:
+            prop_value = obj.get_property(prop_name)
+        except KeyError:
+            return False
+        if isinstance(prop_value, six.string_types):
+            # HMC resource property is Enum String or (non-enum) String,
+            # and is both matched by regexp matching. Ideally, regexp
+            # matching should only be done for non-enum strings, but
+            # distinguishing them is not possible given that the client
+            # has no knowledge about the properties.
+
+            # The regexp matching implemented in the HMC requires begin and
+            # end of the string value to match, even if the '^' for begin
+            # and '$' for end are not specified in the pattern. The code
+            # here is consistent with that: We add end matching to the
+            # pattern, and begin matching is done by re.match()
+            # automatically.
+            re_match = prop_match + '$'
+            m = re.match(re_match, prop_value)
+            if m:
+                return True
+        else:
+            if prop_value == prop_match:
+                return True
+    return False

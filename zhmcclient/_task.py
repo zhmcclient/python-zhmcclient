@@ -25,6 +25,7 @@ from __future__ import absolute_import
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
+from ._utils import matches_filters, divide_filter_args
 
 __all__ = ['TaskManager', 'Task']
 
@@ -113,7 +114,8 @@ class TaskManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         resource_obj_list = []
-        query_parms, client_filters = self._divide_filter_args(filter_args)
+        query_parms, client_filters = divide_filter_args(
+            self._query_props, filter_args)
         resources_name = 'tasks'
         uri = '{}/{}{}'.format(self.console.uri, resources_name, query_parms)
 
@@ -128,7 +130,7 @@ class TaskManager(BaseManager):
                     name=props.get(self._name_prop, None),
                     properties=props)
 
-                if self._matches_filters(resource_obj, client_filters):
+                if matches_filters(resource_obj, client_filters):
                     resource_obj_list.append(resource_obj)
                     if full_properties:
                         resource_obj.pull_full_properties()

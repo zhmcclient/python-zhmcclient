@@ -30,6 +30,7 @@ from __future__ import absolute_import
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
+from ._utils import matches_filters, divide_filter_args
 
 __all__ = ['UnmanagedCpcManager', 'UnmanagedCpc']
 
@@ -126,7 +127,8 @@ class UnmanagedCpcManager(BaseManager):
         if resource_obj:
             resource_obj_list.append(resource_obj)
         else:
-            query_parms, client_filters = self._divide_filter_args(filter_args)
+            query_parms, client_filters = divide_filter_args(
+                self._query_props, filter_args)
 
             uri = self.parent.uri + '/operations/list-unmanaged-cpcs' + \
                 query_parms
@@ -142,7 +144,7 @@ class UnmanagedCpcManager(BaseManager):
                         name=props.get(self._name_prop, None),
                         properties=props)
 
-                    if self._matches_filters(resource_obj, client_filters):
+                    if matches_filters(resource_obj, client_filters):
                         resource_obj_list.append(resource_obj)
 
         self._name_uri_cache.update_from(resource_obj_list)
