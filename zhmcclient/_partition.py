@@ -386,7 +386,6 @@ class Partition(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this Partition.
-        * Object-access permission to the CPC containing this Partition.
         * Task permission to the "Start Partition" task.
 
         Parameters:
@@ -588,7 +587,7 @@ class Partition(BaseResource):
         'Dump Partition'.
 
         This operation requires that the CPC does not have the storage
-        management feature (i.e. is a z13 or earlier).
+        management feature (i.e. is a z13).
 
         Authorization requirements:
 
@@ -851,6 +850,12 @@ class Partition(BaseResource):
         Open a JMS message channel to this partition's operating system,
         returning the string "topic" representing the message channel.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Operating System Messages" task at least
+          in view-only mode.
+
         Parameters:
 
           include_refresh_messages (bool):
@@ -887,6 +892,12 @@ class Partition(BaseResource):
     def send_os_command(self, os_command_text, is_priority=False):
         """
         Send a command to the operating system running in this partition.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Operating System Messages" task in
+          modification mode.
 
         Parameters:
 
@@ -1000,6 +1011,7 @@ class Partition(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this Partition.
+        * Object-access permission to the specified Crypto Adapter.
         * Task permission to the "Partition Details" task.
 
         Parameters:
@@ -1070,6 +1082,7 @@ class Partition(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this Partition.
+        * Object-access permission to the specified Crypto Adapters.
         * Task permission to the "Partition Details" task.
 
         Parameters:
@@ -1152,7 +1165,8 @@ class Partition(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to this Partition and to the Crypto Adapter.
+        * Object-access permission to this Partition.
+        * Object-access permission to the specified Crypto Adapter.
         * Task permission to the "Zeroize Crypto Domain" task.
 
         Parameters:
@@ -1264,7 +1278,6 @@ class Partition(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this partition.
-        * Task permission to the "Partition Details" task.
 
         Parameters:
 
