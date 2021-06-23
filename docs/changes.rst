@@ -32,6 +32,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Docs: Fixed and added missing authorization requirements for the Partition
+  and Lpar methods.
+
 * Examples: Fixed errors in and improved metrics examples.
 
 **Enhancements:**
