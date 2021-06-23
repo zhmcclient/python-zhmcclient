@@ -189,10 +189,19 @@ class Lpar(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "Change Object Definition" task.
-        * Object-access permission to the CPC of this LPAR.
-        * For an LPAR whose activation-mode is "zaware", task permission for
-          the "Firmware Details" task.
+        * Since HMC 2.14.1: If the "next-activation-profile-name" property is to
+          be updated, task permission for the "Change Object Options" task or
+          the "Customize/Delete Activation Profiles" task.
+        * Before HMC 2.15.0: For an LPAR whose activation-mode is "zaware", task
+          permission for the "Firmware Details" task.
+        * Since HMC 2.15.0: If any of the "ssc-*" or "zaware-*" properties is to
+          be updated, task permission for the "Firmware Details" task.
+        * Since HMC 2.15.0: If any of the numbers of allocated or reserved cores
+          is to be updated, task permission for the "Logical Processor Add"
+          task.
 
         Parameters:
 
@@ -237,8 +246,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "Activate" task.
 
         Parameters:
@@ -345,8 +355,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "Deactivate" task.
 
         Parameters:
@@ -450,8 +461,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "SCSI Load" task.
 
         Parameters:
@@ -600,8 +612,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "SCSI Dump" task.
 
         Parameters:
@@ -745,8 +758,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "Load" task.
 
         Parameters:
@@ -871,8 +885,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "Stop" task.
 
         Parameters:
@@ -963,8 +978,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "Reset Clear" task.
 
         Parameters:
@@ -1048,6 +1064,12 @@ class Lpar(BaseResource):
         Open a JMS message channel to this LPAR's operating system, returning
         the string "topic" representing the message channel.
 
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Operating System Messages" task at least
+          in view-only mode.
+
         Parameters:
 
           include_refresh_messages (bool):
@@ -1084,6 +1106,12 @@ class Lpar(BaseResource):
     def send_os_command(self, os_command_text, is_priority=False):
         """
         Send a command to the operating system running in this LPAR.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Operating System Messages" task in
+          modification mode.
 
         Parameters:
 
@@ -1131,8 +1159,9 @@ class Lpar(BaseResource):
 
         Authorization requirements:
 
-        * Object-access permission to the CPC containing this LPAR.
         * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
         * Task permission for the "PSW Restart" task.
 
         Parameters:
