@@ -97,6 +97,8 @@ class ConsoleManager(BaseManager):
 
           The returned object has only the following properties set:
 
+          * 'class'
+          * 'parent'
           * 'object-uri'
 
           Use :meth:`~zhmcclient.BaseResource.get_property` or
@@ -105,7 +107,7 @@ class ConsoleManager(BaseManager):
           retrieved.
         """
         if self._console is None:
-            self._console = self.list()[0]
+            self._console = self.resource_object('/api/console')
         return self._console
 
     @logged_api_call

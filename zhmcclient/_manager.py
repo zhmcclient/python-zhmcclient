@@ -454,15 +454,19 @@ class BaseManager(object):
             assert uri_or_oid[-1] != '/'
             uri = uri_or_oid
             oid = uri.split('/')[-1]
+            # For the Console, we can predict the URI but not the OID.
+            if oid == 'console':
+                oid = None
         else:
             assert '/' not in uri_or_oid
             oid = uri_or_oid
             uri = '{}/{}'.format(self._base_uri, oid)
         res_props = {
-            self._oid_prop: oid,
             'parent': self.parent.uri if self.parent is not None else None,
             'class': self.class_name,
         }
+        if oid:
+            res_props[self._oid_prop] = oid
         name = None
         if props:
             res_props.update(props)
