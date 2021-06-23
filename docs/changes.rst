@@ -45,6 +45,9 @@ Released: not yet
   'Console.list_permitted_lpars()'. These methods require HMC 2.14.0 or later.
   (issue #793)
 
+* The Console object returned by 'client.consoles.console' is now a locally
+  built object in order to avoid needless property retrieval.
+
 **Cleanup:**
 
 **Known issues:**
