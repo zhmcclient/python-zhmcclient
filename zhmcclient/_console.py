@@ -26,7 +26,7 @@ import time
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import timestamp_from_datetime
+from ._utils import timestamp_from_datetime, divide_filter_args, matches_filters
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
 from ._user import UserManager
@@ -563,3 +563,235 @@ class Console(BaseResource):
             filter_args['name'] = name
         cpcs = self.unmanaged_cpcs.list(filter_args=filter_args)
         return cpcs
+
+    @logged_api_call
+    def list_permitted_partitions(
+            self, full_properties=False, filter_args=None):
+        """
+        List the permitted partitions of CPCs in DPM mode managed by this HMC.
+
+        *Added in version 1.0; requires HMC 2.14.0 or later*
+
+        Any CPCs in classic mode managed by the HMC will be ignored for this
+        operation.
+
+        The partitions in the result can be additionally limited by specifying
+        filter arguments.
+
+        Authorization requirements:
+
+        * Object permission to the partition objects included in the result.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls whether the full set of resource properties for the
+            returned Partition objects should be retrieved, vs. only a short
+            set.
+
+          filter_args (dict):
+            Filter arguments for limiting the partitions in the result.
+            `None` causes no filtering to happen.
+
+            The following filter arguments are supported by server-side
+            filtering:
+
+            * name (string): Limits the result to partitions whose name
+              match the specified regular expression.
+
+            * type (string): Limits the result to partitions with a matching
+              "type" property value (i.e. "linux", "ssc", "zvm").
+
+            * status (string): Limits the result to partitions with a matching
+              "status" property value.
+
+            * has-unacceptable-status (bool): Limits the result to partitions
+              with a matching "has-unacceptable-status" property value.
+
+            * cpc-name (string): Limits the result to partitions whose CPC
+              has a name that matches the specified regular expression.
+
+            Any other valid property of partitions is supported by
+            client-side filtering:
+
+            * <property-name>: Any other property of partitions.
+
+        Returns:
+
+          : A list of :class:`~zhmcclient.Partition` objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        query_parms, client_filters = divide_filter_args(
+            ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
+            filter_args)
+
+        # Perform the operation with the HMC, including any server-side
+        # filtering.
+        uri = self.uri + '/operations/list-permitted-partitions' + query_parms
+        result = self.manager.session.get(uri)
+
+        partition_objs = []
+        if result:
+            partition_items = result['partitions']
+            for partition_item in partition_items:
+
+                # The partition items have the following partition properties:
+                # * name, object-uri, type, status, has-unacceptable-status
+                # And the following properties for their parent CPC:
+                # * cpc-name (CPC property 'name')
+                # * cpc-object-uri (CPC property 'object-uri')
+                # * se-version (CPC property 'se-version')
+
+                # Create a 'skeleton' local Cpc object we can hang the
+                # Partition objects off of, even if the user does not have
+                # access permissions to these CPCs. Note that different
+                # partitions can have different parent CPCs.
+                cpc = self.manager.client.cpcs.find_local(
+                    partition_item['cpc-name'],
+                    partition_item['cpc-object-uri'],
+                    {
+                        'se-version': partition_item['se-version'],
+                    },
+                )
+
+                partition_obj = cpc.partitions.resource_object(
+                    partition_item['object-uri'],
+                    {
+                        'name': partition_item['name'],
+                        'type': partition_item['type'],
+                        'status': partition_item['status'],
+                        'has-unacceptable-status':
+                            partition_item['has-unacceptable-status'],
+                    },
+                )
+
+                # Apply client-side filtering
+                if matches_filters(partition_obj, client_filters):
+                    partition_objs.append(partition_obj)
+                    if full_properties:
+                        partition_obj.pull_full_properties()
+
+        return partition_objs
+
+    @logged_api_call
+    def list_permitted_lpars(
+            self, full_properties=False, filter_args=None):
+        """
+        List the permitted LPARs of CPCs in classic mode managed by this HMC.
+
+        *Added in version 1.0; requires HMC 2.14.0 or later*
+
+        Any CPCs in DPM mode managed by the HMC will be ignored for this
+        operation.
+
+        The LPARs in the result can be additionally limited by specifying
+        filter arguments.
+
+        Authorization requirements:
+
+        * Object permission to the LPAR objects included in the result.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls whether the full set of resource properties for the
+            returned LPAR objects should be retrieved, vs. only a short set.
+
+          filter_args (dict):
+            Filter arguments for limiting the LPARs in the result.
+            `None` causes no filtering to happen.
+
+            The following filter arguments are supported by server-side
+            filtering:
+
+            * name (string): Limits the result to LPARs whose name
+              match the specified regular expression.
+
+            * activation-mode (string): Limits the result to LPARs with a
+              matching "activation-mode" property value.
+
+            * status (string): Limits the result to LPARs with a matching
+              "status" property value.
+
+            * has-unacceptable-status (bool): Limits the result to LPARs
+              with a matching "has-unacceptable-status" property value.
+
+            * cpc-name (string): Limits the result to LPARs whose CPC
+              has a name that matches the specified regular expression.
+
+            Any other valid property of LPARs is supported by
+            client-side filtering:
+
+            * <property-name>: Any other property of LPARs.
+
+        Returns:
+
+          : A list of :class:`~zhmcclient.Lpar` objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+
+        query_parms, client_filters = divide_filter_args(
+            ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
+            filter_args)
+
+        # Perform the operation with the HMC, including any server-side
+        # filtering.
+        uri = self.uri + '/operations/list-permitted-logical-partitions' + \
+            query_parms
+        result = self.manager.session.get(uri)
+
+        lpar_objs = []
+        if result:
+            lpar_items = result['logical-partitions']
+            for lpar_item in lpar_items:
+
+                # The partition items have the following partition properties:
+                # * name, object-uri, activation-mode, status,
+                #   has-unacceptable-status
+                # And the following properties for their parent CPC:
+                # * cpc-name (CPC property 'name')
+                # * cpc-object-uri (CPC property 'object-uri')
+                # * se-version (CPC property 'se-version')
+
+                # Create a 'skeleton' local Cpc object we can hang the
+                # Partition objects off of, even if the user does not have
+                # access permissions to these CPCs. Note that different
+                # partitions can have different parent CPCs.
+                cpc = self.manager.client.cpcs.find_local(
+                    lpar_item['cpc-name'],
+                    lpar_item['cpc-object-uri'],
+                    {
+                        'se-version': lpar_item['se-version'],
+                    },
+                )
+
+                lpar_obj = cpc.lpars.resource_object(
+                    lpar_item['object-uri'],
+                    {
+                        'name': lpar_item['name'],
+                        'activation-mode': lpar_item['activation-mode'],
+                        'status': lpar_item['status'],
+                        'has-unacceptable-status':
+                            lpar_item['has-unacceptable-status'],
+                    },
+                )
+
+                # Apply client-side filtering
+                if matches_filters(lpar_obj, client_filters):
+                    lpar_objs.append(lpar_obj)
+                    if full_properties:
+                        lpar_obj.pull_full_properties()
+
+        return lpar_objs

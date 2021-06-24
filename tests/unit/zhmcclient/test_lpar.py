@@ -35,6 +35,8 @@ LPAR1_NAME = 'lpar 1'
 LPAR2_OID = 'lpar2-oid'
 LPAR2_NAME = 'lpar 2'
 
+CPC_NAME = 'fake-cpc1-name'
+
 
 class TestLpar(object):
     """All tests for Lpar and LparManager classes."""
@@ -57,14 +59,14 @@ class TestLpar(object):
             # object-uri is set up automatically
             'parent': None,
             'class': 'cpc',
-            'name': 'fake-cpc1-name',
+            'name': CPC_NAME,
             'description': 'CPC #1 (classic mode)',
             'status': 'active',
             'dpm-enabled': False,
             'is-ensemble-member': False,
             'iml-mode': 'lpar',
         })
-        self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
+        self.cpc = self.client.cpcs.find(name=CPC_NAME)
 
     def add_lpar1(self):
         """Add lpar 1 (type linux)."""
@@ -653,6 +655,46 @@ class TestLpar(object):
 
             stored_status = lpar.get_property('stored-status')
             assert stored_status == exp_stored_status
+
+    @pytest.mark.parametrize(
+        "filter_args, exp_names", [
+            ({'cpc-name': 'bad'},
+             []),
+            ({'cpc-name': CPC_NAME},
+             [LPAR1_NAME, LPAR2_NAME]),
+            ({},
+             [LPAR1_NAME, LPAR2_NAME]),
+            (None,
+             [LPAR1_NAME, LPAR2_NAME]),
+            ({'name': LPAR1_NAME},
+             [LPAR1_NAME]),
+        ]
+    )
+    def test_console_list_permitted_lpars(self, filter_args, exp_names):
+        """Test Console.list_permitted_lpars() with filter_args."""
+
+        # Add two faked partitions
+        self.add_lpar1()
+        self.add_lpar2()
+
+        self.session.hmc.consoles.add({
+            'object-id': None,
+            # object-uri will be automatically set
+            'parent': None,
+            'class': 'console',
+            'name': 'fake-console1',
+            'description': 'Console #1',
+        })
+
+        console = self.client.consoles.console
+
+        # Execute the code to be tested
+        lpars = console.list_permitted_lpars(filter_args=filter_args)
+
+        assert len(lpars) == len(exp_names)
+        if exp_names:
+            names = [p.properties['name'] for p in lpars]
+            assert set(names) == set(exp_names)
 
     # TODO: Test for Lpar.scsi_load()
 

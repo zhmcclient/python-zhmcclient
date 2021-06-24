@@ -745,6 +745,58 @@ class BaseManager(object):
         return obj
 
     @logged_api_call
+    def find_local(self, name, uri, properties=None):
+        """
+        Return a local resource object without fetching it from the HMC.
+
+        If the resource object is in the local URI name cache, take it from
+        there. The object is looked up by the specified name, and the uri and
+        properties parameters are ignored in that case.
+
+        If the resource object is not in the local URI name cache, a new
+        locally constructed resource object is returned from the specified
+        name, uri and properties parameters. That resource object is not put
+        into the local URI name cache, because there was no validation that the
+        specified properties are up to date or even valid at all.
+
+        This approach is a compromise for operations such as "List Permitted
+        Partitions" in which the parent CPC object may not be accessible
+        by the user and thus cannot be fetched.
+
+        Parameters:
+
+          name (string):
+            Name of the resource.
+
+          uri (string):
+            Object URI of the resource, to be used when the resource is
+            locally constructed.
+
+          properties (dict):
+            Additional properties, to be used when the resource is locally
+            constructed.
+
+        Returns:
+
+          Resource object in scope of this manager object. This resource object
+          has a minimal set of properties.
+        """
+        resource_obj = self._try_optimized_lookup(dict(name=name))
+        if resource_obj is None:
+            resource_props = {
+                'name': name,
+                'object-uri': uri,
+            }
+            resource_props.update(properties)
+            resource_obj = self.resource_class(
+                manager=self,
+                uri=uri,
+                name=name,
+                properties=resource_props)
+            # Note: The object is intentionally not put into the local cache
+        return resource_obj
+
+    @logged_api_call
     def flush(self):
         """
         Invalidate the Name-URI cache of this manager.

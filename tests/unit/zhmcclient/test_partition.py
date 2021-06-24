@@ -35,6 +35,8 @@ PART2_NAME = 'part 2'
 PART3_OID = 'part3-oid'
 PART3_NAME = 'part 3'
 
+CPC_NAME = 'fake-cpc1-name'
+
 
 class TestPartition(object):
     """All tests for the Partition and PartitionManager classes."""
@@ -56,14 +58,14 @@ class TestPartition(object):
             # object-uri is set up automatically
             'parent': None,
             'class': 'cpc',
-            'name': 'fake-cpc1-name',
+            'name': CPC_NAME,
             'description': 'CPC #1 (DPM mode)',
             'status': 'active',
             'dpm-enabled': True,
             'is-ensemble-member': False,
             'iml-mode': 'dpm',
         })
-        self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
+        self.cpc = self.client.cpcs.find(name=CPC_NAME)
 
     def add_partition1(self):
         """Add partition 1 (type linux)."""
@@ -892,6 +894,46 @@ class TestPartition(object):
         ret = partition.unmount_iso_image()
 
         assert ret is None
+
+    @pytest.mark.parametrize(
+        "filter_args, exp_names", [
+            ({'cpc-name': 'bad'},
+             []),
+            ({'cpc-name': CPC_NAME},
+             [PART1_NAME, PART2_NAME]),
+            ({},
+             [PART1_NAME, PART2_NAME]),
+            (None,
+             [PART1_NAME, PART2_NAME]),
+            ({'name': PART1_NAME},
+             [PART1_NAME]),
+        ]
+    )
+    def test_console_list_permitted_partitions(self, filter_args, exp_names):
+        """Test Console.list_permitted_partitions() with filter_args."""
+
+        # Add two faked partitions
+        self.add_partition1()
+        self.add_partition2()
+
+        self.session.hmc.consoles.add({
+            'object-id': None,
+            # object-uri will be automatically set
+            'parent': None,
+            'class': 'console',
+            'name': 'fake-console1',
+            'description': 'Console #1',
+        })
+
+        console = self.client.consoles.console
+
+        # Execute the code to be tested
+        partitions = console.list_permitted_partitions(filter_args=filter_args)
+
+        assert len(partitions) == len(exp_names)
+        if exp_names:
+            names = [p.properties['name'] for p in partitions]
+            assert set(names) == set(exp_names)
 
     # TODO: Test for Partition.send_os_command()
 
