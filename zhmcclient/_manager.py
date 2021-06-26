@@ -749,51 +749,47 @@ class BaseManager(object):
         """
         Return a local resource object without fetching it from the HMC.
 
-        If the resource object is in the local URI name cache, take it from
-        there. The object is looked up by the specified name, and the uri and
-        properties parameters are ignored in that case.
+        The resource object is fully functional, for example it has the proper
+        parent resource object set and its properties can be fetched using
+        :meth:`~zhmcclient.BaseResource.pull_full_properties`.
 
-        If the resource object is not in the local URI name cache, a new
-        locally constructed resource object is returned from the specified
-        name, uri and properties parameters. That resource object is not put
-        into the local URI name cache, because there was no validation that the
-        specified properties are up to date or even valid at all.
-
-        This approach is a compromise for operations such as "List Permitted
-        Partitions" in which the parent CPC object may not be accessible
-        by the user and thus cannot be fetched.
+        If the resource object is in the name-to-URI cache, it is returned from
+        there, and dependent on the history it may have a minimal set of
+        properties or the full set of properties. Otherwise, a new resource
+        object is constructed locally from the specified name, uri and
+        properties parameters. That resource object is not put into the
+        name-to-URI cache because there was no validation that the specified
+        properties are up to date or even valid at all.
 
         Parameters:
 
           name (string):
-            Name of the resource.
+            Name of the resource. Must not be `None`.
 
           uri (string):
-            Object URI of the resource, to be used when the resource is
-            locally constructed.
+            Object URI of the resource. Must not be `None`.
 
           properties (dict):
-            Additional properties, to be used when the resource is locally
-            constructed.
+            Additional properties. Only used when the resource is not found
+            in the name-to-URI cache. It is the responsibility of the user
+            to ensure that the properties are valid.
 
         Returns:
 
-          Resource object in scope of this manager object. This resource object
-          has a minimal set of properties.
+          Resource object.
         """
+        # Get the resource object from the name-to-URI cache, if possible.
         resource_obj = self._try_optimized_lookup(dict(name=name))
-        if resource_obj is None:
-            resource_props = {
-                'name': name,
-                'object-uri': uri,
-            }
-            resource_props.update(properties)
-            resource_obj = self.resource_class(
-                manager=self,
-                uri=uri,
-                name=name,
-                properties=resource_props)
-            # Note: The object is intentionally not put into the local cache
+        if resource_obj:
+            assert uri == resource_obj.uri
+            return resource_obj
+
+        # Create a new local resource object.
+        resource_props = {
+            self._name_prop: name,
+        }
+        resource_props.update(properties)
+        resource_obj = self.resource_object(uri, resource_props)
         return resource_obj
 
     @logged_api_call
