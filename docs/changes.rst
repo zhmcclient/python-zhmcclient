@@ -35,6 +35,8 @@ Released: not yet
 
 * Examples: Fixed errors in and improved metrics examples.
 
+* Fixed issues raised by new Pylint version 2.9.1.
+
 **Enhancements:**
 
 **Cleanup:**
