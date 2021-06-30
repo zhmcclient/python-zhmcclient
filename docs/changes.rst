@@ -19,14 +19,10 @@ Change log
 ----------
 
 
-Version 0.31.1.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.31.1
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-06-30
 
 **Bug fixes:**
 
@@ -36,16 +32,6 @@ Released: not yet
 * Examples: Fixed errors in and improved metrics examples.
 
 * Fixed issues raised by new Pylint version 2.9.1.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.31.0
