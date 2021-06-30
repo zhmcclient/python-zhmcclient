@@ -95,17 +95,14 @@ class TestPartitionLifecycle(object):
 
         part = cpc.partitions.create(part_input_props)
 
-        for pn in part_input_props:
-            exp_value = part_input_props[pn]
+        for pn, exp_value in part_input_props.items():
             assert part.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
         part.pull_full_properties()
-        for pn in part_input_props:
-            exp_value = part_input_props[pn]
+        for pn, exp_value in part_input_props.items():
             assert part.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
-        for pn in part_auto_props:
-            exp_value = part_auto_props[pn]
+        for pn, exp_value in part_auto_props.items():
             assert part.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
 

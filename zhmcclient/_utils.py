@@ -23,6 +23,7 @@ from collections import OrderedDict
 try:
     from collections.abc import Mapping, MutableSequence, Iterable
 except ImportError:
+    # pylint: disable=deprecated-class
     from collections import Mapping, MutableSequence, Iterable
 from datetime import datetime
 import six

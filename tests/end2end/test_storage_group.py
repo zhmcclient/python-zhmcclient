@@ -116,20 +116,17 @@ class TestStorageGroups(object):
 
         stogrp = console.storage_groups.create(stogrp_input_props)
 
-        for pn in stogrp_input_props:
-            exp_value = stogrp_input_props[pn]
+        for pn, exp_value in stogrp_input_props.items():
             assert stogrp.properties[pn] == exp_value, \
                 "Unexpected value for property {!r} of storage group:\n" \
                 "{!r}".format(pn, sorted(stogrp.properties))
         stogrp.pull_full_properties()
-        for pn in stogrp_input_props:
-            exp_value = stogrp_input_props[pn]
+        for pn, exp_value in stogrp_input_props.items():
             assert stogrp.properties[pn] == exp_value, \
                 "Unexpected value for property {!r} of storage group:\n" \
                 "{!r}".format(pn, sorted(stogrp.properties))
         if not faked_cpc:
-            for pn in stogrp_auto_props:
-                exp_value = stogrp_auto_props[pn]
+            for pn, exp_value in stogrp_auto_props.items():
                 assert stogrp.properties[pn] == exp_value, \
                     "Unexpected value for property {!r} of storage group:\n" \
                     "{!r}".format(pn, sorted(stogrp.properties))
@@ -224,28 +221,25 @@ class TestStorageGroups(object):
 
         stovol = stogrp.storage_volumes.create(stovol_input_props)
 
-        for pn in stovol_input_props:
-            exp_value = stovol_input_props[pn]
+        for pn, exp_value in stovol_input_props.items():
             assert stovol.properties[pn] == exp_value, \
                 "Unexpected value for property {!r} of storage volume:\n" \
                 "{!r}".format(pn, sorted(stovol.properties))
         stovol.pull_full_properties()
-        for pn in stovol_input_props:
+        for pn, exp_value in stovol_input_props.items():
             # TODO: Remove this tempfix when fixed:
             if pn == 'name':
                 info(capsys, "Tempfix: Create Volume does not honor name; "
                      "Skipping assertion of name:\n"
                      "  provided name: %r\n"
                      "  created name:  %r" %
-                     (stovol_input_props[pn], stovol.properties[pn]))
+                     (exp_value, stovol.properties[pn]))
                 continue
-            exp_value = stovol_input_props[pn]
             assert stovol.properties[pn] == exp_value, \
                 "Unexpected value for property {!r} of storage volume:\n" \
                 "{!r}".format(pn, sorted(stovol.properties))
         if not faked_cpc:
-            for pn in stovol_auto_props:
-                exp_value = stovol_auto_props[pn]
+            for pn, exp_value in stovol_auto_props.items():
                 assert stovol.properties[pn] == exp_value, \
                     "Unexpected value for property {!r} of storage volume:\n" \
                     "{!r}".format(pn, sorted(stovol.properties))
