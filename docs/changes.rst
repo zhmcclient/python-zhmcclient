@@ -19,16 +19,12 @@ Change log
 ----------
 
 
-Version 0.32.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.32.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 0.31.x.
+This version contains all fixes up to version 0.31.1.
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-07-02
 
 **Bug fixes:**
 
@@ -48,13 +44,6 @@ Released: not yet
 * The Console object returned by 'client.consoles.console' is now a locally
   built object in order to avoid needless property retrieval.
 
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.31.0
