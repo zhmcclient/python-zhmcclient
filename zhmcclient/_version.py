@@ -37,5 +37,5 @@ _PYTHON_M = sys.version_info[0]
 _PYTHON_N = sys.version_info[1]
 if _PYTHON_M == 2 and _PYTHON_N < 7:
     raise RuntimeError('On Python 2, zhcmclient requires Python 2.7')
-if _PYTHON_M == 3 and _PYTHON_N < 4:
-    raise RuntimeError('On Python 3, zhmcclient requires Python 3.4 or higher')
+if _PYTHON_M == 3 and _PYTHON_N < 5:
+    raise RuntimeError('On Python 3, zhmcclient requires Python 3.5 or higher')

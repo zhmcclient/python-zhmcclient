@@ -28,6 +28,10 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Dropped support for Python 3.4. Python 3.4 has had its last release as 3.4.10
+  on March 18, 2019 and has officially reached its end of life as of that date.
+  Current Linux distributions no longer support Python 3.4. (issue #792)
+
 **Deprecations:**
 
 **Bug fixes:**
