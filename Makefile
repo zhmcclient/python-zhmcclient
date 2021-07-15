@@ -313,7 +313,6 @@ endif
 
 pip_upgrade_$(pymn).done: Makefile
 	-$(call RM_FUNC,$@)
-	$(PYTHON_CMD) tools/remove_duplicate_setuptools.py
 	bash -c 'pv=$$($(PIP_CMD) --version); if [[ $$pv =~ (^pip [1-8]\..*) ]]; then $(PYTHON_CMD) -m pip install pip==9.0.1; fi'
 	@echo "Installing/upgrading pip, setuptools and wheel with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) pip setuptools wheel
