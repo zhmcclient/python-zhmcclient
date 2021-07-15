@@ -36,6 +36,9 @@ Released: not yet
 
 **Cleanup:**
 
+* Removed old build tools that were needed on Travis and Appveyor
+  (remove_duplicate_setuptools.py and retry.bat) (issue #809)
+
 **Known issues:**
 
 * See `list of open issues`_.
