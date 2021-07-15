@@ -11,12 +11,11 @@
 # Direct dependencies (except pip, setuptools, wheel):
 
 # decorator 5.0.0 removed support for Python 2.7 and 3.4
-decorator>=4.0.11,<5.0; python_version <= '3.4'  # new BSD
+decorator>=4.0.11,<5.0; python_version == '2.7'  # new BSD
 decorator>=4.0.11; python_version >= '3.5'  # new BSD
 pytz>=2016.10 # MIT
 # requests 2.22.0 removed support for Python 3.4
 requests>=2.20.1; python_version == '2.7'  # Apache-2.0
-requests>=2.20.1,<2.22.0; python_version == '3.4'  # Apache-2.0
 requests>=2.20.1; python_version >= '3.5'  # Apache-2.0
 six>=1.14.0 # MIT
 # stomp.py 5.0.0 (now deleted) and 6.0.0 removed support for Python 2.7, 3.4 and 3.5
