@@ -36,6 +36,12 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed an install error of laxy-object-proxy on Python 3.5 by no longer
+  installing pylint/astroid/typed-ast/laxy-object-proxy on Python 3.5. It
+  was already not invoked anymore on Python 3.5, but still installed.
+
+* Increased minimum version of Pylint to 2.5.2 on Python 3.6 and higher.
+
 **Enhancements:**
 
 **Cleanup:**
