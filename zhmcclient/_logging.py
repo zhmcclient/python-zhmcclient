@@ -20,8 +20,13 @@ names:
 * 'zhmcclient.api' for user-issued calls to zhmcclient API functions, at the
   debug level. Internal calls to API functions are not logged.
 
-* 'zhmcclient.hmc' for interactions between zhmcclient and the HMC, at the
+* 'zhmcclient.hmc' for operations from zhmcclient to the HMC, at the
   debug level.
+
+* 'zhmcclient.jms' for notifications from the HMC to zhmcclient, at the
+  debug, info, warning and error level. At this point, this logger is used only
+  for the :ref:`auto-update <Auto-updating of resources>` support, but not for
+  the :class:`~zhmcclient.NotificationReceiver` class.
 
 For HMC operations and API calls that contain the HMC password or HMC session
 tokens, the password is hidden in the log message by replacing it with a few

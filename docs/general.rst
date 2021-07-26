@@ -53,6 +53,20 @@ Retry / timeout configuration
    :special-members: __str__
 
 
+.. _`ResourceUpdater`:
+
+ResourceUpdater
+---------------
+
+.. automodule:: zhmcclient._resource_updater
+
+.. autoclass:: zhmcclient.ResourceUpdater
+  :members:
+  :autosummary:
+  :autosummary-inherited-members:
+  :special-members: __str__
+
+
 .. _`Client`:
 
 Client

@@ -24,6 +24,7 @@ from __future__ import absolute_import, print_function
 import json
 import threading
 from mock import patch
+import six
 
 from zhmcclient._notification import NotificationReceiver
 
@@ -80,11 +81,12 @@ class MockedStompConnection(object):
         self._sender_thread = None
         self._state_connected = False
 
-    def mock_add_message(self, headers, message_obj):
+    def mock_add_message(self, headers, message):
         """Adds a STOMP message to the queue."""
         assert self._sender_thread is None
-        message_str = json.dumps(message_obj)
-        self._queued_messages.append((headers, message_str))
+        if not isinstance(message, six.string_types):
+            message = json.dumps(message)
+        self._queued_messages.append((headers, message))
 
     def mock_start(self):
         """Start the STOMP message sender thread."""

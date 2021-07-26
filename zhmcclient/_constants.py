@@ -118,6 +118,9 @@ HMC_LOGGER_NAME = 'zhmcclient.hmc'
 #: Name of the Python logger that logs zhmcclient API calls made by the user.
 API_LOGGER_NAME = 'zhmcclient.api'
 
+#: Name of the Python logger that logs JMS notifications.
+JMS_LOGGER_NAME = 'zhmcclient.jms'
+
 #: HTTP reason code: Web Services API is not enabled on the HMC.
 HTML_REASON_WEB_SERVICES_DISABLED = 900
 

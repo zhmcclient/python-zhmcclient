@@ -40,7 +40,12 @@ class TestVirtualSwitch(object):
         with requests_mock.mock() as m:
             # Because logon is deferred until needed, we perform it
             # explicitly in order to keep mocking in the actual test simple.
-            m.post('/api/sessions', json={'api-session': 'vswitch-session-id'})
+            m.post(
+                '/api/sessions', json={
+                    'api-session': 'test-session-id',
+                    'notification-topic': 'test-obj-topic.1',
+                    'job-notification-topic': 'test-job-topic.1',
+                })
             self.session.logon()
 
         self.cpc_mgr = self.client.cpcs
