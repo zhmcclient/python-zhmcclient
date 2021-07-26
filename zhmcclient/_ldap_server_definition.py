@@ -25,7 +25,8 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, \
+    RC_LDAP_SERVER_DEFINITION
 
 __all__ = ['LdapServerDefinitionManager', 'LdapServerDefinition']
 
@@ -61,7 +62,7 @@ class LdapServerDefinitionManager(BaseManager):
 
         super(LdapServerDefinitionManager, self).__init__(
             resource_class=LdapServerDefinition,
-            class_name='ldap-server-definition',
+            class_name=RC_LDAP_SERVER_DEFINITION,
             session=console.manager.session,
             parent=console,
             base_uri='/api/console/ldap-server-definitions',

@@ -31,7 +31,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters
+from ._utils import matches_filters, RC_NIC
 
 __all__ = ['NicManager', 'Nic']
 
@@ -59,7 +59,7 @@ class NicManager(BaseManager):
 
         super(NicManager, self).__init__(
             resource_class=Nic,
-            class_name='nic',
+            class_name=RC_NIC,
             session=partition.manager.session,
             parent=partition,
             base_uri='{}/nics'.format(partition.uri),

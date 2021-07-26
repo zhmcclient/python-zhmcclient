@@ -88,7 +88,8 @@ from ._resource import BaseResource
 from ._storage_volume import StorageVolumeManager
 from ._virtual_storage_resource import VirtualStorageResourceManager
 from ._logging import logged_api_call
-from ._utils import append_query_parms, matches_filters, divide_filter_args
+from ._utils import append_query_parms, matches_filters, divide_filter_args, \
+    RC_STORAGE_GROUP
 
 __all__ = ['StorageGroupManager', 'StorageGroup']
 
@@ -127,7 +128,7 @@ class StorageGroupManager(BaseManager):
 
         super(StorageGroupManager, self).__init__(
             resource_class=StorageGroup,
-            class_name='storage-group',
+            class_name=RC_STORAGE_GROUP,
             session=console.manager.session,
             parent=console,
             base_uri='/api/storage-groups',

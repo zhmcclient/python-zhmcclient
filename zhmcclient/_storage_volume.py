@@ -45,7 +45,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_STORAGE_VOLUME
 
 __all__ = ['StorageVolumeManager', 'StorageVolume']
 
@@ -85,7 +85,7 @@ class StorageVolumeManager(BaseManager):
 
         super(StorageVolumeManager, self).__init__(
             resource_class=StorageVolume,
-            class_name='storage_volume',
+            class_name=RC_STORAGE_VOLUME,
             session=storage_group.manager.session,
             parent=storage_group,
             base_uri='{}/storage-volumes'.format(storage_group.uri),

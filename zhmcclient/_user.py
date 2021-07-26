@@ -23,7 +23,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_USER
 
 __all__ = ['UserManager', 'User']
 
@@ -59,7 +59,7 @@ class UserManager(BaseManager):
 
         super(UserManager, self).__init__(
             resource_class=User,
-            class_name='user',
+            class_name=RC_USER,
             session=console.manager.session,
             parent=console,
             base_uri='/api/users',

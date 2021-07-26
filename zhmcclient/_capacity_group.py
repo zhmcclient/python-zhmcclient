@@ -30,7 +30,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_CAPACITY_GROUP
 
 __all__ = ['CapacityGroupManager', 'CapacityGroup']
 
@@ -58,7 +58,7 @@ class CapacityGroupManager(BaseManager):
 
         super(CapacityGroupManager, self).__init__(
             resource_class=CapacityGroup,
-            class_name='capacity-group',
+            class_name=RC_CAPACITY_GROUP,
             session=cpc.manager.session,
             parent=cpc,
             base_uri='{}/capacity-groups'.format(cpc.uri),

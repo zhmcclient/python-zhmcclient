@@ -25,7 +25,7 @@ from __future__ import absolute_import
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_TASK
 
 __all__ = ['TaskManager', 'Task']
 
@@ -60,7 +60,7 @@ class TaskManager(BaseManager):
 
         super(TaskManager, self).__init__(
             resource_class=Task,
-            class_name='task',
+            class_name=RC_TASK,
             session=console.manager.session,
             parent=console,
             base_uri='/api/console/tasks',

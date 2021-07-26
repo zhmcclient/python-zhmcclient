@@ -55,7 +55,8 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, \
+    RC_VIRTUAL_STORAGE_RESOURCE
 
 __all__ = ['VirtualStorageResourceManager', 'VirtualStorageResource']
 
@@ -94,7 +95,7 @@ class VirtualStorageResourceManager(BaseManager):
 
         super(VirtualStorageResourceManager, self).__init__(
             resource_class=VirtualStorageResource,
-            class_name='virtual-storage-resource',
+            class_name=RC_VIRTUAL_STORAGE_RESOURCE,
             session=storage_group.manager.session,
             parent=storage_group,
             base_uri='{}/virtual-storage-resources'.format(storage_group.uri),

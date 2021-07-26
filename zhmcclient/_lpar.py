@@ -34,7 +34,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._exceptions import StatusTimeout
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_LOGICAL_PARTITION
 
 __all__ = ['LparManager', 'Lpar']
 
@@ -70,7 +70,7 @@ class LparManager(BaseManager):
 
         super(LparManager, self).__init__(
             resource_class=Lpar,
-            class_name='logical-partition',
+            class_name=RC_LOGICAL_PARTITION,
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/logical-partitions',
