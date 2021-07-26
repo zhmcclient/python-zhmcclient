@@ -35,6 +35,72 @@ __all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
 
 _EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc)
 
+# Resource class names.
+# These are the values of the 'class' property on the resource objects.
+#
+# For CPCs in DPM mode:
+RC_ADAPTER = 'adapter'
+RC_CAPACITY_GROUP = 'capacity-group'
+RC_HBA = 'hba'
+RC_NIC = 'nic'
+RC_PARTITION = 'partition'
+RC_NETWORK_PORT = 'network-port'
+RC_STORAGE_PORT = 'storage-port'
+RC_STORAGE_TEMPLATE = 'storage-template'
+RC_STORAGE_GROUP = 'storage-group'
+RC_STORAGE_TEMPLATE_VOLUME = 'storage-template-volume'
+RC_STORAGE_VOLUME = 'storage_volume'
+RC_VIRTUAL_FUNCTION = 'virtual-function'
+RC_VIRTUAL_STORAGE_RESOURCE = 'virtual-storage-resource'
+RC_VIRTUAL_SWITCH = 'virtual-switch'
+#
+# For CPCs in classic mode:
+RC_RESET_ACTIVATION_PROFILE = 'reset-activation-profile'
+RC_IMAGE_ACTIVATION_PROFILE = 'image-activation-profile'
+RC_LOAD_ACTIVATION_PROFILE = 'load-activation-profile'
+RC_LDAP_SERVER_DEFINITION = 'ldap-server-definition'
+RC_LOGICAL_PARTITION = 'logical-partition'
+#
+# For CPCs in any  mode and resources independent of CPCs:
+RC_CONSOLE = 'console'
+RC_CPC = 'cpc'
+RC_PASSWORD_RULE = 'password-rule'
+RC_TASK = 'task'
+RC_USER_PATTERN = 'user-pattern'
+RC_USER_ROLE = 'user-role'
+RC_USER = 'user'
+
+# Valid resource class names
+#:
+VALID_RESOURCE_CLASSES = frozenset([
+    RC_ADAPTER,
+    RC_CAPACITY_GROUP,
+    RC_HBA,
+    RC_NIC,
+    RC_PARTITION,
+    RC_NETWORK_PORT,
+    RC_STORAGE_PORT,
+    RC_STORAGE_TEMPLATE,
+    RC_STORAGE_GROUP,
+    RC_STORAGE_TEMPLATE_VOLUME,
+    RC_STORAGE_VOLUME,
+    RC_VIRTUAL_FUNCTION,
+    RC_VIRTUAL_STORAGE_RESOURCE,
+    RC_VIRTUAL_SWITCH,
+    RC_RESET_ACTIVATION_PROFILE,
+    RC_IMAGE_ACTIVATION_PROFILE,
+    RC_LOAD_ACTIVATION_PROFILE,
+    RC_LDAP_SERVER_DEFINITION,
+    RC_LOGICAL_PARTITION,
+    RC_CONSOLE,
+    RC_CPC,
+    RC_PASSWORD_RULE,
+    RC_TASK,
+    RC_USER_PATTERN,
+    RC_USER_ROLE,
+    RC_USER,
+])
+
 
 def _indent(text, amount, ch=' '):
     """Return the indent text, where each line is indented by `amount`

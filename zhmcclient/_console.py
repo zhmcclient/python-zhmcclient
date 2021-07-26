@@ -26,7 +26,8 @@ import time
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import timestamp_from_datetime, divide_filter_args, matches_filters
+from ._utils import timestamp_from_datetime, divide_filter_args, \
+    matches_filters, RC_CONSOLE
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
 from ._user import UserManager
@@ -66,7 +67,7 @@ class ConsoleManager(BaseManager):
 
         super(ConsoleManager, self).__init__(
             resource_class=Console,
-            class_name='console',
+            class_name=RC_CONSOLE,
             session=client.session,
             parent=None,
             base_uri='/api/console',

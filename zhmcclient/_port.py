@@ -27,9 +27,16 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters
+from ._utils import matches_filters, RC_NETWORK_PORT, RC_STORAGE_PORT
 
 __all__ = ['PortManager', 'Port']
+
+# Resource class names, by port type:
+PORT_CLASSES = {
+    'network': RC_NETWORK_PORT,
+    'storage': RC_STORAGE_PORT,
+    None: '',
+}
 
 
 class PortManager(BaseManager):
@@ -56,10 +63,15 @@ class PortManager(BaseManager):
         #     * `storage`: Ports of a storage adapter
         #     * None: Adapter family without ports
 
+        try:
+            port_class = PORT_CLASSES[port_type]
+        except KeyError:
+            raise ValueError("Unknown port type: {}".format(port_type))
+
         super(PortManager, self).__init__(
             resource_class=Port,
             session=adapter.manager.session,
-            class_name='{}-port'.format(port_type) if port_type else '',
+            class_name=port_class,
             parent=adapter,
             base_uri='',
             # TODO: Re-enable the following when unit/test_hba.py has been

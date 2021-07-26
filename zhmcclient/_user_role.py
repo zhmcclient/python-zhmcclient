@@ -31,7 +31,7 @@ import six
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_USER_ROLE
 
 __all__ = ['UserRoleManager', 'UserRole']
 
@@ -67,7 +67,7 @@ class UserRoleManager(BaseManager):
 
         super(UserRoleManager, self).__init__(
             resource_class=UserRole,
-            class_name='user-role',
+            class_name=RC_USER_ROLE,
             session=console.manager.session,
             parent=console,
             base_uri='/api/user-roles',

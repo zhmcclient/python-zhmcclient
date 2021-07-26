@@ -61,7 +61,7 @@ from ._virtual_switch import VirtualSwitchManager
 from ._capacity_group import CapacityGroupManager
 from ._logging import logged_api_call
 from ._exceptions import ParseError
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_CPC
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -95,7 +95,7 @@ class CpcManager(BaseManager):
 
         super(CpcManager, self).__init__(
             resource_class=Cpc,
-            class_name='cpc',
+            class_name=RC_CPC,
             session=client.session,
             parent=None,
             base_uri='/api/cpcs',

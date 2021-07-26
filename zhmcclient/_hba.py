@@ -34,7 +34,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters
+from ._utils import matches_filters, RC_HBA
 
 __all__ = ['HbaManager', 'Hba']
 
@@ -65,7 +65,7 @@ class HbaManager(BaseManager):
 
         super(HbaManager, self).__init__(
             resource_class=Hba,
-            class_name='hba',
+            class_name=RC_HBA,
             session=partition.manager.session,
             parent=partition,
             base_uri='{}/hbas'.format(partition.uri),

@@ -29,7 +29,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters
+from ._utils import matches_filters, RC_VIRTUAL_FUNCTION
 
 __all__ = ['VirtualFunctionManager', 'VirtualFunction']
 
@@ -57,7 +57,7 @@ class VirtualFunctionManager(BaseManager):
         #     Partition defining the scope for this manager.
         super(VirtualFunctionManager, self).__init__(
             resource_class=VirtualFunction,
-            class_name='virtual-function',
+            class_name=RC_VIRTUAL_FUNCTION,
             session=partition.manager.session,
             parent=partition,
             base_uri='{}/virtual-functions'.format(partition.uri),

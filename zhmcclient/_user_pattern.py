@@ -37,7 +37,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_USER_PATTERN
 
 __all__ = ['UserPatternManager', 'UserPattern']
 
@@ -73,7 +73,7 @@ class UserPatternManager(BaseManager):
 
         super(UserPatternManager, self).__init__(
             resource_class=UserPattern,
-            class_name='user-pattern',
+            class_name=RC_USER_PATTERN,
             session=console.manager.session,
             parent=console,
             base_uri='/api/console/user-patterns',

@@ -69,7 +69,7 @@ from ._resource import BaseResource
 from ._port import PortManager
 from ._logging import logged_api_call
 from ._utils import repr_dict, repr_manager, repr_timestamp, matches_filters, \
-    divide_filter_args
+    divide_filter_args, RC_ADAPTER
 
 __all__ = ['AdapterManager', 'Adapter']
 
@@ -118,7 +118,7 @@ class AdapterManager(BaseManager):
 
         super(AdapterManager, self).__init__(
             resource_class=Adapter,
-            class_name='adapter',
+            class_name=RC_ADAPTER,
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/adapters',

@@ -64,6 +64,8 @@ Released: not yet
 
 **Cleanup:**
 
+* Defined HMC resource class names centrally.
+
 **Known issues:**
 
 * See `list of open issues`_.

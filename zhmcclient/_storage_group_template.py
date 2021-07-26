@@ -33,7 +33,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._storage_volume_template import StorageVolumeTemplateManager
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_STORAGE_TEMPLATE
 
 __all__ = ['StorageGroupTemplateManager', 'StorageGroupTemplate']
 
@@ -71,7 +71,7 @@ class StorageGroupTemplateManager(BaseManager):
 
         super(StorageGroupTemplateManager, self).__init__(
             resource_class=StorageGroupTemplate,
-            class_name='storage-template',
+            class_name=RC_STORAGE_TEMPLATE,
             session=console.manager.session,
             parent=console,
             base_uri='/api/storage-templates',

@@ -51,9 +51,18 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, \
+    RC_RESET_ACTIVATION_PROFILE, RC_IMAGE_ACTIVATION_PROFILE, \
+    RC_LOAD_ACTIVATION_PROFILE
 
 __all__ = ['ActivationProfileManager', 'ActivationProfile']
+
+# Resource class names, by profile type:
+ACTIVATION_PROFILE_CLASSES = {
+    'reset': RC_RESET_ACTIVATION_PROFILE,
+    'image': RC_IMAGE_ACTIVATION_PROFILE,
+    'load': RC_LOAD_ACTIVATION_PROFILE,
+}
 
 
 class ActivationProfileManager(BaseManager):
@@ -99,9 +108,15 @@ class ActivationProfileManager(BaseManager):
             'name',
         ]
 
+        try:
+            activation_profile_class = ACTIVATION_PROFILE_CLASSES[profile_type]
+        except KeyError:
+            raise ValueError("Unknown activation profile type: {}".
+                             format(profile_type))
+
         super(ActivationProfileManager, self).__init__(
             resource_class=ActivationProfile,
-            class_name='{}-activation-profile'.format(profile_type),
+            class_name=activation_profile_class,
             session=cpc.manager.session,
             parent=cpc,
             base_uri='{}/{}-activation-profiles'.format(cpc.uri, profile_type),

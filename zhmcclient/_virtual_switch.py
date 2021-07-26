@@ -32,7 +32,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_VIRTUAL_SWITCH
 
 __all__ = ['VirtualSwitchManager', 'VirtualSwitch']
 
@@ -69,7 +69,7 @@ class VirtualSwitchManager(BaseManager):
 
         super(VirtualSwitchManager, self).__init__(
             resource_class=VirtualSwitch,
-            class_name='virtual-switch',
+            class_name=RC_VIRTUAL_SWITCH,
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/virtual-switches',

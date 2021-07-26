@@ -42,7 +42,7 @@ from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_PARTITION
 
 __all__ = ['PartitionManager', 'Partition']
 
@@ -79,7 +79,7 @@ class PartitionManager(BaseManager):
 
         super(PartitionManager, self).__init__(
             resource_class=Partition,
-            class_name='partition',
+            class_name=RC_PARTITION,
             session=cpc.manager.session,
             parent=cpc,
             base_uri='/api/partitions',

@@ -26,7 +26,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args
+from ._utils import matches_filters, divide_filter_args, RC_PASSWORD_RULE
 
 __all__ = ['PasswordRuleManager', 'PasswordRule']
 
@@ -62,7 +62,7 @@ class PasswordRuleManager(BaseManager):
 
         super(PasswordRuleManager, self).__init__(
             resource_class=PasswordRule,
-            class_name='password-rule',
+            class_name=RC_PASSWORD_RULE,
             session=console.manager.session,
             parent=console,
             base_uri='/api/console/password-rules',
