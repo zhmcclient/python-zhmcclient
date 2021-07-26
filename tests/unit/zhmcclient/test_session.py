@@ -43,7 +43,11 @@ def mock_server_1(m):
     logon and logoff.
     """
     m.register_uri('POST', '/api/sessions',
-                   json={'api-session': 'fake-session-id'},
+                   json={
+                       'api-session': 'test-session-id',
+                       'notification-topic': 'test-obj-topic.1',
+                       'job-notification-topic': 'test-job-topic.1',
+                   },
                    headers={'X-Request-Id': 'fake-request-id'})
     m.register_uri('DELETE', '/api/sessions/this-session',
                    headers={'X-Request-Id': 'fake-request-id'},
@@ -169,7 +173,7 @@ def test_session_logon(
             # The code to be tested:
             session.logon()
 
-            assert session.session_id == 'fake-session-id'
+            assert session.session_id == 'test-session-id'
             assert 'X-API-Session' in session.headers
             assert isinstance(session.session, requests.Session)
 
@@ -250,7 +254,7 @@ def test_session_logon_error_invalid_delim(*args):
     Logon with invalid JSON response that has an invalid delimiter.
     """
     m = args[0]
-    json_content = b'{\n"api-session"; "fake-session-id"\n}'
+    json_content = b'{\n"api-session"; "test-session-id"\n}'
     exp_msg_pattern = r"Expecting ':' delimiter: .*"
     exp_line = 2
     exp_col = 14
@@ -263,7 +267,7 @@ def test_session_logon_error_invalid_quotes(*args):
     Logon with invalid JSON response that incorrectly uses single quotes.
     """
     m = args[0]
-    json_content = b'{\'api-session\': \'fake-session-id\'}'
+    json_content = b'{\'api-session\': \'test-session-id\'}'
     exp_msg_pattern = r"Expecting property name enclosed in double " \
         "quotes: .*"
     exp_line = 1
@@ -277,7 +281,7 @@ def test_session_logon_error_extra_closing(*args):
     Logon with invalid JSON response that has an extra closing brace.
     """
     m = args[0]
-    json_content = b'{"api-session": "fake-session-id"}}'
+    json_content = b'{"api-session": "test-session-id"}}'
     exp_msg_pattern = r"Extra data: .*"
     exp_line = 1
     exp_col = 35
@@ -292,7 +296,12 @@ def test_session_get_notification_topics():
     with requests_mock.mock() as m:
         # Because logon is deferred until needed, we perform it
         # explicitly in order to keep mocking in the actual test simple.
-        m.post('/api/sessions', json={'api-session': 'fake-session-id'})
+        m.post(
+            '/api/sessions', json={
+                'api-session': 'test-session-id',
+                'notification-topic': 'test-obj-topic.1',
+                'job-notification-topic': 'test-job-topic.1',
+            })
         session.logon()
         gnt_uri = "/api/sessions/operations/get-notification-topics"
         gnt_result = {

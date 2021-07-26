@@ -52,6 +52,9 @@ Released: not yet
 * Made read and write access to the properties dictionary of zhmcclient resource
   objects thread-safe by adding a Python threading.RLock on each resource object.
 
+* Added support for auto-updating of resources. For details, see the new
+  section 'Concepts -> Auto-updating of resources'. (issue #762)
+
 **Cleanup:**
 
 * Removed old build tools that were needed on Travis and Appveyor

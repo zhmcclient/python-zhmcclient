@@ -37,6 +37,7 @@ from ._exceptions import HTTPError, ServerAuthError, ClientAuthError, \
 from ._exceptions import ConnectionError  # pylint: disable=redefined-builtin
 
 from ._timestats import TimeStatsKeeper
+from ._resource_updater import ResourceUpdater
 from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
@@ -406,6 +407,9 @@ class Session(object):
             self._session_id = None
             self._session = None
         self._time_stats_keeper = TimeStatsKeeper()
+        self._object_topic = None
+        self._job_topic = None
+        self._resource_updater = None
 
     def __repr__(self):
         """
@@ -424,6 +428,9 @@ class Session(object):
             "  _headers={headers!r},\n"
             "  _session_id={blanked_out!r},\n"
             "  _session={s._session!r}\n"
+            "  _object_topic={s._object_topic!r}\n"
+            "  _job_topic={s._job_topic!r}\n"
+            "  _resource_updater={s._resource_updater!r}\n"
             ")".
             format(classname=self.__class__.__name__, id=id(self), s=self,
                    headers=headers, blanked_out=BLANKED_OUT))
@@ -545,6 +552,38 @@ class Session(object):
         """
         return self._session
 
+    @property
+    def object_topic(self):
+        """
+        :term:`string`: Name of the notification topic the HMC will use to send
+        object-related notification messages to this API session.
+
+        When not logged on, this property is `None`.
+
+        The associated topic type is "object-notification".
+        """
+        return self._object_topic
+
+    @property
+    def job_topic(self):
+        """
+        :term:`string`: Name of the notification topic the HMC will use to send
+        job notification messages to this API session.
+
+        When not logged on, this property is `None`.
+
+        The associated topic type is "job-notification".
+        """
+        return self._job_topic
+
+    @property
+    def resource_updater(self):
+        """
+        :class:`~zhmcclient.ResourceUpdater`: Resource updater for
+        :ref:`auto-updating <Auto-updating of resources>` of resources.
+        """
+        return self._resource_updater
+
     @logged_api_call
     def logon(self, verify=False):
         """
@@ -655,6 +694,8 @@ class Session(object):
         logon_res = self.post(logon_uri, logon_body, logon_required=False)
         self._session_id = logon_res['api-session']
         self._headers['X-API-Session'] = self._session_id
+        self._object_topic = logon_res['notification-topic']
+        self._job_topic = logon_res['job-notification-topic']
 
     @staticmethod
     def _new_session(retry_timeout_config):
@@ -690,6 +731,8 @@ class Session(object):
         self._session_id = None
         self._session = None
         self._headers.pop('X-API-Session', None)
+        self._object_topic = None
+        self._job_topic = None
 
     @staticmethod
     def _log_http_request(method, url, headers=None, content=None):
@@ -1199,6 +1242,53 @@ class Session(object):
         topics_uri = '/api/sessions/operations/get-notification-topics'
         response = self.get(topics_uri)
         return response['topics']
+
+    def auto_update_subscribed(self):
+        """
+        Return whether this session is currently subscribed for
+        :ref:`auto-updating of resources <Auto-updating of resources>`.
+
+        Return:
+          bool: Indicates whether session is subscribed.
+        """
+        return bool(self._resource_updater)
+
+    @logged_api_call
+    def subscribe_auto_update(self):
+        """
+        Subscribe this session for
+        :ref:`auto-updating of resources <Auto-updating of resources>`, if not
+        currently subscribed.
+
+        When subscribed, object notifications will be sent by the HMC as
+        resource objects on the HMC change their properties or come or go.
+        These object notifications will be received by the client and will then
+        update the properties of any Python resource objects that are enabled
+        for auto-updating.
+
+        This method is automatically called by
+        :meth:`~zhmcclient.BaseResource.enable_auto_update` and thus does not
+        need to be called by the user.
+        """
+        if not self._resource_updater:
+            self._resource_updater = ResourceUpdater(self)
+
+    @logged_api_call
+    def unsubscribe_auto_update(self):
+        """
+        Unsubscribe this session from
+        :ref:`auto-updating of resources <Auto-updating of resources>`, if
+        currently subscribed.
+
+        When unsubscribed, object notifications are no longer sent by the HMC.
+
+        This method is automatically called by
+        :meth:`~zhmcclient.BaseResource.disable_auto_update` and thus does not
+        need to be called by the user.
+        """
+        if self._resource_updater:
+            self._resource_updater.close()
+            self._resource_updater = None
 
 
 class Job(object):

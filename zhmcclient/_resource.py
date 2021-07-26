@@ -96,6 +96,7 @@ class BaseResource(object):
         self._full_properties = False
         # self._property_lock = contextlib.nullcontext()  # test need to lock
         self._property_lock = threading.RLock()
+        self._auto_update = False
 
     @property
     def properties(self):
@@ -134,6 +135,11 @@ class BaseResource(object):
         method of the resource class. Which properties can be updated
         is indicated with the 'w' qualifier in the data model of the resource
         in the :term:`HMC API` book.
+
+        If :ref:`auto-update <Auto-updating of resources>` is enabled for the
+        resource object and the session is enabled for auto-updating as well,
+        the property values in the returned :class:`iv:immutable_views.DictView`
+        object will change as they change on the HMC.
         """
         return DictView(self._properties)
 
@@ -419,6 +425,7 @@ class BaseResource(object):
                 "  _manager={_manager_classname} at 0x{_manager_id:08x},\n"
                 "  _uri={_uri!r},\n"
                 "  _full_properties={_full_properties!r},\n"
+                "  _auto_update={_auto_update!r},\n"
                 "  _properties_timestamp={_properties_timestamp},\n"
                 "  _properties={_properties}\n"
                 ")".format(
@@ -428,8 +435,58 @@ class BaseResource(object):
                     _manager_id=id(self._manager),
                     _uri=self._uri,
                     _full_properties=self._full_properties,
+                    _auto_update=self._auto_update,
                     _properties_timestamp=repr_timestamp(
                         self._properties_timestamp),
                     _properties=repr_dict(self._properties, indent=4),
                 ))
             return ret
+
+    def auto_update_enabled(self):
+        """
+        Return whether :ref:`auto-update <Auto-updating of resources>` is
+        currently enabled for the resource object.
+
+        Return:
+          bool: Indicates whether auto-update is enabled.
+        """
+        return self._auto_update
+
+    def enable_auto_update(self):
+        """
+        Enable :ref:`auto-update <Auto-updating of resources>` for this
+        resource object, if currently disabled.
+
+        When enabling auto-update, the session to which this resource belongs is
+        subscribed for auto-updating if needed (see
+        :meth:`~zhmcclient.Session.subscribe_auto_update`), the resource
+        object is registered with the session's resource updater via
+        :meth:`~zhmcclient.ResourceUpdater.register_object`, and all properties
+        of this resource object are retrieved using :meth:`pull_full_properties`
+        in order to have the most current values as a basis for the future
+        auto-updating.
+        """
+        if not self._auto_update:
+            session = self.manager.session
+            session.subscribe_auto_update()
+            session.resource_updater.register_object(self)
+            self._auto_update = True
+            self.pull_full_properties()
+
+    def disable_auto_update(self):
+        """
+        Disable :ref:`auto-update <Auto-updating of resources>` for this
+        resource object, if currently enabled.
+
+        When disabling auto-update, the resource object is unregistered from
+        the session's resource updater via
+        :meth:`~zhmcclient.ResourceUpdater.unregister_object`, and the session
+        is unsubscribed from auto-updating if the resource updater has no more
+        objects registered.
+        """
+        if self._auto_update:
+            self._auto_update = False
+            session = self.manager.session
+            session.resource_updater.unregister_object(self)
+            if not session.resource_updater.has_objects():
+                session.unsubscribe_auto_update()

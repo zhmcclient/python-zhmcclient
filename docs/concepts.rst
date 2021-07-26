@@ -335,3 +335,100 @@ Examples:
       adapter1 = cpc.adapters.find(**{'object-id':oid})
 
   The returned resource object will have only a minimal set of properties.
+
+
+.. _`Auto-updating of resources`:
+
+Auto-updating of resources
+--------------------------
+
+The resource objects returned by the zhmcclient library support auto-updating
+of resource properties.
+
+By default, auto-updating is disabled for any resource objects, and the user can
+use the :meth:`~zhmcclient.BaseResource.pull_full_properties` method to have the
+properties of the resource object updated explicitly.
+
+If auto-updating is enabled for a resource object (by means of
+:meth:`~zhmcclient.BaseResource.enable_auto_update`), the zhmcclient library
+subscribes on the HMC for object notifications that inform the client about
+changes to resource properties. When receiving such notifications, the client
+updates the properties on the local resource objects that are enabled for
+auto-updating, to the new values.
+
+There is only one subscription at the HMC for each zhmcclient session that has
+auto-updating enabled, so if auto-updating is enabled for a second and further
+resource objects, the already existing subscription is used. When disabling
+auto-updating, the last resource that is disabled will unsubscribe at the HMC.
+
+The subscription for object notifications will cause the following notifications
+to be sent from the HMC to the client:
+
+*  property change notifications for any properties that have the
+   property-change (pc) qualifier set, for all resources,
+*  status change notifications for any properties that have the
+   status-change (sc) qualifier set, for all resources,
+*  inventory change notifications for any resources that come into existence or
+   go out of existence.
+
+The auto-update support in zhmcclient processes the property and status change
+notifications by updating the correponding properties in those resource objects
+that have been enabled for auto-updating. As a result, these properties will
+always have the value the resource object has on the HMC.
+
+The auto-update support in zhmcclient ignores property and status change
+notifications for resource objects that have not been enabled for auto-updating
+and it also ignores inventory change notifications.
+
+The delay for the new property value to become visible in the zhmcclient
+resource object after it has been changed on the HMC, is in the order of 1
+second.
+
+Note that accessing the properties of a zhmcclient resource object is not any
+slower when auto-update is enabled - the auto-update happens asynchronously
+to the access, and depending on whether the access happens before or after an
+auto-update, you get the old or new value.
+
+Example:
+
+.. code-block:: python
+
+    cpc = ...  # A zhmcclient.Cpc object
+    partition_name = 'PART1'
+
+    # Two different zhmcclient.Partition objects representing the same partition on the HMC
+    partition1 = cpc.partitions.find(name=partition_name)
+    partition2 = cpc.partitions.find(name=partition_name)
+    assert id(partition1) != id(partition2)
+
+    partition1.enable_auto_update()  # Enable auto-update for this partition object
+    prop_name = 'description'
+
+    while True:
+        value1 = partition1.prop(prop_name)
+        value2 = partition2.prop(prop_name)
+        print("Property '{}' of objects 1: {!r}, 2: {!r}".
+              format(prop_name, value1, value2))
+        sleep(1)
+
+This example creates two different partition objects representing the same
+partition on the HMC. It enables auto-update for one of the partition objects
+but not for the other, in order to show the different behavior.
+
+The example then prints the value of the 'description' property of both
+partition objects in a loop, so that in parallel, a change of the description
+of the partition can be performed on the HMC (not shown in the example).
+
+Once the description of the partition on the HMC is changed, the partition
+object that has auto-update enabled will show the new value, while the other
+one will show the same value unchanged:
+
+.. code-block:: text
+
+    Property 'description' of objects 1: 'foo', 2: 'foo'
+    Property 'description' of objects 1: 'foo', 2: 'foo'
+    Property 'description' of objects 1: 'foo', 2: 'foo'
+    # description property is changed to 'bar' on the HMC
+    Property 'description' of objects 1: 'bar', 2: 'foo'
+    Property 'description' of objects 1: 'bar', 2: 'foo'
+    Property 'description' of objects 1: 'bar', 2: 'foo'
