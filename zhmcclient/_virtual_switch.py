@@ -242,6 +242,9 @@ class VirtualSwitch(BaseResource):
         """
         Update writeable properties of this Virtual Switch.
 
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
         Authorization requirements:
 
         * Object-access permission to the backing Adapter of this Virtual
@@ -269,7 +272,7 @@ class VirtualSwitch(BaseResource):
         if is_rename:
             # Delete the old name from the cache
             self.manager._name_uri_cache.delete(self.name)
-        self._properties.update(copy.deepcopy(properties))
+        self.update_properties_local(copy.deepcopy(properties))
         if is_rename:
             # Add the new name to the cache
             self.manager._name_uri_cache.update(self.name, self.uri)

@@ -21,6 +21,8 @@ by the HMC.
 
 from __future__ import absolute_import
 import time
+import threading
+# import contextlib
 from immutable_views import DictView
 
 from ._logging import logged_api_call
@@ -92,6 +94,8 @@ class BaseResource(object):
 
         self._properties_timestamp = int(time.time())
         self._full_properties = False
+        # self._property_lock = contextlib.nullcontext()  # test need to lock
+        self._property_lock = threading.RLock()
 
     @property
     def properties(self):
@@ -194,6 +198,9 @@ class BaseResource(object):
         Retrieve the full set of resource properties and cache them in this
         object.
 
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
         Authorization requirements:
 
         * Object-access permission to this resource.
@@ -206,9 +213,10 @@ class BaseResource(object):
           :exc:`~zhmcclient.ConnectionError`
         """
         full_properties = self.manager.session.get(self._uri)
-        self._properties = dict(full_properties)
-        self._properties_timestamp = int(time.time())
-        self._full_properties = True
+        with self._property_lock:
+            self._properties = dict(full_properties)
+            self._properties_timestamp = int(time.time())
+            self._full_properties = True
 
     @logged_api_call
     def get_property(self, name):
@@ -218,6 +226,9 @@ class BaseResource(object):
         If the resource property is not cached in this object yet, the full set
         of resource properties is retrieved and cached in this object, and the
         resource property is again attempted to be returned.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
 
         Authorization requirements:
 
@@ -243,12 +254,14 @@ class BaseResource(object):
           :exc:`~zhmcclient.ConnectionError`
         """
         try:
-            return self._properties[name]
+            with self._property_lock:
+                return self._properties[name]
         except KeyError:
             if self._full_properties:
                 raise
             self.pull_full_properties()
-            return self._properties[name]
+            with self._property_lock:
+                return self._properties[name]
 
     @logged_api_call
     def prop(self, name, default=None):
@@ -259,6 +272,9 @@ class BaseResource(object):
         If the resource property is not cached in this object yet, the full set
         of resource properties is retrieved and cached in this object, and the
         resource property is again attempted to be returned.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
 
         Authorization requirements:
 
@@ -289,9 +305,84 @@ class BaseResource(object):
         except KeyError:
             return default
 
+    def get_properties_local(self, names, defaults=None):
+        """
+        Return the values of a set of resource properties, using default values
+        for those that are not present in this Python object, without
+        retrieving them from the HMC.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
+        Parameters:
+
+          names (:term:`string` or list/tuple of strings):
+            Single name or list/tuple of names of the resource properties, using
+            the names defined in the respective 'Data model' sections in the
+            :term:`HMC API` book.
+
+          defaults:
+            Single value or list/tuple of values to be used as a default for
+            resource properties that are not present. If a single value, it is
+            used for all properties that are not present. If a list/tuple, it
+            must be index-correlated with the names list/tuple.
+
+        Returns:
+
+          Single value (if names is a single value) or list of values (if names
+          is a list/tuple of values) of the properties, with defaults applied.
+        """
+        if isinstance(names, (list, tuple)):
+            with self._property_lock:
+                values = []
+                for i, name in enumerate(names):
+                    try:
+                        value = self._properties[name]
+                    except KeyError:
+                        if isinstance(defaults, (list, tuple)):
+                            value = defaults[i]
+                        else:
+                            value = defaults
+                    values.append(value)
+                return values
+        else:
+            with self._property_lock:
+                try:
+                    return self._properties[names]
+                except KeyError:
+                    return defaults
+
+    def update_properties_local(self, properties):
+        """
+        Update the values of a set of resource properties on this Python object
+        without propagating the updates the HMC.
+
+        If a property to be updated is not present in the Python object, it
+        is added.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
+        Parameters:
+
+          properties (:class:`py:dict`):
+            Dictionary of new property values, with:
+
+            - Key: Name of the property, using the names defined in the
+              respective 'Data model' sections in the :term:`HMC API` book.
+
+            - Value: New value for the property.
+        """
+        with self._property_lock:
+            for name, value in properties.items():
+                self._properties[name] = value
+
     def __str__(self):
         """
         Return a human readable string representation of this resource.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
 
         Example result:
 
@@ -301,38 +392,44 @@ class BaseResource(object):
                 object-uri=/api/cpcs/f1bc49af-f71a-3467-8def-3c186b5d9352,
                 status=service-required)
         """
-        properties_keys = self._properties.keys()
-        search_keys = ['status', 'object-uri', 'element-uri', 'name',
-                       'type', 'class']
-        sorted_keys = sorted([k for k in properties_keys if k in search_keys])
-        info = ", ".join("%s=%r" % (k, self._properties[k])
-                         for k in sorted_keys)
-        return "%s(%s)" % (self.__class__.__name__, info)
+        with self._property_lock:
+            properties_keys = self._properties.keys()
+            search_keys = ['status', 'object-uri', 'element-uri', 'name',
+                           'type', 'class']
+            sorted_keys = sorted([k for k in properties_keys
+                                  if k in search_keys])
+            info = ", ".join("%s=%r" % (k, self._properties[k])
+                             for k in sorted_keys)
+            return "%s(%s)" % (self.__class__.__name__, info)
 
     def __repr__(self):
         """
         Return a string with the state of this resource, for debug purposes.
 
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
         Note that the derived resource classes that have child resources
         have their own ``__repr__()`` methods, because only they know which
         child resources they have.
         """
-        ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager={_manager_classname} at 0x{_manager_id:08x},\n"
-            "  _uri={_uri!r},\n"
-            "  _full_properties={_full_properties!r},\n"
-            "  _properties_timestamp={_properties_timestamp},\n"
-            "  _properties={_properties}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                _manager_classname=self._manager.__class__.__name__,
-                _manager_id=id(self._manager),
-                _uri=self._uri,
-                _full_properties=self._full_properties,
-                _properties_timestamp=repr_timestamp(
-                    self._properties_timestamp),
-                _properties=repr_dict(self._properties, indent=4),
-            ))
-        return ret
+        with self._property_lock:
+            ret = (
+                "{classname} at 0x{id:08x} (\n"
+                "  _manager={_manager_classname} at 0x{_manager_id:08x},\n"
+                "  _uri={_uri!r},\n"
+                "  _full_properties={_full_properties!r},\n"
+                "  _properties_timestamp={_properties_timestamp},\n"
+                "  _properties={_properties}\n"
+                ")".format(
+                    classname=self.__class__.__name__,
+                    id=id(self),
+                    _manager_classname=self._manager.__class__.__name__,
+                    _manager_id=id(self._manager),
+                    _uri=self._uri,
+                    _full_properties=self._full_properties,
+                    _properties_timestamp=repr_timestamp(
+                        self._properties_timestamp),
+                    _properties=repr_dict(self._properties, indent=4),
+                ))
+            return ret

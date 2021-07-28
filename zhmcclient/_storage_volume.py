@@ -408,7 +408,7 @@ class StorageVolume(BaseResource):
 
         # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
-            self._properties.get(self.manager._name_prop, None))
+            self.get_properties_local(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties, email_to_addresses=None,
@@ -421,6 +421,9 @@ class StorageVolume(BaseResource):
 
         This method performs the "Modify Storage Group Properties" operation,
         requesting modification of the volume.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
 
         Authorization requirements:
 
@@ -493,7 +496,7 @@ class StorageVolume(BaseResource):
             self.manager.storage_group.uri + '/operations/modify',
             body=body)
 
-        self._properties.update(copy.deepcopy(properties))
+        self.update_properties_local(copy.deepcopy(properties))
 
     @logged_api_call
     def indicate_fulfillment_ficon(self, control_unit, unit_address):

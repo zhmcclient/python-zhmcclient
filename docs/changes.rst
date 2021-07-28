@@ -49,6 +49,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Made read and write access to the properties dictionary of zhmcclient resource
+  objects thread-safe by adding a Python threading.RLock on each resource object.
+
 **Cleanup:**
 
 * Removed old build tools that were needed on Travis and Appveyor

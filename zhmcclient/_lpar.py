@@ -188,6 +188,9 @@ class Lpar(BaseResource):
         """
         Update writeable properties of this LPAR.
 
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -225,7 +228,7 @@ class Lpar(BaseResource):
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.
         assert self.manager._name_prop not in properties
-        self._properties.update(copy.deepcopy(properties))
+        self.update_properties_local(copy.deepcopy(properties))
 
     @logged_api_call
     def activate(self, wait_for_completion=True,
