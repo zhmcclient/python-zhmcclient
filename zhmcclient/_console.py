@@ -572,7 +572,8 @@ class Console(BaseResource):
         """
         List the permitted partitions of CPCs in DPM mode managed by this HMC.
 
-        *Added in version 1.0; requires HMC 2.14.0 or later*
+        *Added in version 1.0; requires HMC 2.14.0 or later and otherwise
+        raises HTTPError(404.4).*
 
         Any CPCs in classic mode managed by the HMC will be ignored for this
         operation.
@@ -635,6 +636,7 @@ class Console(BaseResource):
 
         # Perform the operation with the HMC, including any server-side
         # filtering.
+        # Note: "List Permitted Partitions" was introduced in HMC/SE 2.14.0.
         uri = self.uri + '/operations/list-permitted-partitions' + query_parms
         result = self.manager.session.get(uri)
 
@@ -648,18 +650,19 @@ class Console(BaseResource):
                 # And the following properties for their parent CPC:
                 # * cpc-name (CPC property 'name')
                 # * cpc-object-uri (CPC property 'object-uri')
-                # * se-version (CPC property 'se-version')
+                # * se-version (CPC property 'se-version') (if >=2.14.1)
 
                 # Create a 'skeleton' local Cpc object we can hang the
                 # Partition objects off of, even if the user does not have
                 # access permissions to these CPCs. Note that different
                 # partitions can have different parent CPCs.
+                cpc_props = {}
+                if 'se-version' in partition_item:
+                    cpc_props['se-version'] = partition_item['se-version']
                 cpc = self.manager.client.cpcs.find_local(
                     partition_item['cpc-name'],
                     partition_item['cpc-object-uri'],
-                    {
-                        'se-version': partition_item['se-version'],
-                    },
+                    cpc_props,
                 )
 
                 partition_obj = cpc.partitions.resource_object(
@@ -765,18 +768,19 @@ class Console(BaseResource):
                 # And the following properties for their parent CPC:
                 # * cpc-name (CPC property 'name')
                 # * cpc-object-uri (CPC property 'object-uri')
-                # * se-version (CPC property 'se-version')
+                # * se-version (CPC property 'se-version') (if >=2.14.1)
 
                 # Create a 'skeleton' local Cpc object we can hang the
                 # Partition objects off of, even if the user does not have
                 # access permissions to these CPCs. Note that different
                 # partitions can have different parent CPCs.
+                cpc_props = {}
+                if 'se-version' in lpar_item:
+                    cpc_props['se-version'] = lpar_item['se-version']
                 cpc = self.manager.client.cpcs.find_local(
                     lpar_item['cpc-name'],
                     lpar_item['cpc-object-uri'],
-                    {
-                        'se-version': lpar_item['se-version'],
-                    },
+                    cpc_props,
                 )
 
                 lpar_obj = cpc.lpars.resource_object(
