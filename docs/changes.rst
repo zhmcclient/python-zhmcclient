@@ -30,6 +30,11 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a bug where 'Console.list_permitted_partitions()' and
+  'Console.list_permitted_lpars()' when run on HMC/SE version 2.14.0 failed
+  when accessing the 'se-version' property of the partition unconditionally.
+  That property was introduced only in HMC/SE version 2.14.1. (issue #816)
+
 **Enhancements:**
 
 **Cleanup:**
