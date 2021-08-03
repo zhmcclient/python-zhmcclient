@@ -19,14 +19,10 @@ Change log
 ----------
 
 
-Version 0.32.1.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 0.32.1
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-08-03
 
 **Bug fixes:**
 
@@ -34,16 +30,6 @@ Released: not yet
   'Console.list_permitted_lpars()' when run on HMC/SE version 2.14.0 failed
   when accessing the 'se-version' property of the partition unconditionally.
   That property was introduced only in HMC/SE version 2.14.1. (issue #816)
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.32.0
