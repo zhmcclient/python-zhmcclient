@@ -19,12 +19,12 @@ Change log
 ----------
 
 
-Version 1.0.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.0.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 0.32.x.
+This version contains all fixes up to version 0.32.1.
 
-Released: not yet
+Released: 2021-08-05
 
 **Incompatible changes:**
 
@@ -32,12 +32,10 @@ Released: not yet
   on March 18, 2019 and has officially reached its end of life as of that date.
   Current Linux distributions no longer support Python 3.4. (issue #792)
 
-**Deprecations:**
-
 **Bug fixes:**
 
-* Fixed an install error of laxy-object-proxy on Python 3.5 by no longer
-  installing pylint/astroid/typed-ast/laxy-object-proxy on Python 3.5. It
+* Fixed an install error of lazy-object-proxy on Python 3.5 by no longer
+  installing pylint/astroid/typed-ast/lazy-object-proxy on Python 3.5. It
   was already not invoked anymore on Python 3.5, but still installed.
 
 * Increased minimum version of Pylint to 2.5.2 on Python 3.6 and higher.
@@ -59,12 +57,6 @@ Released: not yet
 
 * Removed old build tools that were needed on Travis and Appveyor
   (remove_duplicate_setuptools.py and retry.bat) (issue #809)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 0.32.0
