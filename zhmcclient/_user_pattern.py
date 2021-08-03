@@ -274,12 +274,15 @@ class UserPattern(BaseResource):
         # pylint: disable=protected-access
         self.manager.session.delete(self.uri)
         self.manager._name_uri_cache.delete(
-            self._properties.get(self.manager._name_prop, None))
+            self.get_properties_local(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties):
         """
         Update writeable properties of this UserPattern.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
 
         Authorization requirements:
 
@@ -306,7 +309,7 @@ class UserPattern(BaseResource):
         if is_rename:
             # Delete the old name from the cache
             self.manager._name_uri_cache.delete(self.name)
-        self._properties.update(copy.deepcopy(properties))
+        self.update_properties_local(copy.deepcopy(properties))
         if is_rename:
             # Add the new name to the cache
             self.manager._name_uri_cache.update(self.name, self.uri)

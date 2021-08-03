@@ -22,6 +22,8 @@ from __future__ import absolute_import, print_function
 
 import time
 import re
+import random
+import threading
 from collections import OrderedDict
 from immutable_views import DictView
 import pytest
@@ -558,3 +560,85 @@ class TestManagerDivideFilter(ResourceTestCase):
 
         assert parm_str == '?qp1=bar&qp2=42&qp2={}'.format(escape_str)
         assert cf_args == {}
+
+
+class TestThreadingSerialization(ResourceTestCase):
+    """
+    Test serialization of resource property update/access.
+    """
+
+    def test_serialization_1(self):
+        """
+        Test serialization of resource property update/access.
+        """
+
+        resource = MyResource(self.mgr, self.uri, 'res1', dict(p1=1, p2=1))
+
+        def update():
+            for _ in range(0, 10000):
+                value = random.randint(1, 100)
+                props = dict(p1=value, p2=value)
+                resource.update_properties_local(props)
+
+        def get_assert():
+            for _ in range(0, 10000):
+                value1, value2 = resource.get_properties_local(['p1', 'p2'])
+                assert value1 == value2
+
+        threads = []
+        for _ in range(0, 10):
+
+            thread = threading.Thread(target=update)
+            thread.start()
+            threads.append(thread)
+
+            thread = threading.Thread(target=get_assert)
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+    TESTCASES_GET_PROPERTIES_LOCAL = [
+        (
+            {
+                'p1': 'v1',
+                'p2': 'v2',
+            },
+            ['p1', 'p2'],
+            'vd',
+            ['v1', 'v2'],
+        ),
+        (
+            {},
+            ['p1', 'p2'],
+            'vd',
+            ['vd', 'vd'],
+        ),
+        (
+            {},
+            ['p1', 'p2'],
+            ['vd1', 'vd2'],
+            ['vd1', 'vd2'],
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "create_properties, get_properties, default, exp_values",
+        TESTCASES_GET_PROPERTIES_LOCAL)
+    def test_get_properties_local(
+            self, create_properties, get_properties, default, exp_values):
+        """
+        Test get_properties_local().
+        """
+
+        resource = MyResource(self.mgr, self.uri, 'res1', create_properties)
+
+        values = resource.get_properties_local(get_properties, default)
+
+        for i, name in enumerate(get_properties):
+            value = values[i]
+            exp_value = exp_values[i]
+
+            assert value == exp_value, \
+                "Unexpected property value for '{}'".format(name)

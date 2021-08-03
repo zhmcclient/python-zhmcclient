@@ -238,7 +238,7 @@ class UserRole(BaseResource):
         # pylint: disable=protected-access
         self.manager.session.delete(self.uri)
         self.manager._name_uri_cache.delete(
-            self._properties.get(self.manager._name_prop, None))
+            self.get_properties_local(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties):
@@ -247,6 +247,9 @@ class UserRole(BaseResource):
 
         The User Role must be user-defined. System-defined User Roles cannot be
         updated.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
 
         Authorization requirements:
 
@@ -274,7 +277,7 @@ class UserRole(BaseResource):
         # cause HTTPError to be raised in the POST above, so we assert that
         # here, because we omit the extra code for handling name updates:
         assert self.manager._name_prop not in properties
-        self._properties.update(copy.deepcopy(properties))
+        self.update_properties_local(copy.deepcopy(properties))
 
     @logged_api_call
     def add_permission(self, permitted_object, include_members=False,
