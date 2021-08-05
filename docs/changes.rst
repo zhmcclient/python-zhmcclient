@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed maturity level from 4 (Beta) to 5 (Production/Stable).
+
 **Enhancements:**
 
 **Cleanup:**
