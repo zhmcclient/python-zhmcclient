@@ -19,28 +19,14 @@ Change log
 ----------
 
 
-Version 1.0.1.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.0.1
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-08-05
 
 **Bug fixes:**
 
 * Fixed maturity level from 4 (Beta) to 5 (Production/Stable).
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.0.0
