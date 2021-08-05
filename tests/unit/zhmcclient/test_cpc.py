@@ -338,6 +338,21 @@ GET_FREE_CRYPTO_DOMAINS_SUCCESS_TESTCASES = [
     ),
 ]
 
+SET_AUTO_START_LIST_ENVIRONMENTS = {
+    'env1': {
+        'desc': "CPC with two partitions",
+        'cpc_name': CPC1_NAME,
+        'partitions': [
+            {
+                'name': 'part-A',
+            },
+            {
+                'name': 'part-B',
+            },
+        ]
+    },
+}
+
 
 def updated(dict1, dict2):
     """
@@ -1463,6 +1478,138 @@ class TestCpc(object):
         for pname, pvalue in exp_cpc_props.items():
             assert pname in cpc.properties
             assert cpc.properties[pname] == pvalue
+
+    @pytest.mark.parametrize(
+        "env_name, init_asl, exp_asl", [
+            (
+                'env1',
+                [],
+                [],
+            ),
+            (
+                'env1',
+                [
+                    {
+                        'partition-uri': '/api/partitions/part-A-oid',
+                        'post-start-delay': 10,
+                    },
+                ],
+                [],
+            ),
+            (
+                'env1',
+                [],
+                [
+                    {
+                        'type': 'partition',
+                        'partition-uri': '/api/partitions/part-A-oid',
+                        'post-start-delay': 20,
+                    },
+                ],
+            ),
+            (
+                'env1',
+                [
+                    {
+                        'type': 'partition',
+                        'partition-uri': '/api/partitions/part-A-oid',
+                        'post-start-delay': 10,
+                    },
+                ],
+                [
+                    {
+                        'type': 'partition',
+                        'partition-uri': '/api/partitions/part-A-oid',
+                        'post-start-delay': 20,
+                    },
+                ],
+            ),
+            (
+                'env1',
+                [
+                    {
+                        'type': 'partition',
+                        'partition-uri': '/api/partitions/part-A-oid',
+                        'post-start-delay': 10,
+                    },
+                ],
+                [
+                    {
+                        'type': 'partition-group',
+                        'name': 'pg1',
+                        'description': 'pg1 desc',
+                        'partition-uris': [
+                            '/api/partitions/part-A-oid',
+                        ],
+                        'post-start-delay': 20,
+                    },
+                ],
+            ),
+            (
+                'env1',
+                [
+                    {
+                        'type': 'partition',
+                        'partition-uri': '/api/partitions/part-A-oid',
+                        'post-start-delay': 10,
+                    },
+                ],
+                [
+                    {
+                        'type': 'partition-group',
+                        'name': 'pg1',
+                        'description': 'pg1 desc',
+                        'partition-uris': [
+                            '/api/partitions/part-A-oid',
+                        ],
+                        'post-start-delay': 20,
+                    },
+                    {
+                        'type': 'partition',
+                        'partition-uri': '/api/partitions/part-B-oid',
+                        'post-start-delay': 30,
+                    },
+                ],
+            ),
+        ]
+    )
+    def test_cpc_set_auto_start_list(
+            self, env_name, init_asl, exp_asl):
+        """Test Cpc.set_auto_start_list()."""
+        env = SET_AUTO_START_LIST_ENVIRONMENTS[env_name]
+        cpc_name = env['cpc_name']
+
+        # Add the faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+        faked_cpc.properties['auto-start-list'] = init_asl
+
+        # Add the faked partitions
+        for part in env['partitions']:
+            self.add_partition(faked_cpc, part['name'])
+
+        cpc = self.client.cpcs.find(name=cpc_name)
+        input_asl = []
+        for asl_item in exp_asl:
+            if 'partition-uri' in asl_item:
+                uri = asl_item['partition-uri']
+                part = cpc.partitions.find(**{'object-uri': uri})
+                delay = asl_item['post-start-delay']
+                input_asl.append((part, delay))
+            elif 'partition-uris' in asl_item:
+                uris = asl_item['partition-uris']
+                parts = [p for p in cpc.partitions.list() if p.uri in uris]
+                delay = asl_item['post-start-delay']
+                name = asl_item['name']
+                description = asl_item['description']
+                input_asl.append((parts, name, description, delay))
+
+        # Execute the code to be tested
+        cpc.set_auto_start_list(input_asl)
+
+        cpc.pull_full_properties()
+
+        assert 'auto-start-list' in cpc.properties
+        assert cpc.properties['auto-start-list'] == exp_asl
 
     # TODO: Test for Cpc.list_associated_storage_groups()
 
