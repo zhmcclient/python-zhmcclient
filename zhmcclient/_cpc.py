@@ -54,7 +54,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._lpar import LparManager
-from ._partition import PartitionManager
+from ._partition import PartitionManager, Partition
 from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
@@ -1558,4 +1558,86 @@ class Cpc(BaseResource):
 
         self.manager.session.post(
             self.uri + '/operations/remove-temp-capacity',
+            body=body)
+
+    @logged_api_call
+    def set_auto_start_list(self, auto_start_list):
+        """
+        Set the auto-start list of partitions for this CPC.
+
+        The current auto-start list is replaced with this new list.
+
+        The auto-start list may contain named partition groups that are formed
+        just for the purpose of auto-starting (they have nothing to do with
+        Group objects on the HMC).
+
+        This method performs the "Set Auto-Start List" HMC operation.
+
+        This method requires the CPC to be in DPM mode.
+
+        Parameters:
+
+          auto_start_list (list): The auto-start list to be set.
+
+            Each list item is one of:
+
+            - tuple(partition, post_start_delay)
+            - tuple(partition_list, name, description, post_start_delay)
+
+            Where:
+
+            - partition (:class:`~zhmcclient.Partition`): The partition to be
+              auto-started.
+            - post_start_delay (int): Delay in seconds to wait after starting
+              this partition or partition group, and before the next partition
+              or partition group in the list is started.
+            - partition_list (list of :class:`~zhmcclient.Partition`): The
+              partitions in the partition group to be auto-started.
+            - name (string): Name of the partition group.
+            - description (string): Description of the partition group.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "System Details" task.
+        * Object-access permission to all partitions specified in the auto-start
+          list.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        auto_start_body = []
+        for item in auto_start_list:
+            if isinstance(item[0], Partition):
+                partition, post_start_delay = item
+                auto_start_item = {
+                    'type': 'partition',
+                    'post-start-delay': post_start_delay,
+                    'partition-uri': partition.uri,
+                }
+                auto_start_body.append(auto_start_item)
+            elif isinstance(item[0], (list, tuple)):
+                partition_list, name, description, post_start_delay = item
+                auto_start_item = {
+                    'type': 'partition-group',
+                    'post-start-delay': post_start_delay,
+                    'name': name,
+                    'description': description,
+                    'partition-uris': [p.uri for p in partition_list],
+                }
+                auto_start_body.append(auto_start_item)
+            else:
+                raise TypeError(
+                    "Invalid type for auto_start_list parameter: {}".
+                    format(type(auto_start_list)))
+
+        body = {
+            'auto-start-list': auto_start_body,
+        }
+        self.manager.session.post(
+            self.uri + '/operations/set-auto-start-list',
             body=body)

@@ -52,7 +52,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     CpcSetPowerCappingHandler, CpcGetEnergyManagementDataHandler, \
     CpcStartHandler, CpcStopHandler, \
     CpcImportProfilesHandler, CpcExportProfilesHandler, \
-    CpcExportPortNamesListHandler, \
+    CpcExportPortNamesListHandler, CpcSetAutoStartListHandler, \
     MetricsContextsHandler, MetricsContextHandler, \
     PartitionsHandler, PartitionHandler, PartitionStartHandler, \
     PartitionStopHandler, PartitionScsiDumpHandler, \
@@ -3820,6 +3820,50 @@ class TestCpcExportProfilesHandler(object):
         # the function to be tested:
         resp = self.urihandler.post(
             self.hmc, '/api/cpcs/1/operations/export-profiles',
+            operation_body, True, True)
+
+        assert resp is None
+
+
+class TestCpcSetAutoStartListHandler(object):
+    """
+    All tests for class CpcSetAutoStartListHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        CpcSetAutoStartListHandler and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/set-auto-start-list',
+             CpcSetAutoStartListHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_cpc_set_auto_start_list(self):
+        """
+        Test POST CPC set-auto-start-list.
+        """
+
+        operation_body = {
+            'auto-start-list': [
+                {
+                    'type': 'partition',
+                    'partition-uri': '/api/partitions/part-A-oid',
+                    'post-start-delay': 10,
+                },
+            ]
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/cpcs/2/operations/set-auto-start-list',
             operation_body, True, True)
 
         assert resp is None

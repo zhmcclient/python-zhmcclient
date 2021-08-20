@@ -36,6 +36,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Added support for the 'Set Auto-Start List' operation on CPCs by adding
+  a method 'Cpc.set_auto_start_list()', and the corresponding mock support.
+  (issue #472)
+
 **Cleanup:**
 
 **Known issues:**

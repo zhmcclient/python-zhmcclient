@@ -1705,6 +1705,30 @@ class CpcRemoveTempCapacityHandler(object):
                     cpc.properties[pname] -= psteps
 
 
+class CpcSetAutoStartListHandler(object):
+    """
+    Handler class for operation: Set Auto-start List.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Set Auto-start List."""
+        assert wait_for_completion is True  # no async
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        check_required_fields(method, uri, body, ['auto-start-list'])
+        auto_start_list = body['auto-start-list']
+        # Store it in the CPC
+        cpc.properties['auto-start-list'] = auto_start_list
+
+
 class MetricsContextsHandler(object):
     """
     Handler class for HTTP methods on set of MetricsContext resources.
@@ -3765,6 +3789,9 @@ URIS = (
      CpcAddTempCapacityHandler),
     (r'/api/cpcs/([^/]+)/operations/remove-temp-capacity',
      CpcRemoveTempCapacityHandler),
+
+    (r'/api/cpcs/([^/]+)/operations/set-auto-start-list',
+     CpcSetAutoStartListHandler),
 
     (r'/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
     (r'/api/logical-partitions/([^/]+)', LparHandler),
