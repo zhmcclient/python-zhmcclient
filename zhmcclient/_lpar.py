@@ -951,7 +951,7 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
             waiting for the desired LPAR status.
         """
-        body = {}
+        body = None
         result = self.manager.session.post(
             self.uri + '/operations/stop',
             body,
