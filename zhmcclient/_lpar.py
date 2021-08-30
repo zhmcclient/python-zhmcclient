@@ -885,7 +885,7 @@ class Lpar(BaseResource):
         status has reached the desired value. If `wait_for_completion=True`,
         this method repeatedly checks the status of the LPAR after the HMC
         operation has completed, and waits until the status is in the desired
-        state "operating", or if `allow_status_exceptions` was
+        state "not-operating", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
 
         Authorization requirements:
@@ -903,7 +903,7 @@ class Lpar(BaseResource):
 
             * If `True`, this method will wait for completion of the
               asynchronous job performing the operation, and for the status
-              becoming "operating" (or in addition "exceptions", if
+              becoming "not-operating" (or in addition "exceptions", if
               `allow_status_exceptions` was set.
 
             * If `False`, this method will return immediately once the HMC has
@@ -958,7 +958,7 @@ class Lpar(BaseResource):
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
-            statuses = ["operating"]
+            statuses = ["not-operating"]
             if allow_status_exceptions:
                 statuses.append("exceptions")
             self.wait_for_status(statuses, status_timeout)
