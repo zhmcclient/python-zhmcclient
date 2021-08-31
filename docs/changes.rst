@@ -19,29 +19,15 @@ Change log
 ----------
 
 
-Version 1.0.2.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.0.2
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-08-31
 
 **Bug fixes:**
 
 * Fixed an issue in 'Lpar.stop()' where incorrectly an empty body was sent, and
   an incorrect status has been waited for.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.0.1
