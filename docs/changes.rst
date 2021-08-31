@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed an issue in 'Lpar.stop()' where incorrectly an empty body was sent, and
+  an incorrect status has been waited for.
+
 **Enhancements:**
 
 **Cleanup:**
