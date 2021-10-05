@@ -712,6 +712,7 @@ class Session(object):
         if content is not None:
             if isinstance(content, six.binary_type):
                 content = content.decode('utf-8')
+            assert isinstance(content, six.text_type)
             content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
@@ -761,6 +762,7 @@ class Session(object):
         if content is not None:
             if isinstance(content, six.binary_type):
                 content = content.decode('utf-8')
+            assert isinstance(content, six.text_type)
             content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
@@ -914,7 +916,7 @@ class Session(object):
             :attr:`~zhmcclient.Session.base_url` property).
             Must not be `None`.
 
-          body (:term:`json object`):
+          body (:term:`json object` or :term:`string` or file-like object):
             JSON object to be used as the HTTP request body (payload).
             `None` means the same as an empty dictionary, namely that no HTTP
             body is included in the request.
@@ -997,23 +999,35 @@ class Session(object):
 
         if body is None:
             data = None
+            log_data = None
         elif isinstance(body, dict):
             data = json.dumps(body)
-            # Content-type is already set in standard headers.
+            # Produces unicode string on py3, and unicode or byte string on py2.
+            # Content-type is already set to 'application/json' in standard
+            # headers.
+            if isinstance(data, six.text_type):
+                log_data = data
+                data = data.encode('utf-8')
+            else:
+                log_data = data
         elif isinstance(body, six.text_type):
             data = body.encode('utf-8')
+            log_data = body
             headers['Content-type'] = 'application/octet-stream'
         elif isinstance(body, six.binary_type):
             data = body
+            log_data = body
             headers['Content-type'] = 'application/octet-stream'
         elif isinstance(body, collections.Iterable):
-            # For example, open files: open(), io.open()
+            # File-like objects, e.g. io.BufferedReader or io.TextIOWrapper
+            # returned from open() or io.open().
             data = body
+            log_data = u'(file-like object)'
             headers['Content-type'] = 'application/octet-stream'
         else:
             raise TypeError("Body has invalid type: {}".format(type(body)))
 
-        self._log_http_request('POST', url, headers=headers, content=data)
+        self._log_http_request('POST', url, headers=headers, content=log_data)
         req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
