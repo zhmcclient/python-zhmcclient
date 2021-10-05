@@ -37,6 +37,8 @@ Released: not yet
 * Fixed an issue in 'Lpar.stop()' where incorrectly an empty body was sent, and
   an incorrect status has been waited for.
 
+* Fixed a TypeError in 'Partition.mount_iso_image()'. (issue #833)
+
 **Enhancements:**
 
 * Added support for the 'Set Auto-Start List' operation on CPCs by adding
