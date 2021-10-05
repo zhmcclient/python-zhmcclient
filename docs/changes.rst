@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a TypeError in 'Partition.mount_iso_image()'. (issue #833)
+
 **Enhancements:**
 
 **Cleanup:**
