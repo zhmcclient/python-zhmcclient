@@ -870,6 +870,7 @@ class TestPartition(object):
         partition_mgr = self.cpc.partitions
         partition = partition_mgr.find(name=faked_partition.name)
 
+        # TODO: Add test case where a file-like object is passed as image
         image = b'fake-image-data'
         image_name = 'fake-image-name'
         ins_file_name = 'fake-ins-file-name'
