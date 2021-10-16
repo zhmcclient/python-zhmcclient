@@ -190,7 +190,7 @@ class HmcCredentials(object):
 
         try:
             with open(self.filepath, 'r') as fp:
-                hmccreds_data = yaml.load(fp)
+                hmccreds_data = yaml.safe_load(fp)
         except IOError:
             return None
 

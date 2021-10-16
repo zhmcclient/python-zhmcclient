@@ -107,7 +107,7 @@ def main():
     config_file = args.config_file
 
     with open(args.config_file, 'r') as fp:
-        config_root = yaml.load(fp)
+        config_root = yaml.safe_load(fp)
 
     config_this = config_root.get(MYNAME, None)
     if config_this is None:
