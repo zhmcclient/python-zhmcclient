@@ -34,7 +34,7 @@ if len(sys.argv) != 2:
 hmccreds_file = sys.argv[1]
 
 with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.load(fp)
+    hmccreds = yaml.safe_load(fp)
 
 examples = hmccreds.get("examples", None)
 if examples is None:
