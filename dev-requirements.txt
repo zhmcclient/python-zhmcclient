@@ -106,6 +106,11 @@ typed-ast>=1.4.0,<1.5.0; python_version >= '3.6' and python_version < '3.8' and 
 #   this circumvention can be removed again.
 lazy-object-proxy>=1.4.3; python_version == '2.7'
 lazy-object-proxy>=1.4.3; python_version >= '3.6'
+# wrapt 1.13.0 started depending on MS Visual C++ 9.0 on Python 2.7 on Windows,
+#   which is not available by default on GitHub Actions
+wrapt>=1.11.2,<1.13; sys_platform == 'win32' and python_version == '2.7'
+wrapt>=1.11.2; sys_platform != 'win32' and python_version == '2.7'
+wrapt>=1.11.2; python_version >= '3.5'
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
 

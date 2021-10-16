@@ -172,6 +172,7 @@ typed-ast==1.4.0; python_version >= '3.6' and python_version < '3.8' and impleme
 # Workaround: lazy-object-proxy is used by astroid
 lazy-object-proxy==1.4.3; python_version == '2.7'
 lazy-object-proxy==1.4.3; python_version >= '3.6'
+wrapt==1.11.2
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
 flake8==3.8.0
@@ -273,4 +274,3 @@ traitlets==4.3.1
 typing==3.6.1
 webencodings==0.5.1
 widgetsnbextension==1.2.6
-wrapt==1.11.2
