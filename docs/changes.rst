@@ -32,6 +32,9 @@ Released: not yet
 
 * Fixed a TypeError in 'Partition.mount_iso_image()'. (issue #833)
 
+* Fixed install error of wrapt 1.13.0 on Python 2.7 on Windows due to lack of
+  MS Visual C++ 9.0 on GitHub Actions, by pinning it to <1.13.
+
 **Enhancements:**
 
 **Cleanup:**
