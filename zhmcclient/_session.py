@@ -735,7 +735,8 @@ class Session(object):
         self._job_topic = None
 
     @staticmethod
-    def _log_http_request(method, url, headers=None, content=None):
+    def _log_http_request(method, url, headers=None, content=None,
+                          content_len=None):
         """
         Log the HTTP request of an HMC REST API call, at the debug level.
 
@@ -749,14 +750,18 @@ class Session(object):
 
           content (:term:`string`): HTTP body (aka content) used for the
             request (byte string or unicode string)
+
+          content_len (int): Length of content in Bytes, or `None` for
+            determining the length from the content string
         """
 
         content_msg = None
         if content is not None:
             if isinstance(content, six.binary_type):
-                content = content.decode('utf-8')
+                content = content.decode('utf-8', errors='ignore')
             assert isinstance(content, six.text_type)
-            content_len = len(content)  # may change after JSON conversion
+            if content_len is None:
+                content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
             except ValueError:
@@ -960,7 +965,14 @@ class Session(object):
             Must not be `None`.
 
           body (:term:`json object` or :term:`string` or file-like object):
-            JSON object to be used as the HTTP request body (payload).
+            The HTTP request body (payload).
+            If a JSON object (=dict) is provided, it will be serialized into
+            a UTF-8 encoded binary string.
+            If a Unicode string is provided, it will be encoded into a UTF-8
+            encoded binary string.
+            If a binary string is provided, it will be used unchanged.
+            If a file-like object is provided, it must return binary strings,
+            i.e. the file must have been opened in binary mode.
             `None` means the same as an empty dictionary, namely that no HTTP
             body is included in the request.
 
@@ -1040,6 +1052,7 @@ class Session(object):
         url = self.base_url + uri
         headers = self.headers.copy()  # Standard headers
 
+        log_len = None
         if body is None:
             data = None
             log_data = None
@@ -1065,12 +1078,18 @@ class Session(object):
             # File-like objects, e.g. io.BufferedReader or io.TextIOWrapper
             # returned from open() or io.open().
             data = body
-            log_data = u'(file-like object)'
+            try:
+                mode = body.mode
+            except AttributeError:
+                mode = 'unknown'
+            log_data = u"<file-like object with mode {}>".format(mode)
+            log_len = -1
             headers['Content-type'] = 'application/octet-stream'
         else:
             raise TypeError("Body has invalid type: {}".format(type(body)))
 
-        self._log_http_request('POST', url, headers=headers, content=log_data)
+        self._log_http_request('POST', url, headers=headers, content=log_data,
+                               content_len=log_len)
         req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)

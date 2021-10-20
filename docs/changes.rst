@@ -37,6 +37,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Improved the log entries when file-like objects are passed to
+  'Partition.mount_iso_image()'.
+
 **Cleanup:**
 
 **Known issues:**
