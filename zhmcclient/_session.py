@@ -45,6 +45,7 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME, \
     HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER, \
     DEFAULT_HMC_PORT
+from ._version import __version__
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
 
@@ -52,6 +53,7 @@ HMC_LOGGER = get_logger(HMC_LOGGER_NAME)
 
 _HMC_SCHEME = "https"
 _STD_HEADERS = {
+    'User-Agent': 'python-zhmcclient/{}'.format(__version__),
     'Content-type': 'application/json',
     'Accept': '*/*'
 }
