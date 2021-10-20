@@ -19,14 +19,10 @@ Change log
 ----------
 
 
-Version 1.0.3.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.0.3
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-10-21
 
 **Bug fixes:**
 
@@ -39,14 +35,6 @@ Released: not yet
 
 * Improved the log entries when file-like objects are passed to
   'Partition.mount_iso_image()'.
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.0.2
