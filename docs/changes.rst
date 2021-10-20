@@ -51,6 +51,9 @@ Released: not yet
 * Improved the log entries when file-like objects are passed to
   'Partition.mount_iso_image()'.
 
+* Changed the 'User-Agent' header sent with each HTTP request to show
+  'python-zhmcclient/<version>'.
+
 **Cleanup:**
 
 **Known issues:**

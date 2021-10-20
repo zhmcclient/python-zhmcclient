@@ -101,11 +101,11 @@ def test_session_init(
     if session_id is None:
         assert session.session is None
         assert 'X-API-Session' not in session.headers
-        assert len(session.headers) == 2
+        assert len(session.headers) == 3
     else:
         assert isinstance(session.session, requests.Session)
         assert session.headers['X-API-Session'] == session_id
-        assert len(session.headers) == 3
+        assert len(session.headers) == 4
 
 
 def test_session_repr():
@@ -210,7 +210,7 @@ def test_session_logoff():
         assert session.session_id is None
         assert session.session is None
         assert 'X-API-Session' not in session.headers
-        assert len(session.headers) == 2
+        assert len(session.headers) == 3
 
         logged_on = session.is_logon()
         assert not logged_on
