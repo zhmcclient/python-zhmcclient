@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed Sphinx doc build error on Python 2.7.
+
 **Enhancements:**
 
 **Cleanup:**
