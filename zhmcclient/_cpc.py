@@ -1641,3 +1641,70 @@ class Cpc(BaseResource):
         self.manager.session.post(
             self.uri + '/operations/set-auto-start-list',
             body=body)
+
+    @logged_api_call
+    def import_dpm_configuration(self, dpm_configuration):
+        """
+        Import a DPM configuration into this CPC.
+
+        This includes settable CPC properties, settable properties of physical
+        adapters, Hipersocket adapters, partitions with their child objects,
+        virtual functions, virtual switches, capacity groups, storage related
+        resources, storage ports, and network ports.
+
+        This method performs the "Import DPM Configuration" HMC operation.
+
+        This method requires the CPC to be in DPM mode.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Import Dynamic Partition Manager
+          Configuration" task.
+
+        Parameters:
+
+          dpm_configuration (dict): A DPM configuration, represented as a
+            dictionary with the fields described for the
+            "Import DPM Configuration" operation in the :term:`HMC API` book.
+
+            Resource URIs are represented as URI strings in the fields of
+            the DPM configuration, as described for the request body fields
+            of the HMC operation. URIs of imported resource objects can be
+            chosen to be preserved or newly allocated via the "preserve-uris"
+            field.
+
+            Adapter PCHIDs may be different between the imported adapter
+            objects and the actual adapters in this CPC and can be mapped
+            via the "adapter-mapping" field.
+
+            Host WWPNs of FICON adapters can be chosen to be preserved
+            or newly allocated via the "preserve-wwpns" field.
+
+        Returns:
+          list or None:
+            If the complete input DPM configuration has been applied
+            to the CPC, `None` is returned.
+
+            If only a part of the input DPM configuration has been applied,
+            a list of dict objects is returned that describe what was not
+            applied.
+            For details, see the description of the response of the
+            "Import DPM Configuration" operation in the :term:`HMC API` book.
+
+            To verify that the complete input DPM configuration has been
+            applied, the caller must verify the return value to be `None` and
+            not just verify that no exceptions have been raised.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = dpm_configuration
+        result = self.manager.session.post(
+            self.uri + '/operations/import-dpm-config',
+            body=body)
+        return result

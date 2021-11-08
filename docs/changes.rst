@@ -56,6 +56,8 @@ Released: not yet
 * Changed the 'User-Agent' header sent with each HTTP request to show
   'python-zhmcclient/<version>'.
 
+* Added support for 'Cpc.import_dpm_configuration()'. (issue #851)
+
 **Cleanup:**
 
 **Known issues:**
