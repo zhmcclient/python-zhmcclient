@@ -154,7 +154,9 @@ dparse==0.5.1; python_version >= '3.5'
 tox==2.5.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
-Sphinx==1.7.6
+Sphinx==1.7.6; python_version == '2.7'
+Sphinx==3.5.4; python_version >= '3.5'
+docutils==0.13.1
 sphinx-git==10.1.1
 GitPython==2.1.1
 sphinxcontrib-fulltoc==1.2.0
@@ -242,7 +244,6 @@ backports.ssl-match-hostname==3.5.0.1
 bleach==2.1.4
 clint==0.5.1
 configparser==4.0.2
-docutils==0.13.1
 enum34==1.1.6; python_version < "3.4"
 gitdb2==2.0.0
 html5lib==0.999999999
