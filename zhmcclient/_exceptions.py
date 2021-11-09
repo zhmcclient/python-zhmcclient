@@ -24,7 +24,7 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'ServerAuthError', 'ParseError', 'VersionError', 'HTTPError',
            'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound',
            'MetricsResourceNotFound', 'NotificationError',
-           'NotificationJMSError', 'NotificationParseError']
+           'NotificationJMSError', 'NotificationParseError', 'ConsistencyError']
 
 
 class Error(Exception):
@@ -1369,3 +1369,16 @@ class NotificationParseError(NotificationError):
         """
         return "classname={!r}; message={!r};". \
             format(self.__class__.__name__, self.args[0])
+
+
+class ConsistencyError(Error):
+    # pylint: disable=abstract-method
+    """
+    This exception indicates that an inconsistency has been detected.
+
+    Please report such exceptions in the zhmcclient issue tracker
+    at https://github.com/zhmcclient/python-zhmcclient/issues.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+    pass

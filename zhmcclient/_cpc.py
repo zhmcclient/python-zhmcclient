@@ -50,6 +50,10 @@ from __future__ import absolute_import
 
 import warnings
 import copy
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -60,8 +64,15 @@ from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
 from ._capacity_group import CapacityGroupManager
 from ._logging import logged_api_call
-from ._exceptions import ParseError
-from ._utils import matches_filters, divide_filter_args, RC_CPC
+from ._exceptions import ParseError, ConsistencyError
+from ._utils import matches_filters, divide_filter_args, \
+    RC_CPC, RC_ADAPTER, RC_CAPACITY_GROUP, RC_HBA, RC_NIC, RC_PARTITION, \
+    RC_NETWORK_PORT, RC_STORAGE_PORT, RC_STORAGE_TEMPLATE, RC_STORAGE_GROUP, \
+    RC_STORAGE_TEMPLATE_VOLUME, RC_STORAGE_VOLUME, RC_VIRTUAL_FUNCTION, \
+    RC_VIRTUAL_STORAGE_RESOURCE, RC_VIRTUAL_SWITCH, RC_STORAGE_SITE, \
+    RC_STORAGE_FABRIC, RC_STORAGE_SWITCH, RC_STORAGE_SUBSYSTEM, \
+    RC_STORAGE_PATH, RC_STORAGE_CONTROL_UNIT, RC_VIRTUAL_TAPE_RESOURCE, \
+    RC_TAPE_LINK, RC_TAPE_LIBRARY
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -1708,3 +1719,286 @@ class Cpc(BaseResource):
             self.uri + '/operations/import-dpm-config',
             body=body)
         return result
+
+    @logged_api_call
+    def export_dpm_configuration(self):
+        """
+        Export a DPM configuration from this CPC and return it.
+
+        The DPM configuration includes settable CPC properties and all DPM
+        specific objects of or associated with the CPC, such as adapters with
+        their ports, virtual switches, partitions with their child objects,
+        capacity groups, and various storage and tape related resources.
+
+        Note that all adapters of the CPC are exported, even when they are not
+        used by partitions.
+
+        This method performs the "Get Inventory" HMC operation and extracts
+        all information into the result.
+
+        This method requires the CPC to be in DPM mode.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+
+        Returns:
+          dict:
+            A DPM configuration, represented as a dictionary with the
+            fields described for the "Import DPM Configuration" operation
+            in the :term:`HMC API` book.
+
+            Resource URIs are represented as URI strings in the fields of
+            the DPM configuration, as described for the request body fields
+            of the HMC operation.
+
+            The optional "preserve-uris", "preserve-wwpns", and
+            "adapter-mapping" fields will not be in the returned dictionary,
+            so their defaults will be used when importing this DPM configuration
+            unchanged to a CPC.
+
+            The returned DPM configuration object can be passed to
+            :meth:`~zhmcclient.Cpc.import_dpm_configuration` either unchanged,
+            or after changing it, e.g. by adding the optional "preserve-uris",
+            "preserve-wwpns", or "adapter-mapping" fields.
+
+        Raises:
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.ConsistencyError` - issues with inventory data
+        """
+        inventory_list = retrieveInventoryData(self.manager.client)
+        cpc_uri = self.get_property('object-uri')
+        config_dict = convertToConfig(inventory_list, cpc_uri)
+        return config_dict
+
+
+# Functions used by Cpc.export_dpm_configuration().
+# Some of these functions were adapted from code in the
+# exportDpmResourcesToFile.py script available at
+# https://www-01.ibm.com/servers/resourcelink/lib03020.nsf/0/2C88A77CEA71062E8525829500667BCD?OpenDocument
+
+def extractByParent(classname, parent_list, inventory_list):
+    """
+    Extract all items from inventory_list that have the classname and where the
+    parent is in parent_list.
+
+    This is used for example to get all partitions of a CPC or all NICs of a
+    partition.
+    """
+    result_list = [x for x in inventory_list
+                   if (x['class'] == classname and x['parent'] in parent_list)]
+    return result_list
+
+
+def extractByPropertyInListValue(classname, prop_name, values, inventory_list):
+    """
+    Extract all items from inventory_list that have the classname and where the
+    value of the prop_name property is in the values list.
+
+    Used for example to get all storage groups that have value for property
+    'cpc-uri' in a list of CPC uris.
+    """
+    result_list = [x for x in inventory_list
+                   if x['class'] == classname and x[prop_name] in values]
+    return result_list
+
+
+def extractByValueInListProperty(classname, value, prop_name, inventory_list):
+    """
+    Extract all items from inventory_list that have the classname and where
+    value is in the value of the prop_name array property.
+
+    Used for example to get all storage-sites that have a 'cpc-uris' list
+    containing the specified cpc-uri value.
+    """
+    result_list = [x for x in inventory_list
+                   if x['class'] == classname and value in x[prop_name]]
+    return result_list
+
+
+def extractCpc(cpc_uri, inventory_list):
+    """
+    Extract the CPC item from inventory_list that has the specified cpc_uri.
+    """
+    cpcs = [x for x in inventory_list
+            if x['class'] == RC_CPC and x['object-uri'] == cpc_uri]
+    cpc_len = len(cpcs)
+    if cpc_len == 0:
+        raise ConsistencyError(
+            "Inventory data does not contain CPC with URI {}".
+            format(cpc_uri))
+    if cpc_len > 1:
+        raise ConsistencyError(
+            "Inventory data contains multiple ({}) CPCs with URI {}".
+            format(cpc_len, cpc_uri))
+    cpc = cpcs[0]
+    return cpc
+
+
+def extractAdapters(cpc_uri, inventory_list):
+    """
+    Extract all items from inventory_list with class "adapter" and parent
+    cpc_uri.
+    """
+
+    # Export all adapters even when not used. If False, only adapters that
+    # are used, are exported.
+    all_adapters = True
+
+    result_list = []
+    excluded_classes = (RC_ADAPTER, RC_NETWORK_PORT, RC_STORAGE_PORT)
+    for x in inventory_list:
+        if x['class'] == RC_ADAPTER and x['parent'] == cpc_uri:
+            # It is an adapter of this CPC
+            if all_adapters:
+                result_list.append(x)
+            elif containsItemsWithSubstring(
+                    x['object-uri'], excluded_classes, inventory_list):
+                # The adapter is used.
+                # Note that the test above checks only adapter URIs, but in
+                # case of OSA adapters the virtual switches are referencing
+                # the backing network ports, and in case of FICON adapters the
+                # HBAs/VSRs are referencing the storage ports. The reason this
+                # test works nevertheless, is that the storage and network ports
+                # are element resources that are children of the adapter
+                # resources, and thus their URIs happen to contain the adapter
+                # URIs.
+                result_list.append(x)
+    return result_list
+
+
+def containsItemsWithSubstring(substr, excluded_classes, inventory_list):
+    """
+    Check if inventory_list contains items where substr appears in the
+    string representation of the item, excluding the items with a class in
+    excluded_classes.
+    """
+    find_list = [x for x in inventory_list
+                 if x['class'] not in excluded_classes
+                 and str(x).find(substr) != -1]  # noqa: W503
+    found = len(find_list) > 0
+    return found
+
+
+def retrieveInventoryData(client):
+    """
+    Retrieve inventory data from the HMC.
+    Returns the inventory list from Client.get_inventory().
+    """
+    resource_classes = ['dpm-resources', 'cpc']
+    inventory_list = client.get_inventory(resource_classes)
+    for res in inventory_list:
+        uri = res.get('object-uri') or res.get('element-uri')
+        if not uri:
+            raise ConsistencyError(
+                "Inventory data has an item without URI property: {}".
+                format(res))
+    return inventory_list
+
+
+def convertToConfig(inventory_list, cpc_uri):
+    """
+    Convert the inventory list to a DPM configuration dict.
+    """
+    config_dict = OrderedDict()
+
+    cpc = extractCpc(cpc_uri, inventory_list)
+    cpc_uris = [cpc_uri]
+
+    config_dict['se-version'] = cpc.get('se-version', None)
+    config_dict['available-features-list'] = \
+        cpc.get('available-features-list', [])
+    config_dict['cpc-properties'] = {
+        'auto-start-list': cpc.get('auto-start-list', None),
+        'description': cpc.get('description', None),
+        'management-world-wide-port-name':
+            cpc.get('management-world-wide-port-name', None),
+    }
+
+    config_dict['adapters'] = extractAdapters(
+        cpc_uri, inventory_list)
+    adapter_uris = [x['object-uri'] for x in config_dict['adapters']]
+
+    config_dict['partitions'] = extractByParent(
+        RC_PARTITION, cpc_uris, inventory_list)
+    partition_uris = [x['object-uri'] for x in config_dict['partitions']]
+
+    config_dict['nics'] = extractByParent(
+        RC_NIC, partition_uris, inventory_list)
+    config_dict['hbas'] = extractByParent(
+        RC_HBA, partition_uris, inventory_list)
+    config_dict['virtual-functions'] = extractByParent(
+        RC_VIRTUAL_FUNCTION, partition_uris, inventory_list)
+
+    config_dict['virtual-switches'] = extractByParent(
+        RC_VIRTUAL_SWITCH, cpc_uris, inventory_list)
+
+    config_dict['capacity-groups'] = extractByParent(
+        RC_CAPACITY_GROUP, cpc_uris, inventory_list)
+
+    config_dict['storage-sites'] = extractByValueInListProperty(
+        RC_STORAGE_SITE, cpc_uri, 'cpc-uris', inventory_list)
+    storage_site_uris = [x['object-uri'] for x in config_dict['storage-sites']]
+
+    config_dict['storage-subsystems'] = extractByPropertyInListValue(
+        RC_STORAGE_SUBSYSTEM, 'storage-site-uri', storage_site_uris,
+        inventory_list)
+    storage_subsystem_uris = \
+        [x['object-uri'] for x in config_dict['storage-subsystems']]
+
+    config_dict['storage-fabrics'] = extractByPropertyInListValue(
+        RC_STORAGE_FABRIC, 'cpc-uri', cpc_uris, inventory_list)
+    config_dict['storage-switches'] = extractByPropertyInListValue(
+        RC_STORAGE_SWITCH, 'storage-site-uri', storage_site_uris,
+        inventory_list)
+
+    config_dict['storage-control-units'] = extractByPropertyInListValue(
+        RC_STORAGE_CONTROL_UNIT, 'parent', storage_subsystem_uris,
+        inventory_list)
+    storage_control_unit_uris = \
+        [x['object-uri'] for x in config_dict['storage-control-units']]
+
+    config_dict['storage-paths'] = extractByPropertyInListValue(
+        RC_STORAGE_PATH, 'parent', storage_control_unit_uris, inventory_list)
+
+    config_dict['storage-ports'] = extractByPropertyInListValue(
+        RC_STORAGE_PORT, 'parent', adapter_uris, inventory_list)
+
+    config_dict['network-ports'] = extractByPropertyInListValue(
+        RC_NETWORK_PORT, 'parent', adapter_uris, inventory_list)
+
+    config_dict['storage-groups'] = extractByPropertyInListValue(
+        RC_STORAGE_GROUP, 'cpc-uri', cpc_uris, inventory_list)
+    storage_group_uris = \
+        [x['object-uri'] for x in config_dict['storage-groups']]
+
+    config_dict['storage-volumes'] = extractByPropertyInListValue(
+        RC_STORAGE_VOLUME, 'parent', storage_group_uris, inventory_list)
+
+    config_dict['storage-templates'] = extractByPropertyInListValue(
+        RC_STORAGE_TEMPLATE, 'cpc-uri', cpc_uris, inventory_list)
+    storage_template_uris = \
+        [x['object-uri'] for x in config_dict['storage-templates']]
+
+    config_dict['storage-template-volumes'] = extractByPropertyInListValue(
+        RC_STORAGE_TEMPLATE_VOLUME, 'parent', storage_template_uris,
+        inventory_list)
+
+    config_dict['virtual-storage-resources'] = extractByPropertyInListValue(
+        RC_VIRTUAL_STORAGE_RESOURCE, 'parent', storage_group_uris,
+        inventory_list)
+
+    config_dict['tape-links'] = extractByPropertyInListValue(
+        RC_TAPE_LINK, 'cpc-uri', cpc_uris, inventory_list)
+    tape_link_uris = [x['object-uri'] for x in config_dict['tape-links']]
+
+    config_dict['tape-libraries'] = extractByPropertyInListValue(
+        RC_TAPE_LIBRARY, 'cpc-uri', cpc_uris, inventory_list)
+
+    config_dict['virtual-tape-resources'] = extractByParent(
+        RC_VIRTUAL_TAPE_RESOURCE, tape_link_uris, inventory_list)
+
+    return config_dict
