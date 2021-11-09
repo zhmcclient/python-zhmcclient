@@ -158,14 +158,14 @@ class Client(object):
 
         Returns:
 
-          :term:`JSON object`:
-            The resources with their properties, for the requested resource
-            classes and resource classifiers.
+          list of dict: The list of resources for the requested resource
+            classes and resource classifiers. Each list item is a dictionary
+            with the resource properties using the HMC property names.
 
         Example:
 
             resource_classes = ['partition', 'adapter']
-            result_dict = client.get_inventory(resource_classes)
+            resource_list = client.get_inventory(resource_classes)
 
         Raises:
 
