@@ -44,6 +44,8 @@ Released: not yet
 
 * Fixed Sphinx doc build error on Python 2.7.
 
+* Docs: Fixed description of Client.get_inventory().
+
 **Enhancements:**
 
 * Added support for the 'Set Auto-Start List' operation on CPCs by adding
