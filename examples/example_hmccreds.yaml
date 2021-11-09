@@ -99,6 +99,12 @@ examples:
       #loglevel: info
       #logmodule: zhmcclient._session
       #timestats: yes
+   export_dpm_config:
+      hmc: "192.168.111.5"
+      cpcname: DPMSE2
+      #loglevel: info
+      #logmodule: zhmcclient._session
+      #timestats: yes
 
 "192.168.111.5":
    userid: ensadmin

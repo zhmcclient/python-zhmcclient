@@ -53,6 +53,16 @@ RC_STORAGE_VOLUME = 'storage-volume'
 RC_VIRTUAL_FUNCTION = 'virtual-function'
 RC_VIRTUAL_STORAGE_RESOURCE = 'virtual-storage-resource'
 RC_VIRTUAL_SWITCH = 'virtual-switch'
+RC_STORAGE_SITE = 'storage-site'
+RC_STORAGE_FABRIC = 'storage-fabric'
+RC_STORAGE_SWITCH = 'storage-switch'
+RC_STORAGE_SUBSYSTEM = 'storage-subsystem'
+RC_STORAGE_PATH = 'storage-path'
+RC_STORAGE_CONTROL_UNIT = 'storage-control-unit'
+RC_VIRTUAL_TAPE_RESOURCE = 'virtual-tape-resource'
+RC_TAPE_LINK = 'tape-link'
+RC_TAPE_LIBRARY = 'tape-library'
+
 #
 # For CPCs in classic mode:
 RC_RESET_ACTIVATION_PROFILE = 'reset-activation-profile'
@@ -87,6 +97,15 @@ VALID_RESOURCE_CLASSES = frozenset([
     RC_VIRTUAL_FUNCTION,
     RC_VIRTUAL_STORAGE_RESOURCE,
     RC_VIRTUAL_SWITCH,
+    RC_STORAGE_SITE,
+    RC_STORAGE_FABRIC,
+    RC_STORAGE_SWITCH,
+    RC_STORAGE_SUBSYSTEM,
+    RC_STORAGE_PATH,
+    RC_STORAGE_CONTROL_UNIT,
+    RC_VIRTUAL_TAPE_RESOURCE,
+    RC_TAPE_LINK,
+    RC_TAPE_LIBRARY,
     RC_RESET_ACTIVATION_PROFILE,
     RC_IMAGE_ACTIVATION_PROFILE,
     RC_LOAD_ACTIVATION_PROFILE,

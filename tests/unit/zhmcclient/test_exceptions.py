@@ -25,7 +25,8 @@ import pytest
 from zhmcclient import Error, ConnectTimeout, ReadTimeout, \
     RetriesExceeded, AuthError, ClientAuthError, ServerAuthError, ParseError, \
     VersionError, HTTPError, OperationTimeout, StatusTimeout, NoUniqueMatch, \
-    NotFound, Client, NotificationJMSError, NotificationParseError
+    NotFound, Client, NotificationJMSError, NotificationParseError, \
+    ConsistencyError
 from zhmcclient import ConnectionError  # pylint: disable=redefined-builtin
 from zhmcclient_mock import FakedSession
 
@@ -1724,3 +1725,17 @@ def test_notiparseerror_str_def(msg, jms_message):
     str_def = ' ' + str_def
     assert str_def.find(' classname={!r};'.format(classname)) >= 0
     assert str_def.find(' message={!r};'.format(msg)) >= 0
+
+
+@pytest.mark.parametrize(
+    "exc_class, msg", [
+        (ConsistencyError, 'bla'),
+    ]
+)
+def test_simple_exc(exc_class, msg):
+    """Test a simple exception class"""
+    exc = exc_class(msg)
+
+    act_msg = str(exc.args[0])
+
+    assert act_msg == msg

@@ -62,6 +62,13 @@ Released: not yet
 
 * Added support for 'Cpc.import_dpm_configuration()'. (issue #851)
 
+* Added support for 'Cpc.export_dpm_configuration()'.
+
+* Added a new exception classs 'ConsistencyError' that indicates consistency
+  errors that should be reported.
+
+* Added a new example script examples/export_dpm_config.py.
+
 **Cleanup:**
 
 * Defined HMC resource class names centrally.
