@@ -46,6 +46,8 @@ Released: not yet
 
 * Docs: Fixed description of Client.get_inventory().
 
+* Dev: Excluded more-itertools 8.11.0 on Python 3.5.
+
 **Enhancements:**
 
 * Added support for the 'Set Auto-Start List' operation on CPCs by adding
