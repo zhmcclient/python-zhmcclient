@@ -32,6 +32,9 @@ mock>=2.0.0 # BSD
 # requests: covered in direct deps for installation
 requests-mock>=1.6.0
 requests-toolbelt>=0.7.0
+# more-itertools 8.11.0 does not support py35 but incorrectly installs on it
+more-itertools>=4.0.0,!=8.11.0; python_version < '3.6'
+more-itertools>=4.0.0; python_version >= '3.6'
 # pytz: covered in requirements.txt
 
 # Virtualenv
