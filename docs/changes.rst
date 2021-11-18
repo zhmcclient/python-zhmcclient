@@ -19,16 +19,12 @@ Change log
 ----------
 
 
-Version 1.1.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.1.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.0.x.
+This version contains all fixes up to version 1.0.3.
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2021-11-18
 
 **Bug fixes:**
 
@@ -72,12 +68,6 @@ Released: not yet
 **Cleanup:**
 
 * Defined HMC resource class names centrally.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.0.0
