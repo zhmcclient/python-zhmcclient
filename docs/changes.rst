@@ -34,6 +34,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Added support for Python 3.10. This required increasing the minimum version of
+  a number of packages, both for installation and development. (issue #867)
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact
