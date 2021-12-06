@@ -135,10 +135,6 @@ dist_dir := dist
 bdist_file := $(dist_dir)/$(package_name)-$(package_version)-py2.py3-none-any.whl
 sdist_file := $(dist_dir)/$(package_name)-$(package_version).tar.gz
 
-# Windows installable (as built by setup.py)
-win64_dist_file := $(dist_dir)/$(package_name)-$(package_version).win-amd64.exe
-
-# dist_files := $(bdist_file) $(sdist_file) $(win64_dist_file)
 dist_files := $(bdist_file) $(sdist_file)
 
 # Source files in the packages
@@ -215,11 +211,7 @@ endif
 pytest_cov_opts := --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html
 
 # Files to be built
-ifeq ($(PLATFORM),Windows_native)
-build_files := $(bdist_file) $(sdist_file) $(win64_dist_file)
-else
 build_files := $(bdist_file) $(sdist_file)
-endif
 
 # Files the distribution archive depends upon.
 # This is also used for 'include' statements in MANIFEST.in.
@@ -458,17 +450,6 @@ $(bdist_file) $(sdist_file): _check_version Makefile MANIFEST.in $(dist_included
 	-$(call RM_FUNC,MANIFEST)
 	-$(call RMDIR_FUNC,build $(package_name).egg-info-INFO .eggs)
 	$(PYTHON_CMD) setup.py sdist -d $(dist_dir) bdist_wheel -d $(dist_dir) --universal
-
-$(win64_dist_file): _check_version Makefile MANIFEST.in $(dist_included_files)
-ifeq ($(PLATFORM),Windows_native)
-	-$(call RM_FUNC,MANIFEST)
-	-$(call RMDIR_FUNC,build $(package_name).egg-info-INFO .eggs)
-	$(PYTHON_CMD) setup.py bdist_wininst -d $(dist_dir) -o -t "$(package_name) v$(package_version)"
-	@echo "Done: Created Windows installable: $@"
-else
-	@echo "Error: Creating Windows installable requires to run on Windows"
-	@false
-endif
 
 pylint_$(pymn).done: develop_$(pymn).done Makefile $(pylint_rc_file) $(check_py_files)
 ifeq ($(python_m_version),2)
