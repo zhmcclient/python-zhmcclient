@@ -36,6 +36,11 @@ Released: not yet
 
 **Cleanup:**
 
+* Removed the ability to build the Windows executable, triggered by the fact
+  that the corresponding build command has been removed in Python 3.10.
+  The Windows executable has never been part of the zhmcclient package on Pypi,
+  and building it seems odd anyway. (issue #865)
+
 **Known issues:**
 
 * See `list of open issues`_.
