@@ -168,10 +168,11 @@ function make_virtualenv()
     pip list --format=columns 2>/dev/null || pip list 2>/dev/null
   fi
 
+  # We ensure that Pip is at least at 10.0.1 to have support for the features used in the requirements
+  # and constraints files (e.g. implementation_name)
   pip_version=$(pip --version | sed -e 's/pip \([0-9.]*\) .*/\1/')
-  verbose "Debug: pip_version='$pip_version'"
-  if [[ $pip_version =~ (^[1-8]\..*) ]]; then
-    run "pip install 'pip==9.0.1'" "Upgrading pip $pip_version to 9.0.1"
+  if [[ $pip_version =~ (^[1-9]\..*) ]]; then
+    run "pip install 'pip==10.0.1'" "Upgrading pip $pip_version to 10.0.1"
     run "pip --version"
   fi
 

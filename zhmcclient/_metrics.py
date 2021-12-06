@@ -65,7 +65,10 @@ The basic usage of the metrics API is shown in this example:
 
 from __future__ import absolute_import
 
-from collections import namedtuple
+try:
+    from collections.abc import namedtuple
+except ImportError:
+    from collections import namedtuple
 import re
 from datetime import datetime
 import pytz

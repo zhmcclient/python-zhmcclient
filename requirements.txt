@@ -10,14 +10,25 @@
 
 # Direct dependencies (except pip, setuptools, wheel):
 
-# decorator 5.0.0 removed support for Python 2.7 and 3.4
+# decorator 5.0.0 removes support for Python 2.7 and 3.4
 decorator>=4.0.11,<5.0; python_version == '2.7'  # new BSD
 decorator>=4.0.11; python_version >= '3.5'  # new BSD
-pytz>=2016.10 # MIT
-# requests 2.22.0 removed support for Python 3.4
-requests>=2.20.1; python_version == '2.7'  # Apache-2.0
-requests>=2.20.1; python_version >= '3.5'  # Apache-2.0
-six>=1.14.0 # MIT
+
+# pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
+pytz>=2016.10; python_version <= '3.9'  # MIT
+pytz>=2019.1; python_version >= '3.10'  # MIT
+
+# requests 2.22.0 removes the pinning of urllib3 to <1.25.0, and urllib 1.25.9
+#   is required to address safety issues
+# requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
+#   remove ImportWarning in six
+requests>=2.22.0; python_version <= '3.9'  # Apache-2.0
+requests>=2.25.0; python_version >= '3.10'  # Apache-2.0
+
+# six 1.16.0 removes the ImportWarning raised by Python 3.10
+six>=1.14.0; python_version <= '3.9'  # MIT
+six>=1.16.0; python_version >= '3.10'  # MIT
+
 # stomp.py 5.0.0 (now deleted) and 6.0.0 removed support for Python 2.7, 3.4 and 3.5
 # stomp.py 6.1.0 on Pypi contained older code than v6.1.0 in the repo -> will be yanked on Pypi
 # stomp.py 6.1.1 broke compatibility -> will be yanked on Pypi and re-released as 7.0.0

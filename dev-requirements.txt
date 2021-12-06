@@ -26,12 +26,14 @@ funcsigs>=1.0.2; python_version < '3.3'
 # pytest 4.3.1 solves an issue on Python 3 with minimum package levels
 pytest>=4.3.1,<5.0.0; python_version == '2.7'
 pytest>=4.3.1; python_version >= '3.5' and python_version <= '3.6'
-pytest>=4.4.0; python_version >= '3.7'
+pytest>=4.4.0; python_version >= '3.7' and python_version <= '3.9'
+pytest>=6.2.5; python_version >= '3.10'
 testfixtures>=6.9.0
 mock>=2.0.0 # BSD
 # requests: covered in direct deps for installation
 requests-mock>=1.6.0
-requests-toolbelt>=0.7.0
+# twine 3.0.0 depends on requests-toolbelt!=0.9.0 and >=0.8.0
+requests-toolbelt>=0.8.0
 # more-itertools 8.11.0 does not support py35 but incorrectly installs on it
 more-itertools>=4.0.0,!=8.11.0; python_version < '3.6'
 more-itertools>=4.0.0; python_version >= '3.6'
@@ -50,7 +52,10 @@ pluggy>=0.13.0; python_version >= '3.7'
 yamlloader>=0.5.5
 backports.statistics>=0.1.0; python_version == '2.7'
 # FormEncode is used for xml comparisons in unit test
-FormEncode>=1.3.1
+# FormEncode 1.3.1 has no python_requires and fails install on Python 3.10 due to incorrect
+#   version checking
+FormEncode>=1.3.1; python_version <= '3.9'
+FormEncode>=2.0.0; python_version >= '3.10'
 
 
 # Coverage reporting (no imports, invoked via coveralls script):
@@ -79,16 +84,24 @@ tox>=2.5.0
 # Sphinx 4.0.0 breaks autodocsumm and needs to be excluded
 # Sphinx <4.3.0 requires docutils <0.18 due to an incompatibility
 Sphinx>=1.7.6,<2.0.0; python_version == '2.7'
-Sphinx>=3.5.4,!=4.0.0,<4.3.0; python_version >= '3.5'
-docutils>=0.13.1,<0.18
+Sphinx>=3.5.4,!=4.0.0,<4.3.0; python_version >= '3.5' and python_version <= '3.9'
+Sphinx>=4.2.0; python_version >= '3.10'
+docutils>=0.13.1,<0.17; python_version == '2.7'
+docutils>=0.13.1; python_version >= '3.5' and python_version <= '3.9'
+docutils>=0.14; python_version >= '3.10'
 sphinx-git>=10.1.1
-GitPython>=2.1.1
+# GitPython 3.0.0 removed support for Python 2.7
+GitPython>=2.1.1,<3.0.0; python_version == '2.7'
+GitPython>=2.1.1; python_version >= '3.5'
 sphinxcontrib-fulltoc>=1.2.0
 sphinxcontrib-websupport>=1.1.2
 Pygments>=2.1.3
 sphinx-rtd-theme>=0.5.0
 autodocsumm>=0.1.13,<0.2.0; python_version == '2.7'
-autodocsumm>=0.1.13; python_version >= '3.5'
+autodocsumm>=0.1.13; python_version >= '3.5' and python_version <= '3.9'
+autodocsumm>=0.2.5; python_version >= '3.10'
+# Babel 2.7.0 fixes an ImportError for MutableMapping which starts failing on Python 3.10
+Babel>=2.7.0
 
 # PyLint (no imports, invoked via pylint script)
 # Pylint requires astroid
@@ -120,16 +133,23 @@ wrapt>=1.11.2; sys_platform != 'win32' and python_version == '2.7'
 wrapt>=1.11.2; python_version >= '3.5'
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
-
-flake8>=3.8.0
+# flake8 4.0.0 fixes an AttributeError on Python 3.10.
+flake8>=3.8.0; python_version <= '3.9'
+flake8>=4.0.0; python_version >= '3.10'
 mccabe>=0.6.0
-pycodestyle>=2.6.0
-pyflakes>=2.2.0
+pycodestyle>=2.6.0,<2.8.0; python_version == '2.7'
+pycodestyle>=2.6.0; python_version >= '3.5' and python_version <= '3.9'
+pycodestyle>=2.8.0; python_version >= '3.10'
+pyflakes>=2.2.0,<2.4.0; python_version == '2.7'
+pyflakes>=2.2.0; python_version >= '3.5' and python_version <= '3.9'
+pyflakes>=2.4.0; python_version >= '3.10'
 entrypoints>=0.3.0
 functools32>=3.2.3.post2; python_version == '2.7'  # technically: python_version < '3.2'
 
 # Twine (no imports, invoked via twine script):
-twine>=1.8.1
+# twine 2.0.0 removed support for Python < 3.6
+twine>=1.8.1,<2.0.0; python_version <= '3.5'
+twine>=3.0.0; python_version >= '3.6'
 # readme-renderer 23.0 has made cmarkgfm part of extras (it fails on Cygwin)
 readme-renderer>=23.0
 
@@ -152,16 +172,19 @@ pyrsistent>=0.14.0,<0.16.0; python_version == '2.7'
 pyrsistent>=0.14.0; python_version >= '3.5'
 
 # Pywin32 is used (at least?) by jupyter.
-# Pywin32 version 226 needs to be excluded, see issue #1946.
 # Pywin32 version 222 is inconsistent in its 32-bit/64-bit support on py37
-# Pywin32 version 225+ provides wheel files for py38, but does not advertise
-# py38 on Pypi. That causes pywin32==225 to fail but pywin32>=225 to work.
+# Pywin32 version 226 needs to be excluded, see issues #1946 and #1975.
+# Issue #2675: Pywin32 version 225+ provides wheel files for py38, but does not
+#   advertise py38 on Pypi. That causes pywin32==225 to fail but pywin32>=225
+#   to work.
+#   Reported to pywin32 as https://github.com/mhammond/pywin32/issues/1448.
+#   Addressed by increasing the minimum version of pywin32 to >=227 on Python >=3.8.
+# TODO: To circumvent https://github.com/pypa/pip/issues/10701, we exclude
+#       py3.10. Remove the circumvention once fixed.
 pywin32>=222,!=226; sys_platform == 'win32' and python_version == '2.7'
 pywin32>=222,!=226; sys_platform == 'win32' and python_version >= '3.5' and python_version <= '3.6'
 pywin32>=223,!=226; sys_platform == 'win32' and python_version == '3.7'
-# TODO: Re-enable once pywin32 fixes its Python version advertising on Pypi
-#       (see issue #1975).
-# pywin32>=225,!=226; sys_platform == 'win32' and python_version >= '3.8'
+pywin32>=227; sys_platform == 'win32' and python_version >= '3.8' and python_version != '3.10'
 
 # The tornado package is used by ipykernel which is used by jupyter.
 # Tornado 5.0.0 and 5.0.1 rejects installation if the Python ssl module

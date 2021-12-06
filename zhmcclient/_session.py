@@ -22,12 +22,15 @@ import sys
 import json
 import time
 import re
-import collections
 from copy import copy
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 import six
 import requests
 from requests.packages import urllib3
@@ -1076,7 +1079,7 @@ class Session(object):
             data = body
             log_data = body
             headers['Content-type'] = 'application/octet-stream'
-        elif isinstance(body, collections.Iterable):
+        elif isinstance(body, Iterable):
             # File-like objects, e.g. io.BufferedReader or io.TextIOWrapper
             # returned from open() or io.open().
             data = body
