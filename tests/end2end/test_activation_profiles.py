@@ -15,7 +15,11 @@
 # pylint: disable=attribute-defined-outside-init
 
 """
-Function tests for activation profile handling.
+End2end tests for activation profiles in classic mode.
+
+These tests do not change any activation profiles.
+
+Only tested on CPCs in classic mode, and skipped otherwise.
 """
 
 from __future__ import absolute_import, print_function
@@ -24,117 +28,27 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-from tests.common.utils import HmcCredentials, setup_cpc, setup_logging
+# pylint: disable=line-too-long,unused-import
+from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
+# pylint: disable=unused-import
 
 urllib3.disable_warnings()
 
 
-class TestActivationProfiles(object):
-    """Test activation profile handling."""
-
-    # Prefix for any names of HMC resources that are being created
-    NAME_PREFIX = 'zhmcclient.TestActivationProfiles.'
-
-    def setup_method(self):
-        """
-        Set up HMC data, Session to that HMC, Client, and Cpc object.
-        """
-        self.hmc_creds = HmcCredentials()
-        self.fake_data = dict(
-            hmc_host='fake-host', hmc_name='fake-hmc',
-            hmc_version='2.13.1', api_version='1.8',
-            cpc_properties={
-                'object-id': 'fake-cpc1-oid',
-                # object-uri is set up automatically
-                'parent': None,
-                'class': 'cpc',
-                'name': 'CPC1',
-                'description': 'Fake CPC #1 (classic mode)',
-                'status': 'active',
-                'dpm-enabled': False,
-                'is-ensemble-member': False,
-                'iml-mode': 'lpar',
-            })
-        self.faked_cpc_resources = {
-            'lpars': [
-                {
-                    'properties': {
-                        'partition-number': 0x41,
-                        'partition-identifier': 0x41,
-                        'name': 'LPAR1',
-                        'status': 'operating',
-                        'activation-mode': 'linux',
-                        'next-activation-profile-name': 'LPAR1',
-                        'last-used-activation-profile': 'LPAR1',
-                    },
-                },
-                {
-                    'properties': {
-                        'partition-number': 0x42,
-                        'partition-identifier': 0x42,
-                        'name': 'LPAR2',
-                        'status': 'not-activated',
-                        'activation-mode': 'not-set',
-                        'next-activation-profile-name': 'LPAR2',
-                        'last-used-activation-profile': 'LPAR2',
-                    },
-                },
-            ],
-            'reset_activation_profiles': [
-                {
-                    'properties': {
-                        'name': 'CPC1',
-                        'iocds-name': 'ABC',
-                    },
-                },
-            ],
-            'load_activation_profiles': [
-                {
-                    'properties': {
-                        'name': 'LPAR1',
-                        'ipl-type': 'ipltype-standard',
-                        'ipl-address': '189AB',
-                    },
-                },
-                {
-                    'properties': {
-                        'name': 'LPAR2',
-                        'ipl-type': 'ipltype-scsi',
-                        'worldwide-port-name': '1234',
-                        'logical-unit-number': '1234',
-                        'boot-record-lba': '1234',
-                        'disk-partition-id': 0,
-                    },
-                },
-            ],
-            'image_activation_profiles': [
-                {
-                    'properties': {
-                        'name': 'LPAR1',
-                        # TODO: Add more properties
-                    },
-                },
-                {
-                    'properties': {
-                        'name': 'LPAR2',
-                        # TODO: Add more properties
-                    },
-                },
-            ],
-        }
-        setup_logging()
-
-    @pytest.mark.parametrize(
-        "profile_type", ['reset', 'image', 'load']
-    )
-    def test_ap_lf(self, capsys, profile_type):
-        """List and find activation profiles."""
-
-        _, session, _, cpc, faked_cpc = \
-            setup_cpc(capsys, self.hmc_creds, self.fake_data)
-
-        if faked_cpc:
-            faked_cpc.add_resources(self.faked_cpc_resources)
+@pytest.mark.parametrize(
+    "profile_type", ['reset', 'image', 'load']
+)
+def test_cpc_find_by_name(hmc_session, profile_type):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test that all CPCs in the HMC definition can be found using find_by_name().
+    """
+    client = zhmcclient.Client(hmc_session)
+    hd = hmc_session.hmc_definition
+    for cpc_name in hd.cpcs:
+        cpc = client.cpcs.find_by_name(cpc_name)
+        if cpc.get_property('dpm-enabled'):
+            pytest.skip("CPC {} is not in classic mode".format(cpc_name))
 
         ap_mgr_attr = profile_type + '_activation_profiles'
         ap_class = profile_type + '-activation-profile'
@@ -166,6 +80,3 @@ class TestActivationProfiles(object):
         aps_found = ap_mgr.findall(**{'class': ap_class})
 
         assert ap_name in [ap.name for ap in aps_found]  # noqa: F812
-
-        # Cleanup
-        session.logoff()

@@ -15,7 +15,9 @@
 # pylint: disable=attribute-defined-outside-init
 
 """
-Function tests for partition lifecycle.
+End2end tests for partition lifecycle in DPM mode.
+
+Only tested on CPCs in DPM mode, and skipped otherwise.
 """
 
 from __future__ import absolute_import, print_function
@@ -24,122 +26,97 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-from tests.common.utils import HmcCredentials, info, setup_cpc, setup_logging
+# pylint: disable=line-too-long,unused-import
+from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
+# pylint: disable=unused-import
 
 urllib3.disable_warnings()
 
 
-class TestPartitionLifecycle(object):
-    """Test partition lifecycle."""
+def test_crud(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test create, read, update and delete a partition.
+    """
+    client = zhmcclient.Client(hmc_session)
+    hd = hmc_session.hmc_definition
+    for cpc_name in hd.cpcs:
+        cpc = client.cpcs.find_by_name(cpc_name)
+        if not cpc.get_property('dpm-enabled'):
+            pytest.skip("CPC {} is not in DPM mode".format(cpc_name))
 
-    # Prefix for any names of HMC resources that are being created
-    NAME_PREFIX = 'zhmcclient.TestPartitionLifecycle.'
+    part_name = 'test_crud.part1'
 
-    def setup_method(self):
-        """
-        Set up HMC data, Session to that HMC, Client, and Cpc object.
-        """
-        self.hmc_creds = HmcCredentials()
-        self.fake_data = dict(
-            hmc_host='fake-host', hmc_name='fake-hmc',
-            hmc_version='2.13.1', api_version='1.8',
-            cpc_properties={
-                'object-id': 'fake-cpc1-oid',
-                # object-uri is set up automatically
-                'parent': None,
-                'class': 'cpc',
-                'name': 'fake-cpc1',
-                'description': 'Fake CPC #1 (DPM mode)',
-                'status': 'active',
-                'dpm-enabled': True,
-                'is-ensemble-member': False,
-                'iml-mode': 'dpm',
-            })
-        setup_logging()
-
-    def test_crud(self, capsys):
-        """Create, read, update and delete a partition."""
-
-        _, session, _, cpc, _ = \
-            setup_cpc(capsys, self.hmc_creds, self.fake_data)
-
-        part_name = self.NAME_PREFIX + 'test_crud.part1'
-
-        # Ensure a clean starting point for this test
-        try:
-            part = cpc.partitions.find(name=part_name)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            info(capsys, "Cleaning up partition from previous run: {!r}".
-                 format(part))
-            status = part.get_property('status')
-            if status != 'stopped':
-                part.stop()
-            part.delete()
-
-        # Test creating the partition
-
-        part_input_props = {
-            'name': part_name,
-            'description': 'Dummy partition description.',
-            'ifl-processors': 2,
-            'initial-memory': 1024,
-            'maximum-memory': 2048,
-            'processor-mode': 'shared',  # used for filtering
-            'type': 'linux',  # used for filtering
-        }
-        part_auto_props = {
-            'status': 'stopped',
-        }
-
-        part = cpc.partitions.create(part_input_props)
-
-        for pn, exp_value in part_input_props.items():
-            assert part.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
-        part.pull_full_properties()
-        for pn, exp_value in part_input_props.items():
-            assert part.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
-        for pn, exp_value in part_auto_props.items():
-            assert part.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
-
-        # Test finding the partition based on its (cached) name
-
-        p = cpc.partitions.find(name=part_name)
-
-        assert p.name == part_name
-
-        # Test finding the partition based on a server-side filtered prop
-
-        parts = cpc.partitions.findall(type='linux')
-
-        assert part_name in [p.name for p in parts]  # noqa: F812
-
-        # Test finding the partition based on a client-side filtered prop
-
-        parts = cpc.partitions.findall(**{'processor-mode': 'shared'})
-
-        assert part_name in [p.name for p in parts]  # noqa: F812
-
-        # Test updating a property of the partition
-
-        new_desc = "Updated partition description."
-
-        part.update_properties(dict(description=new_desc))
-
-        assert part.properties['description'] == new_desc
-        part.pull_full_properties()
-        assert part.properties['description'] == new_desc
-
-        # Test deleting the partition
-
+    # Ensure a clean starting point for this test
+    try:
+        part = cpc.partitions.find(name=part_name)
+    except zhmcclient.NotFound:
+        pass
+    else:
+        status = part.get_property('status')
+        if status != 'stopped':
+            part.stop()
         part.delete()
 
-        with pytest.raises(zhmcclient.NotFound):
-            cpc.partitions.find(name=part_name)
+    # Test creating the partition
 
-        # Cleanup
-        session.logoff()
+    part_input_props = {
+        'name': part_name,
+        'description': 'Dummy partition description.',
+        'ifl-processors': 2,
+        'initial-memory': 1024,
+        'maximum-memory': 2048,
+        'processor-mode': 'shared',  # used for filtering
+        'type': 'linux',  # used for filtering
+    }
+    part_auto_props = {
+        'status': 'stopped',
+    }
+
+    part = cpc.partitions.create(part_input_props)
+
+    for pn, exp_value in part_input_props.items():
+        assert part.properties[pn] == exp_value, \
+            "Unexpected value for property {!r}".format(pn)
+    part.pull_full_properties()
+    for pn, exp_value in part_input_props.items():
+        assert part.properties[pn] == exp_value, \
+            "Unexpected value for property {!r}".format(pn)
+    for pn, exp_value in part_auto_props.items():
+        assert part.properties[pn] == exp_value, \
+            "Unexpected value for property {!r}".format(pn)
+
+    # Test finding the partition based on its (cached) name
+
+    p = cpc.partitions.find(name=part_name)
+
+    assert p.name == part_name
+
+    # Test finding the partition based on a server-side filtered prop
+
+    parts = cpc.partitions.findall(type='linux')
+
+    assert part_name in [p.name for p in parts]  # noqa: F812
+
+    # Test finding the partition based on a client-side filtered prop
+
+    parts = cpc.partitions.findall(**{'processor-mode': 'shared'})
+
+    assert part_name in [p.name for p in parts]  # noqa: F812
+
+    # Test updating a property of the partition
+
+    new_desc = "Updated partition description."
+
+    part.update_properties(dict(description=new_desc))
+
+    assert part.properties['description'] == new_desc
+    part.pull_full_properties()
+    assert part.properties['description'] == new_desc
+
+    # Test deleting the partition
+
+    part.delete()
+
+    with pytest.raises(zhmcclient.NotFound):
+        cpc.partitions.find(name=part_name)

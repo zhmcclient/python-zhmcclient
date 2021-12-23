@@ -15,7 +15,9 @@
 # pylint: disable=attribute-defined-outside-init
 
 """
-Function tests for storage groups and their child resources.
+End2end tests for storage groups and their child resources.
+
+Only tested on CPCs in DPM mode, and skipped otherwise.
 """
 
 from __future__ import absolute_import, print_function
@@ -24,71 +26,45 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-from tests.common.utils import HmcCredentials, info, setup_cpc
+# pylint: disable=line-too-long,unused-import
+from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
+# pylint: disable=unused-import
 
 urllib3.disable_warnings()
 
 
-@pytest.mark.skip('TODO: Enable and fix issues')
-class TestStorageGroups(object):
-    """Test storage groups and their child resources."""
+def dpm_storage_management_enabled(cpc):
+    """
+    Return boolean indicating whether the "DPM Storage Management" feature
+    is enabled for the specified CPC.
 
-    # Prefix for any names of HMC resources that are being created
-    NAME_PREFIX = 'zhmcclient.TestStorageGroups.'
+    If the machine is not even aware of firmware features, it is considered
+    disabled.
+    """
+    try:
+        dpm_sm = cpc.feature_enabled('dpm-storage-management')
+    except ValueError:
+        dpm_sm = False
+    return dpm_sm
 
-    def setup_method(self):
-        """
-        Set up HMC data, Session to that HMC, Client, and Cpc object.
-        """
-        self.hmc_creds = HmcCredentials()
-        self.fake_data = dict(
-            hmc_host='fake-host', hmc_name='fake-hmc',
-            hmc_version='2.13.1', api_version='1.8',
-            cpc_properties={
-                'object-id': 'fake-cpc1-oid',
-                # object-uri is set up automatically
-                'parent': None,
-                'class': 'cpc',
-                'name': 'fake-cpc1',
-                'description': 'Fake CPC #1 (DPM mode)',
-                'status': 'active',
-                'dpm-enabled': True,
-                'is-ensemble-member': False,
-                'iml-mode': 'dpm',
-                'available-features-list': [
-                    dict(name='dpm-storage-management', state=True),
-                ],
-            })
-        # setup_logging()
 
-    @staticmethod
-    def dpm_storage_management_enabled(cpc):
-        """
-        Return boolean indicating whether the "DPM Storage Management" feature
-        is enabled for the specified CPC.
-
-        If the machine is not even aware of firmware features, it is considered
-        disabled.
-        """
-        try:
-            dpm_sm = cpc.feature_enabled('dpm-storage-management')
-        except ValueError:
-            dpm_sm = False
-        return dpm_sm
-
-    def test_stogrp_crud(self, capsys):
-        """Create, read, update and delete a storage group."""
-
-        _, session, client, cpc, faked_cpc = \
-            setup_cpc(capsys, self.hmc_creds, self.fake_data)
-
-        if not self.dpm_storage_management_enabled(cpc):
-            info(capsys, "DPM Storage feature not enabled or not supported; "
-                 "Skipping test_stogrp_crud() test case")
-            return
+def test_stogrp_crud(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test create, read, update and delete a storage group.
+    """
+    client = zhmcclient.Client(hmc_session)
+    hd = hmc_session.hmc_definition
+    for cpc_name in hd.cpcs:
+        cpc = client.cpcs.find_by_name(cpc_name)
+        if not cpc.get_property('dpm-enabled'):
+            pytest.skip("CPC {} is not in DPM mode".format(cpc_name))
+        if not dpm_storage_management_enabled(cpc):
+            pytest.skip("DPM Storage feature not enabled or not supported "
+                        "on CPC {}".format(cpc_name))
 
         console = client.consoles.console
-        stogrp_name = self.NAME_PREFIX + 'test_stogrp_crud.stogrp1'
+        stogrp_name = 'test_stogrp_crud.stogrp1'
 
         # Ensure clean starting point
         try:
@@ -96,22 +72,19 @@ class TestStorageGroups(object):
         except zhmcclient.NotFound:
             pass
         else:
-            info(capsys, "Cleaning up storage group from previous run: {!r}".
-                 format(stogrp))
             stogrp.delete()
 
         # Test creating the storage group
 
         stogrp_input_props = {
+            'cpc-uri': cpc.uri,
             'name': stogrp_name,
             'description': 'Dummy storage group description.',
             'type': 'fcp',
         }
         stogrp_auto_props = {
-            'shared': False,
-            'active': False,
-            'fulfillment-state': 'creating',
-            'adapter-count': 1,
+            'shared': True,
+            'fulfillment-state': 'pending',
         }
 
         stogrp = console.storage_groups.create(stogrp_input_props)
@@ -125,11 +98,10 @@ class TestStorageGroups(object):
             assert stogrp.properties[pn] == exp_value, \
                 "Unexpected value for property {!r} of storage group:\n" \
                 "{!r}".format(pn, sorted(stogrp.properties))
-        if not faked_cpc:
-            for pn, exp_value in stogrp_auto_props.items():
-                assert stogrp.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage group:\n" \
-                    "{!r}".format(pn, sorted(stogrp.properties))
+        for pn, exp_value in stogrp_auto_props.items():
+            assert stogrp.properties[pn] == exp_value, \
+                "Unexpected value for property {!r} of storage group:\n" \
+                "{!r}".format(pn, sorted(stogrp.properties))
 
         # Test finding the storage group based on its (cached) name
 
@@ -145,7 +117,7 @@ class TestStorageGroups(object):
 
         # Test finding the storage group based on a client-side filtered prop
 
-        stogrps = console.storage_groups.findall(active=False)
+        stogrps = console.storage_groups.findall(shared=True)
 
         assert stogrp_name in [sg.name for sg in stogrps]
 
@@ -166,24 +138,26 @@ class TestStorageGroups(object):
         with pytest.raises(zhmcclient.NotFound):
             console.storage_groups.find(name=stogrp_name)
 
-        # Cleanup
-        session.logoff()
 
-    def test_stovol_crud(self, capsys):
-        """Create, read, update and delete a storage volume in a sto.grp."""
-
-        _, session, client, cpc, faked_cpc = \
-            setup_cpc(capsys, self.hmc_creds, self.fake_data)
-
-        if not self.dpm_storage_management_enabled(cpc):
-            info(capsys, "DPM Storage feature not enabled or not supported; "
-                 "Skipping test_stovol_crud() test case")
-            return
+def test_stovol_crud(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test create, read, update and delete a storage volume in a storage group.
+    """
+    client = zhmcclient.Client(hmc_session)
+    hd = hmc_session.hmc_definition
+    for cpc_name in hd.cpcs:
+        cpc = client.cpcs.find_by_name(cpc_name)
+        if not cpc.get_property('dpm-enabled'):
+            pytest.skip("CPC {} is not in DPM mode".format(cpc_name))
+        if not dpm_storage_management_enabled(cpc):
+            pytest.skip("DPM Storage feature not enabled or not supported "
+                        "on CPC {}".format(cpc_name))
 
         console = client.consoles.console
 
-        stogrp_name = self.NAME_PREFIX + 'test_stovol_crud.stogrp1'
-        stovol_name = self.NAME_PREFIX + 'test_stovol_crud.stovol1'
+        stogrp_name = 'test_stovol_crud.stogrp1'
+        stovol_name = 'test_stovol_crud.stovol1'
 
         # Ensure clean starting point
         try:
@@ -191,13 +165,16 @@ class TestStorageGroups(object):
         except zhmcclient.NotFound:
             pass
         else:
-            info(capsys, "Cleaning up storage group from previous run: {!r}".
-                 format(stogrp))
             stogrp.delete()
 
         # Create a storage group for the volume
-        stogrp = console.storage_groups.create(
-            dict(name=stogrp_name, type='fcp'))
+        stogrp_input_props = {
+            'cpc-uri': cpc.uri,
+            'name': stogrp_name,
+            'description': 'Dummy storage group description.',
+            'type': 'fcp',
+        }
+        stogrp = console.storage_groups.create(stogrp_input_props)
 
         # Test creating a volume
 
@@ -207,17 +184,9 @@ class TestStorageGroups(object):
             'size': 100,  # MB
         }
         stovol_auto_props = {
-            'fulfillment-state': 'creating',
+            'fulfillment-state': 'pending',
             'usage': 'data',
         }
-
-        # TODO: Remove this tempfix when fixed:
-        # pylint: disable=using-constant-test
-        if True:
-            info(capsys, "Tempfix: Volume does not support 'cpc-uri' "
-                 "property; Omitting it in Create Volume.")
-        else:
-            stovol_input_props['cpc-uri'] = cpc.uri
 
         stovol = stogrp.storage_volumes.create(stovol_input_props)
 
@@ -227,22 +196,13 @@ class TestStorageGroups(object):
                 "{!r}".format(pn, sorted(stovol.properties))
         stovol.pull_full_properties()
         for pn, exp_value in stovol_input_props.items():
-            # TODO: Remove this tempfix when fixed:
-            if pn == 'name':
-                info(capsys, "Tempfix: Create Volume does not honor name; "
-                     "Skipping assertion of name:\n"
-                     "  provided name: %r\n"
-                     "  created name:  %r" %
-                     (exp_value, stovol.properties[pn]))
-                continue
             assert stovol.properties[pn] == exp_value, \
                 "Unexpected value for property {!r} of storage volume:\n" \
                 "{!r}".format(pn, sorted(stovol.properties))
-        if not faked_cpc:
-            for pn, exp_value in stovol_auto_props.items():
-                assert stovol.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage volume:\n" \
-                    "{!r}".format(pn, sorted(stovol.properties))
+        for pn, exp_value in stovol_auto_props.items():
+            assert stovol.properties[pn] == exp_value, \
+                "Unexpected value for property {!r} of storage volume:\n" \
+                "{!r}".format(pn, sorted(stovol.properties))
 
         # Test finding the storage volume based on its (cached) name
 
@@ -252,29 +212,13 @@ class TestStorageGroups(object):
 
         # Test finding the storage volume based on a server-side filtered prop
 
-        # TODO: Remove this tempfix when fixed:
-        try:
-            stovols = stogrp.storage_volumes.find(usage='data')
-        except zhmcclient.HTTPError as exc:
-            if exc.http_status == 500:
-                info(capsys, "Tempfix: List Volumes filtered by usage raises "
-                     "%s,%s %r; Skipping this test." %
-                     (exc.http_status, exc.reason, exc.message))
-        else:
-            assert stovol_name in [sv.name for sv in stovols]  # noqa: F812
+        stovols = stogrp.storage_volumes.findall(usage='data')
+        assert stovol_name in [sv.name for sv in stovols]  # noqa: F812
 
         # Test finding the storage group based on a client-side filtered prop
 
-        # TODO: Remove this tempfix when fixed:
-        try:
-            stovols = stogrp.storage_volumes.findall(active=False)
-        except zhmcclient.HTTPError as exc:
-            if exc.http_status == 500:
-                info(capsys, "Tempfix: List Volumes raises "
-                     "%s,%s %r; Skipping this test." %
-                     (exc.http_status, exc.reason, exc.message))
-        else:
-            assert stovol_name in [sv.name for sv in stovols]
+        stovols = stogrp.storage_volumes.findall(size=100)
+        assert stovol_name in [sv.name for sv in stovols]
 
         # Test updating a property of the storage volume
 
@@ -288,18 +232,10 @@ class TestStorageGroups(object):
 
         # Test deleting the storage volume
 
-        # TODO: Remove this tempfix when fixed:
-        try:
-            stovol.delete()
-        except zhmcclient.HTTPError as exc:
-            if exc.http_status == 500:
-                info(capsys, "Tempfix: Delete Volume raises "
-                     "%s,%s %r; Skipping this test." %
-                     (exc.http_status, exc.reason, exc.message))
-        else:
-            with pytest.raises(zhmcclient.NotFound):
-                stogrp.storage_volumes.find(name=stovol_name)
+        stovol.delete()
+
+        with pytest.raises(zhmcclient.NotFound):
+            stogrp.storage_volumes.find(name=stovol_name)
 
         # Cleanup
         stogrp.delete()
-        session.logoff()
