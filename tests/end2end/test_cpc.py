@@ -13,7 +13,9 @@
 # limitations under the License.
 
 """
-End2end tests for CPCs that do not change anything.
+End2end tests for CPCs.
+
+These tests do not change any CPC properties.
 """
 
 from __future__ import absolute_import, print_function
@@ -126,12 +128,12 @@ def test_cpc_find_by_name(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
-    for def_name in hd.cpcs:
+    for cpc_name in hd.cpcs:
 
         # The code to be tested
-        cpc = client.cpcs.find_by_name(def_name)
+        cpc = client.cpcs.find_by_name(cpc_name)
 
-        assert_cpc_minimal(cpc, def_name, PROPS_CPC_MINIMAL)
+        assert_cpc_minimal(cpc, cpc_name, PROPS_CPC_MINIMAL)
 
 
 def test_cpc_find_with_name(hmc_session):  # noqa: F811
@@ -142,12 +144,12 @@ def test_cpc_find_with_name(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
-    for def_name in hd.cpcs:
+    for cpc_name in hd.cpcs:
 
         # The code to be tested
-        found_cpc = client.cpcs.find(name=def_name)
+        found_cpc = client.cpcs.find(name=cpc_name)
 
-        assert_cpc_minimal(found_cpc, def_name, PROPS_CPC_MINIMAL)
+        assert_cpc_minimal(found_cpc, cpc_name, PROPS_CPC_MINIMAL)
 
 
 def test_cpc_findall_with_name(hmc_session):  # noqa: F811
@@ -158,14 +160,14 @@ def test_cpc_findall_with_name(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
-    for def_name in hd.cpcs:
+    for cpc_name in hd.cpcs:
 
         # The code to be tested
-        found_cpcs = client.cpcs.findall(name=def_name)
+        found_cpcs = client.cpcs.findall(name=cpc_name)
 
         assert len(found_cpcs) == 1
         found_cpc = found_cpcs[0]
-        assert_cpc_minimal(found_cpc, def_name, PROPS_CPC_MINIMAL)
+        assert_cpc_minimal(found_cpc, cpc_name, PROPS_CPC_MINIMAL)
 
 
 def test_cpc_list_with_name(hmc_session):  # noqa: F811
@@ -176,13 +178,13 @@ def test_cpc_list_with_name(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
-    for def_name in hd.cpcs:
+    for cpc_name in hd.cpcs:
 
         # The code to be tested
-        found_cpcs = client.cpcs.list(filter_args=dict(name=def_name))
+        found_cpcs = client.cpcs.list(filter_args=dict(name=cpc_name))
 
         exp_prop_names = []
-        def_machine_type = hd.cpcs[def_name].get('machine_type', None)
+        def_machine_type = hd.cpcs[cpc_name].get('machine_type', None)
         if def_machine_type:
             gen = MACHINE_GENERATIONS.get(def_machine_type, None)
             if gen:
@@ -190,7 +192,7 @@ def test_cpc_list_with_name(hmc_session):  # noqa: F811
 
         assert len(found_cpcs) == 1
         found_cpc = found_cpcs[0]
-        assert_cpc_minimal(found_cpc, def_name, exp_prop_names)
+        assert_cpc_minimal(found_cpc, cpc_name, exp_prop_names)
 
 
 def test_cpc_list_with_name_full(hmc_session):  # noqa: F811
@@ -201,14 +203,14 @@ def test_cpc_list_with_name_full(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
-    for def_name in hd.cpcs:
+    for cpc_name in hd.cpcs:
 
         # The code to be tested
-        found_cpcs = client.cpcs.list(filter_args=dict(name=def_name),
+        found_cpcs = client.cpcs.list(filter_args=dict(name=cpc_name),
                                       full_properties=True)
 
         exp_prop_names = []
-        def_machine_type = hd.cpcs[def_name].get('machine_type', None)
+        def_machine_type = hd.cpcs[cpc_name].get('machine_type', None)
         if def_machine_type:
             gen = MACHINE_GENERATIONS.get(def_machine_type, None)
             if gen:
@@ -216,4 +218,4 @@ def test_cpc_list_with_name_full(hmc_session):  # noqa: F811
 
         assert len(found_cpcs) == 1
         found_cpc = found_cpcs[0]
-        assert_cpc_minimal(found_cpc, def_name, exp_prop_names)
+        assert_cpc_minimal(found_cpc, cpc_name, exp_prop_names)
