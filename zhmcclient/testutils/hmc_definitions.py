@@ -240,11 +240,14 @@ class HMCDefinition(object):
             self._hmc_host = None
             self._hmc_userid = None
             self._hmc_password = None
+            self._hmc_verify_cert = None
         else:
             self._hmc_host = _required_attr(hmc_dict, 'hmc_host', nickname)
             self._hmc_userid = _required_attr(hmc_dict, 'hmc_userid', nickname)
             self._hmc_password = _required_attr(hmc_dict, 'hmc_password',
                                                 nickname)
+            self._hmc_verify_cert = _required_attr(hmc_dict, 'hmc_verify_cert',
+                                                   nickname)
         self._cpcs = hmc_dict.get('cpcs', dict())
 
     def __repr__(self):
@@ -258,6 +261,7 @@ class HMCDefinition(object):
             "hmc_host={s.hmc_host!r}, " \
             "hmc_userid={s.hmc_userid!r}, " \
             "hmc_password=..., " \
+            "hmc_verify_cert={s.hmc_verify_cert!r}, " \
             "cpcs={s.cpcs!r})". \
             format(s=self)
 
@@ -333,6 +337,18 @@ class HMCDefinition(object):
         This property is `None` for faked HMCs.
         """
         return self._hmc_password
+
+    @property
+    def hmc_verify_cert(self):
+        """
+        Control for verifying the SSL certificate from the HMC during SSL/TLS
+        handshake.
+
+        False / True / Path name of certificate file or directory.
+
+        This property is `None` for faked HMCs.
+        """
+        return self._hmc_verify_cert
 
     @property
     def cpcs(self):

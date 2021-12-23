@@ -18,6 +18,9 @@
 #                                # HMC. Mandatory (if real HMC).
 #     hmc_password: TEXT         # For real HMC: Password for logging on to the
 #                                # HMC. Mandatory (if real HMC).
+#     hmc_verify_cert: BOOL or TEXT  # For real HMC: verify SSL certificate from
+#                                # HMC. False / True / path name of certificate
+#                                # file or directory. Mandatory (if real HMC).
 #     faked_hmc_file: TEXT       # For faked HMC: Path name of fake HMC file,
 #                                # relative to this file.
 #                                # Mandatory (if faked HMC).
@@ -35,6 +38,7 @@ hmcs:
     hmc_host: "10.11.12.13"
     hmc_userid: ensadmin
     hmc_password: password
+    hmc_verify_cert: false
     cpcs:
       XYZ1:
         machine_type: "2964"
