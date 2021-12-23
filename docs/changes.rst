@@ -37,6 +37,9 @@ Released: not yet
 * Added support for Python 3.10. This required increasing the minimum version of
   a number of packages, both for installation and development. (issue #867)
 
+* End2end tests: Added support for verify_cert parameter in HMC definition file.
+  Changed test env var TESTHMCDIR with hard coded filename to TESTHMCFILE.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact

@@ -29,10 +29,14 @@ import zhmcclient_mock
 
 from .hmc_definitions import HMCDefinitionFile, HMCDefinition
 
-# Nicknames in HMC definition file
-TESTHMCDIR = os.getenv('TESTHMCDIR', 'tests')
-TESTHMCFILE = os.path.join(TESTHMCDIR, 'hmc_definitions.yaml')
-TESTHMC = os.getenv('TESTHMC', 'default')
+# Path name of HMC definition file
+DEFAULT_TESTHMCFILE = os.path.join('tests', 'hmc_definitions.yaml')
+TESTHMCFILE = os.getenv('TESTHMCFILE', DEFAULT_TESTHMCFILE)
+
+# Test nickname in HMC definition file
+DEFAULT_TESTHMC = 'default'
+TESTHMC = os.getenv('TESTHMC', DEFAULT_TESTHMC)
+
 HMC_DEF_LIST = HMCDefinitionFile(filepath=TESTHMCFILE).list_hmcs(TESTHMC)
 
 # Log file
@@ -158,7 +162,8 @@ def hmc_session(request, hmc_definition):
 
         # Creating a session does not interact with the HMC (logon is deferred)
         session = zhmcclient.Session(
-            hd.hmc_host, hd.hmc_userid, hd.hmc_password)
+            hd.hmc_host, hd.hmc_userid, hd.hmc_password,
+            verify_cert=hd.hmc_verify_cert)
 
         # Check access to the HMC
         try:
