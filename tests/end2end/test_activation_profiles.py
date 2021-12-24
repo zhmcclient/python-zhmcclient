@@ -38,10 +38,10 @@ urllib3.disable_warnings()
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_cpc_find_by_name(hmc_session, profile_type):  # noqa: F811
+def test_actprof_find_list(hmc_session, profile_type):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
-    Test that all CPCs in the HMC definition can be found using find_by_name().
+    Test list(), find(), findall().
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition

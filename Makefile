@@ -488,5 +488,5 @@ endif
 
 .PHONY:	end2end
 end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files)
-	bash -c 'TESTHMCFILE=$(TESTHMCFILE) TESTHMC=$(TESTHMC) py.test $(pytest_no_log_opt) -s $(test_dir)/end2end $(pytest_opts)'
+	bash -c 'TESTHMCFILE=$(TESTHMCFILE) TESTHMC=$(TESTHMC) py.test $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_opts)'
 	@echo "Makefile: $@ done."
