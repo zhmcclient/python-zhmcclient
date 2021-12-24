@@ -30,7 +30,8 @@ from requests.packages import urllib3
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: disable=unused-import
+# pylint: disable=line-too-long,unused-import
+from zhmcclient.testutils.cpc_fixtures import classic_mode_cpcs  # noqa: F401, E501
 
 urllib3.disable_warnings()
 
@@ -38,17 +39,14 @@ urllib3.disable_warnings()
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_find_list(hmc_session, profile_type):  # noqa: F811
+def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
     """
-    client = zhmcclient.Client(hmc_session)
-    hd = hmc_session.hmc_definition
-    for cpc_name in hd.cpcs:
-        cpc = client.cpcs.find_by_name(cpc_name)
-        if cpc.get_property('dpm-enabled'):
-            pytest.skip("CPC {} is not in classic mode".format(cpc_name))
+    for cpc in classic_mode_cpcs:
+        assert not cpc.dpm_enabled
+        print("Testing CPC {} (classic mode)".format(cpc.name))
 
         ap_mgr_attr = profile_type + '_activation_profiles'
         ap_class = profile_type + '-activation-profile'

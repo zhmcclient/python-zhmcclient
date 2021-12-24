@@ -101,8 +101,15 @@ def hmc_session(request, hmc_definition):
 
     Upon teardown, the `zhmcclient.Session` object is logged off.
     """
-    hd = hmc_definition
+    session = setup_hmc_session(hmc_definition)
+    yield session
+    teardown_hmc_session(session)
 
+
+def setup_hmc_session(hd):
+    """
+    Log on to an HMC and return its zhmcclient.Session object.
+    """
     # We use the cached skip reason from previous attempts
     skip_msg = getattr(hd, 'skip_msg', None)
     if skip_msg:
@@ -177,6 +184,11 @@ def hmc_session(request, hmc_definition):
     hd.skip_msg = None
     session.hmc_definition = hd
 
-    yield session
+    return session
 
+
+def teardown_hmc_session(session):
+    """
+    Log off from an HMC session.
+    """
     session.logoff()
