@@ -20,12 +20,13 @@ These tests do not change any CPC properties.
 
 from __future__ import absolute_import, print_function
 
+import pytest
 from requests.packages import urllib3
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: disable=unused-import
-from zhmcclient.testutils.cpc_fixtures import all_cpcs  # noqa: F401
+# pylint: disable=line-too-long,unused-import
+from zhmcclient.testutils.cpc_fixtures import all_cpcs, classic_mode_cpcs  # noqa: F401, E501
 
 urllib3.disable_warnings()
 
@@ -49,8 +50,30 @@ CPC_VOLATILE_PROPS = [
     'zcpc-maximum-inlet-air-temperature',
     'zcpc-maximum-inlet-liquid-temperature',
     'zcpc-minimum-inlet-air-temperature',
+    'zcpc-power-consumption',
+    'cpc-power-consumption',
     'ec-mcl-description'  # TODO: Remove once 'last-update' volat. issue fixed
 ]
+
+# Machine types with same max partitions for all models:
+MAX_PARTS_BY_TYPE = {
+    '2817': 60,  # z196
+    '2818': 30,  # z114
+    '2827': 60,  # zEC12
+    '2828': 30,  # zBC12
+    '2964': 85,  # z13 / Emperor
+    '2965': 40,  # z13s / Rockhopper
+    '3906': 85,  # z14 / Emperor II
+    '3907': 40,  # z14-ZR1 / Rockhopper II
+    '8561': 85,  # z15
+}
+
+# Machine types with different max partitions across their models:
+MAX_PARTS_BY_TYPE_MODEL = {
+    ('8562', 'GT2'): 85,  # z15 (85 is an exception for 8562)
+    ('8562', 'T02'): 40,  # z15
+    ('8562', 'LT2'): 40,  # z15
+}
 
 
 def assert_cpc_props(cpc, exp_props, ignore_values=None, prop_names=None):
@@ -83,6 +106,15 @@ def assert_cpc_props(cpc, exp_props, ignore_values=None, prop_names=None):
         "'{c}' : {e}".format(c=cpc.name, e=', '.join(extra_prop_names))
 
 
+def assert_cpc_prop(act_value, exp_value, prop_name, cpc_name):
+    """
+    Check a property of a Cpc object.
+    """
+    assert act_value == exp_value, \
+        "Property '{p}' has unexpected value in Cpc object '{c}'". \
+        format(p=prop_name, c=cpc_name)
+
+
 def get_cpc_props(session, cpc_uri):
     """
     Get CPC properties directly using the "Get CPC Properties" operation.
@@ -94,8 +126,9 @@ def get_cpc_props(session, cpc_uri):
 def test_cpc_find_list(hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
-    Test find/list methods for CPCs:
+    Test find/list methods for CPCs (any mode):
     - find_by_name(name)
+    - pull_full_properties()
     - find(**filter_args)
       - name filter (cache/server-side)
     - findall(**filter_args)
@@ -111,6 +144,7 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
     for cpc_name in hd.cpcs:
+        print("Testing CPC {}".format(cpc_name))
 
         # The code to be tested: find_by_name(name)
         found_cpc = client.cpcs.find_by_name(cpc_name)
@@ -124,6 +158,12 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
             found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
             prop_names=CPC_MINIMAL_PROPS)
 
+        # The code to be tested: pull_full_properties()
+        found_cpc.pull_full_properties()
+
+        assert_cpc_props(
+            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS)
+
         # The code to be tested: find() with name filter (cache/server-side)
         found_cpc = client.cpcs.find(name=cpc_name)
 
@@ -134,7 +174,6 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
         # The code to be tested: findall() with no filter
         found_cpcs = client.cpcs.findall()
 
-        assert len(found_cpcs) == len(hd.cpcs)
         assert cpc_name in [_cpc.name for _cpc in found_cpcs]
         found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
         assert_cpc_props(
@@ -153,7 +192,6 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
         # The code to be tested: findall() with status filter (client-side)
         found_cpcs = client.cpcs.findall(status=cpc_status)
 
-        assert len(found_cpcs) >= 1
         assert cpc_name in [_cpc.name for _cpc in found_cpcs]
         found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
         assert_cpc_props(
@@ -163,7 +201,6 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
         # The code to be tested: list() with no filter and short properties
         found_cpcs = client.cpcs.list()
 
-        assert len(found_cpcs) == len(hd.cpcs)
         assert cpc_name in [_cpc.name for _cpc in found_cpcs]
         found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
         assert_cpc_props(
@@ -193,20 +230,121 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
         # short properties
         found_cpcs = client.cpcs.list(filter_args=dict(status=cpc_status))
 
-        assert len(found_cpcs) >= 1
         assert cpc_name in [_cpc.name for _cpc in found_cpcs]
         found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
         assert_cpc_props(
             found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
             prop_names=CPC_SHORT_PROPS)
 
+
+def test_cpc_features(all_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test certain "features" of a CPC (any mode):
+    - dpm_enabled property
+    - maximum_active_partitions property
+    - feature_enabled(feature_name)
+    - feature_info()
+    """
+    for cpc in all_cpcs:
+        cpc_mode = 'DPM' if cpc.dpm_enabled else 'classic'
+        print("Testing CPC {} ({} mode)".format(cpc.name, cpc_mode))
+
+        cpc.pull_full_properties()
+        cpc_mach_type = cpc.properties['machine-type']
+        cpc_mach_model = cpc.properties['machine-model']
+        cpc_features = cpc.properties.get('available-features-list', None)
+
+        exp_cpc_props = dict(cpc.properties)
+
+        # The code to be tested: dpm_enabled property
+        dpm_enabled = cpc.dpm_enabled
+
+        exp_dpm_enabled = exp_cpc_props.get('dpm-enabled', False)
+        assert_cpc_prop(dpm_enabled, exp_dpm_enabled, 'dpm-enabled', cpc.name)
+
+        # The code to be tested: maximum_active_partitions property
+        max_parts = cpc.maximum_active_partitions
+
+        exp_max_parts = exp_cpc_props.get('maximum-active-partitions', None)
+        if exp_max_parts is None:
+            # Determine from tables
+            try:
+                exp_max_parts = MAX_PARTS_BY_TYPE[cpc_mach_type]
+            except KeyError:
+                exp_max_parts = MAX_PARTS_BY_TYPE_MODEL[
+                    (cpc_mach_type, cpc_mach_model)]
+        assert_cpc_prop(max_parts, exp_max_parts,
+                        'maximum-active-partitions', cpc.name)
+
+        # Test: feature_enabled(feature_name)
+        feature_name = 'storage-management'
+        if not cpc_features:
+            # The machine does not yet support features
+            with pytest.raises(ValueError):
+                # The code to be tested: feature_enabled(feature_name)
+                cpc.feature_enabled(feature_name)
+        else:
+            features = [f for f in cpc_features if f['name'] == feature_name]
+            if not features:
+                # The machine generally supports features, but not this feature
+                with pytest.raises(ValueError):
+                    # The code to be tested: feature_enabled(feature_name)
+                    cpc.feature_enabled(feature_name)
+            else:
+                # The machine supports this feature
+                # The code to be tested: feature_enabled(feature_name)
+                sm_enabled = cpc.feature_enabled(feature_name)
+                exp_sm_enabled = features[0]['state']
+                assert_cpc_prop(sm_enabled, exp_sm_enabled,
+                                'available-features-list', cpc.name)
+
+        # Test: feature_info()
+        if not cpc_features:
+            # The machine does not yet support features
+            with pytest.raises(ValueError):
+                # The code to be tested: feature_info()
+                cpc.feature_info()
+        else:
+            # The machine supports features
+            # The code to be tested: feature_info()
+            features = cpc.feature_info()
+            assert len(features) >= 1, \
+                "Feature list does not have at least one entry in Cpc object " \
+                "'{c}'".format(c=cpc.name)
+            for i, feature in enumerate(features):
+                assert 'name' in feature, \
+                    "Feature #{i} does not have '{p}' field in Cpc object " \
+                    "'{c}'".format(i=i, p='name', c=cpc.name)
+                assert 'description' in feature, \
+                    "Feature #{i} does not have '{p}' field in Cpc object " \
+                    "'{c}'".format(i=i, p='description', c=cpc.name)
+                assert 'state' in feature, \
+                    "Feature #{i} does not have '{p}' field in Cpc object " \
+                    "'{c}'".format(i=i, p='state', c=cpc.name)
+
+
+def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test for export_profiles(profile_area, wait_for_completion=True,
+                             operation_timeout=None)
+
+    Only for CPCs in classic mode, skipped in DPM mode.
+    """
+    for cpc in classic_mode_cpcs:
+        assert not cpc.dpm_enabled
+        print("Testing CPC {} (classic mode)".format(cpc.name))
+
+        # cpc.pull_full_properties()
+
+        # The code to be tested: dpm_enabled property
+        cpc.export_profiles(profile_area=1)
+
+        # TODO: Complete this test
+
+
 # Read-only tests:
-# TODO: Test for dpm_enabled property
-# TODO: Test for maximum_active_partitions property
-# TODO: Test for feature_enabled(feature_name)
-# TODO: Test for feature_info()
-# TODO: Test for export_profiles(profile_area, wait_for_completion=True,
-#                                operation_timeout=None)
 # TODO: Test for get_wwpns(partitions)
 # TODO: Test for get_free_crypto_domains(crypto_adapters=None)
 # TODO: Test for get_energy_management_properties()
