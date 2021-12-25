@@ -28,13 +28,15 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.cpc_fixtures import all_cpcs, classic_mode_cpcs  # noqa: F401, E501
 
+from .utils import runtest_find_list, assert_res_prop
+
 urllib3.disable_warnings()
 
 # Properties in minimalistic Cpc objects (e.g. find_by_name())
 CPC_MINIMAL_PROPS = ['object-uri', 'name']
 
-# Properties in short Cpc objects (e.g. list() without full properties)
-CPC_SHORT_PROPS = [
+# Properties in Cpc objects returned by list() without full properties
+CPC_LIST_PROPS = [
     'object-uri', 'name', 'status', 'has-unacceptable-status', 'dpm-enabled',
     'se-version', 'target-name']
 
@@ -76,165 +78,18 @@ MAX_PARTS_BY_TYPE_MODEL = {
 }
 
 
-def assert_cpc_props(cpc, exp_props, ignore_values=None, prop_names=None):
-    """
-    Check the properties of a Cpc object.
-    """
-    checked_prop_names = set()
-    for prop_name in exp_props:
-
-        if prop_names is not None and prop_name not in prop_names:
-            continue  # Only check properties in prop_names
-
-        assert prop_name in cpc.properties, \
-            "Property '{p}' not found in Cpc object '{c}'". \
-            format(p=prop_name, c=cpc.name)
-
-        if ignore_values is not None and prop_name not in ignore_values:
-            act_value = cpc.properties[prop_name]
-            exp_value = exp_props[prop_name]
-            assert act_value == exp_value, \
-                "Property '{p}' has unexpected value in Cpc object '{c}'". \
-                format(p=prop_name, c=cpc.name)
-
-        checked_prop_names.add(prop_name)
-
-    extra_prop_names = set(cpc.properties.keys()) - checked_prop_names
-
-    assert not extra_prop_names, \
-        "The following properties were unexpectedly present in Cpc object " \
-        "'{c}' : {e}".format(c=cpc.name, e=', '.join(extra_prop_names))
-
-
-def assert_cpc_prop(act_value, exp_value, prop_name, cpc_name):
-    """
-    Check a property of a Cpc object.
-    """
-    assert act_value == exp_value, \
-        "Property '{p}' has unexpected value in Cpc object '{c}'". \
-        format(p=prop_name, c=cpc_name)
-
-
-def get_cpc_props(session, cpc_uri):
-    """
-    Get CPC properties directly using the "Get CPC Properties" operation.
-    """
-    cpc_props = session.get(cpc_uri)
-    return cpc_props
-
-
 def test_cpc_find_list(hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
-    Test find/list methods for CPCs (any mode):
-    - find_by_name(name)
-    - pull_full_properties()
-    - find(**filter_args)
-      - name filter (cache/server-side)
-    - findall(**filter_args)
-      - no filter
-      - name filter (cache/server-side)
-      - status filter (client-side)
-    - list(full_properties=False, filter_args=None)
-      - no filter + short
-      - name filter (cache/server-side) + full
-      - name filter (cache/server-side) + short
-      - status filter (client-side) + short
+    Test find/list methods for CPCs (any mode).
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
     for cpc_name in hd.cpcs:
-        print("Testing CPC {}".format(cpc_name))
-
-        # The code to be tested: find_by_name(name)
-        found_cpc = client.cpcs.find_by_name(cpc_name)
-
-        # Get full properties directly, for comparison
-        exp_cpc_props = get_cpc_props(hmc_session, found_cpc.uri)
-
-        cpc_status = exp_cpc_props['status']  # a client-side filter property
-
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_MINIMAL_PROPS)
-
-        # The code to be tested: pull_full_properties()
-        found_cpc.pull_full_properties()
-
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS)
-
-        # The code to be tested: find() with name filter (cache/server-side)
-        found_cpc = client.cpcs.find(name=cpc_name)
-
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_MINIMAL_PROPS)
-
-        # The code to be tested: findall() with no filter
-        found_cpcs = client.cpcs.findall()
-
-        assert cpc_name in [_cpc.name for _cpc in found_cpcs]
-        found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_SHORT_PROPS)
-
-        # The code to be tested: findall() with name filter (server-side)
-        found_cpcs = client.cpcs.findall(name=cpc_name)
-
-        assert len(found_cpcs) == 1
-        found_cpc = found_cpcs[0]
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_MINIMAL_PROPS)
-
-        # The code to be tested: findall() with status filter (client-side)
-        found_cpcs = client.cpcs.findall(status=cpc_status)
-
-        assert cpc_name in [_cpc.name for _cpc in found_cpcs]
-        found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_SHORT_PROPS)
-
-        # The code to be tested: list() with no filter and short properties
-        found_cpcs = client.cpcs.list()
-
-        assert cpc_name in [_cpc.name for _cpc in found_cpcs]
-        found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_SHORT_PROPS)
-
-        # The code to be tested: list() with name filter and full properties
-        found_cpcs = client.cpcs.list(
-            full_properties=True, filter_args=dict(name=cpc_name))
-
-        assert len(found_cpcs) == 1
-        found_cpc = found_cpcs[0]
-
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS)
-
-        # The code to be tested: list() with name filter and short properties
-        found_cpcs = client.cpcs.list(filter_args=dict(name=cpc_name))
-
-        assert len(found_cpcs) == 1
-        found_cpc = found_cpcs[0]
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_SHORT_PROPS)
-
-        # The code to be tested: list() with status filter (client-side) and
-        # short properties
-        found_cpcs = client.cpcs.list(filter_args=dict(status=cpc_status))
-
-        assert cpc_name in [_cpc.name for _cpc in found_cpcs]
-        found_cpc = [_cpc for _cpc in found_cpcs if _cpc.name == cpc_name][0]
-        assert_cpc_props(
-            found_cpc, exp_cpc_props, ignore_values=CPC_VOLATILE_PROPS,
-            prop_names=CPC_SHORT_PROPS)
+        print("Testing on CPC {}".format(cpc_name))
+        runtest_find_list(
+            hmc_session, client.cpcs, cpc_name, 'name', 'status',
+            CPC_VOLATILE_PROPS, CPC_MINIMAL_PROPS, CPC_LIST_PROPS)
 
 
 def test_cpc_features(all_cpcs):  # noqa: F811
@@ -248,7 +103,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     """
     for cpc in all_cpcs:
         cpc_mode = 'DPM' if cpc.dpm_enabled else 'classic'
-        print("Testing CPC {} ({} mode)".format(cpc.name, cpc_mode))
+        print("Testing on CPC {} ({} mode)".format(cpc.name, cpc_mode))
 
         cpc.pull_full_properties()
         cpc_mach_type = cpc.properties['machine-type']
@@ -261,7 +116,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
         dpm_enabled = cpc.dpm_enabled
 
         exp_dpm_enabled = exp_cpc_props.get('dpm-enabled', False)
-        assert_cpc_prop(dpm_enabled, exp_dpm_enabled, 'dpm-enabled', cpc.name)
+        assert_res_prop(dpm_enabled, exp_dpm_enabled, 'dpm-enabled', cpc)
 
         # The code to be tested: maximum_active_partitions property
         max_parts = cpc.maximum_active_partitions
@@ -274,8 +129,8 @@ def test_cpc_features(all_cpcs):  # noqa: F811
             except KeyError:
                 exp_max_parts = MAX_PARTS_BY_TYPE_MODEL[
                     (cpc_mach_type, cpc_mach_model)]
-        assert_cpc_prop(max_parts, exp_max_parts,
-                        'maximum-active-partitions', cpc.name)
+        assert_res_prop(max_parts, exp_max_parts,
+                        'maximum-active-partitions', cpc)
 
         # Test: feature_enabled(feature_name)
         feature_name = 'storage-management'
@@ -296,8 +151,8 @@ def test_cpc_features(all_cpcs):  # noqa: F811
                 # The code to be tested: feature_enabled(feature_name)
                 sm_enabled = cpc.feature_enabled(feature_name)
                 exp_sm_enabled = features[0]['state']
-                assert_cpc_prop(sm_enabled, exp_sm_enabled,
-                                'available-features-list', cpc.name)
+                assert_res_prop(sm_enabled, exp_sm_enabled,
+                                'available-features-list', cpc)
 
         # Test: feature_info()
         if not cpc_features:
@@ -334,7 +189,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
     """
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
-        print("Testing CPC {} (classic mode)".format(cpc.name))
+        print("Testing on CPC {} (classic mode)".format(cpc.name))
 
         # cpc.pull_full_properties()
 
