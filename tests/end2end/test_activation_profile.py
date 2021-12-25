@@ -27,13 +27,23 @@ from __future__ import absolute_import, print_function
 import pytest
 from requests.packages import urllib3
 
-import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.cpc_fixtures import classic_mode_cpcs  # noqa: F401, E501
 
+from .utils import runtest_find_list
+
 urllib3.disable_warnings()
+
+# Properties in minimalistic ActivationProfile objects (e.g. find_by_name())
+ACTPROF_MINIMAL_PROPS = ['element-uri', 'name']
+
+# Properties in ActivationProfile objects returned by list() without full props
+ACTPROF_LIST_PROPS = ['element-uri', 'name', 'target-name']
+
+# Properties whose values can change between retrievals
+ACTPROF_VOLATILE_PROPS = []
 
 
 @pytest.mark.parametrize(
@@ -46,35 +56,16 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
     """
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
-        print("Testing CPC {} (classic mode)".format(cpc.name))
+        print("Testing on CPC {} (classic mode)".format(cpc.name))
 
-        ap_mgr_attr = profile_type + '_activation_profiles'
-        ap_class = profile_type + '-activation-profile'
+        session = cpc.manager.session
+        actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
 
-        ap_mgr = getattr(cpc, ap_mgr_attr)
+        # Pick an activation profile
+        actprof_list = actprof_mgr.list()
+        assert len(actprof_list) >= 1
+        actprof = actprof_list[-1]  # Pick the last one returned
 
-        # Test listing activation profiles
-
-        ap_list = ap_mgr.list()
-
-        assert len(ap_list) >= 1
-        for ap in ap_list:
-            assert isinstance(ap, zhmcclient.ActivationProfile)
-
-        # Pick the last one returned
-        ap = ap_list[-1]
-        ap_name = ap.name
-
-        # Test finding the activation profile based on its (cached) name
-
-        ap_found = ap_mgr.find(name=ap_name)
-
-        assert ap_found.name == ap_name
-
-        # There are no other server-side filtered props besides name
-
-        # Test finding the partition based on a client-side filtered prop
-
-        aps_found = ap_mgr.findall(**{'class': ap_class})
-
-        assert ap_name in [ap.name for ap in aps_found]  # noqa: F812
+        runtest_find_list(
+            session, actprof_mgr, actprof.name, 'name', 'element-uri',
+            ACTPROF_VOLATILE_PROPS, ACTPROF_MINIMAL_PROPS, ACTPROF_LIST_PROPS)
