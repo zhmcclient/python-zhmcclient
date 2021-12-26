@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=attribute-defined-outside-init
-
 """
 End2end tests for activation profiles (with CPCs in classic mode).
 
@@ -27,8 +25,8 @@ from requests.packages import urllib3
 
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.cpc_fixtures import classic_mode_cpcs  # noqa: F401, E501
+# pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list
 

@@ -24,6 +24,7 @@ from requests.packages import urllib3
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
+# pylint: enable=line-too-long,unused-import
 
 urllib3.disable_warnings()
 
