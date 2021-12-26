@@ -87,7 +87,7 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
         console = cpc.manager.client.consoles.console
 
         stogrp_name = TEST_PREFIX + '.test_stovol_crud.stogrp1'
-        stovol_name = TEST_PREFIX + '.test_stovol_crud.stovol1'
+        stovol_name = 'stovol1'
 
         # Ensure clean starting point
         try:
@@ -100,62 +100,67 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
                 "CPC '{c}'".format(s=stogrp_name, c=cpc.name), UserWarning)
             stogrp.delete()
 
-        # Create a storage group for the volume
-        stogrp_input_props = {
-            'cpc-uri': cpc.uri,
-            'name': stogrp_name,
-            'description': 'Dummy storage group description.',
-            'type': 'fcp',
-        }
-        stogrp = console.storage_groups.create(stogrp_input_props)
+        stogrp = None
+        try:
 
-        # Test creating a volume
+            # Create a storage group for the volume
+            stogrp_input_props = {
+                'cpc-uri': cpc.uri,
+                'name': stogrp_name,
+                'description': 'Dummy storage group description.',
+                'type': 'fcp',
+            }
+            stogrp = console.storage_groups.create(stogrp_input_props)
 
-        stovol_input_props = {
-            'name': stovol_name,
-            'description': 'Dummy storage volume description.',
-            'size': 100,  # MB
-        }
-        stovol_auto_props = {
-            'fulfillment-state': 'pending',
-            'usage': 'data',
-        }
+            # Test creating a volume
 
-        # The code to be tested
-        stovol = stogrp.storage_volumes.create(stovol_input_props)
+            stovol_input_props = {
+                'name': stovol_name,
+                'description': 'Dummy storage volume description.',
+                'size': 100,  # MB
+            }
+            stovol_auto_props = {
+                'fulfillment-state': 'pending',
+                'usage': 'data',
+            }
 
-        for pn, exp_value in stovol_input_props.items():
-            assert stovol.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage volume:\n" \
-                "{!r}".format(pn, sorted(stovol.properties))
-        stovol.pull_full_properties()
-        for pn, exp_value in stovol_input_props.items():
-            assert stovol.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage volume:\n" \
-                "{!r}".format(pn, sorted(stovol.properties))
-        for pn, exp_value in stovol_auto_props.items():
-            assert stovol.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage volume:\n" \
-                "{!r}".format(pn, sorted(stovol.properties))
+            # The code to be tested
+            stovol = stogrp.storage_volumes.create(stovol_input_props)
 
-        # Test updating a property of the storage volume
+            for pn, exp_value in stovol_input_props.items():
+                assert stovol.properties[pn] == exp_value, \
+                    "Unexpected value for property {!r} of storage volume:\n" \
+                    "{!r}".format(pn, sorted(stovol.properties))
+            stovol.pull_full_properties()
+            for pn, exp_value in stovol_input_props.items():
+                assert stovol.properties[pn] == exp_value, \
+                    "Unexpected value for property {!r} of storage volume:\n" \
+                    "{!r}".format(pn, sorted(stovol.properties))
+            for pn, exp_value in stovol_auto_props.items():
+                assert stovol.properties[pn] == exp_value, \
+                    "Unexpected value for property {!r} of storage volume:\n" \
+                    "{!r}".format(pn, sorted(stovol.properties))
 
-        new_desc = "Updated storage volume description."
+            # Test updating a property of the storage volume
 
-        # The code to be tested
-        stovol.update_properties(dict(description=new_desc))
+            new_desc = "Updated storage volume description."
 
-        assert stovol.properties['description'] == new_desc
-        stovol.pull_full_properties()
-        assert stovol.properties['description'] == new_desc
+            # The code to be tested
+            stovol.update_properties(dict(description=new_desc))
 
-        # Test deleting the storage volume
+            assert stovol.properties['description'] == new_desc
+            stovol.pull_full_properties()
+            assert stovol.properties['description'] == new_desc
 
-        # The code to be tested
-        stovol.delete()
+            # Test deleting the storage volume
 
-        with pytest.raises(zhmcclient.NotFound):
-            stogrp.storage_volumes.find(name=stovol_name)
+            # The code to be tested
+            stovol.delete()
 
-        # Cleanup
-        stogrp.delete()
+            with pytest.raises(zhmcclient.NotFound):
+                stogrp.storage_volumes.find(name=stovol_name)
+
+        finally:
+            # Cleanup
+            if stogrp:
+                stogrp.delete()
