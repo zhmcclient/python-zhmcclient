@@ -18,6 +18,9 @@ Utility functions for end2end tests.
 
 from __future__ import absolute_import, print_function
 
+# Prefix used for names of resources that are created during tests
+TEST_PREFIX = 'zhmcclient.tests.end2end'
+
 
 def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
     """
