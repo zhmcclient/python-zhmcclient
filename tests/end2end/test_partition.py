@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=attribute-defined-outside-init
-
 """
-End2end tests for partitions (with CPCs in DPM mode).
+End2end tests for partitions (on CPCs in DPM mode).
 
 These tests do not change any existing partitions, but create, modify and delete
 test partitions.
@@ -30,20 +28,20 @@ from requests.packages import urllib3
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
+# pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list, TEST_PREFIX
 
 urllib3.disable_warnings()
 
-# Properties in minimalistic ActivationProfile objects (e.g. find_by_name())
+# Properties in minimalistic Partition objects (e.g. find_by_name())
 PART_MINIMAL_PROPS = ['object-uri', 'name']
 
-# Properties in ActivationProfile objects returned by list() without full props
+# Properties in Partition objects returned by list() without full props
 PART_LIST_PROPS = ['object-uri', 'name', 'status', 'type']
 
-# Properties whose values can change between retrievals
+# Properties whose values can change between retrievals of Partition objects
 PART_VOLATILE_PROPS = []
 
 
@@ -58,7 +56,7 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick an activation profile
+        # Pick a partition
         part_list = cpc.partitions.list()
         assert len(part_list) >= 1
         part = part_list[-1]  # Pick the last one returned
@@ -97,7 +95,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
 
         part_input_props = {
             'name': part_name,
-            'description': 'Test partition for zhmcclient end2end tests.',
+            'description': 'Test partition for zhmcclient end2end tests',
             'ifl-processors': 2,
             'initial-memory': 1024,
             'maximum-memory': 2048,

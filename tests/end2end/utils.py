@@ -18,6 +18,8 @@ Utility functions for end2end tests.
 
 from __future__ import absolute_import, print_function
 
+import pytest
+
 # Prefix used for names of resources that are created during tests
 TEST_PREFIX = 'zhmcclient.tests.end2end'
 
@@ -193,3 +195,17 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         found_res = [_res for _res in found_res_list if _res.name == name][0]
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                          prop_names=list_props)
+
+
+def skipif_no_storage_mgmt_feature(cpc):
+    """
+    Skip the test if the "DPM Storage Management" feature is not enabled for
+    the specified CPC, or if the CPC does not yet support it.
+    """
+    try:
+        smf = cpc.feature_enabled('dpm-storage-management')
+    except ValueError:
+        smf = False
+    if not smf:
+        pytest.skip("DPM Storage Mgmt feature not enabled or not supported "
+                    "on CPC {}".format(cpc.name))
