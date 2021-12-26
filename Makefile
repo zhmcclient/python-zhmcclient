@@ -102,17 +102,13 @@ else
   WHICH = which
 endif
 
-# Path name of HMC definitions file used for end2end tests
+# Path name of HMC definitions file used for end2end tests.
+# Keep in sync with zhmcclient/testutils/hmc_definition_fixtures.py
 default_testhmcfile := tests/hmc_definitions.yaml
-ifndef TESTHMCFILE
-  TESTHMCFILE := $(default_testhmcfile)
-endif
 
 # HMC nickname in HMC definitions file
+# Keep in sync with zhmcclient/testutils/hmc_definition_fixtures.py
 default_testhmc := default
-ifndef TESTHMC
-  TESTHMC := $(default_testhmc)
-endif
 
 # Name of this Python package (top-level Python namespace + Pypi package name)
 package_name := zhmcclient
@@ -241,7 +237,7 @@ help:
 	@echo "  build      - Build the distribution files in: $(dist_dir)"
 	@echo "  builddoc   - Build documentation in: $(doc_build_dir)"
 	@echo "  all        - Do all of the above"
-	@echo "  end2end    - Run end2end tests"
+	@echo "  end2end    - Run end2end tests (and test coverage)"
 	@echo "  uninstall  - Uninstall package from active Python environment"
 	@echo "  upload     - Upload the distribution files to PyPI"
 	@echo "  clean      - Remove any temporary files"
@@ -487,6 +483,6 @@ endif
 	@echo "Makefile: Done running install tests"
 
 .PHONY:	end2end
-end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files)
-	bash -c 'TESTHMCFILE=$(TESTHMCFILE) TESTHMC=$(TESTHMC) py.test $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_opts)'
+end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) .coveragerc
+	py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."

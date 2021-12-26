@@ -30,7 +30,6 @@ import yamlloader
 
 THIS_DIR = os.path.dirname(__file__)
 
-DEFAULT_HMC_FILE = os.path.join('tests', 'hmc_definitions.yaml')
 EXAMPLE_HMC_FILE = os.path.join('tests', 'example_hmc_definitions.yaml')
 
 
@@ -46,7 +45,7 @@ class HMCDefinitionFile(object):
     Encapsulation of the definitions in the HMC definition file.
     """
 
-    def __init__(self, filepath=DEFAULT_HMC_FILE):
+    def __init__(self, filepath):
         self._filepath = filepath
         self._hmcs = OrderedDict()
         self._hmc_groups = OrderedDict()
