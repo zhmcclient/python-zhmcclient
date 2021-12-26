@@ -15,11 +15,9 @@
 # pylint: disable=attribute-defined-outside-init
 
 """
-End2end tests for activation profiles in classic mode.
+End2end tests for activation profiles (with CPCs in classic mode).
 
 These tests do not change any activation profiles.
-
-Only tested on CPCs in classic mode, and skipped otherwise.
 """
 
 from __future__ import absolute_import, print_function
