@@ -131,10 +131,23 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
         part.pull_full_properties()
         assert part.properties['description'] == new_desc
 
+        # Test renaming the partition
+
+        part_name_new = part_name + '_new'
+
+        # The code to be tested
+        part.update_properties(dict(name=part_name_new))
+
+        assert part.properties['name'] == part_name_new
+        part.pull_full_properties()
+        assert part.properties['name'] == part_name_new
+        with pytest.raises(zhmcclient.NotFound):
+            cpc.partitions.find(name=part_name)
+
         # Test deleting the partition
 
         # The code to be tested
         part.delete()
 
         with pytest.raises(zhmcclient.NotFound):
-            cpc.partitions.find(name=part_name)
+            cpc.partitions.find(name=part_name_new)

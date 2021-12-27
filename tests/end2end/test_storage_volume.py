@@ -152,13 +152,26 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
             stovol.pull_full_properties()
             assert stovol.properties['description'] == new_desc
 
+            # Test renaming the storage volume
+
+            stovol_name_new = stovol_name + '_new'
+
+            # The code to be tested
+            stovol.update_properties(dict(name=stovol_name_new))
+
+            assert stovol.properties['name'] == stovol_name_new
+            stovol.pull_full_properties()
+            assert stovol.properties['name'] == stovol_name_new
+            with pytest.raises(zhmcclient.NotFound):
+                stogrp.storage_volumes.find(name=stovol_name)
+
             # Test deleting the storage volume
 
             # The code to be tested
             stovol.delete()
 
             with pytest.raises(zhmcclient.NotFound):
-                stogrp.storage_volumes.find(name=stovol_name)
+                stogrp.storage_volumes.find(name=stovol_name_new)
 
         finally:
             # Cleanup

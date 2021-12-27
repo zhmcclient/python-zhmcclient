@@ -145,8 +145,6 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
                 'description': 'Dummy NIC description.',
                 'virtual-switch-uri': vswitch.uri,
                 'device-number': '0100',
-                'vlan-id': 53,
-                'vlan-type': 'enforced',
             }
             nic_auto_props = {
                 'type': 'iqd',
@@ -178,13 +176,26 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
             nic.pull_full_properties()
             assert nic.properties['description'] == new_desc
 
+            # Test renaming the NIC
+
+            nic_name_new = nic_name + '_new'
+
+            # The code to be tested
+            nic.update_properties(dict(name=nic_name_new))
+
+            assert nic.properties['name'] == nic_name_new
+            nic.pull_full_properties()
+            assert nic.properties['name'] == nic_name_new
+            with pytest.raises(zhmcclient.NotFound):
+                part.nics.find(name=nic_name)
+
             # Test deleting the NIC
 
             # The code to be tested
             nic.delete()
 
             with pytest.raises(zhmcclient.NotFound):
-                part.nics.find(name=nic_name)
+                part.nics.find(name=nic_name_new)
 
         finally:
             # Cleanup
