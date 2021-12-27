@@ -31,7 +31,7 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX
+from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props
 
 urllib3.disable_warnings()
 
@@ -81,7 +81,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
         assert cpc.dpm_enabled
         print("Testing on CPC {} (DPM mode)".format(cpc.name))
 
-        part_name = TEST_PREFIX + '.test_part_crud.part1'
+        part_name = TEST_PREFIX + ' test_part_crud part1'
 
         # Ensure a clean starting point for this test
         try:
@@ -99,15 +99,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
 
         # Test creating the partition
 
-        part_input_props = {
-            'name': part_name,
-            'description': 'Test partition for zhmcclient end2end tests',
-            'ifl-processors': 2,
-            'initial-memory': 1024,
-            'maximum-memory': 2048,
-            'processor-mode': 'shared',  # used for filtering
-            'type': 'linux',  # used for filtering
-        }
+        part_input_props = standard_partition_props(cpc, part_name)
         part_auto_props = {
             'status': 'stopped',
         }

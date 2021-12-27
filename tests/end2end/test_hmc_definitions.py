@@ -36,25 +36,33 @@ def test_cpc_definitions(hmc_session):  # noqa: F811
     have the attributes defined there.
     """
     client = zhmcclient.Client(hmc_session)
+    cpcs = client.cpcs.list()
+    cpc_names = [cpc.name for cpc in cpcs]
+
     hd = hmc_session.hmc_definition
-    for def_name in hd.cpcs:
-        def_cpc_dict = hd.cpcs[def_name]
-        def_machine_type = def_cpc_dict.get('machine_type', None)
-        def_dpm_enabled = def_cpc_dict.get('dpm', None)
+    for cpc_name in hd.cpcs:
 
-        act_cpcs = client.cpcs.list()
-        act_names = [cpc.name for cpc in act_cpcs]
-        assert def_name in act_names, \
-            "CPC {0}".format(def_name)
+        def_cpc_props = dict(hd.cpcs[cpc_name])
+        assert cpc_name in cpc_names, \
+            "CPC '{c}' defined in HMC definition file is not managed by " \
+            "the HMC".format(c=cpc_name)
 
-        act_cpc = client.cpcs.find(name=def_name)
+        cpc = client.cpcs.find(name=cpc_name)
+        cpc.pull_full_properties()
 
-        if def_dpm_enabled is not None:
-            act_dpm_enabled = act_cpc.dpm_enabled
-            assert def_dpm_enabled == act_dpm_enabled, \
-                "CPC {0}".format(def_name)
+        cpc_props = dict(cpc.properties)
+        for def_prop_name in def_cpc_props:
 
-        if def_machine_type is not None:
-            act_machine_type = act_cpc.get_property('machine-type')
-            assert def_machine_type == act_machine_type, \
-                "CPC {0}".format(def_name)
+            hmc_prop_name = def_prop_name.replace('_', '-')
+            assert hmc_prop_name in cpc_props, \
+                "Property '{dp}' defined in HMC definition file does not " \
+                "exist in CPC '{c}' (as '{hp}')". \
+                format(dp=def_prop_name, hp=hmc_prop_name, c=cpc_name)
+
+            cpc_value = cpc_props[hmc_prop_name]
+            def_cpc_value = def_cpc_props[def_prop_name]
+            assert def_cpc_value == cpc_value, \
+                "Unexpected value for property '{dp}' in CPC '{c}': " \
+                "HMC definition file: {dv!r}, CPC: {hv!r}". \
+                format(dp=def_prop_name, c=cpc_name, dv=def_cpc_value,
+                       hv=cpc_value)
