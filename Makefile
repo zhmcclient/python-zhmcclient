@@ -472,7 +472,7 @@ flake8_$(pymn).done: develop_$(pymn).done Makefile $(flake8_rc_file) $(check_py_
 
 .PHONY: test
 test: Makefile develop_$(pymn).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
-	-$(call RM_FUNC,htmlcov)
+	-$(call RMDIR_R_FUNC,htmlcov)
 	py.test --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."
 
@@ -488,6 +488,6 @@ endif
 
 .PHONY:	end2end
 end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_e2e_cov_files)
-	-$(call RM_FUNC,htmlcov.end2end)
+	-$(call RMDIR_R_FUNC,htmlcov.end2end)
 	py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_e2e_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."

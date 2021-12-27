@@ -37,8 +37,10 @@ CPC_MINIMAL_PROPS = ['object-uri', 'name']
 
 # Properties in Cpc objects returned by list() without full properties
 CPC_LIST_PROPS = [
+    'object-uri', 'name', 'status']
+CPC_LIST_PROPS_Z15 = [
     'object-uri', 'name', 'status', 'has-unacceptable-status', 'dpm-enabled',
-    'se-version', 'target-name']
+    'se-version']
 
 # Properties whose values can change between retrievals
 CPC_VOLATILE_PROPS = [
@@ -87,9 +89,17 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
     hd = hmc_session.hmc_definition
     for cpc_name in hd.cpcs:
         print("Testing on CPC {}".format(cpc_name))
+
+        se_version = hd.cpcs[cpc_name].get('se_version', [])
+        # pylint: disable=unnecessary-lambda
+        se_version_info = list(map(lambda v: int(v), se_version.split('.')))
+        cpc_list_props = CPC_LIST_PROPS
+        if se_version_info >= [2, 15, 0]:
+            cpc_list_props = CPC_LIST_PROPS_Z15
+
         runtest_find_list(
             hmc_session, client.cpcs, cpc_name, 'name', 'status',
-            CPC_VOLATILE_PROPS, CPC_MINIMAL_PROPS, CPC_LIST_PROPS)
+            CPC_VOLATILE_PROPS, CPC_MINIMAL_PROPS, cpc_list_props)
 
 
 def test_cpc_features(all_cpcs):  # noqa: F811
@@ -124,7 +134,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
         # The code to be tested: maximum_active_partitions property
         max_parts = cpc.maximum_active_partitions
 
-        exp_max_parts = exp_cpc_props.get('maximum-active-partitions', None)
+        exp_max_parts = exp_cpc_props.get('maximum-partitions', None)
         if exp_max_parts is None:
             # Determine from tables
             try:
@@ -132,12 +142,11 @@ def test_cpc_features(all_cpcs):  # noqa: F811
             except KeyError:
                 exp_max_parts = MAX_PARTS_BY_TYPE_MODEL[
                     (cpc_mach_type, cpc_mach_model)]
-        assert_res_prop(max_parts, exp_max_parts,
-                        'maximum-active-partitions', cpc)
+        assert_res_prop(max_parts, exp_max_parts, 'maximum-partitions', cpc)
 
         # Test: feature_enabled(feature_name)
         feature_name = 'storage-management'
-        if not cpc_features:
+        if cpc_features is None:
             # The machine does not yet support features
             with pytest.raises(ValueError):
                 # The code to be tested: feature_enabled(feature_name)
@@ -158,7 +167,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
                                 'available-features-list', cpc)
 
         # Test: feature_info()
-        if not cpc_features:
+        if cpc_features is None:
             # The machine does not yet support features
             with pytest.raises(ValueError):
                 # The code to be tested: feature_info()
@@ -167,9 +176,8 @@ def test_cpc_features(all_cpcs):  # noqa: F811
             # The machine supports features
             # The code to be tested: feature_info()
             features = cpc.feature_info()
-            assert len(features) >= 1, \
-                "Feature list does not have at least one entry in Cpc object " \
-                "'{c}'".format(c=cpc.name)
+            # Note: It is possible that the feature list exists but is empty
+            #       (e.g when a z14 HMC manages a z13)
             for i, feature in enumerate(features):
                 assert 'name' in feature, \
                     "Feature #{i} does not have '{p}' field in Cpc object " \

@@ -24,6 +24,11 @@
 #     faked_hmc_file: TEXT       # For faked HMC: Path name of fake HMC file,
 #                                # relative to this file.
 #                                # Mandatory (if faked HMC).
+#     cpcs:                      # Dict of CPCs
+#       CPC_NAME:                # CPC definition. key: CPC name, value: List
+#                                #   of expected CPC properties.
+#         prop_name: prop_value  # CPC property name (with underscores) and
+#                                #   expected value.
 # hmc_groups:                    # Dict of HMC groups (optional).
 #   NICKNAME42:                  # Nickname of HMC group.
 #     - NICKNAME1                # Nicknames of HMCs or HMC groups in that grp.

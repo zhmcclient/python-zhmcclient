@@ -21,7 +21,7 @@ from __future__ import absolute_import, print_function
 import pytest
 
 # Prefix used for names of resources that are created during tests
-TEST_PREFIX = 'zhmcclient.tests.end2end'
+TEST_PREFIX = 'zhmcclient_tests_end2end'
 
 
 def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
@@ -42,9 +42,7 @@ def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
         if ignore_values is not None and prop_name not in ignore_values:
             act_value = res_props[prop_name]
             exp_value = exp_props[prop_name]
-            assert act_value == exp_value, \
-                "Property '{p}' has unexpected value in {k} object '{o}'". \
-                format(p=prop_name, k=res.prop('class'), o=res.name)
+            assert_res_prop(act_value, exp_value, prop_name, res)
 
         # checked_prop_names.add(prop_name)
 
@@ -62,8 +60,10 @@ def assert_res_prop(act_value, exp_value, prop_name, res):
     Check a property of a resource object.
     """
     assert act_value == exp_value, \
-        "Property '{p}' has unexpected value in {k} object '{o}'". \
-        format(p=prop_name, k=res.properties['class'], o=res.name)
+        "Property '{p}' has unexpected value in {k} object '{o}': " \
+        "Expected: {ev}, actual: {av}". \
+        format(p=prop_name, k=res.prop('class'), o=res.name, ev=exp_value,
+               av=act_value)
 
 
 def runtest_find_list(session, manager, name, server_prop, client_prop,
@@ -139,7 +139,13 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
     found_res_list = manager.findall()
 
     assert name in map(lambda _res: _res.name, found_res_list)
-    found_res = next(filter(lambda _res: _res.name == name, found_res_list))
+    found_res_list = list(filter(lambda _res: _res.name == name,
+                                 found_res_list))
+    found_res = found_res_list[0]
+    if len(found_res_list) > 1:
+        raise AssertionError(
+            "{k} findall() result with non-unique name '{n}': {o}".
+            format(k=found_res.prop('class'), n=name, o=found_res_list))
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
 
@@ -157,7 +163,14 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         found_res_list = manager.findall(**{client_prop: client_value})
 
         assert name in map(lambda _res: _res.name, found_res_list)
-        found_res = next(filter(lambda _res: _res.name == name, found_res_list))
+        found_res_list = list(filter(lambda _res: _res.name == name,
+                                     found_res_list))
+        found_res = found_res_list[0]
+        if len(found_res_list) > 1:
+            raise AssertionError(
+                "{k} findall(client_filter) result with non-unique name '{n}': "
+                "{o}".
+                format(k=found_res.prop('class'), n=name, o=found_res_list))
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                          prop_names=list_props)
 
@@ -165,7 +178,13 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
     found_res_list = manager.list()
 
     assert name in map(lambda _res: _res.name, found_res_list)
-    found_res = next(filter(lambda _res: _res.name == name, found_res_list))
+    found_res_list = list(filter(lambda _res: _res.name == name,
+                                 found_res_list))
+    found_res = found_res_list[0]
+    if len(found_res_list) > 1:
+        raise AssertionError(
+            "{k} list() result with non-unique name '{n}': {o}".
+            format(k=found_res.prop('class'), n=name, o=found_res_list))
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
 
@@ -209,3 +228,31 @@ def skipif_no_storage_mgmt_feature(cpc):
     if not smf:
         pytest.skip("DPM Storage Mgmt feature not enabled or not supported "
                     "on CPC {}".format(cpc.name))
+
+
+def standard_partition_props(cpc, part_name):
+    """
+    Return the input properties for a standard partition in the specified CPC.
+    """
+    part_input_props = {
+        'name': part_name,
+        'description': 'Test partition for zhmcclient end2end tests',
+        'initial-memory': 1024,
+        'maximum-memory': 2048,
+        'processor-mode': 'shared',  # used for filtering
+        'type': 'linux',  # used for filtering
+    }
+    if cpc.get_property('processor-count-ifl') > 0:
+        part_input_props['ifl-processors'] = 2
+    elif cpc.get_property('processor-count-general-purpose') > 0:
+        part_input_props['cp-processors'] = 2
+    else:
+        pc_names = filter(lambda p: p.startswith('processor-count-'),
+                          cpc.properties.keys())
+        pc_list = ["{}={}".format(n, cpc.properties[n]) for n in pc_names]
+        raise AssertionError(
+            "CPC '{c}' has neither IFL nor CP processors. Processor-count "
+            "properties are: {p}".
+            format(c=cpc.name, p=', '.join(pc_list)))
+
+    return part_input_props
