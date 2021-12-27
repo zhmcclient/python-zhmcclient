@@ -4,6 +4,7 @@
 /.cache/
 /.tox/
 /htmlcov/
+/htmlcov.end2end/
 /build/
 /build_doc/
 /dist/
