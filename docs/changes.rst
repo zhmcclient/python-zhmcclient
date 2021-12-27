@@ -30,6 +30,10 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed an issue that delete() of element objects e.g. NICs, HBAs, VFs,
+  storage volumes, storage template volumes) did not update the uris list in
+  the local properties of its parent object.
+
 **Enhancements:**
 
 **Cleanup:**

@@ -263,6 +263,14 @@ class Hba(BaseResource):
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
+        parent_hba_uris = self.manager.parent.get_properties_local(
+            'hba-uris')
+        if parent_hba_uris:
+            try:
+                parent_hba_uris.remove(self._uri)
+            except ValueError:
+                pass
+
     @logged_api_call
     def update_properties(self, properties):
         """
