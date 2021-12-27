@@ -101,6 +101,9 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     - feature_enabled(feature_name)
     - feature_info()
     """
+    if not all_cpcs:
+        pytest.skip("No CPCs provided")
+
     for cpc in all_cpcs:
         cpc_mode = 'DPM' if cpc.dpm_enabled else 'classic'
         print("Testing on CPC {} ({} mode)".format(cpc.name, cpc_mode))
@@ -187,6 +190,9 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
 
     Only for CPCs in classic mode, skipped in DPM mode.
     """
+    if not classic_mode_cpcs:
+        pytest.skip("No CPCs in classic mode provided")
+
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
         print("Testing on CPC {} (classic mode)".format(cpc.name))
