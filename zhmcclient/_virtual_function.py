@@ -227,6 +227,14 @@ class VirtualFunction(BaseResource):
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
+        parent_vf_uris = self.manager.parent.get_properties_local(
+            'virtual-function-uris')
+        if parent_vf_uris:
+            try:
+                parent_vf_uris.remove(self._uri)
+            except ValueError:
+                pass
+
     @logged_api_call
     def update_properties(self, properties):
         """

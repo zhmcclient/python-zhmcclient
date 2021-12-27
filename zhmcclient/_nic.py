@@ -289,6 +289,14 @@ class Nic(BaseResource):
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
+        parent_nic_uris = self.manager.parent.get_properties_local(
+            'nic-uris')
+        if parent_nic_uris:
+            try:
+                parent_nic_uris.remove(self._uri)
+            except ValueError:
+                pass
+
     @logged_api_call
     def update_properties(self, properties):
         """

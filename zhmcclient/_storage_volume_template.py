@@ -310,6 +310,14 @@ class StorageVolumeTemplate(BaseResource):
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
+        parent_sv_uris = self.manager.parent.get_properties_local(
+            'storage-volume-uris')
+        if parent_sv_uris:
+            try:
+                parent_sv_uris.remove(self._uri)
+            except ValueError:
+                pass
+
     @logged_api_call
     def update_properties(self, properties):
         """
