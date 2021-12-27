@@ -135,10 +135,23 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
         stogrp.pull_full_properties()
         assert stogrp.properties['description'] == new_desc
 
+        # Test renaming the storage group
+
+        stogrp_name_new = stogrp_name + '_new'
+
+        # The code to be tested
+        stogrp.update_properties(dict(name=stogrp_name_new))
+
+        assert stogrp.properties['name'] == stogrp_name_new
+        stogrp.pull_full_properties()
+        assert stogrp.properties['name'] == stogrp_name_new
+        with pytest.raises(zhmcclient.NotFound):
+            console.storage_groups.find(name=stogrp_name)
+
         # Test deleting the storage group
 
         # The code to be tested
         stogrp.delete()
 
         with pytest.raises(zhmcclient.NotFound):
-            console.storage_groups.find(name=stogrp_name)
+            console.storage_groups.find(name=stogrp_name_new)
