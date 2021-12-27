@@ -205,6 +205,9 @@ else
 endif
 
 pytest_cov_opts := --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-report=html
+pytest_cov_files := .coveragerc
+pytest_e2e_cov_opts := --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc.end2end --cov-report=html
+pytest_e2e_cov_files := .coveragerc.end2end
 
 # Files to be built
 build_files := $(bdist_file) $(sdist_file)
@@ -468,7 +471,8 @@ flake8_$(pymn).done: develop_$(pymn).done Makefile $(flake8_rc_file) $(check_py_
 	echo "done" >$@
 
 .PHONY: test
-test: Makefile develop_$(pymn).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) .coveragerc
+test: Makefile develop_$(pymn).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
+	-$(call RM_FUNC,htmlcov)
 	py.test --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."
 
@@ -483,6 +487,7 @@ endif
 	@echo "Makefile: Done running install tests"
 
 .PHONY:	end2end
-end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) .coveragerc
-	py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)
+end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_e2e_cov_files)
+	-$(call RM_FUNC,htmlcov.end2end)
+	py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_e2e_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."

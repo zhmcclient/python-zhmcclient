@@ -23,4 +23,4 @@ show_missing = True
 
 [html]
 
-directory = htmlcov
+directory = htmlcov.end2end
