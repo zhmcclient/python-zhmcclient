@@ -59,15 +59,20 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick an adapter and port
-        adapters = cpc.adapters.list()
-        if not adapters:
-            msg_txt = "No adapters on CPC {}".format(cpc.name)
+        # Pick a port of an adapter
+        port = None
+        adapter_list = cpc.adapters.list()
+        for ad in adapter_list:
+            port_list = ad.ports.list()
+            if not port_list:
+                continue
+            adapter = ad
+            port = port_list[0]
+            break
+        if not port:
+            msg_txt = "No adapters with ports on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        adapter = adapters[0]
-        ports = adapter.ports.list()
-        port = ports[0]
 
         runtest_find_list(
             session, adapter.ports, port.name, 'name', 'element-uri',
