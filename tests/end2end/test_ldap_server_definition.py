@@ -31,7 +31,7 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import all_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, TestWarning
+from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -62,7 +62,7 @@ def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
         if not ldapsrvdef_list:
             msg_txt = "No LPAR Server Definitions defined on CPC {}". \
                 format(cpc.name)
-            warnings.warn(msg_txt, TestWarning)
+            warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
 
         ldapsrvdef = ldapsrvdef_list[-1]  # Pick the last one returned
@@ -133,7 +133,7 @@ def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
                 msg_txt = "HMC userid '{u}' is not authorized for 'Manage " \
                     "LDAP Server Definitions' task on HMC {h}". \
                     format(u=hd.hmc_userid, h=hd.hmc_host)
-                warnings.warn(msg_txt, TestWarning)
+                warnings.warn(msg_txt, End2endTestWarning)
                 pytest.skip(msg_txt)
 
         for pn, exp_value in ldapsrvdef_input_props.items():
