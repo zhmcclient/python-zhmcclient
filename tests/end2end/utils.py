@@ -18,13 +18,14 @@ Utility functions for end2end tests.
 
 from __future__ import absolute_import, print_function
 
+import warnings
 import pytest
 
 # Prefix used for names of resources that are created during tests
 TEST_PREFIX = 'zhmcclient_tests_end2end'
 
 
-class TestWarning(UserWarning):
+class End2endTestWarning(UserWarning):
     """
     Python warning indicating an issue with an end2end test.
     """
@@ -278,12 +279,14 @@ def standard_partition_props(cpc, part_name):
     elif cpc.get_property('processor-count-general-purpose') > 0:
         part_input_props['cp-processors'] = 2
     else:
+        part_input_props['cp-processors'] = 1
         pc_names = filter(lambda p: p.startswith('processor-count-'),
                           cpc.properties.keys())
         pc_list = ["{}={}".format(n, cpc.properties[n]) for n in pc_names]
-        raise AssertionError(
-            "CPC '{c}' has neither IFL nor CP processors. Processor-count "
-            "properties are: {p}".
-            format(c=cpc.name, p=', '.join(pc_list)))
+        warnings.warn(
+            "CPC '{c}' shows neither IFL nor CP processors, specifying 1 CP "
+            "for partition creation. "
+            "CPC processor-count properties are: {p}".
+            format(c=cpc.name, p=', '.join(pc_list)), End2endTestWarning)
 
     return part_input_props
