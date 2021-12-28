@@ -20,6 +20,7 @@ These tests do not change any CPC properties.
 
 from __future__ import absolute_import, print_function
 
+import warnings
 import pytest
 from requests.packages import urllib3
 import zhmcclient
@@ -28,7 +29,7 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import all_cpcs, classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, assert_res_prop
+from .utils import runtest_find_list, assert_res_prop, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -205,10 +206,21 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
         assert not cpc.dpm_enabled
         print("Testing on CPC {} (classic mode)".format(cpc.name))
 
-        # cpc.pull_full_properties()
+        session = cpc.manager.session
 
-        # The code to be tested: dpm_enabled property
-        cpc.export_profiles(profile_area=1)
+        try:
+
+            # The code to be tested
+            _ = cpc.export_profiles(profile_area=1)
+
+        except zhmcclient.HTTPError as exc:
+            if exc.http_status == 403 and exc.reason == 1:
+                hd = session.hmc_definition
+                msg_txt = "HMC userid '{u}' is not authorized for the " \
+                    "'Export/Import Profile Data (API only)' " \
+                    "task on HMC {h}".format(u=hd.hmc_userid, h=hd.hmc_host)
+                warnings.warn(msg_txt, End2endTestWarning)
+                pytest.skip(msg_txt)
 
         # TODO: Complete this test
 
