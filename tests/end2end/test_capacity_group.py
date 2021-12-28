@@ -31,7 +31,7 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX
+from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -61,7 +61,10 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
 
         # Pick a capacity group
         capgrp_list = cpc.capacity_groups.list()
-        assert len(capgrp_list) >= 1
+        if not capgrp_list:
+            msg_txt = "No Capacity Groups defined on CPC {}".format(cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
         capgrp = capgrp_list[-1]  # Pick the last one returned
 
         runtest_find_list(
@@ -94,9 +97,6 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
                 "Deleting test capacity group from previous run: '{p}' "
                 "on CPC '{c}'".
                 format(p=capgrp_name, c=cpc.name), UserWarning)
-            status = capgrp.get_property('status')
-            if status != 'stopped':
-                capgrp.stop()
             capgrp.delete()
         try:
             capgrp = cpc.capacity_groups.find(name=capgrp_name_new)
@@ -107,9 +107,6 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
                 "Deleting test capacity group from previous run: '{p}' "
                 "on CPC '{c}'".
                 format(p=capgrp_name_new, c=cpc.name), UserWarning)
-            status = capgrp.get_property('status')
-            if status != 'stopped':
-                capgrp.stop()
             capgrp.delete()
 
         # Test creating the capacity group

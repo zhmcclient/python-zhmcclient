@@ -56,6 +56,15 @@ def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
     for cpc in all_cpcs:
         session = cpc.manager.session
         console = cpc.manager.client.consoles.console
+        client = console.manager.client
+
+        api_version = client.query_api_version()
+        hmc_version = api_version['hmc-version']
+        # pylint: disable=unnecessary-lambda
+        hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
+        if hmc_version_info < [2, 13, 0]:
+            pytest.skip("HMC {hv} does not yet support LDAP Server Definitions".
+                        format(hv=hmc_version))
 
         # Pick a LDAP server definition
         ldapsrvdef_list = console.ldap_server_definitions.list()
@@ -64,7 +73,6 @@ def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-
         ldapsrvdef = ldapsrvdef_list[-1]  # Pick the last one returned
 
         print("Testing on CPC {}".format(cpc.name))
@@ -88,6 +96,15 @@ def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
 
         session = cpc.manager.session
         console = cpc.manager.client.consoles.console
+        client = console.manager.client
+
+        api_version = client.query_api_version()
+        hmc_version = api_version['hmc-version']
+        # pylint: disable=unnecessary-lambda
+        hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
+        if hmc_version_info < [2, 13, 0]:
+            pytest.skip("HMC {hv} does not yet support LDAP Server Definitions".
+                        format(hv=hmc_version))
 
         ldapsrvdef_name = TEST_PREFIX + ' test_ldapsrvdef_crud ldapsrvdef1'
         ldapsrvdef_name_new = ldapsrvdef_name + ' new'
@@ -103,9 +120,6 @@ def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
                 "Deleting test LDAP server definition from previous run: '{p}' "
                 "on CPC '{c}'".
                 format(p=ldapsrvdef_name, c=cpc.name), UserWarning)
-            status = ldapsrvdef.get_property('status')
-            if status != 'stopped':
-                ldapsrvdef.stop()
             ldapsrvdef.delete()
 
         # Test creating the LDAP server definition
@@ -120,7 +134,6 @@ def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
         ldapsrvdef_auto_props = {
             'connection-port': None,
             'use-ssl': False,
-            'tolerate-untrusted-certificates': False,
         }
 
         # The code to be tested

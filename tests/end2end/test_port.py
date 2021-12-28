@@ -31,7 +31,7 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX
+from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -61,6 +61,10 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
 
         # Pick an adapter and port
         adapters = cpc.adapters.list()
+        if not adapters:
+            msg_txt = "No adapters on CPC {}".format(cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
         adapter = adapters[0]
         ports = adapter.ports.list()
         port = ports[0]
