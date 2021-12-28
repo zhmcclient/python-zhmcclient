@@ -24,6 +24,13 @@ import pytest
 TEST_PREFIX = 'zhmcclient_tests_end2end'
 
 
+class TestWarning(UserWarning):
+    """
+    Python warning indicating an issue with an end2end test.
+    """
+    pass
+
+
 def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
     """
     Check the properties of a resource object.
