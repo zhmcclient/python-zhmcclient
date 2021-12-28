@@ -82,6 +82,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
         print("Testing on CPC {} (DPM mode)".format(cpc.name))
 
         part_name = TEST_PREFIX + ' test_part_crud part1'
+        part_name_new = part_name + ' new'
 
         # Ensure a clean starting point for this test
         try:
@@ -92,6 +93,18 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
             warnings.warn(
                 "Deleting test partition from previous run: '{p}' on CPC '{c}'".
                 format(p=part_name, c=cpc.name), UserWarning)
+            status = part.get_property('status')
+            if status != 'stopped':
+                part.stop()
+            part.delete()
+        try:
+            part = cpc.partitions.find(name=part_name_new)
+        except zhmcclient.NotFound:
+            pass
+        else:
+            warnings.warn(
+                "Deleting test partition from previous run: '{p}' on CPC '{c}'".
+                format(p=part_name_new, c=cpc.name), UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
                 part.stop()
@@ -130,8 +143,6 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
         assert part.properties['description'] == new_desc
 
         # Test renaming the partition
-
-        part_name_new = part_name + '_new'
 
         # The code to be tested
         part.update_properties(dict(name=part_name_new))

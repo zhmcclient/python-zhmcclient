@@ -95,6 +95,7 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
 
         part_name = TEST_PREFIX + ' test_hba_crud part1'
         hba_name = 'hba1'
+        hba_name_new = hba_name + ' new'
 
         # Ensure a clean starting point for this test
         try:
@@ -161,8 +162,6 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
             assert hba.properties['description'] == new_desc
 
             # Test renaming the HBA
-
-            hba_name_new = hba_name + '_new'
 
             # The code to be tested
             hba.update_properties(dict(name=hba_name_new))

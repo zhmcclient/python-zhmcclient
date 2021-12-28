@@ -92,8 +92,9 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
 
         console = cpc.manager.client.consoles.console
 
-        stogrp_name = TEST_PREFIX + '.test_stovol_crud.stogrp1'
+        stogrp_name = TEST_PREFIX + ' test_stovol_crud stogrp1'
         stovol_name = 'stovol1'
+        stovol_name_new = stovol_name + ' new'
 
         # Ensure clean starting point
         try:
@@ -159,8 +160,6 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
             assert stovol.properties['description'] == new_desc
 
             # Test renaming the storage volume
-
-            stovol_name_new = stovol_name + '_new'
 
             # The code to be tested
             stovol.update_properties(dict(name=stovol_name_new))

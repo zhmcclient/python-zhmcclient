@@ -88,9 +88,10 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
         assert cpc.dpm_enabled
         print("Testing on CPC {} (DPM mode)".format(cpc.name))
 
+        hs_adapter_name = TEST_PREFIX + ' test_nic_crud adapter1'
         part_name = TEST_PREFIX + ' test_nic_crud part1'
         nic_name = 'nic1'
-        adapter_name = TEST_PREFIX + ' test_nic_crud adapter1'
+        nic_name_new = nic_name + ' new'
 
         # Ensure a clean starting point for this test
         try:
@@ -105,15 +106,14 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
             if status != 'stopped':
                 part.stop()
             part.delete()
-
         try:
-            adapter = cpc.adapters.find(name=adapter_name)
+            adapter = cpc.adapters.find(name=hs_adapter_name)
         except zhmcclient.NotFound:
             pass
         else:
             warnings.warn(
                 "Deleting test adapter from previous run: '{a}' on CPC '{c}'".
-                format(a=adapter_name, c=cpc.name), UserWarning)
+                format(a=hs_adapter_name, c=cpc.name), UserWarning)
             adapter.delete()
 
         part = None
@@ -126,7 +126,7 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
 
             # Create a Hipersocket adapter backing the NIC
             adapter_input_props = {
-                'name': adapter_name,
+                'name': hs_adapter_name,
                 'description': 'Test adapter for zhmcclient end2end tests',
             }
             adapter = cpc.adapters.create_hipersocket(adapter_input_props)
@@ -175,8 +175,6 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
             assert nic.properties['description'] == new_desc
 
             # Test renaming the NIC
-
-            nic_name_new = nic_name + '_new'
 
             # The code to be tested
             nic.update_properties(dict(name=nic_name_new))

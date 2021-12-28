@@ -114,11 +114,21 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
     # Get full properties directly, for comparison
     exp_props = session.get(found_res.uri)
 
+    # Get the object-id of the resource from its URI
+    oid = found_res.uri.split('/')[-1]
+    oid_prop = manager._oid_prop  # pylint: disable=protected-access
+
     if client_prop:
         client_value = exp_props[client_prop]
 
     if server_prop:
         server_value = exp_props[server_prop]
+
+    assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                     prop_names=minimal_props)
+
+    # The code to be tested: find(oid), for optimized lookup
+    found_res = manager.find(**{oid_prop: oid})
 
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=minimal_props)
