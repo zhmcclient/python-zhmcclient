@@ -230,6 +230,20 @@ def skipif_no_storage_mgmt_feature(cpc):
                     "on CPC {}".format(cpc.name))
 
 
+def skipif_storage_mgmt_feature(cpc):
+    """
+    Skip the test if the "DPM Storage Management" feature is enabled for
+    the specified CPC.
+    """
+    try:
+        smf = cpc.feature_enabled('dpm-storage-management')
+    except ValueError:
+        smf = False
+    if smf:
+        pytest.skip("DPM Storage Mgmt feature enabled on CPC {}".
+                    format(cpc.name))
+
+
 def standard_partition_props(cpc, part_name):
     """
     Return the input properties for a standard partition in the specified CPC.
