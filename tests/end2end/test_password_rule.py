@@ -13,10 +13,10 @@
 # limitations under the License.
 
 """
-End2end tests for LDAP server definitions (on CPCs in DPM mode).
+End2end tests for password rules (on CPCs in DPM mode).
 
-These tests do not change any existing LDAP server definitions, but create,
-modify and delete test LDAP server definitions.
+These tests do not change any existing password rules, but create,
+modify and delete test password rules.
 """
 
 from __future__ import absolute_import, print_function
@@ -36,16 +36,16 @@ from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
 urllib3.disable_warnings()
 
 # Properties in minimalistic CapacityGroup objects (e.g. find_by_name())
-LDAPSRVDEF_MINIMAL_PROPS = ['element-uri', 'name']
+PWRULE_MINIMAL_PROPS = ['element-uri', 'name']
 
 # Properties in CapacityGroup objects returned by list() without full props
-LDAPSRVDEF_LIST_PROPS = ['element-uri', 'name']
+PWRULE_LIST_PROPS = ['element-uri', 'name', 'type']
 
 # Properties whose values can change between retrievals of CapacityGroup objects
-LDAPSRVDEF_VOLATILE_PROPS = []
+PWRULE_VOLATILE_PROPS = []
 
 
-def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
+def test_pwrule_find_list(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
@@ -63,30 +63,30 @@ def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
         # pylint: disable=unnecessary-lambda
         hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
         if hmc_version_info < [2, 13, 0]:
-            pytest.skip("HMC {hv} does not yet support LDAP server definitions".
+            pytest.skip("HMC {hv} does not yet support password rules".
                         format(hv=hmc_version))
 
-        # Pick a LDAP server definition
-        ldapsrvdef_list = console.ldap_server_definitions.list()
-        if not ldapsrvdef_list:
-            msg_txt = "No LDAP server definitions defined on CPC {}". \
+        # Pick a password rule
+        pwrule_list = console.password_rules.list()
+        if not pwrule_list:
+            msg_txt = "No password rules defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        ldapsrvdef = ldapsrvdef_list[-1]  # Pick the last one returned
+        pwrule = pwrule_list[-1]  # Pick the last one returned
 
         print("Testing on CPC {}".format(cpc.name))
 
         runtest_find_list(
-            session, console.ldap_server_definitions, ldapsrvdef.name, None,
-            'element-uri', LDAPSRVDEF_VOLATILE_PROPS, LDAPSRVDEF_MINIMAL_PROPS,
-            LDAPSRVDEF_LIST_PROPS)
+            session, console.password_rules, pwrule.name, None,
+            'element-uri', PWRULE_VOLATILE_PROPS, PWRULE_MINIMAL_PROPS,
+            PWRULE_LIST_PROPS)
 
 
-def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
+def test_pwrule_crud(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
-    Test create, read, update and delete a LDAP server definition.
+    Test create, read, update and delete a password rule.
     """
     if not all_cpcs:
         pytest.skip("No CPCs provided")
@@ -103,91 +103,88 @@ def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
         # pylint: disable=unnecessary-lambda
         hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
         if hmc_version_info < [2, 13, 0]:
-            pytest.skip("HMC {hv} does not yet support LDAP server definitions".
+            pytest.skip("HMC {hv} does not yet support password rules".
                         format(hv=hmc_version))
 
-        ldapsrvdef_name = TEST_PREFIX + ' test_ldapsrvdef_crud ldapsrvdef1'
-        ldapsrvdef_name_new = ldapsrvdef_name + ' new'
+        pwrule_name = TEST_PREFIX + ' test_pwrule_crud pwrule1'
+        pwrule_name_new = pwrule_name + ' new'
 
         # Ensure a clean starting point for this test
         try:
-            ldapsrvdef = console.ldap_server_definitions.find(
-                name=ldapsrvdef_name)
+            pwrule = console.password_rules.find(name=pwrule_name)
         except zhmcclient.NotFound:
             pass
         else:
             warnings.warn(
-                "Deleting test LDAP server definition from previous run: '{p}' "
+                "Deleting test password rule from previous run: '{p}' "
                 "on CPC '{c}'".
-                format(p=ldapsrvdef_name, c=cpc.name), UserWarning)
-            ldapsrvdef.delete()
+                format(p=pwrule_name, c=cpc.name), UserWarning)
+            pwrule.delete()
 
-        # Test creating the LDAP server definition
+        # Test creating the password rule
 
-        ldapsrvdef_input_props = {
-            'name': ldapsrvdef_name,
-            'description': 'Test LDAP server def for zhmcclient end2end tests',
-            'primary-hostname-ipaddr': '10.11.12.13',
-            'location-method': 'pattern',
-            'search-distinguished-name': 'user {0}',
+        pwrule_input_props = {
+            'name': pwrule_name,
+            'description': 'Test password rule for zhmcclient end2end tests',
+            'expiration': 90,
         }
-        ldapsrvdef_auto_props = {
-            'connection-port': None,
-            'use-ssl': False,
+        pwrule_auto_props = {
+            'min-length': 8,
+            'max-length': 256,
         }
 
         # The code to be tested
         try:
-            ldapsrvdef = console.ldap_server_definitions.create(
-                ldapsrvdef_input_props)
+            pwrule = console.password_rules.create(
+                pwrule_input_props)
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
                 hd = session.hmc_definition
                 msg_txt = "HMC userid '{u}' is not authorized for the " \
-                    "'Manage LDAP Server Definitions' task on HMC {h}". \
+                    "'Manage Password Rules' task on HMC {h}". \
                     format(u=hd.hmc_userid, h=hd.hmc_host)
                 warnings.warn(msg_txt, End2endTestWarning)
                 pytest.skip(msg_txt)
 
-        for pn, exp_value in ldapsrvdef_input_props.items():
-            assert ldapsrvdef.properties[pn] == exp_value, \
+        for pn, exp_value in pwrule_input_props.items():
+            assert pwrule.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
-        ldapsrvdef.pull_full_properties()
-        for pn, exp_value in ldapsrvdef_input_props.items():
-            assert ldapsrvdef.properties[pn] == exp_value, \
+        pwrule.pull_full_properties()
+        for pn, exp_value in pwrule_input_props.items():
+            assert pwrule.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
-        for pn, exp_value in ldapsrvdef_auto_props.items():
-            assert ldapsrvdef.properties[pn] == exp_value, \
+        for pn, exp_value in pwrule_auto_props.items():
+            assert pwrule.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
 
-        # Test updating a property of the LDAP server definition
+        # Test updating a property of the password rule
 
-        new_desc = "Updated LDAP server definition description."
+        new_desc = "Updated password rule description."
 
         # The code to be tested
-        ldapsrvdef.update_properties(dict(description=new_desc))
+        pwrule.update_properties(dict(description=new_desc))
 
-        assert ldapsrvdef.properties['description'] == new_desc
-        ldapsrvdef.pull_full_properties()
-        assert ldapsrvdef.properties['description'] == new_desc
+        assert pwrule.properties['description'] == new_desc
+        pwrule.pull_full_properties()
+        assert pwrule.properties['description'] == new_desc
 
-        # Test that LDAP server definitions cannot be renamed
+        # Test that password rules cannot be renamed
 
         with pytest.raises(zhmcclient.HTTPError) as exc_info:
 
             # The code to be tested
-            ldapsrvdef.update_properties(dict(name=ldapsrvdef_name_new))
+            pwrule.update_properties(dict(name=pwrule_name_new))
 
         exc = exc_info.value
         assert exc.http_status == 400
         assert exc.reason == 6
         with pytest.raises(zhmcclient.NotFound):
-            console.ldap_server_definitions.find(name=ldapsrvdef_name_new)
+            console.password_rules.find(name=pwrule_name_new)
 
-        # Test deleting the LDAP server definition
+        # Test deleting the password rule
 
         # The code to be tested
-        ldapsrvdef.delete()
+        pwrule.delete()
 
         with pytest.raises(zhmcclient.NotFound):
-            console.ldap_server_definitions.find(name=ldapsrvdef_name)
+            console.password_rules.find(name=pwrule_name)
