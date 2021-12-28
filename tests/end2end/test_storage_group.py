@@ -87,7 +87,8 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
         skipif_no_storage_mgmt_feature(cpc)
 
         console = cpc.manager.client.consoles.console
-        stogrp_name = TEST_PREFIX + '.test_stogrp_crud.stogrp1'
+        stogrp_name = TEST_PREFIX + ' test_stogrp_crud stogrp1'
+        stogrp_name_new = stogrp_name + ' new'
 
         # Ensure clean starting point
         try:
@@ -98,6 +99,15 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
             warnings.warn(
                 "Deleting test storage group from previous run: '{s}' on "
                 "CPC '{c}'".format(s=stogrp_name, c=cpc.name), UserWarning)
+            stogrp.delete()
+        try:
+            stogrp = console.storage_groups.find(name=stogrp_name_new)
+        except zhmcclient.NotFound:
+            pass
+        else:
+            warnings.warn(
+                "Deleting test storage group from previous run: '{s}' on "
+                "CPC '{c}'".format(s=stogrp_name_new, c=cpc.name), UserWarning)
             stogrp.delete()
 
         # Test creating the storage group
@@ -142,8 +152,6 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
         assert stogrp.properties['description'] == new_desc
 
         # Test renaming the storage group
-
-        stogrp_name_new = stogrp_name + '_new'
 
         # The code to be tested
         stogrp.update_properties(dict(name=stogrp_name_new))
