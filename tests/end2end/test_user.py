@@ -13,10 +13,10 @@
 # limitations under the License.
 
 """
-End2end tests for LDAP server definitions (on CPCs in DPM mode).
+End2end tests for users (on CPCs in DPM mode).
 
-These tests do not change any existing LDAP server definitions, but create,
-modify and delete test LDAP server definitions.
+These tests do not change any existing users, but create,
+modify and delete test users.
 """
 
 from __future__ import absolute_import, print_function
@@ -35,19 +35,17 @@ from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
-# Properties in minimalistic LDAPServerDefinition objects (e.g. find_by_name())
-LDAPSRVDEF_MINIMAL_PROPS = ['element-uri', 'name']
+# Properties in minimalistic User objects (e.g. find_by_name())
+USER_MINIMAL_PROPS = ['object-uri', 'name']
 
-# Properties in LDAPServerDefinition objects returned by list() without full
-# props
-LDAPSRVDEF_LIST_PROPS = ['element-uri', 'name']
+# Properties in User objects returned by list() without full props
+USER_LIST_PROPS = ['object-uri', 'name', 'type']
 
-# Properties whose values can change between retrievals of LDAPServerDefinition
-# objects
-LDAPSRVDEF_VOLATILE_PROPS = []
+# Properties whose values can change between retrievals of User objects
+USER_VOLATILE_PROPS = []
 
 
-def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
+def test_user_find_list(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
@@ -65,30 +63,30 @@ def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
         # pylint: disable=unnecessary-lambda
         hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
         if hmc_version_info < [2, 13, 0]:
-            pytest.skip("HMC {hv} does not yet support LDAP server definitions".
+            pytest.skip("HMC {hv} does not yet support users".
                         format(hv=hmc_version))
 
-        # Pick a LDAP server definition
-        ldapsrvdef_list = console.ldap_server_definitions.list()
-        if not ldapsrvdef_list:
-            msg_txt = "No LDAP server definitions defined on CPC {}". \
+        # Pick a user
+        user_list = console.users.list()
+        if not user_list:
+            msg_txt = "No users defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        ldapsrvdef = ldapsrvdef_list[-1]  # Pick the last one returned
+        user = user_list[-1]  # Pick the last one returned
 
         print("Testing on CPC {}".format(cpc.name))
 
         runtest_find_list(
-            session, console.ldap_server_definitions, ldapsrvdef.name, 'name',
-            'element-uri', LDAPSRVDEF_VOLATILE_PROPS, LDAPSRVDEF_MINIMAL_PROPS,
-            LDAPSRVDEF_LIST_PROPS)
+            session, console.users, user.name, 'name',
+            'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
+            USER_LIST_PROPS)
 
 
-def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
+def test_user_crud(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
-    Test create, read, update and delete a LDAP server definition.
+    Test create, read, update and delete a user.
     """
     if not all_cpcs:
         pytest.skip("No CPCs provided")
@@ -106,92 +104,95 @@ def test_ldapsrvdef_crud(all_cpcs):  # noqa: F811
         # pylint: disable=unnecessary-lambda
         hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
         if hmc_version_info < [2, 13, 0]:
-            pytest.skip("HMC {hv} does not yet support LDAP server definitions".
+            pytest.skip("HMC {hv} does not yet support users".
                         format(hv=hmc_version))
 
-        ldapsrvdef_name = TEST_PREFIX + ' test_ldapsrvdef_crud ldapsrvdef1'
-        ldapsrvdef_name_new = ldapsrvdef_name + ' new'
+        user_name = TEST_PREFIX + ' test_user_crud user1'
+        user_name_new = user_name + ' new'
 
         # Ensure a clean starting point for this test
         try:
-            ldapsrvdef = console.ldap_server_definitions.find(
-                name=ldapsrvdef_name)
+            user = console.users.find(name=user_name)
         except zhmcclient.NotFound:
             pass
         else:
             warnings.warn(
-                "Deleting test LDAP server definition from previous run: '{p}' "
+                "Deleting test user from previous run: '{p}' "
                 "on CPC '{c}'".
-                format(p=ldapsrvdef_name, c=cpc.name), UserWarning)
-            ldapsrvdef.delete()
+                format(p=user_name, c=cpc.name), UserWarning)
+            user.delete()
 
-        # Test creating the LDAP server definition
+        # Pick a password rule to be used for the user
+        pwrule = console.password_rules.list()[0]
 
-        ldapsrvdef_input_props = {
-            'name': ldapsrvdef_name,
-            'description': 'Test LDAP server def for zhmcclient end2end tests',
-            'primary-hostname-ipaddr': '10.11.12.13',
-            'location-method': 'pattern',
-            'search-distinguished-name': 'user {0}',
+        # Test creating the user
+
+        user_input_props = {
+            'name': user_name,
+            'description': 'Test user for zhmcclient end2end tests',
+            'type': 'standard',
+            'authentication-type': 'local',
+            'password-rule-uri': pwrule.uri,
+            'password': 'Abcdefghij12345!',
         }
-        ldapsrvdef_auto_props = {
-            'connection-port': None,
-            'use-ssl': False,
+        user_auto_props = {
+            'disabled': False,
         }
+        task_name = 'Manage Users' if user_input_props['type'] == 'standard' \
+            else 'Manage User Templates'
 
         # The code to be tested
         try:
-            ldapsrvdef = console.ldap_server_definitions.create(
-                ldapsrvdef_input_props)
+            user = console.users.create(user_input_props)
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
                 msg_txt = "HMC userid '{u}' is not authorized for the " \
-                    "'Manage LDAP Server Definitions' task on HMC {h}". \
-                    format(u=hd.hmc_userid, h=hd.hmc_host)
+                    "'{t}' task on HMC {h}". \
+                    format(u=hd.hmc_userid, h=hd.hmc_host, t=task_name)
                 warnings.warn(msg_txt, End2endTestWarning)
                 pytest.skip(msg_txt)
             else:
                 raise
 
-        for pn, exp_value in ldapsrvdef_input_props.items():
-            assert ldapsrvdef.properties[pn] == exp_value, \
+        for pn, exp_value in user_input_props.items():
+            assert user.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
-        ldapsrvdef.pull_full_properties()
-        for pn, exp_value in ldapsrvdef_input_props.items():
-            assert ldapsrvdef.properties[pn] == exp_value, \
+        user.pull_full_properties()
+        for pn, exp_value in user_input_props.items():
+            assert user.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
-        for pn, exp_value in ldapsrvdef_auto_props.items():
-            assert ldapsrvdef.properties[pn] == exp_value, \
+        for pn, exp_value in user_auto_props.items():
+            assert user.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
 
-        # Test updating a property of the LDAP server definition
+        # Test updating a property of the user
 
-        new_desc = "Updated LDAP server definition description."
+        new_desc = "Updated user description."
 
         # The code to be tested
-        ldapsrvdef.update_properties(dict(description=new_desc))
+        user.update_properties(dict(description=new_desc))
 
-        assert ldapsrvdef.properties['description'] == new_desc
-        ldapsrvdef.pull_full_properties()
-        assert ldapsrvdef.properties['description'] == new_desc
+        assert user.properties['description'] == new_desc
+        user.pull_full_properties()
+        assert user.properties['description'] == new_desc
 
-        # Test that LDAP server definitions cannot be renamed
+        # Test that users cannot be renamed
 
         with pytest.raises(zhmcclient.HTTPError) as exc_info:
 
             # The code to be tested
-            ldapsrvdef.update_properties(dict(name=ldapsrvdef_name_new))
+            user.update_properties(dict(name=user_name_new))
 
         exc = exc_info.value
         assert exc.http_status == 400
         assert exc.reason == 6
         with pytest.raises(zhmcclient.NotFound):
-            console.ldap_server_definitions.find(name=ldapsrvdef_name_new)
+            console.users.find(name=user_name_new)
 
-        # Test deleting the LDAP server definition
+        # Test deleting the user
 
         # The code to be tested
-        ldapsrvdef.delete()
+        user.delete()
 
         with pytest.raises(zhmcclient.NotFound):
-            console.ldap_server_definitions.find(name=ldapsrvdef_name)
+            console.users.find(name=user_name)

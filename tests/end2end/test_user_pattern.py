@@ -13,10 +13,10 @@
 # limitations under the License.
 
 """
-End2end tests for password rules (on CPCs in DPM mode).
+End2end tests for user patterns (on CPCs in DPM mode).
 
-These tests do not change any existing password rules, but create,
-modify and delete test password rules.
+These tests do not change any existing user patterns, but create,
+modify and delete test user patterns.
 """
 
 from __future__ import absolute_import, print_function
@@ -35,17 +35,17 @@ from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
-# Properties in minimalistic PasswordRule objects (e.g. find_by_name())
-PWRULE_MINIMAL_PROPS = ['element-uri', 'name']
+# Properties in minimalistic UserPattern objects (e.g. find_by_name())
+UPATT_MINIMAL_PROPS = ['element-uri', 'name']
 
-# Properties in PasswordRule objects returned by list() without full props
-PWRULE_LIST_PROPS = ['element-uri', 'name', 'type']
+# Properties in UserPattern objects returned by list() without full props
+UPATT_LIST_PROPS = ['element-uri', 'name', 'type']
 
-# Properties whose values can change between retrievals of PasswordRule objects
-PWRULE_VOLATILE_PROPS = []
+# Properties whose values can change between retrievals of UserPattern objects
+UPATT_VOLATILE_PROPS = []
 
 
-def test_pwrule_find_list(all_cpcs):  # noqa: F811
+def test_upatt_find_list(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
@@ -63,30 +63,30 @@ def test_pwrule_find_list(all_cpcs):  # noqa: F811
         # pylint: disable=unnecessary-lambda
         hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
         if hmc_version_info < [2, 13, 0]:
-            pytest.skip("HMC {hv} does not yet support password rules".
+            pytest.skip("HMC {hv} does not yet support user patterns".
                         format(hv=hmc_version))
 
-        # Pick a password rule
-        pwrule_list = console.password_rules.list()
-        if not pwrule_list:
-            msg_txt = "No password rules defined on CPC {}". \
+        # Pick a user pattern
+        upatt_list = console.user_patterns.list()
+        if not upatt_list:
+            msg_txt = "No user patterns defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        pwrule = pwrule_list[-1]  # Pick the last one returned
+        upatt = upatt_list[-1]  # Pick the last one returned
 
         print("Testing on CPC {}".format(cpc.name))
 
         runtest_find_list(
-            session, console.password_rules, pwrule.name, 'name',
-            'element-uri', PWRULE_VOLATILE_PROPS, PWRULE_MINIMAL_PROPS,
-            PWRULE_LIST_PROPS)
+            session, console.user_patterns, upatt.name, 'name',
+            'element-uri', UPATT_VOLATILE_PROPS, UPATT_MINIMAL_PROPS,
+            UPATT_LIST_PROPS)
 
 
-def test_pwrule_crud(all_cpcs):  # noqa: F811
+def test_upatt_crud(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
-    Test create, read, update and delete a password rule.
+    Test create, read, update and delete a user pattern.
     """
     if not all_cpcs:
         pytest.skip("No CPCs provided")
@@ -104,89 +104,89 @@ def test_pwrule_crud(all_cpcs):  # noqa: F811
         # pylint: disable=unnecessary-lambda
         hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
         if hmc_version_info < [2, 13, 0]:
-            pytest.skip("HMC {hv} does not yet support password rules".
+            pytest.skip("HMC {hv} does not yet support user patterns".
                         format(hv=hmc_version))
 
-        pwrule_name = TEST_PREFIX + ' test_pwrule_crud pwrule1'
-        pwrule_name_new = pwrule_name + ' new'
+        upatt_name = TEST_PREFIX + ' test_upatt_crud upatt1'
+        upatt_name_new = upatt_name + ' new'
 
         # Ensure a clean starting point for this test
         try:
-            pwrule = console.password_rules.find(name=pwrule_name)
+            upatt = console.user_patterns.find(name=upatt_name)
         except zhmcclient.NotFound:
             pass
         else:
             warnings.warn(
-                "Deleting test password rule from previous run: '{p}' "
+                "Deleting test user pattern from previous run: '{p}' "
                 "on CPC '{c}'".
-                format(p=pwrule_name, c=cpc.name), UserWarning)
-            pwrule.delete()
+                format(p=upatt_name, c=cpc.name), UserWarning)
+            upatt.delete()
 
-        # Test creating the password rule
+        # Pick a user to be the template user for the user pattern
+        user = console.users.find(name=hd.hmc_userid)
 
-        pwrule_input_props = {
-            'name': pwrule_name,
-            'description': 'Test password rule for zhmcclient end2end tests',
-            'expiration': 90,
+        # Test creating the user pattern
+
+        upatt_input_props = {
+            'name': upatt_name,
+            'description': 'Test user pattern for zhmcclient end2end tests',
+            'pattern': TEST_PREFIX + ' test_upatt_crud .+',
+            'type': 'regular-expression',
+            'retention-time': 180,
+            'user-template-uri': user.uri,  # required until z13
         }
-        pwrule_auto_props = {
-            'min-length': 8,
-            'max-length': 256,
-        }
+        upatt_auto_props = {}
 
         # The code to be tested
         try:
-            pwrule = console.password_rules.create(
-                pwrule_input_props)
+            upatt = console.user_patterns.create(upatt_input_props)
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
                 msg_txt = "HMC userid '{u}' is not authorized for the " \
-                    "'Manage Password Rules' task on HMC {h}". \
+                    "'Manage User Patterns' task on HMC {h}". \
                     format(u=hd.hmc_userid, h=hd.hmc_host)
                 warnings.warn(msg_txt, End2endTestWarning)
                 pytest.skip(msg_txt)
             else:
                 raise
 
-        for pn, exp_value in pwrule_input_props.items():
-            assert pwrule.properties[pn] == exp_value, \
+        for pn, exp_value in upatt_input_props.items():
+            assert upatt.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
-        pwrule.pull_full_properties()
-        for pn, exp_value in pwrule_input_props.items():
-            assert pwrule.properties[pn] == exp_value, \
+        upatt.pull_full_properties()
+        for pn, exp_value in upatt_input_props.items():
+            assert upatt.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
-        for pn, exp_value in pwrule_auto_props.items():
-            assert pwrule.properties[pn] == exp_value, \
+        for pn, exp_value in upatt_auto_props.items():
+            assert upatt.properties[pn] == exp_value, \
                 "Unexpected value for property {!r}".format(pn)
 
-        # Test updating a property of the password rule
+        # Test updating a property of the user pattern
 
-        new_desc = "Updated password rule description."
+        new_desc = "Updated user pattern description."
 
         # The code to be tested
-        pwrule.update_properties(dict(description=new_desc))
+        upatt.update_properties(dict(description=new_desc))
 
-        assert pwrule.properties['description'] == new_desc
-        pwrule.pull_full_properties()
-        assert pwrule.properties['description'] == new_desc
+        assert upatt.properties['description'] == new_desc
+        upatt.pull_full_properties()
+        assert upatt.properties['description'] == new_desc
 
-        # Test that password rules cannot be renamed
-
-        with pytest.raises(zhmcclient.HTTPError) as exc_info:
-
-            # The code to be tested
-            pwrule.update_properties(dict(name=pwrule_name_new))
-
-        exc = exc_info.value
-        assert exc.http_status == 400
-        assert exc.reason == 6
-        with pytest.raises(zhmcclient.NotFound):
-            console.password_rules.find(name=pwrule_name_new)
-
-        # Test deleting the password rule
+        # Test renaming the user pattern
 
         # The code to be tested
-        pwrule.delete()
+        upatt.update_properties(dict(name=upatt_name_new))
+
+        assert upatt.properties['name'] == upatt_name_new
+        upatt.pull_full_properties()
+        assert upatt.properties['name'] == upatt_name_new
+        with pytest.raises(zhmcclient.NotFound):
+            console.user_patterns.find(name=upatt_name)
+
+        # Test deleting the user pattern
+
+        # The code to be tested
+        upatt.delete()
 
         with pytest.raises(zhmcclient.NotFound):
-            console.password_rules.find(name=pwrule_name)
+            console.user_patterns.find(name=upatt_name_new)
