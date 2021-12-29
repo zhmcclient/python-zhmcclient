@@ -71,7 +71,11 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
                 vfunc = vfunc_list[0]
                 part = _part
                 break
-        assert vfunc
+        if not vfunc:
+            msg_txt = "No partitions with virtual functions on CPC {c}". \
+                format(c=cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
 
         runtest_find_list(
             session, part.virtual_functions, vfunc.name, 'name', 'description',
