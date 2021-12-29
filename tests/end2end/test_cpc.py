@@ -88,6 +88,7 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     hd = hmc_session.hmc_definition
+
     for cpc_name in hd.cpcs:
         print("Testing on CPC {}".format(cpc_name))
 
@@ -207,6 +208,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
         print("Testing on CPC {} (classic mode)".format(cpc.name))
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         try:
 
@@ -215,12 +217,13 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                hd = session.hmc_definition
                 msg_txt = "HMC userid '{u}' is not authorized for the " \
                     "'Export/Import Profile Data (API only)' " \
                     "task on HMC {h}".format(u=hd.hmc_userid, h=hd.hmc_host)
                 warnings.warn(msg_txt, End2endTestWarning)
                 pytest.skip(msg_txt)
+            else:
+                raise
 
         # TODO: Complete this test
 
