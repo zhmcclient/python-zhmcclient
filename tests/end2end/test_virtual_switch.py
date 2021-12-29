@@ -13,63 +13,58 @@
 # limitations under the License.
 
 """
-End2end tests for tasks (on CPCs in DPM mode).
+End2end tests for virtual switches (on CPCs in DPM mode).
 
-These tests do not change any existing tasks.
+These tests do not change any existing virtual switches.
 """
 
 from __future__ import absolute_import, print_function
 
+import warnings
 import pytest
 from requests.packages import urllib3
 
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils.cpc_fixtures import all_cpcs  # noqa: F401, E501
+from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list
+from .utils import runtest_find_list, End2endTestWarning
 
 urllib3.disable_warnings()
 
 # Properties in minimalistic Task objects (e.g. find_by_name())
-TASK_MINIMAL_PROPS = ['element-uri', 'name']
+VSWITCH_MINIMAL_PROPS = ['object-uri', 'name']
 
 # Properties in Task objects returned by list() without full props
-TASK_LIST_PROPS = ['element-uri', 'name']
+VSWITCH_LIST_PROPS = ['object-uri', 'name', 'type']
 
 # Properties whose values can change between retrievals of Task objects
-TASK_VOLATILE_PROPS = []
+VSWITCH_VOLATILE_PROPS = []
 
 
-def test_task_find_list(all_cpcs):  # noqa: F811
+def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
     """
-    if not all_cpcs:
-        pytest.skip("No CPCs provided")
+    if not dpm_mode_cpcs:
+        pytest.skip("No CPCs in DPM mode provided")
 
-    for cpc in all_cpcs:
+    for cpc in dpm_mode_cpcs:
         session = cpc.manager.session
-        console = cpc.manager.client.consoles.console
-        client = console.manager.client
 
-        api_version = client.query_api_version()
-        hmc_version = api_version['hmc-version']
-        # pylint: disable=unnecessary-lambda
-        hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
-        if hmc_version_info < [2, 13, 0]:
-            pytest.skip("HMC {hv} does not yet support tasks".
-                        format(hv=hmc_version))
-
-        # Pick a task
-        task_list = console.tasks.list()
-        assert task_list
-        task = task_list[-1]  # Pick the last one returned
+        # Pick a virtual switch
+        vswitch_list = cpc.virtual_switches.list()
+        if not vswitch_list:
+            msg_txt = "No virtual switches (= no network adapters) on CPC {}". \
+                format(cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        vswitch = vswitch_list[-1]  # Pick the last one returned
 
         print("Testing on CPC {}".format(cpc.name))
 
         runtest_find_list(
-            session, console.tasks, task.name, 'name', 'element-uri',
-            TASK_VOLATILE_PROPS, TASK_MINIMAL_PROPS, TASK_LIST_PROPS)
+            session, cpc.virtual_switches, vswitch.name, 'name', 'description',
+            VSWITCH_VOLATILE_PROPS, VSWITCH_MINIMAL_PROPS, VSWITCH_LIST_PROPS)
