@@ -199,7 +199,7 @@ check_py_files := \
     $(wildcard docs/notebooks/*.py) \
 
 ifdef TESTCASES
-  pytest_opts := $(TESTOPTS) -k $(TESTCASES)
+  pytest_opts := $(TESTOPTS) -k "$(TESTCASES)"
 else
   pytest_opts := $(TESTOPTS)
 endif
