@@ -56,6 +56,8 @@ class LdapServerDefinitionManager(BaseManager):
         # If the support for a resource property changes within the set of HMC
         # versions that support this type of resource, this list must be set up
         # for the version of the HMC this session is connected to.
+        # Because this resource has case-insensitive names, this list must
+        # contain the name property.
         query_props = [
             'name',
         ]
@@ -69,7 +71,8 @@ class LdapServerDefinitionManager(BaseManager):
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
-            query_props=query_props)
+            query_props=query_props,
+            case_insensitive_names=True)
 
     @property
     def console(self):

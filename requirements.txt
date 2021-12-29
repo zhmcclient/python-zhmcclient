@@ -37,6 +37,8 @@ stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version >= '3.6'  # Apache
 
 immutable-views>=0.6.0
 
+nocasedict>=1.0.2
+
 # Indirect dependencies (commented out, only listed to document their license):
 
 # certifi # ISC, from requests>=2.20

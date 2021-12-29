@@ -39,6 +39,12 @@ Released: not yet
 * Fixed the issue that 'StorageVolumeTemplate.delete()' provided an incorrect
   field in the request to the HMC. (issue #900)
 
+* Fixed the issue that resource types with case-insensitive names were matched
+  case-sensitively in find..() and list() methods. This affected resource
+  types User, UserRole, UserPattern, PasswordRule, and LDAPServerDefinition.
+  The mock support was also fixed accordingly. This required adding 'nocasedict'
+  as a new package dependency. (issue #894)
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of

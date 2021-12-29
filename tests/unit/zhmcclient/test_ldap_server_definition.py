@@ -115,6 +115,8 @@ class TestLdapServerDefinition(object):
              ['a', 'b']),
             ({'name': 'a'},
              ['a']),
+            ({'name': 'A'},  # LDAP user definitions have case-insensitive names
+             ['a']),
         ]
     )
     def test_ldap_srv_def_manager_list(
