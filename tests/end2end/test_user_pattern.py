@@ -122,8 +122,13 @@ def test_upatt_crud(all_cpcs):  # noqa: F811
                 format(p=upatt_name, c=cpc.name), UserWarning)
             upatt.delete()
 
-        # Pick a user to be the template user for the user pattern
-        user = console.users.find(name=hd.hmc_userid)
+        # Pick a template user to be the template user for the user pattern
+        template_users = console.users.findall(type='template')
+        if not template_users:
+            msg_txt = "No template users on HMC {h}".format(h=hd.hmc_host)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        template_user = template_users[0]
 
         # Test creating the user pattern
 
@@ -133,7 +138,7 @@ def test_upatt_crud(all_cpcs):  # noqa: F811
             'pattern': TEST_PREFIX + ' test_upatt_crud .+',
             'type': 'regular-expression',
             'retention-time': 180,
-            'user-template-uri': user.uri,  # required until z13
+            'user-template-uri': template_user.uri,  # required until z13
         }
         upatt_auto_props = {}
 
