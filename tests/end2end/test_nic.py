@@ -21,6 +21,7 @@ and delete test partitions with NICs.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +32,8 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props
+from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -59,17 +61,18 @@ def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick a NIC on a partition
+        # Pick a random NIC on a random partition
+        part_nic_tuples = []
         part_list = cpc.partitions.list()
-        nic = None
-        part = None
-        for _part in part_list:
-            nic_list = _part.nics.list()
-            if nic_list:
-                nic = nic_list[0]
-                part = _part
-                break
-        assert nic
+        for part in part_list:
+            nic_list = part.nics.list()
+            for nic in nic_list:
+                part_nic_tuples.append((part, nic))
+        if not part_nic_tuples:
+            msg_txt = "No partitions with NICs on CPC {}".format(cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        part, nic = random.choice(part_nic_tuples)
 
         runtest_find_list(
             session, part.nics, nic.name, 'name', 'type',

@@ -21,6 +21,7 @@ and delete test partitions with HBAs.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,7 +33,7 @@ from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props, \
-    skipif_storage_mgmt_feature
+    skipif_storage_mgmt_feature, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -62,17 +63,18 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick a HBA on a partition
+        # Pick a random HBA on a random partition
+        part_hba_tuples = []
         part_list = cpc.partitions.list()
-        hba = None
-        part = None
-        for _part in part_list:
-            hba_list = _part.hbas.list()
-            if hba_list:
-                hba = hba_list[0]
-                part = _part
-                break
-        assert hba
+        for part in part_list:
+            hba_list = part.hbas.list()
+            for hba in hba_list:
+                part_hba_tuples.append((part, hba))
+        if not part_hba_tuples:
+            msg_txt = "No partitions with HBAs on CPC {}".format(cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        part, hba = random.choice(part_hba_tuples)
 
         runtest_find_list(
             session, part.hbas, hba.name, 'name', 'wwpn',

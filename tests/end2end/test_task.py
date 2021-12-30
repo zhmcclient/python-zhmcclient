@@ -20,6 +20,7 @@ These tests do not change any existing tasks.
 
 from __future__ import absolute_import, print_function
 
+import random
 import pytest
 from requests.packages import urllib3
 
@@ -63,10 +64,10 @@ def test_task_find_list(all_cpcs):  # noqa: F811
             pytest.skip("HMC {hv} does not yet support tasks".
                         format(hv=hmc_version))
 
-        # Pick a task
+        # Pick a random task
         task_list = console.tasks.list()
-        assert task_list
-        task = task_list[-1]  # Pick the last one returned
+        assert task_list  # system-defined and therefore never empty
+        task = random.choice(task_list)
 
         print("Testing on CPC {}".format(cpc.name))
 

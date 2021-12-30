@@ -21,6 +21,7 @@ modify and delete test storage volume templates.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -62,23 +63,21 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
 
-        # Pick a storage volume template of a storage group template associated
-        # to this CPC
-        stovoltpl = None
+        # Pick a random storage volume template of a random storage group
+        # template associated to this CPC
+        grp_vol_tuples = []
         stogrptpl_list = console.storage_group_templates.findall(
             **{'cpc-uri': cpc.uri})
-        for sg in stogrptpl_list:
-            stovoltpl_list = sg.storage_volume_templates.list()
-            if not stovoltpl_list:
-                continue
-            stogrptpl = sg
-            stovoltpl = stovoltpl_list[0]
-            break
-        if not stovoltpl:
+        for stogrptpl in stogrptpl_list:
+            stovoltpl_list = stogrptpl.storage_volume_templates.list()
+            for stovoltpl in stovoltpl_list:
+                grp_vol_tuples.append((stogrptpl, stovoltpl))
+        if not grp_vol_tuples:
             msg_txt = "No storage group templates with volumes associated to " \
                 "CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
+        stogrptpl, stovoltpl = random.choice(grp_vol_tuples)
 
         runtest_find_list(
             session, stogrptpl.storage_volume_templates, stovoltpl.name, 'name',

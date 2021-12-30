@@ -20,6 +20,7 @@ These tests do not change any existing virtual switches.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -54,14 +55,14 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         session = cpc.manager.session
 
-        # Pick a virtual switch
+        # Pick a random virtual switch
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
             msg_txt = "No virtual switches (= no network adapters) on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        vswitch = vswitch_list[-1]  # Pick the last one returned
+        vswitch = random.choice(vswitch_list)
 
         print("Testing on CPC {}".format(cpc.name))
 

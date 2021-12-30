@@ -21,6 +21,7 @@ adapters and modify their ports.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -59,20 +60,18 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick a port of an adapter
-        port = None
+        # Pick a random port of a random adapter
+        adapter_port_tuples = []
         adapter_list = cpc.adapters.list()
-        for ad in adapter_list:
-            port_list = ad.ports.list()
-            if not port_list:
-                continue
-            adapter = ad
-            port = port_list[0]
-            break
-        if not port:
+        for adapter in adapter_list:
+            port_list = adapter.ports.list()
+            for port in port_list:
+                adapter_port_tuples.append((adapter, port))
+        if not adapter_port_tuples:
             msg_txt = "No adapters with ports on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
+        adapter, port = random.choice(adapter_port_tuples)
 
         runtest_find_list(
             session, adapter.ports, port.name, 'name', 'element-uri',

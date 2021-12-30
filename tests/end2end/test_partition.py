@@ -21,6 +21,7 @@ test partitions.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +32,8 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props
+from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -59,10 +61,13 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick a partition
+        # Pick a random partition
         part_list = cpc.partitions.list()
-        assert len(part_list) >= 1
-        part = part_list[-1]  # Pick the last one returned
+        if not part_list:
+            msg_txt = "No partitions on CPC {}".format(cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        part = random.choice(part_list)
 
         runtest_find_list(
             session, cpc.partitions, part.name, 'name', 'status',

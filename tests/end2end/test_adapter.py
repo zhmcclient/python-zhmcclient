@@ -21,6 +21,7 @@ and delete Hipersocket adapters.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +32,7 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX
+from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -60,9 +61,13 @@ def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick an adapter
-        adapters = cpc.adapters.list()
-        adapter = adapters[0]
+        # Pick a random adapter
+        adapter_list = cpc.adapters.list()
+        if not adapter_list:
+            msg_txt = "No adapters on CPC {}".format(cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        adapter = random.choice(adapter_list)
 
         runtest_find_list(
             session, cpc.adapters, adapter.name, 'name', 'object-uri',

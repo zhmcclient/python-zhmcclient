@@ -21,6 +21,7 @@ modify and delete test user roles.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -66,14 +67,14 @@ def test_urole_find_list(all_cpcs):  # noqa: F811
             pytest.skip("HMC {hv} does not yet support user roles".
                         format(hv=hmc_version))
 
-        # Pick a user role
+        # Pick a random user role
         urole_list = console.user_roles.list()
         if not urole_list:
             msg_txt = "No user roles defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        urole = urole_list[-1]  # Pick the last one returned
+        urole = random.choice(urole_list)
 
         print("Testing on CPC {}".format(cpc.name))
 

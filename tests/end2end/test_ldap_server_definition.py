@@ -21,6 +21,7 @@ modify and delete test LDAP server definitions.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -68,14 +69,14 @@ def test_ldapsrvdef_find_list(all_cpcs):  # noqa: F811
             pytest.skip("HMC {hv} does not yet support LDAP server definitions".
                         format(hv=hmc_version))
 
-        # Pick a LDAP server definition
+        # Pick a random LDAP server definition
         ldapsrvdef_list = console.ldap_server_definitions.list()
         if not ldapsrvdef_list:
             msg_txt = "No LDAP server definitions defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        ldapsrvdef = ldapsrvdef_list[-1]  # Pick the last one returned
+        ldapsrvdef = random.choice(ldapsrvdef_list)
 
         print("Testing on CPC {}".format(cpc.name))
 
