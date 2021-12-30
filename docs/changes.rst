@@ -36,6 +36,9 @@ Released: not yet
   storage volumes, storage template volumes) did not update the uris list in
   the local properties of its parent object.
 
+* Fixed the issue that 'StorageVolumeTemplate.delete()' provided an incorrect
+  field in the request to the HMC. (issue #900)
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of

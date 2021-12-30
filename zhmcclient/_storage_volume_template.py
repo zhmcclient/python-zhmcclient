@@ -298,7 +298,7 @@ class StorageVolumeTemplate(BaseResource):
             'element-uri': self.uri,
         }
         body = {
-            'storage-volumes': [
+            'storage-template-volumes': [
                 volreq_obj
             ],
         }
