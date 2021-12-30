@@ -21,6 +21,7 @@ delete test capacity groups.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -59,13 +60,13 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick a capacity group
+        # Pick a random capacity group
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
             msg_txt = "No Capacity Groups defined on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        capgrp = capgrp_list[-1]  # Pick the last one returned
+        capgrp = random.choice(capgrp_list)
 
         runtest_find_list(
             session, cpc.capacity_groups, capgrp.name, 'name', 'element-uri',

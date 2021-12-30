@@ -21,6 +21,7 @@ modify and delete test users.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -66,14 +67,14 @@ def test_user_find_list(all_cpcs):  # noqa: F811
             pytest.skip("HMC {hv} does not yet support users".
                         format(hv=hmc_version))
 
-        # Pick a user
+        # Pick a random user
         user_list = console.users.list()
         if not user_list:
             msg_txt = "No users defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        user = user_list[-1]  # Pick the last one returned
+        user = random.choice(user_list)
 
         print("Testing on CPC {}".format(cpc.name))
 

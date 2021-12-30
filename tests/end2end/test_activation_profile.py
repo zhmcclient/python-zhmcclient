@@ -20,6 +20,8 @@ These tests do not change any activation profiles.
 
 from __future__ import absolute_import, print_function
 
+import random
+import warnings
 import pytest
 from requests.packages import urllib3
 
@@ -28,7 +30,7 @@ from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_ses
 from zhmcclient.testutils.cpc_fixtures import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list
+from .utils import runtest_find_list, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -60,10 +62,14 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
         session = cpc.manager.session
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
 
-        # Pick an activation profile
+        # Pick a random activation profile
         actprof_list = actprof_mgr.list()
-        assert len(actprof_list) >= 1
-        actprof = actprof_list[-1]  # Pick the last one returned
+        if not actprof_list:
+            msg_txt = "No {} activation profiles on CPC {}". \
+                format(profile_type, cpc.name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        actprof = random.choice(actprof_list)
 
         runtest_find_list(
             session, actprof_mgr, actprof.name, 'name', 'element-uri',

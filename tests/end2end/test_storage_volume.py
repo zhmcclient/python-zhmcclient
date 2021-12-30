@@ -21,6 +21,7 @@ delete test storage volumes.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -62,21 +63,20 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick a storage volume of a storage group associated to this CPC
-        stovol = None
+        # Pick a random storage volume of a random storage group associated to
+        # this CPC
+        grp_vol_tuples = []
         stogrp_list = cpc.list_associated_storage_groups()
-        for sg in stogrp_list:
-            stovol_list = sg.storage_volumes.list()
-            if not stovol_list:
-                continue
-            stogrp = sg
-            stovol = stovol_list[0]
-            break
-        if not stovol:
+        for stogrp in stogrp_list:
+            stovol_list = stogrp.storage_volumes.list()
+            for stovol in stovol_list:
+                grp_vol_tuples.append((stogrp, stovol))
+        if not grp_vol_tuples:
             msg_txt = "No storage groups with volumes associated to CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
+        stogrp, stovol = random.choice(grp_vol_tuples)
 
         runtest_find_list(
             session, stogrp.storage_volumes, stovol.name, 'name', 'size',

@@ -21,6 +21,7 @@ delete test storage groups.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -63,14 +64,14 @@ def test_stogrp_find_list(dpm_mode_cpcs):  # noqa: F811
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
 
-        # Pick a storage group associated to this CPC
+        # Pick a random storage group associated to this CPC
         stogrp_list = cpc.list_associated_storage_groups()
         if not stogrp_list:
             msg_txt = "No storage groups associated to CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        stogrp = stogrp_list[-1]  # Pick the last one returned
+        stogrp = random.choice(stogrp_list)
 
         runtest_find_list(
             session, console.storage_groups, stogrp.name, 'name', 'object-uri',

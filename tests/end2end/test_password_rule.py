@@ -21,6 +21,7 @@ modify and delete test password rules.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -66,14 +67,14 @@ def test_pwrule_find_list(all_cpcs):  # noqa: F811
             pytest.skip("HMC {hv} does not yet support password rules".
                         format(hv=hmc_version))
 
-        # Pick a password rule
+        # Pick a random password rule
         pwrule_list = console.password_rules.list()
         if not pwrule_list:
             msg_txt = "No password rules defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        pwrule = pwrule_list[-1]  # Pick the last one returned
+        pwrule = random.choice(pwrule_list)
 
         print("Testing on CPC {}".format(cpc.name))
 

@@ -21,6 +21,7 @@ create, modify and delete test partitions with virtual functions.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -61,21 +62,19 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
 
-        # Pick a virtual function on a partition
+        # Pick a random virtual function on a random partition
+        part_vfunc_tuples = []
         part_list = cpc.partitions.list()
-        vfunc = None
-        part = None
-        for _part in part_list:
-            vfunc_list = _part.virtual_functions.list()
-            if vfunc_list:
-                vfunc = vfunc_list[0]
-                part = _part
-                break
-        if not vfunc:
+        for part in part_list:
+            vfunc_list = part.virtual_functions.list()
+            for vfunc in vfunc_list:
+                part_vfunc_tuples.append((part, vfunc))
+        if not part_vfunc_tuples:
             msg_txt = "No partitions with virtual functions on CPC {c}". \
                 format(c=cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
+        part, vfunc = random.choice(part_vfunc_tuples)
 
         runtest_find_list(
             session, part.virtual_functions, vfunc.name, 'name', 'description',

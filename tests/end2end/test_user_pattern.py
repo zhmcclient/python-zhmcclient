@@ -21,6 +21,7 @@ modify and delete test user patterns.
 
 from __future__ import absolute_import, print_function
 
+import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -66,14 +67,14 @@ def test_upatt_find_list(all_cpcs):  # noqa: F811
             pytest.skip("HMC {hv} does not yet support user patterns".
                         format(hv=hmc_version))
 
-        # Pick a user pattern
+        # Pick a random user pattern
         upatt_list = console.user_patterns.list()
         if not upatt_list:
             msg_txt = "No user patterns defined on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        upatt = upatt_list[-1]  # Pick the last one returned
+        upatt = random.choice(upatt_list)
 
         print("Testing on CPC {}".format(cpc.name))
 
