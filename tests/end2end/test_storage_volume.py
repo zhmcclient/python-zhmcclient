@@ -73,7 +73,7 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
             stovol = stovol_list[0]
             break
         if not stovol:
-            msg_txt = "No storage groups with volumes on CPC {}". \
+            msg_txt = "No storage groups with volumes associated to CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
