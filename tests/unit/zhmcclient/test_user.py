@@ -128,6 +128,8 @@ class TestUser(object):
              ['a', 'b']),
             ({'name': 'a'},
              ['a']),
+            ({'name': 'A'},  # users have case-insensitive names
+             ['a']),
         ]
     )
     def test_user_manager_list(

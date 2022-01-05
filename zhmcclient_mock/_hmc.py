@@ -328,7 +328,8 @@ class FakedBaseManager(object):
     next_oid = 1  # next object ID, for auto-generating them
 
     def __init__(self, hmc, parent, resource_class, base_uri, oid_prop,
-                 uri_prop, class_value):
+                 uri_prop, class_value, name_prop,
+                 case_insensitive_names=False):
         self._hmc = hmc
         self._parent = parent
         self._resource_class = resource_class
@@ -336,6 +337,8 @@ class FakedBaseManager(object):
         self._oid_prop = oid_prop
         self._uri_prop = uri_prop
         self._class_value = class_value
+        self._name_prop = name_prop
+        self._case_insensitive_names = case_insensitive_names
 
         # List of Faked{Resource} objects in this faked manager, by object ID
         self._resources = OrderedDict()
@@ -354,6 +357,8 @@ class FakedBaseManager(object):
             "  _oid_prop = {_oid_prop!r}\n"
             "  _uri_prop = {_uri_prop!r}\n"
             "  _class_value = {_class_value!r}\n"
+            "  _name_prop = {_name_prop!r}\n"
+            "  _case_insensitive_names = {_case_insensitive_names}\n"
             "  _resources = {_resources}\n"
             ")".format(
                 classname=self.__class__.__name__,
@@ -367,6 +372,8 @@ class FakedBaseManager(object):
                 _oid_prop=self._oid_prop,
                 _uri_prop=self._uri_prop,
                 _class_value=self._class_value,
+                _name_prop=self._name_prop,
+                _case_insensitive_names=self._case_insensitive_names,
                 _resources=repr_dict(self._resources, indent=2),
             ))
         return ret
@@ -394,11 +401,16 @@ class FakedBaseManager(object):
         if filter_args is not None:
             for prop_name in filter_args:
                 prop_match = filter_args[prop_name]
-                if not self._matches_prop(obj, prop_name, prop_match):
+                if prop_name == self._name_prop:
+                    case_insensitive = self._case_insensitive_names
+                else:
+                    case_insensitive = False
+                if not self._matches_prop(
+                        obj, prop_name, prop_match, case_insensitive):
                     return False
         return True
 
-    def _matches_prop(self, obj, prop_name, prop_match):
+    def _matches_prop(self, obj, prop_name, prop_match, case_insensitive):
         """
         Return a boolean indicating whether a faked resource object matches
         with a single property against a property match value.
@@ -423,6 +435,10 @@ class FakedBaseManager(object):
             - Else the property value is matched by exact value comparison
               with the match value.
 
+          case_insensitive (bool):
+            Controls whether the values of string typed properties are matched
+            case insensitively.
+
         Returns:
 
           bool: Boolean indicating whether the resource object matches w.r.t.
@@ -431,7 +447,7 @@ class FakedBaseManager(object):
         if isinstance(prop_match, (list, tuple)):
             # List items are logically ORed, so one matching item suffices.
             for pm in prop_match:
-                if self._matches_prop(obj, prop_name, pm):
+                if self._matches_prop(obj, prop_name, pm, case_insensitive):
                     return True
         else:
             # Some lists of resources do not have all properties, for example
@@ -455,7 +471,8 @@ class FakedBaseManager(object):
                 # pattern, and begin matching is done by re.match()
                 # automatically.
                 re_match = prop_match + '$'
-                m = re.match(re_match, prop_value)
+                re_flags = re.IGNORECASE if case_insensitive else 0
+                m = re.match(re_match, prop_value, flags=re_flags)
                 if m:
                     return True
             else:
@@ -723,7 +740,8 @@ class FakedConsoleManager(FakedBaseManager):
             base_uri=self.api_root + '/console',
             oid_prop=None,  # Console does not have an object ID property
             uri_prop='object-uri',
-            class_value='console')
+            class_value='console',
+            name_prop='name')
         self._console = None
 
     @property
@@ -907,7 +925,9 @@ class FakedUserManager(FakedBaseManager):
             base_uri=self.api_root + '/users',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='user')
+            class_value='user',
+            name_prop='name',
+            case_insensitive_names=True)
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -966,7 +986,9 @@ class FakedUserRoleManager(FakedBaseManager):
             base_uri=self.api_root + '/user-roles',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='user-role')
+            class_value='user-role',
+            name_prop='name',
+            case_insensitive_names=True)
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1026,7 +1048,9 @@ class FakedUserPatternManager(FakedBaseManager):
             base_uri=self.api_root + '/console/user-patterns',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='user-pattern')
+            class_value='user-pattern',
+            name_prop='name',
+            case_insensitive_names=True)
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1086,7 +1110,9 @@ class FakedPasswordRuleManager(FakedBaseManager):
             base_uri=self.api_root + '/console/password-rules',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='password-rule')
+            class_value='password-rule',
+            name_prop='name',
+            case_insensitive_names=True)
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1146,7 +1172,8 @@ class FakedTaskManager(FakedBaseManager):
             base_uri=self.api_root + '/console/tasks',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='task')
+            class_value='task',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1205,7 +1232,9 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
             base_uri=self.api_root + '/console/ldap-server-definitions',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='ldap-server-definition')
+            class_value='ldap-server-definition',
+            name_prop='name',
+            case_insensitive_names=True)
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1267,7 +1296,8 @@ class FakedActivationProfileManager(FakedBaseManager):
             base_uri=cpc.uri + '/' + ap_uri_segment,
             oid_prop='name',  # This is an exception!
             uri_prop='element-uri',
-            class_value=ap_class_value)
+            class_value=ap_class_value,
+            name_prop='name')
         self._profile_type = profile_type
 
     def add(self, properties):
@@ -1336,7 +1366,8 @@ class FakedAdapterManager(FakedBaseManager):
             base_uri=self.api_root + '/adapters',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='adapter')
+            class_value='adapter',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1506,7 +1537,8 @@ class FakedCpcManager(FakedBaseManager):
             base_uri=self.api_root + '/cpcs',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='cpc')
+            class_value='cpc',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1709,7 +1741,8 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
             base_uri=self.api_root + '/cpcs',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value=None)
+            class_value=None,
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1789,7 +1822,8 @@ class FakedHbaManager(FakedBaseManager):
             base_uri=partition.uri + '/hbas',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='hba')
+            class_value='hba',
+            name_prop='name')
 
     def add(self, properties):
         """
@@ -1903,7 +1937,8 @@ class FakedLparManager(FakedBaseManager):
             base_uri=self.api_root + '/logical-partitions',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='logical-partition')
+            class_value='logical-partition',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -1965,7 +2000,8 @@ class FakedNicManager(FakedBaseManager):
             base_uri=partition.uri + '/nics',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='nic')
+            class_value='nic',
+            name_prop='name')
 
     def add(self, properties):
         """
@@ -2095,7 +2131,8 @@ class FakedPartitionManager(FakedBaseManager):
             base_uri=self.api_root + '/partitions',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='partition')
+            class_value='partition',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -2333,7 +2370,8 @@ class FakedPortManager(FakedBaseManager):
             base_uri=adapter.uri + '/' + port_uri_segment,
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value=port_class_value)
+            class_value=port_class_value,
+            name_prop='name')
 
     def add(self, properties):
         """
@@ -2424,7 +2462,8 @@ class FakedVirtualFunctionManager(FakedBaseManager):
             base_uri=partition.uri + '/virtual-functions',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='virtual-function')
+            class_value='virtual-function',
+            name_prop='name')
 
     def add(self, properties):
         """
@@ -2520,7 +2559,8 @@ class FakedVirtualSwitchManager(FakedBaseManager):
             base_uri=self.api_root + '/virtual-switches',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='virtual-switch')
+            class_value='virtual-switch',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -2584,7 +2624,8 @@ class FakedStorageGroupManager(FakedBaseManager):
             base_uri=self.api_root + '/storage-groups',
             oid_prop='object-id',
             uri_prop='object-uri',
-            class_value='storage-group')
+            class_value='storage-group',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -2685,7 +2726,8 @@ class FakedStorageVolumeManager(FakedBaseManager):
             base_uri=self.api_root + '/storage-groups',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='storage-volume')
+            class_value='storage-volume',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -2767,7 +2809,8 @@ class FakedCapacityGroupManager(FakedBaseManager):
             base_uri=cpc.uri + '/capacity-groups',
             oid_prop='element-id',
             uri_prop='element-uri',
-            class_value='capacity-group')
+            class_value='capacity-group',
+            name_prop='name')
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -2916,7 +2959,8 @@ class FakedMetricsContextManager(FakedBaseManager):
             base_uri=self.api_root + '/services/metrics/context',
             oid_prop='fake-id',
             uri_prop='fake-uri',
-            class_value=None)
+            class_value=None,
+            name_prop=None)
         self._metric_group_def_names = []
         self._metric_group_defs = {}  # by group name
         self._metric_value_names = []

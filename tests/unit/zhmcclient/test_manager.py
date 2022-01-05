@@ -520,7 +520,8 @@ class TestNameUriCache(object):
         self.manager._list_resources = [self.resource1, self.resource2]
 
         self.timetolive = 1.0  # seconds
-        self.cache = _NameUriCache(self.manager, self.timetolive)
+        self.cache = _NameUriCache(
+            self.manager, self.timetolive, case_insensitive_names=False)
         self.created = datetime.now()
 
     def test_initial(self):

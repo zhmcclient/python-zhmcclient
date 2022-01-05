@@ -100,6 +100,9 @@ stomp.py==4.1.23
 
 immutable-views==0.6.0
 
+nocasedict==1.0.2
+
+
 # Indirect dependencies for runtime (must be consistent with requirements.txt)
 
 certifi==2019.9.11

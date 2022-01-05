@@ -31,6 +31,7 @@ import re
 from datetime import datetime, timedelta
 import warnings
 import six
+from nocasedict import NocaseDict
 
 from ._logging import logged_api_call
 from ._exceptions import NotFound, NoUniqueMatch, HTTPError
@@ -48,7 +49,7 @@ class _NameUriCache(object):
     part of the external API.
     """
 
-    def __init__(self, manager, timetolive):
+    def __init__(self, manager, timetolive, case_insensitive_names):
         """
         Parameters:
 
@@ -59,14 +60,18 @@ class _NameUriCache(object):
 
           timetolive (number): Time in seconds until the cache will invalidate
             itself automatically, since it was last invalidated.
+
+          case_insensitive_names (bool): Controls whether the name of the
+            resource is treated case insensitively.
         """
         self._manager = manager
         self._timetolive = timetolive
+        self._dict_type = NocaseDict if case_insensitive_names else dict
 
         # The cached data, as a dictionary with:
         # Key (string): Name of a resource (unique within its parent resource)
         # Value (string): URI of that resource
-        self._uris = {}
+        self._uris = self._dict_type()
 
         # Point in time when the cache was last invalidated
         self._invalidated = datetime.now()
@@ -111,7 +116,7 @@ class _NameUriCache(object):
         This empties the cache and sets the time of last invalidation to the
         current time.
         """
-        self._uris = {}
+        self._uris = self._dict_type()
         self._invalidated = datetime.now()
 
     def refresh(self):
@@ -187,7 +192,7 @@ class BaseManager(object):
 
     def __init__(self, resource_class, class_name, session, parent, base_uri,
                  oid_prop, uri_prop, name_prop, query_props,
-                 list_has_name=True):
+                 list_has_name=True, case_insensitive_names=False):
         # This method intentionally has no docstring, because it is internal.
         #
         # Parameters:
@@ -235,6 +240,9 @@ class BaseManager(object):
         #     Indicates whether the list() method for the resource populates
         #     the name property (i.e. name_prop). For example, for NICs the
         #     list() method returns minimalistic Nic objects without name.
+        #   case_insensitive_names (bool):
+        #     Indicates whether the name of the resource is treated case
+        #     insensitively.
 
         # We want to surface precondition violations as early as possible,
         # so we test those that are not surfaced through the init code:
@@ -256,9 +264,11 @@ class BaseManager(object):
         self._name_prop = name_prop
         self._query_props = query_props
         self._list_has_name = list_has_name
+        self._case_insensitive_names = case_insensitive_names
 
         self._name_uri_cache = _NameUriCache(
-            self, session.retry_timeout_config.name_uri_cache_timetolive)
+            self, session.retry_timeout_config.name_uri_cache_timetolive,
+            case_insensitive_names)
 
     def __repr__(self):
         """
@@ -277,6 +287,7 @@ class BaseManager(object):
             "  _name_prop={_name_prop!r},\n"
             "  _query_props={_query_props},\n"
             "  _list_has_name={_list_has_name!r},\n"
+            "  _case_insensitive_names={_case_insensitive_names!r},\n"
             "  _name_uri_cache={_name_uri_cache!r}\n"
             ")".format(
                 classname=self.__class__.__name__,
@@ -293,6 +304,7 @@ class BaseManager(object):
                 _name_prop=self._name_prop,
                 _query_props=repr_list(self._query_props, indent=2),
                 _list_has_name=self._list_has_name,
+                _case_insensitive_names=self._case_insensitive_names,
                 _name_uri_cache=self._name_uri_cache,
             ))
         return ret
@@ -418,6 +430,15 @@ class BaseManager(object):
           resources.
         """
         return self._parent
+
+    @property
+    def case_insensitive_names(self):
+        """
+        :class:`py:bool`:
+          Indicates whether the names of the resources are treated case
+          insensitively.
+        """
+        return self._case_insensitive_names
 
     def resource_object(self, uri_or_oid, props=None):
         """

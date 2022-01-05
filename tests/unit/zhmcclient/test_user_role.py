@@ -113,6 +113,8 @@ class TestUserRole(object):
              ['a', 'b']),
             ({'name': 'a'},
              ['a']),
+            ({'name': 'A'},  # user roles have case-insensitive names
+             ['a']),
         ]
     )
     def test_user_role_manager_list(

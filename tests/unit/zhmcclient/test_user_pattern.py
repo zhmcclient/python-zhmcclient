@@ -131,6 +131,8 @@ class TestUserPattern(object):
              ['a', 'b']),
             ({'name': 'a'},
              ['a']),
+            ({'name': 'A'},  # user patterns have case-insensitive names
+             ['a']),
         ]
     )
     def test_upm_list(
