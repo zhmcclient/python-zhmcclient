@@ -3338,7 +3338,7 @@ class LparHandler(GenericGetPropertiesHandler):
                 method, uri, 1,
                 "Cannot update LPAR properties in status {}".format(status))
             new_exc.__cause__ = None
-            raise new_exc  # zhmcclient_mock.InvalidResourceError
+            raise new_exc  # zhmcclient_mock.ConflictError
         # TODO: Add check whether requested properties are modifiable
         lpar.update(body)
 
@@ -3354,9 +3354,10 @@ class LparActivateHandler(object):
         Status retrieval method that returns the status the faked Lpar will
         have after completion of the "Activate Logical Partition" operation.
 
-        This method returns the successful status 'not-operating' for
-        LPARs that do not auto-start their OSs, and can be mocked by testcases
-        to return a different status (e.g. 'exceptions').
+        This method returns the successful status 'not-operating' for LPARs that
+        do not auto-load their OSs, and can be mocked by testcases to return a
+        different status (e.g. 'operating' for LPARs that do auto-load, or
+        'acceptable' or 'exceptions').
         """
         return 'not-operating'
 
@@ -3473,7 +3474,8 @@ class LparLoadHandler(object):
         have after completion of the "Load Logical Partition" operation.
 
         This method returns the successful status 'operating', and can be
-        mocked by testcases to return a different status (e.g. 'exceptions').
+        mocked by testcases to return a different status (e.g. 'acceptable' or
+        'exceptions').
         """
         return 'operating'
 
