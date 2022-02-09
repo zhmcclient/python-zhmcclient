@@ -43,6 +43,9 @@ Released: not yet
 * Fixed issues in the zhmcclient_mock support for the "Update LPAR Properties"
   operation. (issue #909)
 
+* Fixed issues in the zhmcclient_mock support for the "Update LPAR Properties"
+  operation. (issue #909)
+
 **Enhancements:**
 
 **Cleanup:**

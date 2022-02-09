@@ -3332,7 +3332,7 @@ class LparHandler(GenericGetPropertiesHandler):
             raise CpcInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         status = lpar.properties.get('status', None)
-        if status not in ('operating', 'exceptions'):
+        if status not in ('not-operating', 'operating', 'exceptions'):
             # LPAR permits property updates only when a active
             new_exc = ConflictError(
                 method, uri, 1,
