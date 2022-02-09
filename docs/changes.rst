@@ -45,6 +45,9 @@ Released: not yet
   The mock support was also fixed accordingly. This required adding 'nocasedict'
   as a new package dependency. (issue #894)
 
+* Fixed issues in the zhmcclient_mock support for the "Update LPAR Properties"
+  operation. (issue #909)
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of
