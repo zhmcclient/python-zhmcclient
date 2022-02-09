@@ -37,6 +37,9 @@ Released: not yet
 * Fixed the issue that 'StorageVolumeTemplate.delete()' provided an incorrect
   field in the request to the HMC. (issue #900)
 
+* Fixed issues in the zhmcclient_mock support for the "Update LPAR Properties"
+  operation. (issue #909)
+
 **Enhancements:**
 
 **Cleanup:**

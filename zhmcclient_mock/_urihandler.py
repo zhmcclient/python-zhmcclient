@@ -2042,6 +2042,7 @@ class PartitionHandler(GenericGetPropertiesHandler,
 
     # TODO: Add check_valid_cpc_status() in Update Partition Properties
     # TODO: Add check_partition_status(transitional) in Update Partition Props
+    # TODO: Add check whether properties are modifiable in Update Part. Props
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
@@ -3309,12 +3310,37 @@ class LparsHandler(object):
         return {'logical-partitions': result_lpars}
 
 
-class LparHandler(GenericGetPropertiesHandler,
-                  GenericUpdatePropertiesHandler):
+class LparHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single Lpar resource.
     """
-    pass
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update Logical Partition Properties."""
+        assert wait_for_completion is True  # async not supported yet
+        try:
+            lpar = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        cpc = lpar.manager.parent
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        status = lpar.properties.get('status', None)
+        if status not in ('operating', 'exceptions'):
+            # LPAR permits property updates only when a active
+            new_exc = ConflictError(
+                method, uri, 1,
+                "Cannot update LPAR properties in status {}".format(status))
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        # TODO: Add check whether requested properties are modifiable
+        lpar.update(body)
 
 
 class LparActivateHandler(object):
@@ -3326,11 +3352,11 @@ class LparActivateHandler(object):
     def get_status():
         """
         Status retrieval method that returns the status the faked Lpar will
-        have after completion of the the "Activate Logical Partition"
-        operation.
+        have after completion of the "Activate Logical Partition" operation.
 
-        This method returns the successful status 'not-operating', and can be
-        mocked by testcases to return a different status (e.g. 'exceptions').
+        This method returns the successful status 'not-operating' for
+        LPARs that do not auto-start their OSs, and can be mocked by testcases
+        to return a different status (e.g. 'exceptions').
         """
         return 'not-operating'
 
@@ -3389,8 +3415,7 @@ class LparDeactivateHandler(object):
     def get_status():
         """
         Status retrieval method that returns the status the faked Lpar will
-        have after completion of the the "Deactivate Logical Partition"
-        operation.
+        have after completion of the "Deactivate Logical Partition" operation.
 
         This method returns the successful status 'not-activated', and can be
         mocked by testcases to return a different status (e.g. 'exceptions').
