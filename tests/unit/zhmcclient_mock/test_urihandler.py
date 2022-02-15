@@ -51,6 +51,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     CpcsHandler, CpcHandler, CpcSetPowerSaveHandler, \
     CpcSetPowerCappingHandler, CpcGetEnergyManagementDataHandler, \
     CpcStartHandler, CpcStopHandler, \
+    CpcActivateHandler, CpcDeactivateHandler, \
     CpcImportProfilesHandler, CpcExportProfilesHandler, \
     CpcExportPortNamesListHandler, CpcSetAutoStartListHandler, \
     MetricsContextsHandler, MetricsContextHandler, \
@@ -3668,6 +3669,88 @@ class TestCpcStartStopHandler(object):
 
         cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
         assert cpc2['status'] == 'active'
+
+
+class TestCpcActivateDeactivateHandler(object):
+    """
+    All tests for classes CpcActivateHandler and CpcDeactivateHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        CpcActivateHandler and CpcDeactivateHandler and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs/([^/]+)', CpcHandler),
+            (r'/api/cpcs/([^/]+)/operations/activate', CpcActivateHandler),
+            (r'/api/cpcs/([^/]+)/operations/deactivate', CpcDeactivateHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_cpc_deactivate_dpm(self):
+        """
+        Test POST CPC deactivate, for a CPC in DPM mode.
+        """
+
+        # CPC2 is in DPM mode
+        cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
+        assert cpc2['status'] == 'active'
+
+        # the function to be tested:
+        with pytest.raises(CpcInDpmError):
+            body = {'force': True}
+            self.urihandler.post(self.hmc, '/api/cpcs/2/operations/deactivate',
+                                 body, True, True)
+
+        cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
+        assert cpc2['status'] == 'active'
+
+    def test_cpc_activate_dpm(self):
+        """
+        Test POST CPC start, for a CPC in DPM mode.
+        """
+
+        # CPC2 is in DPM mode
+        cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
+        assert cpc2['status'] == 'active'
+
+        # the function to be tested:
+        with pytest.raises(CpcInDpmError):
+            body = {'activation-profile-name': 'faked-rp', 'force': False}
+            self.urihandler.post(self.hmc, '/api/cpcs/2/operations/activate',
+                                 body, True, True)
+
+        cpc2 = self.urihandler.get(self.hmc, '/api/cpcs/2', True)
+        assert cpc2['status'] == 'active'
+
+    def test_cpc_deactivate_activate_classic(self):
+        """
+        Test POST CPC deactivate and activate, for a CPC in classic mode.
+        """
+
+        # CPC1 is in classic mode
+        cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
+        assert cpc1['status'] == 'operating'
+
+        # the function to be tested:
+        body = {'force': True}
+        self.urihandler.post(self.hmc, '/api/cpcs/1/operations/deactivate',
+                             body, True, True)
+
+        cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
+        assert cpc1['status'] == 'no-power'
+
+        # the function to be tested:
+        body = {'activation-profile-name': 'faked-rp', 'force': False}
+        self.urihandler.post(self.hmc, '/api/cpcs/1/operations/activate',
+                             body, True, True)
+
+        cpc1 = self.urihandler.get(self.hmc, '/api/cpcs/1', True)
+        assert cpc1['status'] == 'operating'
 
 
 class TestCpcExportPortNamesListHandler(object):

@@ -583,6 +583,16 @@ class Cpc(BaseResource):
         """
         Start this CPC, using the HMC operation "Start CPC".
 
+        This operation performs an orderly start of the CPC, including:
+
+        * Turning CPC power on.
+        * Performing a power-on reset, this includes allocating system
+          resources to the CPC.
+        * Starting partitions that are in the auto-start list of the CPC.
+
+        The CPC must be set for DPM operational mode (i.e. its 'dpm-enabled'
+        property is True) and must currently be inactive.
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -636,7 +646,17 @@ class Cpc(BaseResource):
     @logged_api_call
     def stop(self, wait_for_completion=True, operation_timeout=None):
         """
-        Stop this CPC, using the HMC operation "Stop CPC".
+        Stop this DPM-mode CPC, using the HMC operation "Stop CPC".
+
+        This operation performs an orderly shutdown of the CPC, including:
+
+        * Stopping all partitions.
+        * Ending hardware activity.
+        * Clearing, releasing, and de-allocating hardware resources.
+        * Turning off CPC power.
+
+        The CPC must be set for DPM operational mode (i.e. its 'dpm-enabled'
+        property is True) and must currently be active.
 
         Authorization requirements:
 
@@ -684,6 +704,161 @@ class Cpc(BaseResource):
         """
         result = self.manager.session.post(
             self.uri + '/operations/stop',
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        return result
+
+    @logged_api_call
+    def activate(self, activation_profile_name, force=False,
+                 wait_for_completion=True, operation_timeout=None):
+        """
+        Activate this classic-mode CPC, using the HMC operation "Activate CPC".
+
+        This operation performs an orderly start of the CPC, including:
+
+        * Turning CPC power on.
+        * Performing a power-on reset, this includes allocating system
+          resources to the CPC as defined by the reset activation profile.
+        * Activating LPARs that are in the auto-start list defined by the
+          reset activation profile.
+
+        If the CPC is already active in classic mode, only the operations are
+        performed that are needed to get into the state defined by the
+        specified reset activation profile.
+
+        The CPC must be set for classic operational mode (i.e. its 'dpm-enabled'
+        property is False).
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "Activate" task.
+
+        Parameters:
+
+          activation_profile_name (:term:`string`):
+            Name of the reset activation profile used to activate the CPC.
+
+          force (bool):
+            Boolean controlling whether the operation is permitted if the CPC
+            is in 'operating' status.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {
+            'activation-profile-name': activation_profile_name,
+            'force': force,
+        }
+        result = self.manager.session.post(
+            self.uri + '/operations/activate',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        return result
+
+    @logged_api_call
+    def deactivate(self, force=False, wait_for_completion=True,
+                   operation_timeout=None):
+        """
+        Deactivate this CPC, using the HMC operation "Deactivate CPC".
+
+        This operation performs an orderly shutdown of the CPC, including:
+
+        * Stopping all LPARs.
+        * Ending hardware activity.
+        * Clearing, releasing, and de-allocating hardware resources.
+        * Turning off CPC power.
+
+        The CPC must be set for classic operational mode (i.e. its 'dpm-enabled'
+        property is False).
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission for the "Deactivate" task.
+
+        Parameters:
+
+          force (bool):
+            Boolean controlling whether the operation is permitted if the CPC
+            is in 'operating' status.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {'force': force}
+        result = self.manager.session.post(
+            self.uri + '/operations/deactivate',
+            body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result

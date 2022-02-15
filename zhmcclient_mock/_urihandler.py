@@ -35,6 +35,25 @@ from ._hmc import InputError
 __all__ = ['UriHandler', 'LparActivateHandler', 'LparDeactivateHandler',
            'LparLoadHandler', 'HTTPError', 'URIS']
 
+# CPC status values
+CPC_ACTIVE_STATUSES = (
+    "active",
+    "operating",
+    "degraded",
+    "acceptable",
+    "exceptions",
+    "service-required",
+    "service",
+)
+CPC_INACTIVE_STATUSES = (
+    "not-operating",
+    "no-power",
+)
+CPC_BAD_STATUSES = (
+    "not-communicating",
+    "status-check",
+)
+
 
 class HTTPError(Exception):
     """
@@ -1418,7 +1437,7 @@ class CpcGetEnergyManagementDataHandler(object):
 
 class CpcStartHandler(object):
     """
-    Handler class for operation: Start CPC.
+    Handler class for operation: Start CPC (DPM mode).
     """
 
     @staticmethod
@@ -1441,7 +1460,7 @@ class CpcStartHandler(object):
 
 class CpcStopHandler(object):
     """
-    Handler class for operation: Stop CPC.
+    Handler class for operation: Stop CPC (DPM mode).
     """
 
     @staticmethod
@@ -1460,6 +1479,84 @@ class CpcStopHandler(object):
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
         cpc.properties['status'] = 'not-operating'
+
+
+class CpcActivateHandler(object):
+    """
+    Handler class for operation: Activate CPC (classic mode)
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Activate CPC (requires classic mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        check_required_fields(method, uri, body, ['activation-profile-name'])
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
+        profile_name = body['activation-profile-name']
+        force = body.get('force', False)
+        status = cpc.properties['status']
+        if status in CPC_BAD_STATUSES:
+            raise ConflictError(method, uri, reason=1,
+                                message="The operation cannot be performed "
+                                "because the targeted CPC {} has a bad status "
+                                "{!r}".
+                                format(cpc.name, status))
+        if status in CPC_ACTIVE_STATUSES and not force:
+            raise ConflictError(method, uri, reason=1,
+                                message="The operation cannot be performed "
+                                "because the targeted CPC {} already has an "
+                                "active status {!r} and force is not specified".
+                                format(cpc.name, status))
+        cpc.properties['status'] = 'operating'
+        cpc.properties['last-used-activation-profile'] = profile_name
+        # TODO: Set last-used-iocds from profile
+
+
+class CpcDeactivateHandler(object):
+    """
+    Handler class for operation: Deactivate CPC (classic mode).
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Deactivate CPC (requires classic mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
+        force = body.get('force', False)
+        status = cpc.properties['status']
+        if status in CPC_BAD_STATUSES:
+            raise ConflictError(method, uri, reason=1,
+                                message="The operation cannot be performed "
+                                "because the targeted CPC {} has a bad status "
+                                "{!r}".
+                                format(cpc.name, status))
+        if status in CPC_ACTIVE_STATUSES and not force:
+            raise ConflictError(method, uri, reason=1,
+                                message="The operation cannot be performed "
+                                "because the targeted CPC {} has an active "
+                                "status {!r} and force is not specified".
+                                format(cpc.name, status))
+        cpc.properties['status'] = 'no-power'
 
 
 class CpcImportProfilesHandler(object):
@@ -3732,6 +3829,8 @@ URIS = (
 
     (r'/api/cpcs/([^/]+)/operations/start', CpcStartHandler),
     (r'/api/cpcs/([^/]+)/operations/stop', CpcStopHandler),
+    (r'/api/cpcs/([^/]+)/operations/activate', CpcActivateHandler),
+    (r'/api/cpcs/([^/]+)/operations/deactivate', CpcDeactivateHandler),
     (r'/api/cpcs/([^/]+)/operations/export-port-names-list',
      CpcExportPortNamesListHandler),
 
