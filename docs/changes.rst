@@ -19,14 +19,10 @@ Change log
 ----------
 
 
-Version 1.1.1.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.1.1
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2022-02-17
 
 **Bug fixes:**
 
@@ -40,20 +36,12 @@ Released: not yet
 * Fixed issues in the zhmcclient_mock support for the "Update LPAR Properties"
   operation. (issue #909)
 
-**Enhancements:**
-
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact
   that the corresponding build command has been removed in Python 3.10.
   The Windows executable has never been part of the zhmcclient package on Pypi,
   and building it seems odd anyway. (issue #865)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.1.0
