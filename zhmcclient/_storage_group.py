@@ -822,3 +822,32 @@ class StorageGroup(BaseResource):
     # TODO: Add support for "Reject Mismatched FCP Storage Volumes" operation
 
     # TODO: Add support for "Get Storage Group Histories" operation
+
+    def dump(self):
+        """
+        Dump this StorageGroup resource with its properties and child
+        resources (recursively) as a resource definition.
+
+        The returned resource definition has the following format::
+
+            {
+                # Resource properties:
+                "properties": {...},
+
+                # Child resources:
+                "storage_volumes": [...],
+            }
+
+        Returns:
+          dict: Resource definition of this resource.
+        """
+
+        # Dump the resource properties
+        resource_dict = super(StorageGroup, self).dump()
+
+        # Dump the child resources
+        storage_volumes = self.storage_volumes.dump()
+        if storage_volumes:
+            resource_dict['storage_volumes'] = storage_volumes
+
+        return resource_dict

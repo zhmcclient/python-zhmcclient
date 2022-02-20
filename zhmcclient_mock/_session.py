@@ -18,13 +18,651 @@ A faked Session class for the zhmcclient package.
 
 from __future__ import absolute_import
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+import yaml
+import yamlloader
+import jsonschema
 import zhmcclient
 
-from ._hmc import FakedHmc
+from zhmcclient._utils import datetime_from_isoformat
+
+from ._hmc import FakedHmc, FakedMetricObjectValues
 from ._urihandler import UriHandler, HTTPError, URIS
 from ._urihandler import ConnectionError  # pylint: disable=redefined-builtin
 
-__all__ = ['FakedSession']
+__all__ = ['FakedSession', 'HmcDefinitionYamlError', 'HmcDefinitionSchemaError']
+
+
+# JSON schema for a faked HMC definition
+FAKED_HMC_DEFINITION_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "JSON schema for a faked HMC definition",
+    "definitions": {
+        "Properties": {
+            "description": "Dictionary of resource properties. Keys are the "
+                           "property names in HMC format (with dashes)",
+            "type": "object",
+            "patternProperties": {
+                "^[a-z0-9\\-]+$": {
+                    "description": "A resource property value",
+                    "type": ["object", "array", "string", "integer", "number",
+                             "boolean", "null"],
+                },
+            },
+        },
+        "Hmc": {
+            "description": "The definition of a faked HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "hmc_host",
+                "api_version",
+                "consoles",
+            ],
+            "properties": {
+                "hmc_host": {
+                    "description": "The hostname or IP address of the HMC host",
+                    "type": "string",
+                },
+                "api_version": {
+                    "description": "The version of the HMC WS API, as "
+                                   "major.minor",
+                    "type": "string",
+                },
+                "metric_values": {
+                    "description": "The metric values prepared for later "
+                                   "retrieval",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MetricValues"
+                    },
+                },
+                "metrics_contexts": {
+                    "description": "The metrics contexts defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MetricsContext"
+                    },
+                },
+                "consoles": {
+                    "description": "The consoles (HMCs). There is only "
+                                   "a single console.",
+                    "type": "array",
+                    "maxItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/Console"
+                    },
+                },
+                "cpcs": {
+                    "description": "The CPCs managed by this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Cpc"
+                    },
+                },
+            },
+        },
+        "MetricValues": {
+            "description": "The metric values of a single metric group for a "
+                           "single resource object at a point in time, "
+                           "prepared for later retrieval",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "group_name",
+                "resource_uri",
+                "timestamp",
+                "metrics",
+            ],
+            "properties": {
+                "group_name": {
+                    "description": "Name of the metric group definition for "
+                                   "these metric values",
+                    "type": "string",
+                },
+                "resource_uri": {
+                    "description": "URI of the resource object for these "
+                                   "metric values",
+                    "type": "string",
+                },
+                "timestamp": {
+                    "description": "Point in time for these metric values, "
+                                   "as a string in ISO8601 format",
+                    "type": "string",
+                },
+                "metrics": {
+                    "description": "The metrics (values by name)",
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z0-9\\-]+$": {
+                            "description": "The value of the metric",
+                            "type": ["string", "integer", "number",
+                                     "boolean", "null"],
+                        },
+                    },
+                },
+            },
+        },
+        "MetricsContext": {
+            "description": "A metrics context defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "Console": {
+            "description": "A console (HMC)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "users": {
+                    "description": "The users defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/User"
+                    },
+                },
+                "user_roles": {
+                    "description": "The user roles defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserRole"
+                    },
+                },
+                "user_patterns": {
+                    "description": "The user patterns defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserPattern"
+                    },
+                },
+                "password_rules": {
+                    "description": "The password rules defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PasswordRule"
+                    },
+                },
+                "tasks": {
+                    "description": "The tasks defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Task"
+                    },
+                },
+                "ldap_server_definitions": {
+                    "description": "The LDAP server definitions on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/LdapServerDefinition"
+                    },
+                },
+                "unmanaged_cpcs": {
+                    "description": "The unmanaged CPCs discovered by this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UnmanagedCpc"
+                    },
+                },
+                "storage_groups": {
+                    "description": "The storage groups defined on this HMC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageGroup"
+                    },
+                },
+            },
+        },
+        "User": {
+            "description": "A user defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "UserRole": {
+            "description": "A user role defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "UserPattern": {
+            "description": "A user pattern defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "PasswordRule": {
+            "description": "A password rule defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "Task": {
+            "description": "A task defined on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "LdapServerDefinition": {
+            "description": "An LPAP server definition on an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "UnmanagedCpc": {
+            "description": "An unmanaged CPC discovered by an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "StorageGroup": {
+            "description": "A storage group defined on an HMC (and associated "
+                           "with a CPC)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "storage_volumes": {
+                    "description": "The storage volumes of this storage group",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/StorageVolume"
+                    },
+                },
+            },
+        },
+        "StorageVolume": {
+            "description": "A storage volume of a storage group",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "Cpc": {
+            "description": "A CPC managed by an HMC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "capacity_groups": {
+                    "description": "The capacity groups of this CPC (any mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CapacityGroup"
+                    },
+                },
+                "partitions": {
+                    "description": "The partitions of this CPC (DPM mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Partition"
+                    },
+                },
+                "adapters": {
+                    "description": "The adapters of this CPC (DPM mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Adapter"
+                    },
+                },
+                "virtual_switches": {
+                    "description": "The virtual switches of this CPC "
+                                   "(DPM mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VirtualSwitch"
+                    },
+                },
+                "lpars": {
+                    "description": "The LPARs of this CPC (classic mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Lpar"
+                    },
+                },
+                "reset_activation_profiles": {
+                    "description": "The reset activation profiles of this CPC "
+                                   "(classic mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ResetActivationProfile"
+                    },
+                },
+                "image_activation_profiles": {
+                    "description": "The image activation profiles of this CPC "
+                                   "(classic mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ImageActivationProfile"
+                    },
+                },
+                "load_activation_profiles": {
+                    "description": "The load activation profiles of this CPC "
+                                   "(classic mode)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/LoadActivationProfile"
+                    },
+                },
+            },
+        },
+        "CapacityGroup": {
+            "description": "A capacity group in a CPC",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "Partition": {
+            "description": "A partition of a CPC (DPM mode)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "devno_pool": {
+                    "description": "Internal state: The pool of "
+                                   "auto-allocated device numbers for this "
+                                   "partition",
+                    "type": "object",
+                    "additionalProperties": True,
+                },
+                "wwpn_pool": {
+                    "description": "Internal state: The pool of "
+                                   "auto-allocated WWPNs for this partition",
+                    "type": "object",
+                    "additionalProperties": True,
+                },
+                "nics": {
+                    "description": "The NICs of this partition",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Nic"
+                    },
+                },
+                "hbas": {
+                    "description": "The HBAs of this partition (up to z13)",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Hba"
+                    },
+                },
+                "virtual_functions": {
+                    "description": "The virtual functions of this partition",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VirtualFunction"
+                    },
+                },
+            },
+        },
+        "Nic": {
+            "description": "A NIC of a partition",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "Hba": {
+            "description": "An HBA of a partition (up to z13)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "VirtualFunction": {
+            "description": "A virtual function of a partition",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "Adapter": {
+            "description": "An adapter of a CPC (DPM mode)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+                "ports": {
+                    "description": "The ports of this adapter",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Port"
+                    },
+                },
+            },
+        },
+        "Port": {
+            "description": "A port of an adapter",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "Lpar": {
+            "description": "An LPAR of a CPC (classic mode)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "VirtualSwitch": {
+            "description": "A virtual switch in a CPC (DPM mode)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "ResetActivationProfile": {
+            "description": "A reset activation profile of a CPC (classic mode)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "ImageActivationProfile": {
+            "description": "An image activation profile of a CPC "
+                           "(classic mode)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "LoadActivationProfile": {
+            "description": "A load activation profile of a CPC (classic mode)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+    },
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "hmc_definition",
+    ],
+    "properties": {
+        "hmc_definition": {
+            "$ref": "#/definitions/Hmc"
+        },
+    },
+}
+
+
+class HmcDefinitionYamlError(Exception):
+    """
+    An error that is raised when loading an HMC definition and that indicates
+    invalid YAML syntax in the faked HMC definition, at the YAML scanner or
+    parser level.
+
+    ``args[0]`` will be set to a message detailing the issue.
+    """
+
+    def __init__(self, message):
+        # pylint: disable=useless-super-delegation
+        super(HmcDefinitionYamlError, self).__init__(message)
+
+
+class HmcDefinitionSchemaError(Exception):
+    """
+    An error that is raised when loading an HMC definition and that indicates
+    that the data in the faked HMC definition fails schema validation.
+
+    ``args[0]`` will be set to a message detailing the issue.
+    """
+
+    def __init__(self, message):
+        # pylint: disable=useless-super-delegation
+        super(HmcDefinitionSchemaError, self).__init__(message)
 
 
 class FakedSession(zhmcclient.Session):
@@ -117,6 +755,165 @@ class FakedSession(zhmcclient.Session):
         via ``hmc.cpcs``).
         """
         return self._hmc
+
+    @staticmethod
+    def from_hmc_yaml_file(filepath):
+        """
+        Return a new FakedSession object from an HMC definition in a YAML file.
+
+        The data format of the YAML file is validated using a schema.
+
+        Parameters:
+
+          filepath(string): Path name of the YAML file that contains the HMC
+            definition.
+
+        Returns:
+          FakedSession: New faked session with faked HMC set up from HMC
+          definition.
+
+        Raises:
+            IOError: Error opening the YAML file for reading.
+            YamlFormatError: Invalid YAML syntax in HMC definition.
+            HmcDefinitionSchemaError: Invalid data format in HMC definition.
+        """
+        with open(filepath) as fp:
+            hmc = FakedSession.from_hmc_yaml(fp, filepath)
+        return hmc
+
+    @staticmethod
+    def from_hmc_yaml(hmc_yaml, filepath=None):
+        """
+        Return a new FakedSession object from an HMC definition YAML string
+        or stream.
+
+        An HMC definition YAML string can be created using
+        :meth:`zhmcclient.Client.to_hmc_yaml`.
+
+        The timestamp in metric values can have any valid ISO8601 format.
+        Timezone-naive values are amended with the local timezone.
+
+        The data format of the YAML string is validated using a schema.
+
+        Parameters:
+
+          hmc_yaml(string or stream): HMC definition YAML string or stream.
+
+          filepath(string): Path name of the YAML file that contains the HMC
+            definition; used only in exception messages. If `None`, no
+            filename is used in exception messages.
+
+        Returns:
+          FakedSession: New faked session with faked HMC set up from HMC
+          definition.
+
+        Raises:
+            YamlFormatError: Invalid YAML syntax in HMC definition YAML string
+              or stream.
+            HmcDefinitionSchemaError: Invalid data format in HMC definition.
+        """
+
+        try:
+            hmc_dict = yaml.load(hmc_yaml, Loader=yamlloader.ordereddict.Loader)
+        except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
+            if filepath:
+                file_str = " in file {f}".format(f=filepath)
+            else:
+                file_str = ""
+            new_exc = HmcDefinitionYamlError(
+                "Invalid YAML syntax in faked HMC definition{fs}: {msg}".
+                format(fs=file_str, msg=exc))
+            new_exc.__cause__ = None
+            raise new_exc  # HmcDefinitionYamlError
+
+        hmc = FakedSession.from_hmc_dict(hmc_dict, filepath)
+        return hmc
+
+    @staticmethod
+    def from_hmc_dict(hmc_dict, filepath=None):
+        """
+        Return a new FakedSession object from an HMC definition dictionary.
+
+        An HMC definition dictionary can be created using
+        :meth:`zhmcclient.Client.to_hmc_dict`.
+
+        The timestamp in metric values can have any valid ISO8601 format.
+        Timezone-naive values are amended with the local timezone.
+
+        The data format of the YAML string is validated using a schema.
+
+        Parameters:
+
+          hmc_dict(dict): HMC definition dictionary.
+
+          filepath(string): Path name of the YAML file that contains the HMC
+            definition; used only in exception messages. If `None`, no
+            filename is used in exception messages.
+
+        Returns:
+          FakedSession: New faked session with faked HMC set up from the HMC
+          definition.
+
+        Raises:
+            HmcDefinitionSchemaError: Invalid data format in HMC definition.
+        """
+
+        try:
+            jsonschema.validate(hmc_dict, FAKED_HMC_DEFINITION_SCHEMA)
+        except jsonschema.exceptions.ValidationError as exc:
+            if filepath:
+                file_str = " in file {f}".format(f=filepath)
+            else:
+                file_str = ""
+            new_exc = HmcDefinitionSchemaError(
+                "Invalid data format in faked HMC definition{fs}: {msg}; "
+                "Offending element: {elem}; "
+                "Schema item: {schemaitem}; "
+                "Validator: {valname}={valvalue}".
+                format(fs=file_str, msg=exc.message,
+                       elem='.'.join(str(e) for e in exc.absolute_path),
+                       schemaitem='.'.join(str(e) for e in
+                                           exc.absolute_schema_path),
+                       valname=exc.validator,
+                       valvalue=exc.validator_value))
+            new_exc.__cause__ = None
+            raise new_exc  # HmcDefinitionSchemaError
+
+        hmc_res_dict = hmc_dict['hmc_definition']
+
+        consoles = hmc_res_dict.get('consoles')
+        console = consoles[0]
+        hmc_host = hmc_res_dict['hmc_host']
+        api_version = hmc_res_dict['api_version']
+        hmc_name = console['properties']['name']
+        hmc_version = console['properties']['version']
+
+        session = FakedSession(hmc_host, hmc_name, hmc_version, api_version)
+
+        res_dict = OrderedDict(hmc_res_dict)
+        del res_dict['hmc_host']
+        del res_dict['api_version']
+        del res_dict['metric_values']
+        session.hmc.add_resources(res_dict)
+
+        mv_dicts = hmc_res_dict['metric_values']
+        if mv_dicts:
+            for mv_dict in mv_dicts:
+                group_name = mv_dict['group_name']
+                resource_uri = mv_dict['resource_uri']
+                timestamp = datetime_from_isoformat(mv_dict['timestamp'])
+                values = []
+                for name, value in mv_dict['metrics'].items():
+                    item_tup = (name, value)
+                    values.append(item_tup)
+                mv = FakedMetricObjectValues(
+                    group_name=group_name,
+                    resource_uri=resource_uri,
+                    timestamp=timestamp,
+                    values=values)
+                session.hmc.add_metric_values(mv)
+
+        return session
 
     def get(self, uri, logon_required=True):
         """

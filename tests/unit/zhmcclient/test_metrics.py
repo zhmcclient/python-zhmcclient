@@ -22,7 +22,7 @@ import re
 import pytest
 
 from zhmcclient import Client, MetricsContext, HTTPError, NotFound
-from zhmcclient_mock import FakedSession, FakedMetricGroupDefinition
+from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
@@ -30,9 +30,9 @@ from tests.common.utils import assert_resources
 MC1_OID = 'mc1-oid'
 MC2_OID = 'mc2-oid'
 
-# Names of our faked metric groups:
-MG1_NAME = 'mg1-name'
-MG2_NAME = 'mg2-name'
+# Names of our metric groups:
+MG1_NAME = 'partition-usage'
+MG2_NAME = 'dpm-system-usage-overview'
 
 # Base URI for metrics contexts (Object ID will be added to get URI):
 MC_BASE_URI = '/api/services/metrics/context/'
@@ -52,33 +52,6 @@ class TestMetricsContext(object):
 
         self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
         self.client = Client(self.session)
-
-    def add_metricgroupdefinition1(self):
-        """Add metric group definition 1."""
-
-        faked_metricgroupdefinition = FakedMetricGroupDefinition(
-            name=MG1_NAME,
-            types=[
-                ('faked-metric11', 'integer-metric'),
-                ('faked-metric12', 'string-metric'),
-            ]
-        )
-        self.session.hmc.metrics_contexts.add_metric_group_definition(
-            faked_metricgroupdefinition)
-        return faked_metricgroupdefinition
-
-    def add_metricgroupdefinition2(self):
-        """Add metric group definition 2."""
-
-        faked_metricgroupdefinition = FakedMetricGroupDefinition(
-            name=MG2_NAME,
-            types=[
-                ('faked-metric21', 'boolean-metric'),
-            ]
-        )
-        self.session.hmc.metrics_contexts.add_metric_group_definition(
-            faked_metricgroupdefinition)
-        return faked_metricgroupdefinition
 
     def add_metricscontext1(self):
         """Add faked metrics context 1."""
@@ -146,10 +119,6 @@ class TestMetricsContext(object):
     def test_mcm_list_full_properties(
             self, full_properties_kwargs, prop_names):
         """Test MetricsContextManager.list() with full_properties."""
-
-        # Add faked metric groups
-        self.add_metricgroupdefinition1()
-        self.add_metricgroupdefinition2()
 
         # Create (non-faked) metrics contexts (list() will only return those)
         metricscontext1 = self.create_metricscontext1()
@@ -225,10 +194,6 @@ class TestMetricsContext(object):
     def test_mcm_list_filter_args(
             self, filter_args, exp_names):
         """Test MetricsContextManager.list() with filter_args."""
-
-        # Add faked metric groups
-        self.add_metricgroupdefinition1()
-        self.add_metricgroupdefinition2()
 
         # Create (non-faked) metrics contexts (list() will only return those)
         self.create_metricscontext1()

@@ -2,13 +2,55 @@
 # Definition of a faked HMC for zhmcclient testing.
 # The faked HMC represents a single z13 CPC in DPM mode.
 
-faked_client:
-  hmc_host: "fake-host"
-  hmc_name: "fake-hmc"
-  hmc_version: "2.13.1"
-  api_version: "1.8"
+hmc_definition:
+  hmc_host: hmc1
+  api_version: '1.8'
+  consoles:
+  - properties:
+      name: HMC 1
+      version: 2.13.1
+      api-version: '1.8'
+    users:
+    - properties:
+        object-id: user1
+        name: User 1
+    user_roles:
+    - properties:
+        object-id: userrole1
+        name: User role 1
+    user_patterns:
+    - properties:
+        element-id: userpattern1
+        name: User pattern 1
+    password_rules:
+    - properties:
+        element-id: passwordrule1
+        name: Password rule 1
+    tasks:
+    - properties:
+        element-id: task1
+        name: Task 1
+    ldap_server_definitions:
+    - properties:
+        element-id: lsd1
+        name: LDAP server definition 1
+    storage_groups:
+    - properties:
+        object-id: sg1
+        name: Storage group 1
+        shared: false
+        type: fcp
+        fulfillment-state: complete
+      storage_volumes:
+      - properties:
+          element-id: sv1
+          name: Storage volume 1
+          fulfillment-state: complete
+          site: 10.0
+          usage: boot
   cpcs:
     - properties:
+        object-id: cpc1
         name: "CPC1"
         description: "Faked CPC CPC1 (z13 in DPM mode)"
         machine-type: "2964"
@@ -16,24 +58,9 @@ faked_client:
         dpm-enabled: true
         is-ensemble-member: false
         iml-mode: dpm
-      partitions:
-        - properties:
-            name: "PART1"
-            description: "Faked partition PART1 on CPC1"
-            autogenerate-partition-id: true
-            partition-id: 0x41
-            type: linux
-            status: active
-            auto-start: true
-            processor-mode: shared
-            ifl-processors: 2
-            initial-ifl-processing-weight: 20
-            initial-memory: 4096
-            maximum-memory: 4096
-            boot-device: network-adapter
-            boot-network-device: null  # Should be resource URI
       adapters:
         - properties:
+            object-id: osa1
             name: "OSA1"
             description: "Faked OSA adapter OSA1 in CPC1"
             adapter-id: "108"
@@ -48,10 +75,43 @@ faked_client:
             maximum-total-capacity: 1920
           ports:
             - properties:
+                element-id: port0
                 name: "Port 0"
                 description: "Faked port 0 of OSA adapter OSA1 in CPC1"
                 index: 0
             - properties:
+                element-id: port1
                 name: "Port 1"
                 description: "Faked port 1 of OSA adapter OSA1 in CPC1"
                 index: 1
+      virtual_switches:
+        - properties:
+            object-id: vs-osa1
+            name: "Virtual Switch for OSA1"
+            description: "Faked Virtual Switch for OSA adapter OSA1 in CPC1"
+            backing-adapter-uri: /api/adapters/osa1
+            port: 0
+      partitions:
+        - properties:
+            object-id: part1
+            name: "PART1"
+            description: "Faked partition PART1 on CPC1"
+            autogenerate-partition-id: true
+            partition-id: 0x41
+            type: linux
+            status: active
+            auto-start: true
+            processor-mode: shared
+            ifl-processors: 2
+            initial-ifl-processing-weight: 20
+            initial-memory: 4096
+            maximum-memory: 4096
+            boot-device: network-adapter
+            boot-network-device: null  # Should be resource URI
+          nics:
+            - properties:
+                element-id: nic1
+                name: "OSA1-NIC1"
+                description: "NIC1 backed by OSA1"
+                device-number: '0010'
+                virtual-switch-uri: /api/virtual-switches/vs-osa1

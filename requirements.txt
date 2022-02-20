@@ -35,9 +35,22 @@ six>=1.16.0; python_version >= '3.10'  # MIT
 stomp.py>=4.1.23,<5.0.0; python_version <= '3.5'  # Apache
 stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version >= '3.6'  # Apache
 
+python-dateutil>=2.8.0
 immutable-views>=0.6.0
-
 nocasedict>=1.0.2
+
+# PyYAML pulled in by zhmcclient_mock (and zhmcclient examples, and python-coveralls)
+# PyYAML 5.3 fixes narrow build error
+# PyYAML 6.0 removed support for py27,35
+PyYAML>=5.3
+
+# yamlloader pulled in by zhmcclient_mock
+# yamlloader 1.0 removed support for py27,35
+yamlloader>=0.5.5
+
+# jsonschema pulled in by zhmcclient_mock
+# jsonschema 4.0 removed support for py27,35,36
+jsonschema>=2.6.0
 
 # Indirect dependencies (commented out, only listed to document their license):
 
@@ -46,3 +59,4 @@ nocasedict>=1.0.2
 # docopt # MIT, from stomp.py>=4.1
 # idna # BSD-like, from requests>=2.20
 # urllib3 # MIT, from requests>=2.20
+# pyrsistent # MIT, from jsonschema>=3.0

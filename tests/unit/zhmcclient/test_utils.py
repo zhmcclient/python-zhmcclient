@@ -25,7 +25,8 @@ import time
 import pytz
 import pytest
 
-from zhmcclient._utils import datetime_from_timestamp, timestamp_from_datetime
+from zhmcclient._utils import datetime_from_timestamp, \
+    timestamp_from_datetime, datetime_to_isoformat, datetime_from_isoformat
 
 
 # The Unix epoch
@@ -317,3 +318,95 @@ def test_datetime_max():
 
     # The test is that it does not raise an exception:
     timestamp_from_datetime(datetime.max)
+
+
+# Test cases for datetime_to_isoformat()
+TESTCASES_DATETIME_TO_ISOFORMAT = [
+    # dt, exp_dt_str
+    (
+        datetime(2017, 9, 5, 12, 13, 10, 0),
+        '2017-09-05 12:13:10'
+    ),
+    (
+        datetime(2017, 9, 5, 12, 13, 10, 123456),
+        '2017-09-05 12:13:10.123456'
+    ),
+    (
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc),
+        '2017-09-05 12:13:10+00:00'
+    ),
+    (
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('CET')),
+        '2017-09-05 12:13:10+01:00'
+    ),
+    (
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('EST')),
+        '2017-09-05 12:13:10-05:00'
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "dt, exp_dt_str",
+    TESTCASES_DATETIME_TO_ISOFORMAT)
+def test_datetime_to_isoformat(dt, exp_dt_str):
+    """
+    Test function for datetime_to_isoformat().
+    """
+
+    # The function to be tested
+    dt_str = datetime_to_isoformat(dt)
+
+    assert dt_str == exp_dt_str
+
+
+# Test cases for datetime_from_isoformat()
+TESTCASES_DATETIME_FROM_ISOFORMAT = [
+    # dt_str, exp_dt
+    (
+        '2017-09-05 12:13:10',
+        datetime(2017, 9, 5, 12, 13, 10, 0)  # timezone-naive
+    ),
+    (
+        '2017-09-05T12:13:10',
+        datetime(2017, 9, 5, 12, 13, 10, 0)  # timezone-naive
+    ),
+    (
+        '2017-09-05 12:13:10.123456',
+        datetime(2017, 9, 5, 12, 13, 10, 123456)  # timezone-naive
+    ),
+    (
+        '2017-09-05 12:13:10+00:00',
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
+    ),
+    (
+        '2017-09-05 12:13:10+0000',
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
+    ),
+    (
+        '2017-09-05 12:13:10+01:00',
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('CET'))
+    ),
+    (
+        '2017-09-05 12:13:10+0100',
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('CET'))
+    ),
+    (
+        '2017-09-05 12:13:10-05:00',
+        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('EST'))
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "dt_str, exp_dt",
+    TESTCASES_DATETIME_FROM_ISOFORMAT)
+def test_datetime_from_isoformat(dt_str, exp_dt):
+    """
+    Test function for datetime_from_isoformat().
+    """
+
+    # The function to be tested
+    dt = datetime_from_isoformat(dt_str)
+
+    assert dt == exp_dt

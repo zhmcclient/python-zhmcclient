@@ -155,6 +155,12 @@ Faked session
 .. autoclass:: zhmcclient_mock.FakedSession
    :members:
 
+.. autoclass:: zhmcclient_mock.HmcDefinitionYamlError
+   :members:
+
+.. autoclass:: zhmcclient_mock.HmcDefinitionSchemaError
+   :members:
+
 
 .. _`Faked HMC`:
 

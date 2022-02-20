@@ -16,11 +16,6 @@
 # PEP517 package builder, used in Makefile
 build>=0.5.0
 
-# PyYAML pulled in by zhmcclient examples and by python-coveralls
-# PyYAML 5.3 fixes narrow build error
-PyYAML>=5.1; python_version == '2.7'
-PyYAML>=5.1; python_version >= '3.5'
-
 
 # Unit test (imports into testcases):
 packaging>=19.0
@@ -52,7 +47,6 @@ virtualenv>=20.1.0
 pluggy>=0.7.1; python_version >= '2.7' and python_version <= '3.6'
 pluggy>=0.13.0; python_version >= '3.7'
 # decorator: covered in requirements.txt
-yamlloader>=0.5.5
 backports.statistics>=0.1.0; python_version == '2.7'
 # FormEncode is used for xml comparisons in unit test
 # FormEncode 1.3.1 has no python_requires and fails install on Python 3.10 due to incorrect
@@ -171,8 +165,6 @@ jupyter_core>=4.2.1
 nbconvert>=5.0.0
 nbformat>=4.2.0
 notebook>=4.3.1
-pyrsistent>=0.14.0,<0.16.0; python_version == '2.7'
-pyrsistent>=0.14.0; python_version >= '3.5'
 
 # Pywin32 is used (at least?) by jupyter.
 # Pywin32 version 222 is inconsistent in its 32-bit/64-bit support on py37

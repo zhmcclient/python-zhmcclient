@@ -1315,3 +1315,40 @@ class Partition(BaseResource):
                 if full_properties:
                     sg.pull_full_properties()
         return sg_list
+
+    def dump(self):
+        """
+        Dump this Partition resource with its properties and child resources
+        (recursively) as a resource definition.
+
+        The returned resource definition has the following format::
+
+            {
+                # Resource properties:
+                "properties": {...},
+
+                # Child resources:
+                "nics": [...],
+                "hbas": [...],
+                "virtual_functions": [...],
+            }
+
+        Returns:
+          dict: Resource definition of this resource.
+        """
+
+        # Dump the resource properties
+        resource_dict = super(Partition, self).dump()
+
+        # Dump the child resources
+        nics = self.nics.dump()
+        if nics:
+            resource_dict['nics'] = nics
+        hbas = self.hbas.dump()
+        if hbas:
+            resource_dict['hbas'] = hbas
+        virtual_functions = self.virtual_functions.dump()
+        if virtual_functions:
+            resource_dict['virtual_functions'] = virtual_functions
+
+        return resource_dict

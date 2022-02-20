@@ -26,14 +26,17 @@ except ImportError:
     from ordereddict import OrderedDict
 import re
 import copy
+from dateutil import tz
 import six
+from immutable_views import DictView
 
 from zhmcclient._utils import repr_dict, repr_manager, repr_list, \
     timestamp_from_datetime
 
 from ._idpool import IdPool
 
-__all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
+__all__ = ['InputError',
+           'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedConsoleManager', 'FakedConsole',
            'FakedUserManager', 'FakedUser',
            'FakedUserRoleManager', 'FakedUserRole',
@@ -57,6 +60,243 @@ __all__ = ['InputError', 'FakedBaseResource', 'FakedBaseManager', 'FakedHmc',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
            'FakedCapacityGroupManager', 'FakedCapacityGroup',
            ]
+
+# All currently defined metric groups with their metrics.
+# This reflects system generations up to z15.
+# Each item is a dict with:
+# - name: Name of the metric group.
+# - resource_class: Class string of applicable resource type
+# - cpc_dpm_enabled: For CPC metrics, the operational mode (True=DPM,
+#   False=classic, None=any or N/A) in which the metric group is available.
+# - metrics: List of metrics, as tuple(metric-name, metric-type).
+METRIC_GROUPS = [
+    dict(
+        name='channel-usage',
+        resource_class='cpc',
+        cpc_dpm_enabled=False,
+        metrics=[
+            ('channel-name', 'string-metric'),
+            ('shared-channel', 'boolean-metric'),
+            ('logical-partition-name', 'string-metric'),
+            ('channel-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='cpc-usage-overview',
+        resource_class='cpc',
+        cpc_dpm_enabled=False,
+        metrics=[
+            ('cpc-processor-usage', 'integer-metric'),
+            ('channel-usage', 'integer-metric'),
+            ('power-consumption-watts', 'integer-metric'),
+            ('temperature-celsius', 'double-metric'),
+            ('cp-shared-processor-usage', 'integer-metric'),
+            ('cp-dedicated-processor-usage', 'integer-metric'),
+            ('ifl-shared-processor-usage', 'integer-metric'),
+            ('ifl-dedicated-processor-usage', 'integer-metric'),
+            ('icf-shared-processor-usage', 'integer-metric'),
+            ('icf-dedicated-processor-usage', 'integer-metric'),
+            ('iip-shared-processor-usage', 'integer-metric'),
+            ('iip-dedicated-processor-usage', 'integer-metric'),
+            ('aap-shared-processor-usage', 'integer-metric'),
+            ('aap-dedicated-processor-usage', 'integer-metric'),
+            ('all-shared-processor-usage', 'integer-metric'),
+            ('all-dedicated-processor-usage', 'integer-metric'),
+            ('cp-all-processor-usage', 'integer-metric'),
+            ('ifl-all-processor-usage', 'integer-metric'),
+            ('icf-all-processor-usage', 'integer-metric'),
+            ('iip-all-processor-usage', 'integer-metric'),
+            ('cbp-shared-processor-usage', 'integer-metric'),
+            ('cbp-dedicated-processor-usage', 'integer-metric'),
+            ('cbp-all-processor-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='dpm-system-usage-overview',
+        resource_class='cpc',
+        cpc_dpm_enabled=True,
+        metrics=[
+            ('processor-usage', 'integer-metric'),
+            ('network-usage', 'integer-metric'),
+            ('storage-usage', 'integer-metric'),
+            ('accelerator-usage', 'integer-metric'),
+            ('crypto-usage', 'integer-metric'),
+            ('power-consumption-watts', 'integer-metric'),
+            ('temperature-celsius', 'double-metric'),
+            ('cp-shared-processor-usage', 'integer-metric'),
+            ('cp-dedicated-processor-usage', 'integer-metric'),
+            ('ifl-shared-processor-usage', 'integer-metric'),
+            ('ifl-dedicated-processor-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='logical-partition-usage',
+        resource_class='logical-partition',
+        cpc_dpm_enabled=False,
+        metrics=[
+            ('processor-usage', 'integer-metric'),
+            ('zvm-paging-rate', 'integer-metric'),
+            ('cp-processor-usage', 'integer-metric'),
+            ('ifl-processor-usage', 'integer-metric'),
+            ('icf-processor-usage', 'integer-metric'),
+            ('iip-processor-usage', 'integer-metric'),
+            ('cbp-processor-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='partition-usage',
+        resource_class='partition',
+        cpc_dpm_enabled=True,
+        metrics=[
+            ('processor-usage', 'integer-metric'),
+            ('network-usage', 'integer-metric'),
+            ('storage-usage', 'integer-metric'),
+            ('accelerator-usage', 'integer-metric'),
+            ('crypto-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='zcpc-environmentals-and-power',
+        resource_class='cpc',
+        cpc_dpm_enabled=None,
+        metrics=[
+            ('temperature-celsius', 'double-metric'),
+            ('humidity', 'integer-metric'),
+            ('dew-point-celsius', 'double-metric'),
+            ('power-consumption-watts', 'integer-metric'),
+            ('heat-load', 'integer-metric'),
+            ('heat-load-forced-air', 'integer-metric'),
+            ('heat-load-water', 'integer-metric'),
+            ('exhaust-temperature-celsius', 'double-metric'),
+        ]),
+    dict(
+        name='"environmental-power-status',
+        resource_class='cpc',
+        cpc_dpm_enabled=None,
+        metrics=[
+            ('linecord-one-name', 'string-metric'),
+            ('linecord-one-power-phase-A', 'integer-metric'),
+            ('linecord-one-power-phase-B', 'integer-metric'),
+            ('linecord-one-power-phase-C', 'integer-metric'),
+            ('linecord-two-name', 'string-metric'),
+            ('linecord-two-power-phase-A', 'integer-metric'),
+            ('linecord-two-power-phase-B', 'integer-metric'),
+            ('linecord-two-power-phase-C', 'integer-metric'),
+            ('linecord-three-name', 'string-metric'),
+            ('linecord-three-power-phase-A', 'integer-metric'),
+            ('linecord-three-power-phase-B', 'integer-metric'),
+            ('linecord-three-power-phase-C', 'integer-metric'),
+            ('linecord-four-name', 'string-metric'),
+            ('linecord-four-power-phase-A', 'integer-metric'),
+            ('linecord-four-power-phase-B', 'integer-metric'),
+            ('linecord-four-power-phase-C', 'integer-metric'),
+            ('linecord-five-name', 'string-metric'),
+            ('linecord-five-power-phase-A', 'integer-metric'),
+            ('linecord-five-power-phase-B', 'integer-metric'),
+            ('linecord-five-power-phase-C', 'integer-metric'),
+            ('linecord-six-name', 'string-metric'),
+            ('linecord-six-power-phase-A', 'integer-metric'),
+            ('linecord-six-power-phase-B', 'integer-metric'),
+            ('linecord-six-power-phase-C', 'integer-metric'),
+            ('linecord-seven-name', 'string-metric'),
+            ('linecord-seven-power-phase-A', 'integer-metric'),
+            ('linecord-seven-power-phase-B', 'integer-metric'),
+            ('linecord-seven-power-phase-C', 'integer-metric'),
+            ('linecord-eight-name', 'string-metric'),
+            ('linecord-eight-power-phase-A', 'integer-metric'),
+            ('linecord-eight-power-phase-B', 'integer-metric'),
+            ('linecord-eight-power-phase-C', 'integer-metric'),
+        ]),
+    dict(
+        name='zcpc-processor-usage',
+        resource_class='cpc',
+        cpc_dpm_enabled=None,
+        metrics=[
+            ('processor-name', 'string-metric'),
+            ('processor-type', 'string-metric'),
+            ('processor-usage', 'integer-metric'),
+            ('smt-usage', 'integer-metric'),
+            ('thread0-usage', 'integer-metric'),
+            ('thread1-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='crypto-usage',
+        resource_class='cpc',
+        cpc_dpm_enabled=False,
+        metrics=[
+            ('channel-id', 'string-metric'),
+            ('crypto-id', 'string-metric'),
+            ('adapter-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='adapter-usage',
+        resource_class='adapter',
+        cpc_dpm_enabled=False,
+        metrics=[
+            ('adapter-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='flash-memory-usage',
+        resource_class='cpc',
+        cpc_dpm_enabled=False,
+        metrics=[
+            ('channel-id', 'string-metric'),
+            ('adapter-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='roce-usage',
+        resource_class='cpc',
+        cpc_dpm_enabled=False,
+        metrics=[
+            ('channel-id', 'string-metric'),
+            ('adapter-usage', 'integer-metric'),
+        ]),
+    dict(
+        name='network-physical-adapter-port',
+        resource_class='adapter',
+        cpc_dpm_enabled=True,
+        metrics=[
+            ('network-port-id', 'integer-metric'),
+            ('bytes-sent', 'long-metric'),
+            ('bytes-received', 'long-metric'),
+            ('packets-sent', 'long-metric'),
+            ('packets-received', 'long-metric'),
+            ('packets-sent-dropped', 'long-metric'),
+            ('packets-received-dropped', 'long-metric'),
+            ('packets-sent-discarded', 'long-metric'),
+            ('packets-received-discarded', 'long-metric'),
+            ('multicast-packets-sent', 'long-metric'),
+            ('multicast-packets-received', 'long-metric'),
+            ('broadcast-packets-sent', 'long-metric'),
+            ('broadcast-packets-received', 'long-metric'),
+            ('interval-bytes-sent', 'long-metric'),
+            ('interval-bytes-received', 'long-metric'),
+            ('bytes-per-second-sent', 'long-metric'),
+            ('bytes-per-second-received', 'long-metric'),
+            ('utilization', 'long-metric'),
+            ('mac-address', 'string-metric'),
+            ('flags', 'long-metric'),
+        ]),
+    dict(
+        name='partition-attached-network-interface',
+        resource_class='nic',
+        cpc_dpm_enabled=True,
+        metrics=[
+            ('partition-id', 'string-metric'),
+            ('bytes-sent', 'long-metric'),
+            ('bytes-received', 'long-metric'),
+            ('packets-sent', 'long-metric'),
+            ('packets-received', 'long-metric'),
+            ('packets-sent-dropped', 'long-metric'),
+            ('packets-received-dropped', 'long-metric'),
+            ('packets-sent-discarded', 'long-metric'),
+            ('packets-received-discarded', 'long-metric'),
+            ('multicast-packets-sent', 'long-metric'),
+            ('multicast-packets-received', 'long-metric'),
+            ('broadcast-packets-sent', 'long-metric'),
+            ('broadcast-packets-received', 'long-metric'),
+            ('interval-bytes-sent', 'long-metric'),
+            ('interval-bytes-received', 'long-metric'),
+            ('bytes-per-second-sent', 'long-metric'),
+            ('bytes-per-second-received', 'long-metric'),
+            ('flags', 'long-metric'),
+        ]),
+]
 
 
 class InputError(Exception):
@@ -192,10 +432,10 @@ class FakedBaseResource(object):
         """
         self._properties.update(properties)
 
-    def add_resources(self, resources):
+    def add_resources(self, resource_dict):
         """
         Add faked child resources to this resource, from the provided resource
-        definitions.
+        definition.
 
         Duplicate resource names in the same scope are not permitted.
 
@@ -205,9 +445,10 @@ class FakedBaseResource(object):
 
         Parameters:
 
-          resources (dict):
-            resource dictionary with definitions of faked child resources to be
-            added. For an explanation of how the resource dictionary is set up,
+          resource_dict (dict):
+            Resource definition of faked child resources to be added.
+
+            For an explanation of how the resource dictionary is set up,
             see the examples below.
 
             For requirements on and auto-generation of certain resource
@@ -241,7 +482,7 @@ class FakedBaseResource(object):
 
           Example for targeting a faked HMC for adding a CPC with one adapter::
 
-              resources = {
+              resource_dict = {
                   'cpcs': [  # name of manager attribute for this resource
                       {
                           'properties': {
@@ -270,7 +511,7 @@ class FakedBaseResource(object):
           Example for targeting a faked CPC for adding an LPAR and a load
           activation profile::
 
-              resources = {
+              resource_dict = {
                   'lpars': [  # name of manager attribute for this resource
                       {
                           'properties': {
@@ -292,8 +533,8 @@ class FakedBaseResource(object):
               }
 
         """
-        for child_attr in resources:
-            child_list = resources[child_attr]
+        for child_attr in resource_dict:
+            child_list = resource_dict[child_attr]
             self._process_child_list(self, child_attr, child_list)
 
     def _process_child_list(self, parent_resource, child_attr, child_list):
@@ -302,8 +543,9 @@ class FakedBaseResource(object):
         """
         child_manager = getattr(parent_resource, child_attr, None)
         if child_manager is None:
-            raise InputError("Invalid child resource type specified in "
-                             "resource dictionary: {}".format(child_attr))
+            # The attribute is internal state
+            return
+
         for child_dict in child_list:
             # child_dict is a dict of 'properties' and grand child resources
             properties = child_dict.get('properties', None)
@@ -645,6 +887,16 @@ class FakedHmc(FakedBaseResource):
         self.hmc_name = hmc_name
         self.hmc_version = hmc_version
         self.api_version = api_version
+
+        self._metric_groups = {}  # by metric group name
+        for mg_dict in METRIC_GROUPS:
+            mg_name = mg_dict['name']
+            mg_types = mg_dict['metrics']
+            mgd = FakedMetricGroupDefinition(mg_name, mg_types)
+            self._metric_groups[mg_name] = mgd
+
+        self._metric_values = {}  # by metric group name
+
         self.cpcs = FakedCpcManager(hmc=self, client=self)
         self.metrics_contexts = FakedMetricsContextManager(
             hmc=self, client=self)
@@ -664,6 +916,8 @@ class FakedHmc(FakedBaseResource):
             "  hmc_name = {hmc_name!r}\n"
             "  hmc_version = {hmc_version!r}\n"
             "  api_version = {api_version!r}\n"
+            "  metric_groups(group names) = {mg_names}\n"
+            "  metric_values(group names) = {mv_names}\n"
             "  enabled = {enabled!r}\n"
             "  cpcs = {cpcs}\n"
             "  metrics_contexts = {metrics_contexts}\n"
@@ -675,6 +929,8 @@ class FakedHmc(FakedBaseResource):
                 hmc_name=self.hmc_name,
                 hmc_version=self.hmc_version,
                 api_version=self.api_version,
+                mg_names=list(self.metric_groups.keys()),
+                mv_names=list(self.metric_values.keys()),
                 enabled=self.enabled,
                 cpcs=repr_manager(self.cpcs, indent=2),
                 metrics_contexts=repr_manager(self.metrics_contexts, indent=2),
@@ -683,6 +939,34 @@ class FakedHmc(FakedBaseResource):
                                             indent=2),
             ))
         return ret
+
+    @property
+    def metric_values(self):
+        """
+        :class:`iv:immutable_views.DictView`: The metric values in this HMC that
+        have been prepared for later retrieval, with:
+
+        - key(string):
+          Metric group name, e.g. 'partition-usage'.
+
+        - value(list of :class:`~zhmcclient_mock.FakedMetricObjectValues`):
+          The metric values of this metric group.
+        """
+        return DictView(self._metric_values)
+
+    @property
+    def metric_groups(self):
+        """
+        :class:`iv:immutable_views.DictView`: The metric groups supported by
+        this HMC, with:
+
+        - key(string):
+          Metric group name, e.g. 'partition-usage'.
+
+        - value(list of :class:`~zhmcclient_mock.FakedMetricGroupDefinition`):
+          The metric groups including their metric values and their types.
+        """
+        return DictView(self._metric_groups)
 
     @property
     def enabled(self):
@@ -721,6 +1005,26 @@ class FakedHmc(FakedBaseResource):
           KeyError: No resource found for this object ID.
         """
         return self.all_resources[uri]
+
+    def add_metric_values(self, values):
+        """
+        Add one set of faked metric values for a particular resource to the
+        metrics response for a particular metric group, for later retrieval.
+
+        For defined metric groups, see chapter "Metric groups" in the
+        :term:`HMC API` book.
+
+        Parameters:
+
+          values (:class:`~zhmcclient_mock.FakedMetricObjectValues`):
+            The set of metric values to be added. It specifies the resource URI
+            and the targeted metric group name.
+        """
+        assert isinstance(values, FakedMetricObjectValues)
+        group_name = values.group_name
+        if group_name not in self._metric_values:
+            self._metric_values[group_name] = []
+        self._metric_values[group_name].append(values)
 
 
 class FakedConsoleManager(FakedBaseManager):
@@ -2910,21 +3214,9 @@ class FakedMetricsContextManager(FakedBaseManager):
           part1_uri = ...
           part2_uri = ...
 
-          # Add a faked metric group definition for group 'partition-usage':
-          session.hmc.metric_contexts.add_metric_group_definition(
-              FakedMetricGroupDefinition(
-                  name='partition-usage',
-                  types=[
-                      ('processor-usage', 'integer-metric'),
-                      ('network-usage', 'integer-metric'),
-                      ('storage-usage', 'integer-metric'),
-                      ('accelerator-usage', 'integer-metric'),
-                      ('crypto-usage', 'integer-metric'),
-                  ]))
-
           # Prepare the faked metric response for that metric group, with
           # data for two partitions:
-          session.hmc.metric_contexts.add_metric_values(
+          session.hmc.add_metric_values(
               FakedMetricObjectValues(
                   group_name='partition-usage',
                   resource_uri=part1_uri,
@@ -2936,7 +3228,7 @@ class FakedMetricsContextManager(FakedBaseManager):
                       ('accelerator-usage', 0),
                       ('crypto-usage', 0),
                   ]))
-          session.hmc.metric_contexts.add_metric_values(
+          session.hmc.add_metric_values(
               FakedMetricObjectValues(
                   group_name='partition-usage',
                   resource_uri=part2_uri,
@@ -2969,10 +3261,6 @@ class FakedMetricsContextManager(FakedBaseManager):
             uri_prop='fake-uri',
             class_value=None,
             name_prop=None)
-        self._metric_group_def_names = []
-        self._metric_group_defs = {}  # by group name
-        self._metric_value_names = []
-        self._metric_values = {}  # by group name
 
     def add(self, properties):
         # pylint: disable=useless-super-delegation
@@ -2997,132 +3285,6 @@ class FakedMetricsContextManager(FakedBaseManager):
           Context resource.
         """
         return super(FakedMetricsContextManager, self).add(properties)
-
-    def add_metric_group_definition(self, definition):
-        """
-        Add a faked metric group definition.
-
-        The definition will be used:
-
-        * For later addition of faked metrics responses.
-        * For returning the metric-group-info objects in the response of the
-          Create Metrics Context operations.
-
-        For defined metric groups, see chapter "Metric groups" in the
-        :term:`HMC API` book.
-
-        Parameters:
-
-          definition (:class:`~zhmcclient_mock.FakedMetricGroupDefinition`):
-            Definition of the metric group.
-
-        Raises:
-
-          ValueError: A metric group definition with this name already exists.
-        """
-        assert isinstance(definition, FakedMetricGroupDefinition)
-        group_name = definition.name
-        if group_name in self._metric_group_defs:
-            raise ValueError("A metric group definition with this name "
-                             "already exists: {}".format(group_name))
-        self._metric_group_defs[group_name] = definition
-        self._metric_group_def_names.append(group_name)
-
-    def get_metric_group_definition(self, group_name):
-        """
-        Get a faked metric group definition by its group name.
-
-        Parameters:
-
-          group_name (:term:`string`): Name of the metric group.
-
-        Returns:
-
-          :class:`~zhmcclient_mock.FakedMetricGroupDefinition`: Definition of
-          the metric group.
-
-        Raises:
-
-          ValueError: A metric group definition with this name does not exist.
-        """
-        if group_name not in self._metric_group_defs:
-            raise ValueError("A metric group definition with this name does "
-                             "not exist: {}".format(group_name))
-        return self._metric_group_defs[group_name]
-
-    def get_metric_group_definition_names(self):
-        """
-        Get the group names of all faked metric group definitions.
-
-        Returns:
-
-          iterable of string: The group names, in the order their metric
-            group definitions had been added.
-        """
-        return self._metric_group_def_names
-
-    def add_metric_values(self, values):
-        """
-        Add one set of faked metric values for a particular resource to the
-        metrics response for a particular metric group, for later retrieval.
-
-        For defined metric groups, see chapter "Metric groups" in the
-        :term:`HMC API` book.
-
-        Parameters:
-
-          values (:class:`~zhmcclient_mock.FakedMetricObjectValues`):
-            The set of metric values to be added. It specifies the resource URI
-            and the targeted metric group name.
-        """
-        assert isinstance(values, FakedMetricObjectValues)
-        group_name = values.group_name
-        if group_name not in self._metric_values:
-            self._metric_values[group_name] = []
-        self._metric_values[group_name].append(values)
-        if group_name not in self._metric_value_names:
-            self._metric_value_names.append(group_name)
-
-    def get_metric_values(self, group_name):
-        """
-        Get the faked metric values for a metric group, by its metric group
-        name.
-
-        The result includes all metric object values added earlier for that
-        metric group name, using
-        :meth:`~zhmcclient_mock.FakedMetricsContextManager.add_metric_object_values`
-        i.e. the metric values for all resources and all points in time that
-        were added.
-
-        Parameters:
-
-          group_name (:term:`string`): Name of the metric group.
-
-        Returns:
-
-          iterable of :class:`~zhmcclient_mock.FakedMetricObjectValues`: The
-          metric values for that metric group, in the order they had been added.
-
-        Raises:
-
-          ValueError: Metric values for this group name do not exist.
-        """  # pylint:disable=line-too-long
-        if group_name not in self._metric_values:
-            raise ValueError("Metric values for this group name do not "
-                             "exist: {}".format(group_name))
-        return self._metric_values[group_name]
-
-    def get_metric_values_group_names(self):
-        """
-        Get the group names of metric groups for which there are faked metric
-        values.
-
-        Returns:
-
-          iterable of string: The group names, in the order their metric values
-            had been added.
-        """
-        return self._metric_value_names
 
 
 class FakedMetricsContext(FakedBaseResource):
@@ -3188,16 +3350,16 @@ class FakedMetricsContext(FakedBaseResource):
           iterable of :class:`~zhmcclient_mock.FakedMetricGroupDefinition`: The
           faked metric group definitions, in the order they had been added.
         """
+        hmc = self.manager.parent
         group_names = self._properties.get('metric-groups', None)
         if not group_names:
-            group_names = self.manager.get_metric_group_definition_names()
+            group_names = hmc.metric_groups.keys()
         mg_defs = []
         for group_name in group_names:
-            try:
-                mg_def = self.manager.get_metric_group_definition(group_name)
+            if group_name in hmc.metric_groups:
+                # Use only metric groups that have a definition
+                mg_def = hmc.metric_groups[group_name]
                 mg_defs.append(mg_def)
-            except ValueError:
-                pass  # ignore metric groups without metric group defs
         return mg_defs
 
     def get_metric_group_infos(self):
@@ -3242,17 +3404,17 @@ class FakedMetricsContext(FakedBaseResource):
             values (:class:`~zhmcclient_mock.FakedMetricObjectValues`):
               The metric values for one resource at one point in time.
         """
+        hmc = self.manager.parent
         group_names = self._properties.get('metric-groups', None)
         if not group_names:
-            group_names = self.manager.get_metric_values_group_names()
+            group_names = hmc.metric_values.keys()
         ret = []
         for group_name in group_names:
-            try:
-                mo_val = self.manager.get_metric_values(group_name)
+            if group_name in hmc.metric_values:
+                # Use only metric groups that have metric values
+                mo_val = hmc.metric_values[group_name]
                 ret_item = (group_name, mo_val)
                 ret.append(ret_item)
-            except ValueError:
-                pass  # ignore metric groups without metric values
         return ret
 
     def get_metric_values_response(self):
@@ -3367,7 +3529,9 @@ class FakedMetricObjectValues(object):
             metric values apply.
 
           timestamp (datetime): Point in time to which these metric values
-            apply.
+            apply. Timezone-naive values are converted to timezone-aware values
+            using the local timezone as determined by
+            :class:`dateutil:dateutil.tz.tzlocal`.
 
           values (list of tuple(name, value)): The metric values, as follows:
 
@@ -3376,6 +3540,8 @@ class FakedMetricObjectValues(object):
               in the table in the description of
               :class:`~zhmcclient_mock.FakedMetricGroupDefinition`).
         """
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=tz.tzlocal())  # new object
         self.group_name = group_name
         self.resource_uri = resource_uri
         self.timestamp = timestamp

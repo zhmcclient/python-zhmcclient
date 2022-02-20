@@ -31,6 +31,28 @@ Released: not yet
 * The installation of this package using `setup.py install` is no longer
   recommended. Use `pip install` instead.
 
+* The "timestamp" init parameter of "FakedMetricObjectValues" now gets
+  converted to a timezone-aware datetime object using the local timezone, if
+  provided as timezone-naive datetime object. This may be incompatible for
+  users of the zhmcclient mock support if the mock support is used in testcases
+  that have expected timestamps.
+
+* Mock support for metrics: The representation of metric group definitions has
+  been moved from the FakedMetricsContextManager class to the FakedHmc class,
+  where they are now predefined and no longer need to be added by the user of
+  the mock support. As a result, the add_metric_group_definition() method
+  has been dropped. The get_metric_group_definition() and
+  get_metric_group_definition_names() methods have also been dropped and
+  the predefined metric groups can now be accessed via a new property
+  FakedHmc.metric_groups that provides an immutable view.
+
+* Mock support for metrics: The representation of metric values has
+  been moved from the FakedMetricsContextManager class to the FakedHmc class.
+  The add_metric_values() method has been moved accordingly. The
+  get_metric_values() and get_metric_values_group_names() methods have been
+  dropped and the metric values can now be accessed via a new property
+  FakedHmc.metric_values that provides an immutable view.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -67,6 +89,10 @@ Released: not yet
 * Mock support: Fixed list of properties returned by the "List Adapters of CPC"
   operation.
 
+* Fixed that the "timestamp" init parameter of "FakedMetricObjectValues" gets
+  converted to a timezone-aware datetime object using the local timezone, if
+  provided as a timezone-naive datetime object.
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of
@@ -77,6 +103,15 @@ Released: not yet
 
 * Added support for activating and deactivating a CPC in classic mode, by
   adding Cpc.activate() and Cpc.deactivate().
+
+* Added support for saving real and faked HMCs to HMC definitions, via new
+  methods to_hmc_yaml_file(), to_hmc_yaml() and to_hmc_dict() on the 'Client'
+  class.
+  Added support for restoring faked HMCs from HMC definitions, via new methods
+  from_hmc_yaml_file(), from_hmc_yaml() and from_hmc_dict() on the
+  'FakedSession' class.
+  This required adding the following Python packages as dependencies:
+  PyYAML, yamlloader, jsonschema, dateutil.
 
 **Cleanup:**
 

@@ -22,6 +22,10 @@ by the HMC.
 from __future__ import absolute_import
 import time
 import threading
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 # import contextlib
 from immutable_views import DictView
 
@@ -490,3 +494,28 @@ class BaseResource(object):
             session.resource_updater.unregister_object(self)
             if not session.resource_updater.has_objects():
                 session.unsubscribe_auto_update()
+
+    def dump(self):
+        """
+        Dump this resource with its properties and child resources
+        (recursively) as a resource definition.
+
+        This is the default implementation for the case where the resource has
+        no child resources. If the resource does have child resources, this
+        method needs to be overridden in the resource subclass.
+
+        The returned resource definition of this implementation has the
+        following format::
+
+            {
+                "properties": {...},
+            }
+
+        Returns:
+          dict: Resource definition of this resource.
+        """
+        resource_dict = OrderedDict()
+        self.pull_full_properties()
+        resource_dict['properties'] = OrderedDict(self._properties)
+        # No child resources
+        return resource_dict
