@@ -49,9 +49,9 @@ Issues:
   active or loaded state, i.e. not inactive. The description should be amended
   with this information.
 
-## Activation profiles
+## Image and load activation profiles
 
-Facts:
+Existing documentation:
 
 * The 'next-activation-profile-name' property of the LPAR object is described as:
 
@@ -68,7 +68,7 @@ Facts:
 * The 'Load Logical Partition' operation does not have a means to specify any
   activation profile.
 
-Issues:
+Documentation issues:
 
 * Doc clarification: The 'activation-profile-name' parameter of the
   'Activate Logical Partition' operation can specify the name of an image
@@ -76,35 +76,41 @@ Issues:
   can. However, the documentation is unspecific about that. It should be made
   explicit and mention that it can specify image or a load profiles.
 
-Questions:
+Discussion results / questions:
 
-* For a given LPAR name, does there need to be an image activation profile with
-  the same name?
-  Answer: No.
+* For each LPAR, there needs to be an image profile with the same name as the
+  LPAR, otherwise the LPAR activation will fail.
 
-* For a given image activation profile, does there need to be a load activation
-  profile with the same name?
-  Answer: No.
+* There cannot be an image profile and a load profile with the same name
+  (in the same CPC).
 
-* Can an LPAR be activated through the 'Activate Logical Partition' operation
-  when specifying an image activation profile with a different name than the
-  LPAR name?
-  Answer: TBD
+  That also applies to the image and load profiles visible at the WS-API.
 
-* If an LPAR that was previously deactivated, is activated through the
-  'Activate Logical Partition' operation with a load activation profile name
-  (and no same-named image activation profile exists), is this rejected?
-  Answer: TBD
+* The profile name specified with the 'Activate Logical Partition' operation
+  must be one of:
 
-  If not rejected, which image profile is used?
-  Answer: TBD
+  - if it is an image profile, it must have the same name as the targeted LPAR.
+  - if it is a load profile, it must not have the name of any LPAR in the CPC.
 
-* If an LPAR that was previously activated but not loaded, is loaded through the
-  'Load Logical Partition' operation, which load parameters are used?
-  Answer: TBD
+  That requirement applies to both:
 
-* In which cases is the DEFAULTLOAD load activation profile used?
-  Answer: TBD
+  - the name specified in the 'activation-profile-name' operation parameter.
+  - the name specified in the 'next-activation-profile-name' LPAR property,
+    if the 'activation-profile-name' operation parameter is not specified.
+
+  Otherwise, the activation will fail.
+
+* If an inactive LPAR is activated through the 'Activate Logical Partition'
+  operation with 'activation-profile-name' set to a load activation profile
+  name (that is different from the LPAR name), the following parameters
+  are used:
+
+  - the activation related parameters from the image profile with the same
+    name as the LPAR.
+  - the load related parameters from the specified load profile.
+
+* The load activation profile named 'DEFAULTLOAD' is not automatically used
+  by default; it is only used when specified.
 
 
 ## Operations and LPAR status
@@ -127,24 +133,53 @@ Image Profile:
 LPAR:
 * activation-mode = linux
 
-| Operation                | Status before    | Status after               | Verified on M96 | Confirmed |
-|:------------------------ |:---------------- |:-------------------------- |:--------------- |:--------- |
-| CPC IML                  | N/A              | not-activated              | No              | TBD       |
-| Activate LPAR            | not-activated    | not-operating (1)          | Yes             | TBD       |
-| Activate LPAR            | not-operating    | not-operating (noop ?)     | Yes             | TBD       |
-| Activate LPAR (force)    | operating        | not-operating              | No              | TBD       |
-| Stop LPAR                | not-operating    | not-operating (noop ?)     | Yes             | TBD       |
-| Stop LPAR                | operating        | ?                          | No              | TBD       |
-| Start LPAR               | not-operating    | ?                          | No              | TBD       |
-| Start LPAR               | operating        | ?                          | No              | TBD       |
-| Load LPAR                | not-operating    | operating                  | ? (500,263)     | TBD       |
-| Load LPAR (force)        | operating        | operating (newly loaded)   | No              | TBD       |
-| Reset Normal/Clear       | operating        | ?                          | No              | TBD       |
-| Reset Normal/Clear       | not-operating    | ?                          | No              | TBD       |
-| Deactivate LPAR          | not-operating    | not-activated              | Yes             | TBD       |
-| Deactivate LPAR (force)  | operating        | not-activated              | No              | TBD       |
+| LPAR operation                              | Status before    | Status after                         | Verified on M96 | Confirmed |
+|:------------------------------------------- |:---------------- |:------------------------------------ |:--------------- |:--------- |
+| Activate w/ image profile                   | not-activated    | not-operating (1)                    | Yes             | TBD       |
+| Activate w/ load profile                    | not-activated    | not-operating (2)                    | No              | TBD       |
+| Activate w/ image profile (unchanged)       | not-operating    | not-operating (no reactivation) (3)  | No              | TBD       |
+| Activate w/ load pr. (image pr. unchanged)  | not-operating    | not-operating (no reactivation) (4)  | No              | TBD       |
+| Activate w/ image profile (modified)        | not-operating    | not-operating (reactivation) (5)     | No              | TBD       |
+| Activate w/ force (image pr. unchanged)     | operating        | not-operating (no reactivation) (6)  | No              | TBD       |
+| Activate w/ force (image pr. modified)      | operating        | not-operating (reactivation) (7)     | No              | TBD       |
+| Load                                        | not-operating    | operating                            | ? (500,263)     | TBD       |
+| Load (force)                                | operating        | operating (newly loaded) (8)         | No              | TBD       |
+| Deactivate                                  | not-operating    | not-activated                        | Yes             | TBD       |
+| Deactivate (force)                          | operating        | not-activated                        | No              | TBD       |
+| Stop                                        | not-operating    | not-operating (noop ?)               | Yes             | TBD       |
+| Stop                                        | operating        | ?                                    | No              | TBD       |
+| Start                                       | not-operating    | ?                                    | No              | TBD       |
+| Start                                       | operating        | ?                                    | No              | TBD       |
+| Reset Normal/Clear                          | operating        | ?                                    | No              | TBD       |
+| Reset Normal/Clear                          | not-operating    | ?                                    | No              | TBD       |
 
-(1) Due to load-at-activation = False
+(1) Activation parameters are taken from the specified image profile (must have same name as LPAR). Due to load-at-activation=False, the
+    LPAR is not loaded, so the load parameters in the image profile are ignored.
+
+(2) Activation parameters are taken from the image profile with same name as the LPAR. Due to load-at-activation=False, the LPAR is not
+    loaded, so the specified load profile is ignored.
+
+(3) No re-activation occurs, since the image activation profile is unchanged. Due to load-at-activation=False, the
+    LPAR is not loaded, so the load parameters in the image profile are ignored.
+
+(4) No re-activation occurs, since the image activation profile is unchanged. Due to load-at-activation=False, the LPAR is not
+    loaded, so the specified load profile is ignored.
+
+(5) The activation state of the LPAR is adjusted to reflect the modified image profile. Due to load-at-activation=False, the
+    LPAR is not loaded, so the load parameters in the image profile are ignored.
+
+    - Question: For which properties of the image activation profile does this happen?
+
+(6) Since 'force' is specified, the OS in the LPAR is shut down, the activation state of the LPAR is adjusted based
+    on the changed activation parameters, but due to load-at-activation=False the LPAR is not loaded again.
+
+(7) Since 'force' is specified, the OS in the LPAR is shut down, the activation state of the LPAR is not adjusted due
+    to the unchanged activation parameters, and due to load-at-activation=False the LPAR is not loaded again.
+
+(8) Since 'force' is specified, the OS in the LPAR is shut down, the activation state of the LPAR is adjusted based
+    on the activation parameters, and the LPAR is loaded again.
+
+    - Question: Is the LPAR always re-loaded, even when the activation parameters do not need to be changed?
 
 ### Linux-type LPAR with auto-loading
 
@@ -155,16 +190,49 @@ Image Profile:
 LPAR:
 * activation-mode = linux
 
-TBD: Same as without auto-loading, except for:
+Same as without auto-loading, except that activation is followed by a load:
 
-| Operation                | Status before    | Status after               | Verified on M96 | Confirmed |
-|:------------------------ |:---------------- |:-------------------------- |:--------------- |:--------- |
-| Activate LPAR            | not-activated    | operating                  | No              | TBD       |
+| LPAR operation                              | Status before    | Status after                         | Verified on M96 | Confirmed |
+|:------------------------------------------- |:---------------- |:------------------------------------ |:--------------- |:--------- |
+| Activate w/ image profile                   | not-activated    | operating (1)                        | No              | TBD       |
+| Activate w/ load profile                    | not-activated    | operating (2)                        | No              | TBD       |
+| Activate w/ image profile (unchanged)       | not-operating    | operating (no reactivation) (3)      | No              | TBD       |
+| Activate w/ load pr. (image pr. unchanged)  | not-operating    | operating (no reactivation) (4)      | No              | TBD       |
+| Activate w/ image profile (modified)        | not-operating    | operating (reactivation) (5)         | No              | TBD       |
+| Activate w/ force (image+load pr. unchanged)| operating        | operating (no react./no reload) (6)  | No              | TBD       |
+| Activate w/ force (image pr. modified)      | operating        | operating (react+reload) (7)         | No              | TBD       |
+| Activate w/ force (load pr. modified)       | operating        | operating (react+reload) (8)         | No              | TBD       |
+
+(1) Activation parameters are taken from the specified image profile. Due to load-at-activation=True, the LPAR is loaded with load
+    parameters taken from the specified image profile (must have same name as LPAR).
+
+(2) Activation parameters are taken from the image profile with same name as the LPAR. Due to load-at-activation=True, the LPAR
+    is loaded with load parameters taken from the specified load profile.
+
+(3) No re-activation occurs, since the image activation profile is unchanged. Due to load-at-activation=True, the LPAR is loaded
+    with load parameters taken from the specified image profile (must have same name as LPAR).
+
+(4) No re-activation occurs, since the image activation profile is unchanged. Due to load-at-activation=True, the LPAR is loaded
+    with load parameters taken from the specified load profile.
+
+(5) The activation state of the LPAR is adjusted to reflect the modified image profile. Due to load-at-activation=True, the LPAR
+    is loaded with load parameters taken from the specified image profile (must have same name as LPAR).
+
+(6) Since 'force' is specified, the OS in the LPAR could be shut down. However, because the image and load profiles are unchanged,
+    there is no need to reload the LPAR, so the OS is not shut down and keeps on running.
+
+(7) Since 'force' is specified, the OS in the LPAR is shut down. The activation state of the LPAR is adjusted based on the modified
+    image profile. Due to load-at-activation=True, the LPAR is loaded with load parameters taken from the image profile with same
+    name as the LPAR.
+
+(8) Since 'force' is specified, the OS in the LPAR is shut down. The activation state of the LPAR is adjusted based on the modified
+    image profile. Due to load-at-activation=True, the LPAR is loaded with load parameters taken from the image profile with same
+    name as the LPAR.
 
 ### SSC-type LPAR
 
-TBD: Same as Linux-type
+Same as Linux-type: Yes?
 
 ### ESA390-type LPAR
 
-TBD: Same as Linux-type
+Same as Linux-type: Yes?
