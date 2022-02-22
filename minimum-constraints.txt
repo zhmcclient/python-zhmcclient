@@ -115,13 +115,16 @@ urllib3==1.26.5; python_version >= '3.10'
 
 # Direct dependencies for development (must be consistent with dev-requirements.txt)
 
+# PEP517 package builder, used in Makefile
+build==0.5.0
+
 # PyYAML pulled in by zhmcclient examples and by python-coveralls
 PyYAML==5.3; python_version == '2.7'
 PyYAML==5.1; python_version >= '3.5' and python_version < '3.8'
 PyYAML==5.1.2; python_version >= '3.8'
 
 # Unit test (imports into testcases):
-packaging==17.0
+packaging==19.0
 funcsigs==1.0.2; python_version == '2.7'
 # pytest 6.2.5 is needed on Python 3.10 to address issues.
 pytest==4.3.1; python_version <= '3.6'
@@ -130,7 +133,7 @@ pytest==6.2.5; python_version >= '3.10'
 testfixtures==6.9.0
 colorama==0.3.9; python_version == '2.7'
 colorama==0.4.0; python_version >= '3.5'
-importlib-metadata==0.12; python_version <= '3.7'
+importlib-metadata==0.22; python_version <= '3.7'
 mock==2.0.0
 more-itertools==4.0.0
 # pytz: covered in direct deps for installation
@@ -139,9 +142,7 @@ requests-mock==1.6.0
 requests-toolbelt==0.8.0
 
 # Virtualenv
-virtualenv==15.0.0; python_version == '2.7'
-virtualenv==16.1.0; python_version >= '3.5' and python_version < '3.8'
-virtualenv==20.0.0; python_version >= '3.8'  # requires six<2,>=1.12.0
+virtualenv==20.1.0
 
 # Unit test (indirect dependencies):
 pluggy==0.7.1; python_version >= '2.7' and python_version <= '3.6'
@@ -271,7 +272,7 @@ MarkupSafe==0.23; python_version <= '3.9'
 MarkupSafe==1.1.0; python_version >= '3.10'
 mistune==0.8.1
 pandocfilters==1.4.1
-pathlib2==2.2.1
+pathlib2==2.3.3
 pexpect==4.2.1
 pickleshare==0.7.4
 # twine 3.0.0 depends on pkginfo>=1.4.2
