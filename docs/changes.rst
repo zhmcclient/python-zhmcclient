@@ -56,6 +56,9 @@ Released: not yet
 * End2end tests: Added support for verify_cert parameter in HMC definition file.
   Changed test env var TESTHMCDIR with hard coded filename to TESTHMCFILE.
 
+* Added support for activating and deactivating a CPC in classic mode, by
+  adding Cpc.activate() and Cpc.deactivate().
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact

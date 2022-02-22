@@ -59,10 +59,11 @@ CPC1_CAPACITY_PROPS = {
     'processor-count-cbp2': 1,
 }
 
-HTTPError_404_1 = HTTPError({'http-status': 404, 'reason': 1})
-HTTPError_409_5 = HTTPError({'http-status': 409, 'reason': 5})
-HTTPError_409_4 = HTTPError({'http-status': 409, 'reason': 4})
 HTTPError_400_7 = HTTPError({'http-status': 400, 'reason': 7})
+HTTPError_404_1 = HTTPError({'http-status': 404, 'reason': 1})
+HTTPError_409_1 = HTTPError({'http-status': 409, 'reason': 1})
+HTTPError_409_4 = HTTPError({'http-status': 409, 'reason': 4})
+HTTPError_409_5 = HTTPError({'http-status': 409, 'reason': 5})
 
 # Names of our faked crypto adapters:
 CRYPTO1_NAME = 'crypto 1'
@@ -936,6 +937,158 @@ class TestCpc(object):
 
             # Execute the code to be tested
             result = cpc.stop(wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplementedError
+
+            cpc.pull_full_properties()
+            status = cpc.properties['status']
+            assert status == exp_status
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, initial_status, force, exp_status, exp_error", [
+            # Different operational modes
+            (CPC1_NAME, 'not-operating', False, None, HTTPError_409_4),
+            (CPC2_NAME, 'not-operating', False, 'operating', None),
+            # Different initial inactive statuses
+            (CPC3_NAME, 'not-operating', False, 'operating', None),
+            (CPC3_NAME, 'not-operating', True, 'operating', None),
+            (CPC3_NAME, 'no-power', False, 'operating', None),
+            (CPC3_NAME, 'no-power', True, 'operating', None),
+            # Different initial active statuses
+            (CPC3_NAME, 'operating', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'operating', True, 'operating', None),
+            (CPC3_NAME, 'degraded', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'degraded', True, 'operating', None),
+            (CPC3_NAME, 'acceptable', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'acceptable', True, 'operating', None),
+            (CPC3_NAME, 'exceptions', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'exceptions', True, 'operating', None),
+            (CPC3_NAME, 'service-required', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'service-required', True, 'operating', None),
+            # Different initial bad statuses
+            (CPC3_NAME, 'not-communicating', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'not-communicating', True, None, HTTPError_409_1),
+            (CPC3_NAME, 'status-check', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'status-check', True, None, HTTPError_409_1),
+        ]
+    )
+    def test_cpc_activate(
+            self, cpc_name, initial_status, force, exp_status, exp_error,
+            wait_for_completion):
+        """Test Cpc.activate()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set initial status of the CPC for this test
+        faked_cpc.properties['status'] = initial_status
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.activate(
+                    activation_profile_name='fake_rp',
+                    force=force,
+                    wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.activate(
+                activation_profile_name='fake_rp',
+                force=force,
+                wait_for_completion=wait_for_completion)
+
+            if wait_for_completion:
+                assert result is None
+            else:
+                raise NotImplementedError
+
+            cpc.pull_full_properties()
+            status = cpc.properties['status']
+            assert status == exp_status
+
+    @pytest.mark.parametrize(
+        "wait_for_completion", [True]
+    )
+    @pytest.mark.parametrize(
+        "cpc_name, initial_status, force, exp_status, exp_error", [
+            # Different operational modes
+            (CPC1_NAME, 'active', True, None, HTTPError_409_4),
+            (CPC2_NAME, 'operating', True, 'no-power', None),
+            # Different initial inactive statuses
+            (CPC3_NAME, 'not-operating', False, 'no-power', None),
+            (CPC3_NAME, 'not-operating', True, 'no-power', None),
+            (CPC3_NAME, 'no-power', False, 'no-power', None),
+            (CPC3_NAME, 'no-power', True, 'no-power', None),
+            # Different initial active statuses
+            (CPC3_NAME, 'operating', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'operating', True, 'no-power', None),
+            (CPC3_NAME, 'degraded', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'degraded', True, 'no-power', None),
+            (CPC3_NAME, 'acceptable', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'acceptable', True, 'no-power', None),
+            (CPC3_NAME, 'exceptions', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'exceptions', True, 'no-power', None),
+            (CPC3_NAME, 'service-required', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'service-required', True, 'no-power', None),
+            # Different initial bad statuses
+            (CPC3_NAME, 'not-communicating', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'not-communicating', True, None, HTTPError_409_1),
+            (CPC3_NAME, 'status-check', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'status-check', True, None, HTTPError_409_1),
+        ]
+    )
+    def test_cpc_deactivate(
+            self, cpc_name, initial_status, force, exp_status, exp_error,
+            wait_for_completion):
+        """Test Cpc.deactivate()."""
+
+        # wait_for_completion=False not implemented in mock support:
+        assert wait_for_completion is True
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set initial status of the CPC for this test
+        faked_cpc.properties['status'] = initial_status
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_error:
+            with pytest.raises(HTTPError) as exc_info:
+
+                # Execute the code to be tested
+                result = cpc.deactivate(
+                    force=force,
+                    wait_for_completion=wait_for_completion)
+
+            exc = exc_info.value
+            assert exc.http_status == exp_error.http_status
+            assert exc.reason == exp_error.reason
+        else:
+
+            # Execute the code to be tested
+            result = cpc.deactivate(
+                force=force,
+                wait_for_completion=wait_for_completion)
 
             if wait_for_completion:
                 assert result is None
