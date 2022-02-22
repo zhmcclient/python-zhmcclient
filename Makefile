@@ -127,7 +127,7 @@ pymn := py$(python_mn_version)
 # Directory for the generated distribution files
 dist_dir := dist
 
-# Distribution archives (as built by setup.py)
+# Distribution archives (as built by 'build' tool)
 bdist_file := $(dist_dir)/$(package_name)-$(package_version)-py2.py3-none-any.whl
 sdist_file := $(dist_dir)/$(package_name)-$(package_version).tar.gz
 
@@ -445,10 +445,10 @@ endif
 # regenerate MANIFEST. Otherwise, changes in MANIFEST.in will not be used.
 # Note: Deleting build is a safeguard against picking up partial build products
 # which can lead to incorrect hashbangs in scripts in wheel archives.
-$(bdist_file) $(sdist_file): _check_version Makefile MANIFEST.in $(dist_included_files)
+$(bdist_file) $(sdist_file): Makefile MANIFEST.in $(dist_included_files)
 	-$(call RM_FUNC,MANIFEST)
 	-$(call RMDIR_FUNC,build $(package_name).egg-info-INFO .eggs)
-	$(PYTHON_CMD) setup.py sdist -d $(dist_dir) bdist_wheel -d $(dist_dir) --universal
+	$(PYTHON_CMD) -m build --outdir $(dist_dir)
 
 pylint_$(pymn).done: develop_$(pymn).done Makefile $(pylint_rc_file) $(check_py_files)
 ifeq ($(python_m_version),2)

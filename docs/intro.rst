@@ -278,17 +278,6 @@ sources:
       # Install from the source dist archive:
       $ pip install zhmcclient-0.26.1.tar.gz  # adjust version
 
-* setup.py install from unpacked source distribution archive:
-
-  .. code-block:: text
-
-      # Download the source dist archive (you can also use any other means to get it):
-      $ pip download zhmcclient --no-binary zhmcclient
-
-      # Install from the source dist archive:
-      $ tar -xf zhmcclient-0.26.1.tar.gz  # adjust version
-      $ python setup.py install
-
 * Pip install from repo root directory:
 
   .. code-block:: text
@@ -297,13 +286,9 @@ sources:
       $ cd python-zhmcclient
       $ pip install .
 
-* setup.py install from repo root directory:
-
-  .. code-block:: text
-
-      $ git clone https://github.com/zhmcclient/python-zhmcclient
-      $ cd python-zhmcclient
-      $ python setup.py install
+Note that an installation of Python packages using `setup.py install` is no
+longer recommended by the Python packaging community. For details, see
+https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html.
 
 Verification of the installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
