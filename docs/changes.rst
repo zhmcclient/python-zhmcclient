@@ -51,6 +51,11 @@ Released: not yet
 * Fixed issues in the zhmcclient_mock support for the "Update LPAR Properties"
   operation. (issue #909)
 
+* Doc fix: Added the missing classes "FakedMetricGroupDefinition",
+  "FakedMetricObjectValues", "FakedCapacityGroupManager", and "FakedCapacityGroup"
+  to section "Mock support" and fixed errors in doc links to some of these
+  classes.
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of

@@ -181,6 +181,12 @@ Faked HMC
 .. autoclass:: zhmcclient_mock.FakedAdapter
    :members:
 
+.. autoclass:: zhmcclient_mock.FakedCapacityGroupManager
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedCapacityGroup
+   :members:
+
 .. autoclass:: zhmcclient_mock.FakedConsoleManager
    :members:
 
@@ -281,6 +287,12 @@ Faked HMC
    :members:
 
 .. autoclass:: zhmcclient_mock.FakedMetricsContext
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedMetricGroupDefinition
+   :members:
+
+.. autoclass:: zhmcclient_mock.FakedMetricObjectValues
    :members:
 
 .. autoclass:: zhmcclient_mock.FakedBaseManager
