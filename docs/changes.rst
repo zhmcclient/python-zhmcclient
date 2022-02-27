@@ -58,6 +58,11 @@ Released: 2022-02-17
 * Fixed issues in the zhmcclient_mock support for the "Update LPAR Properties"
   operation. (issue #909)
 
+* Doc fix: Added the missing classes "FakedMetricGroupDefinition",
+  "FakedMetricObjectValues", "FakedCapacityGroupManager", and "FakedCapacityGroup"
+  to section "Mock support" and fixed errors in doc links to some of these
+  classes.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact

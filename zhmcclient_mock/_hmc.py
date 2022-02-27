@@ -2961,7 +2961,7 @@ class FakedMetricsContextManager(FakedBaseManager):
 
         Parameters:
 
-          definition (:class:~zhmcclient.FakedMetricGroupDefinition`):
+          definition (:class:`~zhmcclient_mock.FakedMetricGroupDefinition`):
             Definition of the metric group.
 
         Raises:
@@ -2986,8 +2986,8 @@ class FakedMetricsContextManager(FakedBaseManager):
 
         Returns:
 
-          :class:~zhmcclient.FakedMetricGroupDefinition`: Definition of the
-            metric group.
+          :class:`~zhmcclient_mock.FakedMetricGroupDefinition`: Definition of
+          the metric group.
 
         Raises:
 
@@ -3019,7 +3019,7 @@ class FakedMetricsContextManager(FakedBaseManager):
 
         Parameters:
 
-          values (:class:`~zhmclient.FakedMetricObjectValues`):
+          values (:class:`~zhmcclient_mock.FakedMetricObjectValues`):
             The set of metric values to be added. It specifies the resource URI
             and the targeted metric group name.
         """
@@ -3038,7 +3038,7 @@ class FakedMetricsContextManager(FakedBaseManager):
 
         The result includes all metric object values added earlier for that
         metric group name, using
-        :meth:`~zhmcclient.FakedMetricsContextManager.add_metric_object_values`
+        :meth:`~zhmcclient_mock.FakedMetricsContextManager.add_metric_object_values`
         i.e. the metric values for all resources and all points in time that
         were added.
 
@@ -3048,13 +3048,13 @@ class FakedMetricsContextManager(FakedBaseManager):
 
         Returns:
 
-          iterable of :class:`~zhmclient.FakedMetricObjectValues`: The metric
-            values for that metric group, in the order they had been added.
+          iterable of :class:`~zhmcclient_mock.FakedMetricObjectValues`: The
+          metric values for that metric group, in the order they had been added.
 
         Raises:
 
           ValueError: Metric values for this group name do not exist.
-        """
+        """  # pylint:disable=line-too-long
         if group_name not in self._metric_values:
             raise ValueError("Metric values for this group name do not "
                              "exist: {}".format(group_name))
@@ -3133,8 +3133,8 @@ class FakedMetricsContext(FakedBaseResource):
 
         Returns:
 
-          iterable of :class:~zhmcclient.FakedMetricGroupDefinition`: The faked
-            metric group definitions, in the order they had been added.
+          iterable of :class:`~zhmcclient_mock.FakedMetricGroupDefinition`: The
+          faked metric group definitions, in the order they had been added.
         """
         group_names = self._properties.get('metric-groups', None)
         if not group_names:
@@ -3187,7 +3187,7 @@ class FakedMetricsContext(FakedBaseResource):
 
             group_name (string): Metric group name.
 
-            values (:class:~zhmcclient.FakedMetricObjectValues`):
+            values (:class:`~zhmcclient_mock.FakedMetricObjectValues`):
               The metric values for one resource at one point in time.
         """
         group_names = self._properties.get('metric-groups', None)
@@ -3322,7 +3322,7 @@ class FakedMetricObjectValues(object):
             * name (string): The metric name.
             * value: The metric value as an object of the Python type listed
               in the table in the description of
-              :class:`~zhmcclient.FakedMetricGroupDefinition`).
+              :class:`~zhmcclient_mock.FakedMetricGroupDefinition`).
         """
         self.group_name = group_name
         self.resource_uri = resource_uri
