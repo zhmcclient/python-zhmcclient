@@ -1958,7 +1958,8 @@ class AdapterHandler(GenericGetPropertiesHandler,
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = adapter.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         adapter.manager.remove(adapter.oid)
 
 
@@ -1981,7 +1982,8 @@ class AdapterChangeCryptoTypeHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = adapter.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_required_fields(method, uri, body, ['crypto-type'])
 
         # Check the validity of the new crypto_type
@@ -2016,7 +2018,8 @@ class AdapterChangeAdapterTypeHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = adapter.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_required_fields(method, uri, body, ['type'])
 
         new_adapter_type = body['type']
@@ -2152,7 +2155,8 @@ class PartitionHandler(GenericGetPropertiesHandler,
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                valid_statuses=['stopped'])
@@ -2181,7 +2185,8 @@ class PartitionStartHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                valid_statuses=['stopped'])
@@ -2211,7 +2216,8 @@ class PartitionStopHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                valid_statuses=['active', 'paused',
@@ -2245,7 +2251,8 @@ class PartitionScsiDumpHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                valid_statuses=['active', 'paused',
@@ -2279,7 +2286,8 @@ class PartitionStartDumpProgramHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                valid_statuses=['active', 'degraded', 'paused',
@@ -2312,7 +2320,8 @@ class PartitionPswRestartHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                valid_statuses=['active', 'paused',
@@ -2342,7 +2351,8 @@ class PartitionMountIsoImageHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2392,7 +2402,8 @@ class PartitionUnmountIsoImageHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2447,7 +2458,8 @@ class PartitionIncreaseCryptoConfigHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2490,7 +2502,8 @@ class PartitionDecreaseCryptoConfigHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2534,7 +2547,8 @@ class PartitionChangeCryptoConfigHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2574,7 +2588,8 @@ class HbasHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2629,7 +2644,8 @@ class HbaHandler(GenericGetPropertiesHandler,
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = hba.manager.parent
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2660,7 +2676,8 @@ class HbaReassignPortHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = hmc.lookup_by_uri(partition_uri)  # assert it exists
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2690,7 +2707,8 @@ class NicsHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2766,7 +2784,8 @@ class NicHandler(GenericGetPropertiesHandler,
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = nic.manager.parent
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2793,7 +2812,8 @@ class VirtualFunctionsHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2824,7 +2844,8 @@ class VirtualFunctionHandler(GenericGetPropertiesHandler,
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         partition = vf.manager.parent
         cpc = partition.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
         check_valid_cpc_status(method, uri, cpc)
         check_partition_status(method, uri, partition,
                                invalid_statuses=['starting', 'stopping'])
@@ -2891,7 +2912,8 @@ class VirtualSwitchGetVnicsHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = vswitch.manager.parent
-        assert cpc.dpm_enabled
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
 
         connected_vnic_uris = vswitch.properties['connected-vnic-uris']
         return {'connected-vnic-uris': connected_vnic_uris}
@@ -3509,7 +3531,8 @@ class LparActivateHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = lpar.manager.parent
-        assert not cpc.dpm_enabled
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
 
         status = lpar.properties.get('status', None)
         force = body.get('force', False) if body else False
@@ -3571,7 +3594,8 @@ class LparDeactivateHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = lpar.manager.parent
-        assert not cpc.dpm_enabled
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
 
         status = lpar.properties.get('status', None)
         force = body.get('force', False) if body else False
@@ -3627,7 +3651,8 @@ class LparLoadHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         cpc = lpar.manager.parent
-        assert not cpc.dpm_enabled
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
 
         status = lpar.properties.get('status', None)
         force = body.get('force', False) if body else False
@@ -3689,8 +3714,10 @@ class ResetActProfilesHandler(object):
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
-        """Operation: List Reset Activation Profiles (requires classic
-        mode)."""
+        """
+        Operation: List Reset Activation Profiles.
+        In case of DPM mode, an empty list is returned.
+        """
         cpc_oid = uri_parms[0]
         query_str = uri_parms[1]
         try:
@@ -3699,15 +3726,15 @@ class ResetActProfilesHandler(object):
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
-        assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        filter_args = parse_query_parms(method, uri, query_str)
-        for profile in cpc.reset_activation_profiles.list(filter_args):
-            result_profile = {}
-            for prop in profile.properties:
-                if prop in ('element-uri', 'name'):
-                    result_profile[prop] = profile.properties[prop]
-            result_profiles.append(result_profile)
+        if not cpc.dpm_enabled:
+            filter_args = parse_query_parms(method, uri, query_str)
+            for profile in cpc.reset_activation_profiles.list(filter_args):
+                result_profile = {}
+                for prop in profile.properties:
+                    if prop in ('element-uri', 'name'):
+                        result_profile[prop] = profile.properties[prop]
+                result_profiles.append(result_profile)
         return {'reset-activation-profiles': result_profiles}
 
 
@@ -3727,8 +3754,10 @@ class ImageActProfilesHandler(object):
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
-        """Operation: List Image Activation Profiles (requires classic
-        mode)."""
+        """
+        Operation: List Image Activation Profiles.
+        In case of DPM mode, an empty list is returned.
+        """
         cpc_oid = uri_parms[0]
         query_str = uri_parms[1]
         try:
@@ -3737,15 +3766,15 @@ class ImageActProfilesHandler(object):
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
-        assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        filter_args = parse_query_parms(method, uri, query_str)
-        for profile in cpc.image_activation_profiles.list(filter_args):
-            result_profile = {}
-            for prop in profile.properties:
-                if prop in ('element-uri', 'name'):
-                    result_profile[prop] = profile.properties[prop]
-            result_profiles.append(result_profile)
+        if not cpc.dpm_enabled:
+            filter_args = parse_query_parms(method, uri, query_str)
+            for profile in cpc.image_activation_profiles.list(filter_args):
+                result_profile = {}
+                for prop in profile.properties:
+                    if prop in ('element-uri', 'name'):
+                        result_profile[prop] = profile.properties[prop]
+                result_profiles.append(result_profile)
         return {'image-activation-profiles': result_profiles}
 
 
@@ -3765,7 +3794,10 @@ class LoadActProfilesHandler(object):
     @staticmethod
     def get(method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
-        """Operation: List Load Activation Profiles (requires classic mode)."""
+        """
+        Operation: List Load Activation Profiles.
+        In case of DPM mode, an empty list is returned.
+        """
         cpc_oid = uri_parms[0]
         query_str = uri_parms[1]
         try:
@@ -3774,15 +3806,15 @@ class LoadActProfilesHandler(object):
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
-        assert not cpc.dpm_enabled  # TODO: Verify error or empty result?
         result_profiles = []
-        filter_args = parse_query_parms(method, uri, query_str)
-        for profile in cpc.load_activation_profiles.list(filter_args):
-            result_profile = {}
-            for prop in profile.properties:
-                if prop in ('element-uri', 'name'):
-                    result_profile[prop] = profile.properties[prop]
-            result_profiles.append(result_profile)
+        if not cpc.dpm_enabled:
+            filter_args = parse_query_parms(method, uri, query_str)
+            for profile in cpc.load_activation_profiles.list(filter_args):
+                result_profile = {}
+                for prop in profile.properties:
+                    if prop in ('element-uri', 'name'):
+                        result_profile[prop] = profile.properties[prop]
+                result_profiles.append(result_profile)
         return {'load-activation-profiles': result_profiles}
 
 
