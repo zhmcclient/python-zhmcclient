@@ -68,6 +68,9 @@ Released: 2022-02-17
 * Mock support: Fixed that operations on activation profiles succeed with an
   empty result set in case the CPC is in DPM mode, instead of failing.
 
+* Mock support: Fixed a follow-on error in repr() when FakedAdapter() raised
+  InputError.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact
