@@ -56,6 +56,8 @@ Released: not yet
   to section "Mock support" and fixed errors in doc links to some of these
   classes.
 
+* Mock support: Fixes for storage groups and added support for storage volumes.
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of
