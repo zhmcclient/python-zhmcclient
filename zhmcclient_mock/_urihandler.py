@@ -1805,7 +1805,8 @@ class AdaptersHandler(object):
             for adapter in cpc.adapters.list(filter_args):
                 result_adapter = {}
                 for prop in adapter.properties:
-                    if prop in ('object-uri', 'name', 'status'):
+                    if prop in ('object-uri', 'name', 'adapter-id',
+                                'adapter-family', 'type', 'status'):
                         result_adapter[prop] = adapter.properties[prop]
                 result_adapters.append(result_adapter)
         return {'adapters': result_adapters}
