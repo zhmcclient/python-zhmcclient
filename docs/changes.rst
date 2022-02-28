@@ -64,6 +64,9 @@ Released: not yet
 * Mock support: Fixed a follow-on error in repr() when FakedAdapter() raised
   InputError.
 
+* Mock support: Fixed list of properties returned by the "List Adapters of CPC"
+  operation.
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of
