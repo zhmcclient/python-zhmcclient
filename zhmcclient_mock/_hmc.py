@@ -2758,7 +2758,8 @@ class FakedStorageVolumeManager(FakedBaseManager):
         """
         stovol = super(FakedStorageVolumeManager, self).add(properties)
         stogrp = stovol.manager.parent
-        stogrp.properties['storage-volume-uris'].append(stovol.uri)
+        if stovol.uri not in stogrp.properties['storage-volume-uris']:
+            stogrp.properties['storage-volume-uris'].append(stovol.uri)
         return stovol
 
 
