@@ -1419,6 +1419,8 @@ class FakedAdapter(FakedBaseResource):
         super(FakedAdapter, self).__init__(
             manager=manager,
             properties=properties)
+        # Initial values to be prepared for raising InputError
+        self._ports = None
         # TODO: Maybe move this stuff into AdapterManager.add()?
         if 'adapter-family' in self._properties:
             family = self._properties['adapter-family']
