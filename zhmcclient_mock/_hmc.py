@@ -1023,7 +1023,7 @@ class FakedUserPatternManager(FakedBaseManager):
             hmc=hmc,
             parent=console,
             resource_class=FakedUserPattern,
-            base_uri=self.api_root + '/console/user-patterns',
+            base_uri=console.uri + '/user-patterns',
             oid_prop='element-id',
             uri_prop='element-uri',
             class_value='user-pattern')
@@ -1083,7 +1083,7 @@ class FakedPasswordRuleManager(FakedBaseManager):
             hmc=hmc,
             parent=console,
             resource_class=FakedPasswordRule,
-            base_uri=self.api_root + '/console/password-rules',
+            base_uri=console.uri + '/password-rules',
             oid_prop='element-id',
             uri_prop='element-uri',
             class_value='password-rule')
@@ -1143,7 +1143,7 @@ class FakedTaskManager(FakedBaseManager):
             hmc=hmc,
             parent=console,
             resource_class=FakedTask,
-            base_uri=self.api_root + '/console/tasks',
+            base_uri=console.uri + '/tasks',
             oid_prop='element-id',
             uri_prop='element-uri',
             class_value='task')
@@ -1202,7 +1202,7 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
             hmc=hmc,
             parent=console,
             resource_class=FakedLdapServerDefinition,
-            base_uri=self.api_root + '/console/ldap-server-definitions',
+            base_uri=console.uri + '/ldap-server-definitions',
             oid_prop='element-id',
             uri_prop='element-uri',
             class_value='ldap-server-definition')
@@ -2682,7 +2682,7 @@ class FakedStorageVolumeManager(FakedBaseManager):
             hmc=hmc,
             parent=storage_group,
             resource_class=FakedStorageVolume,
-            base_uri=self.api_root + '/storage-groups',
+            base_uri=storage_group.uri + '/storage-volumes',
             oid_prop='element-id',
             uri_prop='element-uri',
             class_value='storage-volume')
@@ -2705,12 +2705,17 @@ class FakedStorageVolumeManager(FakedBaseManager):
               if not specified.
             * 'class' will be auto-generated to 'storage-group',
               if not specified.
+            * 'storage-volume-uris' array in parent storage group will be
+              updated to add the URI of the new faked StorageVolume resource.
 
         Returns:
           :class:`~zhmcclient_mock.FakedStorageVolume`: The faked StorageVolume
             resource.
         """
-        return super(FakedStorageVolumeManager, self).add(properties)
+        stovol = super(FakedStorageVolumeManager, self).add(properties)
+        stogrp = stovol.manager.parent
+        stogrp.properties['storage-volume-uris'].append(stovol.uri)
+        return stovol
 
 
 class FakedStorageVolume(FakedBaseResource):
