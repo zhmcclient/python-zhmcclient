@@ -2912,7 +2912,7 @@ class StorageGroupsHandler(object):
         for sg in hmc.consoles.console.storage_groups.list(filter_args):
             result_sg = {}
             for prop in sg.properties:
-                if prop in ('object-uri', 'cpc-uri', 'name', 'status',
+                if prop in ('object-uri', 'cpc-uri', 'name',
                             'fulfillment-state', 'type'):
                     result_sg[prop] = sg.properties[prop]
             result_storage_groups.append(result_sg)
@@ -3166,6 +3166,42 @@ class StorageGroupRemoveCandidatePortsHandler(object):
                                     "list of storage group %s: %s" %
                                     (storage_group.name, ap_uri))
             candidate_adapter_port_uris.remove(ap_uri)
+
+
+class StorageVolumesHandler(object):
+    """
+    Handler class for HTTP methods on set of StorageVolume resources.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Volumes of a Storage Group."""
+        sg_uri = re.sub('/storage-volumes$', '', uri)
+        try:
+            sg = hmc.lookup_by_uri(sg_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        query_str = uri_parms[1]
+        filter_args = parse_query_parms(method, uri, query_str)
+        result_storage_volumes = []
+        for sv in sg.storage_volumes.list(filter_args):
+            result_sv = {}
+            for prop in sv.properties:
+                if prop in ('element-uri', 'name', 'fulfillment-state', 'size',
+                            'usage'):
+                    result_sv[prop] = sv.properties[prop]
+            result_storage_volumes.append(result_sv)
+        return {'storage-volumes': result_storage_volumes}
+
+
+class StorageVolumeHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on single StorageVolume resource.
+    """
+    pass
 
 
 class CapacityGroupsHandler(object):
@@ -3896,6 +3932,11 @@ URIS = (
      StorageGroupAddCandidatePortsHandler),
     (r'/api/storage-groups/([^/]+)/operations/remove-candidate-adapter-ports',
      StorageGroupRemoveCandidatePortsHandler),
+
+    (r'/api/storage-groups/([^/]+)/storage-volumes(?:\?(.*))?',
+     StorageVolumesHandler),
+    (r'/api/storage-groups/([^/]+)/storage-volumes/([^/]+)',
+     StorageVolumeHandler),
 
     (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?', CapacityGroupsHandler),
     (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)', CapacityGroupHandler),
