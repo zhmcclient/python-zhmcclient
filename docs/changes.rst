@@ -63,6 +63,8 @@ Released: 2022-02-17
   to section "Mock support" and fixed errors in doc links to some of these
   classes.
 
+* Mock support: Fixes for storage groups and added support for storage volumes.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact

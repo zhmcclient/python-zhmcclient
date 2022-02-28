@@ -69,6 +69,8 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     StoragePortHandler, \
     VirtualSwitchesHandler, VirtualSwitchHandler, \
     VirtualSwitchGetVnicsHandler, \
+    StorageGroupsHandler, StorageGroupHandler, \
+    StorageVolumesHandler, StorageVolumeHandler, \
     CapacityGroupsHandler, CapacityGroupHandler, \
     CapacityGroupAddPartitionHandler, CapacityGroupRemovePartitionHandler, \
     LparsHandler, LparHandler, LparActivateHandler, LparDeactivateHandler, \
@@ -770,6 +772,35 @@ def standard_test_hmc():
                             'description': 'LDAP Srv Def #1',
                             'primary-hostname-ipaddr': '10.11.12.13',
                         },
+                    },
+                ],
+                'storage_groups': [
+                    {
+                        'properties': {
+                            'object-id': 'fake-stogrp-oid-1',
+                            'name': 'fake_stogrp_name_1',
+                            'description': 'Storage Group #1',
+                            'cpc-uri': '/api/cpcs/1',
+                            'type': 'fcp',
+                            'shared': False,
+                            'fulfillment-state': 'complete',
+                            'candidate-adapter-port-uris': [
+                                '/api/cpcs/1/adapters/2',
+                            ],
+                            # 'storage-volume-uris' managed automatically
+                        },
+                        'storage_volumes': [
+                            {
+                                'properties': {
+                                    'element-id': 'fake-stovol-oid-1',
+                                    'name': 'fake_stovol_name_1',
+                                    'description': 'Storage Volume #1',
+                                    'fulfillment-state': 'complete',
+                                    'size': 10.0,
+                                    'usage': 'boot',
+                                },
+                            },
+                        ],
                     },
                 ],
             }
@@ -5927,6 +5958,152 @@ class TestVirtualSwitchGetVnicsHandler(object):
             'connected-vnic-uris': connected_nic_uris,
         }
         assert resp == exp_resp
+
+
+class TestStorageGroupHandlers(object):
+    """
+    All tests for classes StorageGroupsHandler and StorageGroupHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        StorageGroupsHandler and StorageGroupHandler.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/storage-groups(?:\?(.*))?', StorageGroupsHandler),
+            (r'/api/storage-groups/([^/]+)', StorageGroupHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_stogrp_list(self):
+        """
+        Test GET Storage Groups (list).
+        """
+
+        # the function to be tested:
+        stogrps = self.urihandler.get(self.hmc, '/api/storage-groups', True)
+
+        exp_stogrps = {  # properties reduced to those returned by List
+            'storage-groups': [
+                {
+                    'object-uri': '/api/storage-groups/fake-stogrp-oid-1',
+                    'cpc-uri': '/api/cpcs/1',
+                    'name': 'fake_stogrp_name_1',
+                    'fulfillment-state': 'complete',
+                    'type': 'fcp',
+                },
+            ]
+        }
+        assert stogrps == exp_stogrps
+
+    def test_stogrp_get(self):
+        """
+        Test GET Storage Group.
+        """
+
+        # the function to be tested:
+        stogrp1 = self.urihandler.get(
+            self.hmc, '/api/storage-groups/fake-stogrp-oid-1', True)
+
+        exp_stogrp1 = {
+            'object-id': 'fake-stogrp-oid-1',
+            'object-uri': '/api/storage-groups/fake-stogrp-oid-1',
+            'class': 'storage-group',
+            'parent': '/api/console',
+            'cpc-uri': '/api/cpcs/1',
+            'name': 'fake_stogrp_name_1',
+            'description': 'Storage Group #1',
+            'fulfillment-state': 'complete',
+            'type': 'fcp',
+            'shared': False,
+            'storage-volume-uris': [
+                '/api/storage-groups/fake-stogrp-oid-1/storage-volumes/'
+                'fake-stovol-oid-1',
+            ],
+            'candidate-adapter-port-uris': ['/api/cpcs/1/adapters/2'],
+        }
+        assert stogrp1 == exp_stogrp1
+
+
+# TODO: Test StorageGroupModifyHandler
+# TODO: Test StorageGroupDeleteHandler
+# TODO: Test StorageGroupRequestFulfillmentHandler
+# TODO: Test StorageGroupAddCandidatePortsHandler
+# TODO: Test StorageGroupRemoveCandidatePortsHandler
+
+
+class TestStorageVolumeHandlers(object):
+    """
+    All tests for classes StorageVolumesHandler and StorageVolumeHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        StorageVolumesHandler and StorageVolumeHandler.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/storage-groups/([^/]+)/storage-volumes(?:\?(.*))?',
+             StorageVolumesHandler),
+            (r'/api/storage-groups/([^/]+)/storage-volumes/([^/]+)',
+             StorageVolumeHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_stovol_list(self):
+        """
+        Test GET Storage Volumes of Storage Group (list).
+        """
+
+        # the function to be tested:
+        stovols = self.urihandler.get(
+            self.hmc, '/api/storage-groups/fake-stogrp-oid-1/storage-volumes',
+            True)
+
+        exp_stovols = {  # properties reduced to those returned by List
+            'storage-volumes': [
+                {
+                    'element-uri': '/api/storage-groups/fake-stogrp-oid-1/'
+                                   'storage-volumes/fake-stovol-oid-1',
+                    'name': 'fake_stovol_name_1',
+                    'fulfillment-state': 'complete',
+                    'size': 10.0,
+                    'usage': 'boot',
+                },
+            ]
+        }
+        assert stovols == exp_stovols
+
+    def test_stovol_get(self):
+        """
+        Test GET Storage Volume.
+        """
+
+        # the function to be tested:
+        stovol1 = self.urihandler.get(
+            self.hmc, '/api/storage-groups/fake-stogrp-oid-1/'
+            'storage-volumes/fake-stovol-oid-1', True)
+
+        exp_stovol1 = {
+            'element-id': 'fake-stovol-oid-1',
+            'element-uri': '/api/storage-groups/fake-stogrp-oid-1/'
+                           'storage-volumes/fake-stovol-oid-1',
+            'class': 'storage-volume',
+            'parent': '/api/storage-groups/fake-stogrp-oid-1',
+            'name': 'fake_stovol_name_1',
+            'description': 'Storage Volume #1',
+            'fulfillment-state': 'complete',
+            'size': 10.0,
+            'usage': 'boot',
+        }
+        assert stovol1 == exp_stovol1
 
 
 class TestCapacityGroupHandlers(object):
