@@ -61,6 +61,9 @@ Released: not yet
 * Mock support: Fixed that operations on activation profiles succeed with an
   empty result set in case the CPC is in DPM mode, instead of failing.
 
+* Mock support: Fixed a follow-on error in repr() when FakedAdapter() raised
+  InputError.
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of
