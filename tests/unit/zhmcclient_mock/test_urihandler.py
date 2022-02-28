@@ -4084,26 +4084,36 @@ class TestAdapterHandlers(object):
                     'object-uri': '/api/adapters/1',
                     'name': 'osa_1',
                     'status': 'active',
+                    'adapter-family': 'osa',
+                    'adapter-id': 'BEF',
                 },
                 {
                     'object-uri': '/api/adapters/2',
                     'name': 'fcp_2',
                     'status': 'active',
+                    'adapter-family': 'ficon',
+                    'adapter-id': 'CEF',
                 },
                 {
                     'object-uri': '/api/adapters/2a',
                     'name': 'fcp_2a',
                     'status': 'active',
+                    'adapter-family': 'ficon',
+                    'adapter-id': 'CEE',
                 },
                 {
                     'object-uri': '/api/adapters/3',
                     'name': 'roce_3',
                     'status': 'active',
+                    'adapter-family': 'roce',
+                    'adapter-id': 'DEF',
                 },
                 {
                     'object-uri': '/api/adapters/4',
                     'name': 'crypto_4',
                     'status': 'active',
+                    'adapter-family': 'crypto',
+                    'adapter-id': 'EEF',
                 },
             ]
         }

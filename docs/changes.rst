@@ -71,6 +71,9 @@ Released: 2022-02-17
 * Mock support: Fixed a follow-on error in repr() when FakedAdapter() raised
   InputError.
 
+* Mock support: Fixed list of properties returned by the "List Adapters of CPC"
+  operation.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact
