@@ -113,6 +113,9 @@ Released: not yet
   This required adding the following Python packages as dependencies:
   PyYAML, yamlloader, jsonschema, dateutil.
 
+* Mock support: Added checks for non-modifiable properties in Update operations
+  and for defaulting properties in Create operations.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact

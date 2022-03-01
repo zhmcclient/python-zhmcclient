@@ -1764,6 +1764,7 @@ class TestUserHandlers(object):
             'name': 'fake_user_name_1',
             'description': 'User #1',
             'type': 'system-defined',
+            'disabled': False,
         }
         assert user1 == exp_user1
 
@@ -1798,6 +1799,7 @@ class TestUserHandlers(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'disabled': False,
         }
 
         # the function to be tested:
@@ -2312,6 +2314,7 @@ class TestUserRoleHandlers(object):
             'name': 'fake_user_role_name_1',
             'description': 'User Role #1',
             'type': 'system-defined',
+            'is-inheritance-enabled': False,
         }
         assert user_role1 == exp_user_role1
 
@@ -3046,6 +3049,8 @@ class TestPasswordRuleHandlers(object):
             'name': 'fake_password_rule_name_1',
             'description': 'Password Rule #1',
             'type': 'system-defined',
+            'max-length': 256,
+            'min-length': 8,
         }
         assert password_rule1 == exp_password_rule1
 
@@ -3228,6 +3233,8 @@ class TestLdapServerDefinitionHandlers(object):
             'name': 'fake_ldap_srv_def_name_1',
             'description': 'LDAP Srv Def #1',
             'primary-hostname-ipaddr': '10.11.12.13',
+            'connection-port': None,
+            'use-ssl': False,
         }
         assert ldap_srv_def1 == exp_ldap_srv_def1
 
@@ -5735,6 +5742,8 @@ class TestNicHandler(object):
             'description': 'NIC #1 in Partition #1',
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
             'device-number': '2001',
+            'ssc-management-nic': False,
+            'type': 'iqd',
         }
         assert nic1 == exp_nic1
 
@@ -5769,6 +5778,8 @@ class TestNicHandler(object):
             'name': 'nic_2',
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
             'device-number': nic2['device-number'],  # auto-generated
+            'ssc-management-nic': False,
+            'type': 'iqd',
         }
 
         assert nic2 == exp_nic2
@@ -6243,7 +6254,7 @@ class TestCapacityGroupHandlers(object):
             'parent': '/api/cpcs/2',
             'name': 'capacity_group1',
             'description': 'Capacity Group #1',
-            'capping-enabled': False,
+            'capping-enabled': True,
             'partition-uris': [],  # auto-generated
         }
         assert cg1 == exp_cg1

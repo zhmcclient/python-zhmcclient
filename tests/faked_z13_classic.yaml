@@ -25,6 +25,9 @@ hmc_definition:
     - properties:
         element-id: passwordrule1
         name: Password rule 1
+    - properties:
+        element-id: Basic
+        name: Basic
     tasks:
     - properties:
         element-id: task1
@@ -39,6 +42,7 @@ hmc_definition:
         name: "CPC1"
         description: "Fake z13 (classic mode)"
         machine-type: "2964"
+        machine-model: "NE1"
         status: "active"
         dpm-enabled: false
         is-ensemble-member: false

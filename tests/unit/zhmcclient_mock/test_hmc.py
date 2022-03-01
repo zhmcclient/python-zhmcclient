@@ -1130,6 +1130,8 @@ class TestFakedNic(object):
             'class': 'nic',
             'parent': partition1.uri,
             'device-number': nic1.properties['device-number'],
+            'ssc-management-nic': False,
+            'type': 'iqd',
         })
         assert isinstance(nic1, FakedNic)
         assert nic1.properties == nic1_out_props
@@ -1174,6 +1176,8 @@ class TestFakedNic(object):
             'class': 'nic',
             'parent': partition1.uri,
             'device-number': nic2.properties['device-number'],
+            'ssc-management-nic': False,
+            'type': 'iqd',
         })
         assert isinstance(nic2, FakedNic)
         assert nic2.properties == nic2_out_props
@@ -1750,7 +1754,7 @@ class TestFakedCapacityGroup(object):
             'class': 'capacity-group',
             'parent': cpc1.uri,
             'partition-uris': [],
-            'capping-enabled': False,
+            'capping-enabled': True,
         })
         assert isinstance(capacity_group1, FakedCapacityGroup)
         assert capacity_group1.properties == capacity_group1_out_props
@@ -1787,7 +1791,7 @@ class TestFakedCapacityGroup(object):
             'class': 'capacity-group',
             'parent': cpc1.uri,
             'partition-uris': [],
-            'capping-enabled': False,
+            'capping-enabled': True,
         })
         assert isinstance(capacity_group2, FakedCapacityGroup)
         assert capacity_group2.properties == capacity_group2_out_props

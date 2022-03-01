@@ -890,13 +890,17 @@ class FakedSession(zhmcclient.Session):
 
         session = FakedSession(hmc_host, hmc_name, hmc_version, api_version)
 
-        res_dict = OrderedDict(hmc_res_dict)
-        del res_dict['hmc_host']
-        del res_dict['api_version']
-        del res_dict['metric_values']
+        res_dict = OrderedDict()
+        res_dict['consoles'] = consoles
+        cpcs = hmc_res_dict.get('cpcs')
+        if cpcs:
+            res_dict['cpcs'] = cpcs
+        metrics_contexts = hmc_res_dict.get('metrics_contexts')
+        if metrics_contexts:
+            res_dict['metrics_contexts'] = metrics_contexts
         session.hmc.add_resources(res_dict)
 
-        mv_dicts = hmc_res_dict['metric_values']
+        mv_dicts = hmc_res_dict.get('metric_values')
         if mv_dicts:
             for mv_dict in mv_dicts:
                 group_name = mv_dict['group_name']

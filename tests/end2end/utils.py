@@ -274,9 +274,9 @@ def standard_partition_props(cpc, part_name):
         'processor-mode': 'shared',  # used for filtering
         'type': 'linux',  # used for filtering
     }
-    if cpc.get_property('processor-count-ifl') > 0:
+    if cpc.prop('processor-count-ifl'):
         part_input_props['ifl-processors'] = 2
-    elif cpc.get_property('processor-count-general-purpose') > 0:
+    elif cpc.prop('processor-count-general-purpose'):
         part_input_props['cp-processors'] = 2
     else:
         part_input_props['cp-processors'] = 1

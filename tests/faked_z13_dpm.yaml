@@ -26,6 +26,9 @@ hmc_definition:
     - properties:
         element-id: passwordrule1
         name: Password rule 1
+    - properties:
+        element-id: Basic
+        name: Basic
     tasks:
     - properties:
         element-id: task1
@@ -54,6 +57,7 @@ hmc_definition:
         name: "CPC1"
         description: "Faked CPC CPC1 (z13 in DPM mode)"
         machine-type: "2964"
+        machine-model: "NE1"
         status: active
         dpm-enabled: true
         is-ensemble-member: false
@@ -84,6 +88,26 @@ hmc_definition:
                 name: "Port 1"
                 description: "Faked port 1 of OSA adapter OSA1 in CPC1"
                 index: 1
+        - properties:
+            object-id: fcp1
+            name: "FCP1"
+            description: "Faked FCP adapter FCP1 in CPC1"
+            adapter-id: "118"
+            status: active
+            state: online
+            physical-channel-status: operating
+            type: fcp
+            adapter-family: ficon
+            detected-card-type: "ficon-express-16s"
+            card-location: "A14B-D114J.01"
+            configured-capacity: 63
+            maximum-total-capacity: 1920
+          ports:
+            - properties:
+                element-id: port0
+                name: "Port 0"
+                description: "Faked port 0 of FCP adapter FCP1 in CPC1"
+                index: 0
       virtual_switches:
         - properties:
             object-id: vs-osa1
@@ -113,5 +137,6 @@ hmc_definition:
                 element-id: nic1
                 name: "OSA1-NIC1"
                 description: "NIC1 backed by OSA1"
+                type: osd
                 device-number: '0010'
                 virtual-switch-uri: /api/virtual-switches/vs-osa1

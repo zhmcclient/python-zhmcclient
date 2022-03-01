@@ -356,6 +356,20 @@ def check_partition_status(method, uri, partition, valid_statuses=None,
                             format(partition.name, status))
 
 
+def check_writable(method, uri, body, writeable):
+    """
+    Check that the body specifies only writeable properties.
+
+    Raises:
+      BadRequestError with reason 6.
+    """
+    for prop in body:
+        if prop not in writeable:
+            raise BadRequestError(
+                method, uri, reason=6,
+                message="Property is not writable: {!r}".format(prop))
+
+
 class UriHandler(object):
     """
     Handle HTTP methods against a set of known URIs and invoke respective
@@ -807,13 +821,60 @@ class UsersHandler(object):
         return {'object-uri': new_user.uri}
 
 
-class UserHandler(GenericGetPropertiesHandler,
-                  GenericUpdatePropertiesHandler):
+class UserHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single User resource.
     """
 
-    # TODO: Add post() for Update User that rejects name update
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update StoragePort Properties."""
+        try:
+            user = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+                'disabled',
+                'authentication-type',
+                'password-rule-uri',
+                'password',
+                'force-password-change',
+                'ldap-server-definition-uri',
+                'userid-on-ldap-server',
+                'session-timeout',
+                'verify-timeout',
+                'timeout',
+                'idle-timeout',
+                'min-pw-change-time',
+                'max-failed-logins',
+                'disable-delay',
+                'inactivity-timeout',
+                'disruptive-pw-required',
+                'disruptive-text-required',
+                'allow-remote-access',
+                'allow-management-interfaces',
+                'max-web-services-api-sessions',
+                'web-services-api-session-idle-timeout',
+                'default-group-uri',
+                'multi-factor-authentication-required',
+                'force-shared-secret-key-change',
+                'email-address',
+                'mfa-types',
+                'primary-mfa-server-definition-uri',
+                'backup-mfa-server-definition-uri',
+                'mfa-policy',
+                'mfa-userid',
+                'mfa-userid-override',
+            ])
+        user.update(body)
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
@@ -967,13 +1028,32 @@ class UserRolesHandler(object):
 
 
 class UserRoleHandler(GenericGetPropertiesHandler,
-                      GenericUpdatePropertiesHandler,
                       GenericDeleteHandler):
     """
     Handler class for HTTP methods on single UserRole resource.
     """
-    pass
-    # TODO: Add post() for Update UserRole that rejects name update
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update StoragePort Properties."""
+        try:
+            user_role = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+                'associated-system-defined-user-role-uri',
+                'is-inheritance-enabled',
+            ])
+        user_role.update(body)
+
     # TODO: Add delete() for Delete UserRole that rejects system-defined type
 
 
@@ -1184,13 +1264,37 @@ class PasswordRulesHandler(object):
 
 
 class PasswordRuleHandler(GenericGetPropertiesHandler,
-                          GenericUpdatePropertiesHandler,
                           GenericDeleteHandler):
     """
     Handler class for HTTP methods on single PasswordRule resource.
     """
-    pass
-    # TODO: Add post() for Update PasswordRule that rejects name update
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update PasswordRule Properties."""
+        try:
+            pw_rule = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+                'expiration',
+                'min-length',
+                'max-length',
+                'consecutive-characters',
+                'similarity-count',
+                'history-count',
+                'case-sensitive',
+                'character-rules',
+            ])
+        pw_rule.update(body)
 
 
 class LdapServerDefinitionsHandler(object):
@@ -1237,13 +1341,39 @@ class LdapServerDefinitionsHandler(object):
 
 
 class LdapServerDefinitionHandler(GenericGetPropertiesHandler,
-                                  GenericUpdatePropertiesHandler,
                                   GenericDeleteHandler):
     """
     Handler class for HTTP methods on single LdapServerDefinition resource.
     """
-    pass
-    # TODO: Add post() for Update LdapServerDefinition that rejects name update
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update LdapServerDefinition Properties."""
+        try:
+            lsd = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+                'primary-hostname-ipaddr',
+                'connection-port',
+                'backup-hostname-ipaddr',
+                'tolerate-untrusted-certificates',
+                'bind-distinguished-name',
+                'bind-password',
+                'location-method',
+                'search-distinguished-name',
+                'search-scope',
+                'search-filter',
+            ])
+        lsd.update(body)
 
 
 class CpcsHandler(object):
@@ -1939,6 +2069,23 @@ class AdaptersHandler(object):
             new_exc = BadRequestError(method, uri, reason=5, message=str(exc))
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.BadRequestError
+
+        # Create the VirtualSwitch for the new adapter
+        vs_props = {
+            'name': new_adapter.name,
+            'type': 'hipersockets',
+            'backing-adapter-uri': new_adapter.uri,
+            'port': 0,
+        }
+        cpc.virtual_switches.add(vs_props)
+
+        # Create the Port for the new adapter
+        port_props = {
+            'index': 0,
+            'name': 'Port 0',
+        }
+        new_adapter.ports.add(port_props)
+
         return {'object-uri': new_adapter.uri}
 
 
@@ -2062,20 +2209,55 @@ class AdapterChangeAdapterTypeHandler(object):
         adapter.properties['type'] = new_adapter_type
 
 
-class NetworkPortHandler(GenericGetPropertiesHandler,
-                         GenericUpdatePropertiesHandler):
+class NetworkPortHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single NetworkPort resource.
     """
-    pass
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update NetworkPort Properties."""
+        try:
+            network_port = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+            ])
+        network_port.update(body)
 
 
-class StoragePortHandler(GenericGetPropertiesHandler,
-                         GenericUpdatePropertiesHandler):
+class StoragePortHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single StoragePort resource.
     """
-    pass
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update StoragePort Properties."""
+        try:
+            storage_port = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+                'connection-endpoint-uri',
+            ])
+        storage_port.update(body)
 
 
 class PartitionsHandler(object):
@@ -2104,7 +2286,7 @@ class PartitionsHandler(object):
             for partition in cpc.partitions.list(filter_args):
                 result_partition = {}
                 for prop in partition.properties:
-                    if prop in ('object-uri', 'name', 'status'):
+                    if prop in ('object-uri', 'name', 'status', 'type'):
                         result_partition[prop] = partition.properties[prop]
                 result_partitions.append(result_partition)
         return {'partitions': result_partitions}
@@ -2764,14 +2946,48 @@ class NicsHandler(object):
         return {'element-uri': new_nic.uri}
 
 
-class NicHandler(GenericGetPropertiesHandler,
-                 GenericUpdatePropertiesHandler):
+class NicHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single Nic resource.
     """
 
-    # TODO: Add check_valid_cpc_status() in Update NIC Properties
-    # TODO: Add check_partition_status(transitional) in Update NIC Properties
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update NIC Properties."""
+        try:
+            nic = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        partition = nic.manager.parent
+        cpc = partition.manager.parent
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+        check_partition_status(method, uri, partition,
+                               invalid_statuses=['starting', 'stopping'])
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'description',
+                'name',
+                'device-number',
+                'network-adapter-port-uri',
+                'ssc-management-nic',
+                'ssc-ip-address-type',
+                'ssc-ip-address',
+                'ssc-mask-prefix',
+                'vlan-id',
+                'mac-address',
+                'vlan-type',
+                'function-number',
+                'function-range',
+            ])
+        nic.update(body)
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):

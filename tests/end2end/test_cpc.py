@@ -92,12 +92,13 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
     for cpc_name in hd.cpcs:
         print("Testing on CPC {}".format(cpc_name))
 
-        se_version = hd.cpcs[cpc_name].get('se_version', [])
-        # pylint: disable=unnecessary-lambda
-        se_version_info = list(map(lambda v: int(v), se_version.split('.')))
         cpc_list_props = CPC_LIST_PROPS
-        if se_version_info >= [2, 15, 0]:
-            cpc_list_props = CPC_LIST_PROPS_Z15
+        se_version = hd.cpcs[cpc_name].get('se_version', None)
+        if se_version:
+            # pylint: disable=unnecessary-lambda
+            se_version_info = list(map(lambda v: int(v), se_version.split('.')))
+            if se_version_info >= [2, 15, 0]:
+                cpc_list_props = CPC_LIST_PROPS_Z15
 
         runtest_find_list(
             hmc_session, client.cpcs, cpc_name, 'name', 'status',
@@ -121,8 +122,8 @@ def test_cpc_features(all_cpcs):  # noqa: F811
         print("Testing on CPC {} ({} mode)".format(cpc.name, cpc_mode))
 
         cpc.pull_full_properties()
-        cpc_mach_type = cpc.properties['machine-type']
-        cpc_mach_model = cpc.properties['machine-model']
+        cpc_mach_type = cpc.properties.get('machine-type', None)
+        cpc_mach_model = cpc.properties.get('machine-model', None)
         cpc_features = cpc.properties.get('available-features-list', None)
 
         exp_cpc_props = dict(cpc.properties)
@@ -137,14 +138,16 @@ def test_cpc_features(all_cpcs):  # noqa: F811
         max_parts = cpc.maximum_active_partitions
 
         exp_max_parts = exp_cpc_props.get('maximum-partitions', None)
-        if exp_max_parts is None:
-            # Determine from tables
-            try:
-                exp_max_parts = MAX_PARTS_BY_TYPE[cpc_mach_type]
-            except KeyError:
-                exp_max_parts = MAX_PARTS_BY_TYPE_MODEL[
-                    (cpc_mach_type, cpc_mach_model)]
-        assert_res_prop(max_parts, exp_max_parts, 'maximum-partitions', cpc)
+        if cpc_mach_type and cpc_mach_model:
+            if exp_max_parts is None:
+                # Determine from tables
+                try:
+                    exp_max_parts = MAX_PARTS_BY_TYPE[cpc_mach_type]
+                except KeyError:
+                    exp_max_parts = MAX_PARTS_BY_TYPE_MODEL[
+                        (cpc_mach_type, cpc_mach_model)]
+        if exp_max_parts is not None:
+            assert_res_prop(max_parts, exp_max_parts, 'maximum-partitions', cpc)
 
         # Test: feature_enabled(feature_name)
         feature_name = 'storage-management'
