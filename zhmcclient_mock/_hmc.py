@@ -1251,11 +1251,19 @@ class FakedUserManager(FakedBaseManager):
               if not specified.
             * 'class' will be auto-generated to 'user',
               if not specified.
+            * 'disabled' will be auto-generated to `False`,
+              if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedUser`: The faked User resource.
         """
-        return super(FakedUserManager, self).add(properties)
+        new_user = super(FakedUserManager, self).add(properties)
+
+        # Resource type specific default values
+        if 'disabled' not in new_user.properties:
+            new_user.properties['disabled'] = False
+
+        return new_user
 
 
 class FakedUser(FakedBaseResource):
@@ -1312,12 +1320,24 @@ class FakedUserRoleManager(FakedBaseManager):
               if not specified.
             * 'class' will be auto-generated to 'user-role',
               if not specified.
+            * 'type' will be auto-generated to 'user-defined',
+              if not specified.
+            * 'is-inheritance-enabled' will be auto-generated to `False`,
+              if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedUserRole`: The faked User Role
           resource.
         """
-        return super(FakedUserRoleManager, self).add(properties)
+        new_user_role = super(FakedUserRoleManager, self).add(properties)
+
+        # Resource type specific default values
+        if 'type' not in new_user_role.properties:
+            new_user_role.properties['type'] = 'user-defined'
+        if 'is-inheritance-enabled' not in new_user_role.properties:
+            new_user_role.properties['is-inheritance-enabled'] = False
+
+        return new_user_role
 
 
 class FakedUserRole(FakedBaseResource):
@@ -1436,12 +1456,24 @@ class FakedPasswordRuleManager(FakedBaseManager):
               if not specified.
             * 'class' will be auto-generated to 'password-rule',
               if not specified.
+            * 'min-length' will be auto-generated to 8,
+              if not specified.
+            * 'max-length' will be auto-generated to 256,
+              if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedPasswordRule`: The faked Password Rule
           resource.
         """
-        return super(FakedPasswordRuleManager, self).add(properties)
+        new_pwrule = super(FakedPasswordRuleManager, self).add(properties)
+
+        # Resource type specific default values
+        if 'min-length' not in new_pwrule.properties:
+            new_pwrule.properties['min-length'] = 8
+        if 'max-length' not in new_pwrule.properties:
+            new_pwrule.properties['max-length'] = 256
+
+        return new_pwrule
 
 
 class FakedPasswordRule(FakedBaseResource):
@@ -1558,12 +1590,24 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
               if not specified.
             * 'class' will be auto-generated to 'ldap-server-definition',
               if not specified.
+            * 'connection-port' will be auto-generated to `None`,
+              if not specified.
+            * 'use-ssl' will be auto-generated to `False`,
+              if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedLdapServerDefinition`: The faked
           LdapServerDefinition resource.
         """
-        return super(FakedLdapServerDefinitionManager, self).add(properties)
+        new_lsd = super(FakedLdapServerDefinitionManager, self).add(properties)
+
+        # Resource type specific default values
+        if 'connection-port' not in new_lsd.properties:
+            new_lsd.properties['connection-port'] = None
+        if 'use-ssl' not in new_lsd.properties:
+            new_lsd.properties['use-ssl'] = False
+
+        return new_lsd
 
 
 class FakedLdapServerDefinition(FakedBaseResource):
@@ -2332,6 +2376,9 @@ class FakedNicManager(FakedBaseManager):
             * 'device-number' will be auto-generated with a unique value
               within the partition in the range 0x8000 to 0xFFFF, if not
               specified.
+            * 'type' will be auto-generated to 'iqd', if not specified.
+            * 'ssc-management-nic'  will be auto-generated to `False`,
+              if not specified.
 
             This method also updates the 'nic-uris' property in the parent
             faked Partition resource, by adding the URI for the faked NIC
@@ -2375,6 +2422,12 @@ class FakedNicManager(FakedBaseManager):
         if 'device-number' not in new_nic.properties:
             devno = partition.devno_alloc()
             new_nic.properties['device-number'] = devno
+
+        # Resource type specific default values
+        if 'type' not in new_nic.properties:
+            new_nic.properties['type'] = 'iqd'
+        if 'ssc-management-nic' not in new_nic.properties:
+            new_nic.properties['ssc-management-nic'] = False
 
         # Reflect the new NIC in the partition
         assert 'nic-uris' in partition.properties
@@ -3142,7 +3195,8 @@ class FakedCapacityGroupManager(FakedBaseManager):
               if not specified.
             * 'class' will be auto-generated to 'capacity-group',
               if not specified.
-            * 'capping-enabled' will be set to False.
+            * 'capping-enabled' will be auto-generated to `True`,
+              if not specified.
 
         Returns:
           :class:`~zhmcclient_mock.FakedCapacityGroup`: The faked CapacityGroup
@@ -3165,7 +3219,7 @@ class FakedCapacityGroup(FakedBaseResource):
             manager=manager,
             properties=properties)
         if 'capping-enabled' not in self._properties:
-            self._properties['capping-enabled'] = False
+            self._properties['capping-enabled'] = True
         if 'partition-uris' not in self._properties:
             self._properties['partition-uris'] = []
 
