@@ -20,9 +20,12 @@ import sys
 import os
 import logging
 import yaml
+from dateutil import tz
 
 import zhmcclient
 import zhmcclient_mock
+from zhmcclient_mock._hmc import FakedBaseResource, \
+    FakedMetricGroupDefinition, FakedMetricObjectValues
 
 # Logger names by log component
 LOGGER_NAMES = {
@@ -492,3 +495,263 @@ def setup_logger(log_comp, handler, level):
     handler.setLevel(level)
     logger.addHandler(handler)
     logger.setLevel(level)
+
+
+def assert_equal_hmc(hmc1, hmc2):
+    """
+    Assert that two FakedHmc objects are equal.
+    """
+    assert hmc1.api_version == hmc2.api_version
+    assert hmc1.hmc_name == hmc2.hmc_name
+    assert hmc1.hmc_version == hmc2.hmc_version
+    assert hmc1.enabled == hmc2.enabled
+
+    consoles1 = hmc1.consoles.list()
+    consoles2 = hmc2.consoles.list()
+    assert len(consoles1) == len(consoles2)
+    for i, console1 in enumerate(consoles1):
+        console2 = consoles2[i]
+        assert_equal_resource(console1, console2)
+
+        users1 = console1.users.list()
+        users2 = console2.users.list()
+        assert len(users1) == len(users2)
+        for j, user1 in enumerate(users1):
+            user2 = users2[j]
+            assert_equal_resource(user1, user2)
+
+        user_roles1 = console1.user_roles.list()
+        user_roles2 = console2.user_roles.list()
+        assert len(user_roles1) == len(user_roles2)
+        for j, user_role1 in enumerate(user_roles1):
+            user_role2 = user_roles2[j]
+            assert_equal_resource(user_role1, user_role2)
+
+        user_patterns1 = console1.user_patterns.list()
+        user_patterns2 = console2.user_patterns.list()
+        assert len(user_patterns1) == len(user_patterns2)
+        for j, user_pattern1 in enumerate(user_patterns1):
+            user_pattern2 = user_patterns2[j]
+            assert_equal_resource(user_pattern1, user_pattern2)
+
+        password_rules1 = console1.password_rules.list()
+        password_rules2 = console2.password_rules.list()
+        assert len(password_rules1) == len(password_rules2)
+        for j, password_rule1 in enumerate(password_rules1):
+            password_rule2 = password_rules2[j]
+            assert_equal_resource(password_rule1, password_rule2)
+
+        tasks1 = console1.tasks.list()
+        tasks2 = console2.tasks.list()
+        assert len(tasks1) == len(tasks2)
+        for j, task1 in enumerate(tasks1):
+            task2 = tasks2[j]
+            assert_equal_resource(task1, task2)
+
+        lsds1 = console1.ldap_server_definitions.list()
+        lsds2 = console2.ldap_server_definitions.list()
+        assert len(lsds1) == len(lsds2)
+        for j, lsd1 in enumerate(lsds1):
+            lsd2 = lsds2[j]
+            assert_equal_resource(lsd1, lsd2)
+
+        unmanaged_cpcs1 = console1.unmanaged_cpcs.list()
+        unmanaged_cpcs2 = console2.unmanaged_cpcs.list()
+        assert len(unmanaged_cpcs1) == len(unmanaged_cpcs2)
+        for j, unmanaged_cpc1 in enumerate(unmanaged_cpcs1):
+            unmanaged_cpc2 = unmanaged_cpcs2[j]
+            assert_equal_resource(unmanaged_cpc1, unmanaged_cpc2)
+
+        storage_groups1 = console1.storage_groups.list()
+        storage_groups2 = console2.storage_groups.list()
+        assert len(storage_groups1) == len(storage_groups2)
+        for j, storage_group1 in enumerate(storage_groups1):
+            storage_group2 = storage_groups2[j]
+            assert_equal_resource(storage_group1, storage_group2)
+
+            storage_volumes1 = storage_group1.storage_volumes.list()
+            storage_volumes2 = storage_group2.storage_volumes.list()
+            assert len(storage_volumes1) == len(storage_volumes2)
+            for k, storage_volume1 in enumerate(storage_volumes1):
+                storage_volume2 = storage_volumes2[k]
+                assert_equal_resource(storage_volume1, storage_volume2)
+
+    cpcs1 = hmc1.cpcs.list()
+    cpcs2 = hmc1.cpcs.list()
+    assert len(cpcs1) == len(cpcs2)
+    for i, cpc1 in enumerate(cpcs1):
+        cpc2 = cpcs2[i]
+        assert_equal_resource(cpc1, cpc2)
+
+        cgs1 = cpc1.capacity_groups.list()
+        cgs2 = cpc2.capacity_groups.list()
+        assert len(cgs1) == len(cgs2)
+        for j, cg1 in enumerate(cgs1):
+            cg2 = cgs2[j]
+            assert_equal_resource(cg1, cg2)
+
+        partitions1 = cpc1.partitions.list()
+        partitions2 = cpc2.partitions.list()
+        assert len(partitions1) == len(partitions2)
+        for j, partition1 in enumerate(partitions1):
+            partition2 = partitions2[j]
+            assert_equal_resource(partition1, partition2)
+
+            nics1 = partition1.nics.list()
+            nics2 = partition2.nics.list()
+            assert len(nics1) == len(nics2)
+            for k, nic1 in enumerate(nics1):
+                nic2 = nics2[k]
+                assert_equal_resource(nic1, nic2)
+
+            hbas1 = partition1.hbas.list()
+            hbas2 = partition2.hbas.list()
+            assert len(hbas1) == len(hbas2)
+            for k, hba1 in enumerate(hbas1):
+                hba2 = hbas2[k]
+                assert_equal_resource(hba1, hba2)
+
+            vfs1 = partition1.virtual_functions.list()
+            vfs2 = partition2.virtual_functions.list()
+            assert len(vfs1) == len(vfs2)
+            for k, vf1 in enumerate(vfs1):
+                vf2 = vfs2[k]
+                assert_equal_resource(vf1, vf2)
+
+        adapters1 = cpc1.adapters.list()
+        adapters2 = cpc2.adapters.list()
+        assert len(adapters1) == len(adapters2)
+        for j, adapter1 in enumerate(adapters1):
+            adapter2 = adapters2[j]
+            assert_equal_resource(adapter1, adapter2)
+
+            ports1 = adapter1.ports.list()
+            ports2 = adapter2.ports.list()
+            assert len(ports1) == len(ports2)
+            for k, port1 in enumerate(ports1):
+                port2 = ports2[k]
+                assert_equal_resource(port1, port2)
+
+        vss1 = cpc1.virtual_switches.list()
+        vss2 = cpc2.virtual_switches.list()
+        assert len(vss1) == len(vss2)
+        for j, vs1 in enumerate(vss1):
+            vs2 = vss2[j]
+            assert_equal_resource(vs1, vs2)
+
+        lpars1 = cpc1.lpars.list()
+        lpars2 = cpc2.lpars.list()
+        assert len(lpars1) == len(lpars2)
+        for j, lpar1 in enumerate(lpars1):
+            lpar2 = lpars2[j]
+            assert_equal_resource(lpar1, lpar2)
+
+        raps1 = cpc1.reset_activation_profiles.list()
+        raps2 = cpc2.reset_activation_profiles.list()
+        assert len(raps1) == len(raps2)
+        for j, rap1 in enumerate(raps1):
+            rap2 = raps2[j]
+            assert_equal_resource(rap1, rap2)
+
+        iaps1 = cpc1.image_activation_profiles.list()
+        iaps2 = cpc2.image_activation_profiles.list()
+        assert len(iaps1) == len(iaps2)
+        for j, iap1 in enumerate(iaps1):
+            iap2 = iaps2[j]
+            assert_equal_resource(iap1, iap2)
+
+        laps1 = cpc1.load_activation_profiles.list()
+        laps2 = cpc2.load_activation_profiles.list()
+        assert len(laps1) == len(laps2)
+        for j, lap1 in enumerate(laps1):
+            lap2 = laps2[j]
+            assert_equal_resource(lap1, lap2)
+
+    # TODO: Reactivate metrics comparison once implemented
+    # mcs1 = hmc1.metrics_contexts.list()
+    # mcs2 = hmc2.metrics_contexts.list()
+    # assert len(mcs1) == len(mcs2)
+    # for i, mc1 in enumerate(mcs1):
+    #     mc2 = mcs2[i]
+    #     assert_equal_resource(mc1, mc2)
+    # mgd1_mg_names = hmc1.metrics_contexts.get_metric_group_definition_names()
+    # mgd2_mg_names = hmc2.metrics_contexts.get_metric_group_definition_names()
+    # assert set(mgd1_mg_names) == set(mgd2_mg_names)
+    # for mg_name in mgd1_mg_names:
+    #     mgd1 = hmc1.metrics_contexts.get_metric_group_definition(mg_name)
+    #     mgd2 = hmc2.metrics_contexts.get_metric_group_definition(mg_name)
+    #     assert_equal_metric_group_def(mgd1, mgd2)
+    # mv1_mg_names = hmc1.metrics_contexts.get_metric_values_group_names()
+    # mv1_mg_names = hmc2.metrics_contexts.get_metric_values_group_names()
+    # assert set(mv1_mg_names) == set(mv1_mg_names)
+    # for mg_name in mv1_mg_names:
+    #     mv1_list = hmc1.metrics_contexts.get_metric_values(mg_name)
+    #     mv2_list = hmc2.metrics_contexts.get_metric_values(mg_name)
+    #     for i, mv1 in enumerate(mv1_list):
+    #         mv2 = mv2_list[i]
+    #         assert_equal_metric_values(mv1, mv2)
+
+
+def assert_equal_resource(res1, res2):
+    """
+    Assert that two Faked resource objects are equal.
+
+    Only the standard attributes are compared.
+    """
+    assert isinstance(res1, FakedBaseResource)
+    assert isinstance(res2, FakedBaseResource)
+    assert res1.uri == res2.uri
+    assert res1.oid == res2.oid
+    names1 = set(res1.properties.keys())
+    names2 = set(res2.properties.keys())
+    if names1 != names2:
+        raise AssertionError(
+            "Resources do not have the same set of properties:\n"
+            "- res1 names: {}\n"
+            "- res2 names: {}\n".
+            format(names1, names2))
+    for name in res1.properties:
+        value1 = res1.properties[name]
+        value2 = res2.properties[name]
+        if value1 != value2:
+            raise AssertionError(
+                "Resources do not have the same value for property {}:\n"
+                "- res1 value: {}\n"
+                "- res2 value: {}\n".
+                format(name, value1, value2))
+
+
+def assert_equal_metric_group_def(mgd1, mgd2):
+    """
+    Assert that two FakedMetricGroupDefinition objects are equal.
+    """
+    assert isinstance(mgd1, FakedMetricGroupDefinition)
+    assert isinstance(mgd2, FakedMetricGroupDefinition)
+    assert mgd1.name == mgd2.name
+    assert mgd1.types == mgd2.types
+
+
+def assert_equal_metric_values(mv1, mv2):
+    """
+    Assert that two FakedMetricObjectValues objects are equal.
+    """
+    assert isinstance(mv1, FakedMetricObjectValues)
+    assert isinstance(mv2, FakedMetricObjectValues)
+    assert mv1.group_name == mv2.group_name
+    assert mv1.resource_uri == mv2.resource_uri
+    assert mv1.timestamp == mv2.timestamp
+    assert mv1.values == mv2.values
+
+
+def timestamp_aware(dt):
+    """
+    Return the input datetime object as a timezone-aware datetime object.
+
+    If the input object is already timezone-aware, it is returned.
+
+    If the input object is timezone-naive, the local timezone information is
+    added to a copy of the input object and that copy is returned.
+    """
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=tz.tzlocal())  # new object
+    return dt

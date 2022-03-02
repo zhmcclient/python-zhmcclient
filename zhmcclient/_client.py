@@ -19,10 +19,16 @@ Client class: A client to an HMC.
 from __future__ import absolute_import
 
 import time
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+import yaml
+import yamlloader
 
 from ._cpc import CpcManager
 from ._console import ConsoleManager
-from ._metrics import MetricsContextManager
+from ._metrics import MetricsContextManager, MetricsResponse, CLASS_FROM_GROUP
 from ._logging import logged_api_call
 from ._exceptions import Error, OperationTimeout
 
@@ -225,3 +231,151 @@ class Client(object):
                         format(self.session.host, operation_timeout),
                         operation_timeout)
             time.sleep(10)  # Avoid hot spin loop
+
+    def to_hmc_yaml(self):
+        """
+        Inspect the HMC of this client and return the HMC and its resources
+        as an HMC definition YAML string.
+
+        This method can be used on clients for sessions to real HMCs and
+        faked sessions.
+
+        The returned YAML string can be used to instantiate a faked session
+        using :meth:`zhmcclient_mock.FakedSession.from_hmc_yaml`.
+
+        The returned HMC definition YAML string has the following format::
+
+            hmc_definition:
+
+              # Internal state:
+              hmc_host: hmc1
+              api_version: '2.20'
+              metric_group_definitions: [...]
+              metric_values: [...]
+
+              # Child resources:
+              metrics_contexts:
+              - properties: {...}
+              consoles:
+              - properties: {...}
+                storage_groups:
+                - properties: {...}
+                ...
+              cpcs:
+              - properties: {...}
+                partitions:
+                - properties: {...}
+                ...
+
+        Returns:
+          string: HMC definition YAML string.
+        """
+        hmc_dict = self.to_hmc_dict()
+        hmc_yaml = yaml.dump(
+            hmc_dict,
+            encoding=None, allow_unicode=True,
+            default_flow_style=False, indent=2,
+            Dumper=yamlloader.ordereddict.CSafeDumper)
+        return hmc_yaml
+
+    def to_hmc_dict(self):
+        """
+        Inspect the HMC of this client and return the HMC and its resources
+        as an HMC definition dictionary.
+
+        This method can be used on clients for sessions to real HMCs and
+        faked sessions.
+
+        The returned dictionary has only items of type dict, list, string,
+        int, float, bool or None. That makes it convertible to simple formats
+        such as JSON or YAML so it can be externalized (e.g. persisted).
+
+        The returned dictionary can be used to instantiate a faked session
+        using :meth:`zhmcclient_mock.FakedSession.from_hmc_dict`.
+
+        The returned HMC definition dictionary has the following format::
+
+            {
+                "hmc_definition": {
+
+                    # Internal state:
+                    "hmc_host": "hmc1",
+                    "api_version": "2.20",
+                    "metric_group_definitions": [...],
+                    "metric_values": [...],
+
+                    # Child resources:
+                    "metrics_contexts": [...],
+                    "consoles": [...],
+                    "cpcs": [...],
+                }
+            }
+
+        Returns:
+          dict: HMC definition dictionary.
+        """
+        resource_dict = self.dump()
+        hmc_dict = {
+            'hmc_definition': resource_dict
+        }
+        return hmc_dict
+
+    def dump(self):
+        """
+        Dump this Client with its properties and child resources
+        (recursively) as a resource definition.
+
+        The returned resource definition has the following format::
+
+            {
+                # Internal state:
+                "hmc_host": "hmc1",
+                "api_version": "2.20",
+                "metric_values": [...],
+
+                # Child resources:
+                "metrics_contexts": [...],
+                "consoles": [...],
+                "cpcs": [...],
+            }
+
+        Returns:
+          dict: Resource definition of this Client.
+        """
+
+        resource_dict = OrderedDict()
+
+        # Dump internal state
+        av = self.query_api_version()
+        api_version_str = "{}.{}". \
+            format(av['api-major-version'], av['api-minor-version'])
+        resource_dict['hmc_host'] = self.session.host
+        resource_dict['api_version'] = api_version_str
+
+        # Get the current metric values for all metric groups and dump them
+        mc = self.metrics_contexts.create({
+            'anticipated-frequency-seconds': 15,
+            'metric-groups': list(CLASS_FROM_GROUP.keys()),
+        })
+        mr_str = mc.get_metrics()
+        mr = MetricsResponse(mc, mr_str)
+        mc.delete()
+        resource_dict['metric_values'] = []
+        for mg in mr.metric_group_values:
+            for mv in mg.object_values:
+                mv_dict = mv.dump()
+                if mv_dict:
+                    resource_dict['metric_values'].append(mv_dict)
+
+        # Dump child resources
+        metrics_contexts = self.metrics_contexts.dump()
+        if metrics_contexts:
+            resource_dict['metrics_contexts'] = metrics_contexts
+        consoles = self.consoles.dump()
+        if consoles:
+            resource_dict['consoles'] = consoles
+        cpcs = self.cpcs.dump()
+        if cpcs:
+            resource_dict['cpcs'] = cpcs
+
+        return resource_dict

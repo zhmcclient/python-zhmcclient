@@ -802,3 +802,60 @@ class Console(BaseResource):
                         lpar_obj.pull_full_properties()
 
         return lpar_objs
+
+    def dump(self):
+        """
+        Dump this Console resource with its properties and child resources
+        (recursively) as a resource definition.
+
+        The returned resource definition has the following format::
+
+            {
+                # Resource properties:
+                "properties": {...},
+
+                # Child resources:
+                "users": [...],
+                "user_roles": [...],
+                "user_patterns": [...],
+                "password_rules": [...],
+                "tasks": [...],
+                "ldap_server_definitions": [...],
+                "unmanaged_cpcs": [...],
+                "storage_groups": [...],
+            }
+
+        Returns:
+          dict: Resource definition of this resource.
+        """
+
+        # Dump the resource properties
+        resource_dict = super(Console, self).dump()
+
+        # Dump the child resources
+        users = self.users.dump()
+        if users:
+            resource_dict['users'] = users
+        user_roles = self.user_roles.dump()
+        if user_roles:
+            resource_dict['user_roles'] = user_roles
+        user_patterns = self.user_patterns.dump()
+        if user_patterns:
+            resource_dict['user_patterns'] = user_patterns
+        password_rules = self.password_rules.dump()
+        if password_rules:
+            resource_dict['password_rules'] = password_rules
+        tasks = self.tasks.dump()
+        if tasks:
+            resource_dict['tasks'] = tasks
+        ldap_server_definitions = self.ldap_server_definitions.dump()
+        if ldap_server_definitions:
+            resource_dict['ldap_server_definitions'] = ldap_server_definitions
+        unmanaged_cpcs = self.unmanaged_cpcs.dump()
+        if unmanaged_cpcs:
+            resource_dict['unmanaged_cpcs'] = unmanaged_cpcs
+        storage_groups = self.storage_groups.dump()
+        if storage_groups:
+            resource_dict['storage_groups'] = storage_groups
+
+        return resource_dict

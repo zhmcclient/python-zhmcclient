@@ -581,3 +581,32 @@ class Adapter(BaseResource):
         body = {'type': adapter_type}
         self.manager.session.post(
             self.uri + '/operations/change-adapter-type', body)
+
+    def dump(self):
+        """
+        Dump this Adapter resource with its properties and child resources
+        (recursively) as a resource definition.
+
+        The returned resource definition has the following format::
+
+            {
+                # Resource properties:
+                "properties": {...},
+
+                # Child resources:
+                "ports": [...],
+            }
+
+        Returns:
+          dict: Resource definition of this resource.
+        """
+
+        # Dump the resource properties
+        resource_dict = super(Adapter, self).dump()
+
+        # Dump the child resources
+        ports = self.ports.dump()
+        if ports:
+            resource_dict['ports'] = ports
+
+        return resource_dict

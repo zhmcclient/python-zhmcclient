@@ -19,11 +19,8 @@ Pytest fixtures for mocked HMCs.
 from __future__ import absolute_import
 
 import os
-import errno
 import logging
 import pytest
-import yaml
-import yamlloader
 import zhmcclient
 import zhmcclient_mock
 
@@ -108,7 +105,13 @@ def hmc_session(request, hmc_definition):
 
 def setup_hmc_session(hd):
     """
-    Log on to an HMC and return its zhmcclient.Session object.
+    Setup an HMC session and return a new zhmcclient.Session object for it.
+
+    If the HMC definition represents a real HMC, log on to an HMC and return
+    a new zhmcclient.Session object.
+
+    If the HMC definition represents a faked HMC, create a new faked environment
+    from that and return a zhmcclient_mock.FakedSession object.
     """
     # We use the cached skip reason from previous attempts
     skip_msg = getattr(hd, 'skip_msg', None)
@@ -118,38 +121,11 @@ def setup_hmc_session(hd):
     if hd.faked_hmc_file:
         # A faked HMC
 
-        # Read the faked HMC file
+        # Create a faked session from the HMC definition file
         filepath = os.path.join(
             os.path.dirname(hd.hmc_filepath),
             hd.faked_hmc_file)
-        try:
-            with open(filepath) as fp:
-                try:
-                    data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)
-                except (yaml.parser.ParserError,
-                        yaml.scanner.ScannerError) as exc:
-                    new_exc = FakedHMCFileError(
-                        "Invalid YAML syntax in faked HMC file {0!r}: {1} {2}".
-                        format(filepath, exc.__class__.__name__, exc))
-                    new_exc.__cause__ = None
-                    raise new_exc  # FakedHMCFileError
-        except IOError as exc:
-            if exc.errno == errno.ENOENT:
-                new_exc = FakedHMCFileError(
-                    "The faked HMC file {0!r} was not found".
-                    format(filepath))
-                new_exc.__cause__ = None
-                raise new_exc  # FakedHMCFileError
-            raise
-
-        client = data['faked_client']
-        session = zhmcclient_mock.FakedSession(
-            client['hmc_host'],
-            client['hmc_name'],
-            client['hmc_version'],
-            client['api_version'])
-        for cpc in client['cpcs']:
-            session.hmc.cpcs.add(cpc['properties'])
+        session = zhmcclient_mock.FakedSession.from_hmc_yaml_file(filepath)
 
     else:
         # A real HMC

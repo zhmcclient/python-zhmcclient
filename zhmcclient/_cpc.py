@@ -461,6 +461,67 @@ class Cpc(BaseResource):
             new_exc.__cause__ = None
             raise new_exc  # ValueError
 
+    def dump(self):
+        """
+        Dump this Cpc resource with its properties and child resources
+        (recursively) as a resource definition.
+
+        The returned resource definition has the following format::
+
+            {
+                # Resource properties:
+                "properties": {...},
+
+                # Child resources for any CPC mode:
+                "capacity_groups": [...],
+
+                # Child resources for DPM mode:
+                "partitions": [...],
+                "adapters": [...],
+                "virtual_switches": [...],
+
+                # Child resources for classic mode:
+                "lpars": [...],  # Faked Lpar children
+                "reset_activation_profiles": [...],
+                "image_activation_profiles": [...],
+                "load_activation_profiles": [...],
+            }
+
+        Returns:
+          dict: Resource definition of this resource.
+        """
+
+        # Dump the resource properties
+        resource_dict = super(Cpc, self).dump()
+
+        # Dump the child resources
+        capacity_groups = self.capacity_groups.dump()
+        if capacity_groups:
+            resource_dict['capacity_groups'] = capacity_groups
+        partitions = self.partitions.dump()
+        if partitions:
+            resource_dict['partitions'] = partitions
+        adapters = self.adapters.dump()
+        if adapters:
+            resource_dict['adapters'] = adapters
+        virtual_switches = self.virtual_switches.dump()
+        if virtual_switches:
+            resource_dict['virtual_switches'] = virtual_switches
+        lpars = self.lpars.dump()
+        if lpars:
+            resource_dict['lpars'] = lpars
+        reset_act_profiles = self.reset_activation_profiles.dump()
+        if reset_act_profiles:
+            resource_dict['reset_activation_profiles'] = reset_act_profiles
+        image_act_profiles = self.image_activation_profiles.dump()
+        if image_act_profiles:
+            resource_dict['image_activation_profiles'] = image_act_profiles
+        load_act_profiles = self.load_activation_profiles.dump()
+        if load_act_profiles:
+            resource_dict['load_activation_profiles'] = load_act_profiles
+
+        return resource_dict
+
     @logged_api_call
     def feature_enabled(self, feature_name):
         """

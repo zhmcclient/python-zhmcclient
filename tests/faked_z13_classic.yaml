@@ -2,13 +2,40 @@
 # Definition of a faked HMC for zhmcclient testing.
 # The faked HMC represents a single z13 CPC in classic mode.
 
-faked_client:
-  hmc_host: "fake-host"
-  hmc_name: "fake-hmc"
-  hmc_version: "2.13.1"
-  api_version: "1.8"
+hmc_definition:
+  hmc_host: hmc1
+  api_version: '1.8'
+  consoles:
+  - properties:
+      name: HMC 1
+      version: 2.13.1
+    users:
+    - properties:
+        object-id: user1
+        name: User 1
+    user_roles:
+    - properties:
+        object-id: userrole1
+        name: User role 1
+    user_patterns:
+    - properties:
+        element-id: userpattern1
+        name: User pattern 1
+    password_rules:
+    - properties:
+        element-id: passwordrule1
+        name: Password rule 1
+    tasks:
+    - properties:
+        element-id: task1
+        name: Task 1
+    ldap_server_definitions:
+    - properties:
+        element-id: lsd1
+        name: LDAP server definition 1
   cpcs:
     - properties:
+        object-id: cpc1
         name: "CPC1"
         description: "Fake z13 (classic mode)"
         machine-type: "2964"
@@ -18,6 +45,7 @@ faked_client:
         iml-mode: "lpar"
       lpars:
         - properties:
+            object-id: lpar1
             name: "LPAR1"
             partition-number: 0x41
             partition-identifier: 0x41
@@ -26,6 +54,7 @@ faked_client:
             next-activation-profile-name: "LPAR1"
             last-used-activation-profile: "LPAR1"
         - properties:
+            object-id: lpar2
             name: "LPAR2"
             partition-number: 0x42
             partition-identifier: 0x42
@@ -39,11 +68,11 @@ faked_client:
             iocds-name: "ABC"
       load_activation_profiles:
         - properties:
-            name: "LPAR1"
+            name: "STANDARDLOAD"
             ipl-type: "ipltype-standard"
             ipl-address: "189AB"
         - properties:
-            name: "LPAR2"
+            name: "SCSILOAD"
             ipl-type: "ipltype-scsi"
             worldwide-port-name: "1234"
             logical-unit-number: "1234"

@@ -21,13 +21,14 @@ Unit tests for _urihandler module of the zhmcclient_mock package.
 from __future__ import absolute_import, print_function
 
 from datetime import datetime
+from dateutil import tz
+import pytz
 from requests.packages import urllib3
 # TODO: Migrate mock to zhmcclient_mock
 from mock import MagicMock
 import pytest
 
-from zhmcclient_mock._hmc import FakedHmc, FakedMetricGroupDefinition, \
-    FakedMetricObjectValues
+from zhmcclient_mock._hmc import FakedHmc, FakedMetricObjectValues
 
 from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     InvalidMethodError, CpcNotInDpmError, CpcInDpmError, BadRequestError, \
@@ -4007,85 +4008,70 @@ class TestMetricsContextHandlers(object):
         Test POST metrics context (create), followed by get and delete.
         """
 
-        mc_mgr = self.hmc.metrics_contexts
+        faked_hmc = self.hmc
 
         # Prepare faked metric group definitions
 
         mg_name = 'partition-usage'
-        mg_def = FakedMetricGroupDefinition(
-            name=mg_name,
-            types=[
-                ('metric-1', 'string-metric'),
-                ('metric-2', 'integer-metric'),
-            ])
+        mg_def = faked_hmc.metric_groups[mg_name]
         mg_info = {
             'group-name': mg_name,
             'metric-infos': [
-                {
-                    'metric-name': 'metric-1',
-                    'metric-type': 'string-metric',
-                },
-                {
-                    'metric-name': 'metric-2',
-                    'metric-type': 'integer-metric',
-                },
+                {'metric-name': t[0], 'metric-type': t[1]}
+                for t in mg_def.types
             ],
         }
-        mc_mgr.add_metric_group_definition(mg_def)
 
-        mg_name2 = 'cpc-usage'
-        mg_def2 = FakedMetricGroupDefinition(
-            name=mg_name2,
-            types=[
-                ('metric-3', 'string-metric'),
-                ('metric-4', 'integer-metric'),
-            ])
+        mg_name2 = 'dpm-system-usage-overview'
+        mg_def2 = faked_hmc.metric_groups[mg_name2]
         mg_info2 = {
             'group-name': mg_name2,
             'metric-infos': [
-                {
-                    'metric-name': 'metric-3',
-                    'metric-type': 'string-metric',
-                },
-                {
-                    'metric-name': 'metric-4',
-                    'metric-type': 'integer-metric',
-                },
+                {'metric-name': t[0], 'metric-type': t[1]}
+                for t in mg_def2.types
             ],
         }
-        mc_mgr.add_metric_group_definition(mg_def2)
 
         # Prepare faked metric values
 
+        ts1_input = datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
+        ts1_exp = 1504613590000
         mo_val1_input = FakedMetricObjectValues(
             group_name=mg_name,
             resource_uri='/api/partitions/fake-oid',
-            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            timestamp=ts1_input,
             values=[
-                ('metric-1', "a"),
-                ('metric-2', 5),
+                ('processor-usage', 10),
+                ('network-usage', 5),
             ])
-        mc_mgr.add_metric_values(mo_val1_input)
+        faked_hmc.add_metric_values(mo_val1_input)
 
+        ts2_tz = pytz.timezone('CET')
+        ts2_input = datetime(2017, 9, 5, 12, 13, 20, 0, ts2_tz)
+        ts2_offset = int(ts2_tz.utcoffset(ts2_input).total_seconds())
+        ts2_exp = 1504613600000 - 1000 * ts2_offset
         mo_val2_input = FakedMetricObjectValues(
             group_name=mg_name,
             resource_uri='/api/partitions/fake-oid',
-            timestamp=datetime(2017, 9, 5, 12, 13, 20, 0),
+            timestamp=ts2_input,
             values=[
-                ('metric-1', "b"),
-                ('metric-2', -7),
+                ('processor-usage', 12),
+                ('network-usage', 3),
             ])
-        mc_mgr.add_metric_values(mo_val2_input)
+        faked_hmc.add_metric_values(mo_val2_input)
 
+        ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # timezone-naive
+        ts3_offset = int(tz.tzlocal().utcoffset(ts3_input).total_seconds())
+        ts3_exp = 1504613610000 - 1000 * ts3_offset
         mo_val3_input = FakedMetricObjectValues(
             group_name=mg_name2,
             resource_uri='/api/cpcs/fake-oid',
-            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            timestamp=ts3_input,
             values=[
-                ('metric-1', "c"),
-                ('metric-2', 0),
+                ('processor-usage', 50),
+                ('network-usage', 20),
             ])
-        mc_mgr.add_metric_values(mo_val3_input)
+        faked_hmc.add_metric_values(mo_val3_input)
 
         body = {
             'anticipated-frequency-seconds': '10',
@@ -4109,22 +4095,23 @@ class TestMetricsContextHandlers(object):
 
         exp_mv_resp = '''"partition-usage"
 "/api/partitions/fake-oid"
-1504613590000
-"a",5
+{ts1}
+10,5
 
 "/api/partitions/fake-oid"
-1504613600000
-"b",-7
+{ts2}
+12,3
 
 
-"cpc-usage"
+"dpm-system-usage-overview"
 "/api/cpcs/fake-oid"
-1504613590000
-"c",0
+{ts3}
+50,20
 
 
 
-'''
+'''.format(ts1=ts1_exp, ts2=ts2_exp, ts3=ts3_exp)
+
         assert mv_resp == exp_mv_resp, \
             "Actual response string:\n{!r}\n" \
             "Expected response string:\n{!r}\n". \

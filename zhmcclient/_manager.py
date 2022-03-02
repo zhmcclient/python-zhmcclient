@@ -830,3 +830,28 @@ class BaseManager(object):
             "Use of flush() on zhmcclient manager objects is deprecated; "
             "use invalidate_cache() instead", DeprecationWarning)
         self.invalidate_cache()
+
+    def dump(self):
+        """
+        Dump the resources of this resource manager as a resource definition.
+
+        This is the default implementation for the case where the resource
+        manager has no internal state that needs to be saved.
+        If the resource manager does have internal state, this method needs to
+        be overridden in the resource manager subclass.
+
+        The returned resource definition of this implementation has the
+        following format::
+
+            [
+                {...},  # resource definition
+                ...
+            ]
+
+        Returns:
+          list: Resource definitions of the resources of this resource manager.
+        """
+        res_list = []
+        for res in self.list():
+            res_list.append(res.dump())
+        return res_list

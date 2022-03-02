@@ -22,7 +22,8 @@ from __future__ import absolute_import, print_function
 
 import re
 from datetime import datetime
-import pytest
+from dateutil import tz
+import pytz
 
 from zhmcclient_mock._hmc import FakedHmc, \
     FakedBaseManager, FakedBaseResource, \
@@ -39,6 +40,8 @@ from zhmcclient_mock._hmc import FakedHmc, \
     FakedCapacityGroupManager, FakedCapacityGroup, \
     FakedMetricsContextManager, FakedMetricsContext, \
     FakedMetricGroupDefinition, FakedMetricObjectValues
+
+from tests.common.utils import timestamp_aware
 
 
 class TestFakedHmc(object):
@@ -1867,65 +1870,12 @@ class TestFakedMetricsContext(object):
         })
         assert mc.properties == mc_props
 
-    def test_mcm_add_get_mg_def(self):
-        """
-        Test add_metric_group_definition(), get_metric_group_definition(),
-        and get_metric_group_definition_names() of
-        FakedMetricsContextManager.
-        """
-
-        faked_hmc = self.hmc
-        mc_mgr = faked_hmc.metrics_contexts
-
-        mg_name = 'partition-usage'
-        mg_def_input = FakedMetricGroupDefinition(
-            name=mg_name,
-            types={
-                'metric-1': 'string-metric',
-                'metric-2': 'integer-metric',
-            })
-
-        # Verify the initial M.G.Def names
-        mg_def_names = mc_mgr.get_metric_group_definition_names()
-        assert list(mg_def_names) == []
-
-        # Verify that a M.G.Def can be added
-        mc_mgr.add_metric_group_definition(mg_def_input)
-
-        # Verify the M.G.Def names after having added one
-        mg_def_names = mc_mgr.get_metric_group_definition_names()
-        assert list(mg_def_names) == [mg_name]
-
-        # Verify that it can be retrieved
-        mg_def = mc_mgr.get_metric_group_definition(mg_name)
-        assert mg_def == mg_def_input
-
-        # Verify that retrieving a non-existing M.G.Def fails
-        with pytest.raises(ValueError) as exc_info:
-            mc_mgr.get_metric_group_definition('foo')
-        exc = exc_info.value
-        assert re.match(r"^A metric group definition with this name does "
-                        r"not exist:.*", str(exc))
-
-        # Verify that adding an M.G.Def with an existing name fails
-        with pytest.raises(ValueError) as exc_info:
-            mc_mgr.add_metric_group_definition(mg_def_input)
-        exc = exc_info.value
-        assert re.match(r"^A metric group definition with this name already "
-                        r"exists:.*", str(exc))
-
-        # Verify that the M.G.Def names have not changed in these fails
-        mg_def_names = mc_mgr.get_metric_group_definition_names()
-        assert list(mg_def_names) == [mg_name]
-
     def test_mcm_add_get_metric_values(self):
         """
-        Test add_metric_values(), get_metric_values(), and
-        get_metric_values_group_names() of FakedMetricsContextManager.
+        Test add_metric_values() of FakedMetricsContextManager.
         """
 
         faked_hmc = self.hmc
-        mc_mgr = faked_hmc.metrics_contexts
 
         mg_name = 'partition-usage'
         mo_val_input = FakedMetricObjectValues(
@@ -1946,62 +1896,41 @@ class TestFakedMetricsContext(object):
             ])
 
         # Verify the initial M.O.Val group names
-        mo_val_group_names = mc_mgr.get_metric_values_group_names()
+        mo_val_group_names = faked_hmc.metric_values.keys()
         assert list(mo_val_group_names) == []
 
         # Verify that a first M.O.Val can be added
-        mc_mgr.add_metric_values(mo_val_input)
+        faked_hmc.add_metric_values(mo_val_input)
 
         # Verify the M.O.Val group names after having added one
-        mo_val_group_names = mc_mgr.get_metric_values_group_names()
+        mo_val_group_names = faked_hmc.metric_values.keys()
         assert list(mo_val_group_names) == [mg_name]
 
         # Verify that the M.O.Vals can be retrieved and contain the first one
-        mo_vals = mc_mgr.get_metric_values(mg_name)
+        mo_vals = faked_hmc.metric_values[mg_name]
         assert list(mo_vals) == [mo_val_input]
 
-        # Verify that retrieving a non-existing M.O.Val fails
-        with pytest.raises(ValueError) as exc_info:
-            mc_mgr.get_metric_values('foo')
-        exc = exc_info.value
-        assert re.match(r"^Metric values for this group name do not "
-                        r"exist:.*", str(exc))
-
         # Verify that a second M.O.Val can be added for the same group name
-        mc_mgr.add_metric_values(mo_val2_input)
+        faked_hmc.add_metric_values(mo_val2_input)
 
         # Verify the M.O.Val group names after having added a second M.O.Val
         # for the same group name -> still just one group name
-        mo_val_group_names = mc_mgr.get_metric_values_group_names()
+        mo_val_group_names = faked_hmc.metric_values.keys()
         assert list(mo_val_group_names) == [mg_name]
 
         # Verify that the M.O.Vals can be retrieved and contain both
-        mo_vals = mc_mgr.get_metric_values(mg_name)
+        mo_vals = faked_hmc.metric_values[mg_name]
         assert list(mo_vals) == [mo_val_input, mo_val2_input]
 
     def test_mc_get_mg_defs(self):
         """Test get_metric_group_definitions() of FakedMetricsContext."""
 
         faked_hmc = self.hmc
-        mc_mgr = faked_hmc.metrics_contexts
 
         mg_name = 'partition-usage'
-        mg_def = FakedMetricGroupDefinition(
-            name=mg_name,
-            types=[
-                ('metric-1', 'string-metric'),
-                ('metric-2', 'integer-metric'),
-            ])
-        mc_mgr.add_metric_group_definition(mg_def)
-
-        mg_name2 = 'cpc-usage'
-        mg_def2 = FakedMetricGroupDefinition(
-            name=mg_name2,
-            types=[
-                ('metric-3', 'string-metric'),
-                ('metric-4', 'integer-metric'),
-            ])
-        mc_mgr.add_metric_group_definition(mg_def2)
+        mg_def = faked_hmc.metric_groups[mg_name]
+        mg_name2 = 'dpm-system-usage-overview'
+        mg_def2 = faked_hmc.metric_groups[mg_name2]
 
         # Test case where only one M.G.Def is tested
         mc_in_props = {
@@ -2009,13 +1938,12 @@ class TestFakedMetricsContext(object):
             'metric-groups': [mg_name],
         }
         mc = faked_hmc.metrics_contexts.add(mc_in_props)
-        exp_mg_defs = [mg_def]
 
         # the function to be tested:
         mg_defs = mc.get_metric_group_definitions()
 
         # Verify the returned M.G.Defs
-        assert list(mg_defs) == exp_mg_defs
+        assert list(mg_defs) == [mg_def]
 
         # Test case where the default for M.G.Defs is tested
         mc_in_props = {
@@ -2023,63 +1951,38 @@ class TestFakedMetricsContext(object):
             # 'metric-groups' not specified -> default: return all
         }
         mc = faked_hmc.metrics_contexts.add(mc_in_props)
-        exp_mg_defs = [mg_def, mg_def2]
 
         # the function to be tested:
         mg_defs = mc.get_metric_group_definitions()
 
-        # Verify the returned M.G.Defs
-        assert list(mg_defs) == exp_mg_defs
+        # Verify a subset of the returned M.G.Defs
+        assert mg_def in mg_defs
+        assert mg_def2 in mg_defs
 
     def test_mc_get_mg_infos(self):
         """Test get_metric_group_infos() of FakedMetricsContext."""
 
         faked_hmc = self.hmc
-        mc_mgr = faked_hmc.metrics_contexts
 
         mg_name = 'partition-usage'
-        mg_def = FakedMetricGroupDefinition(
-            name=mg_name,
-            types=[
-                ('metric-1', 'string-metric'),
-                ('metric-2', 'integer-metric'),
-            ])
+        mg_def = faked_hmc.metric_groups[mg_name]
         mg_info = {
             'group-name': mg_name,
             'metric-infos': [
-                {
-                    'metric-name': 'metric-1',
-                    'metric-type': 'string-metric',
-                },
-                {
-                    'metric-name': 'metric-2',
-                    'metric-type': 'integer-metric',
-                },
+                {'metric-name': t[0], 'metric-type': t[1]}
+                for t in mg_def.types
             ],
         }
-        mc_mgr.add_metric_group_definition(mg_def)
 
-        mg_name2 = 'cpc-usage'
-        mg_def2 = FakedMetricGroupDefinition(
-            name=mg_name2,
-            types=[
-                ('metric-3', 'string-metric'),
-                ('metric-4', 'integer-metric'),
-            ])
+        mg_name2 = 'dpm-system-usage-overview'
+        mg_def2 = faked_hmc.metric_groups[mg_name2]
         mg_info2 = {
             'group-name': mg_name2,
             'metric-infos': [
-                {
-                    'metric-name': 'metric-3',
-                    'metric-type': 'string-metric',
-                },
-                {
-                    'metric-name': 'metric-4',
-                    'metric-type': 'integer-metric',
-                },
+                {'metric-name': t[0], 'metric-type': t[1]}
+                for t in mg_def2.types
             ],
         }
-        mc_mgr.add_metric_group_definition(mg_def2)
 
         # Test case where only one M.G.Def is tested
         mc_in_props = {
@@ -2087,13 +1990,12 @@ class TestFakedMetricsContext(object):
             'metric-groups': [mg_name],
         }
         mc = faked_hmc.metrics_contexts.add(mc_in_props)
-        exp_mg_infos = [mg_info]
 
         # the function to be tested:
         mg_infos = mc.get_metric_group_infos()
 
         # Verify the returned M.G.Defs
-        assert list(mg_infos) == exp_mg_infos
+        assert list(mg_infos) == [mg_info]
 
         # Test case where the default for M.G.Defs is tested
         mc_in_props = {
@@ -2101,13 +2003,13 @@ class TestFakedMetricsContext(object):
             # 'metric-groups' not specified -> default: return all
         }
         mc = faked_hmc.metrics_contexts.add(mc_in_props)
-        exp_mg_infos = [mg_info, mg_info2]
 
         # the function to be tested:
         mg_infos = mc.get_metric_group_infos()
 
-        # Verify the returned M.G.Defs
-        assert list(mg_infos) == exp_mg_infos
+        # Verify a subset of the returned M.G.Defs
+        assert mg_info in mg_infos
+        assert mg_info2 in mg_infos
 
     def test_mc_get_m_values(self):
         """Test get_metric_values() of FakedMetricsContext."""
@@ -2116,33 +2018,26 @@ class TestFakedMetricsContext(object):
         mc_mgr = faked_hmc.metrics_contexts
 
         mg_name = 'partition-usage'
-        mg_def = FakedMetricGroupDefinition(
-            name=mg_name,
-            types=[
-                ('metric-1', 'string-metric'),
-                ('metric-2', 'integer-metric'),
-            ])
-        mc_mgr.add_metric_group_definition(mg_def)
-
         mo_val_input = FakedMetricObjectValues(
             group_name=mg_name,
             resource_uri='/api/partitions/fake-oid',
             timestamp=datetime.now(),
             values=[
-                ('metric-1', "a"),
-                ('metric-2', 5),
+                ('processor-usage', 10),
+                ('network-usage', 5),
             ])
-        mc_mgr.add_metric_values(mo_val_input)
+        faked_hmc.add_metric_values(mo_val_input)
         mo_val2_input = FakedMetricObjectValues(
             group_name=mg_name,
             resource_uri='/api/partitions/fake-oid2',
             timestamp=datetime.now(),
             values=[
-                ('metric-1', "b"),
-                ('metric-2', 7),
+                ('processor-usage', 12),
+                ('network-usage', 3),
             ])
-        mc_mgr.add_metric_values(mo_val2_input)
-        exp_mo_vals = mc_mgr.get_metric_values(mg_name)
+        faked_hmc.add_metric_values(mo_val2_input)
+
+        exp_mo_vals = faked_hmc.metric_values[mg_name]
 
         # Test case where only one M.G.Def is tested
         mc_in_props = {
@@ -2166,71 +2061,66 @@ class TestFakedMetricsContext(object):
         mc_mgr = faked_hmc.metrics_contexts
 
         mg_name = 'partition-usage'
-        mg_def = FakedMetricGroupDefinition(
-            name=mg_name,
-            types=[
-                ('metric-1', 'string-metric'),
-                ('metric-2', 'integer-metric'),
-                ('metric-3', 'double-metric'),
-            ])
-        mc_mgr.add_metric_group_definition(mg_def)
 
+        ts1_input = datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
+        ts1_exp = 1504613590000
         mo_val_input = FakedMetricObjectValues(
             group_name=mg_name,
             resource_uri='/api/partitions/fake-oid',
-            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            timestamp=ts1_input,
             values=[
-                ('metric-1', "a"),
-                ('metric-2', -5),
-                ('metric-3', 3.1),
+                ('processor-usage', 12),
+                ('network-usage', 3),
             ])
-        mc_mgr.add_metric_values(mo_val_input)
+        faked_hmc.add_metric_values(mo_val_input)
+
+        ts2_tz = pytz.timezone('CET')
+        ts2_input = datetime(2017, 9, 5, 12, 13, 20, 0, ts2_tz)
+        ts2_offset = int(ts2_tz.utcoffset(ts2_input).total_seconds())
+        ts2_exp = 1504613600000 - 1000 * ts2_offset
         mo_val2_input = FakedMetricObjectValues(
             group_name=mg_name,
             resource_uri='/api/partitions/fake-oid',
-            timestamp=datetime(2017, 9, 5, 12, 13, 20, 0),
+            timestamp=ts2_input,
             values=[
-                ('metric-1', "0"),
-                ('metric-2', 7),
-                ('metric-3', -4.2),
+                ('processor-usage', 10),
+                ('network-usage', 5),
             ])
-        mc_mgr.add_metric_values(mo_val2_input)
+        faked_hmc.add_metric_values(mo_val2_input)
 
-        mg_name2 = 'cpc-usage'
-        mg_def2 = FakedMetricGroupDefinition(
-            name=mg_name2,
-            types=[
-                ('metric-4', 'double-metric'),
-            ])
-        mc_mgr.add_metric_group_definition(mg_def2)
+        mg_name2 = 'dpm-system-usage-overview'
 
+        ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # timezone-naive
+        ts3_offset = int(tz.tzlocal().utcoffset(ts3_input).total_seconds())
+        ts3_exp = 1504613610000 - 1000 * ts3_offset
         mo_val3_input = FakedMetricObjectValues(
             group_name=mg_name2,
             resource_uri='/api/cpcs/fake-oid',
-            timestamp=datetime(2017, 9, 5, 12, 13, 10, 0),
+            timestamp=ts3_input,
             values=[
-                ('metric-4', 7.0),
+                ('processor-usage', 50),
+                ('network-usage', 20),
             ])
-        mc_mgr.add_metric_values(mo_val3_input)
+        faked_hmc.add_metric_values(mo_val3_input)
 
         exp_mv_resp = '''"partition-usage"
 "/api/partitions/fake-oid"
-1504613590000
-"a",-5,3.1
+{ts1}
+12,3
 
 "/api/partitions/fake-oid"
-1504613600000
-"0",7,-4.2
+{ts2}
+10,5
 
 
-"cpc-usage"
+"dpm-system-usage-overview"
 "/api/cpcs/fake-oid"
-1504613590000
-7.0
+{ts3}
+50,20
 
 
 
-'''
+'''.format(ts1=ts1_exp, ts2=ts2_exp, ts3=ts3_exp)
 
         # Test case where only one M.G.Def is tested
         mc_in_props = {
@@ -2270,21 +2160,23 @@ def test_mgd_attr():
 def test_mov_attr():
     """Test attributes of a FakedMetricObjectValues object."""
 
+    in_timestamp = datetime.now()  # timezone-naive
     in_kwargs = {
         'group_name': 'partition-usage',
         'resource_uri': '/api/partitions/fake-oid',
-        'timestamp': datetime.now(),
+        'timestamp': in_timestamp,
         'values': [
             ('metric-1', "a"),
             ('metric-2', 5),
         ]
     }
+    exp_timestamp = timestamp_aware(in_timestamp)
 
     # the function to be tested:
     new_mov = FakedMetricObjectValues(**in_kwargs)
 
     assert new_mov.group_name == in_kwargs['group_name']
     assert new_mov.resource_uri == in_kwargs['resource_uri']
-    assert new_mov.timestamp == in_kwargs['timestamp']
+    assert new_mov.timestamp == exp_timestamp
     assert new_mov.values == in_kwargs['values']
     assert new_mov.values is not in_kwargs['values']  # was copied

@@ -69,6 +69,10 @@ try:
     from collections.abc import namedtuple
 except ImportError:
     from collections import namedtuple
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 import re
 from datetime import datetime
 import pytz
@@ -83,7 +87,7 @@ from ._adapter import Adapter
 from ._nic import Nic
 from ._logging import logged_api_call
 from ._exceptions import NotFound, MetricsResourceNotFound
-from ._utils import datetime_from_timestamp, repr_list
+from ._utils import datetime_from_timestamp, repr_list, datetime_to_isoformat
 
 __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
            'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
@@ -577,10 +581,10 @@ def _resource_class_from_group(metric_group_name):
 
     Returns an empty string if a metric group name is unknown.
     """
-    return _CLASS_FROM_GROUP.get(metric_group_name, '')
+    return CLASS_FROM_GROUP.get(metric_group_name, '')
 
 
-_CLASS_FROM_GROUP = {
+CLASS_FROM_GROUP = {
     # DPM mode only:
     'dpm-system-usage-overview': 'cpc',
     'partition-usage': 'partition',
@@ -962,3 +966,36 @@ class MetricObjectValues(object):
 
         self._resource = resource
         return self._resource
+
+    def dump(self):
+        """
+        Dump these metric values as a resource definition.
+
+        The timestamp of the object is represented as an ISO8601 string using
+        this format::
+
+            YYYY-MM-DD HH:MM:SS[.ssssss]shh:mm
+
+        Where:
+
+          * YYYY-MM-DD - is year, month and day.
+
+          * HH:MM:SS - is hour in 24-hour format, minutes and seconds.
+
+          * .ssssss - is an optional part specifying microseconds. It is not
+            created when the timestamp microsecond value is 0.
+
+          * shh:mm - is the timezone offset from UTC with sign, hours (hh) and
+            minutes (mm). Since the FakedMetricObjectValues class ensures that
+            the timestamp is always timezone-aware, this part is always created.
+
+        Returns:
+          dict: Resource definition of this object.
+        """
+        obj_dict = OrderedDict()
+        # Faked Simple properties
+        obj_dict['group_name'] = self.metric_group_definition.name
+        obj_dict['resource_uri'] = self.resource_uri
+        obj_dict['timestamp'] = datetime_to_isoformat(self.timestamp)
+        obj_dict['metrics'] = self.metrics
+        return obj_dict

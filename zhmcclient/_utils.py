@@ -26,11 +26,13 @@ except ImportError:
     # pylint: disable=deprecated-class
     from collections import Mapping, MutableSequence, Iterable
 from datetime import datetime
+from dateutil import parser
 import six
 import pytz
 from requests.utils import quote
 
-__all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
+__all__ = ['datetime_from_timestamp', 'timestamp_from_datetime',
+           'datetime_from_isoformat', 'datetime_to_isoformat']
 
 
 _EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc)
@@ -488,3 +490,46 @@ def matches_prop(obj, prop_name, prop_match):
             if prop_value == prop_match:
                 return True
     return False
+
+
+def datetime_from_isoformat(dt_str):
+    """
+    Return a datetime object representing the date time string in ISO8601
+    format.
+
+    This function is used to parse timestamp strings from the externalized
+    HMC definition.
+
+    The date time strings are parsed using dateutil.parse.isoparse(), which
+    supports the ISO8601 formats. The separator between the date portion and
+    the time portion can be ' ' or 'T', and the optional timezone portion can
+    be specified as 'shhmm' or 'shh:mm'.
+
+    If the date time string specifies a timezone, the returned datetime object
+    is timezone-aware. Otherwise, it is timezone-naive.
+    """
+    dt = parser.isoparse(dt_str)
+    return dt
+
+
+def datetime_to_isoformat(dt):
+    """
+    Return a date time string in ISO8601 format representing the datetime
+    object.
+
+    This function is used to create timestamp strings for the externalized
+    HMC definition.
+
+    The generated date time string has this format:
+
+        YYYY-MM-DD HH:MM:SS[.ssssss][shh:mm]
+
+    Where:
+      * .ssssss - is an optional part specifying microseconds. It is not created
+        when the datetime microsecond value is 0.
+      * shh:mm - is an optional part specifying the timezone offset with sign,
+        hours hh and minutes mm. It is not created when the datetime is
+        timezone-naive.
+    """
+    dt_str = dt.isoformat(sep=' ')
+    return dt_str
