@@ -9,9 +9,9 @@ on:
     - # cron (in UTC): minute hour day_of_month month day_of_week
       cron: '00 04 * * SUN'
   push:
-    branches: [ master, stable_1.1 ]
+    branches: [ master, stable_1.2 ]
   pull_request:
-    branches: [ master, stable_1.1 ]
+    branches: [ master, stable_1.2 ]
 
 jobs:
 
