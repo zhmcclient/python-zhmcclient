@@ -122,6 +122,9 @@ Released: not yet
 * Docs: Improved example on README page and in Introduction section of the
   documentation to be much faster.
 
+* Fixed that some content of request exceptions was lost when re-raising them
+  as zhmcclient exceptions. (issue #845)
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact
