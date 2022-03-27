@@ -74,6 +74,9 @@ Released: 2022-02-17
 * Mock support: Fixed list of properties returned by the "List Adapters of CPC"
   operation.
 
+* Fixed installation of pywinpty (used by Jupyter notebook) on Python >=3.6,
+  by pinning it to <1.0.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact
