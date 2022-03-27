@@ -70,17 +70,28 @@ def _handle_request_exc(exc, retry_timeout_config):
     raised.
     """
     if isinstance(exc, requests.exceptions.ConnectTimeout):
-        raise ConnectTimeout(_request_exc_message(exc), exc,
-                             retry_timeout_config.connect_timeout,
-                             retry_timeout_config.connect_retries)
+        new_exc = ConnectTimeout(_request_exc_message(exc), exc,
+                                 retry_timeout_config.connect_timeout,
+                                 retry_timeout_config.connect_retries)
+        new_exc.__cause__ = None
+        raise new_exc  # ConnectTimeout
+
     if isinstance(exc, requests.exceptions.ReadTimeout):
-        raise ReadTimeout(_request_exc_message(exc), exc,
-                          retry_timeout_config.read_timeout,
-                          retry_timeout_config.read_retries)
+        new_exc = ReadTimeout(_request_exc_message(exc), exc,
+                              retry_timeout_config.read_timeout,
+                              retry_timeout_config.read_retries)
+        new_exc.__cause__ = None
+        raise new_exc  # ReadTimeout
+
     if isinstance(exc, requests.exceptions.RetryError):
-        raise RetriesExceeded(_request_exc_message(exc), exc,
-                              retry_timeout_config.connect_retries)
-    raise ConnectionError(_request_exc_message(exc), exc)
+        new_exc = RetriesExceeded(_request_exc_message(exc), exc,
+                                  retry_timeout_config.connect_retries)
+        new_exc.__cause__ = None
+        raise new_exc  # RetriesExceeded
+
+    new_exc = ConnectionError(_request_exc_message(exc), exc)
+    new_exc.__cause__ = None
+    raise new_exc  # ConnectionError
 
 
 def _request_exc_message(exc):
@@ -100,24 +111,26 @@ def _request_exc_message(exc):
     Returns:
       string: A reasonable exception message from the specified exception.
     """
-    if exc.args:
-        if isinstance(exc.args[0], Exception):
-            org_exc = exc.args[0]
+    messages = []
+    for arg in exc.args:
+
+        if isinstance(arg, Exception):
+            org_exc = arg
             if isinstance(org_exc, urllib3.exceptions.MaxRetryError):
-                reason_exc = org_exc.reason
-                message = str(reason_exc)
+                message = str(org_exc.reason)
             else:
-                message = str(org_exc.args[0])
+                message = str(org_exc)
         else:
-            message = str(exc.args[0])
+            message = str(arg)
 
         # Eliminate useless object repr at begin of the message
         m = re.match(r'^(\(<[^>]+>, \'(.*)\'\)|<[^>]+>: (.*))$', message)
         if m:
             message = m.group(2) or m.group(3)
-    else:
-        message = ""
-    return message
+
+        messages.append(message)
+
+    return ", ".join(messages)
 
 
 class RetryTimeoutConfig(object):
