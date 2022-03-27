@@ -211,5 +211,5 @@ pip-check-reqs>=2.0.4; python_version >= '3.5'
 # pywinpty is used by terminado <- notebook <- jupyter
 # pywinpty <1.1.1 does not have metadata for required Python or dependent packages.
 # pywinpty 1.0 has removed support for py27.
-pywinpty>=0.5,<1.0; os_name == "nt" and python_version == '2.7'
-pywinpty>=0.5; os_name == "nt" and python_version >= '3.5'
+# pywinpty 1.0 requires maturin which requires py>=3.6 and on py>=3.7 it fails installation
+pywinpty>=0.5,<1.0; os_name == "nt"
