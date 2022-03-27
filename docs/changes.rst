@@ -93,6 +93,9 @@ Released: not yet
   converted to a timezone-aware datetime object using the local timezone, if
   provided as a timezone-naive datetime object.
 
+* Fixed installation of pywinpty (used by Jupyter notebook) on Python >=3.6,
+  by pinning it to <1.0.
+
 **Enhancements:**
 
 * Added support for Python 3.10. This required increasing the minimum version of
