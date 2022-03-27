@@ -119,6 +119,9 @@ Released: not yet
 * Mock support: Added checks for non-modifiable properties in Update operations
   and for defaulting properties in Create operations.
 
+* Docs: Improved example on README page and in Introduction section of the
+  documentation to be much faster.
+
 **Cleanup:**
 
 * Removed the ability to build the Windows executable, triggered by the fact
