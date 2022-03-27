@@ -402,7 +402,8 @@ For details, see the :term:`HMC Operations Guide`.
 Examples
 --------
 
-The following example code lists the machines (CPCs) managed by an HMC:
+The following example code lists the partitions on CPCs in DPM mode that are
+accessible for the user:
 
 .. code-block:: python
 
@@ -416,19 +417,24 @@ The following example code lists the machines (CPCs) managed by an HMC:
     hmc_host = "<IP address or hostname of the HMC>"
     hmc_userid = "<userid on that HMC>"
     hmc_password = "<password of that HMC userid>"
+    verify_cert = False
 
-    session = zhmcclient.Session(hmc_host, hmc_userid, hmc_password)
+    session = zhmcclient.Session(hmc_host, hmc_userid, hmc_password, verify_cert=verify_cert)
     client = zhmcclient.Client(session)
+    console = client.consoles.console
 
-    cpcs = client.cpcs.list()
-    for cpc in cpcs:
-        print(cpc)
+    partitions = console.list_permitted_partitions()
+    for part in partitions:
+        cpc = part.manager.parent
+        print("{} {}".format(cpc.name, part.name))
 
 Possible output when running the script:
 
 .. code-block:: text
 
-    Cpc(name=P000S67B, object-uri=/api/cpcs/fa1f2466-12df-311a-804c-4ed2cc1d6564, status=service-required)
+    P000S67B PART1
+    P000S67B PART2
+    P0000M96 PART1
 
 For more example code, see the Python scripts in the `examples directory`_ of
 the Git repository, or the :ref:`Tutorial` section of this documentation.
