@@ -19,12 +19,12 @@ Change log
 ----------
 
 
-Version 1.2.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.2.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.1.x.
+This version contains all fixes up to version 1.1.1.
 
-Released: not yet
+Released: 2022-03-28
 
 **Incompatible changes:**
 
@@ -52,8 +52,6 @@ Released: not yet
   get_metric_values() and get_metric_values_group_names() methods have been
   dropped and the metric values can now be accessed via a new property
   FakedHmc.metric_values that provides an immutable view.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -131,12 +129,6 @@ Released: not yet
   that the corresponding build command has been removed in Python 3.10.
   The Windows executable has never been part of the zhmcclient package on Pypi,
   and building it seems odd anyway. (issue #865)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.1.0
