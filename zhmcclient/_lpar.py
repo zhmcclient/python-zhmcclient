@@ -539,9 +539,10 @@ class Lpar(BaseResource):
             set.
 
           secure_boot (bool):
-            Bollean controlling whether the system checks the software
+            Boolean controlling whether the system checks the software
             signature of what is loaded against what the distributor signed it
-            with. Requires z15 or later.
+            with. Requires z15 or later. It is only passed to the HMC when
+            `True`.
 
         Returns:
 
@@ -601,7 +602,7 @@ class Lpar(BaseResource):
                   boot_record_logical_block_address=None, os_ipl_token=None,
                   wait_for_completion=True, operation_timeout=None,
                   status_timeout=None, allow_status_exceptions=False,
-                  force=False):
+                  force=False, secure_boot=False):
         # pylint: disable=invalid-name
         """
         Load a standalone dump program from a designated SCSI device
@@ -692,6 +693,12 @@ class Lpar(BaseResource):
             Boolean controlling whether this operation is permitted when the
             LPAR is in the "operating" status.
 
+          secure_boot (bool):
+            Boolean controlling whether the system checks the software
+            signature of what is loaded against what the distributor signed it
+            with. Requires z15 or later. It is only passed to the HMC when
+            `True`.
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -731,6 +738,8 @@ class Lpar(BaseResource):
             body['os-ipl-token'] = os_ipl_token
         if force:
             body['force'] = force
+        if secure_boot:
+            body['secure-boot'] = secure_boot
         result = self.manager.session.post(
             self.uri + '/operations/scsi-dump',
             body,
