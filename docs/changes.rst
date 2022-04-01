@@ -19,29 +19,15 @@ Change log
 ----------
 
 
-Version 1.2.1.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.2.1
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2022-04-01
 
 **Bug fixes:**
 
 * Added the missing `secure_boot` parameter to `zhmcclient.Lpar.scsi_dump()`
   (issue #945)
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.2.0
