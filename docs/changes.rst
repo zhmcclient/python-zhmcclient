@@ -30,6 +30,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Added the missing `secure_boot` parameter to `zhmcclient.Lpar.scsi_dump()`
+  (issue #945)
+
 **Enhancements:**
 
 **Cleanup:**
