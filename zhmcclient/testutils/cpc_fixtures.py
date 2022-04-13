@@ -32,6 +32,7 @@ def fixtureid_cpc(fixture_value):
     CPC.
 
     Parameters:
+
       * fixture_value (zhmcclient.Cpc): The single CPC.
     """
     cpc = fixture_value
@@ -45,6 +46,7 @@ def fixtureid_cpcs(fixture_value):
     CPCs.
 
     Parameters:
+
       * fixture_value (list of zhmcclient.Cpc): The list of CPCs.
     """
     cpc_list = fixture_value
@@ -63,10 +65,12 @@ def one_cpc(request, hmc_session):  # noqa: F811
     Pytest fixture representing a single, arbitrary CPC managed by the HMC.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    `hmc_session` needs to be imported as well when this fixture is used.
+    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    function needs to be imported as well when this fixture is used.
 
-    Returns a `zhmcclient.Cpc` object, with the "short" set of
-    properties (i.e. from list()).
+    A test function parameter using this fixture resolves to a
+    :class:`zhmcclient.Cpc` object for that CPC,
+    that has the "short" set of properties (i.e. from list()).
     """
     client = zhmcclient.Client(hmc_session)
     cpcs = client.cpcs.list()
@@ -90,8 +94,9 @@ def one_cpc(request, hmc_session):  # noqa: F811
 #     Because the `hmc_session` parameter of this fixture is again a fixture,
 #     `hmc_session` needs to be imported as well when this fixture is used.
 #
-#     Returns a list of `zhmcclient.Cpc` objects, with the "short" set of
-#     properties (i.e. from list()).
+#     A test function parameter using this fixture resolves to a
+#     :class:`zhmcclient.Cpc` object from that set,
+#     that has the "short" set of properties (i.e. from list()).
 #     """
 #     session = setup_hmc_session(hmc_definition)
 #     yield defined_cpcs(session, 'any')  # don't know how to parametrize this
@@ -109,10 +114,12 @@ def all_cpcs(request, hmc_session):  # noqa: F811
     HMC definition file (regardless of their classic/DPM mode).
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    `hmc_session` needs to be imported as well when this fixture is used.
+    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    function needs to be imported as well when this fixture is used.
 
-    Returns a list of `zhmcclient.Cpc` objects, with the "short" set of
-    properties (i.e. from list()).
+    A test function parameter using this fixture resolves to a
+    :class:`zhmcclient.Cpc` object from that set,
+    that has the "short" set of properties (i.e. from list()).
     """
     return defined_cpcs(hmc_session, 'any')
 
@@ -128,10 +135,12 @@ def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
     all CPCs defined in the HMC definition file.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    `hmc_session` needs to be imported as well when this fixture is used.
+    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    function needs to be imported as well when this fixture is used.
 
-    Returns a list of `zhmcclient.Cpc` objects, with the "short" set of
-    properties (i.e. from list()).
+    A test function parameter using this fixture resolves to a
+    :class:`zhmcclient.Cpc` object from that set,
+    that has the "short" set of properties (i.e. from list()).
     """
     return defined_cpcs(hmc_session, 'dpm')
 
@@ -147,10 +156,12 @@ def classic_mode_cpcs(request, hmc_session):  # noqa: F811
     all CPCs defined in the HMC definition file.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    `hmc_session` needs to be imported as well when this fixture is used.
+    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    function needs to be imported as well when this fixture is used.
 
-    For each of those CPCs, yields a `zhmcclient.Cpc` object with "short"
-    set of properties (i.e. from list()).
+    A test function parameter using this fixture resolves to a
+    :class:`zhmcclient.Cpc` object from that set,
+    that has the "short" set of properties (i.e. from list()).
     """
     return defined_cpcs(hmc_session, 'classic')
 

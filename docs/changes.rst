@@ -28,6 +28,11 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Test: By default, the end2end tests now use the
+  '.zhmc_hmc_definitions.yaml' file in the home directory of the user,
+  instead of the 'tests/hmc_definitions.yaml' file. This can be changed using
+  the 'TESTHMCFILE' environment variable. (issue #950)
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -35,9 +40,18 @@ Released: not yet
 * Added the missing `secure_boot` parameter to `zhmcclient.Lpar.scsi_dump()`
   (issue #945)
 
-**Enhancements:**
+**Enhancements:**hmc_definition_fixtures.
+
+* Docs: Added documentation for the 'zhmcclient.testutils' module to the
+  "Development" chapter. (issue #950)
+
+* Docs: Improved and fixed the "Testing" section in the "Development" chapter.
+  (issue #950)
 
 **Cleanup:**
+
+* Removed the unused 'FakedHMCFileError' class from the
+  'zhmcclient.testutils.hmc_definition_fixtures' module. (issue #950)
 
 **Known issues:**
 

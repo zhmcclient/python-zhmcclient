@@ -101,18 +101,53 @@ The top-level document to open with a web browser will be
 Testing
 -------
 
-To run unit tests in the currently active Python environment, issue one of
-these example variants of ``make test``:
+The zhmcclient project supports the following kinds of tests:
+
+* unit tests against a mocked HMC, using ``pytest``
+* end2end tests against a real or mocked HMC, using ``pytest``
+* install tests (Linux and MacOS only)
+
+
+.. _`Running unit tests`:
+
+Running unit tests
+^^^^^^^^^^^^^^^^^^
+
+To run the unit tests in the currently active Python environment, issue:
 
 .. code-block:: text
 
-    $ make test                                  # Run all unit tests
+    $ make test
+
+By default, all unit tests are run. The ``TESTCASES`` environment variable can
+be used to limit the testcases that are run. Its value is passed to the ``-k``
+option of the ``pytest`` command.
+For example:
+
+.. code-block:: text
+
     $ TESTCASES=test_resource.py make test       # Run only this test source file
-    $ TESTCASES=TestInit make test               # Run only this test class
-    $ TESTCASES="TestInit or TestSet" make test  # py.test -k expressions are possible
+    $ TESTCASES=test_func1  make test            # Run only this test function or test class
+    $ TESTCASES="test_func1 or test_func2" make test  # Run both of these test functions or classes
+
+Additional options for the ``pytest`` command can be specified with the
+``TESTOPTS`` environment variable.
+For example:
+
+.. code-block:: text
+
+    $ TESTOPTS='-x' make test                    # Stop after first test case failure
+    $ TESTOPTS='--pdb' make test                 # Invoke debugger on each test case failure
+
+Invoke ``pytest --help`` for details on its options including the syntax of the
+``-k`` option, or see
+`pytest options <https://docs.pytest.org/en/latest/reference/reference.html#command-line-flags>`_.
 
 To run the unit tests and some more commands that verify the project is in good
-shape in all supported Python environments, use Tox:
+shape in all supported Python environments, use Tox.
+The positional arguments of the ``tox`` command are passed to ``pytest`` using
+its ``-k`` option.
+For example:
 
 .. code-block:: text
 
@@ -120,65 +155,62 @@ shape in all supported Python environments, use Tox:
     $ tox -e py27                      # Run all tests on Python 2.7
     $ tox -e py27 test_resource.py     # Run only this test source file on Python 2.7
     $ tox -e py27 TestInit             # Run only this test class on Python 2.7
-    $ tox -e py27 TestInit or TestSet  # py.test -k expressions are possible
+    $ tox -e py27 TestInit or TestSet  # pytest -k expressions are possible
 
-The positional arguments of the ``tox`` command are passed to ``py.test`` using
-its ``-k`` option. Invoke ``py.test --help`` for details on the expression
-syntax of its ``-k`` option.
 
-Running function tests against a real HMC and CPC
--------------------------------------------------
+.. _`Running end2end tests`:
 
-The function tests (in ``tests/function/test_*.py``) can be run against a
-faked HMC/CPC (using the zhmcclient mock support), or against a real HMC/CPC.
+Running end2end tests
+^^^^^^^^^^^^^^^^^^^^^
 
-By default, the function tests are run against the faked HMC/CPC. To run them
-against a real HMC/CPC, you must:
+Prepare an :ref:`HMC definition file` that defines real and/or mocked HMCs the tests
+should be run against.
+The HMC definition file can be created from this
+`example HMC definition file <https://github.com/zhmcclient/python-zhmcclient/blob/master/tests/example_hmc_definitions.yaml>`_.
+Its format is described in the comment header of the example file.
 
-* Specify the name of the target CPC in the ``ZHMC_TEST_CPC`` environment
-  variable. This environment variable is the control point that decides
-  between using a real HMC/CPC and using the faked environment::
+To run the end2end tests in the currently active Python environment, issue:
 
-      export ZHMC_TEST_CPC=S67B
+.. code-block:: text
 
-* Have an HMC credentials file at location ``examples/hmccreds.yaml`` that
-  specifies the target CPC (among possibly further CPCs) in its ``cpcs`` item::
+    $ make end2end
 
-      cpcs:
+By default, the HMC definition file named ``.zhmc_hmc_definitions.yaml`` in
+the home directory of the current user is used. A different path name can
+be specified with the ``TESTHMCFILE`` environment variable.
 
-        S67B:
-          description: "z13s in DPM mode"
-          contact: "Joe"
-          hmc_host: "10.11.12.13"
-          hmc_userid: myuserid
-          hmc_password: mypassword
+By default, the tests are run against the nickname ``default`` in the HMC
+definition file, which can be used for a single HMC or a group. A different
+nickname can be specified with the ``TESTHMC`` environment variable.
 
-        # ... more CPCs
+For example:
 
-There is an example HMC credentials file in the repo, at
-``examples/example_hmccreds.yaml``. For a description of its format, see
-`Format of the HMC credentials file`_.
+.. code-block:: text
 
-Enabling logging for function tests
------------------------------------
+    $ TESTHMCFILE=`./hmcs.yaml` make end2end  # Run against 'default' in the specified file
+    $ TESTHMC=`HMC1` make end2end             # Run against 'HMC1' in default file
 
-The function tests always log to stderr. What can be logged are the
-following two components:
 
-* ``api``: Calls to and returns from zhmcclient API functions (at debug level).
-* ``hmc``: Interactions with the HMC (i.e. HTTP requests and responses, at
-  debug level).
+.. _`Enabling logging during end2end tests`:
 
-By default, the log component and level is set to::
+Enabling logging during end2end tests
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    all=warning
+**TODO: At this point, the `setup_logging()` function that enables the logging
+described in this section is not used in the end2end tests**
 
-meaning that all components log at warning level or higher.
+The end2end tests have the ability to log the API calls to the zhmcclient library
+and the interactions with the (real or mocked) HMC.
 
-To set different log levels for the log components, set the ``ZHMC_LOG``
-environment variable as follows::
+By default, logging is set up such that the zhmcclient library logs messages
+with a log level of "warning" or higher, to stderr.
 
-    export ZHMC_LOG=COMP=LEVEL[,COMP=LEVEL[,...]]
+The log level and the components to be logged can be set using the ``ZHMC_LOG``
+environment variable:
+
+.. code-block:: text
+
+    $ export ZHMC_LOG=COMP=LEVEL[,COMP=LEVEL[,...]]
 
 Where:
 
@@ -186,45 +218,73 @@ Where:
 * ``LEVEL`` is one of: ``error``, ``warning``, ``info``, ``debug``.
 
 For example, to enable logging of the zhmcclient API calls and the
-interactions with the HMC, use::
+interactions with the HMC, use:
 
-    export ZHMC_LOG=api=debug,hmc=debug
+.. code-block:: text
 
-or, shorter::
+    $ export ZHMC_LOG=api=debug,hmc=debug
 
-    export ZHMC_LOG=all=debug
+or, shorter:
 
-Format of the HMC credentials file
-----------------------------------
+.. code-block:: text
 
-The HMC credentials file is used for specifying real HMCs/CPCs to be used by
-function tests. Its syntax is YAML, and the ``cpcs`` item relevant for function
-testing has the following structure::
+    $ export ZHMC_LOG=all=debug
 
-    cpcs:
 
-      "CPC1":
-        description: "z13 test system"
-        contact: "Amy"
-        hmc_host: "10.10.10.11"           # required
-        hmc_userid: "myuser1"             # required
-        hmc_password: "mypassword1"       # required
+.. _`HMC definition file`:
 
-      "CPC2":
-        description: "z14 development system"
-        contact: "Bob"
-        hmc_host: "10.10.10.12"
-        hmc_userid: "myuser2"
-        hmc_password: "mypassword2"
+HMC definition file
+^^^^^^^^^^^^^^^^^^^
 
-In the example above, any words in double quotes are data and can change,
-and any words without double quotes are considered keywords and must be
-specified as shown.
+The HMC definition file specifies HMCs and/or groups of HMCs to run the end2end
+tests against.
 
-"CPC1" and "CPC2" are CPC names that are used to select an entry in the
-file. The entry for a CPC contains data about the HMC managing that CPC,
-with its host, userid and password. If two CPCs are managed by the same
-HMC, there would be two CPC entries with the same HMC data.
+Its format is described in the comment header of the
+`example HMC definition file <https://github.com/zhmcclient/python-zhmcclient/blob/master/tests/example_hmc_definitions.yaml>`_.
+
+
+.. _`zhmcclient.testutils module`:
+
+zhmcclient.testutils module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :mod:`zhmcclient.testutils` module provides support for running tests against
+real or mocked HMCs defined in a :ref:`HMC definition file`.
+
+It defines
+`pytest fixtures <https://docs.pytest.org/en/latest/explanation/fixtures.html>`_
+and encapsulates the access to the HMC definition file.
+
+.. automodule:: zhmcclient.testutils.hmc_definition_fixtures
+
+.. autofunction:: zhmcclient.testutils.hmc_definition_fixtures.hmc_definition
+
+.. autofunction:: zhmcclient.testutils.hmc_definition_fixtures.hmc_session
+
+.. automodule:: zhmcclient.testutils.cpc_fixtures
+
+.. autofunction:: zhmcclient.testutils.cpc_fixtures.one_cpc
+
+.. autofunction:: zhmcclient.testutils.cpc_fixtures.all_cpcs
+
+.. autofunction:: zhmcclient.testutils.cpc_fixtures.dpm_mode_cpcs
+
+.. autofunction:: zhmcclient.testutils.cpc_fixtures.classic_mode_cpcs
+
+.. automodule:: zhmcclient.testutils.hmc_definitions
+
+.. autoclass:: zhmcclient.testutils.hmc_definitions.HMCDefinition
+   :members:
+   :autosummary:
+   :special-members: __repr__
+
+.. autoclass:: zhmcclient.testutils.hmc_definitions.HMCDefinitionFile
+   :members:
+   :autosummary:
+
+.. autoclass:: zhmcclient.testutils.hmc_definitions.HMCDefinitionFileError
+   :members:
+   :autosummary:
 
 
 .. _`Contributing`:

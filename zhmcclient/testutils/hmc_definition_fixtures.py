@@ -26,8 +26,11 @@ import zhmcclient_mock
 
 from .hmc_definitions import HMCDefinitionFile, HMCDefinition
 
+HOME_DIR = os.path.expanduser("~")
+
 # Path name of HMC definition file
-DEFAULT_TESTHMCFILE = os.path.join('tests', 'hmc_definitions.yaml')
+DEFAULT_TESTHMCFN = '.zhmc_hmc_definitions.yaml'
+DEFAULT_TESTHMCFILE = os.path.join(HOME_DIR, DEFAULT_TESTHMCFN)
 TESTHMCFILE = os.getenv('TESTHMCFILE', DEFAULT_TESTHMCFILE)
 
 # Test nickname in HMC definition file
@@ -45,13 +48,6 @@ if TESTLOGFILE:
 else:
     LOG_HANDLER = None
     LOG_FORMAT_STRING = None
-
-
-class FakedHMCFileError(Exception):
-    """
-    Exception indicating an issue with the faked HMC file.
-    """
-    pass
 
 
 def fixtureid_hmc_definition(fixture_value):
@@ -77,7 +73,9 @@ def hmc_definition(request):
     Fixture representing the set of HMC definitions to use for the end2end
     tests.
 
-    Returns the `HMCDefinition` object of each HMC to test against.
+    A test function parameter using this fixture resolves to the
+    :class:`~zhmcclient.testutils.hmc_definitions.HMCDefinition`
+    object of each HMC to test against.
     """
     return request.param
 
@@ -88,15 +86,19 @@ def hmc_definition(request):
 def hmc_session(request, hmc_definition):
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of `zhmcclient.Session` objects to use
-    for the end2end tests.
+    Pytest fixture representing the set of HMC sessions to use for the
+    end2end tests.
 
     Because the `hmc_definition` parameter of this fixture is again a fixture,
-    `hmc_definition` needs to be imported as well when this fixture is used.
+    the :func:`hmc_definition` function needs to be imported as well when this
+    fixture is used.
 
-    Returns a `zhmcclient.Session` object that is logged on to the HMC.
+    A test function parameter using this fixture resolves to the
+    :class:`zhmcclient.Session` or :class:`zhmcclient_mock.FakedSession` object
+    for the HMC session to test against.
+    The session is already logged on to the HMC.
 
-    Upon teardown, the `zhmcclient.Session` object is logged off.
+    Upon fixture teardown, the session is automatically logged off from the HMC.
     """
     session = setup_hmc_session(hmc_definition)
     yield session
