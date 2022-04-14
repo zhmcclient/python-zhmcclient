@@ -37,6 +37,14 @@ Released: not yet
 
 **Enhancements:**
 
+* End2end test: Changed the checking of the HMC definition files for end2end
+  tests to be based on JSON schema validation. This improves the checking
+  quality. (issue #950)
+
+* End2end test: Made the hmc_verify_cert property in HMC definition files
+  optional with a default of True, for consistency with the corresponding
+  zhmcclient.Session parameter. (issue #950)
+
 **Cleanup:**
 
 **Known issues:**
