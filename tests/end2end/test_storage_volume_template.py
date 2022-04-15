@@ -28,8 +28,8 @@ from requests.packages import urllib3
 
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils.cpc_fixtures import dpm_mode_cpcs  # noqa: F401, E501
+from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
+from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skipif_no_storage_mgmt_feature, runtest_find_list, \

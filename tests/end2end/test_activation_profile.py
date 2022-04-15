@@ -26,8 +26,8 @@ import pytest
 from requests.packages import urllib3
 
 # pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils.hmc_definition_fixtures import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils.cpc_fixtures import classic_mode_cpcs  # noqa: F401, E501
+from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
+from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list, End2endTestWarning

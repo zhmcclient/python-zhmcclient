@@ -24,7 +24,9 @@ import pytest
 import zhmcclient
 import zhmcclient_mock
 
-from .hmc_definitions import HMCDefinitionFile, HMCDefinition
+from ._hmc_definitions import HMCDefinitionFile, HMCDefinition
+
+__all__ = ['hmc_definitions', 'hmc_definition', 'hmc_session']
 
 HOME_DIR = os.path.expanduser("~")
 
@@ -37,8 +39,6 @@ TESTHMCFILE = os.getenv('TESTHMCFILE', DEFAULT_TESTHMCFILE)
 DEFAULT_TESTHMC = 'default'
 TESTHMC = os.getenv('TESTHMC', DEFAULT_TESTHMC)
 
-HMC_DEF_LIST = HMCDefinitionFile(filepath=TESTHMCFILE).list_hmcs(TESTHMC)
-
 # Log file
 TESTLOGFILE = os.getenv('TESTLOGFILE', None)
 if TESTLOGFILE:
@@ -48,6 +48,41 @@ if TESTLOGFILE:
 else:
     LOG_HANDLER = None
     LOG_FORMAT_STRING = None
+
+
+def hmc_definitions():
+    """
+    Return the list of HMC definitions for a HMC nickname in a HMC
+    definition file.
+
+    The HMC nickname is taken from the environment variable "TESTHMC" if
+    set, or otherwise is the default nickname "{def_nick}."
+
+    The path name of the HMC definition file is taken from the environment
+    variable "TESTHMCFILE" is set, or otherwise is "{def_fn}" in the home
+    directory of the user.
+
+    Returns:
+      list of :class:`zhmcclient.testutils.HMCDefinition`:
+      The selected HMC definitions.
+    """.format(def_nick=DEFAULT_TESTHMC, def_fn=DEFAULT_TESTHMCFN)
+
+    # The Sphinx build imports this module and the use of this function
+    # in the hmc_definition() fixture along with the wildcard imports in
+    # the testutils/__init__.py module causes this function to be executed upon
+    # module import. Since there is no HMC definition file when GitHub Actions
+    # or ReadTheDocs builds the documentation, the 'TESTHMCFILE_NOLOAD'
+    # emv.var is used to disable the loading of the file in these cases.
+    # This env.var needs to be set to 'True' in the following places:
+    # * In .github/workflows/test.yml when invoking 'make builddoc'.
+    # * In the ReadTheDocs advanced settings, as a private env.var.
+    noload = os.getenv('TESTHMCFILE_NOLOAD')
+
+    if noload:
+        return []
+    def_file = HMCDefinitionFile(filepath=TESTHMCFILE)
+    hmc_defs = def_file.list_hmcs(TESTHMC)
+    return hmc_defs
 
 
 def fixtureid_hmc_definition(fixture_value):
@@ -64,7 +99,7 @@ def fixtureid_hmc_definition(fixture_value):
 
 
 @pytest.fixture(
-    params=HMC_DEF_LIST,
+    params=hmc_definitions(),
     scope='module',
     ids=fixtureid_hmc_definition
 )
@@ -74,7 +109,7 @@ def hmc_definition(request):
     tests.
 
     A test function parameter using this fixture resolves to the
-    :class:`~zhmcclient.testutils.hmc_definitions.HMCDefinition`
+    :class:`~zhmcclient.testutils.HMCDefinition`
     object of each HMC to test against.
     """
     return request.param
@@ -90,8 +125,8 @@ def hmc_session(request, hmc_definition):
     end2end tests.
 
     Because the `hmc_definition` parameter of this fixture is again a fixture,
-    the :func:`hmc_definition` function needs to be imported as well when this
-    fixture is used.
+    the :func:`zhmcclient.testutils.hmc_definition` function needs to be
+    imported as well when this fixture is used.
 
     A test function parameter using this fixture resolves to the
     :class:`zhmcclient.Session` or :class:`zhmcclient_mock.FakedSession` object
