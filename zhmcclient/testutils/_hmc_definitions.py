@@ -29,6 +29,8 @@ import yaml
 import yamlloader
 import jsonschema
 
+__all__ = ['HMCDefinitionFileError', 'HMCDefinitionFile', 'HMCDefinition']
+
 THIS_DIR = os.path.dirname(__file__)
 
 EXAMPLE_HMC_FILE = os.path.join('tests', 'example_hmc_definitions.yaml')

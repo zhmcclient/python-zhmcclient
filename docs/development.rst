@@ -255,34 +255,28 @@ It defines
 `pytest fixtures <https://docs.pytest.org/en/latest/explanation/fixtures.html>`_
 and encapsulates the access to the HMC definition file.
 
-.. automodule:: zhmcclient.testutils.hmc_definition_fixtures
+.. autofunction:: zhmcclient.testutils.hmc_definition
 
-.. autofunction:: zhmcclient.testutils.hmc_definition_fixtures.hmc_definition
+.. autofunction:: zhmcclient.testutils.hmc_session
 
-.. autofunction:: zhmcclient.testutils.hmc_definition_fixtures.hmc_session
+.. autofunction:: zhmcclient.testutils.one_cpc
 
-.. automodule:: zhmcclient.testutils.cpc_fixtures
+.. autofunction:: zhmcclient.testutils.all_cpcs
 
-.. autofunction:: zhmcclient.testutils.cpc_fixtures.one_cpc
+.. autofunction:: zhmcclient.testutils.dpm_mode_cpcs
 
-.. autofunction:: zhmcclient.testutils.cpc_fixtures.all_cpcs
+.. autofunction:: zhmcclient.testutils.classic_mode_cpcs
 
-.. autofunction:: zhmcclient.testutils.cpc_fixtures.dpm_mode_cpcs
-
-.. autofunction:: zhmcclient.testutils.cpc_fixtures.classic_mode_cpcs
-
-.. automodule:: zhmcclient.testutils.hmc_definitions
-
-.. autoclass:: zhmcclient.testutils.hmc_definitions.HMCDefinition
+.. autoclass:: zhmcclient.testutils.HMCDefinition
    :members:
    :autosummary:
    :special-members: __repr__
 
-.. autoclass:: zhmcclient.testutils.hmc_definitions.HMCDefinitionFile
+.. autoclass:: zhmcclient.testutils.HMCDefinitionFile
    :members:
    :autosummary:
 
-.. autoclass:: zhmcclient.testutils.hmc_definitions.HMCDefinitionFileError
+.. autoclass:: zhmcclient.testutils.HMCDefinitionFileError
    :members:
    :autosummary:
 

@@ -66,6 +66,9 @@ Released: not yet
 * Docs: Improved and fixed the "Testing" section in the "Development" chapter.
   (issue #950)
 
+* Added a new function 'zhmcclient.testutils.hmc_definitions()' that
+  can be used by example scripts to access HMC definitions.
+
 **Cleanup:**
 
 * Made the handling of 'Lpar.list()' with filters that have no matching LPAR

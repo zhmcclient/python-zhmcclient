@@ -22,8 +22,10 @@ import warnings
 import pytest
 import zhmcclient
 
-# pylint: disable=unused-import,line-too-long
-from .hmc_definition_fixtures import hmc_session, HMC_DEF_LIST  # noqa: F401, E501
+# pylint: disable=unused-import
+from ._hmc_definition_fixtures import hmc_session  # noqa: F401
+
+__all__ = ['one_cpc', 'all_cpcs', 'dpm_mode_cpcs', 'classic_mode_cpcs']
 
 
 def fixtureid_cpc(fixture_value):
@@ -65,7 +67,7 @@ def one_cpc(request, hmc_session):  # noqa: F811
     Pytest fixture representing a single, arbitrary CPC managed by the HMC.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    the :func:`zhmcclient.testutils.hmc_session`
     function needs to be imported as well when this fixture is used.
 
     A test function parameter using this fixture resolves to a
@@ -79,30 +81,6 @@ def one_cpc(request, hmc_session):  # noqa: F811
     return cpc
 
 
-# TODO: The following is an attempt to define a parametrized CPC fixture
-# @pytest.mark.parametrize('hmc_definition', HMC_DEF_LIST)
-# @pytest.fixture(
-#     scope='module',
-#     ids=fixtureid_cpc
-# )
-# def any_mode_cpc(request, hmc_definition):  # noqa: F811
-#     # pylint: disable=redefined-outer-name,unused-argument
-#     """
-#     Pytest fixture representing the set of all CPCs defined in the
-#     HMC definition file (regardless of their classic/DPM mode).
-#
-#     Because the `hmc_session` parameter of this fixture is again a fixture,
-#     `hmc_session` needs to be imported as well when this fixture is used.
-#
-#     A test function parameter using this fixture resolves to a
-#     :class:`zhmcclient.Cpc` object from that set,
-#     that has the "short" set of properties (i.e. from list()).
-#     """
-#     session = setup_hmc_session(hmc_definition)
-#     yield defined_cpcs(session, 'any')  # don't know how to parametrize this
-#     teardown_hmc_session(session)
-
-
 @pytest.fixture(
     scope='module',
     ids=fixtureid_cpcs
@@ -114,7 +92,7 @@ def all_cpcs(request, hmc_session):  # noqa: F811
     HMC definition file (regardless of their classic/DPM mode).
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    the :func:`zhmcclient.testutils.hmc_session`
     function needs to be imported as well when this fixture is used.
 
     A test function parameter using this fixture resolves to a
@@ -135,7 +113,7 @@ def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
     all CPCs defined in the HMC definition file.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    the :func:`zhmcclient.testutils.hmc_session`
     function needs to be imported as well when this fixture is used.
 
     A test function parameter using this fixture resolves to a
@@ -156,7 +134,7 @@ def classic_mode_cpcs(request, hmc_session):  # noqa: F811
     all CPCs defined in the HMC definition file.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_definition_fixtures.hmc_session`
+    the :func:`zhmcclient.testutils.hmc_session`
     function needs to be imported as well when this fixture is used.
 
     A test function parameter using this fixture resolves to a
@@ -169,14 +147,23 @@ def classic_mode_cpcs(request, hmc_session):  # noqa: F811
 def defined_cpcs(session, mode):
     """
     Return a list of CPCs defined in the HMC definition file, that are managed
-    by the HMC, and that have the desired mode ('dpm', 'classic', 'any').
+    by the HMC, and that have the desired operational mode.
+
+    Parameters:
+
+      session (:class:`zhmcclient.Session`): The session with the HMC.
+
+      mode (string): The desired mode of the CPC ('dpm', 'classic', 'any').
+
+    Returns:
+      list of :class:`zhmcclient.Cpc`: The CPCs in the desired mode.
     """
     client = zhmcclient.Client(session)
-    all_cpcs = client.cpcs.list()
+    _all_cpcs = client.cpcs.list()
     hd = session.hmc_definition
     result_cpcs = []
     for cpc_name in hd.cpcs:
-        cpcs = [cpc for cpc in all_cpcs if cpc.name == cpc_name]
+        cpcs = [cpc for cpc in _all_cpcs if cpc.name == cpc_name]
         if not cpcs:
             warnings.warn(
                 "Cannot find CPC {c} defined in HMC definition file".
