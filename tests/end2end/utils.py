@@ -161,9 +161,14 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
                                  found_res_list))
     found_res = found_res_list[0]
     if len(found_res_list) > 1:
+        found_uri_list = [r.uri for r in found_res_list]
+        parent = manager.parent
         raise AssertionError(
-            "{k} findall() result with non-unique name '{n}': {o}".
-            format(k=found_res.prop('class'), n=name, o=found_res_list))
+            "{k} findall() result for {pk} '{pn}' has non-unique name '{n}' "
+            "for the following {no} objects:\n{o}".
+            format(k=found_res.prop('class'), pk=parent.prop('class'),
+                   pn=parent.name, n=name, no=len(found_res_list),
+                   o='\n'.join(found_uri_list)))
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
 
