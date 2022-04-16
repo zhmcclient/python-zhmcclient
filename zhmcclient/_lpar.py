@@ -32,7 +32,7 @@ import copy
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._exceptions import StatusTimeout
+from ._exceptions import StatusTimeout, HTTPError
 from ._logging import logged_api_call
 from ._utils import matches_filters, divide_filter_args, RC_LOGICAL_PARTITION
 
@@ -135,7 +135,14 @@ class LparManager(BaseManager):
             resources_name = 'logical-partitions'
             uri = '{}/{}{}'.format(self.cpc.uri, resources_name, query_parms)
 
-            result = self.session.get(uri)
+            try:
+                result = self.session.get(uri)
+            except HTTPError as exc:
+                if exc.http_status == 404 and exc.reason == 1:
+                    # Unlike other list operations, "List Logical Partitions
+                    # of CPC" fails with 404.1 "ERROR: found no Images" if
+                    # no LPAR matches the filters in the query parms.
+                    result = []
             if result:
                 props_list = result[resources_name]
                 for props in props_list:
