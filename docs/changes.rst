@@ -30,6 +30,14 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed the handling of JMS notifications that have no content, such as the
+  job completion notification and the inventory change notification.
+  (issue #956)
+
+* Fixed the handling of JMS notifications that have no content, such as the
+  job completion notification and the inventory change notification.
+  (issue #956)
+
 **Enhancements:**
 
 **Cleanup:**
