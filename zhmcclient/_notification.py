@@ -209,7 +209,8 @@ class NotificationReceiver(object):
             :term:`HMC API` book.
 
           * message (:term:`JSON object`): Body of the HMC notification,
-            converted into a JSON object.
+            converted into a JSON object. `None` for notifications that
+            have no content in their response body.
 
             The properties of the JSON object vary by notification type.
 
@@ -251,13 +252,16 @@ class NotificationReceiver(object):
                         "Received JMS error from HMC{}".format(details),
                         headers, message)
 
-                try:
-                    msg_obj = json.loads(message)
-                except Exception as exc:
-                    raise NotificationParseError(
-                        "Cannot convert JMS message body to JSON: {}: {}".
-                        format(exc.__class__.__name__, exc),
-                        message)
+                if message:
+                    try:
+                        msg_obj = json.loads(message)
+                    except Exception as exc:
+                        raise NotificationParseError(
+                            "Cannot convert JMS message body to JSON: {}: {}".
+                            format(exc.__class__.__name__, exc),
+                            message)
+                else:
+                    msg_obj = None
 
                 yield headers, msg_obj
 
