@@ -28,10 +28,18 @@ Released: not yet
 
 **Incompatible changes:**
 
+
 * Test: By default, the end2end tests now use the
   '.zhmc_hmc_definitions.yaml' file in the home directory of the user,
   instead of the 'tests/hmc_definitions.yaml' file. This can be changed using
   the 'TESTHMCFILE' environment variable. (issue #950)
+=======
+* 'Lpar.list()' with filters that have no matching LPAR now returns an empty
+  result set, consistent with other zhmcclient 'list()' methods. Previosuly,
+  'Lpar.list()' raised HTTPError 404.1 when no LPAR matched the filters.
+  If you used 'Lpar.list()' with filters, you may need to adjust the handling
+  of the case where no LPARs match the filter. (issue #954)
+
 
 **Deprecations:**
 
@@ -40,6 +48,7 @@ Released: not yet
 * Added the missing `secure_boot` parameter to `zhmcclient.Lpar.scsi_dump()`
   (issue #945)
 
+
 **Enhancements:**hmc_definition_fixtures.
 
 * Docs: Added documentation for the 'zhmcclient.testutils' module to the
@@ -47,11 +56,33 @@ Released: not yet
 
 * Docs: Improved and fixed the "Testing" section in the "Development" chapter.
   (issue #950)
+=======
+* Fixed the handling of JMS notifications that have no content, such as the
+  job completion notification and the inventory change notification.
+  (issue #956)
+
+**Enhancements:**
+
+
+* End2end test: Changed the checking of the HMC definition files for end2end
+  tests to be based on JSON schema validation. This improves the checking
+  quality. (issue #950)
+
+* End2end test: Made the hmc_verify_cert property in HMC definition files
+  optional with a default of True, for consistency with the corresponding
+  zhmcclient.Session parameter. (issue #950)
 
 **Cleanup:**
 
+
 * Removed the unused 'FakedHMCFileError' class from the
   'zhmcclient.testutils.hmc_definition_fixtures' module. (issue #950)
+=======
+* Made the handling of 'Lpar.list()' with filters that have no matching LPAR
+  consistent with other zhmcclient 'list()' methods that return an empty
+  result set in such cases. Previously, 'Lpar.list()' raised HTTPError 404.1
+  when no LPAR matched the filters. (issue #954)
+
 
 **Known issues:**
 
