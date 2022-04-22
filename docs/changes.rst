@@ -69,6 +69,11 @@ Released: not yet
 * Added a new function 'zhmcclient.testutils.hmc_definitions()' that
   can be used by example scripts to access HMC definitions.
 
+* Examples: Simplified and cleaned up the example scripts. They now use
+  the HMC definition file. Deleted scripts that were too complex and not
+  particularly instructive (cpcdata.py, cpcinfo.py). Renamed some scripts
+  for better clarity on what they do. (issue #953)
+
 **Cleanup:**
 
 * Made the handling of 'Lpar.list()' with filters that have no matching LPAR

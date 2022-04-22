@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2016-2021 IBM Corp. All Rights Reserved.
+# Copyright 2016-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,124 +14,104 @@
 # limitations under the License.
 
 """
-Example: Create a metrics context, retrieve metrics and delete metrics context.
+Example that creates a metrics context, retrieves metrics and deletes the
+metrics context.
 """
 
 import sys
-import yaml
 import time
 import requests.packages.urllib3
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
+print(__doc__)
 
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % hmccreds_file)
+print("Creating a session with the HMC ...")
+try:
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
     sys.exit(1)
-
-example = examples.get("metrics", None)
-if example is None:
-    print("metrics section not found in credentials file %s" % hmccreds_file)
-    sys.exit(1)
-
-
-hmc = example["hmc"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" %
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred['userid']
-password = cred['password']
 
 try:
-    print(__doc__)
+    client = zhmcclient.Client(session)
 
-    print("Using HMC %s with userid %s ..." % (hmc, userid))
-    session = zhmcclient.Session(hmc, userid, password)
-    cl = zhmcclient.Client(session)
+    try:
+        metric_groups = [
 
-    timestats = example.get("timestats", None)
-    if timestats:
-        session.time_stats_keeper.enable()
+            # Please edit this section so it contains only the metric groups
+            # that mnatch the operational mode of the targeted CPC.
 
-    metric_groups = [
+            'cpc-usage-overview',  # Only in classic mode
+            'logical-partition-usage',  # Only in classic mode
+            'channel-usage',  # Only in classic mode
 
-        # Please edit this section so it contains only the metric groups
-        # that mnatch the operational mode of the targeted CPC.
+            'dpm-system-usage-overview',  # Only in DPM mode
+            'partition-usage',  # Only in DPM mode
+            'adapter-usage',  # Only in DPM mode
+            'crypto-usage',  # Only in DPM mode
+            'flash-memory-usage',  # Only in DPM mode
+            'roce-usage',  # Only in DPM mode
 
-        'cpc-usage-overview',  # Only in classic mode
-        'logical-partition-usage',  # Only in classic mode
-        'channel-usage',  # Only in classic mode
+            # 'environmental-power-status',  # In any mode, starting with z15
 
-        'dpm-system-usage-overview',  # Only in DPM mode
-        'partition-usage',  # Only in DPM mode
-        'adapter-usage',  # Only in DPM mode
-        'crypto-usage',  # Only in DPM mode
-        'flash-memory-usage',  # Only in DPM mode
-        'roce-usage',  # Only in DPM mode
+            # 'virtualization-host-cpu-memory-usage',  # Only in ensemble mode
 
-        'environmental-power-status',  # In any mode, starting with z15
+        ]
 
-        # 'virtualization-host-cpu-memory-usage',  # Only in ensemble mode
+        print("Creating Metrics Context ...")
+        mc = client.metrics_contexts.create(
+            {'anticipated-frequency-seconds': 15,
+             'metric-groups': metric_groups})
 
-    ]
+        sleep_time = 15  # seconds
 
-    print("Creating Metrics Context ...")
-    mc = cl.metrics_contexts.create(
-        {'anticipated-frequency-seconds': 15,
-         'metric-groups': metric_groups})
+        print("Sleeping for {} seconds ...".format(sleep_time))
+        time.sleep(sleep_time)
 
-    sleep_time = 15  # seconds
+        print("Retrieving the current metric values ...")
+        mr_str = mc.get_metrics()
 
-    print("Sleeping for %s seconds ..." % sleep_time)
-    time.sleep(sleep_time)
+        print("Current metric values:")
+        mr = zhmcclient.MetricsResponse(mc, mr_str)
+        for mg in mr.metric_group_values:
+            mg_name = mg.name
+            mg_def = mc.metric_group_definitions[mg_name]
+            print("  Metric group: {}".format(mg_name))
+            for ov in mg.object_values:
+                print("    Resource: {}".format(ov.resource_uri))
+                print("    Timestamp: {}".format(ov.timestamp))
+                print("    Metric values:")
+                for m_name in ov.metrics:
+                    m_value = ov.metrics[m_name]
+                    m_def = mg_def.metric_definitions[m_name]
+                    m_unit = m_def.unit or ''
+                    print("      {:30}  {} {}".format(m_name, m_value, m_unit))
+            if not mg.object_values:
+                print("    No resources")
 
-    print("Retrieving the current metric values ...")
-    mr_str = mc.get_metrics()
+        print("Deleting Metrics Context ...")
+        mc.delete()
 
-    print("Current metric values:")
-    mr = zhmcclient.MetricsResponse(mc, mr_str)
-    for mg in mr.metric_group_values:
-        mg_name = mg.name
-        mg_def = mc.metric_group_definitions[mg_name]
-        print("  Metric group: {}".format(mg_name))
-        for ov in mg.object_values:
-            print("    Resource: {}".format(ov.resource_uri))
-            print("    Timestamp: {}".format(ov.timestamp))
-            print("    Metric values:")
-            for m_name in ov.metrics:
-                m_value = ov.metrics[m_name]
-                m_def = mg_def.metric_definitions[m_name]
-                m_unit = m_def.unit or ''
-                print("      {:30}  {} {}".format(m_name, m_value, m_unit))
-        if not mg.object_values:
-            print("    No resources")
+    except zhmcclient.Error as exc:
+        print("{}: {}".format(exc.__class__.__name__, exc))
+        sys.exit(1)
 
-    print("Deleting Metrics Context ...")
-    mc.delete()
-
+finally:
     print("Logging off ...")
     session.logoff()
-
-    if timestats:
-        print(session.time_stats_keeper)
-
-    print("Done.")
-
-except zhmcclient.Error as exc:
-    print("%s: %s" % (exc.__class__.__name__, exc))
-    sys.exit(1)

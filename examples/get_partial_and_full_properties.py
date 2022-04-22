@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2016-2021 IBM Corp. All Rights Reserved.
+# Copyright 2016-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,105 +14,55 @@
 # limitations under the License.
 
 """
-Example shows how to get partial and full properties for CPCs
-and for LPARs of a CPC.
+Example that lists CPCs with partial and full properties to show timing
+difference.
 """
 
 import sys
-import logging
-import yaml
 import requests.packages.urllib3
 from datetime import datetime
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
-
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
-
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-get_partial_and_full_properties = examples.get("get_partial_and_full_properties", None)
-if get_partial_and_full_properties is None:
-    print("get_partial_and_full_properties not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-loglevel = get_partial_and_full_properties.get("loglevel", None)
-if loglevel is not None:
-    level = getattr(logging, loglevel.upper(), None)
-    if level is None:
-        print("Invalid value for loglevel in credentials file %s: %s" % \
-              (hmccreds_file, loglevel))
-        sys.exit(1)
-    logging.basicConfig(level=level)
-
-hmc = get_partial_and_full_properties["hmc"]
-cpcname = get_partial_and_full_properties["cpcname"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred['userid']
-password = cred['password']
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
 print(__doc__)
 
-print("Using HMC %s with userid %s ..." % (hmc, userid))
-session = zhmcclient.Session(hmc, userid, password)
-cl = zhmcclient.Client(session)
-timestats = get_partial_and_full_properties.get("timestats", None)
-if timestats:
-    session.time_stats_keeper.enable()
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-for full_properties in (False, True):
-    print("Listing CPCs with full_properties=%s ..." % full_properties)
-    start_dt = datetime.now()
-    cpcs = cl.cpcs.list(full_properties)
-    end_dt = datetime.now()
-    duration = end_dt - start_dt
-    print("Duration: %s" % duration)
-    for cpc in cpcs:
-        print("Number of properties of CPC %s: %s" %
-              (cpc.name, len(cpc.properties)))
-
-print("Finding CPC by name=%s ..." % cpcname)
+print("Creating a session with the HMC ...")
 try:
-    cpc = cl.cpcs.find(name=cpcname)
-except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
     sys.exit(1)
-print("Found CPC %s at: %s" % (cpc.name, cpc.uri))
 
-for full_properties in (False, True):
-    print("Listing LPARs on CPC %s with full_properties=%s ..." %
-          (cpc.name, full_properties))
-    start_dt = datetime.now()
-    lpars = cpc.lpars.list(full_properties)
-    end_dt = datetime.now()
-    duration = end_dt - start_dt
-    print("Duration: %s" % duration)
-    for lpar in lpars:
-        print("Number of properties of LPAR %s: %s" %
-              (lpar.name, len(lpar.properties)))
+try:
+    client = zhmcclient.Client(session)
 
-print("Logging off ...")
-session.logoff()
+    for full_properties in (False, True):
+        print("Listing CPCs with full_properties={} ...".
+              format(full_properties))
+        start_dt = datetime.now()
+        cpcs = client.cpcs.list(full_properties)
+        end_dt = datetime.now()
+        duration = end_dt - start_dt
+        print("Duration: {}".format(duration))
+        for cpc in cpcs:
+            print("Number of properties returned for CPC {}: {}".
+                  format(cpc.name, len(cpc.properties)))
 
-if timestats:
-    print(session.time_stats_keeper)
-
-print("Done.")
+finally:
+    print("Logging off ...")
+    session.logoff()

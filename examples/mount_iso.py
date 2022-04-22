@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2016-2021 IBM Corp. All Rights Reserved.
+# Copyright 2016-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,130 +14,140 @@
 # limitations under the License.
 
 """
-Example mounting an ISO image to an existing partition and starting the partition.
+Example that mounts an ISO image to a partition and starts the partition
+on a CPC in DPM mode.
 """
 
 import sys
-import io
-import logging
-import yaml
-import json
+import os
+import uuid
 import requests.packages.urllib3
-from pprint import pprint
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
-
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-mount_iso = examples.get("mount_iso", None)
-if mount_iso is None:
-    print("mount_iso not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-loglevel = mount_iso.get("loglevel", None)
-if loglevel is not None:
-    level = getattr(logging, loglevel.upper(), None)
-    if level is None:
-        print("Invalid value for loglevel in credentials file %s: %s" % \
-              (hmccreds_file, loglevel))
-        sys.exit(1)
-    logging.basicConfig(level=level)
-
-hmc = mount_iso["hmc"]
-cpcname = mount_iso["cpcname"]
-partname = mount_iso["partname"]
-imagename = mount_iso["imagename"]
-imagefile = mount_iso["imagefile"]
-imageinsfile = mount_iso["imageinsfile"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred["userid"]
-password = cred["password"]
+# Customize: Set to the ISO image you want to mount:
+# path name of image file on local system
+image_file = 'try/SLE-12-Server-DVD-s390x-GM-DVD1.iso'
+# path name of INS file within ISO image, or None
+image_insfile = 'my_insfile'
 
 print(__doc__)
 
-print("Using HMC %s with userid %s ..." % (hmc, userid))
-session = zhmcclient.Session(hmc, userid, password)
-cl = zhmcclient.Client(session)
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-timestats = mount_iso.get("timestats", False)
-if timestats:
-    session.time_stats_keeper.enable()
+print("Creating a session with the HMC ...")
+try:
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
+    sys.exit(1)
 
 try:
-    print("Finding CPC by name=%s ..." % cpcname)
+    client = zhmcclient.Client(session)
+
+    print("Finding a CPC in DPM mode ...")
+    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+    if not cpcs:
+        print("Error: HMC at {} does not manage any CPCs in DPM mode".
+              format(host))
+        sys.exit(1)
+    cpc = cpcs[0]
+    print("Using CPC {}".format(cpc.name))
+
+    part_name = "zhmc_test_{}".format(uuid.uuid4())
+    print("Creating partition {} ...".format(part_name))
     try:
-        cpc = cl.cpcs.find(name=cpcname)
-    except zhmcclient.NotFound:
-        print("Error: Could not find CPC %s on HMC %s" % (cpcname, hmc))
+        part = cpc.partitions.create(
+            properties={
+                'name': part_name,
+                'type': 'linux',
+                'ifl-processors': 2,
+                'initial-memory': 4096,
+                'maximum-memory': 4096,
+            })
+    except zhmcclient.Error as exc:
+        print("Error: Cannot create partition {} on CPC {}: {}: {}".
+              format(part_name, cpc.name, exc.__class__.__name__, exc))
         sys.exit(1)
 
-    #print("Checking if DPM is enabled on CPC %s..." % cpc.name)
-    #if not cpc.dpm_enabled:
-    #    print("Error: CPC %s is not in DPM mode." % cpc.name)
-    #    sys.exit(1)
-
-    print("Finding Partition by name=%s on CPC %s ..." % (partname, cpc.name))
     try:
-        partition = cpc.partitions.find(name=partname)
-    except zhmcclient.NotFound:
-        print("Error: Partition %s does not exist" % partname)
-        sys.exit(1)
+        try:
+            with open(image_file, 'rb') as image_fp:
+                image_name = os.path.basename(image_file)
+                image_size_mb = 1.0 * os.path.getsize(image_file) / 1024 / 1024
+                print("Mounting ISO image to partition {} ...".
+                      format(part.name))
+                print("  Image file: {} (size: {:.1f} MB)".
+                      format(image_file, image_size_mb))
+                print("  Image name: {}".format(image_name))
+                print("  Image INS file: {}".format(image_insfile))
+                try:
+                    part.mount_iso_image(image_fp, image_name, image_insfile)
+                except zhmcclient.Error as exc:
+                    print("Error: Cannot mount ISO file {}: {}: {}".
+                          format(image_file, exc.__class__.__name__, exc))
+                    sys.exit(1)
+        except (IOError, OSError) as exc:
+            print("Error: Cannot open image file {}: {}: {}".
+                  format(image_file, exc.__class__.__name__, exc))
+            sys.exit(1)
 
-    status = partition.get_property('status')
-    print("Partition %s status: %s" % (partition.name, status))
-    if status == 'active':
-        print("Stopping Partition %s ..." % partition.name)
-        partition.stop()
+        part.pull_full_properties()
+        print("Partition property 'boot-iso-image-name' has been set to image "
+              "name: {}".format(part.get_property('boot-iso-image-name')))
 
-    print("Opening image file %s ..." % imagefile)
-    image_fp = open(imagefile, 'rb')
-    print("Mounting image file as ISO image named %r with INS file %r in Partition %s ..." %
-          (imagename, imageinsfile, partition.name))
-    partition.mount_iso_image(image_fp, imagename, imageinsfile)
+        print("Setting 'iso-image' as a boot device ...")
+        try:
+            part.update_properties({'boot-device': 'iso-image'})
+        except zhmcclient.Error as exc:
+            print("Error: Cannot update properties of partition {}: {}: {}".
+                  format(part.name, exc.__class__.__name__, exc))
+            sys.exit(1)
 
-    partition.pull_full_properties()
-    print("Partition property 'boot-iso-image-name' has been set to image name: %r" %
-          (partition.get_property('boot-iso-image-name')))
+        print("Starting partition {} ...".format(part.name))
+        try:
+            part.start()
+        except zhmcclient.Error as exc:
+            print("Error: Cannot start partition {}: {}: {}".
+                  format(part.name, exc.__class__.__name__, exc))
+            sys.exit(1)
 
-    print("Setting 'iso-image' as a boot device ...")
-    partition.update_properties({'boot-device': 'iso-image'})
+        part.pull_full_properties()
+        status = part.get_property('status')
+        print("Partition status: {}".format(status))
 
-    print("Starting Partition %s ..." % partition.name)
-    try:
-        partition.start()
-    except zhmcclient.HTTPError as exc:
-        print("Error: %s" % exc)
-        sys.exit(1)
+    finally:
+        if part.get_property('status') != 'stopped':
+            print("Stopping partition {} ...".format(part.name))
+            try:
+                part.stop(wait_for_completion=True)
+            except zhmcclient.Error as exc:
+                print("Error: Stop operation failed with {}: {}".
+                      format(exc.__class__.__name__, exc))
+                sys.exit(1)
 
-    partition.pull_full_properties()
-    status = partition.get_property('status')
-    print("Partition %s status: %s" % (partition.name, status))
+        print("Deleting partition {} ...".format(part.name))
+        try:
+            part.delete()
+        except zhmcclient.Error as exc:
+            print("Error: Cannot delete partition {} on CPC {} for clean up - "
+                  "Please delete it manually: {}: {}".
+                  format(part.name, cpc.name, exc.__class__.__name__, exc))
+            sys.exit(1)
 
 finally:
-
     print("Logging off ...")
     session.logoff()
-
-    if timestats:
-        print(session.time_stats_keeper)
