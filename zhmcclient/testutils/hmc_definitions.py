@@ -27,10 +27,133 @@ except ImportError:
 import errno
 import yaml
 import yamlloader
+import jsonschema
 
 THIS_DIR = os.path.dirname(__file__)
 
 EXAMPLE_HMC_FILE = os.path.join('tests', 'example_hmc_definitions.yaml')
+
+# JSON schema for content of a HMC definition file
+HMC_FILE_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "JSON schema for HMC definition file",
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "hmcs",
+    ],
+    "properties": {
+        "hmcs": {
+            "description": "HMC definitions",
+            "type": "object",
+            "additionalProperties": False,
+            "patternProperties": {
+                "^[a-zA-Z0-9_\\-]+$": {
+                    "description": "Key: Nickname of the HMC; "
+                                   "Value: The HMC definition.",
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "description": {
+                            "description": "Short description of the HMC. "
+                                           "Optional, default: empty.",
+                            "type": "string",
+                        },
+                        "contact": {
+                            "description": "Name of technical contact for the "
+                                           "HMC. "
+                                           "Optional, default: empty.",
+                            "type": "string",
+                        },
+                        "access_via": {
+                            "description": "Preconditions to reach the network "
+                                           "of the HMC. "
+                                           "Optional, default: empty.",
+                            "type": "string",
+                        },
+                        "hmc_host": {
+                            "description": "For real HMC: IP address or "
+                                           "hostname of the HMC. "
+                                           "Mandatory (if real HMC).",
+                            "type": "string",
+                        },
+                        "hmc_userid": {
+                            "description": "For real HMC: Userid for logging "
+                                           "on to the HMC. "
+                                           "Mandatory (if real HMC).",
+                            "type": "string",
+                        },
+                        "hmc_password": {
+                            "description": "For real HMC: Password for logging "
+                                           "on to the HMC. "
+                                           "Mandatory (if real HMC).",
+                            "type": "string",
+                        },
+                        "hmc_verify_cert": {
+                            "description": "For real HMC: verify SSL "
+                                           "certificate from HMC. False / "
+                                           "True / path name of certificate "
+                                           "file or directory. "
+                                           "Optional (if real HMC), "
+                                           "default: True.",
+                            "type": ["string", "boolean"],
+                        },
+                        "faked_hmc_file": {
+                            "description": "For faked HMC: Path name of fake "
+                                           "HMC file, relative to this file. "
+                                           "Mandatory (if faked HMC).",
+                            "type": "string",
+                        },
+                        "cpcs": {
+                            "description": "Subset of CPCs managed by this HMC",
+                            "type": "object",
+                            "additionalProperties": False,
+                            "patternProperties": {
+                                "^[a-zA-Z0-9_\\-]+$": {
+                                    "description": "Key: CPC name; "
+                                                   "Value: List of expected "
+                                                   "CPC properties.",
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "patternProperties": {
+                                        "^[a-z0-9_]+$": {
+                                            "description": "Key: CPC property "
+                                                           "name (with "
+                                                           "underscores); "
+                                                           "Value: Expected "
+                                                           "property value",
+                                            "type": ["object", "array",
+                                                     "string", "integer",
+                                                     "number", "boolean",
+                                                     "null"],
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "hmc_groups": {
+            "description": "HMC group definitions (optional)",
+            "type": "object",
+            "additionalProperties": False,
+            "patternProperties": {
+                "^[a-zA-Z0-9_\\-]+$": {
+                    "description": "Key: Nickname of the HMC group; "
+                                   "Value: List of HMCs or HMC groups in this "
+                                   "group",
+                    "type": "array",
+                    "items": {
+                        "description": "Nickname of HMC or HMC group",
+                        "type": "string",
+                    },
+                },
+            },
+        },
+    },
+}
 
 
 class HMCDefinitionFileError(Exception):
@@ -53,7 +176,7 @@ class HMCDefinitionFile(object):
 
     def _load_file(self):
         """
-        Load the HMC definition file.
+        Load and validate the HMC definition file.
         """
         try:
             with open(self._filepath) as fp:
@@ -77,44 +200,31 @@ class HMCDefinitionFile(object):
                 raise new_exc  # HMCDefinitionFileError
             raise
 
-        if data is None:
-            raise HMCDefinitionFileError(
-                "The HMC definition file {0!r} is empty".
-                format(self._filepath))
-
-        if not isinstance(data, OrderedDict):
-            raise HMCDefinitionFileError(
-                "The HMC definition file {0!r} must contain a "
-                "dictionary at the top level, but contains {1}".
-                format(self._filepath, type(data)))
-
-        if 'hmcs' not in data:
-            raise HMCDefinitionFileError(
-                "The HMC definition file {0!r} does not define a "
-                "'hmcs' item, but items: {1}".
-                format(self._filepath, data.keys()))
+        try:
+            jsonschema.validate(data, HMC_FILE_SCHEMA)
+        except jsonschema.exceptions.ValidationError as exc:
+            new_exc = HMCDefinitionFileError(
+                "Invalid data format in HMC definition file {f}: {msg}; "
+                "Offending element: {elem}; "
+                "Schema item: {schemaitem}; "
+                "Validator: {valname}={valvalue}".
+                format(f=self._filepath, msg=exc.message,
+                       elem='.'.join(str(e) for e in exc.absolute_path),
+                       schemaitem='.'.join(str(e) for e in
+                                           exc.absolute_schema_path),
+                       valname=exc.validator,
+                       valvalue=exc.validator_value))
+            new_exc.__cause__ = None
+            raise new_exc  # HMCDefinitionFileError
 
         hmcs = data.get('hmcs')
-        if not isinstance(hmcs, OrderedDict):
-            raise HMCDefinitionFileError(
-                "'hmcs' in HMC definition file {0!r} "
-                "must be a dictionary, but is a {1}".
-                format(self._filepath, type(hmcs)))
-
         self._hmcs.update(hmcs)
 
         hmc_groups = data.get('hmc_groups', OrderedDict())
-        if not isinstance(hmc_groups, OrderedDict):
-            raise HMCDefinitionFileError(
-                "'hmc_groups' in HMC definition file {0!r} "
-                "must be a dictionary, but is a {1}".
-                format(self._filepath, type(hmc_groups)))
-
         for hmc_nick in hmc_groups:
             visited_hmc_nicks = list()
             self._check_hmc_group(hmc_nick, hmc_groups, hmcs,
                                   visited_hmc_nicks)
-
         self._hmc_groups.update(hmc_groups)
 
     def _check_hmc_group(self, hmc_nick, hmc_groups, hmcs, visited_hmc_nicks):
@@ -123,11 +233,6 @@ class HMCDefinitionFile(object):
         """
         visited_hmc_nicks.append(hmc_nick)
         hmc_group = hmc_groups[hmc_nick]
-        if not isinstance(hmc_group, list):
-            raise HMCDefinitionFileError(
-                "HMC group {0!r} in HMC definition file {1!r} "
-                "must be a list, but is a {2}".
-                format(hmc_nick, self._filepath, type(hmc_group)))
         for nick in hmc_group:
             if nick in visited_hmc_nicks:
                 raise HMCDefinitionFileError(
@@ -135,11 +240,6 @@ class HMCDefinitionFile(object):
                     "definition file {1!r} contains HMC group {2!r}, which "
                     "directly or indirectly contains HMC group {0!r}".
                     format(hmc_nick, self._filepath, nick))
-            if not isinstance(nick, str):
-                raise HMCDefinitionFileError(
-                    "Item {0!r} in HMC group {1!r} in HMC definition file "
-                    "{2!r} must be a string, but is a {3}".
-                    format(nick, hmc_nick, self._filepath, type(nick)))
             if nick in hmc_groups:
                 self._check_hmc_group(
                     nick, hmc_groups, hmcs, visited_hmc_nicks)
@@ -245,8 +345,7 @@ class HMCDefinition(object):
             self._hmc_userid = _required_attr(hmc_dict, 'hmc_userid', nickname)
             self._hmc_password = _required_attr(hmc_dict, 'hmc_password',
                                                 nickname)
-            self._hmc_verify_cert = _required_attr(hmc_dict, 'hmc_verify_cert',
-                                                   nickname)
+            self._hmc_verify_cert = hmc_dict.get('hmc_verify_cert', True)
         self._cpcs = hmc_dict.get('cpcs', dict())
 
     def __repr__(self):
