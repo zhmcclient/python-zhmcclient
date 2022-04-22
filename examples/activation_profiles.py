@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2016-2021 IBM Corp. All Rights Reserved.
+# Copyright 2016-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,132 +14,84 @@
 # limitations under the License.
 
 """
-Example shows Activation Profiles handling.
+Example that lists the Reset/Image/Load Activation Profiles on a CPC in classic
+mode.
 """
 
 import sys
-import logging
-import yaml
 import requests.packages.urllib3
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
-
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
-
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-activation_profiles = examples.get("activation_profiles", None)
-if activation_profiles is None:
-    print("activation_profiles not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-loglevel = activation_profiles.get("loglevel", None)
-if loglevel is not None:
-    level = getattr(logging, loglevel.upper(), None)
-    if level is None:
-        print("Invalid value for loglevel in credentials file %s: %s" % \
-              (hmccreds_file, loglevel))
-        sys.exit(1)
-    logging.basicConfig(level=level)
-
-hmc = activation_profiles["hmc"]
-cpcname = activation_profiles["cpcname"]
-lparname = activation_profiles["lparname"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred["userid"]
-password = cred["password"]
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
 print(__doc__)
 
-print("Using HMC %s with userid %s ..." % (hmc, userid))
-session = zhmcclient.Session(hmc, userid, password)
-cl = zhmcclient.Client(session)
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-timestats = activation_profiles.get("timestats", False)
-if timestats:
-    session.time_stats_keeper.enable()
-
-print("Listing CPCs ...")
-cpcs = cl.cpcs.list()
-for cpc in cpcs:
-    print(cpc.name, cpc.get_property('status'), cpc.uri)
-
-print("Finding CPC by name=%s ..." % cpcname)
+print("Creating a session with the HMC ...")
 try:
-    cpc = cl.cpcs.find(name=cpcname)
-except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
     sys.exit(1)
 
-print("Checking if DPM is enabled on CPC %s..." % cpcname)
-if cpc.dpm_enabled:
-    print("CPC %s is in DPM mode." % cpcname)
-    sys.exit(1)
+try:
+    client = zhmcclient.Client(session)
 
-managers = {'reset': 'reset_activation_profiles',
-           'image' : 'image_activation_profiles',
-           'load' : 'load_activation_profiles'}
+    print("Finding a CPC in classic mode ...")
+    cpcs = client.cpcs.list(filter_args={'dpm-enabled': False})
+    if not cpcs:
+        print("Error: HMC at {} does not manage any CPCs in classic mode".
+              format(host))
+        sys.exit(1)
+    cpc = cpcs[0]
+    print("Using CPC {}".format(cpc.name))
 
-for profile_type, manager in managers.items():
-    profiles = getattr(cpc, manager).list()
-
-    print("Listing %d %s Activation Profiles ..."
-            % (len(profiles), profile_type.capitalize()))
-
+    # Reset activation profiles
+    print("Listing reset activation profiles for CPC {} ...".format(cpc.name))
+    try:
+        profiles = cpc.reset_activation_profiles.list()
+    except zhmcclient.Error as exc:
+        print("Error: Cannot list reset activation profiles for CPC {}: {}: {}".
+              format(cpc.name, exc.__class__.__name__, exc))
+        sys.exit(1)
     for profile in profiles:
         print(profile.name, profile.get_property('element-uri'))
 
-    if profile_type == 'image':
+    # Image activation profiles
+    print("Listing image activation profiles for CPC {} ...".format(cpc.name))
+    try:
+        profiles = cpc.image_activation_profiles.list()
+    except zhmcclient.Error as exc:
+        print("Error: Cannot list image activation profiles for CPC {}: {}: {}".
+              format(cpc.name, exc.__class__.__name__, exc))
+        sys.exit(1)
+    for profile in profiles:
+        print(profile.name, profile.get_property('element-uri'))
 
-        print("Finding %s Activation Profile by name=%s ..."
-            % (profile_type.capitalize(), lparname))
-        profile = getattr(cpc, manager).find(name=lparname)
+    # Load activation profiles
+    print("Listing load activation profiles for CPC {} ...".format(cpc.name))
+    try:
+        profiles = cpc.load_activation_profiles.list()
+    except zhmcclient.Error as exc:
+        print("Error: Cannot list load activation profiles for CPC {}: {}: {}".
+              format(cpc.name, exc.__class__.__name__, exc))
+        sys.exit(1)
+    for profile in profiles:
+        print(profile.name, profile.get_property('element-uri'))
 
-        print("Printing info properties:")
-        print(profile.properties)
-
-#                print("Printing full properties:")
-#                profile.pull_full_properties()
-#                print(profile.properties)
-        original_description = profile.get_property('description')
-        print("description: %s" % original_description)
-        updated_properties = dict()
-        updated_properties["description"] = "Test Test Test"
-        profile.update_properties(updated_properties)
-        print("Pull full properties of Image Activation Profile %s ..." % lparname)
-        profile.pull_full_properties()
-        print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
-        print("Re-setting description ...")
-        original_properties = dict()
-        original_properties["description"] = original_description
-#                original_properties["description"] = "OpenStack zKVM"
-        profile.update_properties(original_properties)
-        profile.pull_full_properties()
-        print("Updated description of Image Activation Profile %s: %s" % (lparname, profile.get_property('description')))
-
-print("Logging off ...")
-session.logoff()
-
-if timestats:
-    print(session.time_stats_keeper)
-
-print("Done.")
+finally:
+    print("Logging off ...")
+    session.logoff()

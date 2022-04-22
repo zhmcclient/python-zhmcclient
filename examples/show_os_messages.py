@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2017-2021 IBM Corp. All Rights Reserved.
+# Copyright 2017-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,146 +14,106 @@
 # limitations under the License.
 
 """
-Example that shows the OS messages of the OS in a Partition or LPAR.
+Example that shows the OS messages of the OS in a started partition on a CPC
+in DPM mode.
 """
 
 import sys
-import logging
-import yaml
 import requests.packages.urllib3
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
+
+requests.packages.urllib3.disable_warnings()
+
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
 # Print metadata for each OS message, before each message
 PRINT_METADATA = False
 
-requests.packages.urllib3.disable_warnings()
-
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
-
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
-
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-show_os_messages = examples.get("show_os_messages", None)
-if show_os_messages is None:
-    print("show_os_messages not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-loglevel = show_os_messages.get("loglevel", None)
-if loglevel is not None:
-    level = getattr(logging, loglevel.upper(), None)
-    if level is None:
-        print("Invalid value for loglevel in credentials file %s: %s" % \
-              (hmccreds_file, loglevel))
-        sys.exit(1)
-    logmodule = show_os_messages.get("logmodule", None)
-    if logmodule is None:
-        logmodule = ''  # root logger
-    print("Logging for module %s with level %s" % (logmodule, loglevel))
-    handler = logging.StreamHandler()
-    format_string = '%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'
-    handler.setFormatter(logging.Formatter(format_string))
-    logger = logging.getLogger(logmodule)
-    logger.addHandler(handler)
-    logger.setLevel(level)
-
-hmc = show_os_messages["hmc"]
-cpcname = show_os_messages["cpcname"]
-partname = show_os_messages["partname"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred['userid']
-password = cred['password']
-
 print(__doc__)
 
-print("Using HMC %s with userid %s ..." % (hmc, userid))
-session = zhmcclient.Session(hmc, userid, password)
-cl = zhmcclient.Client(session)
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-timestats = show_os_messages.get("timestats", False)
-if timestats:
-    session.time_stats_keeper.enable()
-
+print("Creating a session with the HMC ...")
 try:
-    cpc = cl.cpcs.find(name=cpcname)
-except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
     sys.exit(1)
 
 try:
-    if cpc.dpm_enabled:
-        partkind = "partition"
-        partition = cpc.partitions.find(name=partname)
-    else:
-        partkind = "LPAR"
-        partition = cpc.lpars.find(name=partname)
-except zhmcclient.NotFound:
-    print("Could not find %s %s on CPC %s" % (partkind, partname, cpcname))
-    sys.exit(1)
+    client = zhmcclient.Client(session)
 
-break_id = show_os_messages.get("breakid", None)
-if break_id:
-    print("Breaking upon receipt of message with ID %s ..." % break_id)
+    print("Finding a CPC in DPM mode ...")
+    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+    if not cpcs:
+        print("Error: HMC at {} does not manage any CPCs in DPM mode".
+              format(host))
+        sys.exit(1)
+    cpc = cpcs[0]
+    print("Using CPC {}".format(cpc.name))
 
-print("Opening OS message channel for %s %s on CPC %s ..." %
-      (partkind, partname, cpcname))
-topic = partition.open_os_message_channel(include_refresh_messages=True)
-print("OS message channel topic: %s" % topic)
+    print("Finding an active partition on CPC {} ...".format(cpc.name))
+    parts = cpc.partitions.list(filter_args={'status': 'active'})
+    if not parts:
+        print("Error: CPC {} does not have any active partitions".
+              format(cpc.name))
+        sys.exit(1)
+    part = parts[0]
+    print("Using partition {} with status {}".
+          format(part.name, part.get_property('status')))
 
-receiver = zhmcclient.NotificationReceiver(topic, hmc, userid, password)
-print("Showing OS messages (including refresh messages) ...")
-sys.stdout.flush()
+    print("Opening OS message channel for partition {} on CPC {} (including "
+          "refresh messages) ...".
+          format(part.name, cpc.name))
+    try:
+        msg_topic = part.open_os_message_channel(include_refresh_messages=True)
+    except zhmcclient.Error as exc:
+        print("Error: Cannot open OS message channel for partition {}: {}: {}".
+              format(part.name, exc.__class__.__name__, exc))
+        sys.exit(1)
+    print("OS message channel notification topic: {}".format(msg_topic))
 
-try:
-    for headers, message in receiver.notifications():
-        # print("# HMC notification #%s:" % headers['session-sequence-nr'])
-        # sys.stdout.flush()
-        os_msg_list = message['os-messages']
-        for os_msg in os_msg_list:
-            if PRINT_METADATA:
-                msg_id = os_msg['message-id']
-                held = os_msg['is-held']
-                priority = os_msg['is-priority']
-                prompt = os_msg.get('prompt-text', None)
-                print("# OS message %s (held: %s, priority: %s, prompt: %r):" %
-                      (msg_id, held, priority, prompt))
-            msg_txt = os_msg['message-text'].strip('\n')
-            print(msg_txt)
-            sys.stdout.flush()
-            if msg_id == break_id:
-                raise NameError
-except KeyboardInterrupt:
-    print("Keyboard interrupt - leaving receiver loop")
-    sys.stdout.flush()
-except NameError:
-    print("Message with ID %s occurred - leaving receiver loop" % break_id)
-    sys.stdout.flush()
+    print("Creating a notification receiver for topic {} ...".
+          format(msg_topic))
+    try:
+        receiver = zhmcclient.NotificationReceiver(
+            msg_topic, host, userid, password)
+    except Exception as exc:
+        print("Error: Cannot create notification receiver: {}".format(exc))
+        sys.exit(1)
+
+    print("Showing OS messages ...")
+    print("-----------------------")
+    try:
+        for headers, message in receiver.notifications():
+            os_msg_list = message['os-messages']
+            for os_msg in os_msg_list:
+                if PRINT_METADATA:
+                    msg_id = os_msg['message-id']
+                    held = os_msg['is-held']
+                    priority = os_msg['is-priority']
+                    prompt = os_msg.get('prompt-text', None)
+                    print("# OS message {} (held: {}, priority: {}, "
+                          "prompt: {}):".
+                          format(msg_id, held, priority, prompt))
+                msg_txt = os_msg['message-text'].strip('\n')
+                print(msg_txt)
+    except KeyboardInterrupt:
+        print("Keyboard interrupt - leaving receiver loop")
+    finally:
+        print("Closing receiver ...")
+        receiver.close()
+
 finally:
-    print("Closing receiver...")
-    sys.stdout.flush()
-    receiver.close()
-
-print("Logging off...")
-sys.stdout.flush()
-session.logoff()
-
-if timestats:
-    print(session.time_stats_keeper)
-
-print("Done.")
+    print("Logging off ...")
+    session.logoff()

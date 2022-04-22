@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2020-2021 IBM Corp. All Rights Reserved.
+# Copyright 2020-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,138 +19,100 @@ Example that discovers a storage group and prints the connection report
 """
 
 import sys
-import logging
-import yaml
 import json
 import requests.packages.urllib3
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
-
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
-
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-discover_storage_group = examples.get("discover_storage_group", None)
-if discover_storage_group is None:
-    print("discover_storage_group not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-loglevel = discover_storage_group.get("loglevel", None)
-if loglevel is not None:
-    level = getattr(logging, loglevel.upper(), None)
-    if level is None:
-        print("Invalid value for loglevel in credentials file %s: %s" % \
-              (hmccreds_file, loglevel))
-        sys.exit(1)
-    logmodule = discover_storage_group.get("logmodule", None)
-    if logmodule is None:
-        logmodule = ''  # root logger
-    print("Logging for module %s with level %s" % (logmodule, loglevel))
-    handler = logging.StreamHandler()
-    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    handler.setFormatter(logging.Formatter(format_string))
-    logger = logging.getLogger(logmodule)
-    logger.addHandler(handler)
-    logger.setLevel(level)
-
-hmc = discover_storage_group["hmc"]
-cpcname = discover_storage_group["cpcname"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred['userid']
-password = cred['password']
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
 print(__doc__)
 
-print("Using HMC %s with userid %s ..." % (hmc, userid))
-session = zhmcclient.Session(hmc, userid, password)
-cl = zhmcclient.Client(session)
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-api_dict = cl.query_api_version()
-api_version = '%d.%d' % (api_dict['api-major-version'],
-                         api_dict['api-minor-version'])
-hmc_version = api_dict['hmc-version']
-print("HMC version: %s" % hmc_version)
-print("HMC API version: %s" % api_version)
-
-timestats = discover_storage_group.get("timestats", False)
-if timestats:
-    session.time_stats_keeper.enable()
-
-print("Finding CPC %s ..." % cpcname)
+print("Creating a session with the HMC ...")
 try:
-    cpc = cl.cpcs.find(name=cpcname)
-except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
     sys.exit(1)
 
-if False:
-    print("Checking CPC %s to be in DPM mode ..." % cpcname)
-    if not cpc.dpm_enabled:
-        print("Storage groups require DPM mode, but CPC %s is not in DPM mode" %
-              cpcname)
+try:
+    client = zhmcclient.Client(session)
+
+    print("Finding CPCs in DPM mode ...")
+    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+    if not cpcs:
+        print("Error: HMC at {} does not manage any CPCs in DPM mode".
+              format(host))
         sys.exit(1)
 
-storage_groups = cpc.list_associated_storage_groups()
-fcp_sg = None
-for sg in storage_groups:
-    if sg.get_property('type') == 'fcp':
-        fcp_sg = sg
-        break
-if not fcp_sg:
-    print("Could not find an FCP storage group on HMC %s" % hmc)
-    sys.exit(1)
+    print("Selecting a z14 or higher CPC ...")
+    cpc = None
+    for _cpc in cpcs:
+        se_version_info = [int(v)
+                           for v in _cpc.get_property('se-version').split('.')]
+        if se_version_info >= [2, 14]:
+            cpc = _cpc
+            break
+    if not cpc:
+        print("Error: HMC at {} does not manage any z14 or higher CPC in DPM "
+              "mode".format(host))
+        sys.exit(1)
+    print("Using CPC {} (SE version: {})".
+          format(cpc.name, cpc.get_property('se-version')))
 
-sgname = discover_storage_group.get("sgname") or fcp_sg.name
+    print("Listing storage groups of CPC {} and selecting the first FCP "
+          "storage group ...".format(cpc.name))
+    storage_groups = cpc.list_associated_storage_groups()
+    sg = None
+    for _sg in storage_groups:
+        if _sg.get_property('type') == 'fcp':
+            sg = _sg
+            break
+    if not sg:
+        print("Could not find any FCP storage group for CPC {}".
+              format(cpc.name))
+        sys.exit(1)
+    print("Using FCP storage group: {} (type: {}, shared: {}, fulfillment: {})".
+          format(sg.name, sg.get_property('type'), sg.get_property('shared'),
+                 sg.get_property('fulfillment-state')))
 
-try:
-    sg = cl.consoles.console.storage_groups.find(name=sgname)
-except zhmcclient.NotFound:
-    print("Could not find storage group %s on HMC %s" % (sgname, hmc))
-    sys.exit(1)
+    print("Listing partitions attached to storage group {} ...".format(sg.name))
+    parts = sg.list_attached_partitions()
+    part_names = [p.name for p in parts]
+    part_names_str = ', '.join(part_names) if part_names else "<none>"
+    print("Partitions attached to storage group {}: {}".
+          format(sg.name, part_names_str))
 
-part_names = [p.name for p in sg.list_attached_partitions()]
-part_names_str = ', '.join(part_names) if part_names else "<none>"
-print("Storage Group: %s (type: %s, shared: %s, fulfillment: %s, "
-      "attached to partitions: %s)" %
-      (sg.name, sg.get_property('type'), sg.get_property('shared'),
-       sg.get_property('fulfillment-state'), part_names_str))
+    print("Getting connection report for storage group {} ...".format(sg.name))
+    report = sg.get_connection_report()
 
+    print("fcp-storage-subsystems section of connection report, before "
+          "discovery:")
+    print(json.dumps(report['fcp-storage-subsystems'], indent=2))
 
-print("Getting connection report...")
-report = sg.get_connection_report()
+    print("Discovering LUNs of storage group (waiting for completion) ...")
+    sg.discover_fcp()
 
-print("fcp-storage-subsystems section of connection report, before discovery:")
-print(json.dumps(report['fcp-storage-subsystems'], indent=2))
+    print("Getting connection report for storage group {} ...".format(sg.name))
+    report = sg.get_connection_report()
 
-print("Discovering LUNs of storage group (waiting for completion)...")
-sg.discover_fcp()
+    print("fcp-storage-subsystems section of connection report, after "
+          "discovery:")
+    print(json.dumps(report['fcp-storage-subsystems'], indent=2))
 
-print("Getting connection report...")
-report = sg.get_connection_report()
-
-print("fcp-storage-subsystems section of connection report, after discovery:")
-print(json.dumps(report['fcp-storage-subsystems'], indent=2))
-
-session.logoff()
-
-if timestats:
-    print(session.time_stats_keeper)
+finally:
+    print("Logging off ...")
+    session.logoff()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2017-2021 IBM Corp. All Rights Reserved.
+# Copyright 2017-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,110 +14,88 @@
 # limitations under the License.
 
 """
-Example showing the free crypto domains of a set of crypto adapters in a CPC.
+Example that determines the crypto domains that are free on all crypto adapters
+of a CPC in DPM mode.
 """
 
 import sys
-import logging
-import yaml
-import json
 import requests.packages.urllib3
-import operator
-import itertools
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
-
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
-
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-list_free_crypto_domains = examples.get("list_free_crypto_domains", None)
-if list_free_crypto_domains is None:
-    print("list_free_crypto_domains not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-loglevel = list_free_crypto_domains.get("loglevel", None)
-if loglevel is not None:
-    level = getattr(logging, loglevel.upper(), None)
-    if level is None:
-        print("Invalid value for loglevel in credentials file %s: %s" % \
-              (hmccreds_file, loglevel))
-        sys.exit(1)
-    logging.basicConfig(level=level)
-
-hmc = list_free_crypto_domains["hmc"]
-cpcname = list_free_crypto_domains["cpcname"]
-crypto_adapter_names = list_free_crypto_domains["crypto_adapter_names"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred["userid"]
-password = cred["password"]
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
 print(__doc__)
 
-print("Using HMC %s with userid %s ..." % (hmc, userid))
-session = zhmcclient.Session(hmc, userid, password)
-cl = zhmcclient.Client(session)
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-timestats = list_free_crypto_domains.get("timestats", False)
-if timestats:
-    session.time_stats_keeper.enable()
+print("Creating a session with the HMC ...")
+try:
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
+    sys.exit(1)
 
-cpc = cl.cpcs.find(name=cpcname)
+try:
+    client = zhmcclient.Client(session)
 
-if crypto_adapter_names:
-    crypto_adapters = [cpc.adapters.find(name=ca_name)
-                       for ca_name in crypto_adapter_names]
-else:
+    print("Finding a CPC in DPM mode ...")
+    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+    if not cpcs:
+        print("Error: HMC at {} does not manage any CPCs in DPM mode".
+              format(host))
+        sys.exit(1)
+    cpc = cpcs[0]
+    print("Using CPC {}".format(cpc.name))
+
+    print("Finding all crypto adapters of CPC {} ...".format(cpc.name))
     crypto_adapters = cpc.adapters.findall(type='crypto')
     crypto_adapter_names = [ca.name for ca in crypto_adapters]
+    print("Found crypto adapters:")
+    for ca in crypto_adapters:
+        print("  {} (type: {})".format(ca.name, ca.get_property('crypto-type')))
 
-print("Determining crypto configurations of all partitions on CPC %r ..." %
-      cpc.name)
-for partition in cpc.partitions.list(full_properties=True):
-    crypto_config = partition.get_property('crypto-configuration')
-    if crypto_config:
-        print("Partition %r has crypto configuration:" % partition.name)
-        print(json.dumps(crypto_config, indent=4))
+    print("Determining crypto domains that are free on all crypto adapters of "
+          "CPC {} ...".format(cpc.name))
+    free_domains = cpc.get_free_crypto_domains(crypto_adapters)
+    # print("Free domains (as list): {}".format(free_domains))
 
-print("Determining free crypto domains on all of the crypto adapters %r on "
-      "CPC %r ..." % (crypto_adapter_names, cpc.name))
-free_domains = cpc.get_free_crypto_domains(crypto_adapters)
+    # Convert this list of numbers into better readable number ranges:
+    ranges = []
+    range_start = -1
+    last_d = -1
+    for d in sorted(free_domains):
+        if range_start == -1:
+            range_start = d
+        elif d == last_d + 1:
+            pass
+        else:
+            if range_start == last_d:
+                ranges.append("{}".format(last_d))
+            else:
+                ranges.append("{}-{}".format(range_start, last_d))
+            range_start = d
+        last_d = d
+        continue
+    if range_start != -1:  # Process the last range, if any
+        if range_start == last_d:
+            ranges.append("{}".format(last_d))
+        else:
+            ranges.append("{}-{}".format(range_start, last_d))
+    free_domains_str = ', '.join(ranges)
+    print("Free domains (as ranges): {}".format(free_domains_str))
 
-# Convert this list of numbers into better readable number ranges:
-ranges = []
-for k, g in itertools.groupby(enumerate(free_domains), lambda (i, x): i - x):
-    group = map(operator.itemgetter(1), g)
-    if group[0] == group[-1]:
-        ranges.append("{}".format(group[0]))
-    else:
-        ranges.append("{}-{}".format(group[0], group[-1]))
-free_domains_str = ', '.join(ranges)
-
-print("Free domains: %s" % free_domains_str)
-
-print("Logging off ...")
-session.logoff()
-
-if timestats:
-    print(session.time_stats_keeper)
-
-print("Done.")
+finally:
+    print("Logging off ...")
+    session.logoff()

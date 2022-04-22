@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2018-2021 IBM Corp. All Rights Reserved.
+# Copyright 2018-2022 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,131 +14,97 @@
 # limitations under the License.
 
 """
-Example that lists storage groups (DPM mode, z14).
+Example that lists storage groups on a CPC in DPM mode.
 """
 
 import sys
-import logging
-import yaml
 import requests.packages.urllib3
 
 import zhmcclient
+from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
-if len(sys.argv) != 2:
-    print("Usage: %s hmccreds.yaml" % sys.argv[0])
-    sys.exit(2)
-hmccreds_file = sys.argv[1]
-
-with open(hmccreds_file, 'r') as fp:
-    hmccreds = yaml.safe_load(fp)
-
-examples = hmccreds.get("examples", None)
-if examples is None:
-    print("examples not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-list_storage_groups = examples.get("list_storage_groups", None)
-if list_storage_groups is None:
-    print("list_storage_groups not found in credentials file %s" % \
-          (hmccreds_file))
-    sys.exit(1)
-
-loglevel = list_storage_groups.get("loglevel", None)
-if loglevel is not None:
-    level = getattr(logging, loglevel.upper(), None)
-    if level is None:
-        print("Invalid value for loglevel in credentials file %s: %s" % \
-              (hmccreds_file, loglevel))
-        sys.exit(1)
-    logmodule = list_storage_groups.get("logmodule", None)
-    if logmodule is None:
-        logmodule = ''  # root logger
-    print("Logging for module %s with level %s" % (logmodule, loglevel))
-    handler = logging.StreamHandler()
-    format_string = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    handler.setFormatter(logging.Formatter(format_string))
-    logger = logging.getLogger(logmodule)
-    logger.addHandler(handler)
-    logger.setLevel(level)
-
-hmc = list_storage_groups["hmc"]
-cpcname = list_storage_groups["cpcname"]
-
-cred = hmccreds.get(hmc, None)
-if cred is None:
-    print("Credentials for HMC %s not found in credentials file %s" % \
-          (hmc, hmccreds_file))
-    sys.exit(1)
-
-userid = cred['userid']
-password = cred['password']
+# Get HMC info from HMC definition file
+hmc_def = hmc_definitions()[0]
+nick = hmc_def.nickname
+host = hmc_def.hmc_host
+userid = hmc_def.hmc_userid
+password = hmc_def.hmc_password
+verify_cert = hmc_def.hmc_verify_cert
 
 print(__doc__)
 
-print("Using HMC %s with userid %s ..." % (hmc, userid))
-session = zhmcclient.Session(hmc, userid, password)
-cl = zhmcclient.Client(session)
+print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
 
-timestats = list_storage_groups.get("timestats", False)
-if timestats:
-    session.time_stats_keeper.enable()
-
-print("Finding CPC %s ..." % cpcname)
+print("Creating a session with the HMC ...")
 try:
-    cpc = cl.cpcs.find(name=cpcname)
-except zhmcclient.NotFound:
-    print("Could not find CPC %s on HMC %s" % (cpcname, hmc))
+    session = zhmcclient.Session(
+        host, userid, password, verify_cert=verify_cert)
+except zhmcclient.Error as exc:
+    print("Error: Cannot establish session with HMC {}: {}: {}".
+          format(host, exc.__class__.__name__, exc))
     sys.exit(1)
 
-if False:
-    print("Checking CPC %s to be in DPM mode ..." % cpcname)
-    if not cpc.dpm_enabled:
-        print("Storage groups require DPM mode, but CPC %s is not in DPM mode" %
-              cpcname)
+try:
+    client = zhmcclient.Client(session)
+
+    print("Finding a CPC in DPM mode ...")
+    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+    if not cpcs:
+        print("Error: HMC at {} does not manage any CPCs in DPM mode".
+              format(host))
+        sys.exit(1)
+    cpc = cpcs[0]
+    print("Using CPC {}".format(cpc.name))
+
+    print("Listing storage groups of CPC {} ...".format(cpc.name))
+    try:
+        storage_groups = cpc.list_associated_storage_groups()
+    except zhmcclient.Error as exc:
+        print("Error: Cannot list storage groups of CPC {}: {}: {}".
+              format(cpc.name, exc.__class__.__name__, exc))
         sys.exit(1)
 
-print("Storage Groups of CPC %s ..." % cpcname)
-storage_groups = cpc.list_associated_storage_groups()
+    for sg in storage_groups:
 
-for sg in storage_groups:
+        print("Storage group: {} (type: {}, shared: {}, fulfillment: {})".
+              format(sg.name, sg.get_property('type'),
+                     sg.get_property('shared'),
+                     sg.get_property('fulfillment-state')))
 
-    part_names = [p.name for p in sg.list_attached_partitions()]
-    part_names_str = ', '.join(part_names) if part_names else "<none>"
-    print("  Storage Group: %s (type: %s, shared: %s, fulfillment: %s, "
-          "attached to partitions: %s)" %
-          (sg.name, sg.get_property('type'), sg.get_property('shared'),
-           sg.get_property('fulfillment-state'), part_names_str))
-
-    try:
-        volumes = sg.storage_volumes.list()
-    except zhmcclient.HTTPError as exc:
-        print("Error listing storage volumes of storage group %s:\n"
-              "HTTPError: %s" % (sg.name, exc))
-        volumes = []
-
-    print("    Storage Volumes: %s" % len(volumes))
-
-    if sg.get_property('type') == 'fcp':
         try:
-            vsrs = sg.virtual_storage_resources.list()
+            volumes = sg.storage_volumes.list()
         except zhmcclient.HTTPError as exc:
-            print("Error listing virtual storage resources of storage group %s:\n"
-                  "HTTPError: %s" % (sg.name, exc))
-            vsrs = []
-        for vsr in vsrs:
-            port = vsr.adapter_port
-            adapter = port.manager.parent
-            print("    Virtual Storage Resource: %s (devno: %s, "
-                  "adapter.port: %s.%s, attached to partition: %s)" %
-                  (vsr.name, vsr.get_property('device-number'),
-                   adapter.name, port.name, vsr.attached_partition.name))
-        else:
-            print("    No Virtual Storage Resources")
+            print("Error: Cannot list storage volumes of storage group {}: "
+                  "{}: {}".format(sg.name, exc.__class__.__name__, exc))
+            sys.exit(1)
 
-session.logoff()
+        print("    Storage Volumes: {}".format(len(volumes)))
+        for sv in volumes:
+            print("    Storage Volume: {}".format(sv.name))
 
-if timestats:
-    print(session.time_stats_keeper)
+        if sg.get_property('type') == 'fcp':
+
+            try:
+                vsrs = sg.virtual_storage_resources.list()
+            except zhmcclient.HTTPError as exc:
+                print("Error: Cannot list virtual storage resources of "
+                      "storage group {}: {}: {}".
+                      format(sg.name, exc.__class__.__name__, exc))
+                sys.exit(1)
+
+            for vsr in vsrs:
+                port = vsr.adapter_port
+                adapter = port.manager.parent
+                print("    Virtual Storage Resource: {} (devno: {}, "
+                      "adapter.port: {}.{}, attached to partition: {})".
+                      format(vsr.name, vsr.get_property('device-number'),
+                             adapter.name, port.name,
+                             vsr.attached_partition.name))
+            else:
+                print("    No Virtual Storage Resources")
+
+finally:
+    print("Logging off ...")
+    session.logoff()
