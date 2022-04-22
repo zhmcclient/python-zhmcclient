@@ -194,7 +194,7 @@ class HMCDefinitionFile(object):
             if exc.errno == errno.ENOENT:
                 new_exc = HMCDefinitionFileError(
                     "The HMC definition file {0!r} was not found; "
-                    "copy it from {1!r}".
+                    "Example: {1!r} in the zhmcclient/python-zhmcclient repo".
                     format(self._filepath, EXAMPLE_HMC_FILE))
                 new_exc.__cause__ = None
                 raise new_exc  # HMCDefinitionFileError
@@ -454,6 +454,7 @@ class HMCDefinition(object):
         List of CPCs managed by the HMC.
 
         Each list item represents one CPC and is a dict with these keys:
+
         * 'name' (string): CPC name.
         * 'dpm' (bool): CPC is in DPM mode. None if not known.
         """
