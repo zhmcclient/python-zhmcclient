@@ -60,9 +60,6 @@ Released: not yet
   optional with a default of True, for consistency with the corresponding
   zhmcclient.Session parameter. (issue #950)
 
-* Docs: Added documentation for the 'zhmcclient.testutils' module to the
-  "Development" chapter. (issue #950)
-
 * Docs: Improved and fixed the "Testing" section in the "Development" chapter.
   (issue #950)
 
