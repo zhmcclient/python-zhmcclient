@@ -35,6 +35,10 @@ Released: not yet
 * Added the missing `secure_boot` parameter to `zhmcclient.Lpar.scsi_dump()`
   (issue #945)
 
+* Fixed the handling of JMS notifications that have no content, such as the
+  job completion notification and the inventory change notification.
+  (issue #956)
+
 **Enhancements:**
 
 **Cleanup:**
