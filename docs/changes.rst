@@ -28,6 +28,12 @@ Released: not yet
 
 **Incompatible changes:**
 
+* 'Lpar.list()' with filters that have no matching LPAR now returns an empty
+  result set, consistent with other zhmcclient 'list()' methods. Previosuly,
+  'Lpar.list()' raised HTTPError 404.1 when no LPAR matched the filters.
+  If you used 'Lpar.list()' with filters, you may need to adjust the handling
+  of the case where no LPARs match the filter. (issue #954)
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -42,6 +48,11 @@ Released: not yet
 **Enhancements:**
 
 **Cleanup:**
+
+* Made the handling of 'Lpar.list()' with filters that have no matching LPAR
+  consistent with other zhmcclient 'list()' methods that return an empty
+  result set in such cases. Previously, 'Lpar.list()' raised HTTPError 404.1
+  when no LPAR matched the filters. (issue #954)
 
 **Known issues:**
 
