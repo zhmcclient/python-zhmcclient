@@ -97,6 +97,9 @@ Released: not yet
 * Transitioned test code for the old format for defining HMCs to the new
   format, and removed some test code. (issue #966)
 
+* End2end test: Removed CPC scope from test functions for HMC-based resources
+  (e.g. users)
+
 **Known issues:**
 
 * See `list of open issues`_.

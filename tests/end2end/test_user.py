@@ -29,7 +29,6 @@ from requests.packages import urllib3
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import all_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
@@ -46,171 +45,155 @@ USER_LIST_PROPS = ['object-uri', 'name', 'type']
 USER_VOLATILE_PROPS = []
 
 
-def test_user_find_list(all_cpcs):  # noqa: F811
+def test_user_find_list(hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
     """
-    if not all_cpcs:
-        pytest.skip("No CPCs provided")
+    client = zhmcclient.Client(hmc_session)
+    console = client.consoles.console
 
-    for cpc in all_cpcs:
-        session = cpc.manager.session
-        console = cpc.manager.client.consoles.console
-        client = console.manager.client
+    api_version = client.query_api_version()
+    hmc_version = api_version['hmc-version']
+    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    if hmc_version_info < (2, 13, 0):
+        pytest.skip("HMC {hv} does not yet support users".
+                    format(hv=hmc_version))
 
-        api_version = client.query_api_version()
-        hmc_version = api_version['hmc-version']
-        hmc_version_info = tuple(map(int, hmc_version.split('.')))
-        if hmc_version_info < (2, 13, 0):
-            pytest.skip("HMC {hv} does not yet support users".
-                        format(hv=hmc_version))
+    # Pick a random user
+    user_list = console.users.list()
+    if not user_list:
+        msg_txt = "No users defined on HMC"
+        warnings.warn(msg_txt, End2endTestWarning)
+        pytest.skip(msg_txt)
+    user = random.choice(user_list)
 
-        # Pick a random user
-        user_list = console.users.list()
-        if not user_list:
-            msg_txt = "No users defined on CPC {}". \
-                format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
-        user = random.choice(user_list)
-
-        print("Testing on CPC {}".format(cpc.name))
-
-        runtest_find_list(
-            session, console.users, user.name, 'name',
-            'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
-            USER_LIST_PROPS)
+    print("Testing with user {}".format(user.name))
+    runtest_find_list(
+        hmc_session, console.users, user.name, 'name',
+        'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
+        USER_LIST_PROPS)
 
 
-def test_user_crud(all_cpcs):  # noqa: F811
+def test_user_crud(hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test create, read, update and delete a user.
     """
-    if not all_cpcs:
-        pytest.skip("No CPCs provided")
+    client = zhmcclient.Client(hmc_session)
+    console = client.consoles.console
+    hd = hmc_session.hmc_definition
 
-    for cpc in all_cpcs:
-        print("Testing on CPC {}".format(cpc.name))
+    api_version = client.query_api_version()
+    hmc_version = api_version['hmc-version']
+    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    if hmc_version_info < (2, 13, 0):
+        pytest.skip("HMC {hv} does not yet support users".
+                    format(hv=hmc_version))
 
-        session = cpc.manager.session
-        console = cpc.manager.client.consoles.console
-        client = console.manager.client
-        hd = session.hmc_definition
+    user_name = TEST_PREFIX + '_test_user_crud_user1'
+    user_name_new = user_name + '_new'
+    pwrule_name = TEST_PREFIX + '_test_user_crud_pwrule1'
 
-        api_version = client.query_api_version()
-        hmc_version = api_version['hmc-version']
-        hmc_version_info = tuple(map(int, hmc_version.split('.')))
-        if hmc_version_info < (2, 13, 0):
-            pytest.skip("HMC {hv} does not yet support users".
-                        format(hv=hmc_version))
-
-        user_name = TEST_PREFIX + '_test_user_crud_user1'
-        user_name_new = user_name + '_new'
-        pwrule_name = TEST_PREFIX + '_test_user_crud_pwrule1'
-
-        # Ensure a clean starting point for this test
-        try:
-            user = console.users.find(name=user_name)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            warnings.warn(
-                "Deleting test user from previous run: '{p}' "
-                "on CPC '{c}'".
-                format(p=user_name, c=cpc.name), UserWarning)
-            user.delete()
-        try:
-            pwrule = console.password_rules.find(name=pwrule_name)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            warnings.warn(
-                "Deleting test password rule from previous run: '{p}' "
-                "on CPC '{c}'".
-                format(p=pwrule_name, c=cpc.name), UserWarning)
-            pwrule.delete()
-
-        # Pick a password rule for the user
-        try:
-            pwrule = console.password_rules.find(name='Basic')
-        except zhmcclient.NotFound:
-            pytest.skip("Password rule 'Basic' not found to create test user")
-
-        # Test creating the user
-
-        user_input_props = {
-            'name': user_name,
-            'description': 'Test user for zhmcclient end2end tests',
-            'type': 'standard',
-            'authentication-type': 'local',
-            'password-rule-uri': pwrule.uri,
-            'password': 'Abcd',  # Basic rule: 4-8 alphanumeric
-        }
-        user_auto_props = {
-            'disabled': False,
-        }
-        task_name = 'Manage Users' \
-            if user_input_props['type'] == 'standard' \
-            else 'Manage User Templates'
-
-        # The code to be tested
-        try:
-            user = console.users.create(user_input_props)
-        except zhmcclient.HTTPError as exc:
-            if exc.http_status == 403 and exc.reason == 1:
-                msg_txt = "HMC userid '{u}' is not authorized for the " \
-                    "'{t}' task on HMC {h}". \
-                    format(u=hd.hmc_userid, h=hd.hmc_host, t=task_name)
-                warnings.warn(msg_txt, End2endTestWarning)
-                pytest.skip(msg_txt)
-            else:
-                raise
-
-        for pn, exp_value in user_input_props.items():
-            if pn == 'password':
-                continue
-            assert user.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
-        user.pull_full_properties()
-        for pn, exp_value in user_input_props.items():
-            if pn == 'password':
-                continue
-            assert user.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
-        for pn, exp_value in user_auto_props.items():
-            assert user.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
-
-        # Test updating a property of the user
-
-        new_desc = "Updated user description."
-
-        # The code to be tested
-        user.update_properties(dict(description=new_desc))
-
-        assert user.properties['description'] == new_desc
-        user.pull_full_properties()
-        assert user.properties['description'] == new_desc
-
-        # Test that users cannot be renamed
-
-        with pytest.raises(zhmcclient.HTTPError) as exc_info:
-
-            # The code to be tested
-            user.update_properties(dict(name=user_name_new))
-
-        exc = exc_info.value
-        assert exc.http_status == 400
-        assert exc.reason == 6
-        with pytest.raises(zhmcclient.NotFound):
-            console.users.find(name=user_name_new)
-
-        # Test deleting the user
-
-        # The code to be tested
+    # Ensure a clean starting point for this test
+    try:
+        user = console.users.find(name=user_name)
+    except zhmcclient.NotFound:
+        pass
+    else:
+        warnings.warn(
+            "Deleting test user from previous run: '{p}'".
+            format(p=user_name), UserWarning)
         user.delete()
+    try:
+        pwrule = console.password_rules.find(name=pwrule_name)
+    except zhmcclient.NotFound:
+        pass
+    else:
+        warnings.warn(
+            "Deleting test password rule from previous run: '{p}'".
+            format(p=pwrule_name), UserWarning)
+        pwrule.delete()
 
-        with pytest.raises(zhmcclient.NotFound):
-            console.users.find(name=user_name)
+    # Pick a password rule for the user
+    try:
+        pwrule = console.password_rules.find(name='Basic')
+    except zhmcclient.NotFound:
+        pytest.skip("Password rule 'Basic' not found to create test user")
+
+    # Test creating the user
+
+    user_input_props = {
+        'name': user_name,
+        'description': 'Test user for zhmcclient end2end tests',
+        'type': 'standard',
+        'authentication-type': 'local',
+        'password-rule-uri': pwrule.uri,
+        'password': 'Abcd',  # Basic rule: 4-8 alphanumeric
+    }
+    user_auto_props = {
+        'disabled': False,
+    }
+    task_name = 'Manage Users' \
+        if user_input_props['type'] == 'standard' \
+        else 'Manage User Templates'
+
+    # The code to be tested
+    try:
+        user = console.users.create(user_input_props)
+    except zhmcclient.HTTPError as exc:
+        if exc.http_status == 403 and exc.reason == 1:
+            msg_txt = "HMC userid '{u}' is not authorized for the " \
+                "'{t}' task on HMC {h}". \
+                format(u=hd.hmc_userid, h=hd.hmc_host, t=task_name)
+            warnings.warn(msg_txt, End2endTestWarning)
+            pytest.skip(msg_txt)
+        else:
+            raise
+
+    for pn, exp_value in user_input_props.items():
+        if pn == 'password':
+            continue
+        assert user.properties[pn] == exp_value, \
+            "Unexpected value for property {!r}".format(pn)
+    user.pull_full_properties()
+    for pn, exp_value in user_input_props.items():
+        if pn == 'password':
+            continue
+        assert user.properties[pn] == exp_value, \
+            "Unexpected value for property {!r}".format(pn)
+    for pn, exp_value in user_auto_props.items():
+        assert user.properties[pn] == exp_value, \
+            "Unexpected value for property {!r}".format(pn)
+
+    # Test updating a property of the user
+
+    new_desc = "Updated user description."
+
+    # The code to be tested
+    user.update_properties(dict(description=new_desc))
+
+    assert user.properties['description'] == new_desc
+    user.pull_full_properties()
+    assert user.properties['description'] == new_desc
+
+    # Test that users cannot be renamed
+
+    with pytest.raises(zhmcclient.HTTPError) as exc_info:
+
+        # The code to be tested
+        user.update_properties(dict(name=user_name_new))
+
+    exc = exc_info.value
+    assert exc.http_status == 400
+    assert exc.reason == 6
+    with pytest.raises(zhmcclient.NotFound):
+        console.users.find(name=user_name_new)
+
+    # Test deleting the user
+
+    # The code to be tested
+    user.delete()
+
+    with pytest.raises(zhmcclient.NotFound):
+        console.users.find(name=user_name)
