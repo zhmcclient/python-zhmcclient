@@ -21,7 +21,6 @@ test partitions.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props, \
-    End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    standard_partition_props, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -57,21 +56,23 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
 
         session = cpc.manager.session
 
-        # Pick a random partition
+        # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
             msg_txt = "No partitions on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        part = random.choice(part_list)
+        part_list = pick_test_resources(part_list)
 
-        runtest_find_list(
-            session, cpc.partitions, part.name, 'name', 'status',
-            PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS)
+        for part in part_list:
+            print("Testing on CPC {} with partition {}".
+                  format(cpc.name, part.name))
+            runtest_find_list(
+                session, cpc.partitions, part.name, 'name', 'status',
+                PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS)
 
 
 def test_part_crud(dpm_mode_cpcs):  # noqa: F811
@@ -84,7 +85,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
 
         part_name = TEST_PREFIX + ' test_part_crud part1'
         part_name_new = part_name + ' new'

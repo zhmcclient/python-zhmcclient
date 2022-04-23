@@ -21,7 +21,6 @@ modify and delete test password rules.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +30,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -60,19 +60,20 @@ def test_pwrule_find_list(hmc_session):  # noqa: F811
         pytest.skip("HMC {hv} does not yet support password rules".
                     format(hv=hmc_version))
 
-    # Pick a random password rule
+    # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
     if not pwrule_list:
         msg_txt = "No password rules defined on HMC"
         warnings.warn(msg_txt, End2endTestWarning)
         pytest.skip(msg_txt)
-    pwrule = random.choice(pwrule_list)
+    pwrule_list = pick_test_resources(pwrule_list)
 
-    print("Testing with password rule {}".format(pwrule.name))
-    runtest_find_list(
-        hmc_session, console.password_rules, pwrule.name, 'name',
-        'element-uri', PWRULE_VOLATILE_PROPS, PWRULE_MINIMAL_PROPS,
-        PWRULE_LIST_PROPS)
+    for pwrule in pwrule_list:
+        print("Testing with password rule {}".format(pwrule.name))
+        runtest_find_list(
+            hmc_session, console.password_rules, pwrule.name, 'name',
+            'element-uri', PWRULE_VOLATILE_PROPS, PWRULE_MINIMAL_PROPS,
+            PWRULE_LIST_PROPS)
 
 
 def test_pwrule_crud(hmc_session):  # noqa: F811

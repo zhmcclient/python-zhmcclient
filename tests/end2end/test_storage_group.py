@@ -21,7 +21,6 @@ delete test storage groups.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import skipif_no_storage_mgmt_feature, runtest_find_list, \
-    TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
+    runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -58,24 +57,27 @@ def test_stogrp_find_list(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
 
-        # Pick a random storage group associated to this CPC
+        # Pick the storage groups to test with
         stogrp_list = cpc.list_associated_storage_groups()
         if not stogrp_list:
             msg_txt = "No storage groups associated to CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        stogrp = random.choice(stogrp_list)
+        stogrp_list = pick_test_resources(stogrp_list)
 
-        runtest_find_list(
-            session, console.storage_groups, stogrp.name, 'name', 'object-uri',
-            STOGRP_VOLATILE_PROPS, STOGRP_MINIMAL_PROPS, STOGRP_LIST_PROPS)
+        for stogrp in stogrp_list:
+            print("Testing on CPC {} with storage group {}".
+                  format(cpc.name, stogrp.name))
+            runtest_find_list(
+                session, console.storage_groups, stogrp.name, 'name',
+                'object-uri', STOGRP_VOLATILE_PROPS, STOGRP_MINIMAL_PROPS,
+                STOGRP_LIST_PROPS)
 
 
 def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
@@ -88,7 +90,7 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
 
         console = cpc.manager.client.consoles.console

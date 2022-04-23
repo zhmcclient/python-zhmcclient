@@ -21,7 +21,6 @@ modify and delete test LDAP server definitions.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +30,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -62,19 +62,20 @@ def test_ldapsrvdef_find_list(hmc_session):  # noqa: F811
         pytest.skip("HMC {hv} does not yet support LDAP server definitions".
                     format(hv=hmc_version))
 
-    # Pick a random LDAP server definition
+    # Pick the LDAP server definitions to test with
     ldapsrvdef_list = console.ldap_server_definitions.list()
     if not ldapsrvdef_list:
         msg_txt = "No LDAP server definitions defined on HMC"
         warnings.warn(msg_txt, End2endTestWarning)
         pytest.skip(msg_txt)
-    ldapsrvdef = random.choice(ldapsrvdef_list)
+    ldapsrvdef_list = pick_test_resources(ldapsrvdef_list)
 
-    print("Testing with LDAP server definition {}".format(ldapsrvdef.name))
-    runtest_find_list(
-        hmc_session, console.ldap_server_definitions, ldapsrvdef.name,
-        'name', 'element-uri', LDAPSRVDEF_VOLATILE_PROPS,
-        LDAPSRVDEF_MINIMAL_PROPS, LDAPSRVDEF_LIST_PROPS)
+    for ldapsrvdef in ldapsrvdef_list:
+        print("Testing with LDAP server definition {}".format(ldapsrvdef.name))
+        runtest_find_list(
+            hmc_session, console.ldap_server_definitions, ldapsrvdef.name,
+            'name', 'element-uri', LDAPSRVDEF_VOLATILE_PROPS,
+            LDAPSRVDEF_MINIMAL_PROPS, LDAPSRVDEF_LIST_PROPS)
 
 
 def test_ldapsrvdef_crud(hmc_session):  # noqa: F811

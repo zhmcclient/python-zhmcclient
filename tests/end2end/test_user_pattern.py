@@ -21,7 +21,6 @@ modify and delete test user patterns.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +30,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -60,19 +60,20 @@ def test_upatt_find_list(hmc_session):  # noqa: F811
         pytest.skip("HMC {hv} does not yet support user patterns".
                     format(hv=hmc_version))
 
-    # Pick a random user pattern
+    # Pick the user patterns to test with
     upatt_list = console.user_patterns.list()
     if not upatt_list:
         msg_txt = "No user patterns defined on HMC"
         warnings.warn(msg_txt, End2endTestWarning)
         pytest.skip(msg_txt)
-    upatt = random.choice(upatt_list)
+    upatt_list = pick_test_resources(upatt_list)
 
-    print("Testing with user pattern {}".format(upatt.name))
-    runtest_find_list(
-        hmc_session, console.user_patterns, upatt.name, 'name',
-        'element-uri', UPATT_VOLATILE_PROPS, UPATT_MINIMAL_PROPS,
-        UPATT_LIST_PROPS)
+    for upatt in upatt_list:
+        print("Testing with user pattern {}".format(upatt.name))
+        runtest_find_list(
+            hmc_session, console.user_patterns, upatt.name, 'name',
+            'element-uri', UPATT_VOLATILE_PROPS, UPATT_MINIMAL_PROPS,
+            UPATT_LIST_PROPS)
 
 
 def test_upatt_crud(hmc_session):  # noqa: F811

@@ -21,7 +21,6 @@ modify and delete test storage volume templates.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import skipif_no_storage_mgmt_feature, runtest_find_list, \
-    TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
+    runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -57,14 +56,12 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
 
-        # Pick a random storage volume template of a random storage group
-        # template associated to this CPC
+        # Pick the storage volume templates to test with
         grp_vol_tuples = []
         stogrptpl_list = console.storage_group_templates.findall(
             **{'cpc-uri': cpc.uri})
@@ -77,12 +74,16 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
                 "CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        stogrptpl, stovoltpl = random.choice(grp_vol_tuples)
+        grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
-        runtest_find_list(
-            session, stogrptpl.storage_volume_templates, stovoltpl.name, 'name',
-            'size', STOVOLTPL_VOLATILE_PROPS, STOVOLTPL_MINIMAL_PROPS,
-            STOVOLTPL_LIST_PROPS)
+        for stogrptpl, stovoltpl in grp_vol_tuples:
+            print("Testing on CPC {} with storage volume template {} of "
+                  "storage group template {}".
+                  format(cpc.name, stovoltpl.name, stogrptpl.name))
+            runtest_find_list(
+                session, stogrptpl.storage_volume_templates, stovoltpl.name,
+                'name', 'size', STOVOLTPL_VOLATILE_PROPS,
+                STOVOLTPL_MINIMAL_PROPS, STOVOLTPL_LIST_PROPS)
 
 
 def test_stovoltpl_crud(dpm_mode_cpcs):  # noqa: F811
@@ -96,7 +97,7 @@ def test_stovoltpl_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
 
         console = cpc.manager.client.consoles.console

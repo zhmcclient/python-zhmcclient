@@ -21,7 +21,6 @@ create, modify and delete test partitions with virtual functions.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props, \
-    End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    standard_partition_props, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -58,11 +57,10 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
 
         session = cpc.manager.session
 
-        # Pick a random virtual function on a random partition
+        # Pick the virtual functions to test with
         part_vfunc_tuples = []
         part_list = cpc.partitions.list()
         for part in part_list:
@@ -74,11 +72,15 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
                 format(c=cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        part, vfunc = random.choice(part_vfunc_tuples)
+        part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
-        runtest_find_list(
-            session, part.virtual_functions, vfunc.name, 'name', 'description',
-            VFUNC_VOLATILE_PROPS, VFUNC_MINIMAL_PROPS, VFUNC_LIST_PROPS)
+        for part, vfunc in part_vfunc_tuples:
+            print("Testing on CPC {} with virtual function {} of partition {}".
+                  format(cpc.name, vfunc.name, part.name))
+            runtest_find_list(
+                session, part.virtual_functions, vfunc.name, 'name',
+                'description', VFUNC_VOLATILE_PROPS, VFUNC_MINIMAL_PROPS,
+                VFUNC_LIST_PROPS)
 
 
 def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
@@ -91,7 +93,7 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
 
         part_name = TEST_PREFIX + ' test_vfunc_crud part1'
         vfunc_name = 'vfunc1'

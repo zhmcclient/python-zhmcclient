@@ -81,6 +81,10 @@ Released: not yet
   that can be used to access the HMC definition file used by the tests.
   (related to issue #966)
 
+* End2end test: Added env.var 'TESTRESOURCES' that can be used to control
+  which resources are picked for testing with. By default, a random choice
+  from all resources is picked. (issue #963)
+
 **Cleanup:**
 
 * Made the handling of 'Lpar.list()' with filters that have no matching LPAR

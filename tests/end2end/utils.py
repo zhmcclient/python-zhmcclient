@@ -18,6 +18,9 @@ Utility functions for end2end tests.
 
 from __future__ import absolute_import, print_function
 
+import os
+import re
+import random
 import warnings
 import pytest
 
@@ -72,6 +75,49 @@ def assert_res_prop(act_value, exp_value, prop_name, res):
         "Expected: {ev}, actual: {av}". \
         format(p=prop_name, k=res.prop('class'), o=res.name, ev=exp_value,
                av=act_value)
+
+
+def _res_name(item):
+    """Return the resource name, used by pick_test_resources()"""
+    if isinstance(item, (tuple, list)):
+        return item[0].name
+    return item.name
+
+
+def pick_test_resources(res_list):
+    """
+    Return the list of resources to be tested.
+
+    The env.var "TESTRESOURCES" controls which resources are picked for the
+    test, as follows:
+
+    * 'random': (default) one random choice from the input list of resources.
+    * 'all': the complete input list of resources.
+    * '<pattern>': The resources with names matching the regexp pattern.
+
+    Parameters:
+      res_list (list of zhmcclient.BaseResource or tuple thereof):
+        List of resources to pick from. Tuple items are a resource and its
+        parent resources.
+
+    Returns:
+      list of zhmcclient.BaseResource: Picked list of resources.
+    """
+
+    test_res = os.getenv('TESTRESOURCES', 'random')
+
+    if test_res == 'random':
+        return [random.choice(res_list)]
+
+    if test_res == 'all':
+        return sorted(res_list, key=_res_name)
+
+    # match the pattern
+    ret_list = []
+    for item in res_list:
+        if re.search(test_res, _res_name(item)):
+            ret_list.append(item)
+    return sorted(ret_list, key=_res_name)
 
 
 def runtest_find_list(session, manager, name, server_prop, client_prop,

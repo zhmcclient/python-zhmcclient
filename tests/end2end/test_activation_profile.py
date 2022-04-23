@@ -20,7 +20,6 @@ These tests do not change any activation profiles.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -30,7 +29,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -57,20 +56,23 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
-        print("Testing on CPC {} (classic mode)".format(cpc.name))
 
         session = cpc.manager.session
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
 
-        # Pick a random activation profile
+        # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
             msg_txt = "No {} activation profiles on CPC {}". \
                 format(profile_type, cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        actprof = random.choice(actprof_list)
+        actprof_list = pick_test_resources(actprof_list)
 
-        runtest_find_list(
-            session, actprof_mgr, actprof.name, 'name', 'element-uri',
-            ACTPROF_VOLATILE_PROPS, ACTPROF_MINIMAL_PROPS, ACTPROF_LIST_PROPS)
+        for actprof in actprof_list:
+            print("Testing on CPC {} with {} activation profile {}".
+                  format(cpc.name, profile_type, actprof.name))
+            runtest_find_list(
+                session, actprof_mgr, actprof.name, 'name', 'element-uri',
+                ACTPROF_VOLATILE_PROPS, ACTPROF_MINIMAL_PROPS,
+                ACTPROF_LIST_PROPS)
