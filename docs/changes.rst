@@ -74,6 +74,10 @@ Released: not yet
   particularly instructive (cpcdata.py, cpcinfo.py). Renamed some scripts
   for better clarity on what they do. (issue #953)
 
+* End2end test: Added a new function 'zhmcclient.testutils.hmc_definition_file()'
+  that can be used to access the HMC definition file used by the tests.
+  (related to issue #966)
+
 **Cleanup:**
 
 * Made the handling of 'Lpar.list()' with filters that have no matching LPAR
@@ -83,6 +87,12 @@ Released: not yet
 
 * Removed the unused 'FakedHMCFileError' class from the
   'zhmcclient.testutils.hmc_definition_fixtures' module. (issue #950)
+
+* Removed code in tests/common/utils.py that supported the old format for
+  defining HMCs. (issue #966)
+
+* Transitioned test code for the old format for defining HMCs to the new
+  format, and removed some test code. (issue #966)
 
 **Known issues:**
 

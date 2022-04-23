@@ -267,6 +267,10 @@ and encapsulates the access to the HMC definition file.
 
 .. autofunction:: zhmcclient.testutils.classic_mode_cpcs
 
+.. autofunction:: zhmcclient.testutils.hmc_definition_file
+
+.. autofunction:: zhmcclient.testutils.hmc_definitions
+
 .. autoclass:: zhmcclient.testutils.HMCDefinition
    :members:
    :autosummary:

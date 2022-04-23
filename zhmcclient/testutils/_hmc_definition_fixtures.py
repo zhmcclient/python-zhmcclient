@@ -26,7 +26,8 @@ import zhmcclient_mock
 
 from ._hmc_definitions import HMCDefinitionFile, HMCDefinition
 
-__all__ = ['hmc_definitions', 'hmc_definition', 'hmc_session']
+__all__ = ['hmc_definition_file', 'hmc_definitions', 'hmc_definition',
+           'hmc_session']
 
 HOME_DIR = os.path.expanduser("~")
 
@@ -50,6 +51,39 @@ else:
     LOG_FORMAT_STRING = None
 
 
+def hmc_definition_file():
+    """
+    Return the HMC definition file.
+
+    The path name of the HMC definition file is taken from the environment
+    variable "TESTHMCFILE" is set, or otherwise is "{def_fn}" in the home
+    directory of the user.
+
+    Returns:
+      :class:`zhmcclient.testutils.HMCDefinitionFile`:
+      The HMC definition file.
+
+    Raises:
+      :exc:`zhmccliennt.testutils.HMCDefinitionFileError`: Some issue with
+      the HMC definition file.
+    """.format(def_fn=DEFAULT_TESTHMCFN)
+
+    # The Sphinx build imports this module and the use of this function
+    # in the hmc_definition() fixture along with the wildcard imports in
+    # the testutils/__init__.py module causes this function to be executed upon
+    # module import. Since there is no HMC definition file when GitHub Actions
+    # or ReadTheDocs builds the documentation, the 'TESTHMCFILE_NOLOAD'
+    # emv.var is used to disable the loading of the file in these cases.
+    # This env.var needs to be set to 'True' in the following places:
+    # * In .github/workflows/test.yml when invoking 'make builddoc'.
+    # * In the ReadTheDocs advanced settings, as a private env.var.
+    noload = os.getenv('TESTHMCFILE_NOLOAD')
+
+    if noload:
+        return None
+    return HMCDefinitionFile(filepath=TESTHMCFILE)
+
+
 def hmc_definitions():
     """
     Return the list of HMC definitions for a HMC nickname in a HMC
@@ -65,22 +99,15 @@ def hmc_definitions():
     Returns:
       list of :class:`zhmcclient.testutils.HMCDefinition`:
       The selected HMC definitions.
+
+    Raises:
+      :exc:`zhmccliennt.testutils.HMCDefinitionFileError`: Some issue with
+      the HMC definition file.
     """.format(def_nick=DEFAULT_TESTHMC, def_fn=DEFAULT_TESTHMCFN)
 
-    # The Sphinx build imports this module and the use of this function
-    # in the hmc_definition() fixture along with the wildcard imports in
-    # the testutils/__init__.py module causes this function to be executed upon
-    # module import. Since there is no HMC definition file when GitHub Actions
-    # or ReadTheDocs builds the documentation, the 'TESTHMCFILE_NOLOAD'
-    # emv.var is used to disable the loading of the file in these cases.
-    # This env.var needs to be set to 'True' in the following places:
-    # * In .github/workflows/test.yml when invoking 'make builddoc'.
-    # * In the ReadTheDocs advanced settings, as a private env.var.
-    noload = os.getenv('TESTHMCFILE_NOLOAD')
-
-    if noload:
+    def_file = hmc_definition_file()
+    if def_file is None:
         return []
-    def_file = HMCDefinitionFile(filepath=TESTHMCFILE)
     hmc_defs = def_file.list_hmcs(TESTHMC)
     return hmc_defs
 
