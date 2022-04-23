@@ -53,7 +53,7 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
     Test list(), find(), findall().
     """
     if not classic_mode_cpcs:
-        pytest.skip("No CPCs in classic mode provided")
+        pytest.skip("HMC does not manage any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
