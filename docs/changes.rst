@@ -50,6 +50,9 @@ Released: not yet
   job completion notification and the inventory change notification.
   (issue #956)
 
+* End2end test: Made user test tolerant against missing passweord rule 'Basic'.
+  (issue #960)
+
 **Enhancements:**
 
 * End2end test: Changed the checking of the HMC definition files for end2end
