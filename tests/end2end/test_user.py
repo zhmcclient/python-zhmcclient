@@ -135,7 +135,10 @@ def test_user_crud(all_cpcs):  # noqa: F811
             pwrule.delete()
 
         # Pick a password rule for the user
-        pwrule = console.password_rules.find(name='Basic')
+        try:
+            pwrule = console.password_rules.find(name='Basic')
+        except zhmcclient.NotFound:
+            pytest.skip("Password rule 'Basic' not found to create test user")
 
         # Test creating the user
 
