@@ -90,7 +90,7 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
     hd = hmc_session.hmc_definition
 
     for cpc_name in hd.cpcs:
-        print("Testing on CPC {}".format(cpc_name))
+        print("Testing with CPC {}".format(cpc_name))
 
         cpc_list_props = CPC_LIST_PROPS
         se_version = hd.cpcs[cpc_name].get('se_version', None)
@@ -118,8 +118,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
         pytest.skip("No CPCs provided")
 
     for cpc in all_cpcs:
-        cpc_mode = 'DPM' if cpc.dpm_enabled else 'classic'
-        print("Testing on CPC {} ({} mode)".format(cpc.name, cpc_mode))
+        print("Testing with CPC {}".format(cpc.name))
 
         cpc.pull_full_properties()
         cpc_mach_type = cpc.properties.get('machine-type', None)
