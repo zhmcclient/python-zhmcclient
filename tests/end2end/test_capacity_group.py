@@ -52,7 +52,7 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC does not manage any CPCs in DPM mode")
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -79,7 +79,7 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a capacity group.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC does not manage any CPCs in DPM mode")
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
