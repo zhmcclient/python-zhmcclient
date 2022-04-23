@@ -3,6 +3,10 @@
 #
 # This file can define real HMCs and faked HMCs (using the zhmcclient mock
 # support) and has the following format:
+# The file must have the format defined in the
+# zhmcclient/testutils/hmc_definitions.py file of the python-zhmcclient project.
+#
+# Brief description of the file format:
 #
 # hmcs:                          # Dict of HMC definitions.
 #   NICKNAME1:                   # Nickname of the HMC.
@@ -47,10 +51,10 @@ hmcs:
     cpcs:
       XYZ1:
         machine_type: "2964"
-        dpm: true
+        dpm_enabled: true
       XYZ2:
         machine_type: "3906"
-        dpm: true
+        dpm_enabled: true
 
   FAKED_ABC:
     description: "an example faked HMC"
@@ -58,7 +62,7 @@ hmcs:
     cpcs:
       ABC1:
         machine_type: "2964"
-        dpm: true
+        dpm_enabled: true
 
   # additional HMCs ...
 
