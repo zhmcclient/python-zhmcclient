@@ -114,7 +114,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     - feature_info()
     """
     if not all_cpcs:
-        pytest.skip("No CPCs provided")
+        pytest.skip("HMC does not manage any CPCs")
 
     for cpc in all_cpcs:
         print("Testing with CPC {}".format(cpc.name))

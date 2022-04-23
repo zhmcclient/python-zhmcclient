@@ -20,12 +20,11 @@ These tests do not change the console object.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 from requests.packages import urllib3
 
+import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import all_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list
@@ -42,24 +41,17 @@ CONSOLE_LIST_PROPS = ['object-uri', 'name', 'type']
 CONSOLE_VOLATILE_PROPS = []
 
 
-def test_pwrule_find_list(all_cpcs):  # noqa: F811
+def test_console_find_list(hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
     """
-    if not all_cpcs:
-        pytest.skip("No CPCs provided")
+    client = zhmcclient.Client(hmc_session)
 
-    for cpc in all_cpcs:
-        session = cpc.manager.session
-        client = cpc.manager.client
+    # Pick the single console
+    console = client.consoles.console
 
-        # Pick the single console
-        console = client.consoles.console
-
-        print("Testing on CPC {}".format(cpc.name))
-
-        runtest_find_list(
-            session, client.consoles, console.name, 'name',
-            'object-uri', CONSOLE_VOLATILE_PROPS, CONSOLE_MINIMAL_PROPS,
-            CONSOLE_LIST_PROPS)
+    runtest_find_list(
+        hmc_session, client.consoles, console.name, 'name',
+        'object-uri', CONSOLE_VOLATILE_PROPS, CONSOLE_MINIMAL_PROPS,
+        CONSOLE_LIST_PROPS)
