@@ -21,7 +21,6 @@ test LPARs.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +30,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -55,18 +54,19 @@ def test_lpar_find_list(classic_mode_cpcs):  # noqa: F811
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
-        print("Testing on CPC {} (classic mode)".format(cpc.name))
 
         session = cpc.manager.session
 
-        # Pick a random LPAR
+        # Pick the LPARs to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
             msg_txt = "No LPARs on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        lpar = random.choice(lpar_list)
+        lpar_list = pick_test_resources(lpar_list)
 
-        runtest_find_list(
-            session, cpc.lpars, lpar.name, 'name', 'status',
-            LPAR_VOLATILE_PROPS, LPAR_MINIMAL_PROPS, LPAR_LIST_PROPS)
+        for lpar in lpar_list:
+            print("Testing on CPC {} with LPAR {}".format(cpc.name, lpar.name))
+            runtest_find_list(
+                session, cpc.lpars, lpar.name, 'name', 'status',
+                LPAR_VOLATILE_PROPS, LPAR_MINIMAL_PROPS, LPAR_LIST_PROPS)

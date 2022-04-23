@@ -20,7 +20,6 @@ These tests do not change any existing virtual switches.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -30,7 +29,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -55,17 +54,19 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         session = cpc.manager.session
 
-        # Pick a random virtual switch
+        # Pick the virtual switches to test with
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
             msg_txt = "No virtual switches (= no network adapters) on CPC {}". \
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        vswitch = random.choice(vswitch_list)
+        vswitch_list = pick_test_resources(vswitch_list)
 
-        print("Testing on CPC {}".format(cpc.name))
-
-        runtest_find_list(
-            session, cpc.virtual_switches, vswitch.name, 'name', 'description',
-            VSWITCH_VOLATILE_PROPS, VSWITCH_MINIMAL_PROPS, VSWITCH_LIST_PROPS)
+        for vswitch in vswitch_list:
+            print("Testing on CPC {} with virtual switch {}".
+                  format(cpc.name, vswitch.name))
+            runtest_find_list(
+                session, cpc.virtual_switches, vswitch.name, 'name',
+                'description', VSWITCH_VOLATILE_PROPS, VSWITCH_MINIMAL_PROPS,
+                VSWITCH_LIST_PROPS)

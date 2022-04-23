@@ -21,7 +21,6 @@ modify and delete test users.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +30,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -60,19 +60,20 @@ def test_user_find_list(hmc_session):  # noqa: F811
         pytest.skip("HMC {hv} does not yet support users".
                     format(hv=hmc_version))
 
-    # Pick a random user
+    # Pick the users to test with
     user_list = console.users.list()
     if not user_list:
         msg_txt = "No users defined on HMC"
         warnings.warn(msg_txt, End2endTestWarning)
         pytest.skip(msg_txt)
-    user = random.choice(user_list)
+    user_list = pick_test_resources(user_list)
 
-    print("Testing with user {}".format(user.name))
-    runtest_find_list(
-        hmc_session, console.users, user.name, 'name',
-        'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
-        USER_LIST_PROPS)
+    for user in user_list:
+        print("Testing with user {}".format(user.name))
+        runtest_find_list(
+            hmc_session, console.users, user.name, 'name',
+            'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
+            USER_LIST_PROPS)
 
 
 def test_user_crud(hmc_session):  # noqa: F811

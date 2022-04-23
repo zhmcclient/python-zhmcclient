@@ -206,7 +206,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
-        print("Testing on CPC {} (classic mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
 
         session = cpc.manager.session
         hd = session.hmc_definition

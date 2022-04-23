@@ -21,7 +21,6 @@ delete test capacity groups.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,7 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -56,21 +56,24 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
 
         session = cpc.manager.session
 
-        # Pick a random capacity group
+        # Pick the capacity groups to test with
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
             msg_txt = "No Capacity Groups defined on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        capgrp = random.choice(capgrp_list)
+        capgrp_list = pick_test_resources(capgrp_list)
 
-        runtest_find_list(
-            session, cpc.capacity_groups, capgrp.name, 'name', 'element-uri',
-            CAPGRP_VOLATILE_PROPS, CAPGRP_MINIMAL_PROPS, CAPGRP_LIST_PROPS)
+        for capgrp in capgrp_list:
+            print("Testing on CPC {} with capacity group {}".
+                  format(cpc.name, capgrp.name))
+            runtest_find_list(
+                session, cpc.capacity_groups, capgrp.name, 'name',
+                'element-uri', CAPGRP_VOLATILE_PROPS, CAPGRP_MINIMAL_PROPS,
+                CAPGRP_LIST_PROPS)
 
 
 def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
@@ -83,7 +86,7 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
 
         capgrp_name = TEST_PREFIX + ' test_capgrp_crud capgrp1'
         capgrp_name_new = capgrp_name + ' new'

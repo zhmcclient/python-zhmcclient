@@ -21,7 +21,6 @@ modify and delete test user roles.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -31,7 +30,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -60,19 +60,20 @@ def test_urole_find_list(hmc_session):  # noqa: F811
         pytest.skip("HMC {hv} does not yet support user roles".
                     format(hv=hmc_version))
 
-    # Pick a random user role
+    # Pick the user roles to test with
     urole_list = console.user_roles.list()
     if not urole_list:
         msg_txt = "No user roles defined on HMC"
         warnings.warn(msg_txt, End2endTestWarning)
         pytest.skip(msg_txt)
-    urole = random.choice(urole_list)
+    urole_list = pick_test_resources(urole_list)
 
-    print("Testing with user role {}".format(urole.name))
-    runtest_find_list(
-        hmc_session, console.user_roles, urole.name, 'name',
-        'object-uri', UROLE_VOLATILE_PROPS, UROLE_MINIMAL_PROPS,
-        UROLE_LIST_PROPS)
+    for urole in urole_list:
+        print("Testing with user role {}".format(urole.name))
+        runtest_find_list(
+            hmc_session, console.user_roles, urole.name, 'name',
+            'object-uri', UROLE_VOLATILE_PROPS, UROLE_MINIMAL_PROPS,
+            UROLE_LIST_PROPS)
 
 
 def test_urole_crud(hmc_session):  # noqa: F811

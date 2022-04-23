@@ -21,7 +21,6 @@ and delete test partitions with HBAs.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, standard_partition_props, \
-    skipif_storage_mgmt_feature, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    standard_partition_props, skipif_storage_mgmt_feature, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -56,14 +55,12 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
-        skipif_storage_mgmt_feature(cpc)
-
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        skipif_storage_mgmt_feature(cpc)
 
         session = cpc.manager.session
 
-        # Pick a random HBA on a random partition
+        # Pick the HBAs to test with
         part_hba_tuples = []
         part_list = cpc.partitions.list()
         for part in part_list:
@@ -74,11 +71,14 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
             msg_txt = "No partitions with HBAs on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        part, hba = random.choice(part_hba_tuples)
+        part_hba_tuples = pick_test_resources(part_hba_tuples)
 
-        runtest_find_list(
-            session, part.hbas, hba.name, 'name', 'wwpn',
-            HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
+        for part, hba in part_hba_tuples:
+            print("Testing on CPC {} with HBA {} of partition {}".
+                  format(cpc.name, hba.name, part.name))
+            runtest_find_list(
+                session, part.hbas, hba.name, 'name', 'wwpn',
+                HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
 
 
 def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
@@ -90,10 +90,9 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
-        skipif_storage_mgmt_feature(cpc)
-
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
+        skipif_storage_mgmt_feature(cpc)
 
         part_name = TEST_PREFIX + ' test_hba_crud part1'
         hba_name = 'hba1'

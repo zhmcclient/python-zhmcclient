@@ -21,7 +21,6 @@ and delete Hipersocket adapters.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,7 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
+    End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -57,21 +57,24 @@ def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
 
         session = cpc.manager.session
 
-        # Pick a random adapter
+        # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
         if not adapter_list:
             msg_txt = "No adapters on CPC {}".format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        adapter = random.choice(adapter_list)
+        adapter_list = pick_test_resources(adapter_list)
 
-        runtest_find_list(
-            session, cpc.adapters, adapter.name, 'name', 'object-uri',
-            ADAPTER_VOLATILE_PROPS, ADAPTER_MINIMAL_PROPS, ADAPTER_LIST_PROPS)
+        for adapter in adapter_list:
+            print("Testing on CPC {} with adapter {}".
+                  format(cpc.name, adapter.name))
+            runtest_find_list(
+                session, cpc.adapters, adapter.name, 'name', 'object-uri',
+                ADAPTER_VOLATILE_PROPS, ADAPTER_MINIMAL_PROPS,
+                ADAPTER_LIST_PROPS)
 
 
 def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
@@ -84,7 +87,7 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
 
         adapter_name = TEST_PREFIX + ' test_adapter_crud adapter1'
         adapter_name_new = adapter_name + ' new'

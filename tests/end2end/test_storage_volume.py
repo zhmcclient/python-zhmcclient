@@ -21,7 +21,6 @@ delete test storage volumes.
 
 from __future__ import absolute_import, print_function
 
-import random
 import warnings
 import pytest
 from requests.packages import urllib3
@@ -32,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import skipif_no_storage_mgmt_feature, runtest_find_list, \
-    TEST_PREFIX, End2endTestWarning
+from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
+    runtest_find_list, TEST_PREFIX, End2endTestWarning
 
 urllib3.disable_warnings()
 
@@ -58,13 +57,11 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
 
         session = cpc.manager.session
 
-        # Pick a random storage volume of a random storage group associated to
-        # this CPC
+        # Pick the storage volumes to test with
         grp_vol_tuples = []
         stogrp_list = cpc.list_associated_storage_groups()
         for stogrp in stogrp_list:
@@ -76,11 +73,15 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
                 format(cpc.name)
             warnings.warn(msg_txt, End2endTestWarning)
             pytest.skip(msg_txt)
-        stogrp, stovol = random.choice(grp_vol_tuples)
+        grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
-        runtest_find_list(
-            session, stogrp.storage_volumes, stovol.name, 'name', 'size',
-            STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS)
+        for stogrp, stovol in grp_vol_tuples:
+            print("Testing on CPC {} with storage volume {} of "
+                  "storage group {}".
+                  format(cpc.name, stovol.name, stogrp.name))
+            runtest_find_list(
+                session, stogrp.storage_volumes, stovol.name, 'name', 'size',
+                STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS)
 
 
 def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
@@ -93,7 +94,7 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {} (DPM mode)".format(cpc.name))
+        print("Testing on CPC {}".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
 
         console = cpc.manager.client.consoles.console
