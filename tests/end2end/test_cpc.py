@@ -95,9 +95,8 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
         cpc_list_props = CPC_LIST_PROPS
         se_version = hd.cpcs[cpc_name].get('se_version', None)
         if se_version:
-            # pylint: disable=unnecessary-lambda
-            se_version_info = list(map(lambda v: int(v), se_version.split('.')))
-            if se_version_info >= [2, 15, 0]:
+            se_version_info = tuple(map(int, se_version.split('.')))
+            if se_version_info >= (2, 15, 0):
                 cpc_list_props = CPC_LIST_PROPS_Z15
 
         runtest_find_list(

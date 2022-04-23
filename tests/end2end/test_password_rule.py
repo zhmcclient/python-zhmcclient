@@ -61,9 +61,8 @@ def test_pwrule_find_list(all_cpcs):  # noqa: F811
 
         api_version = client.query_api_version()
         hmc_version = api_version['hmc-version']
-        # pylint: disable=unnecessary-lambda
-        hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
-        if hmc_version_info < [2, 13, 0]:
+        hmc_version_info = tuple(map(int, hmc_version.split('.')))
+        if hmc_version_info < (2, 13, 0):
             pytest.skip("HMC {hv} does not yet support password rules".
                         format(hv=hmc_version))
 
@@ -102,9 +101,8 @@ def test_pwrule_crud(all_cpcs):  # noqa: F811
 
         api_version = client.query_api_version()
         hmc_version = api_version['hmc-version']
-        # pylint: disable=unnecessary-lambda
-        hmc_version_info = list(map(lambda v: int(v), hmc_version.split('.')))
-        if hmc_version_info < [2, 13, 0]:
+        hmc_version_info = tuple(map(int, hmc_version.split('.')))
+        if hmc_version_info < (2, 13, 0):
             pytest.skip("HMC {hv} does not yet support password rules".
                         format(hv=hmc_version))
 
