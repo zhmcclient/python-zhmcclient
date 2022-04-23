@@ -50,7 +50,7 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC does not manage any CPCs in DPM mode")
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         session = cpc.manager.session
