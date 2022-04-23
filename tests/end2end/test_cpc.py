@@ -202,7 +202,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
     Only for CPCs in classic mode, skipped in DPM mode.
     """
     if not classic_mode_cpcs:
-        pytest.skip("No CPCs in classic mode provided")
+        pytest.skip("HMC does not manage any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled

@@ -53,7 +53,7 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("No CPCs in DPM mode provided")
+        pytest.skip("HMC does not manage any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -80,7 +80,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a partition.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("No CPCs in DPM mode provided")
+        pytest.skip("HMC does not manage any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
