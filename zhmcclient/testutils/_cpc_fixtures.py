@@ -25,21 +25,7 @@ import zhmcclient
 # pylint: disable=unused-import
 from ._hmc_definition_fixtures import hmc_session  # noqa: F401
 
-__all__ = ['one_cpc', 'all_cpcs', 'dpm_mode_cpcs', 'classic_mode_cpcs']
-
-
-def fixtureid_cpc(fixture_value):
-    """
-    Return a fixture ID to be used by pytest, for fixtures returning a single
-    CPC.
-
-    Parameters:
-
-      * fixture_value (zhmcclient.Cpc): The single CPC.
-    """
-    cpc = fixture_value
-    assert isinstance(cpc, zhmcclient.Cpc)
-    return "CPC={}".format(cpc.name)
+__all__ = ['all_cpcs', 'dpm_mode_cpcs', 'classic_mode_cpcs']
 
 
 def fixtureid_cpcs(fixture_value):
@@ -59,45 +45,21 @@ def fixtureid_cpcs(fixture_value):
 
 @pytest.fixture(
     scope='module',
-    ids=fixtureid_cpc
-)
-def one_cpc(request, hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
-    """
-    Pytest fixture representing a single, arbitrary CPC managed by the HMC.
-
-    Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_session`
-    function needs to be imported as well when this fixture is used.
-
-    A test function parameter using this fixture resolves to a
-    :class:`zhmcclient.Cpc` object for that CPC,
-    that has the "short" set of properties (i.e. from list()).
-    """
-    client = zhmcclient.Client(hmc_session)
-    cpcs = client.cpcs.list()
-    assert len(cpcs) >= 1
-    cpc = cpcs[0]
-    return cpc
-
-
-@pytest.fixture(
-    scope='module',
     ids=fixtureid_cpcs
 )
 def all_cpcs(request, hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of all CPCs defined in the
-    HMC definition file (regardless of their classic/DPM mode).
+    Pytest fixture representing the set of all CPCs that are defined in the HMC
+    definition file for the selected HMC or HMC group.
+
+    A test function parameter using this fixture resolves to a list of
+    :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
+    objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
     the :func:`zhmcclient.testutils.hmc_session`
     function needs to be imported as well when this fixture is used.
-
-    A test function parameter using this fixture resolves to a
-    :class:`zhmcclient.Cpc` object from that set,
-    that has the "short" set of properties (i.e. from list()).
     """
     return defined_cpcs(hmc_session, 'any')
 
@@ -109,16 +71,16 @@ def all_cpcs(request, hmc_session):  # noqa: F811
 def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of CPCs in DPM mode, from the set of
-    all CPCs defined in the HMC definition file.
+    Pytest fixture representing the set of CPCs in DPM mode that are
+    defined in the HMC definition file for the selected HMC or HMC group.
+
+    A test function parameter using this fixture resolves to a list of
+    :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
+    objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
     the :func:`zhmcclient.testutils.hmc_session`
     function needs to be imported as well when this fixture is used.
-
-    A test function parameter using this fixture resolves to a
-    :class:`zhmcclient.Cpc` object from that set,
-    that has the "short" set of properties (i.e. from list()).
     """
     return defined_cpcs(hmc_session, 'dpm')
 
@@ -130,24 +92,24 @@ def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
 def classic_mode_cpcs(request, hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of CPCs in classic mode, from the set of
-    all CPCs defined in the HMC definition file.
+    Pytest fixture representing the set of CPCs in classic mode that are
+    defined in the HMC definition file for the selected HMC or HMC group.
+
+    A test function parameter using this fixture resolves to a list of
+    :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
+    objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
     the :func:`zhmcclient.testutils.hmc_session`
     function needs to be imported as well when this fixture is used.
-
-    A test function parameter using this fixture resolves to a
-    :class:`zhmcclient.Cpc` object from that set,
-    that has the "short" set of properties (i.e. from list()).
     """
     return defined_cpcs(hmc_session, 'classic')
 
 
 def defined_cpcs(session, mode):
     """
-    Return a list of CPCs defined in the HMC definition file, that are managed
-    by the HMC, and that have the desired operational mode.
+    Return a list of CPCs defined in the HMC definition file, that are actually
+    managed by the HMC, and that actually have the desired operational mode.
 
     Parameters:
 
@@ -159,16 +121,20 @@ def defined_cpcs(session, mode):
       list of :class:`zhmcclient.Cpc`: The CPCs in the desired mode.
     """
     client = zhmcclient.Client(session)
-    _all_cpcs = client.cpcs.list()
+    actual_cpcs = client.cpcs.list()
+    actual_cpc_names = [cpc.name for cpc in actual_cpcs]
     hd = session.hmc_definition
     result_cpcs = []
     for cpc_name in hd.cpcs:
-        cpcs = [cpc for cpc in _all_cpcs if cpc.name == cpc_name]
+        cpcs = [cpc for cpc in actual_cpcs if cpc.name == cpc_name]
         if not cpcs:
-            warnings.warn(
-                "Cannot find CPC {c} defined in HMC definition file".
-                format(c=cpc_name), UserWarning)
-            continue
+            msg_txt = (
+                "CPC {c} defined for HMC {n} at {h} in HMC definition file is "
+                "not managed by that HMC. Actually managed CPCs: {cl}".
+                format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
+                       cl=', '.join(actual_cpc_names)))
+            warnings.warn(msg_txt, UserWarning)
+            pytest.skip(msg_txt)
         cpc = cpcs[0]
 
         if mode == 'dpm' and not cpc.dpm_enabled:
