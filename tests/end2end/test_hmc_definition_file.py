@@ -19,15 +19,12 @@ file match reality.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 from requests.packages import urllib3
 
 import zhmcclient
 # pylint: disable=unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401
 from zhmcclient.testutils import hmc_definition_file
-
-from tests.common.utils import info
 
 urllib3.disable_warnings()
 
@@ -39,20 +36,33 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
     and that these CPCs actually have the properties defined there.
     """
     client = zhmcclient.Client(hmc_session)
+    hd = hmc_session.hmc_definition
+
     cpcs = client.cpcs.list()
     cpc_names = [cpc.name for cpc in cpcs]
 
-    hd = hmc_session.hmc_definition
     for cpc_name in hd.cpcs:
         def_cpc_props = dict(hd.cpcs[cpc_name])
 
+        print("Checking CPC {c} defined in HMC definition file".
+              format(c=cpc_name))
+
         assert cpc_name in cpc_names, \
-            "CPC {c} defined for HMC nickname {n!r} in HMC definition file " \
-            "is not actually managed by that HMC". \
-            format(c=cpc_name, n=hd.nickname)
+            "CPC {c} defined for HMC {n} at {h} in HMC definition " \
+            "file is not managed by that HMC. Actually managed " \
+            "CPCs: {cl}". \
+            format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
+                   cl=', '.join(cpc_names))
 
         cpc = client.cpcs.find(name=cpc_name)
-        cpc.pull_full_properties()
+
+        try:
+            cpc.pull_full_properties()
+        except zhmcclient.ConnectionError as exc:
+            print("Cannot retrieve properties for CPC {c} (skipping it): "
+                  "{e}: {m}".
+                  format(c=cpc_name, e=exc.__class__.__name__, m=exc))
+            continue
 
         cpc_props = dict(cpc.properties)
         for def_prop_name in def_cpc_props:
@@ -75,8 +85,7 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
                        dv=def_cpc_value, hv=cpc_value)
 
 
-@pytest.mark.skip("Disabled by default")
-def test_hmcdef_check_all_hmcs(capsys):
+def test_hmcdef_check_all_hmcs():
     """
     Check out the HMCs specified in the HMC definition file.
     Skip HMCs that cannot be contacted.
@@ -87,21 +96,22 @@ def test_hmcdef_check_all_hmcs(capsys):
     rt_config = zhmcclient.RetryTimeoutConfig(
         connect_timeout=10,
         connect_retries=1,
+        read_timeout=30,
     )
 
-    # Check HMCs and their CPCs
+    # Check real HMCs and their CPCs
     for hd in hmc_defs:
 
         if hd.hmc_host is None:
-            # Faked HMC
+            print("Skipping faked HMC {n} defined in HMC definition file".
+                  format(n=hd.nickname))
             continue
 
         for cpc_name in hd.cpcs:
 
-            info(capsys,
-                 "Checking HMC {n} at {h} defined in HMC definition "
-                 "file for its managed CPC {c}".
-                 format(n=hd.nickname, h=hd.hmc_host, c=cpc_name))
+            print("Checking CPC {c} defined for HMC {n} at {h} in HMC "
+                  "definition file".
+                  format(c=cpc_name, n=hd.nickname, h=hd.hmc_host))
 
             session = zhmcclient.Session(
                 hd.hmc_host, hd.hmc_userid, hd.hmc_password,
@@ -114,21 +124,20 @@ def test_hmcdef_check_all_hmcs(capsys):
                 try:
                     session.logon()
                 except zhmcclient.ConnectionError as exc:
-                    info(capsys,
-                         "Skipping HMC {n} at {h} defined in HMC definition "
-                         "file: {e}: {m}".
-                         format(n=hd.nickname, h=hd.hmc_host,
-                                e=exc.__class__.__name__, m=exc))
+                    print("Cannot logon to HMC {h} (skipping it): {e}: {m}".
+                          format(h=hd.hmc_host,
+                                 e=exc.__class__.__name__, m=exc))
                     continue
 
                 cpcs = client.cpcs.list()
                 cpc_names = [cpc.name for cpc in cpcs]
-                if cpc_name not in cpc_names:
-                    raise AssertionError(
-                        "CPC {c} defined in HMC definition file for HMC {n} "
-                        "at {h} is not managed by that HMC. Actually managed "
-                        "CPCs: {cl}".
-                        format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
-                               cl=', '.join(cpc_names)))
+
+                assert cpc_name in cpc_names, \
+                    "CPC {c} defined for HMC {n} at {h} in HMC definition " \
+                    "file is not managed by that HMC. Actually managed " \
+                    "CPCs: {cl}". \
+                    format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
+                           cl=', '.join(cpc_names))
+
             finally:
                 session.logoff()
