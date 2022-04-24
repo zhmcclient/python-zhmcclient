@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, skipif_storage_mgmt_feature, End2endTestWarning
+    standard_partition_props, skipif_storage_mgmt_feature, skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,13 +52,14 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
         skipif_storage_mgmt_feature(cpc)
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the HBAs to test with
         part_hba_tuples = []
@@ -68,14 +69,13 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
             for hba in hba_list:
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
-            msg_txt = "No partitions with HBAs on CPC {}".format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No partitions with HBAs on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.hmc_host))
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:
-            print("Testing on CPC {} with HBA {} of partition {}".
-                  format(cpc.name, hba.name, part.name))
+            print("Testing on CPC {c} with HBA {h!r} of partition {p!r}".
+                  format(c=cpc.name, h=hba.name, p=part.name))
             runtest_find_list(
                 session, part.hbas, hba.name, 'name', 'wwpn',
                 HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
@@ -87,12 +87,13 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a HBA (and a partition).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
         skipif_storage_mgmt_feature(cpc)
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         part_name = TEST_PREFIX + ' test_hba_crud part1'
         hba_name = 'hba1'
@@ -105,7 +106,7 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: '{p}' on CPC '{c}'".
+                "Deleting test partition from previous run: {p!r} on CPC {c}".
                 format(p=part_name, c=cpc.name), UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
@@ -118,7 +119,7 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
             # Pick a FICON adapter backing the HBA
             adapters = cpc.adapters.findall(**{'type': 'fcp'})
             assert len(adapters) >= 1, \
-                "CPC '{c}' does not have any FCP-type FICON adapters". \
+                "CPC {c} does not have any FCP-type FICON adapters". \
                 format(c=cpc.name)
             adapter = adapters[-1]  # Pick the last adapter found
             port = adapter.ports.list()[0]  # Pick its first port

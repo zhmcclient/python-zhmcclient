@@ -31,7 +31,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    End2endTestWarning
+    skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,24 +52,23 @@ def test_upatt_find_list(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     console = client.consoles.console
+    hd = hmc_session.hmc_definition
 
     api_version = client.query_api_version()
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        pytest.skip("HMC {hv} does not yet support user patterns".
-                    format(hv=hmc_version))
+        skip_warn("HMC {h} of version {v} does not yet support user patterns".
+                  format(h=hd.hmc_host, v=hmc_version))
 
     # Pick the user patterns to test with
     upatt_list = console.user_patterns.list()
     if not upatt_list:
-        msg_txt = "No user patterns defined on HMC"
-        warnings.warn(msg_txt, End2endTestWarning)
-        pytest.skip(msg_txt)
+        skip_warn("No user patterns defined on HMC {h}".format(h=hd.hmc_host))
     upatt_list = pick_test_resources(upatt_list)
 
     for upatt in upatt_list:
-        print("Testing with user pattern {}".format(upatt.name))
+        print("Testing with user pattern {p!r}".format(p=upatt.name))
         runtest_find_list(
             hmc_session, console.user_patterns, upatt.name, 'name',
             'element-uri', UPATT_VOLATILE_PROPS, UPATT_MINIMAL_PROPS,
@@ -89,8 +88,8 @@ def test_upatt_crud(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        pytest.skip("HMC {hv} does not yet support user patterns".
-                    format(hv=hmc_version))
+        skip_warn("HMC {h} of version {v} does not yet support user patterns".
+                  format(h=hd.hmc_host, v=hmc_version))
 
     upatt_name = TEST_PREFIX + ' test_upatt_crud upatt1'
     upatt_name_new = upatt_name + ' new'
@@ -102,16 +101,14 @@ def test_upatt_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test user pattern from previous run: '{p}'".
+            "Deleting test user pattern from previous run: {p!r}".
             format(p=upatt_name), UserWarning)
         upatt.delete()
 
     # Pick a template user to be the template user for the user pattern
     template_users = console.users.findall(type='template')
     if not template_users:
-        msg_txt = "No template users on HMC {h}".format(h=hd.hmc_host)
-        warnings.warn(msg_txt, End2endTestWarning)
-        pytest.skip(msg_txt)
+        skip_warn("No template users on HMC {h}".format(h=hd.hmc_host))
     template_user = template_users[0]
 
     # Test creating the user pattern
@@ -131,11 +128,9 @@ def test_upatt_crud(hmc_session):  # noqa: F811
         upatt = console.user_patterns.create(upatt_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            msg_txt = "HMC userid '{u}' is not authorized for the " \
-                "'Manage User Patterns' task on HMC {h}". \
-                format(u=hd.hmc_userid, h=hd.hmc_host)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("HMC userid {u!r} is not authorized for task "
+                      "'Manage User Patterns' on HMC {h}".
+                      format(u=hd.hmc_userid, h=hd.hmc_host))
         else:
             raise
 

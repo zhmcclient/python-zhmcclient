@@ -47,7 +47,7 @@ def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
             continue  # Only check properties in prop_names
 
         assert prop_name in res_props, \
-            "Property '{p}' not found in {k} object '{o}'". \
+            "Property {p!r} not found in {k} object {o!r}". \
             format(p=prop_name, k=res.prop('class'), o=res.name)
 
         if ignore_values is not None and prop_name not in ignore_values:
@@ -62,7 +62,7 @@ def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
     # TODO: Decide whether we want to check the exact set, or the minimum set.
     # assert not extra_prop_names, \
     #     "The following properties were unexpectedly present in {k} object " \
-    #     "'{o}' : {e}". \
+    #     "{o!r} : {e}". \
     #     format(k=res.prop('class'), o=res.name, e=', '.join(extra_prop_names))
 
 
@@ -71,8 +71,8 @@ def assert_res_prop(act_value, exp_value, prop_name, res):
     Check a property of a resource object.
     """
     assert act_value == exp_value, \
-        "Property '{p}' has unexpected value in {k} object '{o}': " \
-        "Expected: {ev}, actual: {av}". \
+        "Property {p!r} has unexpected value in {k} object {o!r}: " \
+        "Expected: {ev!r}, actual: {av!r}". \
         format(p=prop_name, k=res.prop('class'), o=res.name, ev=exp_value,
                av=act_value)
 
@@ -210,7 +210,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         found_uri_list = [r.uri for r in found_res_list]
         parent = manager.parent
         raise AssertionError(
-            "{k} findall() result for {pk} '{pn}' has non-unique name '{n}' "
+            "{k} findall() result for {pk} {pn!r} has non-unique name {n!r} "
             "for the following {no} objects:\n{o}".
             format(k=found_res.prop('class'), pk=parent.prop('class'),
                    pn=parent.name, n=name, no=len(found_res_list),
@@ -237,7 +237,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         found_res = found_res_list[0]
         if len(found_res_list) > 1:
             raise AssertionError(
-                "{k} findall(client_filter) result with non-unique name '{n}': "
+                "{k} findall(client_filter) result with non-unique name {n!r}: "
                 "{o}".
                 format(k=found_res.prop('class'), n=name, o=found_res_list))
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
@@ -252,7 +252,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
     found_res = found_res_list[0]
     if len(found_res_list) > 1:
         raise AssertionError(
-            "{k} list() result with non-unique name '{n}': {o}".
+            "{k} list() result with non-unique name {n!r}: {o}".
             format(k=found_res.prop('class'), n=name, o=found_res_list))
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
@@ -295,8 +295,8 @@ def skipif_no_storage_mgmt_feature(cpc):
     except ValueError:
         smf = False
     if not smf:
-        pytest.skip("DPM Storage Mgmt feature not enabled or not supported "
-                    "on CPC {}".format(cpc.name))
+        skip_warn("DPM Storage Mgmt feature not enabled or not supported "
+                  "on CPC {c}".format(c=cpc.name))
 
 
 def skipif_storage_mgmt_feature(cpc):
@@ -309,8 +309,8 @@ def skipif_storage_mgmt_feature(cpc):
     except ValueError:
         smf = False
     if smf:
-        pytest.skip("DPM Storage Mgmt feature enabled on CPC {}".
-                    format(cpc.name))
+        skip_warn("DPM Storage Mgmt feature enabled on CPC {c}".
+                  format(c=cpc.name))
 
 
 def standard_partition_props(cpc, part_name):
@@ -333,11 +333,20 @@ def standard_partition_props(cpc, part_name):
         part_input_props['cp-processors'] = 1
         pc_names = filter(lambda p: p.startswith('processor-count-'),
                           cpc.properties.keys())
-        pc_list = ["{}={}".format(n, cpc.properties[n]) for n in pc_names]
+        pc_list = ["{n}={v}".format(n=n, v=cpc.properties[n]) for n in pc_names]
         warnings.warn(
-            "CPC '{c}' shows neither IFL nor CP processors, specifying 1 CP "
+            "CPC {c} shows neither IFL nor CP processors, specifying 1 CP "
             "for partition creation. "
             "CPC processor-count properties are: {p}".
             format(c=cpc.name, p=', '.join(pc_list)), End2endTestWarning)
 
     return part_input_props
+
+
+def skip_warn(msg):
+    """
+    Issue an End2endTestWarning and skip the current pytest testcase with the
+    specified message.
+    """
+    warnings.warn(msg, End2endTestWarning, stacklevel=2)
+    pytest.skip(msg)

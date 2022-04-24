@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, End2endTestWarning
+    standard_partition_props, skip_warn
 
 urllib3.disable_warnings()
 
@@ -53,12 +53,13 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the virtual functions to test with
         part_vfunc_tuples = []
@@ -68,15 +69,14 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
             for vfunc in vfunc_list:
                 part_vfunc_tuples.append((part, vfunc))
         if not part_vfunc_tuples:
-            msg_txt = "No partitions with virtual functions on CPC {c}". \
-                format(c=cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No partitions with virtual functions on CPC {c} "
+                      "managed by HMC {h}".
+                      format(c=cpc.name, h=hd.hmc_host))
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
-            print("Testing on CPC {} with virtual function {} of partition {}".
-                  format(cpc.name, vfunc.name, part.name))
+            print("Testing on CPC {c} with virtual function {f!r} of partition "
+                  "{p!r}".format(c=cpc.name, f=vfunc.name, p=part.name))
             runtest_find_list(
                 session, part.virtual_functions, vfunc.name, 'name',
                 'description', VFUNC_VOLATILE_PROPS, VFUNC_MINIMAL_PROPS,
@@ -89,11 +89,15 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a virtual function (and a partition).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         part_name = TEST_PREFIX + ' test_vfunc_crud part1'
         vfunc_name = 'vfunc1'
@@ -106,7 +110,7 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: '{p}' on CPC '{c}'".
+                "Deleting test partition from previous run: {p!r} on CPC {c}".
                 format(p=part_name, c=cpc.name), UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
@@ -119,10 +123,8 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
             # Pick a zEDC accelerator adapter that will back the virtual func.
             edc_adapters = cpc.adapters.findall(type='zedc')
             if not edc_adapters:
-                msg_txt = "No zEDC accelerator adapters on CPC {}". \
-                    format(cpc.name)
-                warnings.warn(msg_txt, End2endTestWarning)
-                pytest.skip(msg_txt)
+                skip_warn("No zEDC accelerator adapters on CPC {c} managed by "
+                          "HMC {h}".format(c=cpc.name, h=hd.hmc_host))
             edc_adapter = edc_adapters[-1]  # Pick the last one
 
             # Create a partition that will lateron contain the virtual function

@@ -47,9 +47,9 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
         def_cpc_props = dict(hd.cpcs[cpc_name])
 
         assert cpc_name in cpc_names, \
-            "CPC '{c}' defined in HMC definition file for HMC nickname '{h}' " \
+            "CPC {c} defined for HMC nickname {n!r} in HMC definition file " \
             "is not actually managed by that HMC". \
-            format(c=cpc_name, h=hd.nickname)
+            format(c=cpc_name, n=hd.nickname)
 
         cpc = client.cpcs.find(name=cpc_name)
         cpc.pull_full_properties()
@@ -59,19 +59,19 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
 
             hmc_prop_name = def_prop_name.replace('_', '-')
             assert hmc_prop_name in cpc_props, \
-                "Property '{dp}' defined in HMC definition file for " \
-                "CPC '{c}' in HMC nickname '{h}' does not actually " \
-                "exist on that CPC (as '{hp}')". \
+                "Property {dp!r} defined for CPC {c} in HMC nickname {n!r} " \
+                "in HMC definition file does not actually exist on that CPC " \
+                "(as {hp!r})". \
                 format(dp=def_prop_name, hp=hmc_prop_name, c=cpc_name,
-                       h=hd.nickname)
+                       n=hd.nickname)
 
             cpc_value = cpc_props[hmc_prop_name]
             def_cpc_value = def_cpc_props[def_prop_name]
             assert def_cpc_value == cpc_value, \
-                "Property '{dp}' defined in HMC definition file for " \
-                "CPC '{c}' in HMC nickname '{h}' has an unexpected value: " \
+                "Property {dp!r} defined for CPC {c} in HMC nickname {n!r} " \
+                "in HMC definition file has an unexpected value: " \
                 "HMC definition file: {dv!r}, actual value: {hv!r}". \
-                format(dp=def_prop_name, c=cpc_name, h=hd.nickname,
+                format(dp=def_prop_name, c=cpc_name, n=hd.nickname,
                        dv=def_cpc_value, hv=cpc_value)
 
 
@@ -99,9 +99,9 @@ def test_hmcdef_check_all_hmcs(capsys):
         for cpc_name in hd.cpcs:
 
             info(capsys,
-                 "Checking HMC {} at {} defined in HMC definition "
-                 "file for its managed CPC {}".
-                 format(hd.nickname, hd.hmc_host, cpc_name))
+                 "Checking HMC {n} at {h} defined in HMC definition "
+                 "file for its managed CPC {c}".
+                 format(n=hd.nickname, h=hd.hmc_host, c=cpc_name))
 
             session = zhmcclient.Session(
                 hd.hmc_host, hd.hmc_userid, hd.hmc_password,
@@ -115,20 +115,20 @@ def test_hmcdef_check_all_hmcs(capsys):
                     session.logon()
                 except zhmcclient.ConnectionError as exc:
                     info(capsys,
-                         "Skipping HMC {} at {} defined in HMC definition "
-                         "file: {}: {}".
-                         format(hd.nickname, hd.hmc_host,
-                                exc.__class__.__name__, exc))
+                         "Skipping HMC {n} at {h} defined in HMC definition "
+                         "file: {e}: {m}".
+                         format(n=hd.nickname, h=hd.hmc_host,
+                                e=exc.__class__.__name__, m=exc))
                     continue
 
                 cpcs = client.cpcs.list()
                 cpc_names = [cpc.name for cpc in cpcs]
                 if cpc_name not in cpc_names:
                     raise AssertionError(
-                        "CPC {} defined in HMC definition file for HMC {} "
-                        "at {} is not managed by that HMC. Actually managed "
-                        "CPCs: {}".
-                        format(cpc_name, hd.nickname, hd.hmc_host,
-                               ', '.join(cpc_names)))
+                        "CPC {c} defined in HMC definition file for HMC {n} "
+                        "at {h} is not managed by that HMC. Actually managed "
+                        "CPCs: {cl}".
+                        format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
+                               cl=', '.join(cpc_names)))
             finally:
                 session.logoff()

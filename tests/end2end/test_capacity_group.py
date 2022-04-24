@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    End2endTestWarning
+    skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,24 +52,24 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the capacity groups to test with
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
-            msg_txt = "No Capacity Groups defined on CPC {}".format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No capacity groups defined on CPC {c} managed by "
+                      "HMC {h}".format(c=cpc.name, h=hd.hmc_host))
         capgrp_list = pick_test_resources(capgrp_list)
 
         for capgrp in capgrp_list:
-            print("Testing on CPC {} with capacity group {}".
-                  format(cpc.name, capgrp.name))
+            print("Testing on CPC {c} with capacity group {g!r}".
+                  format(c=cpc.name, g=capgrp.name))
             runtest_find_list(
                 session, cpc.capacity_groups, capgrp.name, 'name',
                 'element-uri', CAPGRP_VOLATILE_PROPS, CAPGRP_MINIMAL_PROPS,
@@ -82,11 +82,12 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a capacity group.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         capgrp_name = TEST_PREFIX + ' test_capgrp_crud capgrp1'
         capgrp_name_new = capgrp_name + ' new'
@@ -98,8 +99,8 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test capacity group from previous run: '{p}' "
-                "on CPC '{c}'".
+                "Deleting test capacity group from previous run: {p!r} "
+                "on CPC {c}".
                 format(p=capgrp_name, c=cpc.name), UserWarning)
             capgrp.delete()
         try:
@@ -108,8 +109,8 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test capacity group from previous run: '{p}' "
-                "on CPC '{c}'".
+                "Deleting test capacity group from previous run: {p!r} "
+                "on CPC {c}".
                 format(p=capgrp_name_new, c=cpc.name), UserWarning)
             capgrp.delete()
 

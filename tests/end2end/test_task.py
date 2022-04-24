@@ -20,7 +20,6 @@ These tests do not change any existing tasks.
 
 from __future__ import absolute_import, print_function
 
-import pytest
 from requests.packages import urllib3
 
 import zhmcclient
@@ -28,7 +27,7 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list
+from .utils import pick_test_resources, runtest_find_list, skip_warn
 
 urllib3.disable_warnings()
 
@@ -49,13 +48,14 @@ def test_task_find_list(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     console = client.consoles.console
+    hd = hmc_session.hmc_definition
 
     api_version = client.query_api_version()
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        pytest.skip("HMC {hv} does not yet support tasks".
-                    format(hv=hmc_version))
+        skip_warn("HMC {h} of version {v} does not yet support tasks".
+                  format(h=hd.hmc_host, v=hmc_version))
 
     # Pick the tasks to test with
     task_list = console.tasks.list()
@@ -63,7 +63,7 @@ def test_task_find_list(hmc_session):  # noqa: F811
     task_list = pick_test_resources(task_list)
 
     for task in task_list:
-        print("Testing with task {}".format(task.name))
+        print("Testing with task {t!r}".format(t=task.name))
         runtest_find_list(
             hmc_session, console.tasks, task.name, 'name', 'element-uri',
             TASK_VOLATILE_PROPS, TASK_MINIMAL_PROPS, TASK_LIST_PROPS)

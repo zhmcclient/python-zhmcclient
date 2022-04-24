@@ -31,7 +31,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    End2endTestWarning
+    skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,24 +52,23 @@ def test_user_find_list(hmc_session):  # noqa: F811
     """
     client = zhmcclient.Client(hmc_session)
     console = client.consoles.console
+    hd = hmc_session.hmc_definition
 
     api_version = client.query_api_version()
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        pytest.skip("HMC {hv} does not yet support users".
-                    format(hv=hmc_version))
+        skip_warn("HMC {h} of version {v} does not yet support users".
+                  format(h=hd.hmc_host, v=hmc_version))
 
     # Pick the users to test with
     user_list = console.users.list()
     if not user_list:
-        msg_txt = "No users defined on HMC"
-        warnings.warn(msg_txt, End2endTestWarning)
-        pytest.skip(msg_txt)
+        skip_warn("No users defined on HMC {h}".format(h=hd.hmc_host))
     user_list = pick_test_resources(user_list)
 
     for user in user_list:
-        print("Testing with user {}".format(user.name))
+        print("Testing with user {u!r}".format(u=user.name))
         runtest_find_list(
             hmc_session, console.users, user.name, 'name',
             'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
@@ -89,8 +88,8 @@ def test_user_crud(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        pytest.skip("HMC {hv} does not yet support users".
-                    format(hv=hmc_version))
+        skip_warn("HMC {h} of version {v} does not yet support users".
+                  format(h=hd.hmc_host, v=hmc_version))
 
     user_name = TEST_PREFIX + '_test_user_crud_user1'
     user_name_new = user_name + '_new'
@@ -103,8 +102,8 @@ def test_user_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test user from previous run: '{p}'".
-            format(p=user_name), UserWarning)
+            "Deleting test user from previous run: {u!r}".
+            format(u=user_name), UserWarning)
         user.delete()
     try:
         pwrule = console.password_rules.find(name=pwrule_name)
@@ -112,15 +111,15 @@ def test_user_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test password rule from previous run: '{p}'".
-            format(p=pwrule_name), UserWarning)
+            "Deleting test password rule from previous run: {r!r}".
+            format(r=pwrule_name), UserWarning)
         pwrule.delete()
 
     # Pick a password rule for the user
     try:
         pwrule = console.password_rules.find(name='Basic')
     except zhmcclient.NotFound:
-        pytest.skip("Password rule 'Basic' not found to create test user")
+        skip_warn("Password rule 'Basic' not found to create test user")
 
     # Test creating the user
 
@@ -144,11 +143,9 @@ def test_user_crud(hmc_session):  # noqa: F811
         user = console.users.create(user_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            msg_txt = "HMC userid '{u}' is not authorized for the " \
-                "'{t}' task on HMC {h}". \
-                format(u=hd.hmc_userid, h=hd.hmc_host, t=task_name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("HMC userid {u!r} is not authorized for task {t!r} on "
+                      "HMC {h}".
+                      format(u=hd.hmc_userid, t=task_name, h=hd.hmc_host))
         else:
             raise
 
