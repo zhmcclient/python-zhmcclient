@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    End2endTestWarning
+    skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,12 +52,13 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the ports to test with
         adapter_port_tuples = []
@@ -67,14 +68,13 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
             for port in port_list:
                 adapter_port_tuples.append((adapter, port))
         if not adapter_port_tuples:
-            msg_txt = "No adapters with ports on CPC {}".format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No adapters with ports on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.hmc_host))
         adapter_port_tuples = pick_test_resources(adapter_port_tuples)
 
         for adapter, port in adapter_port_tuples:
-            print("Testing on CPC {} with port {} of adapter {}".
-                  format(cpc.name, port.name, adapter.name))
+            print("Testing on CPC {c} with port {p!r} of adapter {a!r}".
+                  format(c=cpc.name, p=port.name, a=adapter.name))
             runtest_find_list(
                 session, adapter.ports, port.name, 'name', 'element-uri',
                 PORT_VOLATILE_PROPS, PORT_MINIMAL_PROPS, PORT_LIST_PROPS)
@@ -86,11 +86,12 @@ def test_port_update(dpm_mode_cpcs):  # noqa: F811
     Test updating the port of a Hipersocket adapter.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         adapter_name = TEST_PREFIX + ' test_adapter_crud adapter1'
 
@@ -102,7 +103,7 @@ def test_port_update(dpm_mode_cpcs):  # noqa: F811
         else:
             warnings.warn(
                 "Deleting test Hipersocket adapter from previous run: "
-                "'{a}' on CPC '{c}'".
+                "{a!r} on CPC {c}".
                 format(a=adapter_name, c=cpc.name), UserWarning)
             adapter.delete()
 

@@ -20,7 +20,6 @@ These tests do not change any activation profiles.
 
 from __future__ import absolute_import, print_function
 
-import warnings
 import pytest
 from requests.packages import urllib3
 
@@ -29,7 +28,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, End2endTestWarning
+from .utils import pick_test_resources, runtest_find_list, skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,26 +51,26 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
     Test list(), find(), findall().
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_warn("HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
 
         session = cpc.manager.session
+        hd = session.hmc_definition
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
 
         # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
-            msg_txt = "No {} activation profiles on CPC {}". \
-                format(profile_type, cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No {t} activation profiles on CPC {c} managed by "
+                      "HMC {h}".
+                      format(t=profile_type, c=cpc.name, h=hd.hmc_host))
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:
-            print("Testing on CPC {} with {} activation profile {}".
-                  format(cpc.name, profile_type, actprof.name))
+            print("Testing on CPC {c} with {t} activation profile {p!r}".
+                  format(c=cpc.name, t=profile_type, p=actprof.name))
             runtest_find_list(
                 session, actprof_mgr, actprof.name, 'name', 'element-uri',
                 ACTPROF_VOLATILE_PROPS, ACTPROF_MINIMAL_PROPS,

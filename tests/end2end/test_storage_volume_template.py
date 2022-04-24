@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
-    runtest_find_list, TEST_PREFIX, End2endTestWarning
+    runtest_find_list, TEST_PREFIX, skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,7 +52,7 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -60,6 +60,7 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the storage volume templates to test with
         grp_vol_tuples = []
@@ -70,16 +71,15 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
             for stovoltpl in stovoltpl_list:
                 grp_vol_tuples.append((stogrptpl, stovoltpl))
         if not grp_vol_tuples:
-            msg_txt = "No storage group templates with volumes associated to " \
-                "CPC {}".format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No storage group templates with volumes associated to "
+                      "CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.hmc_host))
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:
-            print("Testing on CPC {} with storage volume template {} of "
-                  "storage group template {}".
-                  format(cpc.name, stovoltpl.name, stogrptpl.name))
+            print("Testing on CPC {c} with storage volume template {v!r} of "
+                  "storage group template {g!r}".
+                  format(c=cpc.name, v=stovoltpl.name, g=stogrptpl.name))
             runtest_find_list(
                 session, stogrptpl.storage_volume_templates, stovoltpl.name,
                 'name', 'size', STOVOLTPL_VOLATILE_PROPS,
@@ -93,12 +93,13 @@ def test_stovoltpl_crud(dpm_mode_cpcs):  # noqa: F811
     group template.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         console = cpc.manager.client.consoles.console
 
@@ -114,9 +115,9 @@ def test_stovoltpl_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group template from previous run: '{s}' "
-                "on CPC '{c}'".
-                format(s=stogrptpl_name, c=cpc.name), UserWarning)
+                "Deleting test storage group template from previous run: {g!r} "
+                "on CPC {c}".
+                format(g=stogrptpl_name, c=cpc.name), UserWarning)
             stogrptpl.delete()
 
         stogrptpl = None

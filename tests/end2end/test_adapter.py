@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    End2endTestWarning
+    skip_warn
 
 urllib3.disable_warnings()
 
@@ -53,24 +53,24 @@ def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
         if not adapter_list:
-            msg_txt = "No adapters on CPC {}".format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No adapters on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.hmc_host))
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:
-            print("Testing on CPC {} with adapter {}".
-                  format(cpc.name, adapter.name))
+            print("Testing on CPC {c} with adapter {a!r}".
+                  format(c=cpc.name, a=adapter.name))
             runtest_find_list(
                 session, cpc.adapters, adapter.name, 'name', 'object-uri',
                 ADAPTER_VOLATILE_PROPS, ADAPTER_MINIMAL_PROPS,
@@ -83,11 +83,12 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a Hipersocket adapter.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         adapter_name = TEST_PREFIX + ' test_adapter_crud adapter1'
         adapter_name_new = adapter_name + ' new'
@@ -100,7 +101,7 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
         else:
             warnings.warn(
                 "Deleting test Hipersocket adapter from previous run: "
-                "'{a}' on CPC '{c}'".
+                "{a!r} on CPC {c}".
                 format(a=adapter_name, c=cpc.name), UserWarning)
             adapter.delete()
         try:
@@ -110,7 +111,7 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
         else:
             warnings.warn(
                 "Deleting test Hipersocket adapter from previous run: "
-                "'{a}' on CPC '{c}'".
+                "{a!r} on CPC {c}".
                 format(a=adapter_name_new, c=cpc.name), UserWarning)
             adapter.delete()
 

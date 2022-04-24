@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
-    runtest_find_list, TEST_PREFIX, End2endTestWarning
+    runtest_find_list, TEST_PREFIX, skip_warn
 
 urllib3.disable_warnings()
 
@@ -54,7 +54,7 @@ def test_stogrptpl_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
@@ -62,20 +62,19 @@ def test_stogrptpl_find_list(dpm_mode_cpcs):  # noqa: F811
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the storage group templates to test with
         stogrptpl_list = console.storage_group_templates.findall(
             **{'cpc-uri': cpc.uri})
         if not stogrptpl_list:
-            msg_txt = "No storage group templates associated to CPC {}". \
-                format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No storage group templates associated to CPC {c} "
+                      "managed by HMC {h}".format(c=cpc.name, h=hd.hmc_host))
         stogrptpl_list = pick_test_resources(stogrptpl_list)
 
         for stogrptpl in stogrptpl_list:
-            print("Testing on CPC {} with storage group template {}".
-                  format(cpc.name, stogrptpl.name))
+            print("Testing on CPC {c} with storage group template {g!r}".
+                  format(c=cpc.name, g=stogrptpl.name))
             runtest_find_list(
                 session, console.storage_group_templates, stogrptpl.name,
                 'name', 'object-uri', STOGRPTPL_VOLATILE_PROPS,
@@ -88,12 +87,13 @@ def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a storage group template.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
         skipif_no_storage_mgmt_feature(cpc)
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         console = cpc.manager.client.consoles.console
         stogrptpl_name = TEST_PREFIX + ' test_stogrptpl_crud stogrptpl1'
@@ -107,9 +107,8 @@ def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group template from previous run: '{s}' "
-                "on CPC '{c}'".
-                format(s=stogrptpl_name, c=cpc.name), UserWarning)
+                "Deleting test storage group template from previous run: {g!r} "
+                "on CPC {c}".format(g=stogrptpl_name, c=cpc.name), UserWarning)
             stogrptpl.delete()
         try:
             stogrptpl = console.storage_group_templates.find(
@@ -118,9 +117,9 @@ def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group template from previous run: '{s}' "
-                "on CPC '{c}'".
-                format(s=stogrptpl_name_new, c=cpc.name), UserWarning)
+                "Deleting test storage group template from previous run: {g!r} "
+                "on CPC {c}".
+                format(g=stogrptpl_name_new, c=cpc.name), UserWarning)
             stogrptpl.delete()
 
         # Test creating the storage group template

@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, End2endTestWarning
+    standard_partition_props, skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,24 +52,24 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            msg_txt = "No partitions on CPC {}".format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No partitions on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.hmc_host))
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
-            print("Testing on CPC {} with partition {}".
-                  format(cpc.name, part.name))
+            print("Testing on CPC {c} with partition {p!r}".
+                  format(c=cpc.name, p=part.name))
             runtest_find_list(
                 session, cpc.partitions, part.name, 'name', 'status',
                 PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS)
@@ -81,11 +81,12 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a partition.
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         part_name = TEST_PREFIX + ' test_part_crud part1'
         part_name_new = part_name + ' new'
@@ -97,7 +98,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: '{p}' on CPC '{c}'".
+                "Deleting test partition from previous run: {p!r} on CPC {c}".
                 format(p=part_name, c=cpc.name), UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
@@ -109,7 +110,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: '{p}' on CPC '{c}'".
+                "Deleting test partition from previous run: {p!r} on CPC {c}".
                 format(p=part_name_new, c=cpc.name), UserWarning)
             status = part.get_property('status')
             if status != 'stopped':

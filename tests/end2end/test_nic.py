@@ -32,7 +32,7 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, End2endTestWarning
+    standard_partition_props, skip_warn
 
 urllib3.disable_warnings()
 
@@ -52,12 +52,13 @@ def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
         session = cpc.manager.session
+        hd = session.hmc_definition
 
         # Pick the NICs to test with
         part_nic_tuples = []
@@ -67,14 +68,13 @@ def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
             for nic in nic_list:
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
-            msg_txt = "No partitions with NICs on CPC {}".format(cpc.name)
-            warnings.warn(msg_txt, End2endTestWarning)
-            pytest.skip(msg_txt)
+            skip_warn("No partitions with NICs on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.hmc_host))
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:
-            print("Testing on CPC {} with NIC {} of partition {}".
-                  format(cpc.name, nic.name, part.name))
+            print("Testing on CPC {c} with NIC {n!r} of partition {p!r}".
+                  format(c=cpc.name, n=nic.name, p=part.name))
             runtest_find_list(
                 session, part.nics, nic.name, 'name', 'type',
                 NIC_VOLATILE_PROPS, NIC_MINIMAL_PROPS, NIC_LIST_PROPS)
@@ -86,11 +86,12 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
     Test create, read, update and delete a NIC (and a partition).
     """
     if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+        skip_warn("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
+
+        print("Testing on CPC {c}".format(c=cpc.name))
 
         hs_adapter_name = TEST_PREFIX + ' test_nic_crud adapter1'
         part_name = TEST_PREFIX + ' test_nic_crud part1'
@@ -104,7 +105,7 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: '{p}' on CPC '{c}'".
+                "Deleting test partition from previous run: {p!r} on CPC {c}".
                 format(p=part_name, c=cpc.name), UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
@@ -116,8 +117,8 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test adapter from previous run: '{a}' on CPC '{c}'".
-                format(a=hs_adapter_name, c=cpc.name), UserWarning)
+                "Deleting test Hipersocket adapter from previous run: {a!r} on "
+                "CPC {c}".format(a=hs_adapter_name, c=cpc.name), UserWarning)
             adapter.delete()
 
         part = None

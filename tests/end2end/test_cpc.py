@@ -20,7 +20,6 @@ These tests do not change any CPC properties.
 
 from __future__ import absolute_import, print_function
 
-import warnings
 import pytest
 from requests.packages import urllib3
 import zhmcclient
@@ -29,7 +28,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import all_cpcs, classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, assert_res_prop, End2endTestWarning
+from .utils import runtest_find_list, assert_res_prop, skip_warn
 
 urllib3.disable_warnings()
 
@@ -90,7 +89,7 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
     hd = hmc_session.hmc_definition
 
     for cpc_name in hd.cpcs:
-        print("Testing with CPC {}".format(cpc_name))
+        print("Testing with CPC {c}".format(c=cpc_name))
 
         cpc_list_props = CPC_LIST_PROPS
         se_version = hd.cpcs[cpc_name].get('se_version', None)
@@ -114,10 +113,10 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     - feature_info()
     """
     if not all_cpcs:
-        pytest.skip("HMC definition does not include any CPCs")
+        skip_warn("HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
-        print("Testing with CPC {}".format(cpc.name))
+        print("Testing with CPC {c}".format(c=cpc.name))
 
         cpc.pull_full_properties()
         cpc_mach_type = cpc.properties.get('machine-type', None)
@@ -183,14 +182,17 @@ def test_cpc_features(all_cpcs):  # noqa: F811
             #       (e.g when a z14 HMC manages a z13)
             for i, feature in enumerate(features):
                 assert 'name' in feature, \
-                    "Feature #{i} does not have '{p}' field in Cpc object " \
-                    "'{c}'".format(i=i, p='name', c=cpc.name)
+                    "Feature #{i} does not have the {p!r} attribute in Cpc " \
+                    "object for CPC {c}". \
+                    format(i=i, p='name', c=cpc.name)
                 assert 'description' in feature, \
-                    "Feature #{i} does not have '{p}' field in Cpc object " \
-                    "'{c}'".format(i=i, p='description', c=cpc.name)
+                    "Feature #{i} does not have the {p!r} attribute in Cpc " \
+                    "object for CPC {c}". \
+                    format(i=i, p='description', c=cpc.name)
                 assert 'state' in feature, \
-                    "Feature #{i} does not have '{p}' field in Cpc object " \
-                    "'{c}'".format(i=i, p='state', c=cpc.name)
+                    "Feature #{i} does not have the {p!r} attribute in Cpc " \
+                    "object for CPC {c}". \
+                    format(i=i, p='state', c=cpc.name)
 
 
 def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
@@ -202,14 +204,15 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
     Only for CPCs in classic mode, skipped in DPM mode.
     """
     if not classic_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in classic mode")
+        skip_warn("HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
-        print("Testing on CPC {}".format(cpc.name))
 
         session = cpc.manager.session
         hd = session.hmc_definition
+
+        print("Testing with CPC {c}".format(c=cpc.name))
 
         try:
 
@@ -218,11 +221,9 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                msg_txt = "HMC userid '{u}' is not authorized for the " \
-                    "'Export/Import Profile Data (API only)' " \
-                    "task on HMC {h}".format(u=hd.hmc_userid, h=hd.hmc_host)
-                warnings.warn(msg_txt, End2endTestWarning)
-                pytest.skip(msg_txt)
+                skip_warn("HMC userid {u!r} is not authorized for task "
+                          "'Export/Import Profile Data (API only)' on HMC {h}".
+                          format(u=hd.hmc_userid, h=hd.hmc_host))
             else:
                 raise
 
