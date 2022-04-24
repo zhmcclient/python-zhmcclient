@@ -53,6 +53,9 @@ Released: not yet
 * End2end test: Made user test tolerant against missing passweord rule 'Basic'.
   (issue #960)
 
+* End2end test: Added CPC property 'last-energy-advice-time' to the list of
+  volatile CPC properties in 'test_cpc_find_list()'.
+
 **Enhancements:**
 
 * End2end test: Changed the checking of the HMC definition files for end2end
