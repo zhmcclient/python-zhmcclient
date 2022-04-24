@@ -109,7 +109,7 @@ def info(capsys, format_str, format_args=None):
         msg = format_str
 
     with capsys.disabled():
-        print("Info: " + msg)
+        print(msg)
 
 
 def print_logging():
