@@ -44,6 +44,7 @@ CPC_LIST_PROPS_Z15 = [
 
 # Properties whose values can change between retrievals
 CPC_VOLATILE_PROPS = [
+    'last-energy-advice-time',
     'zcpc-ambient-temperature',
     'zcpc-dew-point',
     'zcpc-exhaust-temperature',
