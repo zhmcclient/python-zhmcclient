@@ -20,6 +20,7 @@ These tests do not change any existing virtual switches.
 
 from __future__ import absolute_import, print_function
 
+import pytest
 from requests.packages import urllib3
 
 # pylint: disable=line-too-long,unused-import
@@ -47,7 +48,7 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not dpm_mode_cpcs:
-        skip_warn("HMC definition does not include any CPCs in DPM mode")
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled

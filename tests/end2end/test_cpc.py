@@ -114,7 +114,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     - feature_info()
     """
     if not all_cpcs:
-        skip_warn("HMC definition does not include any CPCs")
+        pytest.skip("HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
         print("Testing with CPC {c}".format(c=cpc.name))
@@ -205,7 +205,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
     Only for CPCs in classic mode, skipped in DPM mode.
     """
     if not classic_mode_cpcs:
-        skip_warn("HMC definition does not include any CPCs in classic mode")
+        pytest.skip("HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled

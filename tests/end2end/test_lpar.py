@@ -21,6 +21,7 @@ test LPARs.
 
 from __future__ import absolute_import, print_function
 
+import pytest
 from requests.packages import urllib3
 
 # pylint: disable=line-too-long,unused-import
@@ -48,7 +49,7 @@ def test_lpar_find_list(classic_mode_cpcs):  # noqa: F811
     Test list(), find(), findall().
     """
     if not classic_mode_cpcs:
-        skip_warn("HMC definition does not include any CPCs in classic mode")
+        pytest.skip("HMC definition does not include any CPCs in classic mode")
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
