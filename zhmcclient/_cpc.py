@@ -388,6 +388,7 @@ class Cpc(BaseResource):
     # machine types.
 
     # Machine types with same max partitions for all models:
+    # Keep in sync with tests/end2end/test_cpc.py.
     _MAX_PARTITIONS_BY_MACHINE_TYPE = {
         '2817': 60,  # z196
         '2818': 30,  # z114
@@ -397,42 +398,48 @@ class Cpc(BaseResource):
         '2965': 40,  # z13s / Rockhopper
         '3906': 85,  # z14 / Emperor II
         '3907': 40,  # z14-ZR1 / Rockhopper II
+        '8561': 85,  # z15-T01 / LinuxOne III (-LT1)
+        '3931': 85,  # z16-A01
     }
 
     # Machine types with different max partitions across their models:
+    # Keep in sync with tests/end2end/test_cpc.py.
     _MAX_PARTITIONS_BY_MACHINE_TYPE_MODEL = {
-        ('8561', 'T01'): 85,  # z15
-        ('8561', 'LT1'): 85,  # z15
-        ('8562', 'GT2'): 85,  # z15 (85 is an exception for 8562)
-        ('8562', 'T02'): 40,  # z15
-        ('8562', 'LT2'): 40,  # z15
+        ('8562', 'T02'): 40,  # z15-T02
+        ('8562', 'LT2'): 40,  # LinuxOne III (-LT2)
+        ('8562', 'GT2'): 85,  # z15-GT2
     }
 
     @property
     @logged_api_call
     def maximum_active_partitions(self):
         """
-        Integer: The maximum number of active logical partitions or partitions
-        of this CPC.
+        Integer: The maximum number of partitions of this CPC.
 
-        The following table shows the maximum number of active logical
-        partitions or partitions by machine generations supported at the HMC
-        API:
+        For CPCs in DPM mode, the number indicates the maximum number of
+        partitions. For CPCs in classic mode, the number indicates the maximum
+        number of logical partitions (LPARs) that can be active at the same
+        time.
 
-        =========================  ==================
-        Machine generation         Maximum partitions
-        =========================  ==================
-        z196                                      60
-        z114                                      30
-        zEC12                                     60
-        zBC12                                     30
-        z13 / Emperor                             85
-        z13s / Rockhopper                         40
-        z14 / Emperor II                          85
-        z14-ZR1 / -LR1                            40
-        z15-T01 / -LT1 / -GT2                     85
-        z15-T02 / -LT2                            40
-        =========================  ==================
+        The following table shows the maximum number of partitions by machine
+        generation:
+
+        =============================  ==================
+        Machine generation             Maximum partitions
+        =============================  ==================
+        z196                                          60
+        z114                                          30
+        zEC12                                         60
+        zBC12                                         30
+        z13 / Emperor                                 85
+        z13s / Rockhopper                             40
+        z14 / Emperor II                              85
+        z14-ZR1 / Rockhopper II                       40
+        z15-T01 / LinuxOne III (-LT1)                 85
+        z15-T02 / LinuxOne III (-LT2)                 40
+        z15-GT2                                       85
+        z16-A01                                       85
+        =============================  ==================
 
         Raises:
 
