@@ -88,6 +88,11 @@ Released: not yet
   which resources are picked for testing with. By default, a random choice
   from all resources is picked. (issue #963)
 
+* Added support for z16 in Python property 'Cpc.maximum_active_partitions'.
+
+* Improved description of 'Cpc.maximum_active_partitions' to better
+  clarify the difference between DPM partitions and classic mode LPARs.
+
 **Cleanup:**
 
 * Made the handling of 'Lpar.list()' with filters that have no matching LPAR

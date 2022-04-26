@@ -61,6 +61,7 @@ CPC_VOLATILE_PROPS = [
 ]
 
 # Machine types with same max partitions for all models:
+# Keep in sync with zhmcclient/_cpc.py.
 MAX_PARTS_BY_TYPE = {
     '2817': 60,  # z196
     '2818': 30,  # z114
@@ -70,14 +71,16 @@ MAX_PARTS_BY_TYPE = {
     '2965': 40,  # z13s / Rockhopper
     '3906': 85,  # z14 / Emperor II
     '3907': 40,  # z14-ZR1 / Rockhopper II
-    '8561': 85,  # z15
+    '8561': 85,  # z15-T01 / LinuxOne III (-LT1)
+    '3931': 85,  # z16-A01
 }
 
 # Machine types with different max partitions across their models:
+# Keep in sync with zhmcclient/_cpc.py.
 MAX_PARTS_BY_TYPE_MODEL = {
-    ('8562', 'GT2'): 85,  # z15 (85 is an exception for 8562)
-    ('8562', 'T02'): 40,  # z15
-    ('8562', 'LT2'): 40,  # z15
+    ('8562', 'T02'): 40,  # z15-T02
+    ('8562', 'LT2'): 40,  # LinuxOne III (-LT2)
+    ('8562', 'GT2'): 85,  # z15-GT2
 }
 
 
