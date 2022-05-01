@@ -163,11 +163,15 @@ For example:
 Running end2end tests
 ^^^^^^^^^^^^^^^^^^^^^
 
-Prepare an :ref:`HMC definition file` that defines real and/or mocked HMCs the tests
-should be run against.
-The HMC definition file can be created from this
-`example HMC definition file <https://github.com/zhmcclient/python-zhmcclient/blob/master/tests/example_hmc_definitions.yaml>`_.
-Its format is described in the comment header of the example file.
+Prepare an :ref:`HMC inventory file` that defines real and/or mocked HMCs the
+tests should be run against, and an :ref:`HMC vault file` with credentials for
+the real HMCs.
+
+There are examples for these files, that describe their format in the comment
+header:
+
+* `Example HMC inventory file <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_inventory.yaml>`_.
+* `Example HMC vault file <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_vault.yaml>`_.
 
 To run the end2end tests in the currently active Python environment, issue:
 
@@ -175,20 +179,33 @@ To run the end2end tests in the currently active Python environment, issue:
 
     $ make end2end
 
-By default, the HMC definition file named ``.zhmc_hmc_definitions.yaml`` in
+By default, the HMC inventory file named ``.zhmc_inventory.yaml`` in
 the home directory of the current user is used. A different path name can
-be specified with the ``TESTHMCFILE`` environment variable.
+be specified with the ``TESTINVENTORY`` environment variable.
 
-By default, the tests are run against the nickname ``default`` in the HMC
-definition file, which can be used for a single HMC or a group. A different
-nickname can be specified with the ``TESTHMC`` environment variable.
+By default, the HMC vault file named ``.zhmc_vault.yaml`` in
+the home directory of the current user is used. A different path name can
+be specified with the ``TESTVAULT`` environment variable.
 
-For example:
+By default, the tests are run against the group name or HMC nickname
+``default`` defined in the HMC inventory file. A different group name or
+HMC nickname can be specified with the ``TESTHMC`` environment variable.
 
-.. code-block:: text
+Examples:
 
-    $ TESTHMCFILE=`./hmcs.yaml` make end2end  # Run against 'default' in the specified file
-    $ TESTHMC=`HMC1` make end2end             # Run against 'HMC1' in default file
+* Run against group or HMC nickname 'default' using the specified HMC inventory
+  and vault files:
+
+  .. code-block:: text
+
+      $ TESTINVENTORY=`./hmc_inventory.yaml` TESTVAULT=`./hmc_vault.yaml` make end2end
+
+* Run against group or HMC nickname 'HMC1' using the default HMC inventory and
+  vault files:
+
+  .. code-block:: text
+
+      $ TESTHMC=`HMC1` make end2end
 
 
 .. _`Enabling logging during end2end tests`:
@@ -231,16 +248,59 @@ or, shorter:
     $ export ZHMC_LOG=all=debug
 
 
-.. _`HMC definition file`:
+.. _`HMC inventory file`:
 
-HMC definition file
-^^^^^^^^^^^^^^^^^^^
+HMC inventory file
+^^^^^^^^^^^^^^^^^^
 
-The HMC definition file specifies HMCs and/or groups of HMCs to run the end2end
-tests against.
+The HMC inventory file specifies HMCs and/or groups of HMCs to be used for any
+code that uses the :ref:`zhmcclient.testutils module` such as the end2end
+tests or the examples in the `examples directory`_.
+
+.. _examples directory: https://github.com/zhmcclient/python-zhmcclient/tree/master/examples
 
 Its format is described in the comment header of the
-`example HMC definition file <https://github.com/zhmcclient/python-zhmcclient/blob/master/tests/example_hmc_definitions.yaml>`_.
+`example HMC inventory file <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_inventory.yaml>`_.
+
+The format is compatible to the format of Ansible inventory files in YAML format,
+with some extensions and some limitations:
+
+Extensions:
+
+* The HMC inventory files define and document specific variables for the
+  HMC hosts.
+
+Limitations:
+
+* DNS host names or IP addresses with ranges (e.g. ``myhost[0:9].xyz.com``)
+  are not supported.
+
+For details on the format of Ansible inventory files, see
+`Ansible: How to build your inventory <https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html>`_.
+
+
+.. _`HMC vault file`:
+
+HMC vault file
+^^^^^^^^^^^^^^
+
+The HMC vault file specifies credentials for real HMCs to be used for any
+code that uses the :ref:`zhmcclient.testutils module` such as the end2end
+tests or the examples in the `examples directory`_.
+
+It is required to have the HMC credentials in the HMC vault file; they cannot
+be specified in the HMC inventory file.
+
+The format of the HMC vault file is described in the comment header of the
+`example HMC vault file <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_vault.yaml>`_.
+
+The data items for HMCs in the HMC vault file are looked up using the HMC
+names from the HMC inventory file, so they must match.
+
+Limitations:
+
+* In the current release, HMC vault files cannot be encrypted. To mitigate that,
+  set restrictive file permissions on the HMC vault files.
 
 
 .. _`zhmcclient.testutils module`:
@@ -249,17 +309,15 @@ zhmcclient.testutils module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :mod:`zhmcclient.testutils` module provides support for running tests against
-real or mocked HMCs defined in a :ref:`HMC definition file`.
+real or mocked HMCs defined in an :ref:`HMC inventory file`.
 
 It defines
 `pytest fixtures <https://docs.pytest.org/en/latest/explanation/fixtures.html>`_
-and encapsulates the access to the HMC definition file.
+and encapsulates the access to the HMC inventory file.
 
 .. autofunction:: zhmcclient.testutils.hmc_definition
 
 .. autofunction:: zhmcclient.testutils.hmc_session
-
-.. autofunction:: zhmcclient.testutils.one_cpc
 
 .. autofunction:: zhmcclient.testutils.all_cpcs
 
@@ -267,20 +325,41 @@ and encapsulates the access to the HMC definition file.
 
 .. autofunction:: zhmcclient.testutils.classic_mode_cpcs
 
-.. autofunction:: zhmcclient.testutils.hmc_definition_file
-
 .. autofunction:: zhmcclient.testutils.hmc_definitions
+
+.. autofunction:: zhmcclient.testutils.print_hmc_definitions
+
+.. autoclass:: zhmcclient.testutils.HMCDefinitions
+   :members:
+   :autosummary:
+   :special-members: __repr__
 
 .. autoclass:: zhmcclient.testutils.HMCDefinition
    :members:
    :autosummary:
    :special-members: __repr__
 
-.. autoclass:: zhmcclient.testutils.HMCDefinitionFile
+.. autoclass:: zhmcclient.testutils.HMCInventoryFile
    :members:
    :autosummary:
 
-.. autoclass:: zhmcclient.testutils.HMCDefinitionFileError
+.. autoclass:: zhmcclient.testutils.HMCVaultFile
+   :members:
+   :autosummary:
+
+.. autoclass:: zhmcclient.testutils.HMCInventoryFileError
+   :members:
+   :autosummary:
+
+.. autoclass:: zhmcclient.testutils.HMCVaultFileError
+   :members:
+   :autosummary:
+
+.. autoclass:: zhmcclient.testutils.HMCNoVaultError
+   :members:
+   :autosummary:
+
+.. autoclass:: zhmcclient.testutils.HMCNotFound
    :members:
    :autosummary:
 

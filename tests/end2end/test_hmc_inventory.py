@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-End2end tests for testing whether the HMC definitions in the HMC definition
-file match reality.
+End2end tests for testing whether the HMCs in the HMC inventory file match
+reality.
 """
 
 from __future__ import absolute_import, print_function
@@ -24,7 +24,7 @@ from requests.packages import urllib3
 import zhmcclient
 # pylint: disable=unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401
-from zhmcclient.testutils import hmc_definition_file
+from zhmcclient.testutils import HMCDefinitions
 
 urllib3.disable_warnings()
 
@@ -32,7 +32,7 @@ urllib3.disable_warnings()
 def test_hmcdef_cpcs(hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
-    Test that the HMC actually manages the CPCs defined in its HMC definition
+    Test that the HMC actually manages the CPCs defined in its inventory file
     and that these CPCs actually have the properties defined there.
     """
     client = zhmcclient.Client(hmc_session)
@@ -44,14 +44,12 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
     for cpc_name in hd.cpcs:
         def_cpc_props = dict(hd.cpcs[cpc_name])
 
-        print("Checking CPC {c} defined in HMC definition file".
-              format(c=cpc_name))
+        print("Checking CPC {c}".format(c=cpc_name))
 
         assert cpc_name in cpc_names, \
-            "CPC {c} defined for HMC {n} at {h} in HMC definition " \
-            "file is not managed by that HMC. Actually managed " \
-            "CPCs: {cl}". \
-            format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
+            "CPC {c} defined in inventory file for HMC {n!r} at {h} is not " \
+            "managed by that HMC. Actually managed CPCs: {cl}". \
+            format(c=cpc_name, n=hd.nickname, h=hd.host,
                    cl=', '.join(cpc_names))
 
         cpc = client.cpcs.find(name=cpc_name)
@@ -69,29 +67,28 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
 
             hmc_prop_name = def_prop_name.replace('_', '-')
             assert hmc_prop_name in cpc_props, \
-                "Property {dp!r} defined for CPC {c} in HMC nickname {n!r} " \
-                "in HMC definition file does not actually exist on that CPC " \
-                "(as {hp!r})". \
+                "Property {dp!r} defined in inventory file for CPC {c} for " \
+                "HMC {n!r} does not actually exist on that CPC (as {hp!r})". \
                 format(dp=def_prop_name, hp=hmc_prop_name, c=cpc_name,
                        n=hd.nickname)
 
             cpc_value = cpc_props[hmc_prop_name]
             def_cpc_value = def_cpc_props[def_prop_name]
             assert def_cpc_value == cpc_value, \
-                "Property {dp!r} defined for CPC {c} in HMC nickname {n!r} " \
-                "in HMC definition file has an unexpected value: " \
-                "HMC definition file: {dv!r}, actual value: {hv!r}". \
+                "Property {dp!r} defined in inventory file for CPC {c} for " \
+                "HMC {n!r} has an unexpected value: " \
+                "inventory file: {dv!r}, actual value: {hv!r}". \
                 format(dp=def_prop_name, c=cpc_name, n=hd.nickname,
                        dv=def_cpc_value, hv=cpc_value)
 
 
 def test_hmcdef_check_all_hmcs():
     """
-    Check out the HMCs specified in the HMC definition file.
+    Check out the HMCs specified in the HMC inventory file.
     Skip HMCs that cannot be contacted.
     """
-    def_file = hmc_definition_file()
-    hmc_defs = def_file.list_all_hmcs()
+    hmcdefs = HMCDefinitions()
+    hd_list = hmcdefs.list_all_hmcs()
 
     rt_config = zhmcclient.RetryTimeoutConfig(
         connect_timeout=10,
@@ -100,22 +97,20 @@ def test_hmcdef_check_all_hmcs():
     )
 
     # Check real HMCs and their CPCs
-    for hd in hmc_defs:
+    for hd in hd_list:
 
-        if hd.hmc_host is None:
-            print("Skipping faked HMC {n} defined in HMC definition file".
-                  format(n=hd.nickname))
+        if hd.mock_file:
+            print("Skipping mocked HMC {n!r}".format(n=hd.nickname))
             continue
 
         for cpc_name in hd.cpcs:
 
-            print("Checking CPC {c} defined for HMC {n} at {h} in HMC "
-                  "definition file".
-                  format(c=cpc_name, n=hd.nickname, h=hd.hmc_host))
+            print("Checking CPC {c} defined for HMC {n!r} at {h}".
+                  format(c=cpc_name, n=hd.nickname, h=hd.host))
 
             session = zhmcclient.Session(
-                hd.hmc_host, hd.hmc_userid, hd.hmc_password,
-                verify_cert=hd.hmc_verify_cert,
+                hd.host, hd.userid, hd.password,
+                verify_cert=hd.verify_cert,
                 retry_timeout_config=rt_config)
 
             try:
@@ -124,8 +119,8 @@ def test_hmcdef_check_all_hmcs():
                 try:
                     session.logon()
                 except zhmcclient.ConnectionError as exc:
-                    print("Cannot logon to HMC {h} (skipping it): {e}: {m}".
-                          format(h=hd.hmc_host,
+                    print("Cannot logon to HMC at {h} (skipping it): {e}: {m}".
+                          format(h=hd.host,
                                  e=exc.__class__.__name__, m=exc))
                     continue
 
@@ -133,10 +128,9 @@ def test_hmcdef_check_all_hmcs():
                 cpc_names = [cpc.name for cpc in cpcs]
 
                 assert cpc_name in cpc_names, \
-                    "CPC {c} defined for HMC {n} at {h} in HMC definition " \
-                    "file is not managed by that HMC. Actually managed " \
-                    "CPCs: {cl}". \
-                    format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
+                    "CPC {c} defined in inventory file for HMC {n!r} at {h} " \
+                    "is not managed by that HMC. Actually managed CPCs: {cl}". \
+                    format(c=cpc_name, n=hd.nickname, h=hd.host,
                            cl=', '.join(cpc_names))
 
             finally:

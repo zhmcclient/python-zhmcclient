@@ -73,7 +73,7 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
         if not grp_vol_tuples:
             skip_warn("No storage group templates with volumes associated to "
                       "CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:

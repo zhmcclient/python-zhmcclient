@@ -65,7 +65,7 @@ def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
         adapter_list = cpc.adapters.list()
         if not adapter_list:
             skip_warn("No adapters on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:

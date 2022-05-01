@@ -59,12 +59,12 @@ def test_pwrule_find_list(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support password rules".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
     if not pwrule_list:
-        skip_warn("No password rules defined on HMC {h}".format(h=hd.hmc_host))
+        skip_warn("No password rules defined on HMC {h}".format(h=hd.host))
     pwrule_list = pick_test_resources(pwrule_list)
 
     for pwrule in pwrule_list:
@@ -89,7 +89,7 @@ def test_pwrule_crud(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support password rules".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     pwrule_name = TEST_PREFIX + ' test_pwrule_crud pwrule1'
     pwrule_name_new = pwrule_name + ' new'
@@ -125,7 +125,7 @@ def test_pwrule_crud(hmc_session):  # noqa: F811
         if exc.http_status == 403 and exc.reason == 1:
             skip_warn("HMC userid {u!r} is not authorized for task "
                       "'Manage Password Rules' on HMC {h}".
-                      format(u=hd.hmc_userid, h=hd.hmc_host))
+                      format(u=hd.userid, h=hd.host))
         else:
             raise
 

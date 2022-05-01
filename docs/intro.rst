@@ -414,12 +414,12 @@ accessible for the user:
     requests.packages.urllib3.disable_warnings()
 
     # Set these variables for your environment:
-    hmc_host = "<IP address or hostname of the HMC>"
-    hmc_userid = "<userid on that HMC>"
-    hmc_password = "<password of that HMC userid>"
+    host = "<IP address or hostname of the HMC>"
+    userid = "<userid on that HMC>"
+    password = "<password of that HMC userid>"
     verify_cert = False
 
-    session = zhmcclient.Session(hmc_host, hmc_userid, hmc_password, verify_cert=verify_cert)
+    session = zhmcclient.Session(host, userid, password, verify_cert=verify_cert)
     client = zhmcclient.Client(session)
     console = client.consoles.console
 
@@ -440,6 +440,11 @@ For more example code, see the Python scripts in the `examples directory`_ of
 the Git repository, or the :ref:`Tutorial` section of this documentation.
 
 .. _examples directory: https://github.com/zhmcclient/python-zhmcclient/tree/master/examples
+
+To run the examples in the `examples directory`_, you either need to set up
+an :ref:`HMC inventory file` and an :ref:`HMC vault file` to define the target
+HMC, or you can specify the HMC related parameters in the example scripts
+directly.
 
 
 .. _`Versioning`:

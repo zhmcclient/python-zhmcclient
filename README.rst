@@ -124,12 +124,12 @@ accessible for the user:
     requests.packages.urllib3.disable_warnings()
 
     # Set these variables for your environment:
-    hmc_host = "<IP address or hostname of the HMC>"
-    hmc_userid = "<userid on that HMC>"
-    hmc_password = "<password of that HMC userid>"
+    host = "<IP address or hostname of the HMC>"
+    userid = "<userid on that HMC>"
+    password = "<password of that HMC userid>"
     verify_cert = False
 
-    session = zhmcclient.Session(hmc_host, hmc_userid, hmc_password, verify_cert=verify_cert)
+    session = zhmcclient.Session(host, userid, password, verify_cert=verify_cert)
     client = zhmcclient.Client(session)
     console = client.consoles.console
 

@@ -69,7 +69,7 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
                 adapter_port_tuples.append((adapter, port))
         if not adapter_port_tuples:
             skip_warn("No adapters with ports on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         adapter_port_tuples = pick_test_resources(adapter_port_tuples)
 
         for adapter, port in adapter_port_tuples:

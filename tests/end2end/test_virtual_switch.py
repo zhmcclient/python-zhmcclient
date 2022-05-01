@@ -61,7 +61,7 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
         if not vswitch_list:
             skip_warn("No virtual switches (= no OSA/HS network adapters) on "
                       "CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         vswitch_list = pick_test_resources(vswitch_list)
 
         for vswitch in vswitch_list:

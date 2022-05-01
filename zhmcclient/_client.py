@@ -248,7 +248,7 @@ class Client(object):
             hmc_definition:
 
               # Internal state:
-              hmc_host: hmc1
+              host: hmc1
               api_version: '2.20'
               metric_group_definitions: [...]
               metric_values: [...]
@@ -299,7 +299,7 @@ class Client(object):
                 "hmc_definition": {
 
                     # Internal state:
-                    "hmc_host": "hmc1",
+                    "host": "hmc1",
                     "api_version": "2.20",
                     "metric_group_definitions": [...],
                     "metric_values": [...],
@@ -329,7 +329,7 @@ class Client(object):
 
             {
                 # Internal state:
-                "hmc_host": "hmc1",
+                "host": "hmc1",
                 "api_version": "2.20",
                 "metric_values": [...],
 
@@ -349,7 +349,7 @@ class Client(object):
         av = self.query_api_version()
         api_version_str = "{}.{}". \
             format(av['api-major-version'], av['api-minor-version'])
-        resource_dict['hmc_host'] = self.session.host
+        resource_dict['host'] = self.session.host
         resource_dict['api_version'] = api_version_str
 
         # Get the current metric values for all metric groups and dump them

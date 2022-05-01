@@ -27,13 +27,13 @@ from zhmcclient.testutils import hmc_definitions
 
 requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC definition file
+# Get HMC info from HMC inventory and vault files
 hmc_def = hmc_definitions()[0]
-nick = hmc_def.nickname
-host = hmc_def.hmc_host
-userid = hmc_def.hmc_userid
-password = hmc_def.hmc_password
-verify_cert = hmc_def.hmc_verify_cert
+nickname = hmc_def.nickname
+host = hmc_def.host
+userid = hmc_def.userid
+password = hmc_def.password
+verify_cert = hmc_def.verify_cert
 
 # Customize: Set to the LPAR that you want to activate/load/deactivate
 lpar_name = 'ZHMCTEST'
@@ -43,7 +43,7 @@ lpar_load_devno = '0100'
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nick, host, userid))
+print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
 
 print("Creating a session with the HMC ...")
 try:

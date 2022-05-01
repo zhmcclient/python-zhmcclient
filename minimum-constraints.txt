@@ -104,10 +104,10 @@ nocasedict==1.0.2
 # PyYAML pulled in by zhmcclient_mock (and zhmcclient examples, and python-coveralls)
 PyYAML==5.3
 
-# yamlloader pulled in by zhmcclient_mock
+# yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
 yamlloader==0.5.5
 
-# jsonschema pulled in by zhmcclient_mock
+# jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils
 jsonschema==2.6.0
 
 

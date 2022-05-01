@@ -69,7 +69,7 @@ def test_stogrptpl_find_list(dpm_mode_cpcs):  # noqa: F811
             **{'cpc-uri': cpc.uri})
         if not stogrptpl_list:
             skip_warn("No storage group templates associated to CPC {c} "
-                      "managed by HMC {h}".format(c=cpc.name, h=hd.hmc_host))
+                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
         stogrptpl_list = pick_test_resources(stogrptpl_list)
 
         for stogrptpl in stogrptpl_list:

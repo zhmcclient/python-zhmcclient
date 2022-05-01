@@ -102,12 +102,13 @@ else
   WHICH = which
 endif
 
-# Path name of HMC definitions file used for end2end tests.
-# Keep in sync with zhmcclient/testutils/hmc_definition_fixtures.py
-default_testhmcfile := tests/hmc_definitions.yaml
+# Default path names of HMC inventory and vault files used for end2end tests.
+# Keep in sync with zhmcclient/testutils/_hmc_definitions.py
+default_testinventory := $HOME/.zhmc_inventory.yaml
+default_testvault := $HOME/.zhmc_vault.yaml
 
-# HMC nickname in HMC definitions file
-# Keep in sync with zhmcclient/testutils/hmc_definition_fixtures.py
+# Default group name or HMC nickname in HMC inventory file to test against.
+# Keep in sync with zhmcclient/testutils/_hmc_definitions.py
 default_testhmc := default
 
 # Name of this Python package (top-level Python namespace + Pypi package name)
@@ -241,6 +242,7 @@ help:
 	@echo "  builddoc   - Build documentation in: $(doc_build_dir)"
 	@echo "  all        - Do all of the above"
 	@echo "  end2end    - Run end2end tests (and test coverage)"
+	@echo "  end2end_show - Show HMCs defined for end2end tests"
 	@echo "  uninstall  - Uninstall package from active Python environment"
 	@echo "  upload     - Upload the distribution files to PyPI"
 	@echo "  clean      - Remove any temporary files"
@@ -252,8 +254,9 @@ help:
 	@echo "Environment variables:"
 	@echo "  TESTCASES=... - Testcase filter for pytest -k"
 	@echo "  TESTOPTS=... - Options for pytest"
-	@echo "  TESTHMC=... - HMC nickname in HMC definitions file used in end2end tests. Default: $(default_testhmc)"
-	@echo "  TESTHMCFILE=... - Path name of HMC definitions file used in end2end tests. Default: $(default_testhmcfile)"
+	@echo "  TESTHMC=... - HMC group or host name in HMC inventory file to be used in end2end tests. Default: $(default_testhmc)"
+	@echo "  TESTINVENTORY=... - Path name of HMC inventory file used in end2end tests. Default: $(default_testinventory)"
+	@echo "  TESTVAULT=... - Path name of HMC vault file used in end2end tests. Default: $(default_testvault)"
 	@echo "  TESTRESOURCES=... - The resources to test with in end2end tests, as follows:"
 	@echo "      random - one random choice from the complete list of resources (default)"
 	@echo "      all - the complete list of resources"
@@ -493,5 +496,9 @@ endif
 .PHONY:	end2end
 end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_e2e_cov_files)
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_e2e_cov_opts) $(pytest_opts)
+	bash -c "TESTEND2END_LOAD=true py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_e2e_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
+
+.PHONY:	end2end_show
+end2end_show:
+	bash -c "TESTEND2END_LOAD=true $(PYTHON_CMD) -c 'from zhmcclient.testutils import print_hmc_definitions; print_hmc_definitions()'"

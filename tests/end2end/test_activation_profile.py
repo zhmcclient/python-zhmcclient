@@ -65,7 +65,7 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
         if not actprof_list:
             skip_warn("No {t} activation profiles on CPC {c} managed by "
                       "HMC {h}".
-                      format(t=profile_type, c=cpc.name, h=hd.hmc_host))
+                      format(t=profile_type, c=cpc.name, h=hd.host))
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:

@@ -131,7 +131,7 @@ def defined_cpcs(session, mode):
             msg_txt = (
                 "CPC {c} defined for HMC {n} at {h} in HMC definition file is "
                 "not managed by that HMC. Actually managed CPCs: {cl}".
-                format(c=cpc_name, n=hd.nickname, h=hd.hmc_host,
+                format(c=cpc_name, n=hd.nickname, h=hd.host,
                        cl=', '.join(actual_cpc_names)))
             warnings.warn(msg_txt, UserWarning)
             pytest.skip(msg_txt)

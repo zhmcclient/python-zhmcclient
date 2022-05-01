@@ -59,12 +59,12 @@ def test_upatt_find_list(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support user patterns".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     # Pick the user patterns to test with
     upatt_list = console.user_patterns.list()
     if not upatt_list:
-        skip_warn("No user patterns defined on HMC {h}".format(h=hd.hmc_host))
+        skip_warn("No user patterns defined on HMC {h}".format(h=hd.host))
     upatt_list = pick_test_resources(upatt_list)
 
     for upatt in upatt_list:
@@ -89,7 +89,7 @@ def test_upatt_crud(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support user patterns".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     upatt_name = TEST_PREFIX + ' test_upatt_crud upatt1'
     upatt_name_new = upatt_name + ' new'
@@ -108,7 +108,7 @@ def test_upatt_crud(hmc_session):  # noqa: F811
     # Pick a template user to be the template user for the user pattern
     template_users = console.users.findall(type='template')
     if not template_users:
-        skip_warn("No template users on HMC {h}".format(h=hd.hmc_host))
+        skip_warn("No template users on HMC {h}".format(h=hd.host))
     template_user = template_users[0]
 
     # Test creating the user pattern
@@ -130,7 +130,7 @@ def test_upatt_crud(hmc_session):  # noqa: F811
         if exc.http_status == 403 and exc.reason == 1:
             skip_warn("HMC userid {u!r} is not authorized for task "
                       "'Manage User Patterns' on HMC {h}".
-                      format(u=hd.hmc_userid, h=hd.hmc_host))
+                      format(u=hd.userid, h=hd.host))
         else:
             raise
 
