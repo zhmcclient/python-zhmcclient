@@ -3,7 +3,7 @@
 # The faked HMC represents a single z13 CPC in classic mode.
 
 hmc_definition:
-  hmc_host: hmc1
+  host: hmc1
   api_version: '1.8'
   consoles:
   - properties:

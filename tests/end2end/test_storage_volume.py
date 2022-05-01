@@ -71,7 +71,7 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
                 grp_vol_tuples.append((stogrp, stovol))
         if not grp_vol_tuples:
             skip_warn("No storage groups with volumes associated to CPC {c} "
-                      "managed by HMC {h}".format(c=cpc.name, h=hd.hmc_host))
+                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrp, stovol in grp_vol_tuples:

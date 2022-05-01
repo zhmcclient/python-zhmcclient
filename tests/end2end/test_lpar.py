@@ -61,7 +61,7 @@ def test_lpar_find_list(classic_mode_cpcs):  # noqa: F811
         lpar_list = cpc.lpars.list()
         if not lpar_list:
             skip_warn("No LPARs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         lpar_list = pick_test_resources(lpar_list)
 
         for lpar in lpar_list:

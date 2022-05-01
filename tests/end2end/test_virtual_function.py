@@ -71,7 +71,7 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
         if not part_vfunc_tuples:
             skip_warn("No partitions with virtual functions on CPC {c} "
                       "managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
@@ -124,7 +124,7 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
             edc_adapters = cpc.adapters.findall(type='zedc')
             if not edc_adapters:
                 skip_warn("No zEDC accelerator adapters on CPC {c} managed by "
-                          "HMC {h}".format(c=cpc.name, h=hd.hmc_host))
+                          "HMC {h}".format(c=cpc.name, h=hd.host))
             edc_adapter = edc_adapters[-1]  # Pick the last one
 
             # Create a partition that will lateron contain the virtual function

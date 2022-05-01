@@ -55,7 +55,7 @@ def test_task_find_list(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support tasks".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     # Pick the tasks to test with
     task_list = console.tasks.list()

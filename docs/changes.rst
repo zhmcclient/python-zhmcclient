@@ -34,10 +34,18 @@ Released: not yet
   If you used 'Lpar.list()' with filters, you may need to adjust the handling
   of the case where no LPARs match the filter. (issue #954)
 
-* Test: By default, the end2end tests now use the
-  '.zhmc_hmc_definitions.yaml' file in the home directory of the user,
-  instead of the 'tests/hmc_definitions.yaml' file. This can be changed using
-  the 'TESTHMCFILE' environment variable. (issue #950)
+* End2end test: Changed the format of files that define the HMCs to test against,
+  from a zhmcclient-specific HMC definition file in YAML format to a pair of
+  Ansible-compatible inventory and vault files in YAML format.
+  The HMC inventory file is '.zhmc_inventory.yaml' in the user's home directory
+  by default and can be set using the 'TESTINVENTORY' environment variable.
+  The HMC vault file is '.zhmc_vault.yaml' in the user's home directory
+  by default and can be set using the 'TESTVAULT' environment variable.
+  The format of the HMC definition file used so far is no longer supported.
+  (issues #950, #986)
+
+* Renamed the properties of the 'zhmcclient.testutils.HMCDefinition' to remove
+  the 'hmc_' prefix, e.g. 'hmc_userid' became 'userid', etc. (part of issue #986)
 
 **Deprecations:**
 
@@ -58,14 +66,6 @@ Released: not yet
 
 **Enhancements:**
 
-* End2end test: Changed the checking of the HMC definition files for end2end
-  tests to be based on JSON schema validation. This improves the checking
-  quality. (issue #950)
-
-* End2end test: Made the hmc_verify_cert property in HMC definition files
-  optional with a default of True, for consistency with the corresponding
-  zhmcclient.Session parameter. (issue #950)
-
 * Docs: Added documentation for the 'zhmcclient.testutils' module to the
   "Development" chapter. (issue #950)
 
@@ -76,13 +76,9 @@ Released: not yet
   can be used by example scripts to access HMC definitions.
 
 * Examples: Simplified and cleaned up the example scripts. They now use
-  the HMC definition file. Deleted scripts that were too complex and not
-  particularly instructive (cpcdata.py, cpcinfo.py). Renamed some scripts
+  the HMC inventory and vault files. Deleted scripts that were too complex and
+  not particularly instructive (cpcdata.py, cpcinfo.py). Renamed some scripts
   for better clarity on what they do. (issue #953)
-
-* End2end test: Added a new function 'zhmcclient.testutils.hmc_definition_file()'
-  that can be used to access the HMC definition file used by the tests.
-  (related to issue #966)
 
 * End2end test: Added env.var 'TESTRESOURCES' that can be used to control
   which resources are picked for testing with. By default, a random choice

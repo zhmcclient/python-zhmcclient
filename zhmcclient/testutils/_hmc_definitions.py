@@ -13,451 +13,485 @@
 # limitations under the License.
 
 """
-Encapsulation of HMC definition file defining HMCs for zhmcclient end2end
-tests.
+HMC definitions for zhmcclient end2end tests.
 """
 
 from __future__ import absolute_import
 
 import os
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-import errno
-import yaml
-import yamlloader
-import jsonschema
 
-__all__ = ['HMCDefinitionFileError', 'HMCDefinitionFile', 'HMCDefinition']
+from ._hmc_inventory_file import HMCInventoryFile
+from ._hmc_vault_file import HMCVaultFile
+from ._hmc_definition import HMCDefinition
 
-THIS_DIR = os.path.dirname(__file__)
+__all__ = ['print_hmc_definitions', 'hmc_definitions', 'HMCDefinitions',
+           'HMCNoVaultError', 'HMCNotFound']
 
-EXAMPLE_HMC_FILE = os.path.join('tests', 'example_hmc_definitions.yaml')
+# Path name of user's home directory
+HOME_DIR = os.path.expanduser("~")
 
-# JSON schema for content of a HMC definition file
-HMC_FILE_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "JSON schema for HMC definition file",
-    "type": "object",
-    "additionalProperties": False,
-    "required": [
-        "hmcs",
-    ],
-    "properties": {
-        "hmcs": {
-            "description": "HMC definitions",
-            "type": "object",
-            "additionalProperties": False,
-            "patternProperties": {
-                "^[a-zA-Z0-9_\\-]+$": {
-                    "description": "Key: Nickname of the HMC; "
-                                   "Value: The HMC definition.",
-                    "type": "object",
-                    "additionalProperties": False,
-                    "properties": {
-                        "description": {
-                            "description": "Short description of the HMC. "
-                                           "Optional, default: empty.",
-                            "type": "string",
-                        },
-                        "contact": {
-                            "description": "Name of technical contact for the "
-                                           "HMC. "
-                                           "Optional, default: empty.",
-                            "type": "string",
-                        },
-                        "access_via": {
-                            "description": "Preconditions to reach the network "
-                                           "of the HMC. "
-                                           "Optional, default: empty.",
-                            "type": "string",
-                        },
-                        "hmc_host": {
-                            "description": "For real HMC: IP address or "
-                                           "hostname of the HMC. "
-                                           "Mandatory (if real HMC).",
-                            "type": "string",
-                        },
-                        "hmc_userid": {
-                            "description": "For real HMC: Userid for logging "
-                                           "on to the HMC. "
-                                           "Mandatory (if real HMC).",
-                            "type": "string",
-                        },
-                        "hmc_password": {
-                            "description": "For real HMC: Password for logging "
-                                           "on to the HMC. "
-                                           "Mandatory (if real HMC).",
-                            "type": "string",
-                        },
-                        "hmc_verify_cert": {
-                            "description": "For real HMC: verify SSL "
-                                           "certificate from HMC. False / "
-                                           "True / path name of certificate "
-                                           "file or directory. "
-                                           "Optional (if real HMC), "
-                                           "default: True.",
-                            "type": ["string", "boolean"],
-                        },
-                        "faked_hmc_file": {
-                            "description": "For faked HMC: Path name of fake "
-                                           "HMC file, relative to this file. "
-                                           "Mandatory (if faked HMC).",
-                            "type": "string",
-                        },
-                        "cpcs": {
-                            "description": "Subset of CPCs managed by this HMC",
-                            "type": "object",
-                            "additionalProperties": False,
-                            "patternProperties": {
-                                "^[a-zA-Z0-9_\\-]+$": {
-                                    "description": "Key: CPC name; "
-                                                   "Value: List of expected "
-                                                   "CPC properties.",
-                                    "type": "object",
-                                    "additionalProperties": False,
-                                    "patternProperties": {
-                                        "^[a-z0-9_]+$": {
-                                            "description": "Key: CPC property "
-                                                           "name (with "
-                                                           "underscores); "
-                                                           "Value: Expected "
-                                                           "property value",
-                                            "type": ["object", "array",
-                                                     "string", "integer",
-                                                     "number", "boolean",
-                                                     "null"],
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-        "hmc_groups": {
-            "description": "HMC group definitions (optional)",
-            "type": "object",
-            "additionalProperties": False,
-            "patternProperties": {
-                "^[a-zA-Z0-9_\\-]+$": {
-                    "description": "Key: Nickname of the HMC group; "
-                                   "Value: List of HMCs or HMC groups in this "
-                                   "group",
-                    "type": "array",
-                    "items": {
-                        "description": "Nickname of HMC or HMC group",
-                        "type": "string",
-                    },
-                },
-            },
-        },
-    },
-}
+# Default file names of HMC inventory and vault files in user's home directory.
+# Keep in sync with Makefile.
+DEFAULT_TESTINVENTORY_FN = '.zhmc_inventory.yaml'
+DEFAULT_TESTVAULT_FN = '.zhmc_vault.yaml'
+
+DEFAULT_TESTINVENTORY_FILE = os.path.join(HOME_DIR, DEFAULT_TESTINVENTORY_FN)
+DEFAULT_TESTVAULT_FILE = os.path.join(HOME_DIR, DEFAULT_TESTVAULT_FN)
+
+# Default group name or HMC nickname in HMC inventory file to test against.
+# Keep in sync with Makefile.
+DEFAULT_TESTHMC = 'default'
 
 
-class HMCDefinitionFileError(Exception):
+def hmc_definitions(load=True):
     """
-    An error in the HMC definition file.
+    Return the list of HMC definitions to be used for testing.
+
+    Parameters:
+
+      load (bool): Load the HMC inventory and vault files.
+        If `None`, the 'TESTEND2END_LOAD' environment variable is used.
+
+    Returns:
+      list of :class:`zhmcclient.testutils.HMCDefinition`
+    """
+    hmcdefs = HMCDefinitions(load=load)
+    hd_list = hmcdefs.list_hmcs(hmcdefs.testhmc)
+    return hd_list
+
+
+def print_hmc_definitions():
+    """
+    Print all available HMC definitions in the HMC inventory and vault files.
+    """
+    hmcdefs = HMCDefinitions()
+    print("\nHMC definitions for end2end tests:")
+
+    print("\nHMC inventory file: {}".format(hmcdefs.inventory_file))
+    print("HMC vault file: {}".format(hmcdefs.vault_file))
+    print("Default test group/nickname: {}".format(hmcdefs.testhmc))
+
+    print("\nHMCs in inventory file:")
+    print("{:20s} {:24s} {:}".
+          format("HMC nickname", "HMC host / mock file", "Description"))
+    for hd in hmcdefs.list_all_hmcs():
+        host = hd.mock_file or hd.host
+        print("{:20s} {:24s} {}".format(hd.nickname, host, hd.description))
+
+    print("\nGroups in inventory file:")
+    print("{:20s} {}".format("Group name", "HMCs in the group"))
+    for group_name in hmcdefs.list_all_group_names():
+        hmc_names = ', '.join(
+            [hd.nickname for hd in hmcdefs.list_hmcs(group_name)])
+        print("{:20s} {}".format(group_name, hmc_names))
+
+
+def _default(vars_tuple, key, default):
+    """
+    Return the key value from one of the dicts in vars_tuple, or the default.
+    """
+    for vars_dict in vars_tuple:
+        if vars_dict and key in vars_dict:
+            return vars_dict[key]
+    return default
+
+
+class HMCNoVaultError(Exception):
+    """
+    The HMC vault file does not have a corresponding entry for the HMC.
     """
     pass
 
 
-class HMCDefinitionFile(object):
+class HMCNotFound(Exception):
     """
-    Encapsulation of the definitions in the HMC definition file.
+    The HMC group was not found in the HMC inventory file.
     """
-
-    def __init__(self, filepath):
-        self._filepath = filepath
-        self._hmcs = OrderedDict()
-        self._hmc_groups = OrderedDict()
-        self._load_file()
-
-    def _load_file(self):
-        """
-        Load and validate the HMC definition file.
-        """
-        try:
-            with open(self._filepath) as fp:
-                try:
-                    data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)
-                except (yaml.parser.ParserError,
-                        yaml.scanner.ScannerError) as exc:
-                    new_exc = HMCDefinitionFileError(
-                        "Invalid YAML syntax in HMC definition file "
-                        "{0!r}: {1} {2}".
-                        format(self._filepath, exc.__class__.__name__, exc))
-                    new_exc.__cause__ = None
-                    raise new_exc  # HMCDefinitionFileError
-        except IOError as exc:
-            if exc.errno == errno.ENOENT:
-                new_exc = HMCDefinitionFileError(
-                    "The HMC definition file {0!r} was not found; "
-                    "Example: {1!r} in the zhmcclient/python-zhmcclient repo".
-                    format(self._filepath, EXAMPLE_HMC_FILE))
-                new_exc.__cause__ = None
-                raise new_exc  # HMCDefinitionFileError
-            raise
-
-        try:
-            jsonschema.validate(data, HMC_FILE_SCHEMA)
-        except jsonschema.exceptions.ValidationError as exc:
-            new_exc = HMCDefinitionFileError(
-                "Invalid data format in HMC definition file {f}: {msg}; "
-                "Offending element: {elem}; "
-                "Schema item: {schemaitem}; "
-                "Validator: {valname}={valvalue}".
-                format(f=self._filepath, msg=exc.message,
-                       elem='.'.join(str(e) for e in exc.absolute_path),
-                       schemaitem='.'.join(str(e) for e in
-                                           exc.absolute_schema_path),
-                       valname=exc.validator,
-                       valvalue=exc.validator_value))
-            new_exc.__cause__ = None
-            raise new_exc  # HMCDefinitionFileError
-
-        hmcs = data.get('hmcs')
-        self._hmcs.update(hmcs)
-
-        hmc_groups = data.get('hmc_groups', OrderedDict())
-        for hmc_nick in hmc_groups:
-            visited_hmc_nicks = list()
-            self._check_hmc_group(hmc_nick, hmc_groups, hmcs,
-                                  visited_hmc_nicks)
-        self._hmc_groups.update(hmc_groups)
-
-    def _check_hmc_group(self, hmc_nick, hmc_groups, hmcs, visited_hmc_nicks):
-        """
-        Check the HMC group specified in hmc_nick.
-        """
-        visited_hmc_nicks.append(hmc_nick)
-        hmc_group = hmc_groups[hmc_nick]
-        for nick in hmc_group:
-            if nick in visited_hmc_nicks:
-                raise HMCDefinitionFileError(
-                    "Circular reference: HMC group {0!r} in HMC "
-                    "definition file {1!r} contains HMC group {2!r}, which "
-                    "directly or indirectly contains HMC group {0!r}".
-                    format(hmc_nick, self._filepath, nick))
-            if nick in hmc_groups:
-                self._check_hmc_group(
-                    nick, hmc_groups, hmcs, visited_hmc_nicks)
-            elif nick not in hmcs:
-                raise HMCDefinitionFileError(
-                    "Item {0!r} in HMC group {1!r} in HMC definition file "
-                    "{2!r} is not a known HMC or HMC group".
-                    format(nick, hmc_nick, self._filepath))
-
-    @property
-    def filepath(self):
-        """
-        Path name of the HMC definition file.
-        """
-        return self._filepath
-
-    def get_hmc(self, nickname):
-        """
-        Return a `HMCDefinition` object for the HMC with the specified
-        nickname.
-        """
-        try:
-            hmc_dict = self._hmcs[nickname]
-        except KeyError:
-            new_exc = ValueError(
-                "HMC with nickname {0!r} not found in HMC definition file "
-                "{1!r}".format(nickname, self._filepath))
-            new_exc.__cause__ = None
-            raise new_exc  # ValueError
-        return HMCDefinition(nickname, hmc_dict, self._filepath)
-
-    def list_hmcs(self, nickname):
-        """
-        Return a list of `HMCDefinition` objects for the hmcs in the HMC group
-        with the specified nickname, or the single HMC with the specified
-        nickname.
-        """
-        if nickname in self._hmcs:
-            return [self.get_hmc(nickname)]
-
-        if nickname in self._hmc_groups:
-            hmc_list = list()  # of HMCDefinition objects
-            hmc_nick_list = list()  # of HMC nicknames
-            for item_nick in self._hmc_groups[nickname]:
-                for hd in self.list_hmcs(item_nick):
-                    if hd.nickname not in hmc_nick_list:
-                        hmc_list.append(hd)
-                        hmc_nick_list.append(hd.nickname)
-            return hmc_list
-
-        raise ValueError(
-            "HMC group or HMC with nickname {0!r} not found in "
-            "HMC definition file {1!r}".
-            format(nickname, self._filepath))
-
-    def list_all_hmcs(self):
-        """
-        Return a list of all HMCs in the HMC definition file.
-        """
-        return [self.get_hmc(nickname) for nickname in self._hmcs]
+    pass
 
 
-def _required_attr(hmc_dict, attr_name, nickname):
+class HMCDefinitions(object):
     """
-    Return a required attribute.
-    """
-    try:
-        return hmc_dict[attr_name]
-    except KeyError:
-        new_exc = HMCDefinitionFileError(
-            "Required HMC attribute is missing in definition of HMC "
-            "{0}: {1}".format(nickname, attr_name))
-        new_exc.__cause__ = None
-        raise new_exc  # HMCDefinitionFileError
-
-
-class HMCDefinition(object):
-    """
-    Encapsulation of a single HMC definition (e.g. from an HMC definition
-    file).
-
-    An HMC definition contains information needed to use the WS API of the HMC
-    (such as its IP address and credentials, and any networking preconditions
-    for reaching the IP address), some organizational information (such as a
-    description and a technical contact), and some information about the CPCs
-    managed by the HMC (such as whether they are in DPM mode).
+    The HMC definitions in the HMC inventory and vault files.
     """
 
-    def __init__(self, nickname, hmc_dict, hmc_filepath):
-        self._nickname = nickname
-        self._hmc_filepath = hmc_filepath
-        self._description = hmc_dict.get('description', '')
-        self._contact = hmc_dict.get('contact', '')
-        self._access_via = hmc_dict.get('access_via', '')
-        self._faked_hmc_file = hmc_dict.get('faked_hmc_file', None)
-        if self._faked_hmc_file:
-            self._hmc_host = None
-            self._hmc_userid = None
-            self._hmc_password = None
-            self._hmc_verify_cert = None
+    def __init__(self, inventory_file=None, vault_file=None, testhmc=None,
+                 load=None):
+        """
+        Parameters:
+
+          inventory_file (string): Path name of HMC inventory file.
+            If `None`, the file specified in the 'TESTINVENTORY' environment
+            variable, or the default file in the user's home directory is used.
+
+          vault_file (string): Path name of HMC vault file.
+            If `None`, the file specified in the 'TESTVAULT' environment
+            variable, or the default file in the user's home directory is used.
+
+          testhmc (string): Group name or HMC nickname in HMC inventory file
+            to test against.
+            If `None`, the file specified in the 'TESTHMC' environment
+            variable, or the default name is used.
+
+          load (bool): Load the HMC inventory and vault files.
+            If `None`, the 'TESTEND2END_LOAD' environment variable is used.
+
+        Raises:
+          zhmcclient.testutils.HMCInventoryFileError:
+          zhmcclient.testutils.HMCVaultFileError:
+          zhmcclient.testutils.HMCNoVaultError:
+        """
+
+        # The Sphinx build imports this module and the use of this function
+        # in the hmc_definition() fixture along with the wildcard imports in
+        # the testutils/__init__.py module causes this function to be executed
+        # upon module import. Since there are no HMC inventory and vault files
+        # when GitHub Actions or ReadTheDocs builds the documentation, the
+        # boolean 'TESTEND2END_LOAD' env.var is used to enable the loading of
+        # the files in these cases. This env.var needs to be set to 'true' in
+        # the Makefile for end2end targets.
+        if load is None:
+            load = bool(os.getenv('TESTEND2END_LOAD'))
+
+        if not load:
+            self._inventory_file = None
+            self._vault_file = None
+            self._testhmc = None
+            self._inventory = None
+            self._vault = None
+            self._hd_dict = {}
         else:
-            self._hmc_host = _required_attr(hmc_dict, 'hmc_host', nickname)
-            self._hmc_userid = _required_attr(hmc_dict, 'hmc_userid', nickname)
-            self._hmc_password = _required_attr(hmc_dict, 'hmc_password',
-                                                nickname)
-            self._hmc_verify_cert = hmc_dict.get('hmc_verify_cert', True)
-        self._cpcs = hmc_dict.get('cpcs', dict())
+            self._inventory_file = inventory_file or os.getenv(
+                'TESTINVENTORY', DEFAULT_TESTINVENTORY_FILE)
+            self._vault_file = vault_file or os.getenv(
+                'TESTVAULT', DEFAULT_TESTVAULT_FILE)
+            self._testhmc = testhmc or os.getenv(
+                'TESTHMC', DEFAULT_TESTHMC)
+
+            self._inventory = HMCInventoryFile(self._inventory_file)
+            self._vault = HMCVaultFile(self._vault_file)
+
+            # All HMC definitions, represented as a flat set of groups
+            # with their hosts. All variables are stored in the hosts.
+            # The list methods create and return HMCDefinition objects
+            # from this representation.
+            # Dictionary structure:
+            #   key: group name, value: dict of HMC definitions with:
+            #     key: HMC nickname, value: dict of HMCDefinition attrs with:
+            #       key: attr name, value: attr value
+            self._hd_dict = dict()
+
+            # Update self._hd_dict from groups, starting with top-level groups
+            self._init_groups(self._inventory.data, {})
+
+            # Update self._hd_dict with propagated host properties
+            self._propagate_groups(self._inventory.data)
+
+            # Update self._hd_dict from HMC vault file
+            self._add_vault_data(self._vault, self._inventory.filepath)
+
+    def _init_groups(self, groups, inherited_vars):
+        """
+        Process groups from an HMC inventory filer.
+
+        Parameters:
+
+          groups (dict): The groups, as a data structure from the HMC inventory
+            file. Key: group name, Value: dict with hosts/vars/children.
+            At the top level, groups is a dict with a single item 'all'. Below
+            that, groups is a dict with the items from the 'children' item.
+
+          inherited_vars (dict): Additional variables inherited from parents.
+        """
+        for group_name, group_dict in groups.items():
+            if not group_dict:
+                continue
+            group_vars = dict(inherited_vars)
+            group_vars.update(group_dict.get('vars') or {})
+            self._init_group(group_name, group_dict, group_vars)
+            child_groups = group_dict.get('children') or {}
+            self._init_groups(child_groups, group_vars)
+
+    def _init_group(self, group_name, group_dict, inherited_vars):
+        """
+        Process a single group from an HMC inventory file.
+
+        Parameters:
+
+          group_name (string): Name of the group.
+
+          group_dict (dict): The group, as a dict with hosts/vars/children.
+
+          inherited_vars (dict): Additional variables inherited from parents.
+        """
+
+        _host_dict = {}
+        hosts = group_dict.get('hosts') or {}
+        for nickname, host_vars in hosts.items():
+
+            combined_vars = dict(inherited_vars)
+            if host_vars:
+                combined_vars.update(host_vars)
+
+            description = combined_vars.pop('description', '')
+            contact = combined_vars.pop('contact', '')
+            access_via = combined_vars.pop('access_via', '')
+            mock_file = combined_vars.pop('mock_file', None)
+            ansible_host = combined_vars.pop('ansible_host', None)
+            cpcs = combined_vars.pop('cpcs', None)
+            add_vars = combined_vars
+
+            _host_dict[nickname] = dict(
+                description=description, contact=contact, access_via=access_via,
+                mock_file=mock_file, ansible_host=ansible_host, cpcs=cpcs,
+                add_vars=add_vars)
+
+        self._hd_dict[group_name] = _host_dict
+
+    def _propagate_groups(self, groups, parent_hosts=None):
+        """
+        Propagate host properties of groups to their child groups.
+
+        Parameters:
+
+          groups (dict): The groups, as a data structure from the HMC inventory
+            file. Key: group name, Value: dict with hosts/vars/children.
+            At the top level, groups is a dict with a single item 'all'. Below
+            that, groups is a dict with the items from the 'children' item.
+
+          parent_hosts (dict): The parent hosts of the groups, as a data
+            structure from the HMC inventory file, or None for top level.
+            Key: host nickname, Value: dict with host attributes.
+        """
+        for group_name, group_dict in groups.items():
+
+            if not group_dict:
+                continue
+
+            self._propagate_group(group_name, group_dict, parent_hosts)
+
+            child_groups = group_dict.get('children') or {}
+            hosts = group_dict.get('hosts') or {}
+            self._propagate_groups(child_groups, hosts)
+
+    def _propagate_group(self, group_name, group_dict, parent_hosts):
+        """
+        Propagate host properties of a group to its hosts.
+
+        Parameters:
+
+          group_name (string): Name of the group.
+
+          group_dict (dict): The group, as a dict with hosts/vars/children.
+
+          parent_hosts (dict): The parent hosts of the group, as a data
+            structure from the HMC inventory file, or None for top level.
+            Key: host nickname, Value: dict with host attributes.
+        """
+        if parent_hosts is None:
+            parent_hosts = {}
+
+        hosts = group_dict.get('hosts') or {}
+        for nickname, host_vars in hosts.items():
+
+            try:
+                parent_vars = parent_hosts[nickname]
+            except KeyError:
+                parent_vars = {}
+
+            if host_vars is not None:
+                host_vars_new = dict(host_vars)
+            else:
+                host_vars_new = {}
+
+            if 'description' in parent_vars:
+                host_vars_new.setdefault(
+                    'description', parent_vars['description'])
+            if 'contact' in parent_vars:
+                host_vars_new.setdefault(
+                    'contact', parent_vars['contact'])
+            if 'access_via' in parent_vars:
+                host_vars_new.setdefault(
+                    'access_via', parent_vars['access_via'])
+            if 'ansible_host' in parent_vars:
+                host_vars_new.setdefault(
+                    'ansible_host', parent_vars['ansible_host'])
+            if 'mock_file' in parent_vars:
+                host_vars_new.setdefault(
+                    'mock_file', parent_vars['mock_file'])
+            if 'cpcs' in parent_vars:
+                host_vars_new.setdefault(
+                    'cpcs', parent_vars['cpcs'])
+            if 'add_vars' in parent_vars:
+                host_vars_new.setdefault(
+                    'add_vars', parent_vars['add_vars'])
+
+            # The vault file variables are not in parent_vars and cannot
+            # be propagated (they are defined once in the vault file).
+
+            self._hd_dict[group_name][nickname].update(host_vars_new)
+
+    def _add_vault_data(self, hmc_vault, inv_file):
+        """
+        Add data from HMC vault file to each host of all groups.
+
+        Parameters:
+
+          hmc_vault (HMCVault): Content of HMC vault file.
+
+          inv_file (string): Path name of HMV inventory file (for messages).
+
+        Raises:
+          HMCNoVaultError: No cprresponding entry in HMC vault file.
+        """
+        auth = hmc_vault.data['hmc_auth'] or {}
+        for group_dict in self._hd_dict.values():
+            for nickname, host_vars in group_dict.items():
+
+                mock_file = host_vars.get('mock_file', None)
+
+                if mock_file is not None:
+                    host_vars['userid'] = None
+                    host_vars['password'] = None
+                    host_vars['verify'] = None
+                    host_vars['ca_certs'] = None
+                else:
+                    try:
+                        auth_vars = auth[nickname]
+                    except KeyError:
+                        new_exc = HMCNoVaultError(
+                            "HMC {n!r} defined in HMC inventory file {i} has "
+                            "no corresponding entry in HMC vault file {v}".
+                            format(n=nickname, i=inv_file,
+                                   v=hmc_vault.filepath))
+                        new_exc.__cause__ = None
+                        raise new_exc  # HMCNoVaultError
+
+                    # userid and password are required by the JSON schema
+                    host_vars['userid'] = auth_vars['userid']
+                    host_vars['password'] = auth_vars['password']
+                    host_vars['verify'] = auth_vars.get('verify', True)
+                    host_vars['ca_certs'] = auth_vars.get('ca_certs', None)
 
     def __repr__(self):
-        return "HMCDefinition(" \
-            "nickname={s.nickname!r}, " \
-            "hmc_filepath={s.hmc_filepath!r}, " \
-            "description={s.description!r}, " \
-            "contact={s.contact!r}, " \
-            "access_via={s.access_via!r}, " \
-            "faked_hmc_file={s.faked_hmc_file!r}, " \
-            "hmc_host={s.hmc_host!r}, " \
-            "hmc_userid={s.hmc_userid!r}, " \
-            "hmc_password=..., " \
-            "hmc_verify_cert={s.hmc_verify_cert!r}, " \
-            "cpcs={s.cpcs!r})". \
+        return "HMCDefinitions(" \
+            "inventory_file={s.inventory_file!r}, " \
+            "vault_file={s.vault_file!r}, " \
+            "testhmc={s.testhmc!r}, " \
+            "group_names={s.group_names!r})". \
             format(s=self)
 
     @property
-    def nickname(self):
+    def inventory_file(self):
         """
-        Nickname of the HMC.
+        string: Path name of HMC inventory file.
         """
-        return self._nickname
+        return self._inventory_file
 
     @property
-    def hmc_filepath(self):
+    def vault_file(self):
         """
-        Path name of the HMC definition file defining this HMC.
+        string: Path name of HMC vault file.
         """
-        return self._hmc_filepath
+        return self._vault_file
 
     @property
-    def description(self):
+    def testhmc(self):
         """
-        Short description of the HMC.
+        string: HMC group or single HMC nickname to be tested.
         """
-        return self._description
+        return self._testhmc
 
     @property
-    def contact(self):
+    def group_names(self):
         """
-        Name of the technical contact of the HMC.
+        list of string: The names of the HMC groups in the HMC inventory file.
         """
-        return self._contact
+        return list(self._hd_dict.keys())
 
-    @property
-    def access_via(self):
+    def list_hmcs(self, name=None):
         """
-        Networking preconditions for reaching the IP address of the HMC
-        (e.g. Boundary firewall, VPN connection).
+        Return a list of :class:`HMCDefinition` objects in the HMC inventory
+        file, for the specified HMC group or single HMC nickname.
+
+        Parameters:
+          name (string): Name of an HMC group or nickname of a single HMC in the
+            HMC inventory file. If `None`, the default group or nickname
+            defined in :attr:`HMCDefinitions.testhmc` is used.
+
+        Returns:
+          list of :class:`HMCDefinition`: The specified HMCs in the HMC
+            inventory file.
+
+        Raises:
+          zhmcclient.testutils.HMCNotFound: HMC group or nickname not found.
         """
-        return self._access_via
+        if not self._hd_dict:
+            return []
 
-    @property
-    def faked_hmc_file(self):
+        if name is None:
+            name = self._testhmc
+
+        # Try to find a group with this name
+        try:
+            host_dict = self._hd_dict[name]
+        except KeyError:
+            # Try to find a single HMC with this nickname in group 'all'
+            all_host_dict = self._hd_dict['all']
+            for nickname, host_vars in all_host_dict.items():
+                if nickname == name:
+                    host_dict = {name: host_vars}
+                    break
+            else:
+                new_exc = HMCNotFound(
+                    "HMC group or nickname {n!r} not found in HMC inventory "
+                    "file {i}".format(n=name, i=self._inventory_file))
+                new_exc.__cause__ = None
+                raise new_exc  # HMCNotFound
+
+        hd_list = []
+        for nickname, host_vars in host_dict.items():
+
+            # If ansible_host was set, it is always used, and otherwise
+            # the HMC nickname is used as a DNS name or IP address.
+            ansible_host = host_vars.get('ansible_host')
+            host = ansible_host or nickname
+
+            description = host_vars.get('description', '')
+            contact = host_vars.get('contact', '')
+            access_via = host_vars.get('access_via', '')
+            mock_file = host_vars.get('mock_file', None)
+            userid = host_vars.get('userid', None)
+            password = host_vars.get('password', None)
+            verify = host_vars.get('verify', None)
+            ca_certs = host_vars.get('ca_certs', None)
+            cpcs = host_vars.get('cpcs', None)
+            add_vars = host_vars.get('add_vars', None)
+
+            hd = HMCDefinition(
+                nickname=nickname, description=description,
+                contact=contact, access_via=access_via, mock_file=mock_file,
+                host=host, userid=userid, password=password, verify=verify,
+                ca_certs=ca_certs, cpcs=cpcs, add_vars=add_vars)
+
+            hd_list.append(hd)
+
+        return hd_list
+
+    def list_all_hmcs(self):
         """
-        Path name of faked HMC file, defining a faked HMC with CPCs to be
-        used for setting up the zhmcclient mock support.
+        List all HMCs in the HMC inventory file.
 
-        This property is `None` for real HMCs.
+        Returns:
+          list of :class:`HMCDefinition`: All HMCs in the HMC inventory file.
         """
-        return self._faked_hmc_file
+        return self.list_hmcs('all')
 
-    @property
-    def hmc_host(self):
+    def list_all_group_names(self):
         """
-        IP address or hostname of the HMC.
+        List all group names in the HMC inventory file.
 
-        This property is `None` for faked HMCs.
+        Returns:
+          list of string: All group names in the HMC inventory file.
         """
-        return self._hmc_host
-
-    @property
-    def hmc_userid(self):
-        """
-        Userid for logging on to the HMC.
-
-        This property is `None` for faked HMCs.
-        """
-        return self._hmc_userid
-
-    @property
-    def hmc_password(self):
-        """
-        Password for logging on to the HMC.
-
-        This property is `None` for faked HMCs.
-        """
-        return self._hmc_password
-
-    @property
-    def hmc_verify_cert(self):
-        """
-        Control for verifying the SSL certificate from the HMC during SSL/TLS
-        handshake.
-
-        False / True / Path name of certificate file or directory.
-
-        This property is `None` for faked HMCs.
-        """
-        return self._hmc_verify_cert
-
-    @property
-    def cpcs(self):
-        """
-        List of CPCs managed by the HMC.
-
-        Each list item represents one CPC and is a dict with these keys:
-
-        * 'name' (string): CPC name.
-        * 'dpm' (bool): CPC is in DPM mode. None if not known.
-        """
-        return self._cpcs
+        return list(self._hd_dict.keys())

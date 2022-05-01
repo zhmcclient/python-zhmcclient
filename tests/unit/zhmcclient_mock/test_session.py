@@ -266,12 +266,12 @@ def test_session_to_from_yaml():
 
     # Set up the faked session
     console_props = HMC1_RESOURCES['consoles'][0]['properties']
-    hmc_host = 'testhmc'
+    host = 'testhmc'
     api_version = '2.20'
     hmc_name = console_props['name']
     hmc_version = console_props['version']
 
-    session = FakedSession(hmc_host, hmc_name, hmc_version, api_version)
+    session = FakedSession(host, hmc_name, hmc_version, api_version)
     client = Client(session)
 
     session.hmc.add_resources(HMC1_RESOURCES)

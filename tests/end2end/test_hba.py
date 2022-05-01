@@ -70,7 +70,7 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
             skip_warn("No partitions with HBAs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:

@@ -61,13 +61,13 @@ def test_ldapsrvdef_find_list(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support LDAP server "
-                  "definitions".format(h=hd.hmc_host, v=hmc_version))
+                  "definitions".format(h=hd.host, v=hmc_version))
 
     # Pick the LDAP server definitions to test with
     ldapsrvdef_list = console.ldap_server_definitions.list()
     if not ldapsrvdef_list:
         skip_warn("No LDAP server definitions defined on HMC {h}".
-                  format(h=hd.hmc_host))
+                  format(h=hd.host))
     ldapsrvdef_list = pick_test_resources(ldapsrvdef_list)
 
     for ldapsrvdef in ldapsrvdef_list:
@@ -93,7 +93,7 @@ def test_ldapsrvdef_crud(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support LDAP server "
-                  "definitions".format(h=hd.hmc_host, v=hmc_version))
+                  "definitions".format(h=hd.host, v=hmc_version))
 
     ldapsrvdef_name = TEST_PREFIX + ' test_ldapsrvdef_crud ldapsrvdef1'
     ldapsrvdef_name_new = ldapsrvdef_name + ' new'
@@ -132,7 +132,7 @@ def test_ldapsrvdef_crud(hmc_session):  # noqa: F811
         if exc.http_status == 403 and exc.reason == 1:
             skip_warn("HMC userid {u!r} is not authorized for task "
                       "'Manage LDAP Server Definitions' on HMC {h}".
-                      format(u=hd.hmc_userid, h=hd.hmc_host))
+                      format(u=hd.userid, h=hd.host))
         else:
             raise
 

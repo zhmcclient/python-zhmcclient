@@ -64,7 +64,7 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
             skip_warn("No capacity groups defined on CPC {c} managed by "
-                      "HMC {h}".format(c=cpc.name, h=hd.hmc_host))
+                      "HMC {h}".format(c=cpc.name, h=hd.host))
         capgrp_list = pick_test_resources(capgrp_list)
 
         for capgrp in capgrp_list:

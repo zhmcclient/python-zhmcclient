@@ -227,7 +227,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
             if exc.http_status == 403 and exc.reason == 1:
                 skip_warn("HMC userid {u!r} is not authorized for task "
                           "'Export/Import Profile Data (API only)' on HMC {h}".
-                          format(u=hd.hmc_userid, h=hd.hmc_host))
+                          format(u=hd.userid, h=hd.host))
             else:
                 raise
 

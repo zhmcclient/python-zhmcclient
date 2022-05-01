@@ -64,7 +64,7 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
         part_list = cpc.partitions.list()
         if not part_list:
             skip_warn("No partitions on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         part_list = pick_test_resources(part_list)
 
         for part in part_list:

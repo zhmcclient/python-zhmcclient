@@ -69,7 +69,7 @@ def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
             skip_warn("No partitions with NICs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.hmc_host))
+                      format(c=cpc.name, h=hd.host))
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:

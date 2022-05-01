@@ -59,12 +59,12 @@ def test_user_find_list(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support users".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     # Pick the users to test with
     user_list = console.users.list()
     if not user_list:
-        skip_warn("No users defined on HMC {h}".format(h=hd.hmc_host))
+        skip_warn("No users defined on HMC {h}".format(h=hd.host))
     user_list = pick_test_resources(user_list)
 
     for user in user_list:
@@ -89,7 +89,7 @@ def test_user_crud(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support users".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     user_name = TEST_PREFIX + '_test_user_crud_user1'
     user_name_new = user_name + '_new'
@@ -145,7 +145,7 @@ def test_user_crud(hmc_session):  # noqa: F811
         if exc.http_status == 403 and exc.reason == 1:
             skip_warn("HMC userid {u!r} is not authorized for task {t!r} on "
                       "HMC {h}".
-                      format(u=hd.hmc_userid, t=task_name, h=hd.hmc_host))
+                      format(u=hd.userid, t=task_name, h=hd.host))
         else:
             raise
 

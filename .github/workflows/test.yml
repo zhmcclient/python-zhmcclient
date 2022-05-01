@@ -135,7 +135,6 @@ jobs:
     - name: Run builddoc
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
-        TESTHMCFILE_NOLOAD: True
       run: |
         make builddoc
     - name: Run check

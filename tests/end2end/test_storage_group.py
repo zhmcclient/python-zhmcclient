@@ -67,7 +67,7 @@ def test_stogrp_find_list(dpm_mode_cpcs):  # noqa: F811
         stogrp_list = cpc.list_associated_storage_groups()
         if not stogrp_list:
             skip_warn("No storage groups associated to CPC {c} managed by "
-                      "HMC {h}".format(c=cpc.name, h=hd.hmc_host))
+                      "HMC {h}".format(c=cpc.name, h=hd.host))
         stogrp_list = pick_test_resources(stogrp_list)
 
         for stogrp in stogrp_list:

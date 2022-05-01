@@ -58,12 +58,12 @@ FAKED_HMC_DEFINITION_SCHEMA = {
             "type": "object",
             "additionalProperties": False,
             "required": [
-                "hmc_host",
+                "host",
                 "api_version",
                 "consoles",
             ],
             "properties": {
-                "hmc_host": {
+                "host": {
                     "description": "The hostname or IP address of the HMC host",
                     "type": "string",
                 },
@@ -883,12 +883,12 @@ class FakedSession(zhmcclient.Session):
 
         consoles = hmc_res_dict.get('consoles')
         console = consoles[0]
-        hmc_host = hmc_res_dict['hmc_host']
+        host = hmc_res_dict['host']
         api_version = hmc_res_dict['api_version']
         hmc_name = console['properties']['name']
         hmc_version = console['properties']['version']
 
-        session = FakedSession(hmc_host, hmc_name, hmc_version, api_version)
+        session = FakedSession(host, hmc_name, hmc_version, api_version)
 
         res_dict = OrderedDict()
         res_dict['consoles'] = consoles

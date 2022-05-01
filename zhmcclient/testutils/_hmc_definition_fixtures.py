@@ -24,21 +24,10 @@ import pytest
 import zhmcclient
 import zhmcclient_mock
 
-from ._hmc_definitions import HMCDefinitionFile, HMCDefinition
+from ._hmc_definition import HMCDefinition
+from ._hmc_definitions import hmc_definitions
 
-__all__ = ['hmc_definition_file', 'hmc_definitions', 'hmc_definition',
-           'hmc_session']
-
-HOME_DIR = os.path.expanduser("~")
-
-# Path name of HMC definition file
-DEFAULT_TESTHMCFN = '.zhmc_hmc_definitions.yaml'
-DEFAULT_TESTHMCFILE = os.path.join(HOME_DIR, DEFAULT_TESTHMCFN)
-TESTHMCFILE = os.getenv('TESTHMCFILE', DEFAULT_TESTHMCFILE)
-
-# Test nickname in HMC definition file
-DEFAULT_TESTHMC = 'default'
-TESTHMC = os.getenv('TESTHMC', DEFAULT_TESTHMC)
+__all__ = ['hmc_definition', 'hmc_session']
 
 # Log file
 TESTLOGFILE = os.getenv('TESTLOGFILE', None)
@@ -51,67 +40,6 @@ else:
     LOG_FORMAT_STRING = None
 
 
-def hmc_definition_file():
-    """
-    Return the HMC definition file.
-
-    The path name of the HMC definition file is taken from the environment
-    variable "TESTHMCFILE" is set, or otherwise is "{def_fn}" in the home
-    directory of the user.
-
-    Returns:
-      :class:`zhmcclient.testutils.HMCDefinitionFile`:
-      The HMC definition file.
-
-    Raises:
-      :exc:`zhmccliennt.testutils.HMCDefinitionFileError`: Some issue with
-      the HMC definition file.
-    """.format(def_fn=DEFAULT_TESTHMCFN)
-
-    # The Sphinx build imports this module and the use of this function
-    # in the hmc_definition() fixture along with the wildcard imports in
-    # the testutils/__init__.py module causes this function to be executed upon
-    # module import. Since there is no HMC definition file when GitHub Actions
-    # or ReadTheDocs builds the documentation, the 'TESTHMCFILE_NOLOAD'
-    # emv.var is used to disable the loading of the file in these cases.
-    # This env.var needs to be set to 'True' in the following places:
-    # * In .github/workflows/test.yml when invoking 'make builddoc'.
-    # * In the ReadTheDocs advanced settings, as a private env.var.
-    noload = os.getenv('TESTHMCFILE_NOLOAD')
-
-    if noload:
-        return None
-    return HMCDefinitionFile(filepath=TESTHMCFILE)
-
-
-def hmc_definitions():
-    """
-    Return the list of HMC definitions for a HMC nickname in a HMC
-    definition file.
-
-    The HMC nickname is taken from the environment variable "TESTHMC" if
-    set, or otherwise is the default nickname "{def_nick}."
-
-    The path name of the HMC definition file is taken from the environment
-    variable "TESTHMCFILE" is set, or otherwise is "{def_fn}" in the home
-    directory of the user.
-
-    Returns:
-      list of :class:`zhmcclient.testutils.HMCDefinition`:
-      The selected HMC definitions.
-
-    Raises:
-      :exc:`zhmccliennt.testutils.HMCDefinitionFileError`: Some issue with
-      the HMC definition file.
-    """.format(def_nick=DEFAULT_TESTHMC, def_fn=DEFAULT_TESTHMCFN)
-
-    def_file = hmc_definition_file()
-    if def_file is None:
-        return []
-    hmc_defs = def_file.list_hmcs(TESTHMC)
-    return hmc_defs
-
-
 def fixtureid_hmc_definition(fixture_value):
     """
     Return a fixture ID to be used by pytest, for fixture `hmc_definition()`.
@@ -122,11 +50,20 @@ def fixtureid_hmc_definition(fixture_value):
     """
     hd = fixture_value
     assert isinstance(hd, HMCDefinition)
-    return "hmc_definition={}".format(hd.nickname)
+    show_hmc = False  # Enable to show HMC/userid or mock file in tests
+    if not show_hmc:
+        hmc_str = ""
+    elif hd.mock_file:
+        hmc_str = "(mock_file={f})".format(f=hd.mock_file)
+    else:
+        hmc_str = "(host={h}, userid={u})".format(
+            h=hd.host, u=hd.userid)
+    ret_str = "hmc_definition={n}{v}".format(n=hd.nickname, v=hmc_str)
+    return ret_str
 
 
 @pytest.fixture(
-    params=hmc_definitions(),
+    params=hmc_definitions(load=None),
     scope='module',
     ids=fixtureid_hmc_definition
 )
@@ -174,7 +111,7 @@ def setup_hmc_session(hd):
     If the HMC definition represents a real HMC, log on to an HMC and return
     a new zhmcclient.Session object.
 
-    If the HMC definition represents a faked HMC, create a new faked environment
+    If the HMC definition represents a mocked HMC, create a new mock environment
     from that and return a zhmcclient_mock.FakedSession object.
     """
     # We use the cached skip reason from previous attempts
@@ -182,13 +119,11 @@ def setup_hmc_session(hd):
     if skip_msg:
         pytest.skip("Skip reason from earlier attempt: {0}".format(skip_msg))
 
-    if hd.faked_hmc_file:
-        # A faked HMC
+    if hd.mock_file:
+        # A mocked HMC
 
-        # Create a faked session from the HMC definition file
-        filepath = os.path.join(
-            os.path.dirname(hd.hmc_filepath),
-            hd.faked_hmc_file)
+        # Create a mocked session using the mock file from the inventory file
+        filepath = os.path.join(os.path.dirname(hd.filepath), hd.mock_file)
         session = zhmcclient_mock.FakedSession.from_hmc_yaml_file(filepath)
 
     else:
@@ -213,8 +148,7 @@ def setup_hmc_session(hd):
 
         # Creating a session does not interact with the HMC (logon is deferred)
         session = zhmcclient.Session(
-            hd.hmc_host, hd.hmc_userid, hd.hmc_password,
-            verify_cert=hd.hmc_verify_cert,
+            hd.host, hd.userid, hd.password, verify_cert=hd.verify_cert,
             retry_timeout_config=rt_config)
 
         # Check access to the HMC
@@ -222,7 +156,7 @@ def setup_hmc_session(hd):
             session.logon()
         except zhmcclient.Error as exc:
             msg = "Cannot log on to HMC {0} at {1} due to {2}: {3}". \
-                format(hd.nickname, hd.hmc_host, exc.__class__.__name__, exc)
+                format(hd.nickname, hd.host, exc.__class__.__name__, exc)
             hd.skip_msg = msg
             pytest.skip(msg)
 

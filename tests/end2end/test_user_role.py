@@ -59,12 +59,12 @@ def test_urole_find_list(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support user roles".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     # Pick the user roles to test with
     urole_list = console.user_roles.list()
     if not urole_list:
-        skip_warn("No user roles defined on HMC {h}".format(h=hd.hmc_host))
+        skip_warn("No user roles defined on HMC {h}".format(h=hd.host))
     urole_list = pick_test_resources(urole_list)
 
     for urole in urole_list:
@@ -89,7 +89,7 @@ def test_urole_crud(hmc_session):  # noqa: F811
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
         skip_warn("HMC {h} of version {v} does not yet support user roles".
-                  format(h=hd.hmc_host, v=hmc_version))
+                  format(h=hd.host, v=hmc_version))
 
     urole_name = TEST_PREFIX + ' test_urole_crud urole1'
     urole_name_new = urole_name + ' new'
@@ -124,7 +124,7 @@ def test_urole_crud(hmc_session):  # noqa: F811
         if exc.http_status == 403 and exc.reason == 1:
             skip_warn("HMC userid {u!r} is not authorized for task "
                       "'Manage User Roles' on HMC {h}".
-                      format(u=hd.hmc_userid, h=hd.hmc_host))
+                      format(u=hd.userid, h=hd.host))
         else:
             raise
 
