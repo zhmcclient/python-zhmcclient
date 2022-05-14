@@ -1995,6 +1995,11 @@ class Cpc(BaseResource):
             the DPM configuration, as described for the request body fields
             of the HMC operation.
 
+            Empty fields are omitted from the returned configuration. This
+            allows using newer versions of zhmcclient that may have added
+            support for a feature of a new generation of Z systems with
+            older generations of Z systems that did not yet have the feature.
+
             The optional "preserve-uris", "preserve-wwpns", and
             "adapter-mapping" fields will not be in the returned dictionary,
             so their defaults will be used when importing this DPM configuration
@@ -2133,18 +2138,31 @@ def retrieveInventoryData(client):
     """
     resource_classes = ['dpm-resources', 'cpc']
     inventory_list = client.get_inventory(resource_classes)
-    for res in inventory_list:
-        uri = res.get('object-uri') or res.get('element-uri')
-        if not uri:
-            raise ConsistencyError(
-                "Inventory data has an item without URI property: {}".
-                format(res))
+    error_msgs = []
+    for item in inventory_list:
+        if item.get('class') == 'inventory-error':
+            msg = ("Inventory error {} for resource with URI {}: {}; "
+                   "Details: {}".format(
+                       item.get('inventory-error-code'),
+                       item.get('uri'),
+                       item.get('inventory-error-text'),
+                       dict(item.get('inventory-error-details'))))
+            error_msgs.append(msg)
+    if error_msgs:
+        raise ConsistencyError(
+            "Some resources could not be fully inventoried:\n  {}".
+            format('\n  '.join(error_msgs)))
     return inventory_list
 
 
 def convertToConfig(inventory_list, cpc_uri):
     """
     Convert the inventory list to a DPM configuration dict.
+
+    Important: In order to support export of DPM configs with zhmcclient
+    versions that have support for newer features from older machines and
+    import into older machines, any dictionary items for newly added features
+    must be omitted if empty.
     """
     config_dict = OrderedDict()
 
@@ -2161,87 +2179,131 @@ def convertToConfig(inventory_list, cpc_uri):
             cpc.get('management-world-wide-port-name', None),
     }
 
-    config_dict['adapters'] = extractAdapters(
-        cpc_uri, inventory_list)
-    adapter_uris = [x['object-uri'] for x in config_dict['adapters']]
-
-    config_dict['partitions'] = extractByParent(
+    partitions = extractByParent(
         RC_PARTITION, cpc_uris, inventory_list)
-    partition_uris = [x['object-uri'] for x in config_dict['partitions']]
+    # This item is required by the "Import DPM Configuration" operation
+    config_dict['partitions'] = partitions
+    partition_uris = [x['object-uri'] for x in partitions]
 
-    config_dict['nics'] = extractByParent(
+    adapters = extractAdapters(cpc_uri, inventory_list)
+    if adapters:
+        config_dict['adapters'] = adapters
+    adapter_uris = [x['object-uri'] for x in adapters]
+
+    nics = extractByParent(
         RC_NIC, partition_uris, inventory_list)
-    config_dict['hbas'] = extractByParent(
+    if nics:
+        config_dict['nics'] = nics
+
+    hbas = extractByParent(
         RC_HBA, partition_uris, inventory_list)
-    config_dict['virtual-functions'] = extractByParent(
+    if hbas:
+        config_dict['hbas'] = hbas
+
+    virtual_functions = extractByParent(
         RC_VIRTUAL_FUNCTION, partition_uris, inventory_list)
+    if virtual_functions:
+        config_dict['virtual-functions'] = virtual_functions
 
-    config_dict['virtual-switches'] = extractByParent(
+    virtual_switches = extractByParent(
         RC_VIRTUAL_SWITCH, cpc_uris, inventory_list)
+    if virtual_switches:
+        config_dict['virtual-switches'] = virtual_switches
 
-    config_dict['capacity-groups'] = extractByParent(
+    capacity_groups = extractByParent(
         RC_CAPACITY_GROUP, cpc_uris, inventory_list)
+    if capacity_groups:
+        config_dict['capacity-groups'] = capacity_groups
 
-    config_dict['storage-sites'] = extractByValueInListProperty(
+    storage_sites = extractByValueInListProperty(
         RC_STORAGE_SITE, cpc_uri, 'cpc-uris', inventory_list)
-    storage_site_uris = [x['object-uri'] for x in config_dict['storage-sites']]
+    if storage_sites:
+        config_dict['storage-sites'] = storage_sites
+    storage_site_uris = [x['object-uri'] for x in storage_sites]
 
-    config_dict['storage-subsystems'] = extractByPropertyInListValue(
+    storage_subsystems = extractByPropertyInListValue(
         RC_STORAGE_SUBSYSTEM, 'storage-site-uri', storage_site_uris,
         inventory_list)
-    storage_subsystem_uris = \
-        [x['object-uri'] for x in config_dict['storage-subsystems']]
+    if storage_subsystems:
+        config_dict['storage-subsystems'] = storage_subsystems
+    storage_subsystem_uris = [x['object-uri'] for x in storage_subsystems]
 
-    config_dict['storage-fabrics'] = extractByPropertyInListValue(
+    storage_fabrics = extractByPropertyInListValue(
         RC_STORAGE_FABRIC, 'cpc-uri', cpc_uris, inventory_list)
-    config_dict['storage-switches'] = extractByPropertyInListValue(
+    if storage_fabrics:
+        config_dict['storage-fabrics'] = storage_fabrics
+
+    storage_switches = extractByPropertyInListValue(
         RC_STORAGE_SWITCH, 'storage-site-uri', storage_site_uris,
         inventory_list)
+    if storage_switches:
+        config_dict['storage-switches'] = storage_switches
 
-    config_dict['storage-control-units'] = extractByPropertyInListValue(
+    storage_control_units = extractByPropertyInListValue(
         RC_STORAGE_CONTROL_UNIT, 'parent', storage_subsystem_uris,
         inventory_list)
-    storage_control_unit_uris = \
-        [x['object-uri'] for x in config_dict['storage-control-units']]
+    if storage_control_units:
+        config_dict['storage-control-units'] = storage_control_units
+    storage_control_unit_uris = [x['object-uri'] for x in storage_control_units]
 
-    config_dict['storage-paths'] = extractByPropertyInListValue(
+    storage_paths = extractByPropertyInListValue(
         RC_STORAGE_PATH, 'parent', storage_control_unit_uris, inventory_list)
+    if storage_paths:
+        config_dict['storage-paths'] = storage_paths
 
-    config_dict['storage-ports'] = extractByPropertyInListValue(
+    storage_ports = extractByPropertyInListValue(
         RC_STORAGE_PORT, 'parent', adapter_uris, inventory_list)
+    if storage_ports:
+        config_dict['storage-ports'] = storage_ports
 
-    config_dict['network-ports'] = extractByPropertyInListValue(
+    network_ports = extractByPropertyInListValue(
         RC_NETWORK_PORT, 'parent', adapter_uris, inventory_list)
+    if network_ports:
+        config_dict['network-ports'] = network_ports
 
-    config_dict['storage-groups'] = extractByPropertyInListValue(
+    storage_groups = extractByPropertyInListValue(
         RC_STORAGE_GROUP, 'cpc-uri', cpc_uris, inventory_list)
-    storage_group_uris = \
-        [x['object-uri'] for x in config_dict['storage-groups']]
+    if storage_groups:
+        config_dict['storage-groups'] = storage_groups
+    storage_group_uris = [x['object-uri'] for x in storage_groups]
 
-    config_dict['storage-volumes'] = extractByPropertyInListValue(
+    storage_volumes = extractByPropertyInListValue(
         RC_STORAGE_VOLUME, 'parent', storage_group_uris, inventory_list)
+    if storage_volumes:
+        config_dict['storage-volumes'] = storage_volumes
 
-    config_dict['storage-templates'] = extractByPropertyInListValue(
+    storage_templates = extractByPropertyInListValue(
         RC_STORAGE_TEMPLATE, 'cpc-uri', cpc_uris, inventory_list)
-    storage_template_uris = \
-        [x['object-uri'] for x in config_dict['storage-templates']]
+    if storage_templates:
+        config_dict['storage-templates'] = storage_templates
+    storage_template_uris = [x['object-uri'] for x in storage_templates]
 
-    config_dict['storage-template-volumes'] = extractByPropertyInListValue(
+    storage_template_volumes = extractByPropertyInListValue(
         RC_STORAGE_TEMPLATE_VOLUME, 'parent', storage_template_uris,
         inventory_list)
+    if storage_template_volumes:
+        config_dict['storage-template-volumes'] = storage_template_volumes
 
-    config_dict['virtual-storage-resources'] = extractByPropertyInListValue(
+    virtual_storage_resources = extractByPropertyInListValue(
         RC_VIRTUAL_STORAGE_RESOURCE, 'parent', storage_group_uris,
         inventory_list)
+    if virtual_storage_resources:
+        config_dict['virtual-storage-resources'] = virtual_storage_resources
 
-    config_dict['tape-links'] = extractByPropertyInListValue(
+    tape_links = extractByPropertyInListValue(
         RC_TAPE_LINK, 'cpc-uri', cpc_uris, inventory_list)
-    tape_link_uris = [x['object-uri'] for x in config_dict['tape-links']]
+    if tape_links:
+        config_dict['tape-links'] = tape_links
+    tape_link_uris = [x['object-uri'] for x in tape_links]
 
-    config_dict['tape-libraries'] = extractByPropertyInListValue(
+    tape_libraries = extractByPropertyInListValue(
         RC_TAPE_LIBRARY, 'cpc-uri', cpc_uris, inventory_list)
+    if tape_libraries:
+        config_dict['tape-libraries'] = tape_libraries
 
-    config_dict['virtual-tape-resources'] = extractByParent(
+    virtual_tape_resources = extractByParent(
         RC_VIRTUAL_TAPE_RESOURCE, tape_link_uris, inventory_list)
+    if virtual_tape_resources:
+        config_dict['virtual-tape-resources'] = virtual_tape_resources
 
     return config_dict
