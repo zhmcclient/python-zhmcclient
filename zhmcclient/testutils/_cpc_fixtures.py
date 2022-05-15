@@ -37,8 +37,9 @@ def fixtureid_cpcs(fixture_value):
 
       * fixture_value (list of zhmcclient.Cpc): The list of CPCs.
     """
+    if not isinstance(fixture_value, list):
+        return None  # Use pytest auto-generated ID
     cpc_list = fixture_value
-    assert isinstance(cpc_list, list)
     cpcs_str = ','.join([cpc.name for cpc in cpc_list])
     return "CPCs={}".format(cpcs_str)
 
