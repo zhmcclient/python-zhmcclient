@@ -48,8 +48,9 @@ def fixtureid_hmc_definition(fixture_value):
       * fixture_value (HMCDefinition): The HMC definition of the HMC the test
         runs against.
     """
+    if not isinstance(fixture_value, HMCDefinition):
+        return None  # Use pytest auto-generated ID
     hd = fixture_value
-    assert isinstance(hd, HMCDefinition)
     show_hmc = False  # Enable to show HMC/userid or mock file in tests
     if not show_hmc:
         hmc_str = ""
