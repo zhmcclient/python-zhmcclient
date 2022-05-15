@@ -87,6 +87,7 @@ setuptools.setup(
     version=package_version,
     packages=[
         'zhmcclient',
+        'zhmcclient.testutils',
         'zhmcclient_mock'
     ],
     include_package_data=True,  # Includes MANIFEST.in files into sdist (only)
