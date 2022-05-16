@@ -19,34 +19,16 @@ Change log
 ----------
 
 
-Version 1.2.2.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.2.2
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2022-05-16
 
 **Bug fixes:**
 
 * Fixed the handling of JMS notifications that have no content, such as the
   job completion notification and the inventory change notification.
   (issue #956)
-
-* Fixed the handling of JMS notifications that have no content, such as the
-  job completion notification and the inventory change notification.
-  (issue #956)
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.2.1
