@@ -148,6 +148,11 @@ class Client(object):
 
         This method performs the 'Get Inventory' HMC operation.
 
+        If resources cannot be fully inventoried, the returned list contains
+        items describing the errors. They can be identified by their 'class'
+        property having a value of 'inventory-error'. Note that the presence
+        of such error items does not cause any exceptions to be raised.
+
         Parameters:
 
           resources (:term:`iterable` of :term:`string`):

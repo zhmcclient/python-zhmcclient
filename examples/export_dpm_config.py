@@ -37,19 +37,21 @@ verify_cert = hmc_def.verify_cert
 
 def check(config_items, inventory_data, classname, uri_prop, prop, value):
     """Check an item in the exported DPM config against the inventory data."""
+    if config_items is None:
+        return
     if not isinstance(value, (list, tuple)):
         value = [value]
     inventory_items = [x for x in inventory_data if x['class'] == classname
                        and (True if prop is None else x[prop] in value)]
+    extra_uris = set([x[uri_prop] for x in config_items]) - \
+        set([x[uri_prop] for x in inventory_items])
     missing_uris = set([x[uri_prop] for x in inventory_items]) - \
         set([x[uri_prop] for x in config_items])
-    missing_items = sorted([x for x in inventory_items
-                            if x[uri_prop] in missing_uris],
-                           key=lambda x: x[uri_prop])
-    delta = len(inventory_items) - len(config_items)
-    print("Checking {}: Inventory: {}, DPM config: {}, delta: {}, missing: {}".
+    status = 'Error' if extra_uris or missing_uris else 'Ok'
+    print("Checking resource class {!r}: Inventory: {}; DPM config: {} "
+          "(extra: {}, missing: {}); Check status: {}".
           format(classname, len(inventory_items), len(config_items),
-                 delta, len(missing_items)))
+                 len(extra_uris), len(missing_uris), status))
 
 
 print(__doc__)
@@ -78,7 +80,11 @@ try:
     print("Using CPC {}".format(cpc.name))
 
     print("Exporting DPM configuration of CPC {} ...".format(cpc.name))
-    dpm_config = cpc.export_dpm_configuration()
+    try:
+        dpm_config = cpc.export_dpm_configuration()
+    except zhmcclient.ConsistencyError as exc:
+        print("Error: Cannot export DPM configuration: {}".format(exc))
+        sys.exit(1)
 
     print("Fields in exported DPM configuration: {}".
           format(', '.join(dpm_config.keys())))
@@ -97,33 +103,33 @@ try:
                           if x['class'] == 'storage-group'
                           and x['cpc-uri'] == cpc.uri]
 
-    check(dpm_config['adapters'], inventory_data,
+    check(dpm_config.get('adapters'), inventory_data,
           'adapter', 'object-uri', 'parent', cpc.uri)
-    check(dpm_config['network-ports'], inventory_data,
+    check(dpm_config.get('network-ports'), inventory_data,
           'network-port', 'element-uri', 'parent', adapter_uris)
-    check(dpm_config['storage-ports'], inventory_data,
+    check(dpm_config.get('storage-ports'), inventory_data,
           'storage-port', 'element-uri', 'parent', adapter_uris)
 
-    check(dpm_config['partitions'], inventory_data,
+    check(dpm_config.get('partitions'), inventory_data,
           'partition', 'object-uri', 'parent', cpc.uri)
-    check(dpm_config['nics'], inventory_data,
+    check(dpm_config.get('nics'), inventory_data,
           'nic', 'element-uri', 'parent', partition_uris)
-    check(dpm_config['hbas'], inventory_data,
+    check(dpm_config.get('hbas'), inventory_data,
           'hba', 'element-uri', 'parent', partition_uris)
-    check(dpm_config['virtual-functions'], inventory_data,
+    check(dpm_config.get('virtual-functions'), inventory_data,
           'virtual-function', 'element-uri', 'parent', partition_uris)
 
-    check(dpm_config['virtual-switches'], inventory_data,
+    check(dpm_config.get('virtual-switches'), inventory_data,
           'virtual-switch', 'object-uri', 'parent', cpc.uri)
-    check(dpm_config['capacity-groups'], inventory_data,
+    check(dpm_config.get('capacity-groups'), inventory_data,
           'capacity-group', 'element-uri', 'parent', cpc.uri)
 
-    check(dpm_config['storage-sites'], inventory_data,
+    check(dpm_config.get('storage-sites'), inventory_data,
           'storage-site', 'object-uri', None, None)
 
-    check(dpm_config['storage-groups'], inventory_data,
+    check(dpm_config.get('storage-groups'), inventory_data,
           'storage-group', 'object-uri', 'cpc-uri', cpc.uri)
-    check(dpm_config['storage-volumes'], inventory_data,
+    check(dpm_config.get('storage-volumes'), inventory_data,
           'storage-volume', 'element-uri', 'parent', storage_group_uris)
 
 finally:

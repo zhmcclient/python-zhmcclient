@@ -89,6 +89,11 @@ Released: not yet
 * Improved description of 'Cpc.maximum_active_partitions' to better
   clarify the difference between DPM partitions and classic mode LPARs.
 
+* Removed optional empty fields in the exported DPM configuration data returned
+  by 'Cpc.export_dpm_configuration()'. This allows using newer versions of
+  zhmcclient that added support for new features with older machines that did
+  not yet have the feature. (issue #988)
+
 **Cleanup:**
 
 * Made the handling of 'Lpar.list()' with filters that have no matching LPAR
