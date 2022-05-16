@@ -19,12 +19,12 @@ Change log
 ----------
 
 
-Version 1.3.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.3.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.2.x.
+This version contains all fixes up to version 1.2.2.
 
-Released: not yet
+Released: 2022-05-17
 
 **Incompatible changes:**
 
@@ -46,8 +46,6 @@ Released: not yet
 
 * Renamed the properties of the 'zhmcclient.testutils.HMCDefinition' to remove
   the 'hmc_' prefix, e.g. 'hmc_userid' became 'userid', etc. (part of issue #986)
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -112,12 +110,6 @@ Released: not yet
 
 * End2end test: Removed CPC scope from test functions for HMC-based resources
   (e.g. users)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.2.0
