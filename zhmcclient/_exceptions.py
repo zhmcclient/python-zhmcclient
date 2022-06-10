@@ -24,7 +24,8 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'ServerAuthError', 'ParseError', 'VersionError', 'HTTPError',
            'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound',
            'MetricsResourceNotFound', 'NotificationError',
-           'NotificationJMSError', 'NotificationParseError', 'ConsistencyError']
+           'NotificationJMSError', 'NotificationParseError', 'ConsistencyError',
+           'CeasedExistence']
 
 
 class Error(Exception):
@@ -1382,3 +1383,56 @@ class ConsistencyError(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
     pass
+
+
+class CeasedExistence(Error):
+    # pylint: disable=abstract-method
+    """
+    This exception indicates that the corresponding HMC resource for an
+    auto-updated zhmcclient resource no longer exists.
+
+    This exception will only be raised for zhmcclient resources that are
+    enabled for :ref:`auto-update <Auto-updating of resources>`.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, resource_uri):
+        """
+        Parameters:
+
+          resource_uri (:term:`string`):
+            URI of the resource that no longer exists.
+
+        ``args[0]`` will be set to a default message.
+        """
+        msg = "Resource no longer exists: {}".format(resource_uri)
+        super(CeasedExistence, self).__init__(msg)
+        self._resource_uri = resource_uri
+
+    @property
+    def resource_uri(self):
+        """
+        :term:`string`: The URI of the resource that no longer exists.
+        """
+        return self._resource_uri
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return "{}(message={!r}, resource_uri={!r})". \
+            format(self.__class__.__name__, self.args[0], self.resource_uri)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}; resource_uri={}
+        """
+        return "classname={!r}; message={!r}; resource_uri={!r}". \
+            format(self.__class__.__name__, self.args[0], self.resource_uri)

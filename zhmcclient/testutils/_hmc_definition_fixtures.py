@@ -146,6 +146,11 @@ def setup_hmc_session(hd):
                 logger.addHandler(LOG_HANDLER)
             logger.setLevel(logging.DEBUG)
 
+            logger = logging.getLogger('zhmcclient.jms')
+            if LOG_HANDLER not in logger.handlers:
+                logger.addHandler(LOG_HANDLER)
+            logger.setLevel(logging.DEBUG)
+
         rt_config = zhmcclient.RetryTimeoutConfig(
             read_timeout=300,
         )

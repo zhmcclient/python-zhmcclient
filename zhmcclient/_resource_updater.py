@@ -186,16 +186,6 @@ class _UpdateListener(object):
           message (string): JMS message body as a string, which contains a
             serialized JSON object, see HMC API book.
         """
-
-        try:
-            msg_obj = json.loads(message)
-        except _JSONDecodeError:
-            JMS_LOGGER.error(
-                "JMS message for object notification topic '%s' "
-                "has a non-JSON message body (ignored): %r",
-                self._session.object_topic, message)
-            return
-
         try:
             uri = headers['object-uri']
         except KeyError:
@@ -210,6 +200,14 @@ class _UpdateListener(object):
 
         noti_type = headers['notification-type']
         if noti_type == 'property-change':
+            try:
+                msg_obj = json.loads(message)
+            except _JSONDecodeError:
+                JMS_LOGGER.error(
+                    "JMS message for object notification topic '%s' "
+                    "has a non-JSON message body (ignored): %r",
+                    self._session.object_topic, message)
+                return
             JMS_LOGGER.debug(
                 "JMS message for property change notification for topic '%s' "
                 "for resource %s with change reports: %r",
@@ -223,6 +221,14 @@ class _UpdateListener(object):
                 if obj.auto_update_enabled():
                     obj.update_properties_local(new_props)
         elif noti_type == 'status-change':
+            try:
+                msg_obj = json.loads(message)
+            except _JSONDecodeError:
+                JMS_LOGGER.error(
+                    "JMS message for object notification topic '%s' "
+                    "has a non-JSON message body (ignored): %r",
+                    self._session.object_topic, message)
+                return
             JMS_LOGGER.debug(
                 "JMS message for status change notification for topic '%s' "
                 "for resource %s with change reports: %r",
@@ -241,6 +247,16 @@ class _UpdateListener(object):
             for obj in self._updater.registered_objects(uri):
                 if obj.auto_update_enabled():
                     obj.update_properties_local(new_props)
+        elif noti_type == 'inventory-change':
+            action = headers['action']
+            JMS_LOGGER.debug(
+                "JMS message for inventory change notification for topic '%s' "
+                "for resource %s with action: %r",
+                self._session.object_topic, uri, action)
+            if action == 'remove':
+                for obj in self._updater.registered_objects(uri):
+                    if obj.auto_update_enabled():
+                        obj.cease_existence_local()
         else:
             JMS_LOGGER.warning(
                 "JMS message for notification of type %s for topic '%s' "

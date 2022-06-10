@@ -30,6 +30,11 @@ Released: not yet
 
 * Mocked HMC definitions now require userid and password in the vault file.
 
+* Auto-updated resources now auto-detect if the corresponding HMC resource no
+  longer exists and accessing the zhmcclient resource in that case with certain
+  attributes and methods causes a new `zhmcclient.CeasedExistence` exception to
+  be raised. The documentation shows which attributes and methods do that.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -66,6 +71,13 @@ Released: not yet
   an HMC to a HMC definition file for use as a mock definition.
 
 * Improved mock support for password rules by creating default properties.
+
+* Auto-updated resources now auto-detect if the corresponding HMC resource no
+  longer exists. This can be tested with a new `ceased_existence` attribute on
+  the resources. Accessing the zhmcclient resource in that case with certain
+  attributes and methods causes a new `zhmcclient.CeasedExistence` exception to
+  be raised. The documentation shows which attributes and methods do that.
+  (Issue #996)
 
 **Cleanup:**
 

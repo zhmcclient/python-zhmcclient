@@ -31,6 +31,7 @@ from immutable_views import DictView
 
 from ._logging import logged_api_call
 from ._utils import repr_dict, repr_timestamp
+from ._exceptions import CeasedExistence
 
 __all__ = ['BaseResource']
 
@@ -101,6 +102,7 @@ class BaseResource(object):
         # self._property_lock = contextlib.nullcontext()  # test need to lock
         self._property_lock = threading.RLock()
         self._auto_update = False
+        self._ceased_existence = False
 
     @property
     def properties(self):
@@ -144,6 +146,10 @@ class BaseResource(object):
         resource object and the session is enabled for auto-updating as well,
         the property values in the returned :class:`iv:immutable_views.DictView`
         object will change as they change on the HMC.
+
+        If the resource object on the HMC no longer exists, the properties
+        show the values that were last updated from the HMC when the object
+        still existed.
         """
         return DictView(self._properties)
 
@@ -167,11 +173,27 @@ class BaseResource(object):
         Accessing this property will cause the properties of this resource
         object to be updated from the HMC, if it does not yet contain the
         property for the resource name.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`: Only when not yet available
+            locally.
         """
         # pylint: disable=protected-access
         # We avoid storing the name in an instance variable, because it can
         # be modified via update_properties().
-        return self.get_property(self.manager._name_prop)
+        name_prop = self.manager._name_prop
+        try:
+            with self._property_lock:
+                return self._properties[name_prop]
+        except KeyError:
+            self.pull_full_properties()
+            with self._property_lock:
+                return self._properties[name_prop]
 
     @property
     def manager(self):
@@ -202,6 +224,15 @@ class BaseResource(object):
         """
         return self._properties_timestamp
 
+    @property
+    def ceased_existence(self):
+        """
+        bool: Indicates that the corresponding object on the HMC no longer
+        exists, if auto-update is enabled for the resource. Always `False`, if
+        auto-update is not enabled for the resource.
+        """
+        return self._ceased_existence
+
     @logged_api_call
     def pull_full_properties(self):
         """
@@ -221,7 +252,11 @@ class BaseResource(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`
         """
+        with self._property_lock:
+            if self._ceased_existence:
+                raise CeasedExistence(self._uri)
         full_properties = self.manager.session.get(self._uri)
         with self._property_lock:
             self._properties = dict(full_properties)
@@ -262,9 +297,12 @@ class BaseResource(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`
         """
         try:
             with self._property_lock:
+                if self._ceased_existence:
+                    raise CeasedExistence(self._uri)
                 return self._properties[name]
         except KeyError:
             if self._full_properties:
@@ -309,6 +347,7 @@ class BaseResource(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`
         """
         try:
             return self.get_property(name)
@@ -387,6 +426,17 @@ class BaseResource(object):
             for name, value in properties.items():
                 self._properties[name] = value
 
+    def cease_existence_local(self):
+        """
+        Update this Python object to indicate that the corresponding HMC object
+        no longer exists.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+        """
+        with self._property_lock:
+            self._ceased_existence = True
+
     def __str__(self):
         """
         Return a human readable string representation of this resource.
@@ -428,6 +478,7 @@ class BaseResource(object):
                 "{classname} at 0x{id:08x} (\n"
                 "  _manager={_manager_classname} at 0x{_manager_id:08x},\n"
                 "  _uri={_uri!r},\n"
+                "  _ceased_existence={_ceased_existence!r},\n"
                 "  _full_properties={_full_properties!r},\n"
                 "  _auto_update={_auto_update!r},\n"
                 "  _properties_timestamp={_properties_timestamp},\n"
@@ -438,6 +489,7 @@ class BaseResource(object):
                     _manager_classname=self._manager.__class__.__name__,
                     _manager_id=id(self._manager),
                     _uri=self._uri,
+                    _ceased_existence=self._ceased_existence,
                     _full_properties=self._full_properties,
                     _auto_update=self._auto_update,
                     _properties_timestamp=repr_timestamp(
@@ -469,6 +521,14 @@ class BaseResource(object):
         of this resource object are retrieved using :meth:`pull_full_properties`
         in order to have the most current values as a basis for the future
         auto-updating.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`
         """
         if not self._auto_update:
             session = self.manager.session
@@ -513,6 +573,14 @@ class BaseResource(object):
 
         Returns:
           dict: Resource definition of this resource.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`
         """
         resource_dict = OrderedDict()
         self.pull_full_properties()

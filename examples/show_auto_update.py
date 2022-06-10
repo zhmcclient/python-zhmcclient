@@ -100,11 +100,18 @@ try:
 
         print("Entering loop that displays property '{}' of partition objects "
               "1 and 2".format(part_prop))
-        print("\n==> Update property '{}' of partition '{}' on CPC '{}' from "
-              "another session\n".format(part_prop, part_name, cpc.name))
+        print("")
+        print("==> Update property '{}' of partition '{}' on CPC '{}' from "
+              "another session".format(part_prop, part_name, cpc.name))
+        print("==> Delete partition '{}' on CPC '{}' from another "
+              "session".format(part_name, cpc.name))
+        print("")
         try:
             while True:
-                value1 = partition1.prop(part_prop)
+                try:
+                    value1 = partition1.prop(part_prop)
+                except zhmcclient.CeasedExistence:
+                    value1 = 'N/A'
                 value2 = partition2.prop(part_prop)
                 print("Property '{}' on partition objects 1: {!r}, 2: {!r}".
                       format(part_prop, value1, value2))

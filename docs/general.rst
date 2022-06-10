@@ -256,6 +256,12 @@ Exceptions
    :autosummary-inherited-members:
    :special-members: __str__
 
+.. autoclass:: zhmcclient.CeasedExistence
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
 
 .. _`Constants`:
 
