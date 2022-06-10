@@ -375,10 +375,12 @@ The auto-update support in zhmcclient processes the property and status change
 notifications by updating the correponding properties in those resource objects
 that have been enabled for auto-updating. As a result, these properties will
 always have the value the resource object has on the HMC.
+The inventory change notification is used to set the
+:attr:`~zhmcclient.BaseResource.ceased_existence` attribute of the resource if
+it no longer exists on the HMC.
 
-The auto-update support in zhmcclient ignores property and status change
-notifications for resource objects that have not been enabled for auto-updating
-and it also ignores inventory change notifications.
+Property, status and inventory change notifications for resource objects that
+have not been enabled for auto-updating will be ignored.
 
 The delay for the new property value to become visible in the zhmcclient
 resource object after it has been changed on the HMC, is in the order of 1
@@ -405,7 +407,10 @@ Example:
     prop_name = 'description'
 
     while True:
-        value1 = partition1.prop(prop_name)
+        try:
+            value1 = partition1.prop(prop_name)
+        except zhmcclient.CeasedExistence:
+            value1 = "N/A"
         value2 = partition2.prop(prop_name)
         print("Property '{}' of objects 1: {!r}, 2: {!r}".
               format(prop_name, value1, value2))
@@ -428,7 +433,26 @@ one will show the same value unchanged:
     Property 'description' of objects 1: 'foo', 2: 'foo'
     Property 'description' of objects 1: 'foo', 2: 'foo'
     Property 'description' of objects 1: 'foo', 2: 'foo'
+
     # description property is changed to 'bar' on the HMC
+
     Property 'description' of objects 1: 'bar', 2: 'foo'
     Property 'description' of objects 1: 'bar', 2: 'foo'
     Property 'description' of objects 1: 'bar', 2: 'foo'
+
+If the partition is deleted on the HMC, the partition object that has
+auto-update enabled will raise :exc:`zhmcclient.CeasedExistence` upon
+accessing the property value, while the other one will show the same value
+unchanged:
+
+.. code-block:: text
+
+    Property 'description' of objects 1: 'foo', 2: 'foo'
+    Property 'description' of objects 1: 'foo', 2: 'foo'
+    Property 'description' of objects 1: 'foo', 2: 'foo'
+
+    # partition gets deleted on the HMC
+
+    Property 'description' of objects 1: 'N/A', 2: 'foo'
+    Property 'description' of objects 1: 'N/A', 2: 'foo'
+    Property 'description' of objects 1: 'N/A', 2: 'foo'
