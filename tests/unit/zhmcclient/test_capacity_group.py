@@ -161,7 +161,7 @@ class TestCapacityGroup(object):
 
     testcases_cgm_list_full_properties = (
         "full_properties_kwargs, prop_names", [
-            (dict(),
+            ({},
              ['element-uri', 'name']),
             (dict(full_properties=False),
              ['element-uri', 'name']),

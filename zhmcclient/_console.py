@@ -561,7 +561,7 @@ class Console(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        filter_args = dict()
+        filter_args = {}
         if name is not None:
             filter_args['name'] = name
         cpcs = self.unmanaged_cpcs.list(filter_args=filter_args)

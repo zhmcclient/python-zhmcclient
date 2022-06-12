@@ -271,7 +271,7 @@ class NotificationReceiver(object):
 
                 # Indicate to MessageListener that we are ready for next
                 # notification
-                self._handover_cond.notifyAll()
+                self._handover_cond.notify_all()
 
     @logged_api_call
     def close(self):
@@ -341,7 +341,7 @@ class _NotificationListener(object):
             self._handover_dict['headers'] = None  # terminate receiver
             self._handover_dict['message'] = None
             self._handover_dict['msgtype'] = 'disconnected'
-            self._handover_cond.notifyAll()
+            self._handover_cond.notify_all()
 
     def on_error(self, headers, message):
         """
@@ -371,7 +371,7 @@ class _NotificationListener(object):
             self._handover_dict['headers'] = headers
             self._handover_dict['message'] = message
             self._handover_dict['msgtype'] = 'error'
-            self._handover_cond.notifyAll()
+            self._handover_cond.notify_all()
 
     def on_message(self, headers, message):
         """
@@ -400,4 +400,4 @@ class _NotificationListener(object):
             self._handover_dict['headers'] = headers
             self._handover_dict['message'] = message
             self._handover_dict['msgtype'] = 'message'
-            self._handover_cond.notifyAll()
+            self._handover_cond.notify_all()

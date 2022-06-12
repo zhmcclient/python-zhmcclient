@@ -1234,7 +1234,7 @@ class Cpc(BaseResource):
                 domain_configs = crypto_config['crypto-domain-configurations']
                 for ca in crypto_adapters:
                     if ca.uri in adapter_uris:
-                        used_adapter_domains = list()
+                        used_adapter_domains = []
                         for dc in domain_configs:
                             if dc['access-mode'] == 'control-usage':
                                 used_adapter_domains.append(dc['domain-index'])

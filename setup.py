@@ -31,6 +31,7 @@ def get_version(version_file):
     requirements list of this package (otherwise it cannot be executed in
     a fresh Python environment).
     """
+    # pylint: disable=unspecified-encoding
     with open(version_file, 'r') as fp:
         version_source = fp.read()
     _globals = {}
@@ -44,6 +45,7 @@ def get_requirements(requirements_file):
     non-comment lines. The returned lines are without any trailing newline
     characters.
     """
+    # pylint: disable=unspecified-encoding
     with open(requirements_file, 'r') as fp:
         lines = fp.readlines()
     reqs = []
@@ -58,6 +60,7 @@ def read_file(a_file):
     """
     Read the specified file and return its content as one string.
     """
+    # pylint: disable=unspecified-encoding
     with open(a_file, 'r') as fp:
         content = fp.read()
     return content
