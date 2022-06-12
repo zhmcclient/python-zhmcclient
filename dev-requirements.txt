@@ -107,10 +107,12 @@ Babel>=2.7.0
 # Pylint 2.4 / astroid 2.3 removed py34
 # Issue #2673: Pinning Pylint to <2.7.0 is a circumvention for Pylint issue
 #   https://github.com/PyCQA/pylint/issues/4120 that appears in Pylint 2.7.0.
-pylint>=1.6.4,<2.0.0; python_version == '2.7'
-pylint>=2.5.2,<2.7.0; python_version >= '3.6'
-astroid>=1.4.9,<2.0.0; python_version == '2.7'
-astroid>=2.4.0,<2.5.0; python_version >= '3.6'
+#   Pylint 2.10 has fixed the issue.
+pylint>=2.5.2,<2.7.0; python_version == '3.5'
+pylint>=2.10.0,<2.14.0; python_version == '3.6'
+pylint>=2.10.0; python_version >= '3.7'
+astroid>=2.4.0,<2.6.0; python_version == '3.5'
+astroid>=2.7.2; python_version >= '3.6'
 typed-ast>=1.4.0,<1.5.0; python_version >= '3.6' and python_version < '3.8' and implementation_name=='cpython'
 # Workaround: lazy-object-proxy is used by astroid, and lazy-object-proxy 1.5.0
 #   dropped support for py34 but declared it as supported
