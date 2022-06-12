@@ -835,7 +835,7 @@ class FakedBaseManager(object):
           list of FakedBaseResource: The faked resource objects of this
             manager.
         """
-        res = list()
+        res = []
         for oid in self._resources:
             resource = self._resources[oid]
             if self._matches_filters(resource, filter_args):

@@ -84,7 +84,7 @@ try:
     print("Current partition description: {}".
           format(part.get_property('description')))
     new_description = "Updated partition description."
-    updated_properties = dict()
+    updated_properties = {}
     updated_properties["description"] = new_description
 
     print("Updating partition description to: {}".format(new_description))

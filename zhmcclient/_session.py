@@ -30,6 +30,7 @@ except ImportError:
 try:
     from collections.abc import Iterable
 except ImportError:
+    # pylint: disable=deprecated-class
     from collections import Iterable
 import six
 import requests

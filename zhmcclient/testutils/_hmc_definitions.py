@@ -179,7 +179,7 @@ class HMCDefinitions(object):
             #   key: group name, value: dict of HMC definitions with:
             #     key: HMC nickname, value: dict of HMCDefinition attrs with:
             #       key: attr name, value: attr value
-            self._hd_dict = dict()
+            self._hd_dict = {}
 
             # Update self._hd_dict from groups, starting with top-level groups
             self._init_groups(self._inventory.data, {})

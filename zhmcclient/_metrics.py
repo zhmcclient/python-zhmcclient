@@ -288,13 +288,13 @@ class MetricsContext(BaseResource):
         context, by processing its 'metric-group-infos' property.
         """
         # Dictionary of MetricGroupDefinition objects, by metric group name
-        metric_group_definitions = dict()
+        metric_group_definitions = {}
         for mg_info in self._properties['metric-group-infos']:
             mg_name = mg_info['group-name']
             mg_def = MetricGroupDefinition(
                 name=mg_name,
                 resource_class=_resource_class_from_group(mg_name),
-                metric_definitions=dict())
+                metric_definitions={})
             for i, m_info in enumerate(mg_info['metric-infos']):
                 m_name = m_info['metric-name']
                 m_def = MetricDefinition(
@@ -657,7 +657,7 @@ class MetricsResponse(object):
         dt_timestamp = None
 
         object_values = None
-        metric_group_values = list()
+        metric_group_values = []
         state = 0
         for mr_line in self._metrics_response_str.splitlines():
             if state == 0:
@@ -674,7 +674,7 @@ class MetricsResponse(object):
                     metric_group_name = mr_line.strip('"')  # No " or \ inside
                     assert metric_group_name in mg_defs
                     m_defs = mg_defs[metric_group_name].metric_definitions
-                    object_values = list()
+                    object_values = []
                     state = 1
             elif state == 1:
                 if mr_line == '':
@@ -703,7 +703,7 @@ class MetricsResponse(object):
                 if mr_line != '':
                     # Process the metric values in the ValueRow line
                     str_values = mr_line.split(',')
-                    metrics = dict()
+                    metrics = {}
                     for m_name in m_defs:
                         m_def = m_defs[m_name]
                         m_type = m_def.type

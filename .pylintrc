@@ -180,7 +180,8 @@ disable=I0011,
         consider-using-set-comprehension, unnecessary-pass, useless-return,
         raise-missing-from, consider-using-f-string,
         super-with-arguments, duplicate-string-formatting-argument,
-        consider-using-generator, bad-option-value,
+        consider-using-generator, bad-option-value, redundant-u-string-prefix,
+        use-implicit-booleaness-not-comparison,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

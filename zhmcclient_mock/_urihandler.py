@@ -245,7 +245,7 @@ def parse_query_parms(method, uri, query_str):
         if name in query_parms:
             existing_value = query_parms[name]
             if not isinstance(existing_value, list):
-                query_parms[name] = list()
+                query_parms[name] = []
                 query_parms[name].append(existing_value)
             query_parms[name].append(value)
         else:

@@ -132,7 +132,7 @@ class TestStorageGroup(object):
 
     testcases_sm_list_full_properties = (
         "full_properties_kwargs, prop_names", [
-            (dict(),
+            ({},
              ['object-uri', 'cpc-uri', 'name', 'fulfillment-state', 'type']),
             (dict(full_properties=False),
              ['object-uri', 'cpc-uri', 'name', 'fulfillment-state', 'type']),

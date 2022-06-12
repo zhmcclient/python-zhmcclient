@@ -124,7 +124,7 @@ class TestActivationProfile(object):
     )
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(),
+            ({},
              ['name', 'element-uri']),
             (dict(full_properties=False),
              ['name', 'element-uri']),
