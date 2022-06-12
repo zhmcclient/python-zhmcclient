@@ -116,7 +116,7 @@ class TestPasswordRule(object):
              ['element-uri']),
             (dict(full_properties=True),
              ['element-uri', 'name']),
-            (dict(),  # test default for full_properties (True)
+            ({},  # test default for full_properties (True)
              ['element-uri', 'name']),
         ]
     )

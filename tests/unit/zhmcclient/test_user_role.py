@@ -101,7 +101,7 @@ class TestUserRole(object):
              ['object-uri']),
             (dict(full_properties=True),
              ['object-uri', 'name']),
-            (dict(),  # test default for full_properties (True)
+            ({},  # test default for full_properties (True)
              ['object-uri', 'name']),
         ]
     )

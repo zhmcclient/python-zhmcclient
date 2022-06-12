@@ -113,7 +113,7 @@ class TestLpar(object):
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(),
+            ({},
              ['object-uri', 'name', 'status']),
             (dict(full_properties=False),
              ['object-uri', 'name', 'status']),
@@ -288,11 +288,11 @@ class TestLpar(object):
 
     @pytest.mark.parametrize(
         "initial_profile, profile_kwargs, exp_profile, exp_profile_exc", [
-            ('', dict(),
+            ('', {},
              None, HTTPError({'http-status': 500, 'reason': 263})),
-            (LPAR1_NAME, dict(),
+            (LPAR1_NAME, {},
              LPAR1_NAME, None),
-            (LPAR2_NAME, dict(),
+            (LPAR2_NAME, {},
              None, HTTPError({'http-status': 500, 'reason': 263})),
             ('', dict(activation_profile_name=LPAR1_NAME),
              LPAR1_NAME, None),
@@ -311,7 +311,7 @@ class TestLpar(object):
     @pytest.mark.parametrize(
         "initial_status, status_kwargs, act_exp_status, exp_status_exc", [
 
-            ('not-activated', dict(),  # Verify that force has a default
+            ('not-activated', {},  # Verify that force has a default
              'not-operating', None),
             ('not-activated', dict(force=False),
              'not-operating', None),
@@ -323,7 +323,7 @@ class TestLpar(object):
             ('not-operating', dict(force=True),
              'not-operating', None),
 
-            ('operating', dict(),  # Verify that force default is False
+            ('operating', {},  # Verify that force default is False
              'not-operating', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=False),
              'not-operating', HTTPError({'http-status': 500, 'reason': 263})),
@@ -335,7 +335,7 @@ class TestLpar(object):
             ('exceptions', dict(force=True),
              'not-operating', None),
 
-            ('not-activated', dict(),
+            ('not-activated', {},
              'exceptions', StatusTimeout(None, None, None, None)),
             ('not-activated', dict(allow_status_exceptions=False),
              'exceptions', StatusTimeout(None, None, None, None)),
@@ -405,7 +405,7 @@ class TestLpar(object):
     @pytest.mark.parametrize(
         "initial_status, input_kwargs, act_exp_status, exp_status_exc", [
 
-            ('not-activated', dict(),  # Verify that force has a default
+            ('not-activated', {},  # Verify that force has a default
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
             ('not-activated', dict(force=False),
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
@@ -417,7 +417,7 @@ class TestLpar(object):
             ('not-operating', dict(force=True),
              'not-activated', None),
 
-            ('operating', dict(),  # Verify that force default is False
+            ('operating', {},  # Verify that force default is False
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
             ('operating', dict(force=False),
              'not-activated', HTTPError({'http-status': 500, 'reason': 263})),
@@ -429,7 +429,7 @@ class TestLpar(object):
             ('exceptions', dict(force=True),
              'not-activated', None),
 
-            ('not-operating', dict(),
+            ('not-operating', {},
              'exceptions', StatusTimeout(None, None, None, None)),
             ('not-operating', dict(allow_status_exceptions=False),
              'exceptions', StatusTimeout(None, None, None, None)),
@@ -488,11 +488,11 @@ class TestLpar(object):
 
     @pytest.mark.parametrize(
         "initial_loadparm, loadparm_kwargs, exp_loadparm, exp_loadparm_exc", [
-            (None, dict(),
+            (None, {},
              '', None),
             (None, dict(load_parameter='abcd'),
              'abcd', None),
-            ('abcd', dict(),
+            ('abcd', {},
              'abcd', None),
             ('fooo', dict(load_parameter='abcd'),
              'abcd', None),
@@ -500,11 +500,11 @@ class TestLpar(object):
     )
     @pytest.mark.parametrize(
         "initial_loadaddr, loadaddr_kwargs, exp_loadaddr, exp_loadaddr_exc", [
-            (None, dict(),
+            (None, {},
              None, HTTPError({'http-status': 400, 'reason': 5})),
             (None, dict(load_address='5176'),
              '5176', None),
-            ('5176', dict(),
+            ('5176', {},
              '5176', None),
             ('1234', dict(load_address='5176'),
              '5176', None),
@@ -513,7 +513,7 @@ class TestLpar(object):
     @pytest.mark.parametrize(
         "initial_status, status_kwargs, act_exp_status, exp_status_exc"
         ", initial_stored_status, exp_stored_status, exp_store_status_exc", [
-            ('not-activated', dict(),
+            ('not-activated', {},
              'operating', HTTPError({'http-status': 409, 'reason': 0}),
              None, None, None),
             ('not-activated', dict(force=False),
@@ -530,7 +530,7 @@ class TestLpar(object):
              'operating', None,
              None, None, None),
 
-            ('operating', dict(),
+            ('operating', {},
              'operating', HTTPError({'http-status': 500, 'reason': 263}),
              None, None, None),
             ('operating', dict(force=False),
@@ -547,7 +547,7 @@ class TestLpar(object):
              'operating', None,
              None, None, None),
 
-            ('not-operating', dict(),
+            ('not-operating', {},
              'exceptions', StatusTimeout(None, None, None, None),
              None, None, None),
             ('not-operating', dict(allow_status_exceptions=False),
@@ -567,7 +567,7 @@ class TestLpar(object):
     )
     @pytest.mark.parametrize(
         "initial_memory, memory_kwargs, exp_memory, exp_memory_exc", [
-            ('foobar', dict(),
+            ('foobar', {},
              '', None),
             ('foobar', dict(clear_indicator=False),
              'foobar', None),
