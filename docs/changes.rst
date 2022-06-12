@@ -34,6 +34,9 @@ Released: not yet
   Python 2.7; Enabled running Pylint again on Python 3.5, Increased minimum
   version of Pylint to 2.10.0 on Python 3.5 and higher.
 
+* Addressed issues discovered by Pylint 2.10 and higher (it was pinned to 2.7.0
+  before).
+
 **Enhancements:**
 
 **Cleanup:**

@@ -246,6 +246,7 @@ class HMCInventoryFile(object):
         Load and validate the HMC inventory file in YAML format.
         """
         try:
+            # pylint: disable=unspecified-encoding
             with open(self._filepath) as fp:
                 try:
                     data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)

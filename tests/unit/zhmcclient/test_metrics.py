@@ -108,7 +108,7 @@ class TestMetricsContext(object):
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(),
+            ({},
              ['anticipated-frequency-seconds', 'metric-groups']),
             (dict(full_properties=False),
              ['anticipated-frequency-seconds', 'metric-groups']),

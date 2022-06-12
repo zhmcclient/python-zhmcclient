@@ -160,7 +160,7 @@ class TestHba(object):
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(),
+            ({},
              ['element-uri']),
             (dict(full_properties=False),
              ['element-uri']),

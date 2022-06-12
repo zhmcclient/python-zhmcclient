@@ -32,6 +32,7 @@ def get_version(version_file):
     requirements list of this package (otherwise it cannot be executed in
     a fresh Python environment).
     """
+    # pylint: disable=unspecified-encoding
     with open(version_file, 'r') as fp:
         version_source = fp.read()
     _globals = {}

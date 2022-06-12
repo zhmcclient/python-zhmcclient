@@ -57,7 +57,7 @@ def as_dict():
     Return debug information as a dictionary.
     """
 
-    debug_info = dict()
+    debug_info = {}
 
     debug_info['os_name'] = platform.system()
     debug_info['os_version'] = platform.release()

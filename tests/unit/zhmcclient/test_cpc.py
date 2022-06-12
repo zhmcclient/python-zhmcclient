@@ -518,7 +518,7 @@ class TestCpc(object):
 
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
-            (dict(),
+            ({},
              ['object-uri', 'name', 'status']),
             (dict(full_properties=False),
              ['object-uri', 'name', 'status']),

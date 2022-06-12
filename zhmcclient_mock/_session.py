@@ -777,6 +777,7 @@ class FakedSession(zhmcclient.Session):
             YamlFormatError: Invalid YAML syntax in HMC definition.
             HmcDefinitionSchemaError: Invalid data format in HMC definition.
         """
+        # pylint: disable=unspecified-encoding
         with open(filepath) as fp:
             hmc = FakedSession.from_hmc_yaml(fp, filepath)
         return hmc

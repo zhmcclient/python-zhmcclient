@@ -73,10 +73,7 @@ Examples:
 
 import logging
 import inspect
-try:
-    from decorator import decorate  # decorate >= 4.0
-except ImportError:
-    from decorator import decorator  # decorate < 4.0
+from decorator import decorate  # requires decorator>=4.0
 
 from ._constants import API_LOGGER_NAME
 
@@ -233,6 +230,4 @@ def logged_api_call(func):
 
         return result
 
-    if 'decorate' in globals():
-        return decorate(func, log_api_call)
-    return decorator(log_api_call, func)
+    return decorate(func, log_api_call)
