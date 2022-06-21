@@ -47,22 +47,23 @@ class HMCDefinition(object):
 
           access_via (string): Networking preconditions for reaching the HMC.
 
-          mock_file (string): Path name of HMC mock file. This argument is used
-            to detect whether the HMC is a real or mocked HMC: If `None`, it is
-            a real HMC.
+          mock_file (string): Path name of HMC mock file, or `None`.
+            This argument is used to detect whether the HMC is a real or mocked
+            HMC: If `None`, it is a real HMC. Otherwise, it is a mocked HMC
+            and the path name is stored as provided.
 
           host (string): IP address or DNS hostname of the real HMC.
-            Ignored for mocked HMCs, must not be `None` for real HMCs.
+            Required for real HMCs, must not be `None`. Optional for mocked
+            HMCs.
 
-          userid (string): Userid (username) for authenticating with the
-            HMC. Ignored for mocked HMCs, must not be `None` for real HMCs.
+          userid (string): Userid (username) for authenticating with the HMC.
+            Required, must not be `None`.
 
           password (string): Password for authenticating with the HMC.
-            Ignored for mocked HMCs, must not be `None` for real HMCs.
+            Required, must not be `None`.
 
           verify (bool): Verify the HMC certificate as specified in
-            `ca_certs`.
-            Ignored for mocked HMCs, defaults to `True` for real HMCs.
+            `ca_certs`. Optional, defaults to `True`.
 
           ca_certs (string): Path name of certificate file or certificate
             directory to be used for verifying the HMC certificate, or `None`.
@@ -70,7 +71,7 @@ class HMCDefinition(object):
             variable, or the path name in the 'CURL_CA_BUNDLE' environment
             variable, or the certificates in the Mozilla CA Certificate List
             provided by the 'certifi' Python package are used.
-            Ignored for mocked HMCs, defaults to `None` for real HMCs.
+            Optional, defaults to `None`.
 
           cpcs (dict): CPCs managed by the HMC that are to be tested.
             If `None`, no CPCs are tested.
@@ -89,21 +90,11 @@ class HMCDefinition(object):
         self._contact = contact or ''
         self._access_via = access_via or ''
         self._mock_file = mock_file
-        if self._mock_file:
-            self._host = None
-            self._userid = None
-            self._password = None
-            self._verify = None
-            self._ca_certs = None
-        else:
-            # assert host
-            # assert userid
-            # assert password
-            self._host = host
-            self._userid = userid
-            self._password = password
-            self._verify = verify
-            self._ca_certs = ca_certs
+        self._host = host
+        self._userid = userid
+        self._password = password
+        self._verify = verify
+        self._ca_certs = ca_certs
         self._cpcs = cpcs or {}
         self._add_vars = add_vars or {}
 
@@ -158,7 +149,7 @@ class HMCDefinition(object):
     @property
     def mock_file(self):
         """
-        string: Path name of HMC mock file.
+        string: Path name of HMC mock file, or `None`.
 
         An HMC mock file defines a mocked HMC based on the zhmcclient_mock
         support.
@@ -173,16 +164,20 @@ class HMCDefinition(object):
         """
         string: IP address or DNS hostname of the HMC.
 
-        This property is used only for real HMCs and is `None` for mocked HMCs.
+        This is a settable property.
         """
         return self._host
+
+    @host.setter
+    def host(self, host):
+        """Setter method; for a description see the getter method."""
+        # pylint: disable=attribute-defined-outside-init
+        self._host = host
 
     @property
     def userid(self):
         """
         string: Userid (username) for authenticating with the HMC.
-
-        This property is used only for real HMCs and is `None` for mocked HMCs.
         """
         return self._userid
 
@@ -190,8 +185,6 @@ class HMCDefinition(object):
     def password(self):
         """
         string: Password for authenticating with the HMC.
-
-        This property is used only for real HMCs and is `None` for mocked HMCs.
         """
         return self._password
 
@@ -199,8 +192,6 @@ class HMCDefinition(object):
     def verify(self):
         """
         bool: Verify the HMC certificate as specified in :attr:`ca_certs`.
-
-        This property is used only for real HMCs and is `None` for mocked HMCs.
         """
         return self._verify
 
@@ -214,8 +205,6 @@ class HMCDefinition(object):
         variable, or the path name in the 'CURL_CA_BUNDLE' environment
         variable, or the certificates in the Mozilla CA Certificate List
         provided by the 'certifi' Python package are used.
-
-        This property is used only for real HMCs and is `None` for mocked HMCs.
         """
         return self._ca_certs
 
@@ -225,8 +214,6 @@ class HMCDefinition(object):
         bool or string: A combination of :attr:`verify` and
         :attr:`ca_certs` for direct use as the `verify_cert` parameter of
         :class:`zhmcclient.Session`.
-
-        This property is used only for real HMCs and is `None` for mocked HMCs.
         """
         if self._ca_certs:
             return self._ca_certs

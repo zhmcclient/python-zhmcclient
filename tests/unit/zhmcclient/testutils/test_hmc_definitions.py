@@ -146,6 +146,9 @@ all:
         """,
         """
 hmc_auth:
+  host1:
+    userid: userid1
+    password: password1
         """,
         None,
         {
@@ -156,9 +159,9 @@ hmc_auth:
                     "access_via": "Intranet",
                     "host": None,
                     "mock_file": "host1_mock.yaml",
-                    "userid": None,
-                    "password": None,
-                    "verify": None,
+                    "userid": "userid1",
+                    "password": "password1",
+                    "verify": True,
                     "ca_certs": None,
                     "cpcs": {
                         "CPC1": {
@@ -181,42 +184,9 @@ all:
         """,
         """
 hmc_auth:
-        """,
-        None,
-        {
-            "all": {
-                "host1": {
-                    "description": "",
-                    "contact": "",
-                    "access_via": "",
-                    "host": None,
-                    "mock_file": "host1_mock.yaml",
-                    "userid": None,
-                    "password": None,
-                    "verify": None,
-                    "ca_certs": None,
-                    "cpcs": {},
-                    "add_vars": {},
-                },
-            },
-        },
-        None, None
-    ),
-    (
-        "One mocked HMC with minimal properties but credentials (ignored)",
-        """
-all:
-  hosts:
-    host1:
-      mock_file: host1_mock.yaml
-        """,
-        """
-hmc_auth:
   host1:
-    userid: myuser
-    password: mypass
-    ca_certs: certfile.pem
-    verify: false
+    userid: userid1
+    password: password1
         """,
         None,
         {
@@ -227,9 +197,9 @@ hmc_auth:
                     "access_via": "",
                     "host": None,
                     "mock_file": "host1_mock.yaml",
-                    "userid": None,
-                    "password": None,
-                    "verify": None,
+                    "userid": "userid1",
+                    "password": "password1",
+                    "verify": True,
                     "ca_certs": None,
                     "cpcs": {},
                     "add_vars": {},
@@ -362,6 +332,9 @@ all:
         """,
         """
 hmc_auth:
+  host1:
+    userid: userid1
+    password: password1
         """,
         None,
         {
@@ -370,8 +343,8 @@ hmc_auth:
                     "description": "desc1",
                     "host": None,
                     "mock_file": "mymock.yaml",
-                    "userid": None,
-                    "password": None,
+                    "userid": "userid1",
+                    "password": "password1",
                 },
             },
             "group1": {
@@ -379,8 +352,8 @@ hmc_auth:
                     "description": "desc1",
                     "host": None,
                     "mock_file": "mymock.yaml",
-                    "userid": None,
-                    "password": None,
+                    "userid": "userid1",
+                    "password": "password1",
                 },
             },
         },
