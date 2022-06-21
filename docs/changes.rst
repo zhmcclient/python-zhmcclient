@@ -40,7 +40,22 @@ Released: not yet
 * Made the `JMS_LOGGER_NAME` symbol publicly available, in order for users
   to have a symbol for the JMS logger name.
 
+* Fixed an AttributeError on 'HMCDefinition.filepath' when using the testutils
+  support for mocked environments. (issue #1001)
+
+* Fixed an AttributeError on 'HMCDefinition.filepath' when using the testutils
+  support for mocked environments. (issue #1001)
+
 **Enhancements:**
+
+* Relative path names for mock files specified in the HMC inventory file are
+  now interpreted relative to the directory of the HMC inventory file.
+  (part of issue #1001)
+
+* Added optional 'userid' and 'password' arguments to the
+  'FakedSession.from_hmc_yaml_file()' method and to the methods it calls, in
+  order to use a userid to log on to the mocked HMC, consistent with real HMCs.
+  (part of issue #1001)
 
 **Cleanup:**
 

@@ -815,9 +815,65 @@ class UsersHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body,
                               ['name', 'type', 'authentication-type'])
-        # TODO: There are some more input properties that are required under
-        # certain conditions.
-        new_user = console.users.add(body)
+        properties = copy.deepcopy(body)
+        user_name = properties['name']
+
+        properties.setdefault('allow-management-interfaces', True)
+        properties.setdefault('allow-remote-access', True)
+        properties.setdefault('default-group-uri', None)
+        properties.setdefault('description', '')
+        properties.setdefault('disable-delay', 1)
+        properties.setdefault('disabled', False)
+        properties.setdefault('disruptive-pw-required', True)
+        properties.setdefault('disruptive-text-required', False)
+        properties.setdefault('email-address', None)
+        properties.setdefault('force-password-change', False)
+        properties.setdefault('force-shared-secret-key-change', None)
+        properties.setdefault('idle-timeout', 0)
+        properties.setdefault('inactivity-timeout', 0)
+        properties.setdefault('is-locked', False)
+        properties.setdefault('max-failed-logins', 3)
+        properties.setdefault('max-web-services-api-sessions', 1000)
+        properties.setdefault('min-pw-change-time', 0)
+        properties.setdefault('multi-factor-authentication-required', False)
+        properties.setdefault('password-expires', -1)
+        properties.setdefault('replication-overwrite-possible', False)
+        properties.setdefault('session-timeout', 0)
+        properties.setdefault('user-roles', [])
+        properties.setdefault('userid-on-ldap-server', None)
+        properties.setdefault('verify-timeout', 15)
+        properties.setdefault('web-services-api-session-idle-timeout', 360)
+
+        auth_type = properties['authentication-type']
+        if auth_type == 'local':
+            check_required_fields(method, uri, body,
+                                  ['password', 'password-rule-uri'])
+        elif auth_type == 'ldap':
+            check_required_fields(method, uri, body,
+                                  ['ldap-server-definition-uri'])
+        else:
+            raise BadRequestError(
+                method, uri, reason=4,
+                message="Invalid authentication-type: {!r}".format(auth_type))
+
+        user_type = properties['type']
+        if user_type == 'standard':
+            pass
+        elif user_type == 'template':
+            pass
+        elif user_type == 'pattern-based':
+            pass
+        elif user_type == 'system-defined':
+            raise BadRequestError(
+                method, uri, reason=4,
+                message="System-defined users cannot be created: {!r}".
+                format(user_name))
+        else:
+            raise BadRequestError(
+                method, uri, reason=4,
+                message="Invalid user type: {!r}".format(user_type))
+
+        new_user = console.users.add(properties)
         return {'object-uri': new_user.uri}
 
 
