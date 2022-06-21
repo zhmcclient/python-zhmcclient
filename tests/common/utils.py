@@ -289,12 +289,7 @@ def assert_equal_hmc(hmc1, hmc2):
             lsd2 = lsds2[j]
             assert_equal_resource(lsd1, lsd2)
 
-        unmanaged_cpcs1 = console1.unmanaged_cpcs.list()
-        unmanaged_cpcs2 = console2.unmanaged_cpcs.list()
-        assert len(unmanaged_cpcs1) == len(unmanaged_cpcs2)
-        for j, unmanaged_cpc1 in enumerate(unmanaged_cpcs1):
-            unmanaged_cpc2 = unmanaged_cpcs2[j]
-            assert_equal_resource(unmanaged_cpc1, unmanaged_cpc2)
+        # Do not compare unmanaged CPCs, since they are not dumped.
 
         storage_groups1 = console1.storage_groups.list()
         storage_groups2 = console2.storage_groups.list()
@@ -338,12 +333,14 @@ def assert_equal_hmc(hmc1, hmc2):
                 nic2 = nics2[k]
                 assert_equal_resource(nic1, nic2)
 
-            hbas1 = partition1.hbas.list()
-            hbas2 = partition2.hbas.list()
-            assert len(hbas1) == len(hbas2)
-            for k, hba1 in enumerate(hbas1):
-                hba2 = hbas2[k]
-                assert_equal_resource(hba1, hba2)
+            if partition1.hbas is not None and partition2.hbas is not None:
+                # z14 and above do not have .hbas set
+                hbas1 = partition1.hbas.list()
+                hbas2 = partition2.hbas.list()
+                assert len(hbas1) == len(hbas2)
+                for k, hba1 in enumerate(hbas1):
+                    hba2 = hbas2[k]
+                    assert_equal_resource(hba1, hba2)
 
             vfs1 = partition1.virtual_functions.list()
             vfs2 = partition2.virtual_functions.list()
@@ -359,12 +356,14 @@ def assert_equal_hmc(hmc1, hmc2):
             adapter2 = adapters2[j]
             assert_equal_resource(adapter1, adapter2)
 
-            ports1 = adapter1.ports.list()
-            ports2 = adapter2.ports.list()
-            assert len(ports1) == len(ports2)
-            for k, port1 in enumerate(ports1):
-                port2 = ports2[k]
-                assert_equal_resource(port1, port2)
+            if adapter1.properties.get('type', None) != 'not-configured':
+                # Unconfigured FICON adapters cannot retrieve port properties
+                ports1 = adapter1.ports.list()
+                ports2 = adapter2.ports.list()
+                assert len(ports1) == len(ports2)
+                for k, port1 in enumerate(ports1):
+                    port2 = ports2[k]
+                    assert_equal_resource(port1, port2)
 
         vss1 = cpc1.virtual_switches.list()
         vss2 = cpc2.virtual_switches.list()
