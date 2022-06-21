@@ -688,12 +688,13 @@ class FakedSession(zhmcclient.Session):
     (see :meth:`~zhmcclient_mock.FakedHmc.add_resources`).
     """
 
-    def __init__(self, host, hmc_name, hmc_version, api_version):
+    def __init__(self, host, hmc_name, hmc_version, api_version,
+                 userid=None, password=None):
         """
         Parameters:
 
           host (:term:`string`):
-            HMC host.
+            HMC host the mocked HMC will be set up with.
 
           hmc_name (:term:`string`):
             HMC name. Used for result of Query Version Info operation.
@@ -705,8 +706,15 @@ class FakedSession(zhmcclient.Session):
           api_version (:term:`string`):
             HMC API version string (e.g. '1.8'). Used for result of
             Query Version Info operation.
+
+          userid (:term:`string`):
+            HMC userid for logging in to the mocked HMC.
+
+          password (:term:`string`):
+            HMC password for logging in to the mocked HMC.
         """
-        super(FakedSession, self).__init__(host)
+        super(FakedSession, self).__init__(
+            host, userid=userid, password=password)
         self._hmc = FakedHmc(hmc_name, hmc_version, api_version)
         self._urihandler = UriHandler(URIS)
         self._object_topic = 'faked-notification-topic'
@@ -757,7 +765,7 @@ class FakedSession(zhmcclient.Session):
         return self._hmc
 
     @staticmethod
-    def from_hmc_yaml_file(filepath):
+    def from_hmc_yaml_file(filepath, userid=None, password=None):
         """
         Return a new FakedSession object from an HMC definition in a YAML file.
 
@@ -765,8 +773,14 @@ class FakedSession(zhmcclient.Session):
 
         Parameters:
 
-          filepath(string): Path name of the YAML file that contains the HMC
-            definition.
+          filepath(:term:`string`): Path name of the YAML file that contains
+            the HMC definition.
+
+          userid (:term:`string`):
+            Userid of the HMC user to be used for logging in, or `None`.
+
+          password (:term:`string`):
+            Password of the HMC user if `userid` was specified, or `None`.
 
         Returns:
           FakedSession: New faked session with faked HMC set up from HMC
@@ -779,11 +793,11 @@ class FakedSession(zhmcclient.Session):
         """
         # pylint: disable=unspecified-encoding
         with open(filepath) as fp:
-            hmc = FakedSession.from_hmc_yaml(fp, filepath)
+            hmc = FakedSession.from_hmc_yaml(fp, filepath, userid, password)
         return hmc
 
     @staticmethod
-    def from_hmc_yaml(hmc_yaml, filepath=None):
+    def from_hmc_yaml(hmc_yaml, filepath=None, userid=None, password=None):
         """
         Return a new FakedSession object from an HMC definition YAML string
         or stream.
@@ -803,6 +817,12 @@ class FakedSession(zhmcclient.Session):
           filepath(string): Path name of the YAML file that contains the HMC
             definition; used only in exception messages. If `None`, no
             filename is used in exception messages.
+
+          userid (:term:`string`):
+            Userid of the HMC user to be used for logging in, or `None`.
+
+          password (:term:`string`):
+            Password of the HMC user if `userid` was specified, or `None`.
 
         Returns:
           FakedSession: New faked session with faked HMC set up from HMC
@@ -827,11 +847,11 @@ class FakedSession(zhmcclient.Session):
             new_exc.__cause__ = None
             raise new_exc  # HmcDefinitionYamlError
 
-        hmc = FakedSession.from_hmc_dict(hmc_dict, filepath)
+        hmc = FakedSession.from_hmc_dict(hmc_dict, filepath, userid, password)
         return hmc
 
     @staticmethod
-    def from_hmc_dict(hmc_dict, filepath=None):
+    def from_hmc_dict(hmc_dict, filepath=None, userid=None, password=None):
         """
         Return a new FakedSession object from an HMC definition dictionary.
 
@@ -850,6 +870,12 @@ class FakedSession(zhmcclient.Session):
           filepath(string): Path name of the YAML file that contains the HMC
             definition; used only in exception messages. If `None`, no
             filename is used in exception messages.
+
+          userid (:term:`string`):
+            Userid of the HMC user to be used for logging in, or `None`.
+
+          password (:term:`string`):
+            Password of the HMC user if `userid` was specified, or `None`.
 
         Returns:
           FakedSession: New faked session with faked HMC set up from the HMC
@@ -889,7 +915,8 @@ class FakedSession(zhmcclient.Session):
         hmc_name = console['properties']['name']
         hmc_version = console['properties']['version']
 
-        session = FakedSession(host, hmc_name, hmc_version, api_version)
+        session = FakedSession(host, hmc_name, hmc_version, api_version,
+                               userid=userid, password=password)
 
         res_dict = OrderedDict()
         res_dict['consoles'] = consoles

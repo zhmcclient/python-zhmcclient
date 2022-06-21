@@ -210,27 +210,34 @@ class _UpdateListener(object):
 
         noti_type = headers['notification-type']
         if noti_type == 'property-change':
+            JMS_LOGGER.debug(
+                "JMS message for property change notification for topic '%s' "
+                "for resource %s with change reports: %r",
+                self._session.object_topic, uri, msg_obj['change-reports'])
+            # Build the latest values from all change records. They are ordered
+            # old to new.
             new_props = {}
             for cr in msg_obj['change-reports']:
                 new_props[cr['property-name']] = cr['new-value']
-            JMS_LOGGER.debug(
-                "JMS message for property change notification for topic '%s' "
-                "for resource %s with properties: %r",
-                self._session.object_topic, uri, new_props)
             for obj in self._updater.registered_objects(uri):
                 if obj.auto_update_enabled():
                     obj.update_properties_local(new_props)
         elif noti_type == 'status-change':
-            new_props = {}
-            for cr in msg_obj['change-reports']:
-                new_props['status'] = cr['new-status']
-                new_props['additional-status'] = cr['new-additional-status']
-                new_props['has-unacceptable-status'] = \
-                    cr['has-unacceptable-status']
             JMS_LOGGER.debug(
                 "JMS message for status change notification for topic '%s' "
-                "for resource %s with properties: %r",
-                self._session.object_topic, uri, new_props)
+                "for resource %s with change reports: %r",
+                self._session.object_topic, uri, msg_obj['change-reports'])
+            # Build the latest values from all change records. They are ordered
+            # old to new.
+            new_props = {}
+            for cr in msg_obj['change-reports']:
+                if 'new-status' in cr:
+                    new_props['status'] = cr['new-status']
+                if 'new-additional-status' in cr:
+                    new_props['additional-status'] = cr['new-additional-status']
+                if 'has-unacceptable-status' in cr:
+                    new_props['has-unacceptable-status'] = \
+                        cr['has-unacceptable-status']
             for obj in self._updater.registered_objects(uri):
                 if obj.auto_update_enabled():
                     obj.update_properties_local(new_props)

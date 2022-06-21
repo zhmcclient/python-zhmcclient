@@ -348,30 +348,22 @@ class HMCDefinitions(object):
         for group_dict in self._hd_dict.values():
             for nickname, host_vars in group_dict.items():
 
-                mock_file = host_vars.get('mock_file', None)
+                try:
+                    auth_vars = auth[nickname]
+                except KeyError:
+                    new_exc = HMCNoVaultError(
+                        "HMC {n!r} defined in HMC inventory file {i} has "
+                        "no corresponding entry in HMC vault file {v}".
+                        format(n=nickname, i=inv_file,
+                               v=hmc_vault.filepath))
+                    new_exc.__cause__ = None
+                    raise new_exc  # HMCNoVaultError
 
-                if mock_file is not None:
-                    host_vars['userid'] = None
-                    host_vars['password'] = None
-                    host_vars['verify'] = None
-                    host_vars['ca_certs'] = None
-                else:
-                    try:
-                        auth_vars = auth[nickname]
-                    except KeyError:
-                        new_exc = HMCNoVaultError(
-                            "HMC {n!r} defined in HMC inventory file {i} has "
-                            "no corresponding entry in HMC vault file {v}".
-                            format(n=nickname, i=inv_file,
-                                   v=hmc_vault.filepath))
-                        new_exc.__cause__ = None
-                        raise new_exc  # HMCNoVaultError
-
-                    # userid and password are required by the JSON schema
-                    host_vars['userid'] = auth_vars['userid']
-                    host_vars['password'] = auth_vars['password']
-                    host_vars['verify'] = auth_vars.get('verify', True)
-                    host_vars['ca_certs'] = auth_vars.get('ca_certs', None)
+                # userid and password are required by the JSON schema
+                host_vars['userid'] = auth_vars['userid']
+                host_vars['password'] = auth_vars['password']
+                host_vars['verify'] = auth_vars.get('verify', True)
+                host_vars['ca_certs'] = auth_vars.get('ca_certs', None)
 
     def __repr__(self):
         return "HMCDefinitions(" \
@@ -414,6 +406,11 @@ class HMCDefinitions(object):
         Return a list of :class:`HMCDefinition` objects in the HMC inventory
         file, for the specified HMC group or single HMC nickname.
 
+        The path names in the :attr:`HMCDefinition.mock_file` property are
+        absolute path names, whereby any relative path names in the HMC
+        inventory file have been interpreted relative to the directory of
+        the HMC inventory file.
+
         Parameters:
           name (string): Name of an HMC group or nickname of a single HMC in the
             HMC inventory file. If `None`, the default group or nickname
@@ -452,11 +449,6 @@ class HMCDefinitions(object):
         hd_list = []
         for nickname, host_vars in host_dict.items():
 
-            # If ansible_host was set, it is always used, and otherwise
-            # the HMC nickname is used as a DNS name or IP address.
-            ansible_host = host_vars.get('ansible_host')
-            host = ansible_host or nickname
-
             description = host_vars.get('description', '')
             contact = host_vars.get('contact', '')
             access_via = host_vars.get('access_via', '')
@@ -467,6 +459,22 @@ class HMCDefinitions(object):
             ca_certs = host_vars.get('ca_certs', None)
             cpcs = host_vars.get('cpcs', None)
             add_vars = host_vars.get('add_vars', None)
+
+            if mock_file:
+                # The host will be set from the 'host' attribute in the
+                # mock file. Since that file is read only later, we set
+                # the HMC definition's host to None, for now.
+                host = None
+            else:
+                # If ansible_host was set, it is always used, and otherwise
+                # the HMC nickname is used as a DNS name or IP address.
+                ansible_host = host_vars.get('ansible_host')
+                host = ansible_host or nickname
+
+            # Make relative mock_file relative to inventory file
+            if mock_file and not os.path.isabs(mock_file):
+                mock_file = os.path.join(
+                    os.path.dirname(self._inventory_file), mock_file)
 
             hd = HMCDefinition(
                 nickname=nickname, description=description,

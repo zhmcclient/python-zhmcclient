@@ -165,12 +165,16 @@ class TestUser(object):
              HTTPError({'http-status': 400, 'reason': 5})),
             ({'name': 'fake-name-x',
               'type': 'standard',
-              'authentication-type': 'local'},
+              'authentication-type': 'local',
+              'password': 'bla',
+              'password-rule-uri': '/api/console/password-rules/dummy'},
              ['object-uri', 'name', 'type', 'authentication-type'],
              None),
             ({'name': 'fake-name-x',
               'type': 'standard',
               'authentication-type': 'local',
+              'password': 'bla',
+              'password-rule-uri': '/api/console/password-rules/dummy',
               'description': 'fake description X'},
              ['object-uri', 'name', 'type', 'authentication-type',
               'description'],
@@ -286,6 +290,8 @@ class TestUser(object):
             'description': 'User with same name',
             'type': 'standard',
             'authentication-type': 'local',
+            'password': 'bla',
+            'password-rule-uri': '/api/console/password-rules/dummy',
         }
 
         user_mgr = self.console.users
