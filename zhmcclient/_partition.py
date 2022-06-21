@@ -1344,9 +1344,11 @@ class Partition(BaseResource):
         nics = self.nics.dump()
         if nics:
             resource_dict['nics'] = nics
-        hbas = self.hbas.dump()
-        if hbas:
-            resource_dict['hbas'] = hbas
+        if self.hbas is not None:
+            # Note: z14 and later do not have HBAs
+            hbas = self.hbas.dump()
+            if hbas:
+                resource_dict['hbas'] = hbas
         virtual_functions = self.virtual_functions.dump()
         if virtual_functions:
             resource_dict['virtual_functions'] = virtual_functions

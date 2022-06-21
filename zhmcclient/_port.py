@@ -23,6 +23,10 @@ Ports only exist in :term:`CPCs <CPC>` that are in DPM mode.
 from __future__ import absolute_import
 
 import copy
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -238,3 +242,32 @@ class Port(BaseResource):
         # so we don't need to update the name-to-URI cache.
         assert self.manager._name_prop not in properties
         self.update_properties_local(copy.deepcopy(properties))
+
+    def dump(self):
+        """
+        Dump the Port resource with its properties as a resource definition.
+
+        If the adapter of this port is a FICON adapter in the not-configured
+        state, the port properties cannot be retrieved from the HMC, so
+        an empty dict is returned.
+
+        Otherwise, the returned resource definition has the following format::
+
+            {
+                "properties": {...},
+            }
+
+        Returns:
+          dict: Resource definition of this Port resource.
+        """
+        resource_dict = OrderedDict()
+        adapter = self.manager.parent
+
+        if adapter.prop('type') != 'not-configured':
+            # "Get Storage Port Properties" on the port of an unconfigured FICON
+            # adapter would return HTTP 404,4: "Get for Storage Port Properties
+            # is not supported for this card type".
+            self.pull_full_properties()
+            resource_dict['properties'] = OrderedDict(self._properties)
+            # No child resources
+        return resource_dict

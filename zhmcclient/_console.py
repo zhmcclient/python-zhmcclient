@@ -851,11 +851,11 @@ class Console(BaseResource):
         ldap_server_definitions = self.ldap_server_definitions.dump()
         if ldap_server_definitions:
             resource_dict['ldap_server_definitions'] = ldap_server_definitions
-        unmanaged_cpcs = self.unmanaged_cpcs.dump()
-        if unmanaged_cpcs:
-            resource_dict['unmanaged_cpcs'] = unmanaged_cpcs
         storage_groups = self.storage_groups.dump()
         if storage_groups:
             resource_dict['storage_groups'] = storage_groups
+
+        # Note: Unmanaged CPCs are not dumped, since their properties cannot
+        #       be retrieved.
 
         return resource_dict
