@@ -26,6 +26,8 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Mocked HMC definitions now require userid and password in the vault file.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -46,6 +48,10 @@ Released: not yet
 * Fixed an AttributeError on 'HMCDefinition.filepath' when using the testutils
   support for mocked environments. (issue #1001)
 
+* Fixed the 'dump()' method on the Client class and other resource classes
+  to accomodate for HBAs on z14 and later, unconfigured FICON adapters, and
+  presence of unmanaged CPCs.
+
 **Enhancements:**
 
 * Relative path names for mock files specified in the HMC inventory file are
@@ -56,6 +62,9 @@ Released: not yet
   'FakedSession.from_hmc_yaml_file()' method and to the methods it calls, in
   order to use a userid to log on to the mocked HMC, consistent with real HMCs.
   (part of issue #1001)
+
+* Added a dump_hmc_definition.py example script that dumps the resources of
+  an HMC to a HMC definition file for use as a mock definition.
 
 **Cleanup:**
 
