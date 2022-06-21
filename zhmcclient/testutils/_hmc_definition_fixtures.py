@@ -124,8 +124,11 @@ def setup_hmc_session(hd):
         # A mocked HMC
 
         # Create a mocked session using the mock file from the inventory file
-        filepath = os.path.join(os.path.dirname(hd.filepath), hd.mock_file)
-        session = zhmcclient_mock.FakedSession.from_hmc_yaml_file(filepath)
+        session = zhmcclient_mock.FakedSession.from_hmc_yaml_file(
+            hd.mock_file, userid=hd.userid, password=hd.password)
+
+        # Set the HMC definition host to the host found in the mock file.
+        hd.host = session.host
 
     else:
         # A real HMC

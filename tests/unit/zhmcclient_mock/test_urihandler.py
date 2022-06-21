@@ -1779,6 +1779,8 @@ class TestUserHandlers(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'password': 'bla',
+            'password-rule-uri': '/api/console/password-rules/dummy',
         }
 
         # the function to be tested:
@@ -1799,13 +1801,19 @@ class TestUserHandlers(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'password-rule-uri': '/api/console/password-rules/dummy',
             'disabled': False,
         }
 
         # the function to be tested:
         user2 = self.urihandler.get(self.hmc, '/api/users/2', True)
 
-        assert user2 == exp_user2
+        for name, exp_value in exp_user2.items():
+            assert name in user2
+            value = user2[name]
+            assert value == exp_value, \
+                "Unexpected value for property {!r}: actual: {!r}, " \
+                "expected: {!r}".format(name, value, exp_value)
 
     def test_user_create_err_no_console(self):
         """
@@ -1861,21 +1869,27 @@ class TestUserHandlers(object):
                 'name': 'user_2',
                 'description': 'User #2',
                 'type': 'standard',
-                'authentication-type': 'local'},
+                'authentication-type': 'local',
+                'password': 'bla',
+                'password-rule-uri': '/api/console/password-rules/dummy'},
              None),
             ({
                 'object-id': '3',
                 'name': 'user_3',
                 'description': 'User #3',
                 'type': 'template',
-                'authentication-type': 'local'},
+                'authentication-type': 'local',
+                'password': 'bla',
+                'password-rule-uri': '/api/console/password-rules/dummy'},
              None),
             ({
                 'object-id': '4',
                 'name': 'user_4',
                 'description': 'User #4',
                 'type': 'pattern-based',
-                'authentication-type': 'local'},
+                'authentication-type': 'local',
+                'password': 'bla',
+                'password-rule-uri': '/api/console/password-rules/dummy'},
              (400, 312)),
         ]
         for user_props, exp_exc_tuple in testcases:
@@ -1957,6 +1971,8 @@ class TestUserAddUserRoleHandler(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'password': 'bla',
+            'password-rule-uri': '/api/console/password-rules/dummy',
         }
         resp = self.urihandler.post(
             self.hmc, '/api/console/users', user2, True, True)
@@ -2034,6 +2050,8 @@ class TestUserAddUserRoleHandler(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'password': 'bla',
+            'password-rule-uri': '/api/console/password-rules/dummy',
         }
         resp = self.urihandler.post(
             self.hmc, '/api/console/users', user2, True, True)
@@ -2095,6 +2113,8 @@ class TestUserRemoveUserRoleHandler(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'password': 'bla',
+            'password-rule-uri': '/api/console/password-rules/dummy',
         }
         resp = self.urihandler.post(
             self.hmc, '/api/console/users', user2, True, True)
@@ -2177,6 +2197,8 @@ class TestUserRemoveUserRoleHandler(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'password': 'bla',
+            'password-rule-uri': '/api/console/password-rules/dummy',
         }
         resp = self.urihandler.post(
             self.hmc, '/api/console/users', user2, True, True)
@@ -2209,6 +2231,8 @@ class TestUserRemoveUserRoleHandler(object):
             'description': 'User #2',
             'type': 'standard',
             'authentication-type': 'local',
+            'password': 'bla',
+            'password-rule-uri': '/api/console/password-rules/dummy',
         }
         resp = self.urihandler.post(
             self.hmc, '/api/console/users', user2, True, True)
