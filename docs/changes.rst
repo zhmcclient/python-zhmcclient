@@ -37,6 +37,9 @@ Released: not yet
 * Addressed issues discovered by Pylint 2.10 and higher (it was pinned to 2.7.0
   before).
 
+* Made the `JMS_LOGGER_NAME` symbol publicly available, in order for users
+  to have a symbol for the JMS logger name.
+
 **Enhancements:**
 
 **Cleanup:**
