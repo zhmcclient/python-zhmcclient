@@ -34,6 +34,7 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_STATUS_TIMEOUT',
            'DEFAULT_NAME_URI_CACHE_TIMETOLIVE',
            'HMC_LOGGER_NAME',
+           'JMS_LOGGER_NAME',
            'API_LOGGER_NAME',
            'HTML_REASON_WEB_SERVICES_DISABLED',
            'HTML_REASON_OTHER']
