@@ -65,6 +65,8 @@ Released: not yet
 * Added a dump_hmc_definition.py example script that dumps the resources of
   an HMC to a HMC definition file for use as a mock definition.
 
+* Improved mock support for password rules by creating default properties.
+
 **Cleanup:**
 
 **Known issues:**
