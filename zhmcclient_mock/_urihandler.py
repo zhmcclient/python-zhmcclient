@@ -1315,7 +1315,23 @@ class PasswordRulesHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['name'])
-        new_password_rule = console.password_rules.add(body)
+
+        properties = copy.deepcopy(body)
+        # createable/updateable
+        properties.setdefault('description', '')
+        properties.setdefault('expiration', 0)
+        properties.setdefault('min-length', 8)
+        properties.setdefault('max-length', 256)
+        properties.setdefault('consecutive-characters', 0)
+        properties.setdefault('similarity-count', 0)
+        properties.setdefault('history-count', 0)
+        properties.setdefault('case-sensitive', False)
+        properties.setdefault('character-rules', [])
+        # read-only
+        properties.setdefault('type', 'user-defined')
+        properties.setdefault('replication-overwrite-possible', True)
+
+        new_password_rule = console.password_rules.add(properties)
         return {'element-uri': new_password_rule.uri}
 
 
