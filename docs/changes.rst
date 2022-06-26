@@ -19,16 +19,14 @@ Change log
 ----------
 
 
-Version 1.3.1.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.3.1
+^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2022-06-26
 
 **Incompatible changes:**
 
 * Mocked HMC definitions now require userid and password in the vault file.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -65,14 +63,6 @@ Released: not yet
 
 * Added a dump_hmc_definition.py example script that dumps the resources of
   an HMC to a HMC definition file for use as a mock definition.
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.3.0
