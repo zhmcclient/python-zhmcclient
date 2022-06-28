@@ -165,6 +165,9 @@ class TestUserRole(object):
 
         user_role_mgr = self.console.user_roles
 
+        # Add default system-defined user role
+        self.add_user_role(name='hmc-operator-tasks', type_='system-defined')
+
         if exp_exc is not None:
 
             with pytest.raises(exp_exc.__class__) as exc_info:
@@ -258,6 +261,9 @@ class TestUserRole(object):
         """Test UserRole.delete() followed by create() with same name."""
 
         user_role_name = 'faked_a'
+
+        # Add default system-defined user role
+        self.add_user_role(name='hmc-operator-tasks', type_='system-defined')
 
         # Add the user role to be tested
         self.add_user_role(name=user_role_name, type_='user-defined')

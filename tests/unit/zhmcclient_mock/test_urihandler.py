@@ -726,6 +726,15 @@ def standard_test_hmc():
                             'type': 'system-defined',
                         },
                     },
+                    {
+                        # default system-defined user role
+                        'properties': {
+                            'object-id': 'fake-hmc-operator-tasks',
+                            'name': 'hmc-operator-tasks',
+                            'description': 'Operator Tasks',
+                            'type': 'system-defined',
+                        },
+                    },
                 ],
                 'user_patterns': [
                     {
@@ -2299,6 +2308,11 @@ class TestUserRoleHandlers(object):
                 {
                     'object-uri': '/api/user-roles/fake-user-role-oid-1',
                     'name': 'fake_user_role_name_1',
+                    'type': 'system-defined',
+                },
+                {
+                    'object-uri': '/api/user-roles/fake-hmc-operator-tasks',
+                    'name': 'hmc-operator-tasks',
                     'type': 'system-defined',
                 },
             ]
