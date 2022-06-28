@@ -1081,10 +1081,19 @@ class UserRolesHandler(object):
         properties = copy.deepcopy(body)
         # createable/updateable
         properties.setdefault('description', '')
-        # TODO: Look the URI up from user roles.
-        urole_uri = '/api/user-roles/hmc-operator-tasks'
-        properties.setdefault(
-            'associated-system-defined-user-role-uri', urole_uri)
+        if 'associated-system-defined-user-role-uri' not in properties:
+            # Use the default
+            uroles = console.user_roles.list(
+                filter_args=dict(name='hmc-operator-tasks'))
+            if not uroles:
+                new_exc = ServerError(
+                    method, uri, reason=99,
+                    message="Mock setup error: System-defined user role "
+                    "'hmc-operator-tasks' does not exist")
+                new_exc.__cause__ = None
+                raise new_exc  # zhmcclient_mock.ServerError
+            urole_uri = uroles[0].uri
+            properties['associated-system-defined-user-role-uri'] = urole_uri
         properties.setdefault('is-inheritance-enabled', False)
         # read-only
         properties.setdefault('type', 'user-defined')
