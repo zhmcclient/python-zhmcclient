@@ -283,8 +283,8 @@ class UserRole(BaseResource):
         self.update_properties_local(copy.deepcopy(properties))
 
     @logged_api_call
-    def add_permission(self, permitted_object, include_members=False,
-                       view_only=True):
+    def add_permission(self, permitted_object, include_members=None,
+                       view_only=None):
         # pylint: disable=line-too-long
         """
         Add permission for the specified permitted object(s) to this User Role,
@@ -321,16 +321,16 @@ class UserRole(BaseResource):
           include_members (bool): Controls whether for Group resources, the
             operation applies additionally to its group member resources.
 
-            This parameter will be ignored when the permitted object does not
-            specify Group resources.
+            If `None`, this parameter will be ignored. It should only be
+            specified when the permitted object is a Group resource.
 
           view_only (bool): Controls whether for Task resources, the operation
             aplies to the view-only version of the task (if `True`), or to
             the full version of the task (if `False`). Only certain tasks
             support a view-only version.
 
-            This parameter will be ignored when the permitted object does not
-            specify Task resources.
+            If `None`, this parameter will be ignored. It should only be
+            specified when the permitted object is a Task resource.
 
         Raises:
 
@@ -353,16 +353,18 @@ class UserRole(BaseResource):
         body = {
             'permitted-object': perm_obj,
             'permitted-object-type': perm_type,
-            'include-members': include_members,
-            'view-only-mode': view_only,
         }
+        if include_members is not None:
+            body['include-members'] = include_members
+        if view_only is not None:
+            body['view-only-mode'] = view_only
         self.manager.session.post(
             self.uri + '/operations/add-permission',
             body=body)
 
     @logged_api_call
-    def remove_permission(self, permitted_object, include_members=False,
-                          view_only=True):
+    def remove_permission(self, permitted_object, include_members=None,
+                          view_only=None):
         # pylint: disable=line-too-long
         """
         Remove permission for the specified permitted object(s) from this User
@@ -400,16 +402,16 @@ class UserRole(BaseResource):
           include_members (bool): Controls whether for Group resources, the
             operation applies additionally to its group member resources.
 
-            This parameter will be ignored when the permitted object does not
-            specify Group resources.
+            If `None`, this parameter will be ignored. It should only be
+            specified when the permitted object is a Group resource.
 
           view_only (bool): Controls whether for Task resources, the operation
             aplies to the view-only version of the task (if `True`), or to
             the full version of the task (if `False`). Only certain tasks
             support a view-only version.
 
-            This parameter will be ignored when the permitted object does not
-            specify Task resources.
+            If `None`, this parameter will be ignored. It should only be
+            specified when the permitted object is a Task resource.
 
         Raises:
 
@@ -432,9 +434,11 @@ class UserRole(BaseResource):
         body = {
             'permitted-object': perm_obj,
             'permitted-object-type': perm_type,
-            'include-members': include_members,
-            'view-only-mode': view_only,
         }
+        if include_members is not None:
+            body['include-members'] = include_members
+        if view_only is not None:
+            body['view-only-mode'] = view_only
         self.manager.session.post(
             self.uri + '/operations/remove-permission',
             body=body)
