@@ -70,7 +70,8 @@ Released: not yet
 * Added a dump_hmc_definition.py example script that dumps the resources of
   an HMC to a HMC definition file for use as a mock definition.
 
-* Improved mock support for password rules by creating default properties.
+* Improved mock support for password rules and user roles by creating default
+  properties. (issue #1018)
 
 * Auto-updated resources now auto-detect if the corresponding HMC resource no
   longer exists. This can be tested with a new `ceased_existence` attribute on
