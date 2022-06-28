@@ -1072,13 +1072,24 @@ class UserRolesHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body, ['name'])
-        properties = copy.deepcopy(body)
-        if 'type' in properties:
+        if 'type' in body:
             raise BadRequestError(
                 method, uri, reason=6,
-                message="Type specified when creating a user role: {!r}".
-                format(properties['type']))
-        properties['type'] = 'user-defined'
+                message="The 'type' property cannot be specified when "
+                "creating a user role (type: {!r}, uri: {!r})".
+                format(body['type'], uri))
+        properties = copy.deepcopy(body)
+        # createable/updateable
+        properties.setdefault('description', '')
+        # TODO: Look the URI up from user roles.
+        urole_uri = '/api/user-roles/hmc-operator-tasks'
+        properties.setdefault(
+            'associated-system-defined-user-role-uri', urole_uri)
+        properties.setdefault('is-inheritance-enabled', False)
+        # read-only
+        properties.setdefault('type', 'user-defined')
+        properties.setdefault('replication-overwrite-possible', True)
+        properties.setdefault('permissions', [])
         new_user_role = console.user_roles.add(properties)
         return {'object-uri': new_user_role.uri}
 
