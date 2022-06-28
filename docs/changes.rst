@@ -72,6 +72,11 @@ Released: 2022-06-26
   to accomodate for HBAs on z14 and later, unconfigured FICON adapters, and
   presence of unmanaged CPCs.
 
+* Fixed the add_permissions() and remove_permissions() methods of UserRole
+  by no longer including the 'include-members' and 'view-only-mode' parameters
+  in the request payload, since the HMC requires them to be omitted unless
+  the type of permitted resource allows them.
+
 **Enhancements:**
 
 * Relative path names for mock files specified in the HMC inventory file are
