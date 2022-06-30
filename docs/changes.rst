@@ -19,26 +19,22 @@ Change log
 ----------
 
 
-Version 1.3.2.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.3.2
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2022-06-30
 
 **Bug fixes:**
 
+* Fixed the add_permissions() and remove_permissions() methods of UserRole
+  by no longer including the 'include-members' and 'view-only-mode' parameters
+  in the request payload, since the HMC requires them to be omitted unless
+  the type of permitted resource allows them.
+
 **Enhancements:**
 
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+* Improved mock support for password rules and user roles by creating default
+  properties. (issue #1018)
 
 
 Version 1.3.1
@@ -72,11 +68,6 @@ Released: 2022-06-26
   to accomodate for HBAs on z14 and later, unconfigured FICON adapters, and
   presence of unmanaged CPCs.
 
-* Fixed the add_permissions() and remove_permissions() methods of UserRole
-  by no longer including the 'include-members' and 'view-only-mode' parameters
-  in the request payload, since the HMC requires them to be omitted unless
-  the type of permitted resource allows them.
-
 **Enhancements:**
 
 * Relative path names for mock files specified in the HMC inventory file are
@@ -90,9 +81,6 @@ Released: 2022-06-26
 
 * Added a dump_hmc_definition.py example script that dumps the resources of
   an HMC to a HMC definition file for use as a mock definition.
-
-* Improved mock support for password rules and user roles by creating default
-  properties. (issue #1018)
 
 
 Version 1.3.0
