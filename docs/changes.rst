@@ -85,6 +85,9 @@ Released: not yet
   be raised. The documentation shows which attributes and methods do that.
   (Issue #996)
 
+* Added an example script 'list_cpcs.py' that lists managed CPCs with version,
+  status, operational mode.
+
 **Cleanup:**
 
 **Known issues:**
