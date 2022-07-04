@@ -88,6 +88,9 @@ Released: not yet
 * Added an example script 'list_cpcs.py' that lists managed CPCs with version,
   status, operational mode.
 
+* Improved the mock support for Create Partition by doing more input validation
+  and by setting all default properties on the new partitions.
+
 **Cleanup:**
 
 **Known issues:**

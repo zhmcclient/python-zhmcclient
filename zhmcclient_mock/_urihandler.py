@@ -28,6 +28,7 @@ from __future__ import absolute_import
 import re
 import time
 import copy
+from random import randrange
 from requests.utils import unquote
 
 from ._hmc import InputError
@@ -368,6 +369,22 @@ def check_writable(method, uri, body, writeable):
             raise BadRequestError(
                 method, uri, reason=6,
                 message="Property is not writable: {!r}".format(prop))
+
+
+def check_set_noninput(method, uri, properties, prop_name, prop_value):
+    """
+    Check that a non-input property is not contained in the properties,
+    and set it to the specified value.
+
+    Raises:
+      BadRequestError with reason 6.
+    """
+    if prop_name in properties:
+        raise BadRequestError(
+            method, uri, reason=6,
+            message="Property cannot be provided as input: {!r}".
+            format(prop_name))
+    properties[prop_name] = prop_value
 
 
 class UriHandler(object):
@@ -2388,6 +2405,26 @@ class PartitionsHandler(object):
              wait_for_completion):
         # pylint: disable=unused-argument
         """Operation: Create Partition (requires DPM mode)."""
+
+        def _partition_shortname(partition_name):
+            """"
+            Return 8-char short name from full name.
+
+            Note: Does not guarantee to be reproducable.
+            Note: Has a small chance to not be unique.
+            """
+            return "{:_<4.4s}{:04X}".format(
+                partition_name.upper(), randrange(16 ^ 4))
+
+        def _partition_id():
+            """"
+            Generate a partition ID.
+
+            Note: Does not guarantee to be reproducable.
+            Note: Has a chance to not be unique.
+            """
+            return "{:02X}".format(randrange(80))
+
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
         try:
@@ -2401,11 +2438,176 @@ class PartitionsHandler(object):
         check_valid_cpc_status(method, uri, cpc)
         check_required_fields(method, uri, body,
                               ['name', 'initial-memory', 'maximum-memory'])
-        # TODO: There are some more input properties that are required under
-        # certain conditions.
+
+        properties = copy.deepcopy(body)
+        partition_name = properties['name']
+
+        # Set defaults for optional input properties
+        properties.setdefault('description', '')
+        properties.setdefault('type', 'linux')
+        properties.setdefault('short-name',
+                              _partition_shortname(partition_name))
+        properties.setdefault('autogenerate-partition-id', True)
+        properties.setdefault('processor-mode', 'shared')
+        properties.setdefault('reserve-resources', False)
+        properties.setdefault('boot-device', 'none')
+        properties.setdefault('boot-timeout', 60)
+        properties.setdefault('access-global-performance-data', False)
+        properties.setdefault('permit-cross-partition-commands', False)
+        properties.setdefault('access-basic-counter-set', False)
+        properties.setdefault('access-problem-state-counter-set', False)
+        properties.setdefault('access-crypto-activity-counter-set', False)
+        properties.setdefault('access-extended-counter-set', False)
+        properties.setdefault('access-coprocessor-group-set', False)
+        properties.setdefault('access-basic-sampling', False)
+        properties.setdefault('access-diagnostic-sampling', False)
+        properties.setdefault('permit-des-key-import-functions', True)
+        properties.setdefault('permit-aes-key-import-functions', True)
+        properties.setdefault('permit-ecc-key-import-functions', True)
+        properties.setdefault('ssc-ipv4-gateway', None)
+        properties.setdefault('ssc-ipv6-gateway', None)
+        properties.setdefault('ssc-dns-servers', [])
+        properties.setdefault('initial-ifl-processing-weight', 100)
+        properties.setdefault('initial-cp-processing-weight', 100)
+        properties.setdefault('acceptable-status', ['stopped', 'active'])
+        properties.setdefault('cp-absolute-processor-capping', False)
+        properties.setdefault('cp-absolute-processor-capping-value', 1.0)
+        properties.setdefault('cp-processing-weight-capped', False)
+        properties.setdefault('ifl-absolute-processor-capping', False)
+        properties.setdefault('ifl-absolute-processor-capping-value', 1.0)
+        properties.setdefault('ifl-processing-weight-capped', False)
+        properties.setdefault('maximum-cp-processing-weight', 999)
+        properties.setdefault('maximum-ifl-processing-weight', 999)
+        properties.setdefault('minimum-cp-processing-weight', 1)
+        properties.setdefault('minimum-ifl-processing-weight', 1)
+        properties.setdefault('processor-management-enabled', False)
+
+        # Set initial values for non-input properties
+        check_set_noninput(method, uri, properties, 'status', 'stopped')
+        check_set_noninput(method, uri, properties,
+                           'has-unacceptable-status', False)
+        check_set_noninput(method, uri, properties,
+                           'is-locked', False)
+        check_set_noninput(method, uri, properties, 'os-name', '')
+        check_set_noninput(method, uri, properties, 'os-type', '')
+        check_set_noninput(method, uri, properties, 'os-version', '')
+        check_set_noninput(method, uri, properties, 'degraded-adapters', [])
+        check_set_noninput(method, uri, properties,
+                           'current-ifl-processing-weight', 100)
+        check_set_noninput(method, uri, properties,
+                           'current-cp-processing-weight', 100)
+        reserved_memory = properties['maximum-memory'] - \
+            properties['initial-memory']
+        check_set_noninput(method, uri, properties,
+                           'reserved-memory', reserved_memory)
+        check_set_noninput(method, uri, properties, 'auto-start', False)
+        check_set_noninput(method, uri, properties, 'boot-network-device', None)
+        check_set_noninput(method, uri, properties,
+                           'boot-configuration-selector', 0)
+        check_set_noninput(method, uri, properties, 'boot-record-lba', 0)
+        check_set_noninput(method, uri, properties, 'boot-load-parameters', '')
+        check_set_noninput(method, uri, properties,
+                           'boot-os-specific-parameters', '')
+        check_set_noninput(method, uri, properties, 'boot-storage-device', None)
+        check_set_noninput(method, uri, properties, 'boot-storage-volume', None)
+        check_set_noninput(method, uri, properties,
+                           'boot-logical-unit-number', None)
+        check_set_noninput(method, uri, properties,
+                           'boot-world-wide-port-name', None)
+        check_set_noninput(method, uri, properties, 'boot-iso-image-name', None)
+        check_set_noninput(method, uri, properties, 'boot-iso-ins-file', None)
+        check_set_noninput(method, uri, properties, 'secure-execution', False)
+        check_set_noninput(method, uri, properties, 'secure-boot', False)
+        check_set_noninput(method, uri, properties, 'threads-per-processor', 0)
+        check_set_noninput(method, uri, properties, 'virtual-function-uris', [])
+        check_set_noninput(method, uri, properties, 'nic-uris', [])
+        check_set_noninput(method, uri, properties, 'hba-uris', [])
+        check_set_noninput(method, uri, properties, 'storage-group-uris', [])
+        check_set_noninput(method, uri, properties, 'tape-link-uris', [])
+        check_set_noninput(method, uri, properties,
+                           'crypto-configuration', None)
+        check_set_noninput(method, uri, properties,
+                           'ssc-boot-selection', 'installer')
+        check_set_noninput(method, uri, properties,
+                           'available-features-list',
+                           [
+                               {
+                                   'name': 'dpm-storage-management',
+                                   'description': 'dpm-storage-management',
+                                   'state': True,
+                               },
+                               {
+                                   'name': 'dpm-fcp-tape-management',
+                                   'description': 'dpm-fcp-tape-management',
+                                   'state': True,
+                               },
+                           ])
+
+        # Check conditionally required properties
+
+        boot_device = properties['boot-device']
+
+        if boot_device == 'ftp':
+            check_required_fields(method, uri, body, [
+                'boot-ftp-host',
+                'boot-ftp-username',
+                'boot-ftp-password',
+                'boot-ftp-insfile',
+            ])
+        else:
+            check_set_noninput(method, uri, properties, 'boot-ftp-host', None)
+            check_set_noninput(method, uri, properties,
+                               'boot-ftp-username', None)
+            check_set_noninput(method, uri, properties,
+                               'boot-ftp-password', None)
+            check_set_noninput(method, uri, properties,
+                               'boot-ftp-insfile', None)
+
+        if boot_device == 'removable-media':
+            check_required_fields(method, uri, body, [
+                'boot-removable-media',
+                'boot-removable-media-type',
+            ])
+        else:
+            check_set_noninput(method, uri, properties,
+                               'boot-removable-media', None)
+            check_set_noninput(method, uri, properties,
+                               'boot-removable-media-type', None)
+
+        # Note: The other boot device types cannot be configured during creation
+
+        auto_partition_id = properties['autogenerate-partition-id']
+        if auto_partition_id:
+            check_set_noninput(
+                method, uri, properties, 'partition-id', _partition_id())
+        else:
+            check_required_fields(method, uri, body, ['partition-id'])
+
+        partition_type = properties['type']
+        if partition_type == 'ssc':
+            check_required_fields(method, uri, body,
+                                  ['ssc-host-name', 'ssc-master-userid',
+                                   'ssc-master-pw'])
+        else:
+            check_set_noninput(method, uri, properties, 'ssc-host-name', None)
+            check_set_noninput(method, uri, properties,
+                               'ssc-master-userid', None)
+            check_set_noninput(method, uri, properties, 'ssc-master-pw', None)
+
+        ifl_processors = properties.get('ifl-processors', None)
+        cp_processors = properties.get('cp-processors', None)
+        if not ifl_processors and not cp_processors:
+            new_exc = BadRequestError(
+                method, uri, reason=1,
+                message="At least one of 'ifl-processors' or 'cp-processors' "
+                "is required")
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.BadRequestError
+        properties.setdefault('ifl-processors', 0)
+        properties.setdefault('cp-processors', 0)
 
         # Reflect the result of creating the partition
-        new_partition = cpc.partitions.add(body)
+        new_partition = cpc.partitions.add(properties)
         return {'object-uri': new_partition.uri}
 
 
@@ -2418,6 +2620,7 @@ class PartitionHandler(GenericGetPropertiesHandler,
     # TODO: Add check_valid_cpc_status() in Update Partition Properties
     # TODO: Add check_partition_status(transitional) in Update Partition Props
     # TODO: Add check whether properties are modifiable in Update Part. Props
+    # TODO: Remove 'ssc-master-pw' property from result
 
     @staticmethod
     def delete(method, hmc, uri, uri_parms, logon_required):
