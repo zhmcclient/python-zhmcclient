@@ -79,8 +79,9 @@ class TestPartition(object):
             'description': 'Partition #1',
             'status': 'active',
             'type': 'linux',
-            'initial-memory': 1024,
-            'maximum-memory': 2048,
+            'ifl-processors': 2,
+            'initial-memory': 4096,
+            'maximum-memory': 8192,
         })
         return faked_partition
 
@@ -96,8 +97,9 @@ class TestPartition(object):
             'description': 'Partition #2',
             'status': 'active',
             'type': 'ssc',
-            'initial-memory': 1024,
-            'maximum-memory': 2048,
+            'ifl-processors': 2,
+            'initial-memory': 4096,
+            'maximum-memory': 8192,
         })
         return faked_partition
 
@@ -113,8 +115,9 @@ class TestPartition(object):
             'description': 'Partition #3',
             'status': 'active',
             'type': 'linux',
-            'initial-memory': 1024,
-            'maximum-memory': 2048,
+            'ifl-processors': 2,
+            'initial-memory': 4096,
+            'maximum-memory': 8192,
             'available-features-list': [],
         })
         return faked_partition
@@ -260,16 +263,19 @@ class TestPartition(object):
              None,
              HTTPError({'http-status': 400, 'reason': 5})),
             ({'name': 'fake-part-x',
-              'initial-memory': 1024,
-              'maximum-memory': 1024},
-             ['object-uri', 'name', 'initial-memory', 'maximum-memory'],
+              'ifl-processors': 2,
+              'initial-memory': 4096,
+              'maximum-memory': 4096},
+             ['object-uri', 'name', 'initial-memory', 'maximum-memory',
+              'ifl-processors'],
              None),
             ({'name': 'fake-part-x',
-              'initial-memory': 1024,
-              'maximum-memory': 1024,
+              'ifl-processors': 2,
+              'initial-memory': 4096,
+              'maximum-memory': 4096,
               'description': 'fake description X'},
              ['object-uri', 'name', 'initial-memory', 'maximum-memory',
-              'description'],
+              'ifl-processors', 'description'],
              None),
         ]
     )
@@ -419,8 +425,13 @@ class TestPartition(object):
         self.add_partition2()
 
         # Construct the input properties for a third partition
-        part3_props = copy.deepcopy(faked_partition.properties)
-        part3_props['description'] = 'Third partition'
+        part3_props = {
+            'name': partition_name,
+            'description': 'Third partition',
+            'ifl-processors': 4,
+            'initial-memory': 4096,
+            'maximum-memory': 8192,
+        }
 
         # Set the initial status of the faked partition
         faked_partition.properties['status'] = 'stopped'  # deletable

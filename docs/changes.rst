@@ -32,6 +32,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Improved the mock support for Create Partition by doing more input validation
+  and by setting all default properties on the new partitions.
+
 **Cleanup:**
 
 **Known issues:**
