@@ -4590,6 +4590,7 @@ class TestPartitionHandlers(object):
         new_partition2 = {
             'object-id': '2',
             'name': 'partition_2',
+            'ifl-processors': 2,
             'initial-memory': 1024,
             'maximum-memory': 2048,
         }
@@ -4620,7 +4621,11 @@ class TestPartitionHandlers(object):
         # the function to be tested:
         partition2 = self.urihandler.get(self.hmc, '/api/partitions/2', True)
 
-        assert partition2 == exp_partition2
+        for pname, exp_value in exp_partition2.items():
+            assert pname in partition2
+            act_value = partition2[pname]
+            assert act_value == exp_value, \
+                "property {!r}".format(pname)
 
     def test_part_update_verify(self):
         """
