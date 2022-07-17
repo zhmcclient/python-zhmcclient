@@ -2517,6 +2517,12 @@ class FakedPartitionManager(FakedBaseManager):
               specified.
             * 'virtual-function-uris' will be auto-generated as an empty array,
               if not specified.
+            * 'storage-group-uris' will be auto-generated as an empty array,
+              if not specified.
+            * 'tape-link-uris' will be auto-generated as an empty array,
+              if not specified.
+            * 'partition-link-uris' will be auto-generated as an empty array,
+              if not specified.
             * 'status' is auto-set to 'stopped', if not specified.
 
         Returns:
@@ -2550,6 +2556,12 @@ class FakedPartition(FakedBaseResource):
             self._properties['nic-uris'] = []
         if 'virtual-function-uris' not in self._properties:
             self._properties['virtual-function-uris'] = []
+        if 'storage-group-uris' not in self._properties:
+            self._properties['storage-group-uris'] = []
+        if 'tape-link-uris' not in self._properties:
+            self._properties['tape-link-uris'] = []
+        if 'partition-link-uris' not in self._properties:
+            self._properties['partition-link-uris'] = []
         if 'status' not in self._properties:
             self._properties['status'] = 'stopped'
         self._nics = FakedNicManager(hmc=manager.hmc, partition=self)

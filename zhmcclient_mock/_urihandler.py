@@ -2511,9 +2511,9 @@ class PartitionsHandler(object):
         check_set_noninput(method, uri, properties, 'boot-storage-device', None)
         check_set_noninput(method, uri, properties, 'boot-storage-volume', None)
         check_set_noninput(method, uri, properties,
-                           'boot-logical-unit-number', None)
+                           'boot-logical-unit-number', '')
         check_set_noninput(method, uri, properties,
-                           'boot-world-wide-port-name', None)
+                           'boot-world-wide-port-name', '')
         check_set_noninput(method, uri, properties, 'boot-iso-image-name', None)
         check_set_noninput(method, uri, properties, 'boot-iso-ins-file', None)
         check_set_noninput(method, uri, properties, 'secure-execution', False)
@@ -2524,6 +2524,7 @@ class PartitionsHandler(object):
         check_set_noninput(method, uri, properties, 'hba-uris', [])
         check_set_noninput(method, uri, properties, 'storage-group-uris', [])
         check_set_noninput(method, uri, properties, 'tape-link-uris', [])
+        check_set_noninput(method, uri, properties, 'partition-link-uris', [])
         check_set_noninput(method, uri, properties,
                            'crypto-configuration', None)
         check_set_noninput(method, uri, properties,

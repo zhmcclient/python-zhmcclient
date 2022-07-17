@@ -1275,6 +1275,9 @@ class TestFakedPartition(object):
             'hba-uris': [],
             'nic-uris': [],
             'virtual-function-uris': [],
+            'partition-link-uris': [],
+            'storage-group-uris': [],
+            'tape-link-uris': [],
         })
         assert isinstance(partition1, FakedPartition)
         assert partition1.properties == partition1_out_props
@@ -1314,6 +1317,9 @@ class TestFakedPartition(object):
             'hba-uris': [],
             'nic-uris': [],
             'virtual-function-uris': [],
+            'partition-link-uris': [],
+            'storage-group-uris': [],
+            'tape-link-uris': [],
         })
         assert isinstance(partition2, FakedPartition)
         assert partition2.properties == partition2_out_props

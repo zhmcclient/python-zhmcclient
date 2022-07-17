@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixes in default values for properties in mock support of 'Create Partition'.
+
 **Enhancements:**
 
 * Improved the mock support for Create Partition by doing more input validation
