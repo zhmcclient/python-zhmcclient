@@ -37,7 +37,8 @@ import requests
 from requests.packages import urllib3
 
 from ._exceptions import HTTPError, ServerAuthError, ClientAuthError, \
-    ParseError, ConnectTimeout, ReadTimeout, RetriesExceeded, OperationTimeout
+    ParseError, ConnectTimeout, ReadTimeout, RetriesExceeded, \
+    OperationTimeout, Error
 from ._exceptions import ConnectionError  # pylint: disable=redefined-builtin
 
 from ._timestats import TimeStatsKeeper
@@ -118,7 +119,7 @@ def _request_exc_message(exc):
         if isinstance(arg, Exception):
             org_exc = arg
             if isinstance(org_exc, urllib3.exceptions.MaxRetryError):
-                message = str(org_exc.reason)
+                message = "{}, reason: {}".format(org_exc, org_exc.reason)
             else:
                 message = str(org_exc)
         else:
@@ -1457,7 +1458,14 @@ class Job(object):
           :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        job_result_obj = self.session.get(self.uri)
+
+        try:
+            job_result_obj = self.session.get(self.uri)
+        except Error as exc:
+            HMC_LOGGER.debug("Request: GET %s failed with %s: %s",
+                             self.uri, exc.__class__.__name__, exc)
+            raise
+
         job_status = job_result_obj['status']
         if job_status == 'complete':
             self.session.delete(self.uri)
@@ -1558,7 +1566,7 @@ class Job(object):
                         format(self.uri, operation_timeout),
                         operation_timeout)
 
-            time.sleep(1)  # Avoid hot spin loop
+            time.sleep(10)  # Avoid hot spin loop
 
 
 def _text_repr(text, max_len=1000):
