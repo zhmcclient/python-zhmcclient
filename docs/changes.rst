@@ -91,6 +91,12 @@ Released: not yet
 * Improved the mock support for Create Partition by doing more input validation
   and by setting all default properties on the new partitions.
 
+* Improved waiting for job of asynchronous operation:
+  Increased wait time between 'Get Job Properties' operations from 1 second
+  to 10 seconds to release stress on the HMC. Now logging failures of
+  'Get Job Properties operation. No longer removing the original message in the
+  urllib3.exceptions.MaxRetryError exception.
+
 **Cleanup:**
 
 **Known issues:**
