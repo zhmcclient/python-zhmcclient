@@ -61,6 +61,8 @@ Released: not yet
   in the request payload, since the HMC requires them to be omitted unless
   the type of permitted resource allows them.
 
+* Fixes in default values for properties in mock support of 'Create Partition'.
+
 **Enhancements:**
 
 * Relative path names for mock files specified in the HMC inventory file are
