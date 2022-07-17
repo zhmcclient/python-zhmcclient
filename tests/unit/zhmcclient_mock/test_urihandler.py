@@ -4579,6 +4579,9 @@ class TestPartitionHandlers(object):
             'hba-uris': ['/api/partitions/1/hbas/1'],
             'nic-uris': ['/api/partitions/1/nics/1'],
             'virtual-function-uris': ['/api/partitions/1/virtual-functions/1'],
+            'partition-link-uris': [],
+            'storage-group-uris': [],
+            'tape-link-uris': [],
         }
         assert partition1 == exp_partition1
 
