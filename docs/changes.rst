@@ -19,14 +19,10 @@ Change log
 ----------
 
 
-Version 1.3.3.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.3.3
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2022-07-24
 
 **Bug fixes:**
 
@@ -42,14 +38,6 @@ Released: not yet
   to 10 seconds to release stress on the HMC. Now logging failures of
   'Get Job Properties operation. No longer removing the original message in the
   urllib3.exceptions.MaxRetryError exception.
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.3.2
