@@ -115,6 +115,10 @@ Released: not yet
 
 * Added mock support for Lpar.scsi_load() and Lpar.scsi_dump(), including tests.
 
+* Added Lpar.nvme_load() and Lpar.nvme_dump() methods, and tests.
+
+* Added mock support for Lpar.nvme_load() and Lpar.nvme_dump(), and tests.
+
 **Cleanup:**
 
 * Removed unintended internal names from the zhmcclient namespace in the area
