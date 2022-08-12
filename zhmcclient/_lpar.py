@@ -457,7 +457,7 @@ class Lpar(BaseResource):
                   boot_record_logical_block_address=None, force=False,
                   wait_for_completion=True, operation_timeout=None,
                   status_timeout=None, allow_status_exceptions=False,
-                  secure_boot=False):
+                  secure_boot=False, os_ipl_token=None, clear_indicator=True):
         # pylint: disable=invalid-name
         """
         Load (boot) this LPAR from a designated SCSI device, using the
@@ -489,24 +489,30 @@ class Lpar(BaseResource):
 
           lun (:term:`string`):
             Hexadecimal logical unit number (LUN) to be used for the
-            SCSI Load.
+            SCSI load.
 
           load_parameter (:term:`string`):
-            Optional load control string.  If empty string or `None`,
-            it is not passed to the HMC.
+            Optional load control string.
+            If empty string or `None`, it is not passed to the HMC, and the
+            HMC default of an empty string will be used.
 
           disk_partition_id (:term:`integer`):
-             Optional disk-partition-id (also called the boot program
-             selector) to be used for the SCSI Load. If `None`, it is
-             not passed to the HMC.
+            Optional disk-partition-id (also called the boot program
+            selector) to be used for the SCSI load.
+            If `None`, it is not passed to the HMC, and the HMC default
+            of 0 will be used.
 
           operating_system_specific_load_parameters (:term:`string`):
-             Optional operating system specific load parameters to be
-             used for the SCSI Load.
+            Optional operating system specific load parameters to be
+            used for the SCSI load.
+            If empty string or `None`, it is not passed to the HMC, and the
+            HMC default of an empty string will be used.
 
           boot_record_logical_block_address (:term:`string`):
-             Optional hexadecimal boot record logical block address to
-             be used for the SCSI Load.
+            Optional hexadecimal boot record logical block address to
+            be used for the SCSI load.
+            If `None`, it is not passed to the HMC, and the HMC default
+            of "0" will be used.
 
           force (bool):
             Boolean controlling whether this operation is permitted when the
@@ -548,8 +554,22 @@ class Lpar(BaseResource):
           secure_boot (bool):
             Boolean controlling whether the system checks the software
             signature of what is loaded against what the distributor signed it
-            with. Requires z15 or later. It is only passed to the HMC when
-            `True`.
+            with.
+            If `False` or `None`, it is not passed to the HMC, and the
+            HMC default of `False` will be used.
+            Requires the LPAR to be on a z15 or later.
+
+          os_ipl_token (:term:`string`):
+            Optional hexadecimal value to be used for the SCSI load.
+            If `None`, it is not passed to the HMC.
+
+          clear_indicator (bool):
+            Optional boolean controlling whether the memory should be
+            cleared before performing the load or not cleared.
+            If `True` or `None`, it is not passed to the HMC, and the HMC
+            default of `True` will be used if the LPAR is on a z14 with
+            SE version 2.14.1 or higher.
+            Requires the LPAR to be on a z14 with SE version 2.14.1 or higher.
 
         Returns:
 
@@ -583,12 +603,18 @@ class Lpar(BaseResource):
         if operating_system_specific_load_parameters:
             body['operating-system-specific-load-parameters'] = \
                 operating_system_specific_load_parameters
-        if boot_record_logical_block_address:
+        if boot_record_logical_block_address is not None:
             body['boot-record-logical-block-address'] = \
                 boot_record_logical_block_address
+        if os_ipl_token is not None:
+            body['os-ipl-token'] = os_ipl_token
+        if clear_indicator not in (True, None):
+            # Note: Requires SE >= 2.14.1, but caller needs to control this
+            body['clear-indicator'] = clear_indicator
         if force:
             body['force'] = force
         if secure_boot:
+            # Note: Requires SE >= 2.15, but caller needs to control this
             body['secure-boot'] = secure_boot
         result = self.manager.session.post(
             self.uri + '/operations/scsi-load',
@@ -641,27 +667,34 @@ class Lpar(BaseResource):
 
           lun (:term:`string`):
             Hexadecimal logical unit number (LUN) to be used for the
-            SCSI Load.
+            SCSI dump.
 
           load_parameter (:term:`string`):
-            Optional load control string.  If empty string or `None`,
-            it is not passed to the HMC.
+            Optional load control string.
+            If empty string or `None`, it is not passed to the HMC, and the
+            HMC default of an empty string will be used.
 
           disk_partition_id (:term:`integer`):
-             Optional disk-partition-id (also called the boot program
-             selector) to be used for the SCSI Load. If `None`, it is
-             not passed to the HMC.
+            Optional disk-partition-id (also called the boot program
+            selector) to be used for the SCSI dump.
+            If `None`, it is not passed to the HMC, and the HMC default
+            of 0 will be used.
 
           operating_system_specific_load_parameters (:term:`string`):
-             Optional operating system specific load parameters to be
-             used for the SCSI Load.
+            Optional operating system specific load parameters to be
+            used for the SCSI dump.
+            If empty string or `None`, it is not passed to the HMC, and the
+            HMC default of an empty string will be used.
 
           boot_record_logical_block_address (:term:`string`):
-             Optional hexadecimal boot record logical block address to
-             be used for the SCSI Load.
+            Optional hexadecimal boot record logical block address to
+            be used for the SCSI dump.
+            If `None`, it is not passed to the HMC, and the HMC default
+            of "0" will be used.
 
           os_ipl_token (:term:`string`):
             Optional hexadecimal value to be used for the SCSI dump.
+            If `None`, it is not passed to the HMC.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -703,8 +736,10 @@ class Lpar(BaseResource):
           secure_boot (bool):
             Boolean controlling whether the system checks the software
             signature of what is loaded against what the distributor signed it
-            with. Requires z15 or later. It is only passed to the HMC when
-            `True`.
+            with.
+            If `False` or `None`, it is not passed to the HMC, and the
+            HMC default of `False` will be used.
+            Requires the LPAR to be on a z15 or later.
 
         Returns:
 
@@ -738,7 +773,7 @@ class Lpar(BaseResource):
         if operating_system_specific_load_parameters:
             body['operating-system-specific-load-parameters'] = \
                 operating_system_specific_load_parameters
-        if boot_record_logical_block_address:
+        if boot_record_logical_block_address is not None:
             body['boot-record-logical-block-address'] = \
                 boot_record_logical_block_address
         if os_ipl_token is not None:
@@ -746,6 +781,7 @@ class Lpar(BaseResource):
         if force:
             body['force'] = force
         if secure_boot:
+            # Note: Requires SE >= 2.15, but caller needs to control this
             body['secure-boot'] = secure_boot
         result = self.manager.session.post(
             self.uri + '/operations/scsi-dump',
@@ -793,7 +829,8 @@ class Lpar(BaseResource):
             the Lpar.
 
           load_parameter (:term:`string`): Optional load control string.
-            If empty string or `None`, it is not passed to the HMC.
+            If empty string or `None`, it is not passed to the HMC, and the
+            HMC default of an empty string will be used.
 
           clear_indicator (bool):
             Optional boolean controlling whether the memory should be

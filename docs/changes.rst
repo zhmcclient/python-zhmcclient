@@ -102,6 +102,14 @@ Released: not yet
   'Get Job Properties operation. No longer removing the original message in the
   urllib3.exceptions.MaxRetryError exception.
 
+* In Lpar.scsi_load(), added parameters 'os_ipl_token' and 'clear_indicator',
+  to support the corresponding parameters of the 'SCSI Load' operation. Clarified
+  the description of parameters of Lpar.scsi_load() and Lpar.scsi_dump().
+
+* Added tests for Lpar.scsi_load() and Lpar.scsi_dump().
+
+* Added mock support for Lpar.scsi_load() and Lpar.scsi_dump(), including tests.
+
 **Cleanup:**
 
 **Known issues:**
