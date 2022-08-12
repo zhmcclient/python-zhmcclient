@@ -1054,6 +1054,310 @@ class TestLpar(object):
                     "Unexpected value for property {!r}: got {!r}, " \
                     "expected {!r}".format(pname, act_value, exp_value)
 
+    TESTCASES_NVME_LOAD = [
+        # Testcases for test_lpar_nvme_load()
+
+        # Each testcase is a tuple of:
+        # * desc: description
+        # * initial_status: Status before nvme_load() is called
+        # * result_status: Status to be set by nvme_load()
+        # * input_kwargs: Keyword arguments to nvme_load()
+        # * exp_properties: Props to validate after a successful nvme_load()
+        # * exc_exp: Expected exception object, or None
+
+        (
+            "Missing input parameter 'load_address'",
+            'activated',
+            'operating',
+            {},
+            {},
+            TypeError()
+        ),
+        (
+            "Minimally required input parameters, test defaults for optional",
+            'activated',
+            'operating',
+            {'load_address': '0010A'},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': '',
+             'last-used-disk-partition-id': 0,
+             'last-used-operating-system-specific-load-parameters': '',
+             'last-used-boot-record-logical-block-address': '0',
+             'last-used-load-type': 'ipltype-nvme',
+             'last-used-secure-boot': False,
+             'last-used-clear-indicator': True},
+            None
+        ),
+        (
+            "All input parameters for last-used props",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'load_parameter': 'foo_lp',
+             'disk_partition_id': 42,
+             'operating_system_specific_load_parameters': 'foo_oslp',
+             'boot_record_logical_block_address': '42',
+             'secure_boot': True,
+             'clear_indicator': False},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': 'foo_lp',
+             'last-used-disk-partition-id': 42,
+             'last-used-operating-system-specific-load-parameters': 'foo_oslp',
+             'last-used-boot-record-logical-block-address': '42',
+             'last-used-load-type': 'ipltype-nvme',
+             'last-used-secure-boot': True,
+             'last-used-clear-indicator': False},
+            None
+        ),
+        (
+            "Incorrect initial status 'not-activated'",
+            'not-activated',
+            'operating',
+            {'load_address': '0010A'},
+            {},
+            HTTPError({'http-status': 409, 'reason': 0})
+        ),
+        (
+            "Initial status 'operating', testing default for 'force'",
+            'operating',
+            'operating',
+            {'load_address': '0010A'},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is False",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'force': False},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is True",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'force': True},
+            {'status': 'operating'},
+            None
+        ),
+        (
+            "Initial status 'exceptions'",
+            'exceptions',
+            'operating',
+            {'load_address': '0010A'},
+            {'status': 'operating'},
+            None
+        ),
+
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, initial_status, result_status, input_kwargs, exp_properties, "
+        "exc_exp",
+        TESTCASES_NVME_LOAD)
+    @mock.patch.object(LparLoadHandler, 'get_status')
+    def test_lpar_nvme_load(
+            self, get_status_mock,
+            desc, initial_status, result_status, input_kwargs, exp_properties,
+            exc_exp):
+        # pylint: disable=unused-argument
+        """Test Lpar.nvme_load()."""
+
+        # Add a faked LPAR and set its properties
+        faked_lpar = self.add_lpar1()
+        faked_lpar.properties['status'] = initial_status
+
+        lpar_mgr = self.cpc.lpars
+        lpar = lpar_mgr.find(name=faked_lpar.name)
+
+        get_status_mock.return_value = result_status
+
+        if exc_exp:
+
+            with pytest.raises(Exception) as exc_info:
+
+                # Execute the code to be tested
+                lpar.nvme_load(**input_kwargs)
+
+            exc = exc_info.value
+
+            assert isinstance(exc, exc_exp.__class__)
+            if isinstance(exc, HTTPError):
+                assert exc.http_status == exc_exp.http_status
+                assert exc.reason == exc_exp.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = lpar.nvme_load(**input_kwargs)
+
+            # TODO: Job result not implemented yet
+            assert ret is None
+
+            lpar.pull_full_properties()
+
+            for pname, exp_value in exp_properties.items():
+                act_value = lpar.get_property(pname)
+                assert act_value == exp_value, \
+                    "Unexpected value for property {!r}: got {!r}, " \
+                    "expected {!r}".format(pname, act_value, exp_value)
+
+    TESTCASES_NVME_DUMP = [
+        # Testcases for test_lpar_nvme_dump()
+
+        # Each testcase is a tuple of:
+        # * desc: description
+        # * initial_status: Status before nvme_dump() is called
+        # * result_status: Status to be set by nvme_dump()
+        # * input_kwargs: Keyword arguments to nvme_dump()
+        # * exp_properties: Props to validate after a successful nvme_dump()
+        # * exc_exp: Expected exception object, or None
+
+        (
+            "Missing input parameter 'load_address'",
+            'activated',
+            'operating',
+            {},
+            {},
+            TypeError()
+        ),
+        (
+            "Minimally required input parameters, test defaults for optional",
+            'activated',
+            'operating',
+            {'load_address': '0010A'},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': '',
+             'last-used-disk-partition-id': 0,
+             'last-used-operating-system-specific-load-parameters': '',
+             'last-used-boot-record-logical-block-address': '0',
+             'last-used-load-type': 'ipltype-nvmedump',
+             'last-used-secure-boot': False,
+             'last-used-clear-indicator': True},
+            None
+        ),
+        (
+            "All input parameters for last-used props",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'load_parameter': 'foo_lp',
+             'disk_partition_id': 42,
+             'operating_system_specific_load_parameters': 'foo_oslp',
+             'boot_record_logical_block_address': '42',
+             'secure_boot': True},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': 'foo_lp',
+             'last-used-disk-partition-id': 42,
+             'last-used-operating-system-specific-load-parameters': 'foo_oslp',
+             'last-used-boot-record-logical-block-address': '42',
+             'last-used-load-type': 'ipltype-nvmedump',
+             'last-used-secure-boot': True},
+            None
+        ),
+        (
+            "Incorrect initial status 'not-activated'",
+            'not-activated',
+            'operating',
+            {'load_address': '0010A'},
+            {},
+            HTTPError({'http-status': 409, 'reason': 0})
+        ),
+        (
+            "Initial status 'operating', testing default for 'force'",
+            'operating',
+            'operating',
+            {'load_address': '0010A'},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is False",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'force': False},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is True",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'force': True},
+            {'status': 'operating'},
+            None
+        ),
+        (
+            "Initial status 'exceptions'",
+            'exceptions',
+            'operating',
+            {'load_address': '0010A'},
+            {'status': 'operating'},
+            None
+        ),
+
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, initial_status, result_status, input_kwargs, exp_properties, "
+        "exc_exp",
+        TESTCASES_NVME_DUMP)
+    @mock.patch.object(LparLoadHandler, 'get_status')
+    def test_lpar_nvme_dump(
+            self, get_status_mock,
+            desc, initial_status, result_status, input_kwargs, exp_properties,
+            exc_exp):
+        # pylint: disable=unused-argument
+        """Test Lpar.nvme_dump())."""
+
+        # Add a faked LPAR and set its properties
+        faked_lpar = self.add_lpar1()
+        faked_lpar.properties['status'] = initial_status
+
+        lpar_mgr = self.cpc.lpars
+        lpar = lpar_mgr.find(name=faked_lpar.name)
+
+        get_status_mock.return_value = result_status
+
+        if exc_exp:
+
+            with pytest.raises(Exception) as exc_info:
+
+                # Execute the code to be tested
+                lpar.nvme_dump(**input_kwargs)
+
+            exc = exc_info.value
+
+            assert isinstance(exc, exc_exp.__class__)
+            if isinstance(exc, HTTPError):
+                assert exc.http_status == exc_exp.http_status
+                assert exc.reason == exc_exp.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = lpar.nvme_dump(**input_kwargs)
+
+            # TODO: Job result not implemented yet
+            assert ret is None
+
+            lpar.pull_full_properties()
+
+            for pname, exp_value in exp_properties.items():
+                act_value = lpar.get_property(pname)
+                assert act_value == exp_value, \
+                    "Unexpected value for property {!r}: got {!r}, " \
+                    "expected {!r}".format(pname, act_value, exp_value)
+
     @pytest.mark.parametrize(
         "filter_args, exp_names", [
             ({'cpc-name': 'bad'},

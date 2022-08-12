@@ -4406,6 +4406,181 @@ class LparScsiDumpHandler(object):
         # does not have a corresponding parameter.
 
 
+class LparNvmeLoadHandler(object):
+    """
+    A handler class for the "NVME Load" operation.
+    """
+
+    @staticmethod
+    def get_status():
+        """
+        Status retrieval method that returns the status the faked Lpar will
+        have after completion of the "NVME Load" operation.
+
+        This method returns the successful status 'operating', and can be
+        mocked by testcases to return a different status (e.g. 'acceptable' or
+        'exceptions').
+        """
+        return 'operating'
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: NVME Load (requires classic mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        lpar_oid = uri_parms[0]
+        lpar_uri = '/api/logical-partitions/' + lpar_oid
+        try:
+            lpar = hmc.lookup_by_uri(lpar_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        cpc = lpar.manager.parent
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
+
+        check_required_fields(method, uri, body, ['load-address'])
+
+        status = lpar.properties.get('status', None)
+        force = body.get('force', False)
+
+        if status == 'not-activated':
+            raise ConflictError(method, uri, reason=0,
+                                message="LPAR {!r} could not be loaded "
+                                "because the LPAR is in status {}.".
+                                format(lpar.name, status))
+        if status == 'operating' and not force:
+            raise ServerError(method, uri, reason=263,
+                              message="LPAR {!r} could not be loaded "
+                              "because the LPAR is already loaded "
+                              "(and force was not specified).".
+                              format(lpar.name))
+
+        hmc_version_str = cpc.manager.hmc.hmc_version
+        hmc_version = tuple(map(int, hmc_version_str.split('.')))
+
+        # Update the LPAR resource
+
+        desired_status = LparNvmeLoadHandler.get_status()
+        lpar.properties['status'] = desired_status
+
+        if hmc_version >= (2, 14, 0):
+            load_address = body.get('load-address')
+            load_parameter = body.get('load-parameter', '')
+            lpar.properties['last-used-load-address'] = load_address
+            lpar.properties['last-used-load-parameter'] = load_parameter
+
+        if hmc_version >= (2, 14, 1):
+            disk_partition_id = body.get('disk-partition-id', 0)
+            os_load_parameters = body.get(
+                'operating-system-specific-load-parameters', '')
+            boot_record_lba = body.get('boot-record-logical-block-address', '0')
+            lpar.properties['last-used-disk-partition-id'] = disk_partition_id
+            lpar.properties[
+                'last-used-operating-system-specific-load-parameters'] = \
+                os_load_parameters
+            lpar.properties['last-used-boot-record-logical-block-address'] = \
+                boot_record_lba
+
+        if hmc_version >= (2, 15, 0):
+            secure_boot = body.get('secure-boot', False)
+            lpar.properties['last-used-load-type'] = 'ipltype-nvme'
+            lpar.properties['last-used-secure-boot'] = secure_boot
+
+        if hmc_version >= (2, 16, 0):
+            clear_indicator = body.get('clear-indicator', True)
+            lpar.properties['last-used-clear-indicator'] = clear_indicator
+
+
+class LparNvmeDumpHandler(object):
+    """
+    A handler class for the "NVME Dump" operation.
+    """
+
+    @staticmethod
+    def get_status():
+        """
+        Status retrieval method that returns the status the faked Lpar will
+        have after completion of the "NVME Dump" operation.
+
+        This method returns the successful status 'operating', and can be
+        mocked by testcases to return a different status (e.g. 'acceptable' or
+        'exceptions').
+        """
+        return 'operating'
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: NVME Dump (requires classic mode)."""
+        assert wait_for_completion is True  # async not supported yet
+        lpar_oid = uri_parms[0]
+        lpar_uri = '/api/logical-partitions/' + lpar_oid
+        try:
+            lpar = hmc.lookup_by_uri(lpar_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        cpc = lpar.manager.parent
+        if cpc.dpm_enabled:
+            raise CpcInDpmError(method, uri, cpc)
+
+        check_required_fields(method, uri, body, ['load-address'])
+
+        status = lpar.properties.get('status', None)
+        force = body.get('force', False)
+
+        if status == 'not-activated':
+            raise ConflictError(method, uri, reason=0,
+                                message="LPAR {!r} could not be loaded "
+                                "because the LPAR is in status {}.".
+                                format(lpar.name, status))
+        if status == 'operating' and not force:
+            raise ServerError(method, uri, reason=263,
+                              message="LPAR {!r} could not be loaded "
+                              "because the LPAR is already loaded "
+                              "(and force was not specified).".
+                              format(lpar.name))
+
+        hmc_version_str = cpc.manager.hmc.hmc_version
+        hmc_version = tuple(map(int, hmc_version_str.split('.')))
+
+        # Update the LPAR resource
+
+        desired_status = LparNvmeLoadHandler.get_status()
+        lpar.properties['status'] = desired_status
+
+        if hmc_version >= (2, 14, 0):
+            load_address = body.get('load-address')
+            load_parameter = body.get('load-parameter', '')
+            lpar.properties['last-used-load-address'] = load_address
+            lpar.properties['last-used-load-parameter'] = load_parameter
+
+        if hmc_version >= (2, 14, 1):
+            disk_partition_id = body.get('disk-partition-id', 0)
+            os_load_parameters = body.get(
+                'operating-system-specific-load-parameters', '')
+            boot_record_lba = body.get('boot-record-logical-block-address', '0')
+            lpar.properties['last-used-disk-partition-id'] = disk_partition_id
+            lpar.properties[
+                'last-used-operating-system-specific-load-parameters'] = \
+                os_load_parameters
+            lpar.properties['last-used-boot-record-logical-block-address'] = \
+                boot_record_lba
+
+        if hmc_version >= (2, 15, 0):
+            secure_boot = body.get('secure-boot', False)
+            lpar.properties['last-used-load-type'] = 'ipltype-nvmedump'
+            lpar.properties['last-used-secure-boot'] = secure_boot
+
+        # Note: 'last-used-clear-indicator' is not changed, since this operation
+        # does not have a corresponding parameter.
+
+
 class ResetActProfilesHandler(object):
     """
     Handler class for HTTP methods on set of ResetActProfile resources.
@@ -4703,6 +4878,10 @@ URIS = (
      LparScsiLoadHandler),
     (r'/api/logical-partitions/([^/]+)/operations/scsi-dump',
      LparScsiDumpHandler),
+    (r'/api/logical-partitions/([^/]+)/operations/nvme-load',
+     LparNvmeLoadHandler),
+    (r'/api/logical-partitions/([^/]+)/operations/nvme-dump',
+     LparNvmeDumpHandler),
 
     (r'/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
      ResetActProfilesHandler),
