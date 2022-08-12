@@ -76,7 +76,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     CapacityGroupsHandler, CapacityGroupHandler, \
     CapacityGroupAddPartitionHandler, CapacityGroupRemovePartitionHandler, \
     LparsHandler, LparHandler, LparActivateHandler, LparDeactivateHandler, \
-    LparLoadHandler, \
+    LparLoadHandler, LparScsiLoadHandler, LparScsiDumpHandler, \
     ResetActProfilesHandler, ResetActProfileHandler, \
     ImageActProfilesHandler, ImageActProfileHandler, \
     LoadActProfilesHandler, LoadActProfileHandler
@@ -6501,6 +6501,142 @@ class TestLparActLoadDeactHandler(object):
         self.urihandler.post(self.hmc,
                              '/api/logical-partitions/1/operations/load',
                              {'load-address': '5176'}, True, True)
+
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'operating'
+
+        # the function to be tested:
+        self.urihandler.post(self.hmc,
+                             '/api/logical-partitions/1/operations/deactivate',
+                             {'force': True}, True, True)
+
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'not-activated'
+
+
+class TestLparScsiLoadHandler(object):
+    """
+    All tests for class LparScsiLoadHandler and other needed classes.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        the needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/logical-partitions/([^/]+)',
+             LparHandler),
+            (r'/api/logical-partitions/([^/]+)/operations/activate',
+             LparActivateHandler),
+            (r'/api/logical-partitions/([^/]+)/operations/deactivate',
+             LparDeactivateHandler),
+            (r'/api/logical-partitions/([^/]+)/operations/scsi-load',
+             LparScsiLoadHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_lpar_start_stop(self):
+        """
+        Test POST LPAR activate, SCSI load, deactivate.
+        """
+
+        # CPC1 is in classic mode
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'not-activated'
+        lpar1_name = lpar1['name']
+
+        # the function to be tested:
+        self.urihandler.post(self.hmc,
+                             '/api/logical-partitions/1/operations/activate',
+                             {'activation-profile-name': lpar1_name},
+                             True, True)
+
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'not-operating'
+
+        # the function to be tested:
+        self.urihandler.post(self.hmc,
+                             '/api/logical-partitions/1/operations/scsi-load',
+                             {'load-address': '5176',
+                              'world-wide-port-name': '1234',
+                              'logical-unit-number': '5678'},
+                             True, True)
+
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'operating'
+
+        # the function to be tested:
+        self.urihandler.post(self.hmc,
+                             '/api/logical-partitions/1/operations/deactivate',
+                             {'force': True}, True, True)
+
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'not-activated'
+
+
+class TestLparScsiDumpHandler(object):
+    """
+    All tests for class LparScsiDumpHandler and other needed classes.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        the needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/logical-partitions/([^/]+)',
+             LparHandler),
+            (r'/api/logical-partitions/([^/]+)/operations/activate',
+             LparActivateHandler),
+            (r'/api/logical-partitions/([^/]+)/operations/deactivate',
+             LparDeactivateHandler),
+            (r'/api/logical-partitions/([^/]+)/operations/scsi-dump',
+             LparScsiDumpHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_lpar_start_stop(self):
+        """
+        Test POST LPAR activate, SCSI load, deactivate.
+        """
+
+        # CPC1 is in classic mode
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'not-activated'
+        lpar1_name = lpar1['name']
+
+        # the function to be tested:
+        self.urihandler.post(self.hmc,
+                             '/api/logical-partitions/1/operations/activate',
+                             {'activation-profile-name': lpar1_name},
+                             True, True)
+
+        lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
+                                    True)
+        assert lpar1['status'] == 'not-operating'
+
+        # the function to be tested:
+        self.urihandler.post(self.hmc,
+                             '/api/logical-partitions/1/operations/scsi-dump',
+                             {'load-address': '5176',
+                              'world-wide-port-name': '1234',
+                              'logical-unit-number': '5678'},
+                             True, True)
 
         lpar1 = self.urihandler.get(self.hmc, '/api/logical-partitions/1',
                                     True)

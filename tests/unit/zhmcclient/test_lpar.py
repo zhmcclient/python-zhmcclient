@@ -50,7 +50,7 @@ class TestLpar(object):
         """
         # pylint: disable=attribute-defined-outside-init
 
-        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.16.0', '4.1')
         self.session.retry_timeout_config.status_timeout = 1
         self.client = Client(self.session)
 
@@ -80,6 +80,16 @@ class TestLpar(object):
             'description': 'LPAR #1 (Linux)',
             'status': 'operating',
             'activation-mode': 'linux',
+            'last-used-load-address': '',
+            'last-used-load-parameter': '',
+            'last-used-world-wide-port-name': '',
+            'last-used-logical-unit-number': '',
+            'last-used-disk-partition-id': 0,
+            'last-used-operating-system-specific-load-parameters': '',
+            'last-used-boot-record-logical-block-address': '0',
+            'last-used-load-type': 'ipltype-standard',
+            'last-used-secure-boot': False,
+            'last-used-clear-indicator': True,
         })
         return faked_lpar
 
@@ -95,6 +105,16 @@ class TestLpar(object):
             'description': 'LPAR #2 (SSC)',
             'status': 'operating',
             'activation-mode': 'ssc',
+            'last-used-load-address': '',
+            'last-used-load-parameter': '',
+            'last-used-world-wide-port-name': '',
+            'last-used-logical-unit-number': '',
+            'last-used-disk-partition-id': 0,
+            'last-used-operating-system-specific-load-parameters': '',
+            'last-used-boot-record-logical-block-address': '0',
+            'last-used-load-type': 'ipltype-standard',
+            'last-used-secure-boot': False,
+            'last-used-clear-indicator': True,
         })
         return faked_lpar
 
@@ -656,6 +676,384 @@ class TestLpar(object):
             stored_status = lpar.get_property('stored-status')
             assert stored_status == exp_stored_status
 
+    TESTCASES_SCSI_LOAD = [
+        # Testcases for test_lpar_scsi_load()
+
+        # Each testcase is a tuple of:
+        # * desc: description
+        # * initial_status: Status before scsi_load() is called
+        # * result_status: Status to be set by scsi_load()
+        # * input_kwargs: Keyword arguments to scsi_load()
+        # * exp_properties: Props to validate after a successful scsi_load()
+        # * exc_exp: Expected exception object, or None
+
+        (
+            "Missing input parameter 'load_address'",
+            'activated',
+            'operating',
+            {'wwpn': '1234',
+             'lun': '5678'},
+            {},
+            TypeError()
+        ),
+        (
+            "Missing input parameter 'wwpn'",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'lun': '5678'},
+            {},
+            TypeError()
+        ),
+        (
+            "Missing input parameter 'lun'",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234'},
+            {},
+            TypeError()
+        ),
+        (
+            "Minimally required input parameters, test defaults for optional",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': '',
+             'last-used-world-wide-port-name': '1234',
+             'last-used-logical-unit-number': '5678',
+             'last-used-disk-partition-id': 0,
+             'last-used-operating-system-specific-load-parameters': '',
+             'last-used-boot-record-logical-block-address': '0',
+             'last-used-load-type': 'ipltype-scsi',
+             'last-used-secure-boot': False,
+             'last-used-clear-indicator': True},
+            None
+        ),
+        (
+            "All input parameters for last-used props",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678',
+             'load_parameter': 'foo_lp',
+             'disk_partition_id': 42,
+             'operating_system_specific_load_parameters': 'foo_oslp',
+             'boot_record_logical_block_address': '42',
+             'secure_boot': True,
+             'clear_indicator': False},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': 'foo_lp',
+             'last-used-world-wide-port-name': '1234',
+             'last-used-logical-unit-number': '5678',
+             'last-used-disk-partition-id': 42,
+             'last-used-operating-system-specific-load-parameters': 'foo_oslp',
+             'last-used-boot-record-logical-block-address': '42',
+             'last-used-load-type': 'ipltype-scsi',
+             'last-used-secure-boot': True,
+             'last-used-clear-indicator': False},
+            None
+        ),
+        (
+            "Incorrect initial status 'not-activated'",
+            'not-activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {},
+            HTTPError({'http-status': 409, 'reason': 0})
+        ),
+        (
+            "Initial status 'operating', testing default for 'force'",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is False",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678',
+             'force': False},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is True",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678',
+             'force': True},
+            {'status': 'operating'},
+            None
+        ),
+        (
+            "Initial status 'exceptions'",
+            'exceptions',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {'status': 'operating'},
+            None
+        ),
+
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, initial_status, result_status, input_kwargs, exp_properties, "
+        "exc_exp",
+        TESTCASES_SCSI_LOAD)
+    @mock.patch.object(LparLoadHandler, 'get_status')
+    def test_lpar_scsi_load(
+            self, get_status_mock,
+            desc, initial_status, result_status, input_kwargs, exp_properties,
+            exc_exp):
+        # pylint: disable=unused-argument
+        """Test Lpar.scsi_load()."""
+
+        # Add a faked LPAR and set its properties
+        faked_lpar = self.add_lpar1()
+        faked_lpar.properties['status'] = initial_status
+
+        lpar_mgr = self.cpc.lpars
+        lpar = lpar_mgr.find(name=faked_lpar.name)
+
+        get_status_mock.return_value = result_status
+
+        if exc_exp:
+
+            with pytest.raises(Exception) as exc_info:
+
+                # Execute the code to be tested
+                lpar.scsi_load(**input_kwargs)
+
+            exc = exc_info.value
+
+            assert isinstance(exc, exc_exp.__class__)
+            if isinstance(exc, HTTPError):
+                assert exc.http_status == exc_exp.http_status
+                assert exc.reason == exc_exp.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = lpar.scsi_load(**input_kwargs)
+
+            # TODO: Job result not implemented yet
+            assert ret is None
+
+            lpar.pull_full_properties()
+
+            for pname, exp_value in exp_properties.items():
+                act_value = lpar.get_property(pname)
+                assert act_value == exp_value, \
+                    "Unexpected value for property {!r}: got {!r}, " \
+                    "expected {!r}".format(pname, act_value, exp_value)
+
+    TESTCASES_SCSI_DUMP = [
+        # Testcases for test_lpar_scsi_dump()
+
+        # Each testcase is a tuple of:
+        # * desc: description
+        # * initial_status: Status before scsi_dump() is called
+        # * result_status: Status to be set by scsi_dump()
+        # * input_kwargs: Keyword arguments to scsi_dump()
+        # * exp_properties: Props to validate after a successful scsi_dump()
+        # * exc_exp: Expected exception object, or None
+
+        (
+            "Missing input parameter 'load_address'",
+            'activated',
+            'operating',
+            {'wwpn': '1234',
+             'lun': '5678'},
+            {},
+            TypeError()
+        ),
+        (
+            "Missing input parameter 'wwpn'",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'lun': '5678'},
+            {},
+            TypeError()
+        ),
+        (
+            "Missing input parameter 'lun'",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234'},
+            {},
+            TypeError()
+        ),
+        (
+            "Minimally required input parameters, test defaults for optional",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': '',
+             'last-used-world-wide-port-name': '1234',
+             'last-used-logical-unit-number': '5678',
+             'last-used-disk-partition-id': 0,
+             'last-used-operating-system-specific-load-parameters': '',
+             'last-used-boot-record-logical-block-address': '0',
+             'last-used-load-type': 'ipltype-scsidump',
+             'last-used-secure-boot': False,
+             'last-used-clear-indicator': True},
+            None
+        ),
+        (
+            "All input parameters for last-used props",
+            'activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678',
+             'load_parameter': 'foo_lp',
+             'disk_partition_id': 42,
+             'operating_system_specific_load_parameters': 'foo_oslp',
+             'boot_record_logical_block_address': '42',
+             'secure_boot': True},
+            {'status': 'operating',
+             'last-used-load-address': '0010A',
+             'last-used-load-parameter': 'foo_lp',
+             'last-used-world-wide-port-name': '1234',
+             'last-used-logical-unit-number': '5678',
+             'last-used-disk-partition-id': 42,
+             'last-used-operating-system-specific-load-parameters': 'foo_oslp',
+             'last-used-boot-record-logical-block-address': '42',
+             'last-used-load-type': 'ipltype-scsidump',
+             'last-used-secure-boot': True},
+            None
+        ),
+        (
+            "Incorrect initial status 'not-activated'",
+            'not-activated',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {},
+            HTTPError({'http-status': 409, 'reason': 0})
+        ),
+        (
+            "Initial status 'operating', testing default for 'force'",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is False",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678',
+             'force': False},
+            {},
+            HTTPError({'http-status': 500, 'reason': 263})  # TODO: Check
+        ),
+        (
+            "Initial status 'operating', 'force' is True",
+            'operating',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678',
+             'force': True},
+            {'status': 'operating'},
+            None
+        ),
+        (
+            "Initial status 'exceptions'",
+            'exceptions',
+            'operating',
+            {'load_address': '0010A',
+             'wwpn': '1234',
+             'lun': '5678'},
+            {'status': 'operating'},
+            None
+        ),
+
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, initial_status, result_status, input_kwargs, exp_properties, "
+        "exc_exp",
+        TESTCASES_SCSI_DUMP)
+    @mock.patch.object(LparLoadHandler, 'get_status')
+    def test_lpar_scsi_dump(
+            self, get_status_mock,
+            desc, initial_status, result_status, input_kwargs, exp_properties,
+            exc_exp):
+        # pylint: disable=unused-argument
+        """Test Lpar.scsi_dump())."""
+
+        # Add a faked LPAR and set its properties
+        faked_lpar = self.add_lpar1()
+        faked_lpar.properties['status'] = initial_status
+
+        lpar_mgr = self.cpc.lpars
+        lpar = lpar_mgr.find(name=faked_lpar.name)
+
+        get_status_mock.return_value = result_status
+
+        if exc_exp:
+
+            with pytest.raises(Exception) as exc_info:
+
+                # Execute the code to be tested
+                lpar.scsi_dump(**input_kwargs)
+
+            exc = exc_info.value
+
+            assert isinstance(exc, exc_exp.__class__)
+            if isinstance(exc, HTTPError):
+                assert exc.http_status == exc_exp.http_status
+                assert exc.reason == exc_exp.reason
+
+        else:
+
+            # Execute the code to be tested.
+            ret = lpar.scsi_dump(**input_kwargs)
+
+            # TODO: Job result not implemented yet
+            assert ret is None
+
+            lpar.pull_full_properties()
+
+            for pname, exp_value in exp_properties.items():
+                act_value = lpar.get_property(pname)
+                assert act_value == exp_value, \
+                    "Unexpected value for property {!r}: got {!r}, " \
+                    "expected {!r}".format(pname, act_value, exp_value)
+
     @pytest.mark.parametrize(
         "filter_args, exp_names", [
             ({'cpc-name': 'bad'},
@@ -695,10 +1093,6 @@ class TestLpar(object):
         if exp_names:
             names = [p.properties['name'] for p in lpars]
             assert set(names) == set(exp_names)
-
-    # TODO: Test for Lpar.scsi_load()
-
-    # TODO: Test for Lpar.scsi_dump()
 
     # TODO: Test for Lpar.stop()
 
