@@ -121,11 +121,12 @@ def pick_test_resources(res_list):
 
 
 def runtest_find_list(session, manager, name, server_prop, client_prop,
-                      volatile_props, minimal_props, list_props):  # noqa: F811
+                      volatile_props, minimal_props, list_props,
+                      unique_name=True):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Run tests for find/list methods for a resource type:
-    - find_by_name(name)
+    - find_by_name(name) (only if not unique_name)
     - pull_full_properties()
     - find(**filter_args)
       - server-side filter
@@ -161,9 +162,15 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
 
       list_props (list of string): Names of properties that are returned by
         list()).
+
+      unique_name (bool): Indicates that the resource name is expected to be
+        unique within its parent resource. That is normally the case, the only
+        known exception are storage volumes in HMC 2.14.0 (they were introduced
+        in 2.14.0 and made unique in 2.14.1).
     """
-    # The code to be tested: find_by_name(name)
-    found_res = manager.find_by_name(name)
+    if unique_name:
+        # The code to be tested: find_by_name(name)
+        found_res = manager.find_by_name(name)
 
     # Get full properties directly, for comparison
     exp_props = session.get(found_res.uri)

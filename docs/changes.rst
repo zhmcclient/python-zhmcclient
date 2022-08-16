@@ -63,6 +63,9 @@ Released: not yet
 
 * Fixes in default values for properties in mock support of 'Create Partition'.
 
+* Test: Added tolerance against non-unique storage volume names in HMC 2.14.0
+  in the storage volume end2end tests. (issue #962)
+
 **Enhancements:**
 
 * Relative path names for mock files specified in the HMC inventory file are

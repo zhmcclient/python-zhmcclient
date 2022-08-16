@@ -61,6 +61,11 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
 
         session = cpc.manager.session
         hd = session.hmc_definition
+        client = cpc.manager.client
+
+        api_version = client.query_api_version()
+        hmc_version_str = api_version['hmc-version']
+        hmc_version = tuple(map(int, hmc_version_str.split('.')))
 
         # Pick the storage volumes to test with
         grp_vol_tuples = []
@@ -74,13 +79,20 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
                       "managed by HMC {h}".format(c=cpc.name, h=hd.host))
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
+        # Storage volumes were introduced in HMC 2.14.0 but their names were
+        # made unique only in 2.14.1.
+        unique_name = (hmc_version >= (2, 14, 1))
+        if not unique_name:
+            print("Tolerating non-unique storage volume names on HMC "
+                  "version {}".format(hmc_version))
         for stogrp, stovol in grp_vol_tuples:
             print("Testing on CPC {c} with storage volume {v!r} of "
                   "storage group {g!r}".
                   format(c=cpc.name, v=stovol.name, g=stogrp.name))
             runtest_find_list(
                 session, stogrp.storage_volumes, stovol.name, 'name', 'size',
-                STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS)
+                STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS,
+                unique_name=unique_name)
 
 
 def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
