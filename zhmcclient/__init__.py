@@ -58,3 +58,4 @@ from ._virtual_storage_resource import *        # noqa: F401
 from ._storage_group_template import *          # noqa: F401
 from ._storage_volume_template import *         # noqa: F401
 from ._capacity_group import *         # noqa: F401
+from ._debug_info import *         # noqa: F401

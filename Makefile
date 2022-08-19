@@ -287,7 +287,7 @@ platform:
 .PHONY: debuginfo
 debuginfo:
 	@echo "Makefile: Debug information:"
-	$(PYTHON_CMD) -m $(package_name).debuginfo
+	$(PYTHON_CMD) -c "import $(package_name); print($(package_name).debuginfo())"
 
 .PHONY: pip_list
 pip_list:
