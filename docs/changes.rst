@@ -35,6 +35,11 @@ Released: not yet
   attributes and methods causes a new `zhmcclient.CeasedExistence` exception to
   be raised. The documentation shows which attributes and methods do that.
 
+* The zhmcclient/debuginfo.py script has been removed since the instructions using
+  it only worked when having the repo local, but not when installing from Pypi.
+  To display debug info, you can now use:
+  python -c "import zhmcclient; print(zhmcclient.debuginfo())".
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -111,6 +116,9 @@ Released: not yet
 * Added mock support for Lpar.scsi_load() and Lpar.scsi_dump(), including tests.
 
 **Cleanup:**
+
+* Removed unintended internal names from the zhmcclient namespace in the area
+  of logging and timestamp conversion.
 
 **Known issues:**
 

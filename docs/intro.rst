@@ -551,12 +551,16 @@ as in the following example:
 
 .. code-block:: bash
 
-    $ python -m zhmcclient.debuginfo
-    Operating system: Darwin 18.7.0 on x86_64
-    Python implementation: CPython 3.8.2 (64 bit, wide unicode)
-    Python version: 3.8.2
-    zhmcclient version: 0.27.0.dev1
-
+    $ python -c "import zhmcclient; print(zhmcclient.debuginfo())"
+    os_name: Darwin
+    os_version: 20.6.0
+    cpu_arch: x86_64
+    bit_size: 64
+    unicode_size: wide
+    python_impl: CPython
+    python_impl_version: 3.9.12
+    python_version: 3.9.12
+    zhmcclient_version: 1.4.0
 
 .. _`License`:
 
