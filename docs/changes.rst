@@ -19,12 +19,12 @@ Change log
 ----------
 
 
-Version 1.4.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.4.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.3.x.
+This version contains all fixes up to version 1.3.3.
 
-Released: not yet
+Released: 2022-08-20
 
 **Incompatible changes:**
 
@@ -39,8 +39,6 @@ Released: not yet
   it only worked when having the repo local, but not when installing from Pypi.
   To display debug info, you can now use:
   python -c "import zhmcclient; print(zhmcclient.debuginfo())".
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -123,12 +121,6 @@ Released: not yet
 
 * Removed unintended internal names from the zhmcclient namespace in the area
   of logging and timestamp conversion.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.3.0
