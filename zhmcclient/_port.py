@@ -115,6 +115,25 @@ class PortManager(BaseManager):
 
         If the adapter does not have any ports, an empty list is returned.
 
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled in an optimized way:
+
+        * If this manager is enabled for :ref:`auto-updating`, a locally
+          maintained resource list is used (which is automatically updated via
+          inventory notifications from the HMC) and the provided filter
+          arguments are applied.
+
+        * Otherwise, if the filter arguments specify the resource name as a
+          single filter argument with a straight match string (i.e. without
+          regular expressions), an optimized lookup is performed based on a
+          locally maintained name-URI cache.
+
+        * Otherwise, the corresponding array property for this resource in the
+          parent object is used to list the resources, and the provided filter
+          arguments are applied.
+
         Authorization requirements:
 
         * Object-access permission to this Adapter.
@@ -145,32 +164,39 @@ class PortManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        uris_prop = self.adapter.port_uris_prop
-        if not uris_prop:
-            # Adapter does not have any ports
-            return []
-
-        uris = self.adapter.get_property(uris_prop)
-        assert uris is not None
-
-        # TODO: Remove the following circumvention once fixed.
-        # The following line circumvents a bug for FCP adapters that sometimes
-        # causes duplicate URIs to show up in this property:
-        uris = list(set(uris))
-
         resource_obj_list = []
-        for uri in uris:
+        if self.auto_update_enabled() and not self.auto_update_needs_pull():
+            for resource_obj in self.list_resources_local():
+                if matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
+        else:
+            uris_prop = self.adapter.port_uris_prop
+            if not uris_prop:
+                # Adapter does not have any ports
+                return []
 
-            resource_obj = self.resource_class(
-                manager=self,
-                uri=uri,
-                name=None,
-                properties=None)
+            uris = self.adapter.get_property(uris_prop)
+            assert uris is not None
 
-            if matches_filters(resource_obj, filter_args):
-                resource_obj_list.append(resource_obj)
-                if full_properties:
-                    resource_obj.pull_full_properties()
+            # TODO: Remove the following circumvention once fixed.
+            # The following line circumvents a bug for FCP adapters that
+            # sometimes causes duplicate URIs to show up in this property:
+            uris = list(set(uris))
+
+            for uri in uris:
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=uri,
+                    name=None,
+                    properties=None)
+
+                if matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
+                    if full_properties:
+                        resource_obj.pull_full_properties()
+
+            self.add_resources_local(resource_obj_list)
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list

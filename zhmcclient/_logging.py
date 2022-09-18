@@ -25,7 +25,7 @@ names:
 
 * 'zhmcclient.jms' for notifications from the HMC to zhmcclient, at the
   debug, info, warning and error level. At this point, this logger is used only
-  for the :ref:`auto-update <Auto-updating of resources>` support, but not for
+  for the :ref:`auto-updating` support, but not for
   the :class:`~zhmcclient.NotificationReceiver` class.
 
 For HMC operations and API calls that contain the HMC password or HMC session

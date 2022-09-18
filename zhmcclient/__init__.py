@@ -28,7 +28,7 @@ from ._manager import *       # noqa: F401
 from ._resource import *      # noqa: F401
 from ._logging import *       # noqa: F401
 from ._session import *       # noqa: F401
-from ._resource_updater import *       # noqa: F401
+from ._auto_updater import *  # noqa: F401
 from ._timestats import *     # noqa: F401
 from ._client import *        # noqa: F401
 from ._cpc import *           # noqa: F401

@@ -42,7 +42,7 @@ from ._exceptions import HTTPError, ServerAuthError, ClientAuthError, \
 from ._exceptions import ConnectionError  # pylint: disable=redefined-builtin
 
 from ._timestats import TimeStatsKeeper
-from ._resource_updater import ResourceUpdater
+from ._auto_updater import AutoUpdater
 from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
@@ -429,7 +429,7 @@ class Session(object):
         self._time_stats_keeper = TimeStatsKeeper()
         self._object_topic = None
         self._job_topic = None
-        self._resource_updater = None
+        self._auto_updater = AutoUpdater(self)
 
     def __repr__(self):
         """
@@ -450,7 +450,7 @@ class Session(object):
             "  _session={s._session!r}\n"
             "  _object_topic={s._object_topic!r}\n"
             "  _job_topic={s._job_topic!r}\n"
-            "  _resource_updater={s._resource_updater!r}\n"
+            "  _auto_updater={s._auto_updater!r}\n"
             ")".
             format(classname=self.__class__.__name__, id=id(self), s=self,
                    headers=headers, blanked_out=BLANKED_OUT))
@@ -609,12 +609,12 @@ class Session(object):
         return self._job_topic
 
     @property
-    def resource_updater(self):
+    def auto_updater(self):
         """
-        :class:`~zhmcclient.ResourceUpdater`: Resource updater for
-        :ref:`auto-updating <Auto-updating of resources>` of resources.
+        :class:`~zhmcclient.AutoUpdater`: Updater for
+        :ref:`auto-updating` of resource and manager objects.
         """
-        return self._resource_updater
+        return self._auto_updater
 
     @logged_api_call
     def logon(self, verify=False):
@@ -1392,19 +1392,20 @@ class Session(object):
     def auto_update_subscribed(self):
         """
         Return whether this session is currently subscribed for
-        :ref:`auto-updating of resources <Auto-updating of resources>`.
+        :ref:`auto-updating`.
 
         Return:
           bool: Indicates whether session is subscribed.
         """
-        return bool(self._resource_updater)
+        return self._auto_updater.is_open()
 
     @logged_api_call
     def subscribe_auto_update(self):
         """
-        Subscribe this session for
-        :ref:`auto-updating of resources <Auto-updating of resources>`, if not
-        currently subscribed.
+        Subscribe this session for :ref:`auto-updating`, if not currently
+        subscribed.
+
+        When not yet subscribed, the session is also logged on.
 
         When subscribed, object notifications will be sent by the HMC as
         resource objects on the HMC change their properties or come or go.
@@ -1416,14 +1417,13 @@ class Session(object):
         :meth:`~zhmcclient.BaseResource.enable_auto_update` and thus does not
         need to be called by the user.
         """
-        if not self._resource_updater:
-            self._resource_updater = ResourceUpdater(self)
+        if not self._auto_updater.is_open():
+            self._auto_updater.open()
 
     @logged_api_call
     def unsubscribe_auto_update(self):
         """
-        Unsubscribe this session from
-        :ref:`auto-updating of resources <Auto-updating of resources>`, if
+        Unsubscribe this session from :ref:`auto-updating`, if
         currently subscribed.
 
         When unsubscribed, object notifications are no longer sent by the HMC.
@@ -1432,9 +1432,8 @@ class Session(object):
         :meth:`~zhmcclient.BaseResource.disable_auto_update` and thus does not
         need to be called by the user.
         """
-        if self._resource_updater:
-            self._resource_updater.close()
-            self._resource_updater = None
+        if self._auto_updater.is_open():
+            self._auto_updater.close()
 
 
 class Job(object):

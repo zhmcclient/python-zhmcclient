@@ -121,6 +121,12 @@ class ConsoleManager(BaseManager):
         List the (one) :term:`Console` representing the HMC this client is
         connected to.
 
+        Any provided filter argument will be ignored; the `filter_args`
+        parameter exists only for consistency with other list() methods.
+
+        The listing of resources is handled by constructing a singleton
+        object that represents the HMC of the current session.
+
         Authorization requirements:
 
         * None

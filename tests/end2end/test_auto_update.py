@@ -22,6 +22,7 @@ change any existing partitions, but create, modify and delete test partitions.
 from __future__ import absolute_import, print_function
 
 import uuid
+import warnings
 from time import sleep
 import pytest
 from requests.packages import urllib3
@@ -32,7 +33,7 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import TEST_PREFIX, standard_partition_props
+from .utils import TEST_PREFIX, standard_partition_props, skip_warn
 
 urllib3.disable_warnings()
 
@@ -199,3 +200,78 @@ def test_autoupdate_prop(dpm_mode_cpcs):  # noqa: F811
                     pass
                 else:
                     raise
+
+
+def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test list() with auto-updated Partition manager.
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        new_part_name = TEST_PREFIX + ' test_part_list_auto part1'
+
+        # Ensure a clean starting point for this test
+        try:
+            new_part = cpc.partitions.find(name=new_part_name)
+        except zhmcclient.NotFound:
+            pass
+        else:
+            warnings.warn(
+                "Deleting test partition from previous run: {p!r} on CPC {c}".
+                format(p=new_part_name, c=cpc.name), UserWarning)
+            new_part.delete()
+
+        # Get the initial set of partitions, for later comparison
+        initial_part_list = cpc.partitions.list()
+        if not initial_part_list:
+            skip_warn("No partitions on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        initial_part_names = set([p.name for p in initial_part_list])
+
+        # Enable auto-updating on partition manager and check partition list
+        cpc.partitions.enable_auto_update()
+        part_list = cpc.partitions.list()
+        part_names = set([p.name for p in part_list])
+        assert part_names == initial_part_names
+
+        # Create a partition and check partition list
+        new_part_input_props = standard_partition_props(cpc, new_part_name)
+        new_part = cpc.partitions.create(new_part_input_props)
+        part_list = cpc.partitions.list()
+        part_names = set([p.name for p in part_list])
+        exp_part_names = initial_part_names | set([new_part.name])
+        assert part_names == exp_part_names
+
+        # Delete the partition and check partition list
+        new_part.delete()
+        part_list = cpc.partitions.list()
+        part_names = set([p.name for p in part_list])
+        assert part_names == initial_part_names
+
+        # Disable auto-updating on partition manager and check partition list
+        cpc.partitions.disable_auto_update()
+        part_list = cpc.partitions.list()
+        part_names = set([p.name for p in part_list])
+        assert part_names == initial_part_names
+
+        # Create a partition and check partition list
+        new_part_input_props = standard_partition_props(cpc, new_part_name)
+        new_part = cpc.partitions.create(new_part_input_props)
+        part_list = cpc.partitions.list()
+        part_names = set([p.name for p in part_list])
+        exp_part_names = initial_part_names | set([new_part.name])
+        assert part_names == exp_part_names
+
+        # Delete the partition and check partition list
+        new_part.delete()
+        part_list = cpc.partitions.list()
+        part_names = set([p.name for p in part_list])
+        assert part_names == initial_part_names
