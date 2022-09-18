@@ -153,6 +153,26 @@ class StorageGroupManager(BaseManager):
         Storage groups for which the authenticated user does not have
         object-access permission are not included.
 
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled in an optimized way:
+
+        * If this manager is enabled for :ref:`auto-updating`, a locally
+          maintained resource list is used (which is automatically updated via
+          inventory notifications from the HMC) and the provided filter
+          arguments are applied.
+
+        * Otherwise, if the filter arguments specify the resource name as a
+          single filter argument with a straight match string (i.e. without
+          regular expressions), an optimized lookup is performed based on a
+          locally maintained name-URI cache.
+
+        * Otherwise, the HMC List operation is performed with the subset of the
+          provided filter arguments that can be handled on the HMC side and the
+          remaining filter arguments are applied on the client side on the list
+          result.
+
         Authorization requirements:
 
         * Object-access permission to any storage groups to be included in the
@@ -184,36 +204,40 @@ class StorageGroupManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-
         resource_obj_list = []
-
-        if filter_args is None:
-            filter_args = {}
-
-        resource_obj = self._try_optimized_lookup(filter_args)
-        if resource_obj:
-            resource_obj_list.append(resource_obj)
-            # It already has full properties
+        if self.auto_update_enabled() and not self.auto_update_needs_pull():
+            for resource_obj in self.list_resources_local():
+                if matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
         else:
-            query_parms, client_filters = divide_filter_args(
-                self._query_props, filter_args)
-            uri = '{}{}'.format(self._base_uri, query_parms)
+            if filter_args is None:
+                filter_args = {}
+            resource_obj = self._try_optimized_lookup(filter_args)
+            if resource_obj:
+                resource_obj_list.append(resource_obj)
+                # It already has full properties
+            else:
+                query_parms, client_filters = divide_filter_args(
+                    self._query_props, filter_args)
+                uri = '{}{}'.format(self._base_uri, query_parms)
 
-            result = self.session.get(uri)
-            if result:
-                props_list = result['storage-groups']
-                for props in props_list:
+                result = self.session.get(uri)
+                if result:
+                    props_list = result['storage-groups']
+                    for props in props_list:
 
-                    resource_obj = self.resource_class(
-                        manager=self,
-                        uri=props[self._uri_prop],
-                        name=props.get(self._name_prop, None),
-                        properties=props)
+                        resource_obj = self.resource_class(
+                            manager=self,
+                            uri=props[self._uri_prop],
+                            name=props.get(self._name_prop, None),
+                            properties=props)
 
-                    if matches_filters(resource_obj, client_filters):
-                        resource_obj_list.append(resource_obj)
-                        if full_properties:
-                            resource_obj.pull_full_properties()
+                        if matches_filters(resource_obj, client_filters):
+                            resource_obj_list.append(resource_obj)
+                            if full_properties:
+                                resource_obj.pull_full_properties()
+
+            self.add_resources_local(resource_obj_list)
 
         self._name_uri_cache.update_from(resource_obj_list)
         return resource_obj_list
@@ -353,8 +377,8 @@ class StorageGroup(BaseResource):
         """
         # We do here some lazy loading.
         if not self._virtual_storage_resources:
-            self._virtual_storage_resources = \
-                VirtualStorageResourceManager(self)
+            self._virtual_storage_resources = VirtualStorageResourceManager(
+                self)
         return self._virtual_storage_resources
 
     @property

@@ -85,6 +85,36 @@ RC_USER_ROLE = 'user-role'
 RC_USER = 'user'
 RC_GROUP = 'group'
 
+# Resource classes that are children of zhmcclient.Cpc
+RC_CHILDREN_CPC = (
+    RC_PARTITION,
+    RC_ADAPTER,
+    RC_VIRTUAL_SWITCH,
+    RC_CAPACITY_GROUP,
+    RC_LOGICAL_PARTITION,
+    RC_RESET_ACTIVATION_PROFILE,
+    RC_IMAGE_ACTIVATION_PROFILE,
+    RC_LOAD_ACTIVATION_PROFILE,
+)
+# Resource classes that are children of zhmcclient.Console
+RC_CHILDREN_CONSOLE = (
+    RC_STORAGE_GROUP,
+    RC_STORAGE_TEMPLATE,
+    RC_PASSWORD_RULE,
+    RC_TASK,
+    RC_USER_PATTERN,
+    RC_USER_ROLE,
+    RC_USER,
+    RC_LDAP_SERVER_DEFINITION,
+    RC_CPC,  # For unmanaged CPCs
+)
+# Resource classes that are children of zhmcclient.Client (= top level)
+RC_CHILDREN_CLIENT = (
+    RC_CPC,  # For managed CPCs
+    RC_CONSOLE,
+)
+
+
 # Valid resource class names
 #:
 VALID_RESOURCE_CLASSES = frozenset([

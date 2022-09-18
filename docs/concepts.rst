@@ -337,29 +337,43 @@ Examples:
   The returned resource object will have only a minimal set of properties.
 
 
-.. _`Auto-updating of resources`:
+.. _`Auto-updating`:
 
-Auto-updating of resources
---------------------------
+Auto-updating
+-------------
 
 The resource objects returned by the zhmcclient library support auto-updating
 of resource properties.
 
-By default, auto-updating is disabled for any resource objects, and the user can
-use the :meth:`~zhmcclient.BaseResource.pull_full_properties` method to have the
-properties of the resource object updated explicitly.
+Similarly, the resource manager objects returned by the zhmcclient library
+support auto-updating of their list of resources they maintain locally.
+
+By default, auto-updating is disabled for any resource or manager objects.
+The :meth:`~zhmcclient.BaseResource.pull_full_properties` method can be used
+to have the properties of the resource object updated explicitly, and
+the :meth:`~zhmcclient.BaseManager.list` method (or related ``find...()``
+methods) can be used to list the resources in scope of a resource manager
+object.
 
 If auto-updating is enabled for a resource object (by means of
-:meth:`~zhmcclient.BaseResource.enable_auto_update`), the zhmcclient library
+:meth:`zhmcclient.BaseResource.enable_auto_update`), the zhmcclient library
 subscribes on the HMC for object notifications that inform the client about
 changes to resource properties. When receiving such notifications, the client
 updates the properties on the local resource objects that are enabled for
 auto-updating, to the new values.
 
+If auto-updating is enabled for a manager object (by means of
+:meth:`zhmcclient.BaseManager.enable_auto_update`), the zhmcclient library
+subscribes on the HMC for object notifications that inform the client about
+changes to the resource inventory. When receiving such notifications, the client
+updates the list of resources maintained by the local manager objects
+that are enabled for auto-updating, to add or remove resources.
+
 There is only one subscription at the HMC for each zhmcclient session that has
 auto-updating enabled, so if auto-updating is enabled for a second and further
-resource objects, the already existing subscription is used. When disabling
-auto-updating, the last resource that is disabled will unsubscribe at the HMC.
+resource or manager objects, the already existing subscription is used. When
+disabling auto-updating, the last resource or manager that is disabled will
+unsubscribe at the HMC.
 
 The subscription for object notifications will cause the following notifications
 to be sent from the HMC to the client:
@@ -371,7 +385,7 @@ to be sent from the HMC to the client:
 *  inventory change notifications for any resources that come into existence or
    go out of existence.
 
-The auto-update support in zhmcclient processes the property and status change
+The auto-update support for resource objects processes the property and status change
 notifications by updating the correponding properties in those resource objects
 that have been enabled for auto-updating. As a result, these properties will
 always have the value the resource object has on the HMC.
@@ -382,16 +396,24 @@ it no longer exists on the HMC.
 Property, status and inventory change notifications for resource objects that
 have not been enabled for auto-updating will be ignored.
 
-The delay for the new property value to become visible in the zhmcclient
-resource object after it has been changed on the HMC, is in the order of 1
-second.
+The auto-update support for manager objects processes the inventory change
+notifications to add or remove resource objects to or from the list of resources
+it maintains locally, as the corresponding resources are created or deleted on
+the HMC.
+
+The delay for a changed property value or for a new or remnoved resource to
+become visible in the zhmcclient resource or manager objects after the actual
+change on the HMC, is very short. If the change is triggered by an HTTP request
+to the HMC, the notification is usually received and processed before the
+corresponding HTTP response is received.
 
 Note that accessing the properties of a zhmcclient resource object is not any
 slower when auto-update is enabled - the auto-update happens asynchronously
 to the access, and depending on whether the access happens before or after an
-auto-update, you get the old or new value.
+auto-update, you get the old or new value. Similarly for the access to the
+resource lists of a zhmcclient manager object.
 
-Example:
+Example for auto-updating of resources:
 
 .. code-block:: python
 
@@ -456,6 +478,31 @@ unchanged:
     Property 'description' of objects 1: 'N/A', 2: 'foo'
     Property 'description' of objects 1: 'N/A', 2: 'foo'
     Property 'description' of objects 1: 'N/A', 2: 'foo'
+
+Example for auto-updating of resource managers:
+
+.. code-block:: python
+
+    cpc = ...  # A zhmcclient.Cpc object
+
+    # Partition manager object for that CPC
+    part_mgr = cpc.partitions
+
+    # Get list of partitions when auto-updating is not enabled
+    part_list = part_mgr.list()
+
+    part_mgr.enable_auto_update()
+
+    # Get list of partitions when auto-updating is enabled
+    part_list = part_mgr.list()
+
+The list() method for an auto-updated partition manager is faster because
+only the locally maintained list of resources is returned, yet it is
+automatically up to date with the partitions on the HMC.
+
+Note that this also works for other list-related methods such as
+:meth:`~zhmcclient.BaseManager.find()` or
+:meth:`~zhmcclient.BaseManager.findall()`.
 
 
 .. _`Feature enablement`:

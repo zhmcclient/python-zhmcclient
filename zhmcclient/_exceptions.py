@@ -1392,7 +1392,7 @@ class CeasedExistence(Error):
     auto-updated zhmcclient resource no longer exists.
 
     This exception will only be raised for zhmcclient resources that are
-    enabled for :ref:`auto-update <Auto-updating of resources>`.
+    enabled for :ref:`auto-updating`.
 
     Derived from :exc:`~zhmcclient.Error`.
     """

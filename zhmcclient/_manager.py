@@ -30,6 +30,7 @@ from __future__ import absolute_import
 import re
 from datetime import datetime, timedelta
 import warnings
+import threading
 import six
 from nocasedict import NocaseDict
 
@@ -173,6 +174,183 @@ class _NameUriCache(object):
                 pass
 
 
+class _ResourceList(object):
+    """
+    A list of resources, for use by resource manager objects for auto-updating.
+
+    The resources in the list are the zhmcclient resource objects, organized by
+    resource URI.
+
+    This class is used by the implementation of manager classes, and is not
+    part of the external API.
+    """
+
+    def __init__(self, manager):
+        """
+        Parameters:
+
+          manager (BaseManager): Manager that holds this list of resources. The
+            manager object is expected to have a ``list()`` method, which is
+            used to list the resources of that manager.
+        """
+        self._manager = manager
+
+        # Attributes that are updated under the lock
+        self._lock = threading.RLock()
+        self._resources = {}  # key: resource URI, value: resource obj
+        self._needs_pull = True  # list() method needs to pull from HMC
+        self._enabled = False  # Auto-updating of manager is enabled
+
+    def __repr__(self):
+        """
+        Return a string with the state of this object, for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _enabled={_enabled!r},\n"
+            "  _resources(keys)={_resource_keys!r}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                _enabled=self._enabled,
+                _resource_keys=list(self._resources.keys()),
+            ))
+        return ret
+
+    def enabled(self):
+        """
+        Return whether this list of resources is enabled.
+
+        Return:
+          bool: Indicates whether this list of resources is enabled.
+        """
+        return self._enabled
+
+    def needs_pull(self):
+        """
+        Return whether this list of resources needs to be pulled from the HMC.
+        """
+        return self._needs_pull
+
+    def enable(self):
+        """
+        Enable this list of resources, if currently disabled.
+
+        When enabling, the session to which this manager belongs is subscribed
+        for auto-updating if needed (see
+        :meth:`~zhmcclient.Session.subscribe_auto_update`), the manager
+        object is registered with the session's auto updater via
+        :meth:`~zhmcclient.AutoUpdater.register_object`, and all resources
+        of this manager object are retrieved using :meth:`list` in order to
+        have the most current list of resources as a basis for the future
+        auto-updating.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        if not self._enabled:
+            session = self._manager.session
+            session.subscribe_auto_update()
+            session.auto_updater.register_object(self._manager)
+
+            # The following list() call needs to pull from HMC. That is
+            # happening because the resource list is still disabled at this
+            # point.
+            resource_list = self._manager.list()
+
+            with self._lock:
+                self._resources = {}
+                for res_obj in resource_list:
+                    self._resources[res_obj.uri] = res_obj
+                self._needs_pull = False
+                self._enabled = True
+
+    def disable(self):
+        """
+        Disable this list of resources, if currently enabled.
+
+        When disabling, the manager object is unregistered from the session's
+        auto updater via
+        :meth:`~zhmcclient.AutoUpdater.unregister_object`, and the session
+        is unsubscribed from auto-updating if the auto updater has no more
+        objects registered. Also, the list of resources is cleared.
+        """
+        if self._enabled:
+            session = self._manager.session
+            session.auto_updater.unregister_object(self._manager)
+            if not session.auto_updater.has_objects():
+                session.unsubscribe_auto_update()
+            with self._lock:
+                self._resources = {}
+                self._needs_pull = True
+                self._enabled = False
+
+    def list(self):
+        """
+        Return a new list with the resource objects from this list of resources.
+        """
+        res_list = []
+        with self._lock:
+            for res_obj in self._resources.values():
+                res_list.append(res_obj)
+        return res_list
+
+    def list_uris(self):
+        """
+        Return a new list with the resource URIs from this list of resources.
+        """
+        uri_list = []
+        with self._lock:
+            for res_uri in self._resources:
+                uri_list.append(res_uri)
+        return uri_list
+
+    def add_list(self, resource_obj_list):
+        """
+        Add a new resource object list to this list of resources and mark
+        it as no longer needing pull from the HMC.
+
+        This method is called in list() to put resources pulled from the HMC
+        into the list of resources. It should not be called by the user.
+        """
+        with self._lock:
+            for res_obj in resource_obj_list:
+                self._resources[res_obj.uri] = res_obj
+            self._needs_pull = False
+
+    def trigger_pull(self):
+        """
+        Trigger that resources need to be pulled from the HMC upon the next
+        list() call of the manager object.
+
+        This method is called when an inventory change notification indicates
+        that a new object on the HMC has been created. It should not be called
+        by the user.
+        """
+        with self._lock:
+            self._needs_pull = True
+
+    def remove(self, resource_uri):
+        """
+        Remove the item for a resource URI from this list of resources.
+
+        If the resource URI is not in that list, do nothing.
+
+        This method is called when an inventory change notification indicates
+        that an object on the HMC has been deleted. It should not be called
+        by the user.
+        """
+        with self._lock:
+            try:
+                del self._resources[resource_uri]
+            except KeyError:
+                pass
+
+
 class BaseManager(object):
     """
     Abstract base class for manager classes (e.g.
@@ -261,6 +439,7 @@ class BaseManager(object):
 
         self._resource_class = resource_class
         self._class_name = class_name
+        self._uri = None
         self._session = session
         self._parent = parent
         self._base_uri = base_uri
@@ -272,6 +451,7 @@ class BaseManager(object):
         self._case_insensitive_names = case_insensitive_names
         self._supports_properties = supports_properties
 
+        self._resource_list = _ResourceList(self)
         self._name_uri_cache = _NameUriCache(
             self, session.retry_timeout_config.name_uri_cache_timetolive,
             case_insensitive_names)
@@ -285,6 +465,7 @@ class BaseManager(object):
             "{classname} at 0x{id:08x} (\n"
             "  _resource_class={_resource_class!r},\n"
             "  _class_name={_class_name!r},\n"
+            "  _uri={_uri!r},\n"
             "  _session={_session_classname} at 0x{_session_id:08x},\n"
             "  _parent={_parent_classname} at 0x{_parent_id:08x},\n"
             "  _base_uri={_base_uri!r},\n"
@@ -295,12 +476,14 @@ class BaseManager(object):
             "  _list_has_name={_list_has_name!r},\n"
             "  _case_insensitive_names={_case_insensitive_names!r},\n"
             "  _supports_properties={_supports_properties!r},\n"
+            "  _resource_list={_resource_list!r},\n"
             "  _name_uri_cache={_name_uri_cache!r}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
                 _resource_class=self._resource_class,
                 _class_name=self._class_name,
+                _uri=self._uri,
                 _session_classname=self._session.__class__.__name__,
                 _session_id=id(self._session),
                 _parent_classname=self._parent.__class__.__name__,
@@ -313,6 +496,7 @@ class BaseManager(object):
                 _list_has_name=self._list_has_name,
                 _case_insensitive_names=self._case_insensitive_names,
                 _supports_properties=self._supports_properties,
+                _resource_list=self._resource_list,
                 _name_uri_cache=self._name_uri_cache,
             ))
         return ret
@@ -440,6 +624,29 @@ class BaseManager(object):
         return self._parent
 
     @property
+    def uri(self):
+        """
+        string: The canonical URI path of the manager. Will not be `None`.
+
+        This URI uniquely identifies the list of HMC resources in scope of the
+        manager, consistent with how the canonical URI path of a resource
+        identifies the HMC resource.
+
+        The format of this URI is undocumented.
+
+        This URI is used in the implementation of auto-updated manager objects,
+        it does not have any meaning on the HMC, and there should be no need
+        for users to use it.
+        """
+        if self._uri is None:
+            if self._parent:
+                parent_uri = self._parent.uri
+            else:
+                parent_uri = '/'  # top-level resource
+            self._uri = '{}#{}'.format(parent_uri, self._class_name)
+        return self._uri
+
+    @property
     def case_insensitive_names(self):
         """
         :class:`py:bool`:
@@ -457,6 +664,104 @@ class BaseManager(object):
           released version of the HMC.
         """
         return self._supports_properties
+
+    def auto_update_enabled(self):
+        """
+        Return whether :ref:`auto-updating` is
+        currently enabled for the manager object.
+
+        Return:
+          bool: Indicates whether auto-update is enabled.
+        """
+        return self._resource_list.enabled()
+
+    def auto_update_needs_pull(self):
+        """
+        Return whether there is a need to pull the resources from the HMC, in
+        the list() method.
+
+        This method is called in the list() method. It should not be called
+        by the user.
+        """
+        return self._resource_list.needs_pull()
+
+    def enable_auto_update(self):
+        """
+        Enable :ref:`auto-updating` for this manager object, if currently
+        disabled.
+
+        When enabling auto-update, the session to which this manager belongs is
+        subscribed for auto-updating if needed (see
+        :meth:`~zhmcclient.Session.subscribe_auto_update`), the manager
+        object is registered with the session's auto updater via
+        :meth:`~zhmcclient.AutoUpdater.register_object`, and all resources
+        of this manager object are retrieved using :meth:`list` in order to
+        have the most current list of resources as a basis for the future
+        auto-updating.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self._resource_list.enable()
+
+    def disable_auto_update(self):
+        """
+        Disable :ref:`auto-updating` for this manager object, if currently
+        enabled.
+
+        When disabling auto-updating, the manager object is unregistered from
+        the session's auto updater via
+        :meth:`~zhmcclient.AutoUpdater.unregister_object`, and the session
+        is unsubscribed from auto-updating if the auto updater has no more
+        objects registered.
+        """
+        self._resource_list.disable()
+
+    def auto_update_trigger_pull(self):
+        """
+        Trigger the need to pull the resources from the HMC, in the list()
+        method.
+
+        This method is called when an inventory change notification indicates
+        that a new object on the HMC has been created. It should not be called
+        by the user.
+        """
+        self._resource_list.trigger_pull()
+
+    def add_resources_local(self, resource_obj_list):
+        """
+        Add a resource object to the local auto-updated list of resources.
+
+        This method is called in list() to put resources pulled from the HMC
+        into the list of resources. It should not be called by the user.
+        """
+        self._resource_list.add_list(resource_obj_list)
+
+    def remove_resource_local(self, resource_uri):
+        """
+        Remove the resource object for a resource URI from the local
+        auto-updated list of resources.
+
+        If the resource URI is not in that list, do nothing.
+
+        This method is called when an inventory change notification indicates
+        that an object on the HMC has been deleted. It should not be called
+        by the user.
+        """
+        self._resource_list.remove(resource_uri)
+
+    def list_resources_local(self):
+        """
+        List the resource objects from the local auto-updated list of resources.
+
+        This method is called by the list() methods of resource manager classes.
+        It should not be called by the user.
+        """
+        return self._resource_list.list()
 
     def resource_object(self, uri_or_oid, props=None):
         """
@@ -526,16 +831,8 @@ class BaseManager(object):
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The zhmcclient implementation handles the specified properties in an
-        optimized way: Properties that can be filtered on the HMC are actually
-        filtered there (this varies by resource type), and the remaining
-        properties are filtered on the client side.
-
-        If the "name" property is specified as the only filter argument, an
-        optimized lookup is performed that uses a name-to-URI cache in this
-        manager object. This this optimized lookup uses the specified match
-        value for exact matching and is not interpreted as a regular
-        expression.
+        The listing of resources is handled in an optimized way, as described
+        in :meth:`~zhmcclient.BaseManager.list`.
 
         Authorization requirements:
 
@@ -605,16 +902,8 @@ class BaseManager(object):
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The zhmcclient implementation handles the specified properties in an
-        optimized way: Properties that can be filtered on the HMC are actually
-        filtered there (this varies by resource type), and the remaining
-        properties are filtered on the client side.
-
-        If the "name" property is specified as the only filter argument, an
-        optimized lookup is performed that uses a name-to-URI cache in this
-        manager object. This this optimized lookup uses the specified match
-        value for exact matching and is not interpreted as a regular
-        expression.
+        The listing of resources is handled in an optimized way, as described
+        in :meth:`~zhmcclient.BaseManager.list`.
 
         Authorization requirements:
 
@@ -683,10 +972,26 @@ class BaseManager(object):
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
 
-        The zhmcclient implementation handles the specified properties in an
-        optimized way: Properties that can be filtered on the HMC are actually
-        filtered there (this varies by resource type), and the remaining
-        properties are filtered on the client side.
+        The listing of resources is handled in an optimized way:
+
+        * If this manager is enabled for :ref:`auto-updating`, a locally
+          maintained resource list is used (which is automatically updated via
+          inventory notifications from the HMC) and the provided filter
+          arguments are applied.
+
+        * Otherwise, if the filter arguments specify the resource name as a
+          single filter argument with a straight match string (i.e. without
+          regular expressions), an optimized lookup is performed based on a
+          locally maintained name-URI cache.
+
+        * Otherwise, for resources that have a List operation, the List
+          operation is performed with the subset of the provided filter
+          arguments that can be handled on the HMC side (this varies by
+          resource type) and the remaining filter arguments are applied on the
+          client side on the list result. For resources that are element objects
+          without a List operation, the corresponding array property of the
+          parent object is used to list the resources, and the provided filter
+          arguments are applied.
 
         At the level of the :class:`~zhmcclient.BaseManager` class, this method
         defines the interface for the `list()` methods implemented in the

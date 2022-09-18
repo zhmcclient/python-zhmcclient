@@ -29,6 +29,12 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Renamed the `Session.resource_updater` property to `auto_updater` and the
+  `zhmcclient.ResourceUpdater` class to `AutoUpdater` to take into account that
+  the class and property now represent auto-updated manager objects in addition
+  to auto-updated resource objects. Note that the property and class are
+  still experimental in this version.
+
 **Deprecations:**
 
 * Deprecated the 'verify' parameter of 'Session.logoff()'. Its use with
@@ -78,6 +84,24 @@ Released: not yet
 
 * Improved performance of metrics retrieval and processing for NIC and partition
   related metrics for CPCs in DPM mode.
+
+* Added optimized lookup by name in list() methods of the following resource
+  classes: `LdapServerDefinition`, `PasswordRule`, `Task`, `User`,
+  `UserPattern`, `UserRole`,
+
+* Added support for auto-updated resource managers. An auto-updated resource
+  manager has its list of resources automatically updated as resources are
+  created and deleted on the HMC, based on HMC notifications. (issue #1055)
+
+  Added an example script examples/show_auto_updated_partition_manager.py
+  to demonstrate an auto-updating enabled partition manager.
+
+  Renamed the existing example script show_auto_update.py to
+  show_auto_updated_partition.py, for clarity.
+
+* Docs: In the description of the list() methods of the resource manager
+  classes, described the optimized lookup behavior for auto-updated managers
+  and optimized access via the name-to-URI cache.
 
 **Cleanup:**
 
