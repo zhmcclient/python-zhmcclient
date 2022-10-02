@@ -32,6 +32,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a flake8 AttributeError when using importlib-metadata 5.0.0 on
+  Python >=3.7, by pinning importlib-metadata to <5.0.0 on these Python versions.
+
 **Enhancements:**
 
 **Cleanup:**

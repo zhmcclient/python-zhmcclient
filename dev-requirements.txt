@@ -27,6 +27,8 @@ pytest>=4.3.1; python_version >= '3.5' and python_version <= '3.6'
 pytest>=4.4.0; python_version >= '3.7' and python_version <= '3.9'
 pytest>=6.2.5; python_version >= '3.10'
 testfixtures>=6.9.0
+importlib-metadata>=0.22,<5.0.0; python_version <= '3.7'
+importlib-metadata>=1.1.0; python_version >= '3.8'
 mock>=2.0.0 # BSD
 # requests: covered in direct deps for installation
 requests-mock>=1.6.0
