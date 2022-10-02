@@ -39,6 +39,11 @@ jobs:
             \"package_level\": [ \"minimum\", \"latest\" ], \
             \"include\": [ \
               { \
+                \"os\": \"ubuntu-latest\", \
+                \"python-version\": \"3.7\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
                 \"os\": \"macos-latest\", \
                 \"python-version\": \"2.7\", \
                 \"package_level\": \"latest\" \
