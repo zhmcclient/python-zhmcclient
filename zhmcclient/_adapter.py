@@ -369,14 +369,17 @@ class Adapter(BaseResource):
         corresponding LinuxONE machine generations are listed in the notes
         below the table:
 
-        =================  =========================  ===============
-        Adapter type       Machine generations        Maximum domains
-        =================  =========================  ===============
-        Crypto Express 5S  z14 (3) / z13 (1)               85
-        Crypto Express 5S  z14-ZR1 (4) / z13s (2)          40
-        Crypto Express 6S  z14 (3)                         85
-        Crypto Express 6S  z14-ZR1 (4)                     40
-        =================  =========================  ===============
+        =================  ================================  ===============
+        Adapter type       Machine generations               Maximum domains
+        =================  ================================  ===============
+        Crypto Express 5S  z15 (5) / z14 (3) / z13 (1)             85
+        Crypto Express 5S  z15 (6) / z14-ZR1 (4) / z13s (2)        40
+        Crypto Express 6S  z16 (7) / z15 (5) / z14 (3)             85
+        Crypto Express 6S  z15 (6) / z14-ZR1 (4)                   40
+        Crypto Express 7S  z16 (7) / z15 (5)                       85
+        Crypto Express 7S  z15 (6)                                 40
+        Crypto Express 8S  z16 (7)                                 85
+        =================  ================================  ===============
 
         Notes:
 
@@ -384,6 +387,9 @@ class Adapter(BaseResource):
         (2) Supported for z13s and LinuxONE Rockhopper
         (3) Supported for z14 and LinuxONE Emperor II
         (4) Supported for z14-ZR1 and LinuxONE Rockhopper II
+        (5) Supported for z15-T01 and LinuxONE III LT1
+        (6) Supported for z15-T02 and LinuxONE III LT2
+        (7) Supported for z16-A01 and LinuxONE 4
 
         If this adapter is not a crypto adapter, `None` is returned.
 
