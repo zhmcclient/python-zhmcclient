@@ -35,6 +35,9 @@ Released: not yet
 * Fixed a flake8 AttributeError when using importlib-metadata 5.0.0 on
   Python >=3.7, by pinning importlib-metadata to <5.0.0 on these Python versions.
 
+* Fixed an AttributeError in the VirtualStorageResource.adapter_port property.
+  (issue #1059)
+
 **Enhancements:**
 
 **Cleanup:**
