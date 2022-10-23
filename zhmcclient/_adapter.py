@@ -616,3 +616,66 @@ class Adapter(BaseResource):
             resource_dict['ports'] = ports
 
         return resource_dict
+
+    @logged_api_call
+    def list_assigned_partitions(self, full_properties=False, filter_args=None):
+        """
+        List the partitions assigned to this adapter.
+
+        This method is not supported for OSA adapters configured as OSM
+        (because those cannot be assigned to partitions).
+
+        Authorization requirements:
+
+        * Object-access permission to this Adapter.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls whether the full set of partition properties should be
+            retrieved, vs. only a short set (uri, name, status).
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned partitions to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all assigned partitions
+            are returned.
+
+        Returns:
+
+          : A list of :class:`~zhmcclient.Partition` objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        query_props = ['name', 'status']
+        query_parms, client_filters = divide_filter_args(
+            query_props, filter_args)
+        uri = '{}/operations/get-partitions-assigned-to-adapter{}'.format(
+            self.uri, query_parms)
+
+        result = self.manager.session.get(uri)
+
+        partition_mgr = self.manager.parent.partitions
+        resource_obj_list = []
+        for props in result['partitions-assigned-to-adapter']:
+
+            # pylint: disable=protected-access
+            resource_obj = partition_mgr.resource_class(
+                manager=partition_mgr,
+                uri=props[partition_mgr._uri_prop],
+                name=props.get(partition_mgr._name_prop, None),
+                properties=props)
+
+            if matches_filters(resource_obj, client_filters):
+                resource_obj_list.append(resource_obj)
+                if full_properties:
+                    resource_obj.pull_full_properties()
+
+        return resource_obj_list
