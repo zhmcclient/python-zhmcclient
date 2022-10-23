@@ -276,7 +276,7 @@ class VirtualStorageResource(BaseResource):
             assert port_uri is not None
             m = re.match(r'^(/api/adapters/[^/]+)/.*', port_uri)
             adapter_uri = m.group(1)
-            adapter_mgr = self.manager.storage_group.manager.cpc.adapters
+            adapter_mgr = self.manager.storage_group.cpc.adapters
             filter_args = {'object-uri': adapter_uri}
             adapter = adapter_mgr.find(**filter_args)
             port_mgr = adapter.ports
