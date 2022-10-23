@@ -40,6 +40,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Added a new method Adapter.list_assigned_partitions() that performs the
+  HMC operation "Get Partitions Assigned to Adapter".
+
 **Cleanup:**
 
 **Known issues:**
