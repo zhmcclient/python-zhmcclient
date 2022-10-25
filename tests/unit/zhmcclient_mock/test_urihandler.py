@@ -6785,6 +6785,13 @@ class TestLparNvmeDumpHandler(object):
         assert lpar1['status'] == 'not-activated'
 
 
+# TODO: Add test for handler for start
+# TODO: Add test for handler for stop
+# TODO: Add test for handler for psw-restart
+# TODO: Add test for handler for reset-clear
+# TODO: Add test for handler for reset-normal
+
+
 class TestResetActProfileHandlers(object):
     """
     All tests for classes ResetActProfilesHandler and ResetActProfileHandler.
