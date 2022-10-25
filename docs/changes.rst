@@ -43,6 +43,12 @@ Released: not yet
 * Added a new method Adapter.list_assigned_partitions() that performs the
   HMC operation "Get Partitions Assigned to Adapter".
 
+* Added a new method Lpar.reset_normal() that performs the HMC operation
+  "Reset Normal" on Logical Partitions (in classic mode).
+
+* Added an optional 'os_ipl_token' parameter to the Lpar.reset_clear()
+  method.
+
 **Cleanup:**
 
 **Known issues:**

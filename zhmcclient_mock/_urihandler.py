@@ -4882,6 +4882,11 @@ URIS = (
      LparNvmeLoadHandler),
     (r'/api/logical-partitions/([^/]+)/operations/nvme-dump',
      LparNvmeDumpHandler),
+    # TODO: Add support for start
+    # TODO: Add support for stop
+    # TODO: Add support for psw-restart
+    # TODO: Add support for reset-clear
+    # TODO: Add support for reset-normal
 
     (r'/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
      ResetActProfilesHandler),

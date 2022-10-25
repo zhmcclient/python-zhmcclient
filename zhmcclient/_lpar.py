@@ -1331,11 +1331,13 @@ class Lpar(BaseResource):
     @logged_api_call
     def reset_clear(self, force=False, wait_for_completion=True,
                     operation_timeout=None, status_timeout=None,
-                    allow_status_exceptions=False):
+                    allow_status_exceptions=False, os_ipl_token=None):
         """
-        Initialize this LPAR by clearing its pending interruptions,
-        resetting its channel subsystem, and resetting its processors,
-        using the HMC operation "Reset Clear".
+        Reset this LPAR and clears its memory.
+
+        This includes clearing its pending interruptions, resetting its channel
+        subsystem and resetting its processors, and clearing its memory, using
+        the HMC operation "Reset Clear".
 
         This HMC operation has deferred status behavior: If the asynchronous
         job on the HMC is complete, it takes a few seconds until the LPAR
@@ -1391,6 +1393,11 @@ class Lpar(BaseResource):
             an additional acceptable end status when `wait_for_completion` is
             set.
 
+          os_ipl_token (:term:`string`):
+            Applicable only to z/OS, this parameter requests that this
+            operation only be performed if the provided value matches the
+            current value of the 'os-ipl-token' property of the LPAR.
+
         Returns:
 
           `None` or :class:`~zhmcclient.Job`:
@@ -1415,8 +1422,118 @@ class Lpar(BaseResource):
         body = {}
         if force:
             body['force'] = force
+        if os_ipl_token:
+            body['os-ipl-token'] = os_ipl_token
         result = self.manager.session.post(
             self.uri + '/operations/reset-clear',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        if wait_for_completion:
+            statuses = ["operating"]
+            if allow_status_exceptions:
+                statuses.append("exceptions")
+            self.wait_for_status(statuses, status_timeout)
+        return result
+
+    @logged_api_call
+    def reset_normal(self, force=False, wait_for_completion=True,
+                     operation_timeout=None, status_timeout=None,
+                     allow_status_exceptions=False, os_ipl_token=None):
+        """
+        Reset this LPAR without clearing its memory.
+
+        This includes clearing its pending interruptions, resetting its channel
+        subsystem and resetting its processors, using the HMC operation
+        "Reset Normal".
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the LPAR
+        status has reached the desired value. If `wait_for_completion=True`,
+        this method repeatedly checks the status of the LPAR after the HMC
+        operation has completed, and waits until the status is in the desired
+        state "operating", or if `allow_status_exceptions` was
+        set additionally in the state "exceptions".
+
+        Authorization requirements:
+
+        * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
+        * Task permission for the "Reset Clear" task.
+
+        Parameters:
+
+          force (bool):
+            Boolean controlling whether this operation is permitted when the
+            LPAR is in the "operating" status. The default is `False`.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation, and for the status
+              becoming "operating" (or in addition "exceptions", if
+              `allow_status_exceptions` was set.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status, after the HMC operation has completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.StatusTimeout` is raised.
+
+          allow_status_exceptions (bool):
+            Boolean controlling whether LPAR status "exceptions" is considered
+            an additional acceptable end status when `wait_for_completion` is
+            set.
+
+          os_ipl_token (:term:`string`):
+            Applicable only to z/OS, this parameter requests that this
+            operation only be performed if the provided value matches the
+            current value of the 'os-ipl-token' property of the LPAR.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
+        """
+        body = {}
+        if force:
+            body['force'] = force
+        if os_ipl_token:
+            body['os-ipl-token'] = os_ipl_token
+        result = self.manager.session.post(
+            self.uri + '/operations/reset-normal',
             body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)

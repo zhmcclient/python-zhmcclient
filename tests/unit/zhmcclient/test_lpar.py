@@ -1398,8 +1398,8 @@ class TestLpar(object):
             names = [p.properties['name'] for p in lpars]
             assert set(names) == set(exp_names)
 
+    # TODO: Test for Lpar.start()
     # TODO: Test for Lpar.stop()
-
-    # TODO: Test for Lpar.reset_clear()
-
     # TODO: Test for Lpar.psw_restart()
+    # TODO: Test for Lpar.reset_clear()
+    # TODO: Test for Lpar.reset_normal()
