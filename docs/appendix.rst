@@ -501,6 +501,10 @@ Bibliography
        `IBM SC27-2638, IBM Z Hardware Management Console Web Services API (Version 2.15.0) <https://www.ibm.com/support/pages/node/6019720>`_
        (covers both GA1 and GA2)
 
+   HMC API 2.16.0
+       `IBM SC27-2642, IBM Z Hardware Management Console Web Services API (Version 2.16.0) <https://www.ibm.com/support/pages/node/6591083>`_
+       (covers both GA1 and GA2)
+
    HMC Operations Guide
        The operations guide of the z Systems Hardware Management Console, in the following books (subset):
 
@@ -518,6 +522,10 @@ Bibliography
 
    HMC Operations Guide 2.15.0
        `Hardware Management Console Operations Guide (Version 2.15.0) <https://www.ibm.com/support/pages/node/6018724>`_
+       (covers both GA1 and GA2)
+
+   HMC Operations Guide 2.16.0
+       `Hardware Management Console Operations Guide (Version 2.16.0) <https://www.ibm.com/support/pages/node/6619013>`_
        (covers both GA1 and GA2)
 
    HMC Security
