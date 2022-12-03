@@ -1,4 +1,4 @@
-# This GitHub workflow will publish the package to Pypi.
+# This GitHub workflow will publish the package to Pypi and create a new stable branch when releasing the master branch.
 # For more information see:
 # https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
@@ -12,42 +12,136 @@ on:
 
 jobs:
   build-n-publish:
-    name: Build and publish to PyPI and TestPyPI
+    name: Build and publish to PyPI
+    if: startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
     steps:
-    - name: Display github.ref
+    - name: Set pushed tag
+      id: set-tag
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          const result = "${{ github.ref }}".match("refs/tags/(.*)$")[1]
+          console.log(result)
+          return result
+    - name: Check validity of pushed tag
       run: |
-        echo ${{ github.ref }}
-    # - name: Checkout repo
-    #   uses: actions/checkout@v2
-    #   with:
-    #     fetch-depth: 0
-    # - name: Set up Python 3.10
-    #   uses: actions/setup-python@v3
-    #   with:
-    #     python-version: "3.10"
-    # - name: Development setup
-    #   run: |
-    #     make develop
-    # - name: Run build
-    #   run: |
-    #     make build
-    #     ls -l dist
-    # - name: Publish to TestPyPI
-    #   if: startsWith(github.ref, 'refs/tags')
+        if [[ ${{ steps.set-tag.outputs.result }} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "Pushed tag '${{ steps.set-tag.outputs.result }}' is valid";
+        else
+          echo "Pushed tag '${{ steps.set-tag.outputs.result }}' is invalid (must be 'M.N.U')";
+          false;
+        fi
+    - name: Set whether releasing the master branch
+      id: set-is-master-branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          const resp = await github.rest.git.getRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: "heads/master",
+          })
+          const result = (resp.data.object.sha == "${{ github.sha }}")
+          console.log(result)
+          return result
+    - name: Set name of stable branch for pushed tag
+      id: set-stable-branch
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          const result = "stable_"+"${{ steps.set-tag.outputs.result }}".match("([0-9]+\.[0-9]+)\.")[1]
+          console.log(result)
+          return result
+    - name: Set whether releasing stable branch for pushed tag
+      id: set-is-stable-branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          const resp = await github.rest.git.getRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: "heads/${{ steps.set-stable-branch.outputs.result }}",
+          })
+          const result = (resp.data.object.sha == "${{ github.sha }}")
+          console.log(result)
+          return result
+    - name: Check released commit to be master branch or stable branch for pushed tag
+      run: |
+        if [[ ${{ steps.set-is-master-branch.outputs.result }} == 'false' && ${{ steps.set-is-stable-branch.outputs.result }} == 'false' ]]; then
+          echo "Released commit is not 'master' or '${{ steps.set-stable-branch.outputs.result }}' branch";
+          false;
+        fi
+    - name: Set update version
+      id: set-update-version
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          const result = "${{ steps.set-tag.outputs.result }}".match("[0-9]+\.[0-9]+\.([0-9]+)")[1]
+          console.log(result)
+          return result
+    - name: Check update version to be 0 when releasing master branch
+      if: ${{ steps.set-is-master-branch.outputs.result == 'true' }}
+      run: |
+        if [[ ${{ steps.set-update-version.outputs.result }} != '0' ]]; then
+          echo "Update version '${{ steps.set-update-version.outputs.result }}' in tag '${{ steps.set-tag.outputs.result }}' is invalid (must be 0 when releasing master branch)";
+          false;
+        fi
+    - name: Check update version to be non-0 when releasing stable branch for pushed tag
+      if: ${{ steps.set-is-stable-branch.outputs.result == 'true' }}
+      run: |
+        if [[ ${{ steps.set-update-version.outputs.result }} == '0' ]]; then
+          echo "Update version '${{ steps.set-update-version.outputs.result }}' in tag '${{ steps.set-tag.outputs.result }}' is invalid (must be non-0 when releasing stable branch for pushed tag)";
+          false;
+        fi
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Development setup
+      run: |
+        make develop
+    - name: Build the distribution
+      run: |
+        make build
+    - name: Display the distribution directory
+      run: |
+        ls -l dist
+    # - name: Publish distribution to TestPyPI
     #   uses: pypa/gh-action-pypi-publish@release/v1
     #   with:
+    #     packages_dir: dist
     #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
     #     repository_url: https://test.pypi.org/legacy/
-    # - name: Publish distribution to PyPI
-    #   if: startsWith(github.ref, 'refs/tags')
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     password: ${{ secrets.PYPI_API_TOKEN }}
-    # - name: Display github.ref
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     BRANCH: stable_${{ github.ref }}
-    #   run: |
-    #     git checkout -b ${{ BRANCH }}
-    #     git push --set-upstream origin ${{ BRANCH }}
+    - name: Publish distribution to PyPI
+      if: startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages_dir: dist
+        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Create new stable branch when releasing master branch
+      if: steps.set-is-master-branch.outputs.result == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: "refs/heads/${{ steps.set-stable-branch.outputs.result }}",
+            sha: "${{ github.sha }}",
+          })
