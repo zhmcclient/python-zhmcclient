@@ -8,10 +8,14 @@ on:
     # The schedule event always (and only) runs on the master branch.
     - # cron (in UTC): minute hour day_of_month month day_of_week
       cron: '00 22 * * SAT'
-  push:
-    branches: [ master, stable_1.5 ]
-  pull_request:
-    branches: [ master, stable_1.5 ]
+  pull_request:  # When creating a PR targeting these branches
+    branches:
+    - master
+    - stable_*
+  push:  # When merging a PR targeting these branches (direct push is disabled)
+    branches:
+    - master
+    - stable_*
 
 jobs:
 

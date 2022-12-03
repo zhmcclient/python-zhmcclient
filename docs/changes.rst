@@ -34,6 +34,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Simplified release process by using a new GitHubb Actions workflow publish.yml
+  to build and publish to Pypi.
+
 **Cleanup:**
 
 **Known issues:**
