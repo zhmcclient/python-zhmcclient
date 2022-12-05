@@ -33,10 +33,8 @@ jobs:
           echo "Pushed tag '${{ steps.set-tag.outputs.result }}' is invalid (must be 'M.N.U')";
           false;
         fi
-    - name: Set whether releasing the master branch
+    - name: Determine whether releasing the master branch
       id: set-is-master-branch
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       uses: actions/github-script@v6
       with:
         result-encoding: string
@@ -49,7 +47,9 @@ jobs:
           const result = (resp.data.object.sha == "${{ github.sha }}")
           console.log(result)
           return result
-    - name: Set name of stable branch for pushed tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Determine name of stable branch for pushed tag
       id: set-stable-branch
       uses: actions/github-script@v6
       with:
@@ -58,10 +58,8 @@ jobs:
           const result = "stable_"+"${{ steps.set-tag.outputs.result }}".match("([0-9]+\.[0-9]+)\.")[1]
           console.log(result)
           return result
-    - name: Set whether releasing stable branch for pushed tag
+    - name: Determine whether releasing stable branch for pushed tag
       id: set-is-stable-branch
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       uses: actions/github-script@v6
       with:
         result-encoding: string
@@ -74,6 +72,8 @@ jobs:
           const result = (resp.data.object.sha == "${{ github.sha }}")
           console.log(result)
           return result
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Check released commit to be master branch or stable branch for pushed tag
       run: |
         if [[ ${{ steps.set-is-master-branch.outputs.result }} == 'false' && ${{ steps.set-is-stable-branch.outputs.result }} == 'false' ]]; then
@@ -132,10 +132,26 @@ jobs:
       with:
         packages_dir: dist
         password: ${{ secrets.PYPI_API_TOKEN }}
-    - name: Create new stable branch when releasing master branch
-      if: steps.set-is-master-branch.outputs.result == 'true'
+    - name: Determine whether release on Github exists for the pushed tag
+      id: set-release-exists
+      uses: octokit/request-action@v2.x
+      with:
+        route: GET /repos/${{ github.repository }}/releases/tags/${{ steps.set-tag.outputs.result }}
+      continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create release on Github for the pushed tag if it does not exist
+      if: ${{ steps.set-release-exists.outputs.status == 404 }}
+      uses: octokit/request-action@v2.x
+      with:
+        route: POST /repos/${{ github.repository }}/releases
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        INPUT_TAG_NAME: ${{ steps.set-tag.outputs.result }}
+        INPUT_NAME: "Release ${{ steps.set-tag.outputs.result }}"
+        INPUT_BODY: "Change log https://python-zhmcclient.readthedocs.io/en/${{ steps.set-tag.outputs.result }}/changes.html"
+    - name: Create new stable branch when releasing master branch
+      if: steps.set-is-master-branch.outputs.result == 'true'
       uses: actions/github-script@v6
       with:
         script: |
@@ -145,3 +161,5 @@ jobs:
             ref: "refs/heads/${{ steps.set-stable-branch.outputs.result }}",
             sha: "${{ github.sha }}",
           })
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
