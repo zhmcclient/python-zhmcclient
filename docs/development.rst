@@ -570,20 +570,28 @@ local clone of the python-zhmcclient Git repo.
         git commit -asm "Release ${MNU}"
         git push --set-upstream origin release_${MNU}
 
-6.  On GitHub, create a Pull Request for branch ``release_M.N.U``. This will
-    trigger the CI runs.
+6.  On GitHub, create a Pull Request for branch ``release_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
     change the target branch of the Pull Request to ``stable_M.N``.
 
-7.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
-    have succeeded, merge the Pull Request (no review is needed). This
-    automatically deletes the branch on GitHub.
+    The PR creation will cause the "test" workflow to run. That workflow runs
+    tests for all defined environments, since it discovers by the branch name
+    that this is a PR for a release.
 
-8.  Publish the package on PyPI
+7.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+    Pull Request (no review is needed). This automatically deletes the branch
+    on GitHub.
 
-    Do this only once the Pull Request has been merged!
+    If the PR did not succeed, fix the issues.
+
+8.  On GitHub, close milestone ``M.N.U``.
+
+    Verify that the milestone has no open items anymore. If it does have open
+    items, investigate why and fix.
+
+9.  Publish the package
 
     .. code-block:: sh
 
@@ -594,30 +602,29 @@ local clone of the python-zhmcclient Git repo.
         git tag -f ${MNU}
         git push -f --tags
 
-    Pushing the new tag will cause the publish.yml workflow to run which
-    builds the package, publishes it on PyPI and creates a new stable branch
-    if the master branch was released.
+    Pushing the new tag will cause the "publish" workflow to run. That workflow
+    builds the package, publishes it on PyPI, creates a release for it on
+    Github, and finally creates a new stable branch on Github if the master
+    branch was released.
 
-    Verify that the released version arrived on PyPI at
-    https://pypi.python.org/pypi/zhmcclient/
+10. Verify the publishing
 
-9.  On GitHub, close milestone ``M.N.U``.
+    * Verify that the new version is available on PyPI at
+      https://pypi.python.org/pypi/zhmcclient/
 
-10. On GitHub, edit the new tag ``M.N.U``, and create a release description on
-    it. This will cause it to appear in the Release tab.
+    * Verify that the new version has a release on Github at
+      https://github.com/zhmcclient/python-zhmcclient/releases
 
-    You can see the tags in GitHub via Code -> Releases -> Tags.
-
-11. On ReadTheDocs, activate the new version ``M.N.U``:
-
-    * Go to https://readthedocs.org/projects/python-zhmcclient/versions/
-      and log in.
-
-    * Activate the new version ``M.N.U`` (it should be automatically active)
-
-      This triggers a build of that version. Verify that the build succeeds
-      and that new version is shown in the version selection popup at
+    * Verify that the new version has documentation on ReadTheDocs at
       https://python-zhmcclient.readthedocs.io/
+
+      The new version ``M.N.U`` should be automatically active on ReadTheDocs,
+      causing the the documentation for the new version to be automatically
+      built and published.
+
+      If you cannot see the new version after some minutes, log in to
+      https://readthedocs.org/projects/python-zhmcclient/versions/
+      and activate the new version.
 
 
 .. _`Starting a new version`:
