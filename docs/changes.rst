@@ -32,6 +32,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Accomodated use of Ubuntu 22.04 in Github Actions as the default ubuntu.
+
 **Enhancements:**
 
 * Simplified release process by adding a new GitHub Actions workflow publish.yml
