@@ -616,10 +616,10 @@ local clone of the python-zhmcclient Git repo.
       https://github.com/zhmcclient/python-zhmcclient/releases
 
     * Verify that the new version has documentation on ReadTheDocs at
-      https://python-zhmcclient.readthedocs.io/
+      https://python-zhmcclient.readthedocs.io/en/latest/changes.html
 
       The new version ``M.N.U`` should be automatically active on ReadTheDocs,
-      causing the the documentation for the new version to be automatically
+      causing the documentation for the new version to be automatically
       built and published.
 
       If you cannot see the new version after some minutes, log in to
@@ -741,7 +741,6 @@ local clone of the python-zhmcclient Git repo.
 
     .. code-block:: sh
 
-        git status  # Double check the changed files
         git commit -asm "Start ${MNU}"
         git push --set-upstream origin start_${MNU}
 
