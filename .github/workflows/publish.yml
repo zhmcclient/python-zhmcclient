@@ -66,8 +66,9 @@ jobs:
       with:
         result-encoding: string
         script: |
+          var resp
           try {
-            const resp = await github.rest.git.getRef({
+            resp = await github.rest.git.getRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: "heads/${{ steps.set-stable-branch.outputs.result }}",
