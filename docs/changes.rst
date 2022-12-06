@@ -30,6 +30,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Accomodated use of Ubuntu 22.04 in Github Actions as the default ubuntu.
+
 **Enhancements:**
 
 **Cleanup:**
