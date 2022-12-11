@@ -214,6 +214,7 @@ functools32==3.2.3.post2; python_version == '2.7'  # technically: python_version
 twine==1.8.1; python_version <= '3.5'
 twine==3.0.0; python_version >= '3.6'
 readme-renderer==23.0
+pywin32-ctypes==0.2.0; sys_platform=="win32"
 
 # Jupyter Notebook (no imports, invoked via jupyter script):
 jupyter==1.0.0
