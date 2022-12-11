@@ -34,6 +34,9 @@ Released: not yet
 
 * Accomodated use of Ubuntu 22.04 in Github Actions as the default ubuntu.
 
+* Fixed install error of twine -> keyring dependency pywin32-ctypes on Windows
+  with Python 3.8 and higher. (issue #1078)
+
 **Enhancements:**
 
 * Simplified release process by adding a new GitHub Actions workflow publish.yml
