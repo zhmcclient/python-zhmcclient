@@ -153,6 +153,8 @@ twine>=1.8.1,<2.0.0; python_version <= '3.5'
 twine>=3.0.0; python_version >= '3.6'
 # readme-renderer 23.0 has made cmarkgfm part of extras (it fails on Cygwin)
 readme-renderer>=23.0
+# twine uses keyring, and keyring requires pywin32-ctypes!=0.1.0,0.1.1 but 0.2.0 is required on py38+
+pywin32-ctypes>=0.2.0; sys_platform=="win32"
 
 # Jupyter Notebook (no imports, invoked via jupyter script):
 jupyter>=1.0.0
