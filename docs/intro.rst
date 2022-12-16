@@ -331,6 +331,17 @@ accordingly:
 
 1. The Web Services API must be enabled on the HMC.
 
+   You can do that in the HMC GUI by selecting "HMC Management" in the left pane,
+   then opening the "Configure API Settings" icon on the pain pane,
+   then selecting the "Web Services" tab on the page that comes up, and
+   finally enabling the Web Services API on that page.
+
+   The above is on a z16 HMC, it may be different on older HMCs.
+
+   If you cannot find this icon, then your userid does not have permission
+   for the respective task on the HMC. In that case, there should be some
+   other HMC admin you can go to to get the Web Services API enabled.
+
 2. To use all functionality provided in the zhmcclient package, the HMC user ID
    that will be used by the zhmcclient must be authorized for the following
    tasks. The description of each method of the zhmcclient package will mention
