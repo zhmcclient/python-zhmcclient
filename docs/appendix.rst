@@ -29,6 +29,76 @@ Troubleshooting
 
 This section describes a few issues and how to address them.
 
+No connection to the HMC
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you get errors that indicate there is no connection at all to the HMC, for
+example one of those errors:
+
+.. code-block:: text
+
+    Error: ConnectionError: HTTPSConnectionPool(host='10.11.12.13', port=6794): Max retries exceeded with url: /api/....
+    (Caused by ProxyError('Cannot connect to proxy.', OSError('Tunnel connection failed: 403 Forbidden',)))
+
+    Error: ConnectTimeout: HTTPSConnectionPool(host='10.11.12.13', port=6794): Max retries exceeded with url: /api/....
+    (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x10a8c3910>, 'Connection to 10.11.12.13 timed out. (connect timeout=30)'))
+
+then check all of the following:
+
+* Does the HMC have its Web Services API enabled?
+
+  Refer to the respective item in :ref:`Setting up the HMC` for how to do that.
+
+  If that is not enabled, the ports used by the Web Services API will be
+  inactive on the HMC.
+
+* Do you have direct network connectivity to the HMC?
+
+  You can test this with the following curl command:
+
+  .. code-block:: bash
+
+      $ curl -k https://10.11.12.13:6794/api/version
+      {"api-major-version":4, .....
+
+  If the HMC is reachable, this command displays JSON output with information
+  about the HMC. Otherwise, it displays an error message. You can use the ``-v``
+  option of curl to get more details.
+
+  Using `ping` to verify connectivity is also a possibility, but there are
+  network environments in which ICMP traffic is dropped, and there are also
+  network environments where ping works but some tunnelling or proxy is set up
+  that requires special measures to get IP traffic through. So in order to draw
+  conclusions from a ping result, you need to know how the network environment
+  is set up between the system where you use the zhmcclient and the targeted HMC.
+
+  Having ping work is at least a good indication. If ping works but the curl
+  command above does not, then one possible reason is that the Web Services API
+  is not enabled on the HMC.
+
+* Do you have a proxy setup to your HMC?
+
+  In that case, you need to setup the proxy configuration such that you bypass
+  the proxy. You need direct IP network connectivity between the system where
+  you use the zhmcclient and the targeted HMC.
+
+* Do you have a firewall to your HMC?
+
+  In case of a boundary firewall, you may need to log on to the boundary
+  firewall.
+
+  Also, the firewall needs to permit the ports used by the HMC API. For details,
+  see :ref:`Setting up firewalls or proxies`.
+
+* Can you get to the HMC GUI via your web browser?
+
+  If you can access the HMC GUI via your web browser but not the HMC API via
+  the `curl` command shown above, then possible reasons are:
+
+  - The HMC does not have its Web Services API enabled (see above).
+  - There is a firewall to the HMC but it does not permit the ports used by
+    the HMC API (see above).
+
 ConnectionError with SSLV3_ALERT_HANDSHAKE_FAILURE
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
