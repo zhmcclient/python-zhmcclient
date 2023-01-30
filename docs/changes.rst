@@ -203,7 +203,7 @@ Released: 2022-05-17
   (issues #950, #986)
 
 * Renamed the properties of the 'zhmcclient.testutils.HMCDefinition' to remove
-  the 'hmc_' prefix, e.g. 'hmc_userid' became 'userid', etc. (part of issue #986)
+  the 'hmc&nbsp;_' prefix, e.g. 'hmc_userid' became 'userid', etc. (part of issue #986)
 
 **Bug fixes:**
 
