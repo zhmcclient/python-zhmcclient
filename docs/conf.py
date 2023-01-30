@@ -130,7 +130,7 @@ sys.stdout.flush()
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -518,7 +518,7 @@ intersphinx_cache_limit = 5
 
 extlinks = {
     'nbview': ('http://nbviewer.jupyter.org/github/zhmcclient/'
-               'python-zhmcclient/blob/master/docs/notebooks/%s', ''),
+               'python-zhmcclient/blob/master/docs/notebooks/%s', None),
     'nbdown': ('https://github.com/zhmcclient/python-zhmcclient/'
-               'raw/master/docs/notebooks/%s', '')
+               'raw/master/docs/notebooks/%s', None)
 }
