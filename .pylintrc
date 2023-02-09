@@ -181,7 +181,7 @@ disable=I0011,
         raise-missing-from, consider-using-f-string,
         super-with-arguments, duplicate-string-formatting-argument,
         consider-using-generator, bad-option-value, redundant-u-string-prefix,
-        use-implicit-booleaness-not-comparison,
+        use-implicit-booleaness-not-comparison, use-dict-literal,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -416,8 +416,8 @@ preferred-modules=
 [EXCEPTIONS]
 
 # Exceptions that will emit a warning when caught.
-overgeneral-exceptions=BaseException,
-                       Exception
+overgeneral-exceptions=builtins.BaseException,
+                       builtins.Exception
 
 
 [REFACTORING]
