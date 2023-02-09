@@ -1,3 +1,4 @@
+
 .. Copyright 2016-2021 IBM Corp. All Rights Reserved.
 ..
 .. Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,6 +42,9 @@ Released: not yet
 
 * Simplified release process by adding a new GitHub Actions workflow publish.yml
   to build and publish to PyPI.
+
+* Enhanced method Cpc.export_dpm_configuration() to support Partition Link
+  objects (introduced with Z16).
 
 **Cleanup:**
 
