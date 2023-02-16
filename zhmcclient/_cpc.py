@@ -2306,4 +2306,10 @@ def convertToConfig(inventory_list, cpc_uri):
     if virtual_tape_resources:
         config_dict['virtual-tape-resources'] = virtual_tape_resources
 
+    classname_for_partition_links = 'partition-link'
+    partition_links = extractByPropertyInListValue(
+        classname_for_partition_links, 'cpc-uri', cpc_uris, inventory_list)
+    if partition_links:
+        config_dict['partition-links'] = partition_links
+
     return config_dict
