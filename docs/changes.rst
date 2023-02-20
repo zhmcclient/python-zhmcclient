@@ -46,6 +46,9 @@ Released: not yet
 * Enhanced method Cpc.export_dpm_configuration() to support Partition Link
   objects (introduced with Z16).
 
+* Docs: Added a section "Setting up firewalls or proxies" that provides
+  information which ports to open for accessing the HMC. (issue #1088)
+
 **Cleanup:**
 
 **Known issues:**
