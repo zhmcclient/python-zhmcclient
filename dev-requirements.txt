@@ -103,6 +103,7 @@ autodocsumm>=0.2.5; python_version >= '3.10'
 Babel>=2.7.0
 
 # PyLint (no imports, invoked via pylint script)
+# Pylint is not run on py27 anymore
 # Pylint requires astroid
 # Pylint 1.x / astroid 1.x supports py27 and py34/35/36
 # Pylint 2.0 / astroid 2.0 removed py27, added py37
@@ -116,22 +117,11 @@ pylint>=2.10.0; python_version >= '3.7'
 astroid>=2.4.0,<2.6.0; python_version == '3.5'
 astroid>=2.7.2; python_version >= '3.6'
 typed-ast>=1.4.0,<1.5.0; python_version >= '3.6' and python_version < '3.8' and implementation_name=='cpython'
-# Workaround: lazy-object-proxy is used by astroid, and lazy-object-proxy 1.5.0
-#   dropped support for py34 but declared it as supported
-# Issue #2674: lazy-object-proxy fails installing on macos/py35/minimum, because it uses
-#   setuptools-scm for its setup and (up to 1.5.2) does not correctly pin setuptools-scm.
-#   Not clear why this does not happen on ubuntu/windows with py35 or on py34.
-#   See issue https://github.com/ionelmc/python-lazy-object-proxy/issues/51.
-#   This issue is circumvented by not installing pylint/astroid on py35.
-#   If and when lazy-object-proxy releases a correctly pinned 1.4.x version,
-#   this circumvention can be removed again.
-lazy-object-proxy>=1.4.3; python_version == '2.7'
-lazy-object-proxy>=1.4.3; python_version >= '3.6'
-# wrapt 1.13.0 started depending on MS Visual C++ 9.0 on Python 2.7 on Windows,
-#   which is not available by default on GitHub Actions
-wrapt>=1.11.2,<1.13; sys_platform == 'win32' and python_version == '2.7'
-wrapt>=1.11.2; sys_platform != 'win32' and python_version == '2.7'
+# lazy-object-proxy is used by astroid
+lazy-object-proxy>=1.4.3; python_version >= '3.5'
 wrapt>=1.11.2; python_version >= '3.5'
+# platformdirs is used by pylint starting with its 2.10
+platformdirs>=2.2.0; python_version >= '3.6'
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
 # flake8 4.0.0 fixes an AttributeError on Python 3.10.
