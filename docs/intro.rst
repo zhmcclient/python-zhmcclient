@@ -397,6 +397,21 @@ accordingly:
 For details, see the :term:`HMC Operations Guide`.
 
 
+.. _`Setting up firewalls or proxies`:
+
+Setting up firewalls or proxies
+-------------------------------
+
+If you have to configure firewalls or proxies between the client system and
+the HMC, the following ports need to be opened:
+
+* 6794 (TCP) - for the HMC API HTTP server
+* 61612 (TCP) - for the HMC API message broker via JMS over STOMP
+
+For details, see sections "Connecting to the API HTTP server" and
+"Connecting to the API message broker" in the :term:`HMC API` book.
+
+
 .. _`Examples`:
 
 Examples
