@@ -194,10 +194,9 @@ pylint==2.10.0; python_version >= '3.6'
 astroid==2.4.0; python_version == '3.5'
 astroid==2.7.2; python_version >= '3.6'
 typed-ast==1.4.0; python_version >= '3.6' and python_version < '3.8' and implementation_name=='cpython'
-# Workaround: lazy-object-proxy is used by astroid
-lazy-object-proxy==1.4.3; python_version == '2.7'
-lazy-object-proxy==1.4.3; python_version >= '3.6'
-wrapt==1.11.2
+lazy-object-proxy==1.4.3; python_version >= '3.5'
+wrapt==1.11.2; python_version >= '3.5'
+platformdirs==2.2.0; python_version >= '3.6'
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
 flake8==3.8.0; python_version <= '3.9'
