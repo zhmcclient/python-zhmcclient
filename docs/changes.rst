@@ -51,6 +51,8 @@ Released: not yet
 
 **Cleanup:**
 
+* Addressed issues in test workflow reported by Github Actions. (issue #1091)
+
 **Known issues:**
 
 * See `list of open issues`_.
