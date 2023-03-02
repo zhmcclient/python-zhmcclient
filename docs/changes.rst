@@ -20,16 +20,10 @@ Change log
 ----------
 
 
-Version 1.6.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.6.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.5.x.
-
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-03-02
 
 **Bug fixes:**
 
@@ -52,12 +46,6 @@ Released: not yet
 **Cleanup:**
 
 * Addressed issues in test workflow reported by Github Actions. (issue #1091)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.5.0
