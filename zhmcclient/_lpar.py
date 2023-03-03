@@ -1107,6 +1107,29 @@ class Lpar(BaseResource):
         return result
 
     @logged_api_call
+    def load_from_ftp(self, host_name=None, username=None, password=None,
+                      file_path=None, protocol='ftp',
+                      wait_for_completion=True, operation_timeout=None,
+                      status_timeout=None, allow_status_exceptions=False):
+        body = {}
+        body['host-name'] = host_name
+        body['username'] = username
+        body['password'] = password
+        body['file-path'] = file_path
+        body['protocol'] = protocol
+        result = self.manager.session.post(
+            self.uri + '/operations/load-from-ftp',
+            body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        if wait_for_completion:
+            statuses = ["operating"]
+            if allow_status_exceptions:
+                statuses.append("exceptions")
+            self.wait_for_status(statuses, status_timeout)
+        return result
+
+    @logged_api_call
     def load(self, load_address=None, load_parameter=None,
              clear_indicator=True, store_status_indicator=False,
              wait_for_completion=True, operation_timeout=None,
