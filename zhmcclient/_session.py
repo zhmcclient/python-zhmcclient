@@ -430,6 +430,7 @@ class Session(object):
         self._object_topic = None
         self._job_topic = None
         self._auto_updater = AutoUpdater(self)
+        self._session_credential = None
 
     def __repr__(self):
         """
@@ -576,6 +577,14 @@ class Session(object):
         requests to the HMC.
         """
         return self._session_id
+
+    @property
+    def session_credential(self):
+        """
+        :term:`string`: Session credential for this session, returned by
+                        the HMC.
+        """
+        return self._session_credential
 
     @property
     def session(self):
@@ -764,6 +773,7 @@ class Session(object):
         self._session = self._new_session(self.retry_timeout_config)
         logon_res = self.post(logon_uri, body=logon_body, logon_required=False)
         self._session_id = logon_res['api-session']
+        self._session_credential = logon_res['session-credential']
         self._headers['X-API-Session'] = self._session_id
         self._object_topic = logon_res['notification-topic']
         self._job_topic = logon_res['job-notification-topic']
