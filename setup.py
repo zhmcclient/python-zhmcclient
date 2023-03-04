@@ -68,6 +68,7 @@ def read_file(a_file):
 
 # pylint: disable=invalid-name
 requirements = get_requirements('requirements.txt')
+testutils_requirements = get_requirements('extra-testutils-requirements.txt')
 install_requires = [req for req in requirements
                     if req and not re.match(r'[^:]+://', req)]
 dependency_links = [req for req in requirements
@@ -93,6 +94,9 @@ setuptools.setup(
         'zhmcclient.testutils',
         'zhmcclient_mock'
     ],
+    extras_require={
+        'testutils': testutils_requirements,
+    },
     include_package_data=True,  # Includes MANIFEST.in files into sdist (only)
     install_requires=install_requires,
     dependency_links=dependency_links,

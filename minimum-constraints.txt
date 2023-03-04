@@ -128,7 +128,6 @@ pyrsistent==0.15.0
 build==0.5.0
 
 # Unit test (imports into testcases):
-packaging==19.0
 funcsigs==1.0.2; python_version == '2.7'
 # pytest 6.2.5 is needed on Python 3.10 to address issues.
 pytest==4.3.1; python_version <= '3.6'
@@ -145,6 +144,9 @@ more-itertools==4.0.0
 # requests: covered in direct deps for installation
 requests-mock==1.6.0
 requests-toolbelt==0.8.0
+
+packaging==20.5; python_version <= '3.5'
+packaging==21.0; python_version >= '3.6'
 
 # Virtualenv
 virtualenv==20.1.0
@@ -220,7 +222,7 @@ pywin32-ctypes==0.2.0; sys_platform=="win32"
 jupyter==1.0.0
 ipython==5.1.0; python_version == '2.7'
 ipython==7.0; python_version == '3.5'
-ipython==7.10; python_version >= '3.6'
+ipython==7.16.3; python_version >= '3.6'
 ipykernel==4.5.2
 ipython_genutils==0.1.0
 ipywidgets==5.2.2
@@ -228,6 +230,10 @@ jupyter_console==5.0.0; python_version == '2.7'
 jupyter_console==6.0.0; python_version >= '3.5'
 jupyter_client==4.4.0
 jupyter_core==4.2.1
+jupyterlab-pygments==0.1.2; python_version >= '3.5'
+jupyterlab-widgets==1.0.2; python_version >= '3.5'
+nbclassic==0.4.0; python_version >= '3.7'  # notebook 6.5.1 started using nbclassic
+nbclient==0.5.13; python_version >= '3.5'
 nbconvert==5.0.0
 nbformat==4.2.0
 notebook==4.3.1
@@ -247,7 +253,8 @@ progressbar2==3.12.0
 
 # Package dependency management tools (not used by any make rules)
 pipdeptree==2.0.0
-pip-check-reqs==2.0.4
+pip-check-reqs==2.3.2; python_version >= '3.5' and python_version <= '3.7'
+pip-check-reqs==2.4.3; python_version >= '3.8'
 
 # pywinpty is used by terminado <- notebook <- jupyter
 pywinpty==0.5; os_name == "nt"
@@ -255,7 +262,9 @@ pywinpty==0.5; os_name == "nt"
 # Indirect dependencies for develop (not in dev-requirements.txt)
 
 alabaster==0.7.9
+appdirs==1.4.3
 appnope==0.1.0
+argon2-cffi==21.2.0; python_version >= '3.6'
 args==0.1.0
 backports-abc==0.5
 backports.functools-lru-cache==1.5; python_version < "3.3"
@@ -264,6 +273,8 @@ backports.ssl-match-hostname==3.5.0.1
 bleach==2.1.4
 clint==0.5.1
 configparser==4.0.2
+dill==0.2; python_version >= '3.6' and python_version <= '3.10'
+dill==0.3.6; python_version >= '3.11'
 enum34==1.1.6; python_version < "3.4"
 gitdb2==2.0.0
 html5lib==1.1
@@ -271,20 +282,29 @@ imagesize==0.7.1
 isort==4.3.5
 Jinja2==2.8; python_version <= '3.9'
 Jinja2==2.10.2; python_version >= '3.10'
+keyring==18.0.0
 MarkupSafe==0.23; python_version <= '3.9'
 MarkupSafe==1.1.0; python_version >= '3.10'
 mistune==0.8.1
+nest-asyncio==1.5.4; python_version >= '3.5'
 pandocfilters==1.4.1
 pathlib2==2.3.3
 pexpect==4.2.1
 pickleshare==0.7.4
 # twine 3.0.0 depends on pkginfo>=1.4.2
 pkginfo==1.4.2
+prometheus-client==0.13.1
 ptyprocess==0.5.1
 py==1.5.1; python_version <= '3.9'
 py==1.8.2; python_version >= '3.10'
+pyparsing==2.4.7; python_version == '2.7'
+pyparsing==2.4.7; python_version == '3.5'
+pyparsing==3.0.7; python_version >= '3.6'
 qtconsole==4.2.1
+rfc3986==1.4.0
+rich==12.0.0; python_version >= '3.6'
 scandir==1.9.0
+Send2Trash==1.8.0
 simplegeneric==0.8.1
 singledispatch==3.4.0.3; python_version < "3.4"
 smmap2==2.0.1
@@ -298,11 +318,15 @@ sphinxcontrib-qthelp==1.0.0
 sphinxcontrib-serializinghtml==1.1.5
 terminado==0.6
 testpath==0.3
+toml==0.10.0
+tomli==2.0.1; python_version >= '3.5'
+tomlkit==0.10.1; python_version >= '3.7'
 tornado==4.4.2
 # twine 3.0.0 depends on tqdm>=4.14
 tqdm==4.11.2; python_version <= '3.5'
 tqdm==4.14; python_version >= '3.6'
 traitlets==4.3.1
 typing==3.6.1
+typing-extensions==3.10.0
 webencodings==0.5.1
 widgetsnbextension==1.2.6
