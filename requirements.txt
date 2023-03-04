@@ -50,7 +50,8 @@ yamlloader>=0.5.5
 
 # jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils
 # jsonschema 4.0 removed support for py27,35,36
-jsonschema>=2.6.0
+# jsonschema 4.0.0 was yanked (and does not install), but older pip versions don't recognize that
+jsonschema>=2.6.0,!=4.0.0
 
 # Indirect dependencies (commented out, only listed to document their license):
 
