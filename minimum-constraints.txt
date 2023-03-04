@@ -72,12 +72,13 @@
 # For the base packages, we use the versions from Ubuntu 18.04 as a general
 # minimum, and then increase it to the first version that introduced support
 # for a particular Python version:
-# pip 18.0 is needed on pypy3 (py36) to support constraints like cffi!=1.11.3,>=1.8.
 # pip 10.0.0 introduced the --exclude-editable option.
+# pip 18.0 is needed on pypy3 (py36) to support constraints like cffi!=1.11.3,>=1.8.
 # Pip 20.2 introduced a new resolver whose backtracking had issues that were resolved only in 21.2.2.
+# Pip 21.0 removed support for Python<=3.5
 # pip>=21.0 is needed for the cryptography package on Windows on GitHub Actions.
-pip==10.0.1; python_version <= '3.5'
-pip==21.2.2; python_version >= '3.6'
+pip==18.0; python_version <= '3.5'
+pip==21.2.4; python_version >= '3.6'
 setuptools==39.0.1; python_version <= '3.6'
 setuptools==40.6.0; python_version == '3.7'
 setuptools==41.5.0; python_version >= '3.8' and python_version <= '3.9'
