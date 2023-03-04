@@ -162,6 +162,20 @@ package from `Pypi`_ into the currently active Python environment:
 
     $ pip install zhmcclient
 
+This installs everything you need to program against the client API.
+
+The package provides an extra named 'testutils' that installs additional
+Python packages that are needed for using the 'zhmcclient.testutils'
+sub-package which provides support for end2end testing against a real HMC,
+and is also used in the example scripts.
+See :ref:`zhmcclient.testutils module` for details.
+
+That extra is installed with:
+
+.. code-block:: text
+
+    $ pip install zhmcclient[testutils]
+
 Installation of latest development version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
