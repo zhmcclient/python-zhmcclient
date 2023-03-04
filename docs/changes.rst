@@ -33,6 +33,11 @@ Released: not yet
 
 **Bug fixes:**
 
+* Added the missing dependent packages for using the 'zhmcclient.testutils'
+  sub-package by adding a Paython package extra named 'testutils'. This is
+  only needed when performing end2end tests, or when using the example scripts.
+  The extra can be installed with 'pip install zhmcclient[testutils]'.
+
 **Enhancements:**
 
 **Cleanup:**
