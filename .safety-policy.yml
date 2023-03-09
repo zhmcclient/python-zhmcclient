@@ -19,7 +19,66 @@ security:
     # {id}:                 # vulnerability ID
     #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
     #     expires: {date}   # optional: Date when this ignore will expire
-    ignore-vulnerabilities: []
+    ignore-vulnerabilities:
+        37504:
+            reason: Fixed Twine version requires Python>=3.6 and is used there
+        38330:
+            reason: Fixed Sphinx version requires Python>=3.5 and is used there
+        39611:
+            reason: PyYAML full_load method or FullLoader is not used
+        39621:
+            reason: Fixed Pylint version requires Python>=3.6 and is used there
+        40291:
+            reason: Fixed Pip version requires Python>=3.6 and is used there
+        40380:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        40381:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        40383:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        40384:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        40385:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        40386:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        42253:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        42254:
+            reason: Fixed Notebook version requires Python>=3.6 and is used there
+        42559:
+            reason: Fixed Pip version requires Python>=3.6 and is used there; Pip is not shipped with this package
+        43975:
+            reason: Fixed Urllib3 versions are excluded by requests
+        44634:
+            reason: Fixed Ipython version requires Python>=3.3 and is used there
+        45185:
+            reason: Fixed Pylint version requires Python>=3.6.2 and is used there
+        45775:
+            reason: Fixed Sphinx version requires Python>=3.5 and is used there
+        50463:
+            reason: Fixed Ipywidgets version requires Python>=3.7 and is used there
+        50664:
+            reason: Fixed Ipywidgets version requires Python>=3.7 and is used there
+        50792:
+            reason: Fixed Nbconvert version requires Python>=3.7 and is used there
+        50885:
+            reason: Fixed Pygments version requires Python>=3.5 and is used there
+        50886:
+            reason: Fixed Pygments version requires Python>=3.5 and is used there
+        51457:
+            reason: Py package is not yet fixed (latest version 1.11.0)
+            expires: 2023-03-31
+        51499:
+            reason: Fixed Wheel version requires Python>=3.7 and is used there; Risk is on Pypi side
+        52322:
+            reason: Fixed GitPython version requires Python>=3.7 and is used there
+        52365:
+            reason: Fixed Certifi version requires Python>=3.6 and is used there
+        52495:
+            reason: Fixed Setuptools version requires Python>=3.7 and is used there; Risk is on Pypi side
+        52518:
+            reason: Fixed GitPython version requires Python>=3.7 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
-    continue-on-vulnerability-error: True  # TODO: Set to false once issues are fixed
+    continue-on-vulnerability-error: False
