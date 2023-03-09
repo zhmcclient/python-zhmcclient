@@ -237,6 +237,11 @@ jobs:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
       run: |
         make installtest
+    - name: Run safety
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make safety
     - name: Run debuginfo
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}

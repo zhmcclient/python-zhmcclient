@@ -1,0 +1,25 @@
+# Safety policy file
+# For documentation, see https://docs.pyup.io/docs/safety-20-policy-file
+
+# Configuration for the 'safety check' command
+security:
+
+    # Ignore certain severities.
+    # A number between 0 and 10, with the following significant values:
+    # - 9: ignore all vulnerabilities except CRITICAL severity
+    # - 7: ignore all vulnerabilities except CRITICAL & HIGH severity
+    # - 4: ignore all vulnerabilities except CRITICAL, HIGH & MEDIUM severity
+    ignore-cvss-severity-below: 0
+
+    # Ignore unknown severities.
+    # Should be set to False.
+    ignore-cvss-unknown-severity: False
+
+    # List of specific vulnerabilities to ignore.
+    # {id}:                 # vulnerability ID
+    #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
+    #     expires: {date}   # optional: Date when this ignore will expire
+    ignore-vulnerabilities: []
+
+    # Continue with exit code 0 when vulnerabilities are found.
+    continue-on-vulnerability-error: True  # TODO: Set to false once issues are fixed
