@@ -166,10 +166,9 @@ pytest-cov==2.7.0
 coveralls==2.1.2; python_version >= '3.5'
 
 # Safety CI by pyup.io
-safety==1.8.7; python_version == '2.7'
-safety==1.9.0; python_version >= '3.5'
-dparse==0.4.1; python_version == '2.7'
-dparse==0.5.1; python_version >= '3.5'
+# Safety is run only on Python >=3.6
+safety==2.0.0; python_version >= '3.6'
+dparse==0.6.2; python_version >= '3.6'
 
 # Tox
 tox==2.5.0

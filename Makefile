@@ -189,6 +189,9 @@ pylint_rc_file := .pylintrc
 # PyLint additional options
 pylint_opts := --disable=fixme
 
+# Safety policy file
+safety_policy_file := .safety-policy.yml
+
 # Source files for check (with PyLint and Flake8)
 check_py_files := \
     setup.py \
@@ -241,6 +244,7 @@ help:
 	@echo "  check_reqs - Perform missing dependency checks"
 	@echo "  check      - Run Flake8 on sources"
 	@echo "  pylint     - Run PyLint on sources"
+	@echo "  safety     - Run safety on sources"
 	@echo "  test       - Run unit tests (and test coverage)"
 	@echo "  installtest - Run install tests"
 	@echo "  build      - Build the distribution files in: $(dist_dir)"
@@ -386,6 +390,10 @@ check: flake8_$(pymn).done
 pylint: pylint_$(pymn).done
 	@echo "Makefile: $@ done."
 
+.PHONY: safety
+safety: safety_$(pymn).done
+	@echo "Makefile: $@ done."
+
 .PHONY: install
 install: install_$(pymn).done
 	@echo "Makefile: $@ done."
@@ -472,6 +480,21 @@ else
 	pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
 	echo "done" >$@
 	@echo "Makefile: Done running Pylint"
+endif
+
+safety_$(pymn).done: develop_$(pymn).done Makefile $(safety_policy_file) minimum-constraints.txt
+ifeq ($(python_m_version),2)
+	@echo "Makefile: Warning: Skipping Safety on Python $(python_version)" >&2
+else
+ifeq ($(python_mn_version),3.5)
+	@echo "Makefile: Warning: Skipping Safety on Python $(python_version)" >&2
+else
+	@echo "Makefile: Running Safety"
+	-$(call RM_FUNC,$@)
+	safety check --policy-file $(safety_policy_file) -r minimum-constraints.txt --full-report
+	echo "done" >$@
+	@echo "Makefile: Done running Safety"
+endif
 endif
 
 flake8_$(pymn).done: develop_$(pymn).done Makefile $(flake8_rc_file) $(check_py_files)
