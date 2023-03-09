@@ -35,14 +35,18 @@ six>=1.16.0; python_version >= '3.10'  # MIT
 stomp.py>=4.1.23,<5.0.0; python_version <= '3.5'  # Apache
 stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version >= '3.6'  # Apache
 
-python-dateutil>=2.8.0
+python-dateutil>=2.8.2
 immutable-views>=0.6.0
 nocasedict>=1.0.2
 
 # PyYAML pulled in by zhmcclient_mock (and zhmcclient examples, and python-coveralls)
 # PyYAML 5.3 fixes narrow build error
-# PyYAML 6.0 removed support for py27,35
-PyYAML>=5.3
+# PyYAML 5.4 removed support for py35
+# PyYAML 6.0 removed support for py27
+# PyYAML 5.3.1 fixes safety issue 38100
+# PyYAML 5.4 fixes safety issue 39611
+PyYAML>=5.3.1; python_version <= '3.5'
+PyYAML>=5.4; python_version >= '3.6'
 
 # yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
 # yamlloader 1.0 removed support for py27,35

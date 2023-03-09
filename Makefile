@@ -203,7 +203,15 @@ check_py_files := \
     $(wildcard docs/notebooks/*.py) \
 
 # Packages whose dependencies are checked using pip-missing-reqs
-check_reqs_packages := pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook
+ifeq ($(python_m_version),2)
+  check_reqs_packages := pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook
+else
+ifeq ($(python_mn_version),3.5)
+  check_reqs_packages := pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook
+else
+  check_reqs_packages := pytest coverage coveralls flake8 pylint safety sphinx twine jupyter notebook
+endif
+endif
 
 ifdef TESTCASES
   pytest_opts := $(TESTOPTS) -k "$(TESTCASES)"

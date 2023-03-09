@@ -43,6 +43,8 @@ Released: not yet
 * Added missing test environments (Python >=3.6 on MacOS and Windows) to the
   weekly full tests.
 
+* Addressed issues reported by safety by increasing package versions. (#1103)
+
 **Cleanup:**
 
 **Known issues:**
