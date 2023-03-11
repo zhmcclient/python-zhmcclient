@@ -40,6 +40,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Added missing test environments (Python >=3.6 on MacOS and Windows) to the
+  weekly full tests.
+
 **Cleanup:**
 
 **Known issues:**
