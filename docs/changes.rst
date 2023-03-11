@@ -45,6 +45,8 @@ Released: not yet
 
 * Addressed issues reported by safety by increasing package versions. (#1103)
 
+* Test: Added more tools to missing requirements checking.
+
 **Cleanup:**
 
 **Known issues:**

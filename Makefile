@@ -204,12 +204,12 @@ check_py_files := \
 
 # Packages whose dependencies are checked using pip-missing-reqs
 ifeq ($(python_m_version),2)
-  check_reqs_packages := pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook
+  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook
 else
 ifeq ($(python_mn_version),3.5)
-  check_reqs_packages := pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook
+  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook
 else
-  check_reqs_packages := pytest coverage coveralls flake8 pylint safety sphinx twine jupyter notebook
+  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint sphinx twine jupyter notebook safety
 endif
 endif
 
@@ -516,7 +516,8 @@ ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping the checking of missing dependencies on Python $(python_version)" >&2
 else
 	@echo "Makefile: Checking missing dependencies of this package"
-	bash -c "cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt; pip-missing-reqs $(package_name) --requirements-file=tmp_requirements.txt; rm tmp_requirements.txt"
+	bash -c "cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt; pip-missing-reqs $(package_name) --requirements-file=tmp_requirements.txt"
+	-$(call RM_FUNC,tmp_requirements.txt)
 	pip-missing-reqs $(package_name) --requirements-file=minimum-constraints.txt
 	@echo "Makefile: Done checking missing dependencies of this package"
 ifeq ($(PLATFORM),Windows_native)
