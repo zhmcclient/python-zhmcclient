@@ -129,6 +129,11 @@ jobs:
                 \"package_level\": \"latest\" \
               }, \
               { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.6\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
                 \"os\": \"ubuntu-latest\", \
                 \"python-version\": \"3.7\", \
                 \"package_level\": \"latest\" \
