@@ -79,6 +79,8 @@ security:
             reason: Fixed Setuptools version requires Python>=3.7 and is used there; Risk is on Pypi side
         52518:
             reason: Fixed GitPython version requires Python>=3.7 and is used there
+        53269:
+            reason: Fixed Ipython version 8.1.0 cannot be used without major work on dependencies; Risk is minimal since this is used only in development
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
