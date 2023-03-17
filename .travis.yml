@@ -1,0 +1,132 @@
+# Control file for Travis@IBM for use with the repo on Github@IBM.
+# Travis is not enabled for the repo on the public Github.
+#
+# Just for completeness even though the public Travis is not enabled:
+# So far, it is not possible to distinguish Travis@IBM and the public Travis
+# in job conditions, because the environment that can be tested is very
+# restricted (see https://docs.travis-ci.com/user/conditions-v1) and the
+# build worker has not been set up at the time the condition is tested.
+# Therefore, we use the fact that Travis@IBM does not yet support conditionals
+# and specify 'if: false' for job steps that should run only on Travis@IBM.
+
+# By default, notification emails are sent to the PR creator and commiter.
+notifications:
+  email: false
+
+# We define the job matrix explicitly, in order to minimize the number of combinations.
+jobs:
+
+  include:
+
+    - os: linux
+      language: python
+      python: "3.6"
+      env:
+        - PACKAGE_LEVEL=minimum
+      cache: pip
+
+    - os: linux
+      language: python
+      python: "3.6"
+      env:
+        - PACKAGE_LEVEL=latest
+      cache: pip
+
+    - os: linux
+      language: python
+      python: "3.10"
+      env:
+        - PACKAGE_LEVEL=minimum
+      cache: pip
+
+    - os: linux
+      language: python
+      python: "3.10"
+      env:
+        - PACKAGE_LEVEL=latest
+      cache: pip
+
+     # - if: false  # Only on Travis@IBM
+     #  os: linux-s390
+     #  language: python
+     #  python: "3.8"
+     #  env:
+     #    - PACKAGE_LEVEL=latest
+     #    - ARCH=s390x
+     #  cache: pip
+
+    # - if: false  # Only on Travis@IBM
+    #   os: linux-ppc64le
+    #   language: python
+    #   python: "3.8"
+    #   env:
+    #     - PACKAGE_LEVEL=latest
+    #     - ARCH=ppc64le
+    #   cache: pip
+
+# If a command in this section fails, the Travis job immediately fails.
+before_install:
+  - env | sort
+  - git branch -av
+  - which python
+  - python --version
+
+# Commands to install dependencies
+# If a command in this section fails, the Travis job immediately fails.
+install:
+
+  # # Install Python 3 on macOS
+  # - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+  #     if [[ ${PYTHON:0:1} == '2' ]]; then
+  #       OSX_PYTHON_PKG=python;
+  #       OSX_PYTHON_CMD=python;
+  #     else
+  #       OSX_PYTHON_PKG=python3;
+  #       OSX_PYTHON_CMD=python3;
+  #     fi;
+  #     which $OSX_PYTHON_CMD || brew install $OSX_PYTHON_PKG;
+  #   fi
+
+  # # Set up a Python virtualenv on macOS
+  # # Reason for that:
+  # # Some Ansible scripts are invoked directly from the cloned Ansible repo
+  # # directory, so their hashbang is '/usr/bin/env python'. This requires
+  # # that the 'python' command and environment is the desired one. On macOS,
+  # # when installing Python 3, only the 'python3' command invokes Python 3,
+  # # but the 'python' command invokes Python 2. Therefore, a virtualenv is
+  # # needed in which the desired Python version is available as the
+  # # 'python'. command. Travis does not set up a virtualenv on its macOS
+  # # machines, so we need to do that here.
+  # - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+  #     pip install virtualenv;
+  #     VENV=$HOME/virtualenv/$OSX_PYTHON_CMD;
+  #     virtualenv -p $OSX_PYTHON_CMD $VENV;
+  #     source $VENV/bin/activate;
+  #   fi
+
+  # # The following circumvents a permission issue on s390x, see
+  # # https://travis-ci.community/t/pip-install-fails-with-permission-error-in-cpu-architecture-s390x/8335
+  # # TODO: Remove the circumvention once fixed in Travis on s390x setup.
+  # - id
+  # - ls -al ~/.cache/pip/wheels || true
+  # - if [[ -d ~/.cache/pip/wheels ]]; then sudo chown -Rv $USER:$GROUP ~/.cache/pip/wheels; fi
+  # - ls -al ~/.cache/pip/wheels || true
+
+  - pip list
+  - make platform env
+  - make install
+  - pip list
+  - make develop
+  - pip list
+  - pipdeptree --all
+
+# Commands to run builds & tests
+# If a command in this section fails, the other commands will still be run, but the Travis job is marked as failed.
+script:
+  - make safety
+  - make check_reqs
+  - make build
+  - make builddoc
+  - make check
+  - make pylint
+  - make test
