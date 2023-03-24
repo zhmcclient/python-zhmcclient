@@ -29,6 +29,11 @@ Released: not yet
 
 **Incompatible changes:**
 
+* export_dpm_configuration(): the default behavior when exporting the DPM
+  configuration has been changed to only include those adapters that are
+  referenced by other elements of the exported configuration data.
+  Old behavior is available by passing a new parameter to the function. (#1115)
+
 **Deprecations:**
 
 **Bug fixes:**

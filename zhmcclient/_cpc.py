@@ -1964,7 +1964,7 @@ class Cpc(BaseResource):
         return result
 
     @logged_api_call
-    def export_dpm_configuration(self):
+    def export_dpm_configuration(self, include_unused_adapters=False):
         """
         Export a DPM configuration from this CPC and return it.
 
@@ -1973,17 +1973,24 @@ class Cpc(BaseResource):
         their ports, virtual switches, partitions with their child objects,
         capacity groups, and various storage and tape related resources.
 
-        Note that all adapters of the CPC are exported, even when they are not
-        used by partitions.
+        By default, only those adapters of the CPC are exported that are
+        referenced by other DPM specific objects.
 
         This method performs the "Get Inventory" HMC operation and extracts
-        all information into the result.
+        the relevant elements into the result.
 
         This method requires the CPC to be in DPM mode.
 
         Authorization requirements:
 
         * Object-access permission to this CPC.
+
+        Parameters:
+
+          include_unused_adapters (bool):
+            Controls whether the full set of adapters should be returned,
+            vs. only those that are referenced by other DPM objects that
+            are part of the return data.
 
         Returns:
           dict:
@@ -2019,7 +2026,8 @@ class Cpc(BaseResource):
         """
         inventory_list = retrieveInventoryData(self.manager.client)
         cpc_uri = self.get_property('object-uri')
-        config_dict = convertToConfig(inventory_list, cpc_uri)
+        config_dict = convertToConfig(inventory_list, cpc_uri,
+                                      include_unused_adapters)
         return config_dict
 
 
@@ -2155,7 +2163,7 @@ def retrieveInventoryData(client):
     return inventory_list
 
 
-def convertToConfig(inventory_list, cpc_uri):
+def convertToConfig(inventory_list, cpc_uri, include_unused_adapters):
     """
     Convert the inventory list to a DPM configuration dict.
 
@@ -2312,4 +2320,25 @@ def convertToConfig(inventory_list, cpc_uri):
     if partition_links:
         config_dict['partition-links'] = partition_links
 
+    if not include_unused_adapters:
+        remove_unreferenced_adapters(config_dict)
+
     return config_dict
+
+
+def remove_unreferenced_adapters(dpm_config):
+    """
+    Creates a string representation of the given config, EXCLUDING
+    adapters AND network-ports. Then iterates the list of adapters,
+    to collect those that are referenced by their object-id within that
+    string representation. Updates dpm_config in place to use the refined
+    adapter list.
+    """
+    config_without_adapters_as_str = str(
+        {key: dpm_config[key] for key in dpm_config
+         if (key not in ('adapters', 'network-ports'))})
+    referenced_adapters = []
+    for adapter in dpm_config['adapters']:
+        if adapter['object-id'] in config_without_adapters_as_str:
+            referenced_adapters.append(adapter)
+    dpm_config['adapters'] = referenced_adapters
