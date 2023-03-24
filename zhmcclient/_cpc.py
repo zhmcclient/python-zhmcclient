@@ -2323,6 +2323,8 @@ def convertToConfig(inventory_list, cpc_uri, include_unused_adapters):
     if not include_unused_adapters:
         remove_unreferenced_adapters(config_dict)
 
+    sort_lists(config_dict)
+
     return config_dict
 
 
@@ -2342,3 +2344,34 @@ def remove_unreferenced_adapters(dpm_config):
         if adapter['object-id'] in config_without_adapters_as_str:
             referenced_adapters.append(adapter)
     dpm_config['adapters'] = referenced_adapters
+
+
+def sort_lists(dpm_config):
+    """
+    Sorts all elements in dpm_config that are lists (of strings/dicts).
+    """
+    for key in dpm_config:
+        if isinstance(dpm_config[key], list):
+            dpm_config[key] = _sorted(dpm_config[key])
+
+
+def _sorted(items):
+    """
+    Returns a sorted version of the given items (if they are dicts/strings).
+    """
+    sorted_items = items
+    if len(items) > 1:
+        if isinstance(items[0], str):
+            sorted_items = sorted(items)
+        elif isinstance(items[0], dict):
+            sort_key = _sort_key(items[0])
+            if sort_key is not None:
+                sorted_items = sorted(items, key=lambda x: x[sort_key])
+    return sorted_items
+
+
+def _sort_key(item):
+    for key in ['adapter-id', 'name', 'element-id', 'object-id']:
+        if key in item:
+            return key
+    return None
