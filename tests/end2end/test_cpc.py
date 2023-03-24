@@ -239,7 +239,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
 # TODO: Test for get_free_crypto_domains(crypto_adapters=None)
 # TODO: Test for get_energy_management_properties()
 # TODO: Test for validate_lun_path(host_wwpn, host_port, wwpn, lun)
-# TODO: Test for export_dpm_configuration()
+# TODO: Test for export_dpm_configuration(include_unused_adapters)
 
 # Modifying tests:
 # TODO: Test for update_properties(properties)
