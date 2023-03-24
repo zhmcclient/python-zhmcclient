@@ -52,6 +52,8 @@ Released: not yet
 
 * Test: Added more tools to missing requirements checking.
 
+* export_dpm_configuration(): sorting result lists for more stable output
+
 **Cleanup:**
 
 **Known issues:**
