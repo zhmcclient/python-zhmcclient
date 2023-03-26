@@ -43,6 +43,9 @@ Released: not yet
   only needed when performing end2end tests, or when using the example scripts.
   The extra can be installed with 'pip install zhmcclient[testutils]'.
 
+* Fixed incorrect list of managers in 'managers' attribute of zhmcclient
+  exception 'MetricsResourceNotFound' when a CPC was not found. (issue #1120)
+
 **Enhancements:**
 
 * Added missing test environments (Python >=3.6 on MacOS and Windows) to the

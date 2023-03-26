@@ -877,7 +877,7 @@ class MetricObjectValues(object):
         resource_uri = self.resource_uri
 
         if resource_class == 'cpc':
-            cpc_managers = [self.client]
+            cpc_managers = [self.client.cpcs]
             filter_args = {'object-uri': resource_uri}
             try:
                 resource = self.client.cpcs.find(**filter_args)
