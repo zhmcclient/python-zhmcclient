@@ -490,7 +490,20 @@ has the remote name ``origin`` in your local clone.
 Any commands in the following steps are executed in the main directory of your
 local clone of the python-zhmcclient Git repo.
 
-1.  Set shell variables for the version that is being released and the branch
+1.  On GitHub, verify open items in milestone ``M.N.U``.
+
+    Verify that milestone ``M.N.U`` has no open issues or PRs anymore. If there
+    are open PRs or open issues, make a decision for each of those whether or
+    not it should go into version ``M.N.U`` you are about to release.
+
+    If there are open issues or PRs that should go into this version, abandon
+    the release process.
+
+    If none of the open issues or PRs should go into this version, change their
+    milestones to a future version, and proceed with the release process. You
+    may need to create the milestone for the future version.
+
+2.  Set shell variables for the version that is being released and the branch
     it is based on:
 
     * ``MNU`` - Full version M.N.U that is being released
@@ -525,7 +538,7 @@ local clone of the python-zhmcclient Git repo.
         MN=0.8
         BRANCH=stable_${MN}
 
-2.  Create a topic branch for the version that is being released:
+3.  Create a topic branch for the version that is being released:
 
     .. code-block:: sh
 
@@ -533,7 +546,7 @@ local clone of the python-zhmcclient Git repo.
         git pull
         git checkout -b release_${MNU}
 
-3.  Edit the version file:
+4.  Edit the version file:
 
     .. code-block:: sh
 
@@ -545,7 +558,7 @@ local clone of the python-zhmcclient Git repo.
 
         __version__ = 'M.N.U'
 
-4.  Edit the change log:
+5.  Edit the change log:
 
     .. code-block:: sh
 
@@ -563,35 +576,41 @@ local clone of the python-zhmcclient Git repo.
       add text for any known issues you want users to know about.
     * Remove all empty list items.
 
-5.  Commit your changes and push the topic branch to the remote repo:
+6.  Commit your changes and push the topic branch to the remote repo:
 
     .. code-block:: sh
 
         git commit -asm "Release ${MNU}"
         git push --set-upstream origin release_${MNU}
 
-6.  On GitHub, create a Pull Request for branch ``release_M.N.U``.
+7.  On GitHub, create a Pull Request for branch ``release_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
     change the target branch of the Pull Request to ``stable_M.N``.
 
+    Set the milestone of that PR to version ``M.N.U``.
+
+    This PR should normally be set to be reviewed by at least one of the
+    maintainers.
+
     The PR creation will cause the "test" workflow to run. That workflow runs
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-7.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+8.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-8.  On GitHub, close milestone ``M.N.U``.
+9.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
-    items, investigate why and fix.
+    items, investigate why and fix. If the milestone does not have open items
+    anymore, close the milestone.
 
-9.  Publish the package
+10. Publish the package
 
     .. code-block:: sh
 
@@ -607,7 +626,12 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-10. Verify the publishing
+11. Verify the publishing
+
+    Wait for the "publish" workflow for the new release to have completed:
+    https://github.com/zhmcclient/zhmccli/actions/workflows/publish.yml
+
+    Then, perform the following verifications:
 
     * Verify that the new version is available on PyPI at
       https://pypi.python.org/pypi/zhmcclient/
@@ -687,6 +711,7 @@ local clone of the python-zhmcclient Git repo.
 
     .. code-block:: sh
 
+        git fetch origin
         git checkout ${BRANCH}
         git pull
         git checkout -b start_${MNU}
@@ -744,20 +769,28 @@ local clone of the python-zhmcclient Git repo.
         git commit -asm "Start ${MNU}"
         git push --set-upstream origin start_${MNU}
 
-6.  On GitHub, create a Pull Request for branch ``start_M.N.U``.
-
-    Important: When creating Pull Requests, GitHub by default targets the
-    ``master`` branch. When starting a version based on a stable branch, you
-    need to change the target branch of the Pull Request to ``stable_M.N``.
-
 7.  On GitHub, create a milestone for the new version ``M.N.U``.
 
     You can create a milestone in GitHub via Issues -> Milestones -> New
     Milestone.
 
+7.  On GitHub, create a Pull Request for branch ``start_M.N.U``.
+
+    Important: When creating Pull Requests, GitHub by default targets the
+    ``master`` branch. When starting a version based on a stable branch, you
+    need to change the target branch of the Pull Request to ``stable_M.N``.
+
+    No review is needed for this PR.
+
+    Set the milestone of that PR to the new version ``M.N.U``.
+
 8.  On GitHub, go through all open issues and pull requests that still have
     milestones for previous releases set, and either set them to the new
     milestone, or to have no milestone.
+
+    Note that when the release process has been performed as described, there
+    should not be any such issues or pull requests anymore. So this step here
+    is just an additional safeguard.
 
 9.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
     have succeeded, merge the Pull Request (no review is needed). This
