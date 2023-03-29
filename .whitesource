@@ -1,4 +1,3 @@
 {
-  "settingsInheritedFrom": "whitesource-config/whitesource-config@master",
-  "minSeverityLevel": "NONE"
+  "settingsInheritedFrom": "whitesource-config/whitesource-config@master"
 }
