@@ -326,9 +326,8 @@ keyring==18.0.0
 lxml==4.9.2
 MarkupSafe==1.1.1; python_version <= '3.5'
 MarkupSafe==2.0.0; python_version >= '3.6'
-# nbconvert 6.x depends on mistune<2 and >=0.8.1
-mistune==0.8.3; python_version <= '3.6'
-mistune==0.8.3; python_version >= '3.7'
+# nbconvert 6.x depends on mistune<2 and >=0.8.1 (mistune 0.8.4 is the highest version that satisfies that)
+mistune==0.8.4
 nest-asyncio==1.5.4; python_version >= '3.5'
 # nose is used by older versions of notebook, e.g. 4.3.1
 nose==1.3.7
