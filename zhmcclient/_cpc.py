@@ -65,7 +65,7 @@ from ._virtual_switch import VirtualSwitchManager
 from ._capacity_group import CapacityGroupManager
 from ._logging import logged_api_call
 from ._exceptions import ParseError, ConsistencyError
-from ._utils import matches_filters, divide_filter_args, \
+from ._utils import get_features, matches_filters, divide_filter_args, \
     RC_CPC, RC_ADAPTER, RC_CAPACITY_GROUP, RC_HBA, RC_NIC, RC_PARTITION, \
     RC_NETWORK_PORT, RC_STORAGE_PORT, RC_STORAGE_TEMPLATE, RC_STORAGE_GROUP, \
     RC_STORAGE_TEMPLATE_VOLUME, RC_STORAGE_VOLUME, RC_VIRTUAL_FUNCTION, \
@@ -2029,7 +2029,36 @@ class Cpc(BaseResource):
         cpc_uri = self.get_property('object-uri')
         config_dict = convertToConfig(inventory_list, cpc_uri,
                                       include_unused_adapters)
+        features = self.list_api_features()
+        if len(features) > 0:
+            config_dict['available-api-features-list'] = features
         return config_dict
+
+    @logged_api_call
+    def list_api_features(self, name=None):
+        """
+        Returns information about the Web Services API features (introduced with
+        Web Services version 4.10) available on the CPC, see
+        :ref:`Feature enablement`.
+
+        Parameters:
+
+          name:
+            A regular expression used to limit returned objects to those that
+            have a matching name field.
+
+        Authorization requirements:
+
+        * None
+
+        Returns:
+
+          list of strings: The list of API features that are available on this
+          CPC. For API versions prior to 4.10, an empty list is returned.
+
+        """
+        # TODO: add reference to WSAPI book chapter regarding API features
+        return get_features(self.manager.session, self.uri, name)
 
 
 # Functions used by Cpc.export_dpm_configuration().

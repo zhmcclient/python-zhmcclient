@@ -27,7 +27,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, runtest_get_properties
+from .utils import runtest_find_list, runtest_get_properties, \
+    validate_list_features
 
 urllib3.disable_warnings()
 
@@ -68,3 +69,16 @@ def test_console_property(hmc_session):  # noqa: F811
     non_list_prop = 'description'
 
     runtest_get_properties(client, client.consoles, non_list_prop, (2, 15))
+
+
+def test_console_list_features(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Tests Console.list_api_features() with and without passing a parameter.
+    """
+    client = zhmcclient.Client(hmc_session)
+    console = client.consoles.console
+
+    validate_list_features(client.query_api_version(),
+                           console.list_api_features(),
+                           console.list_api_features('cpc.*'))

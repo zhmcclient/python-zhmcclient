@@ -29,7 +29,7 @@ from zhmcclient.testutils import all_cpcs, classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, assert_res_prop, runtest_find_list, \
-    runtest_get_properties
+    runtest_get_properties, validate_list_features
 
 urllib3.disable_warnings()
 
@@ -135,6 +135,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     - maximum_active_partitions property
     - feature_enabled(feature_name)
     - feature_info()
+    - list_api_features()
     """
     if not all_cpcs:
         pytest.skip("HMC definition does not include any CPCs")
@@ -217,6 +218,13 @@ def test_cpc_features(all_cpcs):  # noqa: F811
                     "Feature #{i} does not have the {p!r} attribute in Cpc " \
                     "object for CPC {c}". \
                     format(i=i, p='state', c=cpc.name)
+
+        # Test: list_api_features()
+        client = zhmcclient.Client(cpc.manager.session)
+
+        validate_list_features(client.query_api_version(),
+                               cpc.list_api_features(),
+                               cpc.list_api_features('cpc.*'))
 
 
 def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811

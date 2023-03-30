@@ -456,3 +456,25 @@ unchanged:
     Property 'description' of objects 1: 'N/A', 2: 'foo'
     Property 'description' of objects 1: 'N/A', 2: 'foo'
     Property 'description' of objects 1: 'N/A', 2: 'foo'
+
+
+.. _`Feature enablement`:
+
+Feature enablement
+------------------
+
+Starting with HMC version 2.14.0 and API version 2.23, so called "Firmware
+features" were enabled for specific objects. To indicate this, the
+"available-features-list" property was introduced to the objects that are
+affected. These features may be enabled by default from a specific HMC or SE
+version onwards or enabled by using standard feature enablement mechanisms.
+"Firmware features" are discussed in :term:`HMC API` book Chapter 6, "Firmware
+Features".
+
+Starting with API version 4.10, information about Firmware capabilities is
+exposed using the "API features" concept. Therefore, beginning with API version
+4.10, WSAPI clients must use this new mechanism. Neither the API version itself
+nor existing "Firmware features" will be updated for every future collection of
+functional additions or changes. Information about available "API features"
+can be retrieved separately via :meth:`zhmcclient.Console.list_api_features`
+and :meth:`zhmcclient.Cpc.list_api_features`.
