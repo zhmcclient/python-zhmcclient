@@ -438,6 +438,50 @@ def runtest_get_properties(
     assert resource.full_properties is True
 
 
+def validate_list_features(api_version, all_features, regex_reduced_features):
+    """
+    Tests the (already retrieved) results of calls to list_api_calls().
+    Can be used for validating the corresponding method results on Console and
+    CPC objects.
+
+    Parameters:
+
+        api_version: the result of a call to client.query_api_version()
+
+        all_features: the result of a call to  list_api_calls()
+
+        regex_reduced_features: the result of a call to  list_api_calls('cpc.*')
+    """
+    assert len(regex_reduced_features) <= len(all_features)
+
+    wsapi_version = (api_version['api-major-version'],
+                     api_version['api-minor-version'])
+
+    if wsapi_version < (4, 10):
+        # API features aren't supported prior 4.10, list must be empty
+        assert len(all_features) == 0
+        return
+
+    # Even when API features are supported, the lists can still be empty.
+    # (for example when HMC/SE driver wasn't restarted after features
+    # where enabled)
+    if len(all_features) > 0:
+        # But when there are some available API features, there are a few that
+        # are always present.
+        expected_features = ['cpc-delete-retrieved-internal-code',
+                             'cpc-install-and-activate']
+        for feature in expected_features:
+            assert feature in all_features, \
+                '{} missing from {}'.format(feature, all_features)
+            assert feature in regex_reduced_features, \
+                '{} missing from {}'.format(feature, regex_reduced_features)
+
+        # Ensure pattern matching using 'cpc.*' worked
+        assert len(regex_reduced_features) < len(all_features)
+        assert 'report-a-problem' in all_features
+        assert 'report-a-problem' not in regex_reduced_features
+
+
 def skipif_no_storage_mgmt_feature(cpc):
     """
     Skip the test if the "DPM Storage Management" feature is not enabled for

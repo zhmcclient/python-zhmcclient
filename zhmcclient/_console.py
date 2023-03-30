@@ -38,6 +38,7 @@ from ._task import TaskManager
 from ._ldap_server_definition import LdapServerDefinitionManager
 from ._unmanaged_cpc import UnmanagedCpcManager
 from ._group import GroupManager
+from ._utils import get_features
 
 __all__ = ['ConsoleManager', 'Console']
 
@@ -816,6 +817,32 @@ class Console(BaseResource):
                         lpar_obj.pull_full_properties()
 
         return lpar_objs
+
+    @logged_api_call
+    def list_api_features(self, name=None):
+        """
+        Returns information about the Web Services API features (introduced with
+        Web Services version 4.10) available on this console, see
+        :ref:`Feature enablement`.
+
+        Parameters:
+
+          name:
+            A regular expression used to limit returned objects to those that
+            have a matching name field.
+
+        Authorization requirements:
+
+        * None
+
+        Returns:
+
+          list of strings: The list of API features that are available on this
+          client. For API versions prior to 4.10, an empty list is returned.
+
+        """
+        # TODO: add reference to WSAPI book chapter regarding API features
+        return get_features(self.manager.session, '/api/console', name)
 
     def dump(self):
         """

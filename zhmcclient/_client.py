@@ -229,6 +229,7 @@ class Client(object):
                 break
             if operation_timeout > 0:
                 current_time = time.time()
+                # noinspection PyUnboundLocalVariable
                 if current_time > start_time + operation_timeout:
                     raise OperationTimeout(
                         "Waiting for Console at {} to become available timed "
@@ -293,7 +294,7 @@ class Client(object):
 
         The returned dictionary has only items of type dict, list, string,
         int, float, bool or None. That makes it convertible to simple formats
-        such as JSON or YAML so it can be externalized (e.g. persisted).
+        such as JSON or YAML, so it can be externalized (e.g. persisted).
 
         The returned dictionary can be used to instantiate a faked session
         using :meth:`zhmcclient_mock.FakedSession.from_hmc_dict`.

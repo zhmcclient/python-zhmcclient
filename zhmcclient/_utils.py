@@ -20,6 +20,7 @@ from __future__ import absolute_import
 
 import re
 from collections import OrderedDict
+
 try:
     from collections.abc import Mapping, MutableSequence, Iterable
 except ImportError:
@@ -30,6 +31,8 @@ from dateutil import parser
 import six
 import pytz
 from requests.utils import quote
+
+from ._exceptions import HTTPError
 
 __all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
 
@@ -534,3 +537,24 @@ def datetime_to_isoformat(dt):
     """
     dt_str = dt.isoformat(sep=' ')
     return dt_str
+
+
+def get_features(session, base_uri, name):
+    """
+    Helper method that GETS the given uri via the given session, appending
+    '/operations/list-features' to the uri (and the query parameter if needed).
+
+    404/Not Found is caught and turned into an empty list result.
+    """
+    try:
+        uri = '{}/operations/list-features'.format(base_uri)
+        if name is not None:
+            uri = '{}?name={}'.format(uri, name)
+        return session.get(uri)
+    except HTTPError as e:
+        # API features are introduced with WS API version 4.10.
+        # Older HMCs will respond with 404/Not Found, which we simply
+        # turn into "no features available at all".
+        if e.http_status == 404:
+            return []
+        raise e
