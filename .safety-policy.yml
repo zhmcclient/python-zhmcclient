@@ -68,7 +68,7 @@ security:
             reason: Fixed Pygments version requires Python>=3.5 and is used there
         51457:
             reason: Py package is not yet fixed (latest version 1.11.0)
-            expires: 2023-03-31
+            expires: 2023-06-30
         51499:
             reason: Fixed Wheel version requires Python>=3.7 and is used there; Risk is on Pypi side
         52322:
