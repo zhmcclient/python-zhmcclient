@@ -522,6 +522,32 @@ def skipif_no_group_support(client):
                   format(v=hmc_version))
 
 
+def skipif_no_secure_boot_feature(cpc):
+    """
+    Skip the test if the API feature "secure-boot-with-certificates" isn't
+    available on the specified CPC & console.
+    """
+    _skipif_api_feature_not_on_cpc_and_hmc("secure-boot-with-certificates", cpc)
+
+
+def _skipif_api_feature_not_on_cpc_and_hmc(feature, cpc):
+    """
+    Skip the test if the given API feature isn't available on the specified CPC
+     and its console.
+    """
+    cpc_features = cpc.list_api_features()
+
+    if feature not in cpc_features:
+        skip_warn('API feature {f} not available '
+                  "on CPC {c}".format(f=feature, c=cpc.name))
+
+    console = cpc.manager.client.consoles.console
+    console_features = console.list_api_features()
+    if feature not in console_features:
+        skip_warn('API feature {f} not available '
+                  "on HMC {c}".format(f=feature, c=console.name))
+
+
 def standard_partition_props(cpc, part_name):
     """
     Return the input properties for a standard partition in the specified CPC.

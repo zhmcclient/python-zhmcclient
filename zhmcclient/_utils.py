@@ -66,7 +66,7 @@ RC_STORAGE_CONTROL_UNIT = 'storage-control-unit'
 RC_VIRTUAL_TAPE_RESOURCE = 'virtual-tape-resource'
 RC_TAPE_LINK = 'tape-link'
 RC_TAPE_LIBRARY = 'tape-library'
-
+RC_CERTIFICATE = 'certificate'
 #
 # For CPCs in classic mode:
 RC_RESET_ACTIVATION_PROFILE = 'reset-activation-profile'

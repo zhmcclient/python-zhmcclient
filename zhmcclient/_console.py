@@ -39,6 +39,7 @@ from ._ldap_server_definition import LdapServerDefinitionManager
 from ._unmanaged_cpc import UnmanagedCpcManager
 from ._group import GroupManager
 from ._utils import get_features
+from ._certificates import CertificateManager
 
 __all__ = ['ConsoleManager', 'Console']
 
@@ -201,6 +202,7 @@ class Console(BaseResource):
         self._ldap_server_definitions = None
         self._unmanaged_cpcs = None
         self._groups = None
+        self._certificates = None
 
     @property
     def storage_groups(self):
@@ -843,6 +845,17 @@ class Console(BaseResource):
         """
         # TODO: add reference to WSAPI book chapter regarding API features
         return get_features(self.manager.session, '/api/console', name)
+
+    @property
+    def certificates(self):
+        """
+        :class:`~zhmcclient.CertificateManager`: Access to the
+        :term:`Certificates <Certificate>` in this HMC.
+        """
+        # We do here some lazy loading.
+        if not self._certificates:
+            self._certificates = CertificateManager(self)
+        return self._certificates
 
     def dump(self):
         """

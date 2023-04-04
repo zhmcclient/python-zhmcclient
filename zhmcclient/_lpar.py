@@ -1789,3 +1789,67 @@ class Lpar(BaseResource):
                     actual_status, statuses, status_timeout)
 
             time.sleep(1)  # Avoid hot spin loop
+
+    @logged_api_call
+    def assign_certificate(self, certificate):
+        """
+        Assigns a :term:`Certificate` to this LPAR.
+
+        :ref:`Feature enablement` requirements:
+
+        *  "secure-boot-with-certificates" must be available on HMC and CPC
+
+        Authorization requirements:
+
+        * Object-access permission to this LPAR.
+        * Object-access permission to the specified certificate.
+        * Task permission to the "Assign Secure Boot Certificates" task.
+
+        Parameters:
+
+          certificate (:class:`~zhmcclient.Certificate`):
+            Certificate to be assigned. The certificate must not currently
+            be assigned to this LPAR.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'certificate-uri': certificate.uri}
+        self.manager.session.post(
+            self.uri + '/operations/assign-certificate', body)
+
+    @logged_api_call
+    def unassign_certificate(self, certificate):
+        """
+        Unassign a :term:`Certificate` from this LPAR.
+
+        :ref:`Feature enablement` requirements:
+
+        *  "secure-boot-with-certificates" must be available on HMC and CPC
+
+        Authorization requirements:
+
+        * Object-access permission to this LPAR.
+        * Object-access permission to the specified certificate.
+        * Task permission to the "Assign Secure Boot Certificates" task.
+
+        Parameters:
+
+          certificate (:class:`~zhmcclient.Certificate`):
+            Certificate to be unassigned. The certificate must currently be
+            assigned to this LPAR.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'certificate-uri': certificate.uri}
+        self.manager.session.post(
+            self.uri + '/operations/unassign-certificate', body)
