@@ -372,6 +372,9 @@ Resources scoped to the HMC
 
 .. glossary::
 
+  Certificate
+     Represents X509 certificates.
+
   Console
      The HMC itself.
 

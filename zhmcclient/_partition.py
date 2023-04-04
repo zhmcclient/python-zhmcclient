@@ -1314,6 +1314,70 @@ class Partition(BaseResource):
                     sg.pull_full_properties()
         return sg_list
 
+    @logged_api_call
+    def assign_certificate(self, certificate):
+        """
+        Assigns a :term:`Certificate` to this partition.
+
+        :ref:`Feature enablement` requirements:
+
+        *  "secure-boot-with-certificates" must be available on HMC and CPC
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to the specified certificate.
+        * Task permission to the "Assign Secure Boot Certificates" task.
+
+        Parameters:
+
+          certificate (:class:`~zhmcclient.Certificate`):
+            Certificate to be assigned. The certificate must not currently
+            be assigned to this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'certificate-uri': certificate.uri}
+        self.manager.session.post(
+            self.uri + '/operations/assign-certificate', body)
+
+    @logged_api_call
+    def unassign_certificate(self, certificate):
+        """
+        Unassign a :term:`Certificate` from this partition.
+
+        :ref:`Feature enablement` requirements:
+
+        *  "secure-boot-with-certificates" must be available on HMC and CPC
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to the specified certificate.
+        * Task permission to the "Assign Secure Boot Certificates" task.
+
+        Parameters:
+
+          certificate (:class:`~zhmcclient.Certificate`):
+            Certificate to be unassigned. The certificate must currently be
+            assigned to this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {'certificate-uri': certificate.uri}
+        self.manager.session.post(
+            self.uri + '/operations/unassign-certificate', body)
+
     def dump(self):
         """
         Dump this Partition resource with its properties and child resources

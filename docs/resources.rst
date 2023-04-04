@@ -549,3 +549,24 @@ LDAP Server Definition
    :autosummary:
    :autosummary-inherited-members:
    :special-members: __str__
+
+
+.. _`Certificates`:
+
+Certificates
+-----------------
+
+.. automodule:: zhmcclient._certificates
+
+.. autoclass:: zhmcclient.CertificateManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Certificate
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
