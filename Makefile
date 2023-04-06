@@ -157,6 +157,8 @@ doc_dependent_files := \
     $(wildcard $(doc_conf_dir)/*.rst) \
     $(wildcard $(doc_conf_dir)/notebooks/*.ipynb) \
     $(package_py_files) \
+    examples/example_hmc_inventory.yaml \
+    examples/example_hmc_vault.yaml \
 
 # Directory with test source files
 test_dir := tests

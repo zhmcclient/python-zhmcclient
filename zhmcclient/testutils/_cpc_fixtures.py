@@ -51,8 +51,11 @@ def fixtureid_cpcs(fixture_value):
 def all_cpcs(request, hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of all CPCs that are defined in the HMC
-    definition file for the selected HMC or HMC group.
+    Pytest fixture representing the set of all CPCs to test against, regardless
+    of their operational mode.
+
+    The CPCs to test against are defined in the ``cpcs`` variable for the
+    HMC entry in the :ref:`HMC inventory file`.
 
     A test function parameter using this fixture resolves to a list of
     :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
@@ -72,8 +75,11 @@ def all_cpcs(request, hmc_session):  # noqa: F811
 def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of CPCs in DPM mode that are
-    defined in the HMC definition file for the selected HMC or HMC group.
+    Pytest fixture representing the set of CPCs in DPM mode to test against.
+
+    The CPCs to test against are defined in the ``cpcs`` variable in the
+    HMC entry in the :ref:`HMC inventory file` and have their ``dpm_enabled``
+    property set to ``true``.
 
     A test function parameter using this fixture resolves to a list of
     :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
@@ -93,8 +99,11 @@ def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
 def classic_mode_cpcs(request, hmc_session):  # noqa: F811
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of CPCs in classic mode that are
-    defined in the HMC definition file for the selected HMC or HMC group.
+    Pytest fixture representing the set of CPCs in classic mode to test against.
+
+    The CPCs to test against are defined in the ``cpcs`` variable in the
+    HMC entry in the :ref:`HMC inventory file` and have their ``dpm_enabled``
+    property set to ``false``.
 
     A test function parameter using this fixture resolves to a list of
     :class:`zhmcclient.Cpc` objects representing that set of CPCs. These

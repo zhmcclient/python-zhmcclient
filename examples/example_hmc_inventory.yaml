@@ -1,41 +1,12 @@
 ---
-# HMC inventory file for zhmcclient.testutils
+# HMC inventory file for zhmcclient projects
 #
 # This file defines real HMCs and mocked HMCs (using the zhmcclient mock
-# support) for use by the zhmcclient.testutils module of the python-zhmcclient
-# project.
+# support) for use by the zhmcclient projects. Their credentials are defined
+# in a corresponding HMC vault file.
 #
-# The file must have the format defined in
-# zhmcclient/testutils/hmc_inventory_file.py of the python-zhmcclient project.
-#
-# HMC inventory files conform to the format of Ansible inventory files in YAML
-# format and define specific host attributes for HMCs.
-#
-# Brief description of the HMC inventory file format:
-#
-#   all:  # the top-level HMC group
-#     hosts:
-#       <hmc_name>:  # DNS hostname, IP address, or nickname of HMC
-#         description: <string>
-#         contact: <string>
-#         access_via: <string>
-#         ansible_host: <host>  # if real HMC and nickname is used
-#         mock_file: <path_name>  # if mocked HMC
-#         cpcs:  # expected CPCs managed by the HMC
-#           <cpc_name>:  # CPC name
-#             <prop_name>: <prop_value>  # expected CPC properties
-#         <var_name>: <var_value>  # additional variables for HMC
-#     vars:
-#       <var_name>: <var_value>  # additional variables for all HMCs in group
-#     children:
-#       <group_name>:  # a child HMC group
-#         hosts: ...  # variables are inherited from parent group
-#         vars: ...
-#         children: ...
-#
-# Notes for this example file:
-# * To use this example file, copy it to `~/.zhmc_inventory.yaml` which is the
-#   default path name used.
+# The format of HMC inventory files is described in
+# https://python-zhmcclient.readthedocs.io/en/latest/development.html#hmc-inventory-file
 
 all:
   hosts:

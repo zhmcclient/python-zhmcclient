@@ -254,28 +254,140 @@ HMC inventory file
 ^^^^^^^^^^^^^^^^^^
 
 The HMC inventory file specifies HMCs and/or groups of HMCs to be used for any
-code that uses the :ref:`zhmcclient.testutils module` such as the end2end
-tests or the examples in the `examples directory`_.
+code that uses the :mod:`zhmcclient.testutils` module, such as the end2end tests,
+the `example scripts`_, other zhmcclient projects, or even projects by users of
+the zhmcclient library.
 
-.. _examples directory: https://github.com/zhmcclient/python-zhmcclient/tree/master/examples
+.. _example scripts: https://github.com/zhmcclient/python-zhmcclient/tree/master/examples
 
-Its format is described in the comment header of the
-`example HMC inventory file <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_inventory.yaml>`_.
+The HMCs and HMC groups defined in the HMC inventory file have nicknames and
+the nickname to be used for end2end tests and the example scripts can be
+specified using the ``TESTHMC`` environment variable, for example:
 
-The format is compatible to the format of Ansible inventory files in YAML format,
-with some extensions and some limitations:
+.. code-block:: bash
 
-Extensions:
+    $ TESTHMC=HMC1 make end2end             # run end2end tests against nickname "HMC1"
 
-* The HMC inventory files define and document specific variables for the
-  HMC hosts.
+    $ TESTHMC=HMC1 examples/list_cpcs.py    # run this example script against nickname "HMC1"
 
-Limitations:
+If no nickname is specified using the ``TESTHMC`` environment variable, the
+nickname "default" is used, for example:
+
+.. code-block:: bash
+
+    $ make end2end             # run end2end tests against nickname "default""
+
+    $ examples/list_cpcs.py    # run this example script against nickname "default""
+
+By default, the HMC inventory file ``~/.zhmc_inventory.yaml`` is used.
+A different path name can be specified with the ``TESTINVENTORY`` environment
+variable.
+
+The following describes the structure of the HMC inventory file:
+
+.. code-block:: yaml
+
+    all:                                # Nickname of the top-level HMC group; must be 'all'.
+
+      hosts:                            # Definition of all HMCs, each with an item as follows:
+
+        <hmc_nick>:                     # Nickname of an HMC; may be a DNS hostname, IP address,
+                                        #   or arbitrary string.
+
+          description: <string>         # Optional: One line description of the HMC.
+
+          contact: <string>             # Optional: Informal reference to a contact for the HMC.
+
+          access_via: <string>          # Optional: Reminder on network setup needed for access.
+
+          ansible_host: <host>          # If real HMC: DNS hostname or IP address of HMC, if
+                                        #   arbitrary string was used as HMC nickname.
+
+          mock_file: <path_name>        # If mocked HMC: Relative path name of HMC mock file.
+          cpcs:                         # CPCs to test against. Can be a subset or all CPCs
+                                        #   managed by the HMC.
+
+            <cpc_name>:                 # CPC name.
+
+              dpm_enabled: <bool>       # Whether the CPC is in DPM mode (true) or classic mode
+                                        #   (false). This is used to include the CPC in pytest
+                                        #   fixtures that select CPCs based on their mode.
+
+              <prop_name>: <prop_value>  # Optional: Additional expected CPC properties, for
+                                        #   use by test functions.
+
+          <var_name>: <var_value>       # Optional: Additional variables for this HMC, for use
+                                        #   by test functions.
+
+      vars:                             # Optional: Additional variables for all HMCs, for use
+                                        #   by test functions.
+        <var_name>: <var_value>
+
+      children:                         # Optional: HMC groups.
+
+        <group_nick>:                   # Nickname of this HMC group.
+
+          hosts:                        # The HMCs in this group.
+
+            <hmc_nick>:                 # Reference to an HMC in this group via its nickname.
+
+              ...                       # Optional: Additional variables to override the ones
+                                        #   inherited from the parent HMC definition. Not
+                                        #   normally needed.
+
+          vars:                         # Optional: Additional variables for the HMCs in this
+                                        #   group.
+            <var_name>: <var_value>
+
+          children:                     # Optional: Grand child groups. Only ever needed when
+            ...                         #   using variable inheritance for some reason.
+                                        #   Can be further nested.
+
+Here is the example HMC inventory file
+`examples/example_hmc_inventory.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_inventory.yaml>`_:
+
+.. literalinclude:: ../examples/example_hmc_inventory.yaml
+   :language: yaml
+
+In that example HMC inventory file, the following nicknames of single HMCs are
+defined:
+
+* HMC1 - The HMC at 10.11.12.13.
+* MOCKED_Z13_CLASSIC - The mocked HMC defined in mock file
+  `examples/example_mocked_z13_classic.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_mocked_z13_classic.yaml>`_.
+* MOCKED_Z13_DPM - The mocked HMC defined in mock file
+  `examples/example_mocked_z13_dpm.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_mocked_z13_dpm.yaml>`_.
+
+The following nicknames of HMC groups are defined:
+
+* all - All HMCs, i.e. HMC1, MOCKED_Z13_CLASSIC, and MOCKED_Z13_DPM.
+* default - The HMCs with nicknames MOCKED_Z13_CLASSIC and MOCKED_Z13_DPM.
+* dev - The HMC with nickname HMC1.
+
+The tests that use CPCs or resources within CPCs will be run against
+only the subset of CPCs that are defined in the ``cpcs`` variables of the HMC
+entries. In that example HMC inventory file, those are:
+
+* For HMC1: Only the CPCs XYZ1 and XYZ2.
+* For MOCKED_Z13_CLASSIC: Only the CPC CPC1.
+* For MOCKED_Z13_DPM: Only the CPC CPC1.
+
+Any variables defined for the HMCs are available to the test functions via an
+:class:`~zhmcclient.testutils.HMCDefinition` object. See pytest fixture
+:func:`~zhmcclient.testutils.hmc_session` for details.
+
+The format of HMC inventory files is compatible with the format of Ansible
+inventory files in YAML format, with the following extensions:
+
+* Certain variables in the definition of HMC hosts have a defined meaning. See
+  the format description above for details.
+
+and the following limitations:
 
 * DNS host names or IP addresses with ranges (e.g. ``myhost[0:9].xyz.com``)
   are not supported.
 
-For details on the format of Ansible inventory files, see
+For more details on the format of Ansible inventory files, see
 `Ansible: How to build your inventory <https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html>`_.
 
 
@@ -285,35 +397,77 @@ HMC vault file
 ^^^^^^^^^^^^^^
 
 The HMC vault file specifies credentials for real HMCs to be used for any
-code that uses the :ref:`zhmcclient.testutils module` such as the end2end
-tests or the examples in the `examples directory`_.
+code that uses the :mod:`zhmcclient.testutils` module, such as the end2end tests,
+the `example scripts`_, other zhmcclient projects, or even projects by users of
+the zhmcclient library.
 
 It is required to have the HMC credentials in the HMC vault file; they cannot
 be specified in the HMC inventory file.
 
-The format of the HMC vault file is described in the comment header of the
-`example HMC vault file <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_vault.yaml>`_.
+By default, the HMC vault file ``~/.zhmc_vault.yaml`` is used.
+A different path name can be specified with the ``TESTVAULT`` environment
+variable.
 
 The data items for HMCs in the HMC vault file are looked up using the HMC
 names from the HMC inventory file, so they must match.
 
-Limitations:
+The following describes the structure of the HMC vault file:
+
+.. code-block:: yaml
+
+    hmc_auth:
+
+      <hmc_nick>:                     # Nickname of an HMC defined in the inventory file
+
+        userid: <string>              # HMC userid
+
+        password: <string>            # HMC password
+
+        verify: <bool>                # Indicates whether the server certificate returned
+                                      #   by the HMC should be validated.
+
+        ca_certs: <ca_certs>          # Used for verify_cert init parm of zhmcclient.Session
+
+    <var_name>: <var_value>           # Any other variables are allowed but will be ignored
+
+For details about ``<ca_certs>``, see the description of the ``verify_cert``
+init parameter of the :class:`zhmcclient.Session` class.
+
+Here is the example HMC vault file
+`examples/example_hmc_vault.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_hmc_vault.yaml>`_:
+
+.. literalinclude:: ../examples/example_hmc_vault.yaml
+   :language: yaml
+
+The format of HMC vault files is compatible with the format of Ansible vault
+files in YAML format, with the following limitations:
 
 * In the current release, HMC vault files cannot be encrypted. To mitigate that,
   set restrictive file permissions on the HMC vault files.
 
 
-.. _`zhmcclient.testutils module`:
+.. _`Developing tests`:
 
-zhmcclient.testutils module
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Developing tests
+----------------
 
-The :mod:`zhmcclient.testutils` module provides support for running tests against
-real or mocked HMCs defined in an :ref:`HMC inventory file`.
+The :mod:`zhmcclient.testutils` module provides support for developing tests
+that run against real HMCs or mocked HMCs defined with the :ref:`mock support`.
 
-It defines
+These HMCs are defined in an :ref:`HMC inventory file`, and their credentials
+are defined in an :ref:`HMC vault file`.
+
+This module defines
 `pytest fixtures <https://docs.pytest.org/en/latest/explanation/fixtures.html>`_
-and encapsulates the access to the HMC inventory file.
+for use by the test functions and encapsulates the access to the HMC inventory
+and vault files.
+
+Pytest fixtures
+^^^^^^^^^^^^^^^
+
+Pytest fixtures are used as parameters of test functions. When used, they are
+specified just with their name. Pytest resolves the parameters of test
+functions to its known fixtures, based upon the parameter name.
 
 .. autofunction:: zhmcclient.testutils.hmc_definition
 
@@ -324,6 +478,9 @@ and encapsulates the access to the HMC inventory file.
 .. autofunction:: zhmcclient.testutils.dpm_mode_cpcs
 
 .. autofunction:: zhmcclient.testutils.classic_mode_cpcs
+
+Encapsulation of HMC inventory file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: zhmcclient.testutils.hmc_definitions
 
@@ -343,9 +500,15 @@ and encapsulates the access to the HMC inventory file.
    :members:
    :autosummary:
 
+Encapsulation of HMC vault file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. autoclass:: zhmcclient.testutils.HMCVaultFile
    :members:
    :autosummary:
+
+Exceptions
+^^^^^^^^^^
 
 .. autoclass:: zhmcclient.testutils.HMCInventoryFileError
    :members:

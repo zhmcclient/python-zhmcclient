@@ -70,8 +70,7 @@ def fixtureid_hmc_definition(fixture_value):
 )
 def hmc_definition(request):
     """
-    Fixture representing the set of HMC definitions to use for the end2end
-    tests.
+    Pytest fixture representing the set of HMC definitions to use for a test.
 
     A test function parameter using this fixture resolves to the
     :class:`~zhmcclient.testutils.HMCDefinition`
@@ -86,17 +85,21 @@ def hmc_definition(request):
 def hmc_session(request, hmc_definition):
     # pylint: disable=redefined-outer-name,unused-argument
     """
-    Pytest fixture representing the set of HMC sessions to use for the
-    end2end tests.
+    Pytest fixture representing the set of HMC sessions to run a test against.
+
+    A test function parameter using this fixture resolves to the
+    :class:`zhmcclient.Session` or :class:`zhmcclient_mock.FakedSession` object
+    for each HMC to test against.
+
+    The session is already logged on to the HMC.
+
+    The session object has an additional property named ``hmc_definition``
+    that is the :class:`~zhmcclient.testutils.HMCDefinition` object for the
+    corresponding HMC definition in the :ref:`HMC inventory file`.
 
     Because the `hmc_definition` parameter of this fixture is again a fixture,
     the :func:`zhmcclient.testutils.hmc_definition` function needs to be
     imported as well when this fixture is used.
-
-    A test function parameter using this fixture resolves to the
-    :class:`zhmcclient.Session` or :class:`zhmcclient_mock.FakedSession` object
-    for the HMC session to test against.
-    The session is already logged on to the HMC.
 
     Upon fixture teardown, the session is automatically logged off from the HMC.
     """
@@ -107,13 +110,13 @@ def hmc_session(request, hmc_definition):
 
 def setup_hmc_session(hd):
     """
-    Setup an HMC session and return a new zhmcclient.Session object for it.
+    Setup an HMC session and return a new session object for it.
 
     If the HMC definition represents a real HMC, log on to an HMC and return
-    a new zhmcclient.Session object.
+    a new :class:`zhmcclient.Session` object.
 
     If the HMC definition represents a mocked HMC, create a new mock environment
-    from that and return a zhmcclient_mock.FakedSession object.
+    from that and return a :class:`zhmcclient_mock.FakedSession` object.
     """
     # We use the cached skip reason from previous attempts
     skip_msg = getattr(hd, 'skip_msg', None)

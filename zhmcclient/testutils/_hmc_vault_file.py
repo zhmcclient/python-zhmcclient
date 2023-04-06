@@ -130,14 +130,14 @@ HMC_VAULT_FILE_SCHEMA = {
 
 class HMCVaultFileError(Exception):
     """
-    An error in the HMC vault file.
+    An error in the :ref:`HMC vault file`.
     """
     pass
 
 
 class HMCVaultFile(object):
     """
-    Encapsulation of an HMC vault file in YAML format.
+    Encapsulation of an :ref:`HMC vault file` in YAML format.
     """
 
     def __init__(self, filepath):
@@ -147,7 +147,7 @@ class HMCVaultFile(object):
 
     def _load_file(self):
         """
-        Load and validate the HMC vault file in YAML format.
+        Load and validate the :ref:`HMC vault file` in YAML format.
         """
         try:
             # pylint: disable=unspecified-encoding
@@ -199,14 +199,16 @@ class HMCVaultFile(object):
     @property
     def filepath(self):
         """
-        string: Path name of the HMC vault file.
+        string: Path name of the :ref:`HMC vault file`.
         """
         return self._filepath
 
     @property
     def data(self):
         """
-        OrderedDict: Content of the HMC vault file, as nested OrderedDict
-        and list objects.
+        :class:`~py:collections.OrderedDict`: Content of the
+        :ref:`HMC vault file`, as nested
+        :class:`~py:collections.OrderedDict` and
+        :class:`~py:list` objects.
         """
         return self._data
