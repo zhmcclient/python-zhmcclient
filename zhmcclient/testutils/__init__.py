@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-zhmcclient.testutils - Utilities for testing against (real or mocked) HMCs.
+zhmcclient.testutils - Utilities for testing against real or mocked HMCs.
 """
 
 from __future__ import absolute_import

@@ -1,28 +1,12 @@
 ---
-# HMC vault file for zhmcclient.testutils
+# HMC vault file for zhmcclient projects
 #
-# This file defines the credentials for real HMCs for use by the
-# zhmcclient.testutils module of the python-zhmcclient project.
+# This file defines the credentials for real HMCs for use by the zhmcclient
+# projects. Their HMC definitions are specified in a corresponding HMC inventory
+# file.
 #
-# The file must have the format defined in
-# zhmcclient/testutils/hmc_vault_file.py of the python-zhmcclient project.
-#
-# HMC vault files conform to the format of Ansible vault files in YAML
-# format and define specific variables for HMC authentication.
-#
-# Brief description of the file format:
-#
-#   hmc_auth:
-#     <hmc_name>:  # DNS hostname, IP address, or nickname of HMC
-#       userid: <userid>
-#       password: <password>
-#       verify: <verify>
-#       ca_certs: <ca_certs>
-#   <var_name>: <var_value>  # allowed but ignored
-#
-# Notes for this example file:
-# * To use this example file, copy it to `~/.zhmc_vault.yaml` which is the
-#   default path name used.
+# The format of HMC vault files is described in
+# https://python-zhmcclient.readthedocs.io/en/latest/development.html#hmc-vault-file
 
 hmc_auth:
 

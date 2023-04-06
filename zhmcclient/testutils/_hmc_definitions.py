@@ -49,7 +49,9 @@ def hmc_definitions(load=True):
 
     Parameters:
 
-      load (bool): Load the HMC inventory and vault files.
+      load (bool): Load the HMC inventory and vault files. Otherwise, these
+        files are not loaded. This is used to avoid a dependency on these
+        files for normal zhmcclient users.
         If `None`, the 'TESTEND2END_LOAD' environment variable is used.
 
     Returns:
@@ -98,21 +100,22 @@ def _default(vars_tuple, key, default):
 
 class HMCNoVaultError(Exception):
     """
-    The HMC vault file does not have a corresponding entry for the HMC.
+    The :ref:`HMC vault file` does not have a corresponding entry for the HMC.
     """
     pass
 
 
 class HMCNotFound(Exception):
     """
-    The HMC group was not found in the HMC inventory file.
+    The HMC group was not found in the :ref:`HMC inventory file`.
     """
     pass
 
 
 class HMCDefinitions(object):
     """
-    The HMC definitions in the HMC inventory and vault files.
+    The HMC definitions in the :ref:`HMC inventory file` and their credentials
+    in the :ref:`HMC vault file`.
     """
 
     def __init__(self, inventory_file=None, vault_file=None, testhmc=None,
@@ -120,20 +123,24 @@ class HMCDefinitions(object):
         """
         Parameters:
 
-          inventory_file (string): Path name of HMC inventory file.
+          inventory_file (string): Path name of HMC inventory file`.
             If `None`, the file specified in the 'TESTINVENTORY' environment
-            variable, or the default file in the user's home directory is used.
+            variable or if not set, the default file ``~/.zhmc_inventory.yaml``
+            is used.
 
           vault_file (string): Path name of HMC vault file.
             If `None`, the file specified in the 'TESTVAULT' environment
-            variable, or the default file in the user's home directory is used.
+            variable or if not set, the default file ``~/.zhmc_vault.yaml``
+            is used.
 
-          testhmc (string): Group name or HMC nickname in HMC inventory file
+          testhmc (string): Group nickname or HMC nickname in HMC inventory file
             to test against.
-            If `None`, the file specified in the 'TESTHMC' environment
-            variable, or the default name is used.
+            If `None`, the nickname specified in the 'TESTHMC' environment
+            variable or if not set, the nickname "default" is used.
 
-          load (bool): Load the HMC inventory and vault files.
+          load (bool): Load the HMC inventory and vault files. Otherwise, these
+            files are not loaded. This is used to avoid a dependency on these
+            files for normal zhmcclient users.
             If `None`, the 'TESTEND2END_LOAD' environment variable is used.
 
         Raises:

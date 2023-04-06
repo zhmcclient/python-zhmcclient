@@ -226,14 +226,14 @@ HMC_INVENTORY_FILE_SCHEMA = {
 
 class HMCInventoryFileError(Exception):
     """
-    An error in the HMC inventory file.
+    An error in the :ref:`HMC inventory file`.
     """
     pass
 
 
 class HMCInventoryFile(object):
     """
-    Encapsulation of an HMC inventory file in YAML format.
+    Encapsulation of an :ref:`HMC inventory file` in YAML format.
     """
 
     def __init__(self, filepath):
@@ -243,7 +243,7 @@ class HMCInventoryFile(object):
 
     def _load_file(self):
         """
-        Load and validate the HMC inventory file in YAML format.
+        Load and validate the :ref:`HMC inventory file` in YAML format.
         """
         try:
             # pylint: disable=unspecified-encoding
@@ -295,14 +295,16 @@ class HMCInventoryFile(object):
     @property
     def filepath(self):
         """
-        string: Path name of the HMC inventory file.
+        string: Path name of the :ref:`HMC inventory file`.
         """
         return self._filepath
 
     @property
     def data(self):
         """
-        OrderedDict: Content of the HMC inventory file, as nested OrderedDict
-        and list objects.
+        :class:`~py:collections.OrderedDict`: Content of the
+        :ref:`HMC inventory file`, as nested
+        :class:`~py:collections.OrderedDict` and
+        :class:`~py:list` objects.
         """
         return self._data
