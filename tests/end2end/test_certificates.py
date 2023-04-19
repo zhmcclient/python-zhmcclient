@@ -18,9 +18,6 @@ End2end tests for Certificates.
 
 from __future__ import absolute_import, print_function
 
-import time
-import warnings
-
 import pytest
 from requests.packages import urllib3
 
@@ -31,7 +28,8 @@ from zhmcclient.testutils import all_cpcs  # noqa: F401, E501
 # pylint: disable=unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from .utils import pick_test_resources, runtest_find_list, skip_warn, \
-    skipif_no_secure_boot_feature, standard_partition_props, TEST_PREFIX
+    skipif_no_secure_boot_feature, standard_partition_props, \
+    cleanup_and_import_example_certificate
 
 urllib3.disable_warnings()
 
@@ -93,32 +91,12 @@ def test_cert_crud(all_cpcs):  # noqa: F811
         console = cpc.manager.console
         assert console == console.certificates.console
 
-        cert_name = "{} timestamp {}".format(TEST_PREFIX,
-                                             time.strftime('%H.%M.%S'))
+        # Test creating the certificate
+        cert, cert_input_props = cleanup_and_import_example_certificate(cpc)
+
+        cert_name = cert_input_props['name']
         cert_name_new = cert_name + ' updated'
 
-        # Ensure a clean starting point for this test
-        try:
-            cert = console.certificates.find(name=cert_name)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            warnings.warn(
-                "Deleting test cert from previous run: {ce!r} on CPC {c}".
-                format(ce=cert_name, c=cpc.name), UserWarning)
-            cert.delete()
-        try:
-            cert = console.certificates.find(name=cert_name_new)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            warnings.warn(
-                "Deleting test cert from previous run: {ce!r} on CPC {c}".
-                format(ce=cert_name_new, c=cpc.name), UserWarning)
-            cert.delete()
-
-        # Test creating the certificate
-        cert, cert_input_props = _import_example_certificate(cpc)
         encoded = cert_input_props.pop('certificate')
         cert_auto_props = {
             'assigned': False,
@@ -202,18 +180,3 @@ def test_cert_crud(all_cpcs):  # noqa: F811
 
         with pytest.raises(zhmcclient.NotFound):
             console.certificates.find(name=cert_name_new)
-
-
-def _import_example_certificate(cpc):
-    props = {
-        # pylint: disable=line-too-long
-        "certificate": "MIIFdjCCA14CCQCILyUhzc9RUjANBgkqhkiG9w0BAQsFADB9MQswCQYDVQQGEwJVUzELMAkGA1UECAwCTlkxDzANBgNVBAcMBkFybW9uazETMBEGA1UECgwKemhtY2NsaWVudDETMBEGA1UECwwKemhtY2NsaWVudDEmMCQGA1UEAwwdaHR0cHM6Ly9naXRodWIuY29tL3pobWNjbGllbnQwHhcNMjMwNDE4MDY0OTAyWhcNMzMwNDE1MDY0OTAyWjB9MQswCQYDVQQGEwJVUzELMAkGA1UECAwCTlkxDzANBgNVBAcMBkFybW9uazETMBEGA1UECgwKemhtY2NsaWVudDETMBEGA1UECwwKemhtY2NsaWVudDEmMCQGA1UEAwwdaHR0cHM6Ly9naXRodWIuY29tL3pobWNjbGllbnQwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDH8F7xMisAESV35LqjC3p6AsrGZ3kEOE5W8wcy0q7TEF9TO7TsAPdWit0e7WT20R1gYErv9uyFJeI4idIjWgTT8GVPixwcXClyywh/ND54voHrMZdbDGbvs5+wcfX/7BDtjRUtzuMtvDswEZqaQU/2W+rDRpb/FolwXDTNm17dSomegm7sw8xQsZGACkU2GPXarJcHWrgytyVghxbIPEvtrOP8XQf/FIBud6Z7/WFONFPSYVFkkmxCM/hOPJBj0CvG6WXV0yNN9a10lcy0yVel0JfX9g0FM0FH4H8pSKEqV2byTcoQjlKQehsuw49TzKEU5pEcdwIz5sMN2XOy8V0bHuoIyoZ54NpkVtqPAMr5MQjvluuiZnU5/6shVfJjChHfYHZQ/rRQbnJhIaKTXgfCUKjm/RrzHwMhy71upSDmhKDB2A5Z1o/pOsHqwUPDW17GBNmFDE/SnbpHhGxemnWWebfxTredFQ6YAy+zThDCXTzglSLsgi64ThDJsHN32/PEa0IiXM6moeRPZOK2NapFF8jFq8WYXvlk0Ianfl9TvgrfEufVx2o+V/0DUxo7TxeoukRuHWsJ7SGfFnWUhoj75mJxgvVLA82SdgTllPWYXTIJBUZ+XsoauOsH+VkDoNINEU3pQOySZj5dzzTYwglnLTBOP8KGxA5zLXSRleSFqwIDAQABMA0GCSqGSIb3DQEBCwUAA4ICAQAXnZZoJgo8I8zOHoQQa0Ocik9k9MCeO7M0gPtD+Xe9JRfoMolxaEZnezmADuJTCepUOUi1cgZXCScmDer2Zc2Y9pldJKhAitBiaajUrTfd0Dl8Gd8WGip8NN+8L9CsELZ+/hQnTG2GHGwi21s/yWt4yT3h2cIViuBqRvNTaxkMh1Devtzlx7haVjNCcDO5muIVBTBynJiaQV5zRaTYiLh+hT6O4OccOHJfnRdFkBRCnnCXE4qtrJg9XJ+NqkP3y0MBZueeQsdnmz9LgSwTiQHWgBI7nJSk0sLgw4AaT18xaZsx9xalKDcy7PN9Ya8IldcG4z+DP2cAoZsKejbZBfsvkV/gYC0g/LxBw0sGJrDaFc8BGDeJRxqwrpsJC8YnXFDi5/SwKII0CpOtb2MxwZC2uzmA9srnV05ta8MbdIQ2xsA8T0MDkTjOPqpJDUg9cqXZbOEOiUywJpYG6XxJdkbxx+IYyOyv8Rn0kLwwAgml7JF3w75fCDKwMw2gEY/0inqtS2NleA8XmA+CZ16YTTBQobyLUrsauVmJm4adRKFgq1OxCRbCGPeRRtD772cpAue2ZTD6Oa8UQlCkEdmXQYjp2PoguWmFI/X9T9P4oREZ182hP4b3EFr2WAhH2waURJmXVATR8IsvKxkSbBxCdVn1zhD55zuOBNLX5f4kq/4ipQ==",  # noqa: E501
-        "description":
-            "Example certificate for end2end tests.",
-        "name":
-            "{} timestamp {}".format(TEST_PREFIX, time.strftime('%H.%M.%S')),
-        "type": "secure-boot"
-    }
-
-    console = cpc.manager.console
-    return console.certificates.import_certificate(cpc, props), props
