@@ -25,11 +25,12 @@ from requests.packages import urllib3
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import all_cpcs, classic_mode_cpcs  # noqa: F401, E501
+from zhmcclient.testutils import all_cpcs, classic_mode_cpcs, dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, assert_res_prop, runtest_find_list, \
-    runtest_get_properties, validate_list_features
+    runtest_get_properties, validate_list_features, \
+    cleanup_and_import_example_certificate, has_api_feature
 
 urllib3.disable_warnings()
 
@@ -261,6 +262,43 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
 
         # TODO: Complete this test
 
+
+def test_cpc_export_dpm_config(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test for export_dpm_configuration()
+
+    Only for CPCs in DPM mode, skipped in classic mode.
+
+    Note: export_dpm_configuration() is time-consuming and is invoked twice, so
+    depending on the configuration of the CPCs, this test might easily run
+    for 5 to 20 minutes!
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        print("Testing on CPC {c}".format(c=cpc.name))
+
+        cert, cert_props = (None, None)
+        if has_api_feature('secure-boot-with-certificates', cpc):
+            cert, cert_props = cleanup_and_import_example_certificate(cpc)
+
+        config = cpc.export_dpm_configuration()
+        full_config = \
+            cpc.export_dpm_configuration(include_unused_adapters=True)
+
+        assert len(config['adapters']) <= len(full_config['adapters'])
+
+        if has_api_feature('secure-boot-with-certificates', cpc):
+            assert len(config['certificates']) >= 1
+            for exported_cert in config['certificates']:
+                if exported_cert['name'] == cert_props['name']:
+                    assert exported_cert['certificate'] == \
+                           cert_props['certificate']
+            cert.delete()
 
 # Read-only tests:
 # TODO: Test for get_wwpns(partitions)

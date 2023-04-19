@@ -72,7 +72,7 @@ from ._utils import get_features, matches_filters, divide_filter_args, \
     RC_VIRTUAL_STORAGE_RESOURCE, RC_VIRTUAL_SWITCH, RC_STORAGE_SITE, \
     RC_STORAGE_FABRIC, RC_STORAGE_SWITCH, RC_STORAGE_SUBSYSTEM, \
     RC_STORAGE_PATH, RC_STORAGE_CONTROL_UNIT, RC_VIRTUAL_TAPE_RESOURCE, \
-    RC_TAPE_LINK, RC_TAPE_LIBRARY
+    RC_TAPE_LINK, RC_TAPE_LIBRARY, RC_CERTIFICATE
 
 __all__ = ['CpcManager', 'Cpc']
 
@@ -1123,7 +1123,7 @@ class Cpc(BaseResource):
         of the specified crypto adapters.
 
         For this test, all currently defined partitions of this CPC are
-        checked, regardless of whether or not they are active. This ensures
+        checked, regardless of whether they are active. This ensures
         that a crypto domain that is found to be free for usage can be assigned
         to a partition for 'control-usage' access to the specified crypto
         adapters, without causing a crypto domain conflict when activating that
@@ -1339,7 +1339,7 @@ class Cpc(BaseResource):
                           wait_for_completion=True, operation_timeout=None):
         """
         Set the power capping settings of this CPC. The power capping settings
-        of a CPC define whether or not the power consumption of the CPC is
+        of a CPC define whether the power consumption of the CPC is
         limited and if so, what the limit is. Use this method to limit the
         peak power consumption of a CPC, or to remove a power consumption
         limit for a CPC.
@@ -1914,6 +1914,12 @@ class Cpc(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this CPC.
+        * Object-access permission to Secure Boot Certificate objects (only
+          applies when the request body contains one or more secure boot
+          Certificate objects to be assigned to Partitions).
+        * Task permission for the "Import Secure Boot Certificates" task
+          (only applies when the request body contains one or more Certificate
+          objects).
         * Task permission to the "Import Dynamic Partition Manager
           Configuration" task.
 
@@ -2030,8 +2036,8 @@ class Cpc(BaseResource):
         """
         inventory_list = retrieveInventoryData(self.manager.client)
         cpc_uri = self.get_property('object-uri')
-        config_dict = convertToConfig(inventory_list, cpc_uri,
-                                      include_unused_adapters)
+        config_dict = convertToConfig(self.manager.console, inventory_list,
+                                      cpc_uri, include_unused_adapters)
         features = self.list_api_features()
         if len(features) > 0:
             config_dict['available-api-features-list'] = features
@@ -2178,6 +2184,10 @@ def retrieveInventoryData(client):
     Returns the inventory list from Client.get_inventory().
     """
     resource_classes = ['dpm-resources', 'cpc']
+    api_features = client.consoles.console.list_api_features()
+    if 'secure-boot-with-certificates' in api_features:
+        resource_classes.append('certificate-resources')
+
     inventory_list = client.get_inventory(resource_classes)
     error_msgs = []
     for item in inventory_list:
@@ -2196,7 +2206,7 @@ def retrieveInventoryData(client):
     return inventory_list
 
 
-def convertToConfig(inventory_list, cpc_uri, include_unused_adapters):
+def convertToConfig(console, inventory_list, cpc_uri, include_unused_adapters):
     """
     Convert the inventory list to a DPM configuration dict.
 
@@ -2353,15 +2363,32 @@ def convertToConfig(inventory_list, cpc_uri, include_unused_adapters):
     if partition_links:
         config_dict['partition-links'] = partition_links
 
+    certificates = extractByPropertyInListValue(
+        RC_CERTIFICATE, 'parent', cpc_uris, inventory_list)
+    if certificates:
+        _add_encoded(console, certificates)
+        config_dict['certificates'] = certificates
+
     if not include_unused_adapters:
-        remove_unreferenced_adapters(config_dict)
+        _remove_unreferenced_adapters(config_dict)
 
     sort_lists(config_dict)
 
     return config_dict
 
 
-def remove_unreferenced_adapters(dpm_config):
+def _add_encoded(console, certificates):
+    """
+    Takes a list of dicts representing certificate objects and adds
+    the corresponding encoded certificate data to each dict.
+    """
+    for cert_dict in certificates:
+        cert = console.certificates.list(
+            filter_args={'name': cert_dict['name']})[0]
+        cert_dict.update(cert.get_encoded())
+
+
+def _remove_unreferenced_adapters(dpm_config):
     """
     Creates a string representation of the given config, EXCLUDING
     adapters AND network-ports. Then iterates the list of adapters,
