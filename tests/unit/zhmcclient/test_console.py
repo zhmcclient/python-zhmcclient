@@ -72,8 +72,8 @@ class TestConsole(object):
              ['object-uri']),
             (dict(full_properties=True),
              ['object-uri', 'name']),
-            ({},  # test default for full_properties (True)
-             ['object-uri', 'name']),
+            ({},  # test default for full_properties (False)
+             ['object-uri']),
         ]
     )
     @pytest.mark.parametrize(

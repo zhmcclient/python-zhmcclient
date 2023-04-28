@@ -93,12 +93,13 @@ class TestUnmanagedCpc(object):
         assert ucpc_mgr.console is self.console
 
     @pytest.mark.parametrize(
+        # Note: full_properties is ignored by UnmanagedCpcManager.list()
         "full_properties_kwargs, prop_names", [
             (dict(full_properties=False),
-             ['object-uri']),
+             ['object-uri', 'name']),
             (dict(full_properties=True),
              ['object-uri', 'name']),
-            ({},  # test default for full_properties (True)
+            ({},  # test default for full_properties (False)
              ['object-uri', 'name']),
         ]
     )

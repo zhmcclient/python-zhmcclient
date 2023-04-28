@@ -94,7 +94,7 @@ class UserPatternManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=True, filter_args=None):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the :term:`User Pattern` resources representing the user patterns
         defined in this HMC.

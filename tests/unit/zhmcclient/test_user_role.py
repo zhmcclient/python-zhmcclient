@@ -98,11 +98,11 @@ class TestUserRole(object):
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
             (dict(full_properties=False),
-             ['object-uri']),
+             ['object-uri', 'name', 'type']),
             (dict(full_properties=True),
-             ['object-uri', 'name']),
-            ({},  # test default for full_properties (True)
-             ['object-uri', 'name']),
+             ['object-uri', 'name', 'type', 'description']),
+            ({},  # test default for full_properties (False)
+             ['object-uri', 'name', 'type']),
         ]
     )
     @pytest.mark.parametrize(

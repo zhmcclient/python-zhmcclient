@@ -83,7 +83,7 @@ class PasswordRuleManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=True, filter_args=None):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the :term:`Password Rule` resources representing the password
         rules defined in this HMC.
