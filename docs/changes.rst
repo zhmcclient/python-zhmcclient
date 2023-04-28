@@ -29,6 +29,24 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The default value for the 'full_properties' parameter of the 'list()' method
+  of some zhmcclient resource types (Console, LDAPServerDefinition,
+  PasswordRule, User, UserPattern, UserRole, Task) has been changed from 'True'
+  to 'False' in order to improve performance. This change also affects the
+  set of properties of resources returned by 'find()' and 'findall()'.
+
+  In many cases, this is not an incompatible change since property access by
+  methods such as 'get_property()' or 'prop()' causes resource property
+  retrieval under the covers if the full set of properties had not been
+  retrieved in 'list()'.
+
+  However, there are also cases where this change is incompatible, for example
+  when accessing the resource properties via the 'properties' property. In such
+  cases, you need to change the call to 'list()' by specifying
+  'full_properties=True'. In cases where you had used 'find()' or 'findall()',
+  that parameter cannot be specified, and you need to fall back to using
+  'list()'.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -37,6 +55,13 @@ Released: not yet
   possible.
 
 **Enhancements:**
+
+* Disabled the default retrieval of the full set of properties in list()
+  methods that was enabled by default, for the following resource types:
+  Console, LDAPServerDefinition, PasswordRule, User, UserPattern, UserRole,
+  Task. This provides a performance boost in cases where find() or findall()
+  is used with filters that can be handled by the HMC, because in such cases
+  the resource properties do not need to be retrieved.
 
 **Cleanup:**
 

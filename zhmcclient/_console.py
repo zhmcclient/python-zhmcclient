@@ -112,7 +112,7 @@ class ConsoleManager(BaseManager):
         return self._console
 
     @logged_api_call
-    def list(self, full_properties=True, filter_args=None):
+    def list(self, full_properties=False, filter_args=None):
         """
         List the (one) :term:`Console` representing the HMC this client is
         connected to.
