@@ -81,6 +81,20 @@ security:
             reason: Fixed GitPython version requires Python>=3.7 and is used there
         53269:
             reason: Fixed Ipython version 8.1.0 cannot be used without major work on dependencies; Risk is minimal since this is used only in development
+        54687:
+            reason: Fixed pywin32 version 301 requires Python>=3.5 and is used there
+        54717:
+            reason: Fixed jupyter-core version 4.11.2 requires Python>=3.7 and is used there
+        54713:
+            reason: Fixed notebook version 6.4.10 requires Python>=3.6 and is used there
+        54684:
+            reason: Fixed notebook version 6.4.12 requires Python>=3.7 and is used there
+        54678:
+            reason: Fixed notebook version 5.7.8 only works on Python>=3.6 and is used there
+        54682:
+            reason: Fixed notebook version 5.5.0 only works on Python>=3.6 and is used there
+        54689:
+            reason: Fixed notebook version 5.7.11 only works on Python>=3.6 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
