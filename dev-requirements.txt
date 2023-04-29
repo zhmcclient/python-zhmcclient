@@ -178,9 +178,14 @@ pywin32-ctypes>=0.2.0; sys_platform=="win32"
 #       so we need to pin notebook to <6.1 on Python<=3.5.
 # Note: notebook 6.5.1 starts using nbclassic which seems to introduce some challenges for pip
 #       dependency resolution, so for now we pin notebook to <6.5.
+# notebook 5.7.8 fixes safety issue 54678
+# notebook 5.7.11 fixes safety issue 54689
 # notebook 6.1.5 fixes safety issue 40380
+# notebook 6.4.11 removed support for Python 3.6
+# notebook 6.4.12 fixes safety issue 54684
 notebook>=4.3.1,<6.1; python_version <= '3.5'
-notebook>=4.3.1,<6.5; python_version >= '3.6'
+notebook>=6.4.10,<6.5; python_version == '3.6'
+notebook>=6.4.12,<6.5; python_version >= '3.7'
 jupyter>=1.0.0
 jupyter-console>=5.2.0,<6.0.0; python_version == '2.7'
 jupyter-console>=5.2.0,<6.0.0; python_version >= '3.5'
@@ -208,31 +213,21 @@ jupyterlab-widgets>=1.0.2,<2.0.0; python_version >= '3.7'
 jupyterlab-pygments>=0.1.0; python_version <= '3.6'
 jupyterlab-pygments>=0.2.0; python_version >= '3.7'
 jupyter-core>=4.2.1,<5.0.0; python_version <= '3.5'
-jupyter-core>=4.6.1,<5.0.0; python_version >= '3.6'
+jupyter-core>=4.6.1,<5.0.0; python_version == '3.6'
+jupyter-core>=4.11.2,<5.0.0; python_version >= '3.7'
 ipython-genutils>=0.2.0
 ipython>=5.1.0,<6.0; python_version <= '3.6'
 ipython>=5.1.0,<6.0; python_version >= '3.7'
 
 # Pywin32 is used (at least?) by jupyter.
-# Pywin32 version 222 is inconsistent in its 32-bit/64-bit support on py37
 # Pywin32 version 226 needs to be excluded, see issues #1946 and #1975.
-# Note: Issue pywbem#2675: Pywin32 version 225+ provides wheel files for py38, but
-#       does not have the supported Python versions in its package metadata.
-#       That causes pywin32==225 to fail but pywin32>=225 to work.
-#       Reported to pywin32 as https://github.com/mhammond/pywin32/issues/1448.
-#       Addressed by increasing the minimum version of pywin32 to >=227 on Python >=3.8.
-#       This error showed up again on Python 3.10 and could be circumvented by increasing
-#       the minimum version to >=302 which supports Pyhton 3.10 as per its downloadable
-#       files.
-# Note: To circumvent https://github.com/pypa/pip/issues/10701,py3.10 was originally
-#       excluded when the minimum version was 227. With a minimum version of 302, that
-#       is no longer needed.
-# pywin32 version 302 added support for Python 3.10
+# pywin32 version 300 removed support for Python 2.7
+# pywin32 version 301 fixes safety issue 54687
+# pywin32 version 302 removed support for Python 3.5 and added support for Python 3.10
 # pywin32 version 303 added support for Python 3.11
-pywin32>=222,!=226; sys_platform == 'win32' and python_version == '2.7'
-pywin32>=222,!=226; sys_platform == 'win32' and python_version >= '3.5' and python_version <= '3.6'
-pywin32>=223,!=226; sys_platform == 'win32' and python_version == '3.7'
-pywin32>=303; sys_platform == 'win32' and python_version >= '3.8'
+pywin32>=222,!=226,<300; sys_platform == 'win32' and python_version == '2.7'
+pywin32>=301,<302; sys_platform == 'win32' and python_version == '3.5'
+pywin32>=303; sys_platform == 'win32' and python_version >= '3.6'
 
 # The tornado package is used by ipykernel which is used by jupyter.
 # Tornado 5.0.0 and 5.0.1 rejects installation if the Python ssl module
@@ -246,7 +241,7 @@ pywin32>=303; sys_platform == 'win32' and python_version >= '3.8'
 # version to below 5.0 on Python 2.
 # TODO: Follow up on resolution of this issue.
 tornado>=4.0,<5.0; python_version == '2.7'
-tornado>=6.0; python_version >= '3.5'
+tornado>=6.1; python_version >= '3.5'
 
 # pyzmq 17.0.0,17.1.0 fail installation when wheel is used
 pyzmq>=17.1.3; python_version <= '3.5'

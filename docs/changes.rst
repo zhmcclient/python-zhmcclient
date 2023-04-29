@@ -33,6 +33,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Addressed safety issues by increasing minimum versions of packages, where
+  possible.
+
 **Enhancements:**
 
 **Cleanup:**
