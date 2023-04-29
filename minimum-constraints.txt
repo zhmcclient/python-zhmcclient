@@ -172,7 +172,7 @@ pluggy==0.13.0; python_version >= '3.7'
 coverage==5.0
 pytest-cov==2.7.0
 # handled by dev-requirements.txt: git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
-coveralls==2.1.2; python_version >= '3.5'
+coveralls==3.3.0; python_version >= '3.5'
 
 # Safety CI by pyup.io
 # Safety is run only on Python >=3.6
