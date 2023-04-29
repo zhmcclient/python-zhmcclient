@@ -64,8 +64,7 @@ coverage>=5.0
 pytest-cov>=2.7.0
 # coveralls 2.0 has removed support for Python 2.7
 git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
-# TODO: Remove coveralls pinning to <3.0.0 once fixed (TheKevJames/coveralls-python#252)
-coveralls>=2.1.2,<3.0.0; python_version >= '3.5'
+coveralls>=3.3.0; python_version >= '3.5'
 # PyYAML: covered in direct deps for development
 
 # Safety CI by pyup.io
