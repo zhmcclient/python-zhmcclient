@@ -20,6 +20,24 @@ Change log
 ----------
 
 
+Version 16.0.0.dev1 (= z16_ga15)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is the internal development content for z16 GA 1.5 It will be merged into
+an external release not before the WS API book with the zz16 GA 1.5 changes
+is public.
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Cleanup:**
+
+
 Version 1.8.0.dev1
 ^^^^^^^^^^^^^^^^^^
 
