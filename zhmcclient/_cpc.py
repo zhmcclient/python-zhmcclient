@@ -1972,7 +1972,8 @@ class Cpc(BaseResource):
         The DPM configuration includes settable CPC properties and all DPM
         specific objects of or associated with the CPC, such as adapters with
         their ports, virtual switches, partitions with their child objects,
-        capacity groups, and various storage and tape related resources.
+        capacity groups, various storage and tape related resources, and
+        certificate objects.
 
         By default, only those adapters of the CPC are exported that are
         referenced by other DPM specific objects.
@@ -1985,6 +1986,8 @@ class Cpc(BaseResource):
         Authorization requirements:
 
         * Object-access permission to this CPC.
+        * Object-access permission to all Certificate objects associated to
+          this CPC.
 
         Parameters:
 
