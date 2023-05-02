@@ -35,6 +35,16 @@ is public.
 
 **Enhancements:**
 
+- Enhanced export_dpm_configuration() to include Certificate objects.
+
+- Introduced Certificate objects as new category of resources and added new
+  methods to assign/unassign Certificate objects to/from DPM mode partitions and
+  classic mode LPARs and activation profiles.
+
+- Added two new methods Console.list_api_features() and
+  Cpc.list_api_features() and accompanying documentation to support the
+  new "API features" concept.
+
 **Cleanup:**
 
 
@@ -169,7 +179,7 @@ Released: 2023-03-02
 
 **Bug fixes:**
 
-* Accomodated use of Ubuntu 22.04 in Github Actions as the default ubuntu.
+* Accommodated use of Ubuntu 22.04 in Github Actions as the default ubuntu.
 
 * Fixed install error of twine -> keyring dependency pywin32-ctypes on Windows
   with Python 3.8 and higher. (issue #1078)
@@ -254,7 +264,7 @@ Released: 2022-08-20
   support for mocked environments. (issue #1001)
 
 * Fixed the 'dump()' method on the Client class and other resource classes
-  to accomodate for HBAs on z14 and later, unconfigured FICON adapters, and
+  to accommodate for HBAs on z14 and later, unconfigured FICON adapters, and
   presence of unmanaged CPCs.
 
 * Fixed the add_permissions() and remove_permissions() methods of UserRole
@@ -331,7 +341,7 @@ Released: 2022-05-17
 **Incompatible changes:**
 
 * 'Lpar.list()' with filters that have no matching LPAR now returns an empty
-  result set, consistent with other zhmcclient 'list()' methods. Previosuly,
+  result set, consistent with other zhmcclient 'list()' methods. Previously,
   'Lpar.list()' raised HTTPError 404.1 when no LPAR matched the filters.
   If you used 'Lpar.list()' with filters, you may need to adjust the handling
   of the case where no LPARs match the filter. (issue #954)
@@ -358,7 +368,7 @@ Released: 2022-05-17
   job completion notification and the inventory change notification.
   (issue #956)
 
-* End2end test: Made user test tolerant against missing passweord rule 'Basic'.
+* End2end test: Made user test tolerant against missing password rule 'Basic'.
   (issue #960)
 
 * End2end test: Added CPC property 'last-energy-advice-time' to the list of
@@ -567,7 +577,7 @@ Released: 2021-11-18
 
 * Added support for 'Cpc.export_dpm_configuration()'.
 
-* Added a new exception classs 'ConsistencyError' that indicates consistency
+* Added a new exception class 'ConsistencyError' that indicates consistency
   errors that should be reported.
 
 * Added a new example script examples/export_dpm_config.py.
@@ -761,7 +771,7 @@ Released: 2021-03-23
 
 * Improved zhmcclient HMC logging in error cases by not truncating the HTTP
   response content for HTTP status 400 and higher. (issue #717) Also the
-  truncation limit was icreased to 30000 to accomodate most HMC responses.
+  truncation limit was increased to 30000 to accommodate most HMC responses.
 
 * Improved display of `zhmcclient.HTTPError` exceptions by adding the 'stack'
   field if present. (issue #716)
