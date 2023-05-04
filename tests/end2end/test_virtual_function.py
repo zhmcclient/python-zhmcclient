@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -81,6 +81,44 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
                 session, part.virtual_functions, vfunc.name, 'name',
                 'description', VFUNC_VOLATILE_PROPS, VFUNC_MINIMAL_PROPS,
                 VFUNC_LIST_PROPS)
+
+
+def test_vfunc_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the virtual functions to test with
+        part_vfunc_tuples = []
+        part_list = cpc.partitions.list()
+        for part in part_list:
+            vfunc_list = part.virtual_functions.list()
+            for vfunc in vfunc_list:
+                part_vfunc_tuples.append((part, vfunc))
+        if not part_vfunc_tuples:
+            skip_warn("No partitions with virtual functions on CPC {c} "
+                      "managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
+
+        for part, vfunc in part_vfunc_tuples:
+            print("Testing on CPC {c} with virtual function {f!r} of partition "
+                  "{p!r}".format(c=cpc.name, f=vfunc.name, p=part.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(client, vfunc.manager, non_list_prop, None)
 
 
 def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811

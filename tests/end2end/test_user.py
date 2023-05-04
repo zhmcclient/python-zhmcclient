@@ -30,8 +30,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -73,6 +73,37 @@ def test_user_find_list(hmc_session):  # noqa: F811
             hmc_session, console.users, user.name, 'name',
             'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
             USER_LIST_PROPS)
+
+
+def test_user_property(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    client = zhmcclient.Client(hmc_session)
+    console = client.consoles.console
+    hd = hmc_session.hmc_definition
+
+    api_version = client.query_api_version()
+    hmc_version = api_version['hmc-version']
+    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    if hmc_version_info < (2, 13, 0):
+        skip_warn("HMC {h} of version {v} does not yet support users".
+                  format(h=hd.host, v=hmc_version))
+
+    # Pick the users to test with
+    user_list = console.users.list()
+    if not user_list:
+        skip_warn("No users defined on HMC {h}".format(h=hd.host))
+    user_list = pick_test_resources(user_list)
+
+    for user in user_list:
+        print("Testing with user {u!r}".format(u=user.name))
+
+        # Select a property that is not returned by list()
+        non_list_prop = 'description'
+
+        runtest_get_properties(client, user.manager, non_list_prop, None)
 
 
 def test_user_crud(hmc_session):  # noqa: F811

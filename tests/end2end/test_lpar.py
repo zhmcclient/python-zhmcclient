@@ -29,7 +29,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, skip_warn
+from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+    runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -70,3 +71,35 @@ def test_lpar_find_list(classic_mode_cpcs):  # noqa: F811
             runtest_find_list(
                 session, cpc.lpars, lpar.name, 'name', 'status',
                 LPAR_VOLATILE_PROPS, LPAR_MINIMAL_PROPS, LPAR_LIST_PROPS)
+
+
+def test_lpar_property(classic_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not classic_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in classic mode")
+
+    for cpc in classic_mode_cpcs:
+        assert not cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the LPARs to test with
+        lpar_list = cpc.lpars.list()
+        if not lpar_list:
+            skip_warn("No LPARs on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        lpar_list = pick_test_resources(lpar_list)
+
+        for lpar in lpar_list:
+            print("Testing on CPC {c} with LPAR {p!r}".
+                  format(c=cpc.name, p=lpar.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(client, lpar.manager, non_list_prop, (2, 14))

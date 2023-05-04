@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
-    runtest_find_list, TEST_PREFIX, skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -93,6 +93,56 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
                 session, stogrp.storage_volumes, stovol.name, 'name', 'size',
                 STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS,
                 unique_name=unique_name)
+
+
+def test_stovol_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        skipif_no_storage_mgmt_feature(cpc)
+
+        session = cpc.manager.session
+        client = cpc.manager.client
+        hd = session.hmc_definition
+
+        api_version = client.query_api_version()
+        hmc_version_str = api_version['hmc-version']
+        hmc_version = tuple(map(int, hmc_version_str.split('.')))
+
+        # Pick the storage volumes to test with
+        grp_vol_tuples = []
+        stogrp_list = cpc.list_associated_storage_groups()
+        for stogrp in stogrp_list:
+            stovol_list = stogrp.storage_volumes.list()
+            for stovol in stovol_list:
+                grp_vol_tuples.append((stogrp, stovol))
+        if not grp_vol_tuples:
+            skip_warn("No storage groups with volumes associated to CPC {c} "
+                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
+        grp_vol_tuples = pick_test_resources(grp_vol_tuples)
+
+        # Storage volumes were introduced in HMC 2.14.0 but their names were
+        # made unique only in 2.14.1.
+        unique_name = (hmc_version >= (2, 14, 1))
+        if not unique_name:
+            print("Tolerating non-unique storage volume names on HMC "
+                  "version {}".format(hmc_version))
+        for stogrp, stovol in grp_vol_tuples:
+            print("Testing on CPC {c} with storage volume {v!r} of "
+                  "storage group {g!r}".
+                  format(c=cpc.name, v=stovol.name, g=stogrp.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(
+                client, stovol.manager, non_list_prop, None)
 
 
 def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811

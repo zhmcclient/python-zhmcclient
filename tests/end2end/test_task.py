@@ -27,7 +27,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, skip_warn
+from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+    runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -67,3 +68,33 @@ def test_task_find_list(hmc_session):  # noqa: F811
         runtest_find_list(
             hmc_session, console.tasks, task.name, 'name', 'element-uri',
             TASK_VOLATILE_PROPS, TASK_MINIMAL_PROPS, TASK_LIST_PROPS)
+
+
+def test_task_property(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    client = zhmcclient.Client(hmc_session)
+    console = client.consoles.console
+    hd = hmc_session.hmc_definition
+
+    api_version = client.query_api_version()
+    hmc_version = api_version['hmc-version']
+    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    if hmc_version_info < (2, 13, 0):
+        skip_warn("HMC {h} of version {v} does not yet support tasks".
+                  format(h=hd.host, v=hmc_version))
+
+    # Pick the tasks to test with
+    task_list = console.tasks.list()
+    assert task_list  # system-defined and therefore never empty
+    task_list = pick_test_resources(task_list)
+
+    for task in task_list:
+        print("Testing with task {t!r}".format(t=task.name))
+
+        # Select a property that is not returned by list()
+        non_list_prop = 'description'
+
+        runtest_get_properties(client, task.manager, non_list_prop, None)

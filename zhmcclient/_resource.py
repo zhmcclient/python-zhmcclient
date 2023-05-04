@@ -31,7 +31,7 @@ from immutable_views import DictView
 
 from ._logging import logged_api_call
 from ._utils import repr_dict, repr_timestamp
-from ._exceptions import CeasedExistence
+from ._exceptions import CeasedExistence, HTTPError
 
 __all__ = ['BaseResource']
 
@@ -262,6 +262,86 @@ class BaseResource(object):
             self._properties = dict(full_properties)
             self._properties_timestamp = int(time.time())
             self._full_properties = True
+
+    @logged_api_call
+    def pull_properties(self, properties):
+        """
+        Retrieve the specified set of resource properties and cache them in
+        this zhmcclient object.
+
+        The values of other properties that may already exist in this
+        zhmcclient object remain unchanged.
+
+        If the HMC does not yet support property filtering for this type of
+        resource, the full set of properties is retrieved, as in
+        :meth:`pull_full_properties`.
+
+        This method serializes with other methods that access or change
+        properties on the same Python object.
+
+        Authorization requirements:
+
+        * Object-access permission to this resource.
+
+        Parameters:
+
+          properties (iterable of :term:`string`):
+            The names of one or more properties to be retrieved, using the
+            names defined in the respective 'Data model' section in the
+            :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`
+        """
+        with self._property_lock:
+            if self._ceased_existence:
+                raise CeasedExistence(self._uri)
+
+        if self.manager.supports_properties:
+            # Note: Older HMC versions may simply ignore the query parameter
+            # and return the full list of properties. Newer HMC versions return
+            # HTTP 400,1 "unrecognized or unsupported query parameter" if it is
+            # not supported for the resource type.
+            uri = "{}?properties={}".format(self._uri, ','.join(properties))
+            try:
+                subset_properties = self.manager.session.get(uri)
+                # pylint: disable=simplifiable-if-statement
+                if len(subset_properties) > len(properties):
+                    # We have an older HMC that ignored the query parameter and
+                    # returned all properties.
+                    is_full = True
+                else:
+                    is_full = False
+            except HTTPError as exc:
+                if exc.http_status == 400 and exc.reason == 1:
+                    # HMC does not yet support the query parameter, get full set
+                    subset_properties = self.manager.session.get(self._uri)
+                    is_full = True
+                else:
+                    raise
+        else:
+            # Resource does not support the query parameter, get full set
+            subset_properties = self.manager.session.get(self._uri)
+            is_full = True
+
+        with self._property_lock:
+            if is_full:
+                self._properties = dict(subset_properties)
+                self._properties_timestamp = int(time.time())
+                self._full_properties = True
+            else:
+                self._properties.update(subset_properties)
+                # We leave the self._full_properties flag unchanged. If the
+                # local object already had full properties pulled earlier, it
+                # now still has all of them.
+                # We leave the self._properties_timestamp unchanged. The
+                # resource now has newer and older properties, and the timestamp
+                # indicates the oldest properties.
 
     @logged_api_call
     def get_property(self, name):
