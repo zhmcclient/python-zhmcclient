@@ -28,7 +28,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, skip_warn
+from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+    runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -75,3 +76,41 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
                 session, actprof_mgr, actprof.name, 'name', 'element-uri',
                 ACTPROF_VOLATILE_PROPS, ACTPROF_MINIMAL_PROPS,
                 ACTPROF_LIST_PROPS)
+
+
+@pytest.mark.parametrize(
+    "profile_type", ['reset', 'image', 'load']
+)
+def test_actprof_property(classic_mode_cpcs, profile_type):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not classic_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in classic mode")
+
+    for cpc in classic_mode_cpcs:
+        assert not cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+        actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
+
+        # Pick the activation profiles to test with
+        actprof_list = actprof_mgr.list()
+        if not actprof_list:
+            skip_warn("No {t} activation profiles on CPC {c} managed by "
+                      "HMC {h}".
+                      format(t=profile_type, c=cpc.name, h=hd.host))
+        actprof_list = pick_test_resources(actprof_list)
+
+        for actprof in actprof_list:
+            print("Testing on CPC {c} with {t} activation profile {p!r}".
+                  format(c=cpc.name, t=profile_type, p=actprof.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(
+                client, actprof.manager, non_list_prop, (2, 15))

@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -74,6 +74,39 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
                 session, cpc.capacity_groups, capgrp.name, 'name',
                 'element-uri', CAPGRP_VOLATILE_PROPS, CAPGRP_MINIMAL_PROPS,
                 CAPGRP_LIST_PROPS)
+
+
+def test_capgrp_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the capacity groups to test with
+        capgrp_list = cpc.capacity_groups.list()
+        if not capgrp_list:
+            skip_warn("No capacity groups defined on CPC {c} managed by "
+                      "HMC {h}".format(c=cpc.name, h=hd.host))
+        capgrp_list = pick_test_resources(capgrp_list)
+
+        for capgrp in capgrp_list:
+            print("Testing on CPC {c} with capacity group {g!r}".
+                  format(c=cpc.name, g=capgrp.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(
+                client, capgrp.manager, non_list_prop, None)
 
 
 def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811

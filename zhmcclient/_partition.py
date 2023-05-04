@@ -86,7 +86,8 @@ class PartitionManager(BaseManager):
             oid_prop='object-id',
             uri_prop='object-uri',
             name_prop='name',
-            query_props=query_props)
+            query_props=query_props,
+            supports_properties=True)
 
     @property
     def cpc(self):

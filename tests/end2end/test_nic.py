@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -78,6 +78,43 @@ def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
             runtest_find_list(
                 session, part.nics, nic.name, 'name', 'type',
                 NIC_VOLATILE_PROPS, NIC_MINIMAL_PROPS, NIC_LIST_PROPS)
+
+
+def test_nic_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the NICs to test with
+        part_nic_tuples = []
+        part_list = cpc.partitions.list()
+        for part in part_list:
+            nic_list = part.nics.list()
+            for nic in nic_list:
+                part_nic_tuples.append((part, nic))
+        if not part_nic_tuples:
+            skip_warn("No partitions with NICs on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        part_nic_tuples = pick_test_resources(part_nic_tuples)
+
+        for part, nic in part_nic_tuples:
+            print("Testing on CPC {c} with NIC {n!r} of partition {p!r}".
+                  format(c=cpc.name, n=nic.name, p=part.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(client, nic.manager, non_list_prop, None)
 
 
 def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
