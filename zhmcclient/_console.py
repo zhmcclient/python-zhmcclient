@@ -75,7 +75,8 @@ class ConsoleManager(BaseManager):
             uri_prop='object-uri',
             name_prop='name',
             query_props=None,
-            list_has_name=False)
+            list_has_name=False,
+            supports_properties=True)
         self._client = client
         self._console = None
 

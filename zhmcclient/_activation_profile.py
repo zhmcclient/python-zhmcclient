@@ -123,7 +123,8 @@ class ActivationProfileManager(BaseManager):
             oid_prop='name',  # This is an exception!
             uri_prop='element-uri',
             name_prop='name',
-            query_props=query_props)
+            query_props=query_props,
+            supports_properties=True)
 
         self._profile_type = profile_type
 

@@ -31,8 +31,9 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, skipif_storage_mgmt_feature, skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    standard_partition_props, skipif_storage_mgmt_feature, \
+    runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -79,6 +80,43 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
             runtest_find_list(
                 session, part.hbas, hba.name, 'name', 'wwpn',
                 HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
+
+
+def test_hba_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the HBAs to test with
+        part_hba_tuples = []
+        part_list = cpc.partitions.list()
+        for part in part_list:
+            hba_list = part.hbas.list()
+            for hba in hba_list:
+                part_hba_tuples.append((part, hba))
+        if not part_hba_tuples:
+            skip_warn("No partitions with HBAs on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        part_hba_tuples = pick_test_resources(part_hba_tuples)
+
+        for part, hba in part_hba_tuples:
+            print("Testing on CPC {c} with HBA {h!r} of partition {p!r}".
+                  format(c=cpc.name, h=hba.name, p=part.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(client, hba.manager, non_list_prop, None)
 
 
 def test_hba_crud(dpm_mode_cpcs):  # noqa: F811

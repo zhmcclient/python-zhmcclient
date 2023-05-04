@@ -192,7 +192,8 @@ class BaseManager(object):
 
     def __init__(self, resource_class, class_name, session, parent, base_uri,
                  oid_prop, uri_prop, name_prop, query_props,
-                 list_has_name=True, case_insensitive_names=False):
+                 list_has_name=True, case_insensitive_names=False,
+                 supports_properties=False):
         # This method intentionally has no docstring, because it is internal.
         #
         # Parameters:
@@ -243,6 +244,10 @@ class BaseManager(object):
         #   case_insensitive_names (bool):
         #     Indicates whether the name of the resource is treated case
         #     insensitively.
+        #   supports_properties (bool):
+        #     Indicates whether the Get Properties operation for this type of
+        #     resource supports the 'properties' query parameter in the latest
+        #     released version of the HMC.
 
         # We want to surface precondition violations as early as possible,
         # so we test those that are not surfaced through the init code:
@@ -265,6 +270,7 @@ class BaseManager(object):
         self._query_props = query_props
         self._list_has_name = list_has_name
         self._case_insensitive_names = case_insensitive_names
+        self._supports_properties = supports_properties
 
         self._name_uri_cache = _NameUriCache(
             self, session.retry_timeout_config.name_uri_cache_timetolive,
@@ -288,6 +294,7 @@ class BaseManager(object):
             "  _query_props={_query_props},\n"
             "  _list_has_name={_list_has_name!r},\n"
             "  _case_insensitive_names={_case_insensitive_names!r},\n"
+            "  _supports_properties={_supports_properties!r},\n"
             "  _name_uri_cache={_name_uri_cache!r}\n"
             ")".format(
                 classname=self.__class__.__name__,
@@ -305,6 +312,7 @@ class BaseManager(object):
                 _query_props=repr_list(self._query_props, indent=2),
                 _list_has_name=self._list_has_name,
                 _case_insensitive_names=self._case_insensitive_names,
+                _supports_properties=self._supports_properties,
                 _name_uri_cache=self._name_uri_cache,
             ))
         return ret
@@ -439,6 +447,16 @@ class BaseManager(object):
           insensitively.
         """
         return self._case_insensitive_names
+
+    @property
+    def supports_properties(self):
+        """
+        :class:`py:bool`:
+          Indicates whether the "Get Properties" operation for this type of
+          resource supports the 'properties' query parameter in the latest
+          released version of the HMC.
+        """
+        return self._supports_properties
 
     def resource_object(self, uri_or_oid, props=None):
         """

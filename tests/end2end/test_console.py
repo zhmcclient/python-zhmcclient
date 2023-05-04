@@ -27,7 +27,7 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list
+from .utils import runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -55,3 +55,16 @@ def test_console_find_list(hmc_session):  # noqa: F811
         hmc_session, client.consoles, console.name, 'name',
         'object-uri', CONSOLE_VOLATILE_PROPS, CONSOLE_MINIMAL_PROPS,
         CONSOLE_LIST_PROPS)
+
+
+def test_console_property(hmc_session):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    client = zhmcclient.Client(hmc_session)
+
+    # Select a property that is not returned by list()
+    non_list_prop = 'description'
+
+    runtest_get_properties(client, client.consoles, non_list_prop, (2, 15))

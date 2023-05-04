@@ -28,7 +28,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, skip_warn
+from .utils import skip_warn, pick_test_resources, runtest_find_list, \
+    runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -71,3 +72,36 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
                 session, cpc.virtual_switches, vswitch.name, 'name',
                 'description', VSWITCH_VOLATILE_PROPS, VSWITCH_MINIMAL_PROPS,
                 VSWITCH_LIST_PROPS)
+
+
+def test_vswitch_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the virtual switches to test with
+        vswitch_list = cpc.virtual_switches.list()
+        if not vswitch_list:
+            skip_warn("No virtual switches (= no OSA/HS network adapters) on "
+                      "CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        vswitch_list = pick_test_resources(vswitch_list)
+
+        for vswitch in vswitch_list:
+            print("Testing on CPC {c} with virtual switch {v!r}".
+                  format(c=cpc.name, v=vswitch.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(client, vswitch.manager, non_list_prop, None)

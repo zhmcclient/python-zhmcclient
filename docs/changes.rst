@@ -68,6 +68,13 @@ Released: not yet
   is used with filters that can be handled by the HMC, because in such cases
   the resource properties do not need to be retrieved.
 
+* Added a 'pull_properties()' method to zhmcclient resource classes, that
+  performs a "Get Properties" HMC operation with the 'properties' query
+  parameter defined. This can be used to speed up certain property retrieval
+  operations, for example on the Console or on CPCs. (issue #862)
+
+* Test: Added end2end testcases for property retrieval.
+
 **Cleanup:**
 
 **Known issues:**

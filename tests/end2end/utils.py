@@ -23,6 +23,7 @@ import re
 import random
 import warnings
 import pytest
+from zhmcclient import HTTPError, BaseManager
 
 # Prefix used for names of resources that are created during tests
 TEST_PREFIX = 'zhmcclient_tests_end2end'
@@ -290,6 +291,151 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         found_res = [_res for _res in found_res_list if _res.name == name][0]
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                          prop_names=list_props)
+
+
+def runtest_get_properties(
+        client, manager, non_list_prop, properties_hmc_version):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Run tests for pull_full_properties/pull_properties/get_property/prop
+    methods for a resource type.
+
+    Parameters:
+
+      client (zhmcclient.Client): Client of the manager.
+
+      manager (zhmcclient.BaseManager): Manager for listing the resources.
+
+      non_list_prop (string): Name of a resource property that is not returned
+        with the List HMC operation.
+
+      properties_hmc_version (tuple(int,int)): HMC version that
+        introduced the 'properties' query parameter for this resource type.
+    """
+
+    assert isinstance(manager, BaseManager)
+
+    # Get HMC version as a tuple (major, minor)
+    av = client.query_api_version()
+    hmc_version = tuple(int(v) for v in av['hmc-version'].split('.'))
+
+    # Indicates whether pull_properties() is expected to pull just the
+    # specified properties.
+    supports_properties = properties_hmc_version is not None \
+        and hmc_version >= properties_hmc_version \
+        and manager.supports_properties
+
+    # Part 1: First chunk of methods to be tested
+
+    # Get a fresh resource with list properties
+    manager.invalidate_cache()
+    resources = manager.list()
+    resource = random.choice(resources)
+
+    local_pnames = set(resource.properties.keys())
+    local_pnames_plus = local_pnames | set([non_list_prop])
+
+    # Validate that the non_list_prop property is not listed.
+    # This is really just checking that the testcase was invoked correctly.
+    assert non_list_prop not in local_pnames, \
+        "non_list_prop={!r}, local_pnames={!r}". \
+        format(non_list_prop, local_pnames)
+
+    # Validate initial state of the resource w.r.t. properties
+    assert resource.full_properties is False
+
+    # Validate that get_property() does not pull additional properties
+    for pname in local_pnames:
+        _ = resource.get_property(pname)
+        assert resource.full_properties is False, \
+            "resource={!r}".format(resource)
+        current_pnames = set(resource.properties.keys())
+        assert current_pnames == local_pnames, \
+            "current_pnames={!r}, local_pnames={!r}". \
+            format(current_pnames, local_pnames)
+
+    # Validate that prop() does not pull additional properties
+    for pname in local_pnames:
+        _ = resource.prop(pname)
+        assert resource.full_properties is False, \
+            "resource={!r}".format(resource)
+        current_pnames = set(resource.properties.keys())
+        assert current_pnames == local_pnames, \
+            "current_pnames={!r}, local_pnames={!r}". \
+            format(current_pnames, local_pnames)
+
+    # Validate that get_property() on non_list_prop pulls full properties
+    _ = resource.get_property(non_list_prop)
+    assert resource.full_properties is True, \
+        "resource={!r}".format(resource)
+    current_pnames = set(resource.properties.keys())
+    assert current_pnames > local_pnames_plus, \
+        "current_pnames={!r}, local_pnames_plus={!r}". \
+        format(current_pnames, local_pnames_plus)
+
+    # Part 2: Second chunk of methods to be tested
+
+    # Get a fresh resource with list properties
+    manager.invalidate_cache()
+    resources = manager.list()
+    resource = random.choice(resources)
+
+    local_pnames = set(resource.properties.keys())
+    assert resource.full_properties is False
+
+    # Validate that pull_properties() with no properties fails
+    if supports_properties:
+        with pytest.raises(HTTPError) as exc_info:
+            resource.pull_properties([])
+        exc = exc_info.value
+        assert exc.http_status == 400
+        assert exc.reason == 14
+        # Verify that the properties are unchanged
+        assert resource.full_properties is False, \
+            "resource={!r}".format(resource)
+        current_pnames = set(resource.properties.keys())
+        assert current_pnames == local_pnames, \
+            "current_pnames={!r}, local_pnames={!r}". \
+            format(current_pnames, local_pnames)
+
+    # Validate pull_properties() with the specified property
+    resource.pull_properties([non_list_prop])
+    current_pnames = set(resource.properties.keys())
+    if supports_properties:
+        # We get just the specified property
+        assert current_pnames == local_pnames_plus, \
+            "current_pnames={!r}, local_pnames_plus={!r}". \
+            format(current_pnames, local_pnames_plus)
+        assert resource.full_properties is False, \
+            "resource={!r}".format(resource)
+    else:
+        assert current_pnames > local_pnames_plus, \
+            "current_pnames={!r}, local_pnames_plus={!r}". \
+            format(current_pnames, local_pnames_plus)
+        assert resource.full_properties is True, \
+            "resource={!r}".format(resource)
+
+    # Part 3: Third chunk of methods to be tested
+
+    # Get a fresh resource with list properties
+    manager.invalidate_cache()
+    resources = manager.list()
+    resource = random.choice(resources)
+
+    local_pnames = set(resource.properties.keys())
+    assert resource.full_properties is False
+
+    # Validate that pull_full_properties() pulls full properties
+    resource.pull_full_properties()
+    assert resource.full_properties is True
+    current_pnames = set(resource.properties.keys())
+    assert current_pnames > local_pnames_plus, \
+        "current_pnames={!r}, local_pnames_plus={!r}". \
+        format(current_pnames, local_pnames_plus)
+
+    # Validate that pull_properties() with non_list_prop still has full props
+    resource.pull_properties([non_list_prop])
+    assert resource.full_properties is True
 
 
 def skipif_no_storage_mgmt_feature(cpc):

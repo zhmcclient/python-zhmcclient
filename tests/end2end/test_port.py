@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -78,6 +78,43 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
             runtest_find_list(
                 session, adapter.ports, port.name, 'name', 'element-uri',
                 PORT_VOLATILE_PROPS, PORT_MINIMAL_PROPS, PORT_LIST_PROPS)
+
+
+def test_port_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the ports to test with
+        adapter_port_tuples = []
+        adapter_list = cpc.adapters.list()
+        for adapter in adapter_list:
+            port_list = adapter.ports.list()
+            for port in port_list:
+                adapter_port_tuples.append((adapter, port))
+        if not adapter_port_tuples:
+            skip_warn("No adapters with ports on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        adapter_port_tuples = pick_test_resources(adapter_port_tuples)
+
+        for adapter, port in adapter_port_tuples:
+            print("Testing on CPC {c} with port {p!r} of adapter {a!r}".
+                  format(c=cpc.name, p=port.name, a=adapter.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(client, port.manager, non_list_prop, None)
 
 
 def test_port_update(dpm_mode_cpcs):  # noqa: F811

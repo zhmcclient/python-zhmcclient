@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
-    standard_partition_props, skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -73,6 +73,39 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
             runtest_find_list(
                 session, cpc.partitions, part.name, 'name', 'status',
                 PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS)
+
+
+def test_part_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the partitions to test with
+        part_list = cpc.partitions.list()
+        if not part_list:
+            skip_warn("No partitions on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        part_list = pick_test_resources(part_list)
+
+        for part in part_list:
+            print("Testing on CPC {c} with partition {p!r}".
+                  format(c=cpc.name, p=part.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(
+                client, part.manager, non_list_prop, (2, 16))
 
 
 def test_part_crud(dpm_mode_cpcs):  # noqa: F811
