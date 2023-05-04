@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
-    runtest_find_list, TEST_PREFIX, skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -79,6 +79,42 @@ def test_stogrptpl_find_list(dpm_mode_cpcs):  # noqa: F811
                 session, console.storage_group_templates, stogrptpl.name,
                 'name', 'object-uri', STOGRPTPL_VOLATILE_PROPS,
                 STOGRPTPL_MINIMAL_PROPS, STOGRPTPL_LIST_PROPS)
+
+
+def test_stogrptpl_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        skipif_no_storage_mgmt_feature(cpc)
+
+        console = cpc.manager.client.consoles.console
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the storage group templates to test with
+        stogrptpl_list = console.storage_group_templates.findall(
+            **{'cpc-uri': cpc.uri})
+        if not stogrptpl_list:
+            skip_warn("No storage group templates associated to CPC {c} "
+                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
+        stogrptpl_list = pick_test_resources(stogrptpl_list)
+
+        for stogrptpl in stogrptpl_list:
+            print("Testing on CPC {c} with storage group template {g!r}".
+                  format(c=cpc.name, g=stogrptpl.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(
+                client, stogrptpl.manager, non_list_prop, None)
 
 
 def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811

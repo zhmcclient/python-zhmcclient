@@ -28,7 +28,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import all_cpcs, classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import runtest_find_list, assert_res_prop, skip_warn
+from .utils import skip_warn, assert_res_prop, runtest_find_list, \
+    runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -105,6 +106,25 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
         runtest_find_list(
             hmc_session, client.cpcs, cpc_name, 'name', 'status',
             CPC_VOLATILE_PROPS, CPC_MINIMAL_PROPS, cpc_list_props)
+
+
+def test_cpc_property(all_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not all_cpcs:
+        pytest.skip("HMC definition does not include any CPCs")
+
+    for cpc in all_cpcs:
+        print("Testing with CPC {c}".format(c=cpc.name))
+
+        client = cpc.manager.client
+
+        # Select a property that is not returned by list()
+        non_list_prop = 'description'
+
+        runtest_get_properties(client, cpc.manager, non_list_prop, (2, 14))
 
 
 def test_cpc_features(all_cpcs):  # noqa: F811

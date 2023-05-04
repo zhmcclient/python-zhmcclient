@@ -31,8 +31,8 @@ from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
-from .utils import pick_test_resources, skipif_no_storage_mgmt_feature, \
-    runtest_find_list, TEST_PREFIX, skip_warn
+from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
+    skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -84,6 +84,49 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
                 session, stogrptpl.storage_volume_templates, stovoltpl.name,
                 'name', 'size', STOVOLTPL_VOLATILE_PROPS,
                 STOVOLTPL_MINIMAL_PROPS, STOVOLTPL_LIST_PROPS)
+
+
+def test_stovoltpl_property(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test property related methods
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        skipif_no_storage_mgmt_feature(cpc)
+
+        console = cpc.manager.client.consoles.console
+        client = cpc.manager.client
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the storage volume templates to test with
+        grp_vol_tuples = []
+        stogrptpl_list = console.storage_group_templates.findall(
+            **{'cpc-uri': cpc.uri})
+        for stogrptpl in stogrptpl_list:
+            stovoltpl_list = stogrptpl.storage_volume_templates.list()
+            for stovoltpl in stovoltpl_list:
+                grp_vol_tuples.append((stogrptpl, stovoltpl))
+        if not grp_vol_tuples:
+            skip_warn("No storage group templates with volumes associated to "
+                      "CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+        grp_vol_tuples = pick_test_resources(grp_vol_tuples)
+
+        for stogrptpl, stovoltpl in grp_vol_tuples:
+            print("Testing on CPC {c} with storage volume template {v!r} of "
+                  "storage group template {g!r}".
+                  format(c=cpc.name, v=stovoltpl.name, g=stogrptpl.name))
+
+            # Select a property that is not returned by list()
+            non_list_prop = 'description'
+
+            runtest_get_properties(
+                client, stovoltpl.manager, non_list_prop, None)
 
 
 def test_stovoltpl_crud(dpm_mode_cpcs):  # noqa: F811
