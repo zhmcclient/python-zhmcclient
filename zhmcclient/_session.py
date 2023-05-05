@@ -206,12 +206,12 @@ class RetryTimeoutConfig(object):
         self.name_uri_cache_timetolive = name_uri_cache_timetolive
 
         # Read retries only for these HTTP methods:
-        self.method_whitelist = {'GET'}
+        self.allowed_methods = {'GET'}
 
     _attrs = ('connect_timeout', 'connect_retries', 'read_timeout',
               'read_retries', 'max_redirects', 'operation_timeout',
               'status_timeout', 'name_uri_cache_timetolive',
-              'method_whitelist')
+              'allowed_methods')
 
     def override_with(self, override_config):
         """
@@ -726,7 +726,7 @@ class Session(object):
             total=retry_timeout_config.connect_retries,
             connect=retry_timeout_config.connect_retries,
             read=retry_timeout_config.read_retries,
-            method_whitelist=retry_timeout_config.method_whitelist,
+            allowed_methods=retry_timeout_config.allowed_methods,
             redirect=retry_timeout_config.max_redirects)
         session = requests.Session()
         session.mount('https://',
