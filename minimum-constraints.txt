@@ -99,8 +99,7 @@ wheel==0.38.1; python_version >= '3.7'
 decorator==4.0.11
 pytz==2016.10; python_version <= '3.9'
 pytz==2019.1; python_version >= '3.10'
-requests==2.22.0; python_version <= '3.9'
-requests==2.25.0; python_version >= '3.10'
+requests==2.25.0
 six==1.14.0; python_version <= '3.9'
 six==1.16.0; python_version >= '3.10'
 stomp.py==4.1.23
@@ -128,8 +127,7 @@ chardet==3.0.3
 docopt==0.6.2
 idna==2.5
 # urllib3 1.26.5 fixes safety issue 43975
-urllib3==1.25.9; python_version <= '3.9'
-urllib3==1.26.5; python_version >= '3.10'
+urllib3==1.26.5
 pyrsistent==0.15.0
 
 # Direct dependencies for development (must be consistent with dev-requirements.txt)
