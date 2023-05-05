@@ -322,7 +322,7 @@ ifeq (,$(package_version))
 	$(error Package version could not be determined)
 endif
 
-pip_upgrade_$(pymn).done: Makefile
+pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done: Makefile
 	-$(call RM_FUNC,$@)
 	bash -c 'pv=$$($(PIP_CMD) --version); if [[ $$pv =~ (^pip [1-8]\..*) ]]; then $(PYTHON_CMD) -m pip install pip==9.0.1; fi'
 	@echo "Installing/upgrading pip, setuptools and wheel with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
@@ -330,10 +330,10 @@ pip_upgrade_$(pymn).done: Makefile
 	echo "done" >$@
 
 .PHONY: develop
-develop: develop_$(pymn).done
+develop: develop_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-develop_$(pymn).done: pip_upgrade_$(pymn).done install_$(pymn).done dev-requirements.txt requirements.txt
+develop_$(pymn)_$(PACKAGE_LEVEL).done: pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt requirements.txt
 	-$(call RM_FUNC,$@)
 	@echo 'Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
@@ -351,13 +351,13 @@ builddoc: html
 html: $(doc_build_dir)/html/docs/index.html
 	@echo "Makefile: $@ done."
 
-$(doc_build_dir)/html/docs/index.html: Makefile develop_$(pymn).done $(doc_dependent_files)
+$(doc_build_dir)/html/docs/index.html: Makefile develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	-$(call RM_FUNC,$@)
 	$(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
 	@echo "Done: Created the HTML pages with top level file: $@"
 
 .PHONY: pdf
-pdf: Makefile develop_$(pymn).done $(doc_dependent_files)
+pdf: Makefile develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	$(doc_cmd) -b latex $(doc_opts) $(doc_build_dir)/pdf
 	@echo "Running LaTeX files through pdflatex..."
 	$(MAKE) -C $(doc_build_dir)/pdf all-pdf
@@ -365,7 +365,7 @@ pdf: Makefile develop_$(pymn).done $(doc_dependent_files)
 	@echo "Makefile: $@ done."
 
 .PHONY: man
-man: Makefile develop_$(pymn).done $(doc_dependent_files)
+man: Makefile develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	$(doc_cmd) -b man $(doc_opts) $(doc_build_dir)/man
 	@echo "Done: Created the manual pages in: $(doc_build_dir)/man/"
 	@echo "Makefile: $@ done."
@@ -391,22 +391,22 @@ doccoverage:
 	@echo "Makefile: $@ done."
 
 .PHONY: check
-check: flake8_$(pymn).done
+check: flake8_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
 .PHONY: pylint
-pylint: pylint_$(pymn).done
+pylint: pylint_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
 .PHONY: safety
-safety: safety_$(pymn).done
+safety: safety_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
 .PHONY: install
-install: install_$(pymn).done
+install: install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-install_$(pymn).done: pip_upgrade_$(pymn).done requirements.txt extra-testutils-requirements.txt
+install_$(pymn)_$(PACKAGE_LEVEL).done: pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -e .
@@ -424,7 +424,7 @@ uninstall:
 .PHONY: clobber
 clobber: clean
 	-$(call RM_FUNC,*.done $(dist_files))
-	-$(call RMDIR_FUNC,$(doc_build_dir) htmlcov .tox)
+	-$(call RMDIR_FUNC,$(doc_build_dir) htmlcov htmlcov.end2end .tox)
 	@echo "Makefile: $@ done."
 
 .PHONY: clean
@@ -432,7 +432,9 @@ clean:
 	-$(call RM_R_FUNC,*.pyc)
 	-$(call RM_R_FUNC,*.tmp)
 	-$(call RM_R_FUNC,tmp_*)
+	-$(call RM_R_FUNC,.DS_Store)
 	-$(call RMDIR_R_FUNC,__pycache__)
+	-$(call RMDIR_R_FUNC,.pytest_cache)
 	-$(call RM_FUNC,MANIFEST MANIFEST.in AUTHORS ChangeLog .coverage)
 	-$(call RMDIR_FUNC,build .cache $(package_name).egg-info .eggs)
 	@echo "Makefile: $@ done."
@@ -479,7 +481,7 @@ $(bdist_file) $(sdist_file): Makefile MANIFEST.in $(dist_included_files)
 	-$(call RMDIR_FUNC,build $(package_name).egg-info-INFO .eggs)
 	$(PYTHON_CMD) -m build --outdir $(dist_dir)
 
-pylint_$(pymn).done: develop_$(pymn).done Makefile $(pylint_rc_file) $(check_py_files)
+pylint_$(pymn)_$(PACKAGE_LEVEL).done: develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(pylint_rc_file) $(check_py_files)
 ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping Pylint on Python $(python_version)" >&2
 else
@@ -490,7 +492,7 @@ else
 	@echo "Makefile: Done running Pylint"
 endif
 
-safety_$(pymn).done: develop_$(pymn).done Makefile $(safety_policy_file) minimum-constraints.txt
+safety_$(pymn)_$(PACKAGE_LEVEL).done: develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_policy_file) minimum-constraints.txt
 ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping Safety on Python $(python_version)" >&2
 else
@@ -505,13 +507,13 @@ else
 endif
 endif
 
-flake8_$(pymn).done: develop_$(pymn).done Makefile $(flake8_rc_file) $(check_py_files)
+flake8_$(pymn)_$(PACKAGE_LEVEL).done: develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(flake8_rc_file) $(check_py_files)
 	-$(call RM_FUNC,$@)
 	flake8 $(check_py_files)
 	echo "done" >$@
 
 .PHONY: check_reqs
-check_reqs: develop_$(pymn).done minimum-constraints.txt requirements.txt extra-testutils-requirements.txt
+check_reqs: develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints.txt requirements.txt extra-testutils-requirements.txt
 ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping the checking of missing dependencies on Python $(python_version)" >&2
 else
@@ -532,7 +534,7 @@ endif
 	@echo "Makefile: $@ done."
 
 .PHONY: test
-test: Makefile develop_$(pymn).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
+test: Makefile develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
 	-$(call RMDIR_R_FUNC,htmlcov)
 	py.test --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."
@@ -548,7 +550,7 @@ endif
 	@echo "Makefile: Done running install tests"
 
 .PHONY:	end2end
-end2end: Makefile develop_$(pymn).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_e2e_cov_files)
+end2end: Makefile develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_e2e_cov_files)
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
 	bash -c "TESTEND2END_LOAD=true py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_e2e_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
