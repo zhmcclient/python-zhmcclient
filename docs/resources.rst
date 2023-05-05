@@ -91,6 +91,26 @@ Unmanaged CPCs
    :special-members: __str__
 
 
+.. _`Groups`:
+
+Groups
+------
+
+.. automodule:: zhmcclient._group
+
+.. autoclass:: zhmcclient.GroupManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.Group
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Activation profiles`:
 
 Activation profiles

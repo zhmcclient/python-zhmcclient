@@ -466,6 +466,18 @@ def skipif_storage_mgmt_feature(cpc):
                   format(c=cpc.name))
 
 
+def skipif_no_group_support(client):
+    """
+    Skip the test if the HMC version does not support groups yet.
+    """
+    api_version = client.query_api_version()
+    hmc_version = api_version['hmc-version']
+    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    if hmc_version_info < (2, 13, 0):
+        skip_warn("HMC has version {v} and does not yet support groups".
+                  format(v=hmc_version))
+
+
 def standard_partition_props(cpc, part_name):
     """
     Return the input properties for a standard partition in the specified CPC.

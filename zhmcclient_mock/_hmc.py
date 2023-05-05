@@ -48,6 +48,7 @@ __all__ = ['InputError',
            'FakedAdapterManager', 'FakedAdapter',
            'FakedCpcManager', 'FakedCpc',
            'FakedUnmanagedCpcManager', 'FakedUnmanagedCpc',
+           'FakedGroupManager', 'FakedGroup',
            'FakedHbaManager', 'FakedHba',
            'FakedLparManager', 'FakedLpar',
            'FakedNicManager', 'FakedNic',
@@ -1107,6 +1108,7 @@ class FakedConsole(FakedBaseResource):
             hmc=manager.hmc, console=self)
         self._unmanaged_cpcs = FakedUnmanagedCpcManager(
             hmc=manager.hmc, console=self)
+        self._groups = FakedGroupManager(hmc=manager.hmc, console=self)
 
     def __repr__(self):
         """
@@ -1127,6 +1129,7 @@ class FakedConsole(FakedBaseResource):
             "  _tasks = {_tasks}\n"
             "  _ldap_server_definitions = {_ldap_server_definitions}\n"
             "  _unmanaged_cpcs = {_unmanaged_cpcs}\n"
+            "  _groups = {_groups}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -1144,6 +1147,7 @@ class FakedConsole(FakedBaseResource):
                 _ldap_server_definitions=repr_manager(
                     self.ldap_server_definitions, indent=2),
                 _unmanaged_cpcs=repr_manager(self.unmanaged_cpcs, indent=2),
+                _groups=repr_manager(self.groups, indent=2),
             ))
         return ret
 
@@ -1210,6 +1214,14 @@ class FakedConsole(FakedBaseResource):
         unmanaged CPC resources of this Console.
         """
         return self._unmanaged_cpcs
+
+    @property
+    def groups(self):
+        """
+        :class:`~zhmcclient_mock.FakedGroupManager`: Access to the faked
+        group resources of this Console.
+        """
+        return self._groups
 
 
 class FakedUserManager(FakedBaseManager):
@@ -2136,6 +2148,94 @@ class FakedUnmanagedCpc(FakedBaseResource):
         """
         Return a string with the state of this faked unmanaged Cpc resource,
         for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self._properties, indent=2),
+            ))
+        return ret
+
+
+class FakedGroupManager(FakedBaseManager):
+    """
+    A manager for faked managed Group resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super(FakedGroupManager, self).__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedGroup,
+            base_uri=self.api_root + '/groups',
+            oid_prop='object-id',
+            uri_prop='object-uri',
+            class_value='group',
+            name_prop='name')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked Group resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'group',
+              if not specified.
+
+        Returns:
+          :class:`~zhmcclient_mock.FakedGroup`: The faked Group resource.
+        """
+        new_group = super(FakedGroupManager, self).add(properties)
+
+        # Set optional properties to their defaults
+        new_group.properties.setdefault('description', '')
+        new_group.properties.setdefault('match-info', None)
+
+        return new_group
+
+
+class FakedGroup(FakedBaseResource):
+    """
+    A faked managed Group resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super(FakedGroup, self).__init__(
+            manager=manager,
+            properties=properties)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked Group resource, for debug
+        purposes.
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"

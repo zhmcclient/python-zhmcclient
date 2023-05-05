@@ -37,6 +37,7 @@ from ._password_rule import PasswordRuleManager
 from ._task import TaskManager
 from ._ldap_server_definition import LdapServerDefinitionManager
 from ._unmanaged_cpc import UnmanagedCpcManager
+from ._group import GroupManager
 
 __all__ = ['ConsoleManager', 'Console']
 
@@ -198,6 +199,7 @@ class Console(BaseResource):
         self._tasks = None
         self._ldap_server_definitions = None
         self._unmanaged_cpcs = None
+        self._groups = None
 
     @property
     def storage_groups(self):
@@ -299,6 +301,17 @@ class Console(BaseResource):
         if not self._unmanaged_cpcs:
             self._unmanaged_cpcs = UnmanagedCpcManager(self)
         return self._unmanaged_cpcs
+
+    @property
+    def groups(self):
+        """
+        :class:`~zhmcclient.GroupManager`: Access to user-defined
+        :term:`Groups <Group>` in this Console.
+        """
+        # We do here some lazy loading.
+        if not self._groups:
+            self._groups = GroupManager(self)
+        return self._groups
 
     @logged_api_call
     def restart(self, force=False, wait_for_available=True,

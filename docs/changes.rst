@@ -89,6 +89,11 @@ Released: not yet
 
 * Test: Added end2end testcases for property retrieval.
 
+* Added zhmcclient.GroupManager and zhmcclient.Group to support Group resources.
+  Group resources represent user-defined groups of resources; they can be used
+  for example in User Role permissions. Added zhmcclient mock support for
+  Group resources. Added testcases for both of that. (issue #1017)
+
 **Cleanup:**
 
 * So far, the `Partition.hbas` property was set to `None` for CPCs that have the
