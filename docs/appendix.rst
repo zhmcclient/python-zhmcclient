@@ -376,7 +376,7 @@ Resources scoped to the HMC
      The HMC itself.
 
   Group
-     TBD - Not yet supported.
+     A user-defined group of resources.
 
   Hardware Message
      TBD - Not yet supported.

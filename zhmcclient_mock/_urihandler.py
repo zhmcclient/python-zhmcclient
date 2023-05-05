@@ -2065,6 +2065,152 @@ class CpcSetAutoStartListHandler(object):
         cpc.properties['auto-start-list'] = auto_start_list
 
 
+class GroupsHandler(object):
+    """
+    Handler class for HTTP methods on set of Group resources.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Custom Groups."""
+        query_str = uri_parms[0]
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        result_groups = []
+        filter_args = parse_query_parms(method, uri, query_str)
+        for group in console.groups.list(filter_args):
+            result_group = {}
+            for prop in group.properties:
+                if prop in ('object-uri', 'name'):
+                    result_group[prop] = group.properties[prop]
+            result_groups.append(result_group)
+        return {'groups': result_groups}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Custom Group."""
+
+        assert wait_for_completion is True  # async not supported yet
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        check_required_fields(method, uri, body, ['name'])
+
+        properties = copy.deepcopy(body)
+
+        # Set defaults for optional input properties
+        properties.setdefault('description', '')
+        properties.setdefault('match-info', None)
+
+        # Set non-input properties
+        properties['members'] = []
+
+        # Reflect the result of creating the partition
+        new_group = console.groups.add(properties)
+        return {'object-uri': new_group.uri}
+
+
+class GroupHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on single Group resource.
+    """
+
+    @staticmethod
+    def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Delete Custom Group."""
+        try:
+            group = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        # Reflect the result of deleting the group
+        group.manager.remove(group.oid)
+
+
+class GroupAddMemberHandler(object):
+    """
+    Handler class for operation: Add Member to Custom Group.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Add Member to Custom Group."""
+        assert wait_for_completion is True  # async not supported yet
+        group_oid = uri_parms[0]
+        try:
+            group = hmc.groups.lookup_by_oid(group_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        check_required_fields(method, uri, body, ['object-uri'])
+
+        object_uri = body['object-uri']
+
+        group.properties['members'].append(object_uri)
+
+
+class GroupRemoveMemberHandler(object):
+    """
+    Handler class for operation: Remove Member from Custom Group.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Remove Member from Custom Group."""
+        assert wait_for_completion is True  # async not supported yet
+        group_oid = uri_parms[0]
+        try:
+            group = hmc.groups.lookup_by_oid(group_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        check_required_fields(method, uri, body, ['object-uri'])
+
+        object_uri = body['object-uri']
+
+        group.properties['members'].remove(object_uri)
+
+
+class GroupMembersHandler(object):
+    """
+    Handler class for operation: List Custom Group Members.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Custom Group Members."""
+        group_oid = uri_parms[0]
+        try:
+            group = hmc.groups.lookup_by_oid(group_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        result = {'members': group.properties['members']}
+        return result
+
+
 class MetricsContextsHandler(object):
     """
     Handler class for HTTP methods on set of MetricsContext resources.
@@ -4764,6 +4910,12 @@ URIS = (
      CpcSetPowerCappingHandler),
     (r'/api/cpcs/([^/]+)/energy-management-data',
      CpcGetEnergyManagementDataHandler),
+
+    (r'/api/groups(?:\?(.*))?', GroupsHandler),
+    (r'/api/groups/([^/]+)', GroupHandler),
+    (r'/api/groups/([^/]+)/operations/add-member', GroupAddMemberHandler),
+    (r'/api/groups/([^/]+)/operations/remove-member', GroupRemoveMemberHandler),
+    (r'/api/groups/([^/]+)/members', GroupMembersHandler),
 
     (r'/api/services/metrics/context', MetricsContextsHandler),
     (r'/api/services/metrics/context/([^/]+)', MetricsContextHandler),

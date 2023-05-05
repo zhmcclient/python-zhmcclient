@@ -80,6 +80,7 @@ RC_TASK = 'task'
 RC_USER_PATTERN = 'user-pattern'
 RC_USER_ROLE = 'user-role'
 RC_USER = 'user'
+RC_GROUP = 'group'
 
 # Valid resource class names
 #:
@@ -119,6 +120,7 @@ VALID_RESOURCE_CLASSES = frozenset([
     RC_USER_PATTERN,
     RC_USER_ROLE,
     RC_USER,
+    RC_GROUP,
 ])
 
 
