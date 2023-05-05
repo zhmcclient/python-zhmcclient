@@ -18,12 +18,9 @@ decorator>=4.0.11; python_version >= '3.5'  # new BSD
 pytz>=2016.10; python_version <= '3.9'  # MIT
 pytz>=2019.1; python_version >= '3.10'  # MIT
 
-# requests 2.22.0 removes the pinning of urllib3 to <1.25.0, and urllib 1.25.9
-#   is required to address safety issues
 # requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
 #   remove ImportWarning in six
-requests>=2.22.0; python_version <= '3.9'  # Apache-2.0
-requests>=2.25.0; python_version >= '3.10'  # Apache-2.0
+requests>=2.25.0  # Apache-2.0
 
 # six 1.16.0 removes the ImportWarning raised by Python 3.10
 six>=1.14.0; python_version <= '3.9'  # MIT
