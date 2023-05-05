@@ -272,6 +272,7 @@ jobs:
       run: |
         make test
     - name: Send coverage result to coveralls.io
+      if: false  # TODO: Enable again once HTTP 422 issue is resolved
       shell: bash -l {0}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -302,6 +303,7 @@ jobs:
       run: |
         pip3 install --upgrade coveralls
     - name: Send coverage finish to coveralls.io
+      if: false  # TODO: Enable again once HTTP 422 issue is resolved
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NUMBER: "${{ github.workflow }}-${{ github.run_number }}"
