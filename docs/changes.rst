@@ -54,6 +54,11 @@ Released: not yet
 * Addressed safety issues by increasing minimum versions of packages, where
   possible.
 
+* Changed use of 'method_whitelist' in urllib3.Retry to 'allowed_methods'.
+  The old method was deprecated in urllib3 1.26.0 and removed in 2.0.0.
+  Related to that, incrased the minimum versions of urllib3 to 1.26.5 and of
+  requests to 2.25.0. (issue #1145)
+
 **Enhancements:**
 
 * Disabled the default retrieval of the full set of properties in list()
