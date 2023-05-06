@@ -59,6 +59,9 @@ Released: not yet
   Related to that, incrased the minimum versions of urllib3 to 1.26.5 and of
   requests to 2.25.0. (issue #1145)
 
+* Fixed RTD docs build ssue with OpenSSL version by providing a .readthedocs.yaml
+  file that specifies Ubuntu 22.04 as the build OS.
+
 **Enhancements:**
 
 * Disabled the default retrieval of the full set of properties in list()
