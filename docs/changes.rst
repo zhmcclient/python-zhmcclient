@@ -20,6 +20,17 @@ Change log
 ----------
 
 
+Version 1.7.2
+^^^^^^^^^^^^^
+
+Released: 2023-05-06
+
+**Bug fixes:**
+
+* Fixed RTD docs build ssue with OpenSSL version by providing a .readthedocs.yaml
+  file that specifies Ubuntu 22.04 as the build OS.
+
+
 Version 1.7.1
 ^^^^^^^^^^^^^
 
