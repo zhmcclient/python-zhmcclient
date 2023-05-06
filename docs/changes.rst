@@ -20,14 +20,10 @@ Change log
 ----------
 
 
-Version 1.7.1.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.7.1
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-05-06
 
 **Bug fixes:**
 
@@ -38,16 +34,6 @@ Released: not yet
   The old method was deprecated in urllib3 1.26.0 and removed in 2.0.0.
   Related to that, incrased the minimum versions of urllib3 to 1.26.5 and of
   requests to 2.25.0. (issue #1145)
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.7.0
