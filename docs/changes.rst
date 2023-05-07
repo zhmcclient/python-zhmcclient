@@ -62,6 +62,9 @@ Released: not yet
 * Fixed RTD docs build ssue with OpenSSL version by providing a .readthedocs.yaml
   file that specifies Ubuntu 22.04 as the build OS.
 
+* Added trouble shooting info for urllib3 2.0 ImportError requiring
+  OpenSSL 1.1.1+.
+
 **Enhancements:**
 
 * Disabled the default retrieval of the full set of properties in list()
