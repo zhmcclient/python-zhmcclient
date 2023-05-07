@@ -156,6 +156,77 @@ certificate and to install that in the HMC.
 
 See also the :ref:`Security` section.
 
+ImportError urllib3 v2.0 only supports OpenSSL 1.1.1+ (macOS)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The 'urllib3' Python package version 2.0 has removed support for LibreSSL and
+wolfSSL and requires OpenSSL 1.1.1 or higher.
+
+The 'zhmcclient' package uses the 'requests' package which uses 'urllib3', and
+neither 'zhmcclient' nor 'requests' pins 'urllib3' to stay below version 2.0.
+(if they did, that would prevent users from installing security fixes for urllib3).
+
+Therefore, if you upgrade your Python packages, and you are using a Python that
+does not provide OpenSSL 1.1.1 or higher, you will see the following exception
+raised by urllib3:
+
+.. code-block:: text
+
+    ImportError: urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the ‘ssl’ module is compiled with LibreSSL 2.8.3.
+    See: https://github.com/urllib3/urllib3/issues/2168
+
+This can happen for example on macOS if you are using the system Python of macOS
+as the basis for a Python virtual environment and then install zhmcclient into
+that virtual environment, which typically installs the latest available versions
+of dependent packages, and thus may install urllib3 with a version 2.0 or later.
+
+The ImportError exception message shows the name and version of the underlying
+SSL library the Python 'ssl' module is using. On most Python systems, that is a
+statically linked SSL library, so just installing OpenSSL 1.1.1 or higher does
+not address the issue.
+
+You can verify for yourself which SSL library and version your Python uses:
+
+.. code-block:: text
+
+    (venv) $ python -c "import ssl; print(ssl.OPENSSL_VERSION)"
+    OpenSSL 1.1.1t  7 Feb 2023
+
+    $ /usr/bin/python3 -c "import ssl; print(ssl.OPENSSL_VERSION)"
+    LibreSSL 2.8.3
+
+Note that Python since version 3.10 requires OpenSSL version 1.1.1 or higher
+(see `PEP-644 <https://peps.python.org/pep-0644/>`_).
+
+At least up to macOS Ventura, Apple compiles the system Python with LibreSSL.
+As long as that does not change, you cannot use the system Python of macOS with
+urllib3>=2.0; also not as a basis for Python virtual environments.
+
+There are basically two options on how this issue can be addressed:
+
+* Use a Python version that uses OpenSSL 1.1.1 or higher. That is the case for
+  the CPython reference implementation version 3.7 or higher.
+  CPython can either be downloaded from https://www.python.org/downloads/macos/
+  or installed using a third party package installer for macOS, such as
+  `Homebrew <https://brew.sh/>`_.
+
+* Pin the urllib3 package to stay below version 2.0 when on Python 3.7 or higher,
+  by specifying in your package dependencies, e.g. in your ``requirements.txt``
+  file:
+
+  .. code-block:: text
+
+      urllib3>=1.26.5,<2.0; python_version >= '3.7'
+
+  The minimum version of urllib3 should be at least what the
+  `minimum-constraints.txt <https://github.com/zhmcclient/python-zhmcclient/blob/master/minimum-constraints.txt>`_
+  file of the zhmcclient project specifies as a minimum, for the zhmcclient
+  version you are using.
+
+  Note that pinning a dependent package prevents you from installing security
+  fixes, which is important for a network related package such as urllib3,
+  so this option should not be the preferred one.
+
 
 .. _`BaseManager`:
 .. _`BaseResource`:
