@@ -65,6 +65,9 @@ Released: not yet
 * Added trouble shooting info for urllib3 2.0 ImportError requiring
   OpenSSL 1.1.1+.
 
+* Increased dependent package jsonschema to >=3.0.1 to resolve dependency
+  issue with jupyter. (issue #1165)
+
 **Enhancements:**
 
 * Disabled the default retrieval of the full set of properties in list()
