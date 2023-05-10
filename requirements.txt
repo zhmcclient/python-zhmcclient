@@ -56,9 +56,13 @@ jsonschema>=2.6.0,!=4.0.0
 
 # Indirect dependencies (commented out, only listed to document their license):
 
+# Since we changed to use the allowed_methods attribute introduced in urllib3
+# 1.26.0, and our minimum version of requests (2.25.0) only requires
+# urllib3>=1.21.0, we need to require a minimum version of urllib3.
+urllib3>=1.26.5  # MIT
+
 # certifi # ISC, from requests>=2.20
 # chardet # LGPL, from requests>=2.20
 # docopt # MIT, from stomp.py>=4.1
 # idna # BSD-like, from requests>=2.20
-# urllib3 # MIT, from requests>=2.20
 # pyrsistent # MIT, from jsonschema>=3.0
