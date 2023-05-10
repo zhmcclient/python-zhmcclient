@@ -28,6 +28,7 @@ from __future__ import absolute_import
 import re
 import time
 import copy
+import uuid
 from random import randrange
 from requests.utils import unquote
 
@@ -605,6 +606,43 @@ class VersionHandler(object):
             'api-major-version': int(api_major),
             'api-minor-version': int(api_minor),
         }
+
+
+class SessionsHandler(object):
+    """
+    Handler class for session operations.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Logon."""
+        assert wait_for_completion is True  # synchronous operation
+        check_required_fields(method, uri, body, ['userid', 'password'])
+        result = {
+            'api-session': 'fake-session-id',
+            'notification-topic': 'fake-topic-1',
+            'job-notification-topic': 'fake-topic-2',
+            'api-major-version': 4,
+            'api-minor-version': 40,
+            'password-expires': -1,
+            # 'shared-secret-key' not included
+            'session-credential': uuid.uuid4().hex,
+        }
+        return result
+
+
+class ThisSessionHandler(object):
+    """
+    Handler class for session operations.
+    """
+
+    @staticmethod
+    def delete(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Logoff."""
+        pass
 
 
 class ConsoleHandler(GenericGetPropertiesHandler):
@@ -5234,6 +5272,9 @@ URIS = (
     # In all modes:
 
     (r'/api/version', VersionHandler),
+
+    (r'/api/sessions', SessionsHandler),
+    (r'/api/sessions/this-session', ThisSessionHandler),
 
     (r'/api/console(?:\?(.*))?', ConsoleHandler),
     (r'/api/console/operations/restart', ConsoleRestartHandler),

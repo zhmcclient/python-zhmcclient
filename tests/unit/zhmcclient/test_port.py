@@ -47,6 +47,11 @@ class TestPort(object):
                     'session-credential':
                         'un8bu462g37aw9j0o8pltontz3szt35jh4b1qe2toxt6fkhl4',
                 })
+            m.get(
+                '/api/version', json={
+                    'api-major-version': 4,
+                    'api-minor-version': 10,
+                })
             self.session.logon()
 
         self.cpc_mgr = self.client.cpcs

@@ -318,6 +318,8 @@ class Session(object):
           that session-id. Once the HMC expires that session-id, subsequent
           operations that require logon will cause a re-logon with the
           specified userid/password.
+          In this case, the `host` parameter must specify the single HMC that
+          has that session.
 
         * `session_id` only: The specified session-id will be stored in this
           session object, so that the session is initially in a logged-on
@@ -327,15 +329,20 @@ class Session(object):
           :exc:`~zhmcclient.ServerAuthError` to be raised (because
           userid/password have not been specified, so an automatic re-logon is
           not possible).
+          In this case, the `host` parameter must specify the single HMC that
+          has that session.
 
         * Neither `userid`/`password` nor `session_id`: Only operations that do
           not require logon, are possible.
 
         Parameters:
 
-          host (:term:`string`):
-            HMC host. For valid formats, see the
-            :attr:`~zhmcclient.Session.host` property.
+          host (:term:`string` or iterable of :term:`string`):
+            HMC host or list of HMC hosts to try from.
+            For valid formats, see the :attr:`~zhmcclient.Session.host`
+            property.
+            If `session_id` is specified, this must be the single HMC that has
+            that session.
             Must not be `None`.
 
           userid (:term:`string`):
@@ -404,7 +411,11 @@ class Session(object):
         """  # noqa: E501
         # pylint: enable=line-too-long
 
-        self._host = host
+        if isinstance(host, six.string_types):
+            self._hosts = [host]
+        else:
+            self._hosts = list(host)
+            assert len(self._hosts) >= 1
         self._port = port
         self._userid = userid
         self._password = password
@@ -412,25 +423,31 @@ class Session(object):
         self._get_password = get_password
         self._retry_timeout_config = self.default_rt_config.override_with(
             retry_timeout_config)
-        self._base_url = "{scheme}://{host}:{port}".format(
-            scheme=_HMC_SCHEME,
-            host=self._host,
-            port=self._port)
         self._headers = copy(_STD_HEADERS)  # dict with standard HTTP headers
         if session_id is not None:
-            # Create a logged-on state (same state as in _do_logon())
+            # Create a logged-on state (nearly same state as in _do_logon())
             self._session_id = session_id
             self._session = self._new_session(self.retry_timeout_config)
             self._headers['X-API-Session'] = session_id
+            assert len(self._hosts) == 1
+            self._actual_host = self._hosts[0]
+            self._base_url = \
+                self._create_base_url(self._actual_host, self._port)
+            # The following are set in _do_logon()) but not here:
+            self._session_credential = None
+            self._object_topic = None
+            self._job_topic = None
         else:
             # Create a logged-off state (same state as in _do_logoff())
             self._session_id = None
             self._session = None
+            self._actual_host = None
+            self._base_url = None
+            self._session_credential = None
+            self._object_topic = None
+            self._job_topic = None
         self._time_stats_keeper = TimeStatsKeeper()
-        self._object_topic = None
-        self._job_topic = None
         self._auto_updater = AutoUpdater(self)
-        self._session_credential = None
 
     def __repr__(self):
         """
@@ -439,12 +456,13 @@ class Session(object):
         headers = _headers_for_logging(self.headers)
         ret = (
             "{classname} at 0x{id:08x} (\n"
-            "  _host={s._host!r},\n"
+            "  _hosts={s._hosts!r},\n"
             "  _userid={s._userid!r},\n"
             "  _password='...',\n"
             "  _verify_cert={s._verify_cert!r},\n"
             "  _get_password={s._get_password!r},\n"
             "  _retry_timeout_config={s._retry_timeout_config!r},\n"
+            "  _actual_host={s._actual_host!r},\n"
             "  _base_url={s._base_url!r},\n"
             "  _headers={headers!r},\n"
             "  _session_id={blanked_out!r},\n"
@@ -460,9 +478,12 @@ class Session(object):
     @property
     def host(self):
         """
-        :term:`string`: HMC host for this session.
+        :term:`string` or list of :term:`string`: HMC host or redundant HMC
+        hosts to use. The first working HMC from this list will actually be
+        used. The working state of the HMC is detrmined using the
+        'Query API Version' operation for which no authentication is needed.
 
-        The string will have one of the following formats:
+        Each host will be in one of the following formats:
 
           * a short or fully qualified DNS hostname
           * a literal (= dotted) IPv4 address
@@ -471,7 +492,29 @@ class Session(object):
             :term:`RFC6874`, supporting ``-`` (minus) for the delimiter
             before the zone ID string, as an additional choice to ``%25``
         """
-        return self._host
+        if len(self._hosts) == 1:
+            host = self._hosts[0]
+        else:
+            host = self._hosts
+        return host
+
+    @property
+    def actual_host(self):
+        """
+        :term:`string` or `None`: The HMC host that is actually used for this
+        session, if the session is in the logged-on state. `None`, if the
+        session is in the logged-off state.
+
+        The HMC host will be in one of the following formats:
+
+          * a short or fully qualified DNS hostname
+          * a literal (= dotted) IPv4 address
+          * a literal IPv6 address, formatted as defined in :term:`RFC3986`
+            with the extensions for zone identifiers as defined in
+            :term:`RFC6874`, supporting ``-`` (minus) for the delimiter
+            before the zone ID string, as an additional choice to ``%25``
+        """
+        return self._actual_host
 
     @property
     def port(self):
@@ -522,7 +565,9 @@ class Session(object):
     @property
     def base_url(self):
         """
-        :term:`string`: Base URL of the HMC that is used for this session.
+        :term:`string` or `None`: Base URL of the HMC that is actually used for
+        this session, if the session is in the logged-on state. `None`, if the
+        session is in the logged-off state.
 
         Example:
 
@@ -565,41 +610,44 @@ class Session(object):
     @property
     def session_id(self):
         """
-        :term:`string`: Session ID (= session token) used for this session.
+        :term:`string` or `None`: Session ID (= HMC session token) used for this
+        session, if the session is in the logged-on state. `None`, if the
+        session is in the logged-off state.
 
-        If `None`, this session object is considered in a logged-off state.
-        In that state, any request that requires logon will first cause a
-        session to be created on the HMC and will store the session ID
+        In the logged-off state, any request that requires logon will first
+        cause a session to be created on the HMC and will store the session ID
         returned by the HMC in this property.
 
-        If not `None`, this session object is considered in a logged-on state,
-        and the session ID stored in this property will be used for any
-        requests to the HMC.
+        In the logged-on state, the session ID stored in this property will be
+        used for any requests to the HMC.
         """
         return self._session_id
 
     @property
     def session_credential(self):
         """
-        :term:`string`: Session credential for this session, returned by
-                        the HMC.
+        :term:`string` or `None`: Session credential for this session returned
+        by the HMC, if the session is in the logged-on state. `None`, if the
+        session is in the logged-off state.
         """
         return self._session_credential
 
     @property
     def session(self):
         """
-        :term:`string`: :class:`requests.Session` object for this session.
+        :term:`string` or `None`: :class:`requests.Session` object for this
+        session, if the session is in the logged-on state. `None`, if the
+        session is in the logged-off state.
         """
         return self._session
 
     @property
     def object_topic(self):
         """
-        :term:`string`: Name of the notification topic the HMC will use to send
-        object-related notification messages to this session.
-
-        When not logged on, this property is `None`.
+        :term:`string` or `None`: Name of the notification topic the HMC will
+        use to send object-related notification messages to this session, if
+        the session is in the logged-on state. `None`, if the session is in the
+        logged-off state.
 
         The associated topic type is "object-notification".
         """
@@ -608,10 +656,10 @@ class Session(object):
     @property
     def job_topic(self):
         """
-        :term:`string`: Name of the notification topic the HMC will use to send
-        job notification messages to this session.
-
-        When not logged on, this property is `None`.
+        :term:`string` or `None`: Name of the notification topic the HMC will
+        use to send job notification messages to this session, if the session
+        is in the logged-on state. `None`, if the session is in the logged-off
+        state.
 
         The associated topic type is "job-notification".
         """
@@ -759,11 +807,19 @@ class Session(object):
         """
         if self._userid is None:
             raise ClientAuthError("Userid is not provided.")
+
+        # Determine working HMC for this session
+        self._actual_host = self._determine_actual_host()
+        self._base_url = self._create_base_url(self._actual_host, self._port)
+
         if self._password is None:
             if self._get_password:
-                self._password = self._get_password(self._host, self._userid)
+                self._password = \
+                    self._get_password(self._actual_host, self._userid)
             else:
                 raise ClientAuthError("Password is not provided.")
+
+        # Create an HMC session
         logon_uri = '/api/sessions'
         logon_body = {
             'userid': self._userid,
@@ -777,6 +833,52 @@ class Session(object):
         self._headers['X-API-Session'] = self._session_id
         self._object_topic = logon_res['notification-topic']
         self._job_topic = logon_res['job-notification-topic']
+
+    @staticmethod
+    def _create_base_url(host, port):
+        """
+        Encapsulates how the base URL of the HMC is constructed.
+        """
+        return "{scheme}://{host}:{port}".format(
+            scheme=_HMC_SCHEME, host=host, port=port)
+
+    def _determine_actual_host(self):
+        """
+        Determine the actual HMC host to be used.
+
+        If a single HMC host is specified, that host is used without further
+        verification as to whether it is available.
+
+        If more than one HMC host is specified, the first available host is
+        used. Availability of the HMC is determined using the
+        'Query API Version' operation, for which no logon is required.
+        If no available HMC can be found, raises the ConnectionError of the
+        last HMC that was tried.
+        """
+
+        if len(self._hosts) == 1:
+            host = self._hosts[0]
+            HMC_LOGGER.debug("Using the only HMC specified without verifying "
+                             "its availability: %s", host)
+            return host
+
+        last_exc = None
+        for host in self._hosts:
+            HMC_LOGGER.debug("Trying HMC for availability: %s", host)
+            self._base_url = self._create_base_url(host, self._port)
+            try:
+                self.get('/api/version', logon_required=False,
+                         renew_session=False)
+            except ConnectionError as exc:
+                last_exc = exc
+                continue
+
+            HMC_LOGGER.debug("Using available HMC: %s", host)
+            return host
+
+        HMC_LOGGER.debug("Did not find an available HMC in: %s",
+                         self._hosts)
+        raise last_exc
 
     @staticmethod
     def _new_session(retry_timeout_config):
@@ -816,6 +918,9 @@ class Session(object):
             # HMC shutdown or broken network causes ConnectionError.
             # Invalid credentials cause ServerAuthError.
             pass
+
+        self._actual_host = None
+        self._base_url = None
         self._session_id = None
         self._session = None
         self._headers.pop('X-API-Session', None)
@@ -1012,7 +1117,11 @@ class Session(object):
         """
         if logon_required:
             self.logon()
-        url = self.base_url + uri
+        elif self._base_url is None:
+            self._actual_host = self._determine_actual_host()
+            self._base_url = \
+                self._create_base_url(self._actual_host, self._port)
+        url = self._base_url + uri
         self._log_http_request('GET', url, resource=resource,
                                headers=self.headers)
         stats = self.time_stats_keeper.get_stats('get ' + uri)
@@ -1194,7 +1303,11 @@ class Session(object):
         """
         if logon_required:
             self.logon()
-        url = self.base_url + uri
+        elif self._base_url is None:
+            self._actual_host = self._determine_actual_host()
+            self._base_url = \
+                self._create_base_url(self._actual_host, self._port)
+        url = self._base_url + uri
         headers = self.headers.copy()  # Standard headers
 
         log_len = None
@@ -1366,7 +1479,11 @@ class Session(object):
         """
         if logon_required:
             self.logon()
-        url = self.base_url + uri
+        elif self._base_url is None:
+            self._actual_host = self._determine_actual_host()
+            self._base_url = \
+                self._create_base_url(self._actual_host, self._port)
+        url = self._base_url + uri
         self._log_http_request('DELETE', url, resource=resource,
                                headers=self.headers)
         stats = self.time_stats_keeper.get_stats('delete ' + uri)

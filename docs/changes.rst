@@ -37,6 +37,13 @@ Released: not yet
   an AssertionError and you need to change your code to specify them as keyword
   arguments, instead.
 
+* When creating a 'zhmcclient.Session' object with a 'session_id' parameter that
+  is not None, the 'host' parameter with the HMC host for that session now also
+  needs to be provided. (related to issue #1024)
+
+* The 'base_url' property of the 'zhmcclient.Session' object is now 'None' when
+  the session is in the logged-off state. (related to issue #1024)
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -50,6 +57,10 @@ Released: not yet
 * Test: Fixed end2end testcase 'test_actprof_crud()' to skip the test when the
   required 'create-delete-activation-profiles' API feature is not available.
   (issue #1375)
+
+* Docs: Clarified that the 'session' and 'session_credential' properties of the
+  'zhmcclient.Session' object are 'None' when the session is in the logged-off
+  state. (related to issue #1024)
 
 **Enhancements:**
 
@@ -77,6 +88,22 @@ Released: not yet
   userid and password, and that in case of MFA being configured, they must be
   the session ID and session credential returned from the HMC logon.
   (issue #1350)
+
+* Added support for targeting multiple redundant HMCs, from which the first
+  one reachable at session creation time will be used for the duration of the
+  session. The multiple HMCs are provided via the same 'Session' init parameter
+  'host' as before, which now can be a list of hosts in addition to being a
+  single host. Because redundant HMCs can be configured differently regarding
+  what data they sync between them, there is no automatic failover to another
+  HMC if the initially determined HMC becomes unavailable during the session.
+  (issue #1024)
+
+* Added support for specifying multiple redundant HMCs in the 'ansible_host'
+  property of HMC definition files. The property can now specify a single HMC
+  like before, or a a list of redundant HMCs. (issue #1024)
+
+* Mock support: Added mock support for the Logon and Logoff HMC operations.
+  (related to issue #1024)
 
 **Cleanup:**
 

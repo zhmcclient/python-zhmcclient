@@ -476,6 +476,7 @@ class HMCDefinitions(object):
                 # If ansible_host was set, it is always used, and otherwise
                 # the HMC nickname is used as a DNS name or IP address.
                 ansible_host = host_vars.get('ansible_host')
+                # Note: ansible_host may be a string or list of strings.
                 host = ansible_host or nickname
 
             # Make relative mock_file relative to inventory file

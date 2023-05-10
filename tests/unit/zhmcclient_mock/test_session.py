@@ -271,7 +271,8 @@ def test_session_to_from_yaml():
     hmc_name = console_props['name']
     hmc_version = console_props['version']
 
-    session = FakedSession(host, hmc_name, hmc_version, api_version)
+    session = FakedSession(host, hmc_name, hmc_version, api_version,
+                           userid='fake-user', password='fake-password')
     client = Client(session)
 
     session.hmc.add_resources(HMC1_RESOURCES)
@@ -302,6 +303,7 @@ def test_session_to_from_yaml():
                 ('accelerator-usage', 0),
                 ('crypto-usage', 0),
             ]))
+    session.logon()  # Sets session.host
 
     # The function to be tested:
     hmc_yaml = client.to_hmc_yaml()

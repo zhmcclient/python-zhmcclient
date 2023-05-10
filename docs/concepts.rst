@@ -101,6 +101,40 @@ need to receive HMC notifications has its own
 very well target the same HMC.
 
 
+.. _`Specifying multiple redundant HMCs`:
+
+Specifying multiple redundant HMCs
+----------------------------------
+
+The zhmcclient package supports the specification of one or more HMCs through
+the `host` init parameter of :class:`zhmcclient.Session`.
+
+That paranmeter can be specified as a single HMC, for example:
+
+.. code-block:: python
+
+    session = zhmcclient.Session(host='10.11.12.13', ...)
+
+or as a list of one or more HMCs, for example:
+
+.. code-block:: python
+
+    session = zhmcclient.Session(host=['10.11.12.13', '10.11.12.14'], ...)
+
+There is no difference between specifying a single HMC as a string or as a
+list with one item.
+
+When a list is specified, it must contain at least one HMC.
+
+If the list contains more than one HMC, a working HMC is selected from that list
+during each logon (and re-logon) to the HMC, and that HMC continues to be used
+by that :class:`zhmcclient.Session` object until logoff.
+
+If a :class:`zhmcclient.Session` object is created by specifying the
+`session_id` init parameter, the corresponding HMC host for that session must
+be provided as the only HMC in the `host` init parameter.
+
+
 .. _`Resource model concepts`:
 
 Resource model concepts
