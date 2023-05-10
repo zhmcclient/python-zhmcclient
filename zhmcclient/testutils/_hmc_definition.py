@@ -18,6 +18,8 @@ HMC definition for zhmcclient end2end tests.
 
 from __future__ import absolute_import
 
+import six
+
 __all__ = ['HMCDefinition']
 
 
@@ -52,7 +54,8 @@ class HMCDefinition(object):
             HMC: If `None`, it is a real HMC. Otherwise, it is a mocked HMC
             and the path name is stored as provided.
 
-          host (string): IP address or DNS hostname of the real HMC.
+          host (string or list of string): IP address or DNS hostname of the
+            real HMC or list of redundant HMCs.
             Required for real HMCs, must not be `None`. Optional for mocked
             HMCs.
 
@@ -90,7 +93,13 @@ class HMCDefinition(object):
         self._contact = contact or ''
         self._access_via = access_via or ''
         self._mock_file = mock_file
-        self._host = host
+        if host is None:
+            self._hosts = None
+        elif isinstance(host, six.string_types):
+            self._hosts = [host]
+        else:
+            self._hosts = list(host)
+            assert len(self._hosts) >= 1
         self._userid = userid
         self._password = password
         self._verify = verify
@@ -162,17 +171,30 @@ class HMCDefinition(object):
     @property
     def host(self):
         """
-        string: IP address or DNS hostname of the HMC.
+        string or list of string: IP address or DNS hostname of the HMC or
+        list of redundant HMCs.
 
         This is a settable property.
         """
-        return self._host
+        if self._hosts is None:
+            host = None
+        elif len(self._hosts) == 1:
+            host = self._hosts[0]
+        else:
+            host = self._hosts
+        return host
 
     @host.setter
     def host(self, host):
         """Setter method; for a description see the getter method."""
         # pylint: disable=attribute-defined-outside-init
-        self._host = host
+        if host is None:
+            self._hosts = None
+        elif isinstance(host, six.string_types):
+            self._hosts = [host]
+        else:
+            self._hosts = list(host)
+            assert len(self._hosts) >= 1
 
     @property
     def userid(self):

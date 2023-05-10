@@ -52,8 +52,12 @@ def mock_server_1(m):
                    },
                    headers={'X-Request-Id': 'fake-request-id'})
     m.register_uri('DELETE', '/api/sessions/this-session',
-                   headers={'X-Request-Id': 'fake-request-id'},
                    status_code=204)
+    m.register_uri('GET', '/api/version',
+                   json={
+                       'api-major-version': 4,
+                       'api-minor-version': 10,
+                   })
 
 
 @pytest.mark.parametrize(
@@ -94,9 +98,6 @@ def test_session_init(
     assert session.port == kwargs.get('port', DEFAULT_HMC_PORT)
     assert session.verify_cert == kwargs.get('verify_cert', DEFAULT_VERIFY_CERT)
 
-    base_url = 'https://{}:{!s}'.format(session.host, session.port)
-    assert session.base_url == base_url
-
     assert session.headers['Content-type'] == 'application/json'
     assert session.headers['Accept'] == '*/*'
 
@@ -104,10 +105,15 @@ def test_session_init(
         assert session.session is None
         assert 'X-API-Session' not in session.headers
         assert len(session.headers) == 3
+        assert session.actual_host is None
+        assert session.base_url is None
     else:
         assert isinstance(session.session, requests.Session)
         assert session.headers['X-API-Session'] == session_id
         assert len(session.headers) == 4
+        assert session.actual_host == host
+        base_url = 'https://{}:{!s}'.format(session.actual_host, session.port)
+        assert session.base_url == base_url
 
 
 def test_session_repr():
@@ -230,6 +236,11 @@ def _do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line, exp_col):
     m.register_uri('POST', '/api/sessions',
                    content=json_content,
                    headers={'X-Request-Id': 'fake-request-id'})
+    m.register_uri('GET', '/api/version',
+                   json={
+                       'api-major-version': 4,
+                       'api-minor-version': 10,
+                   })
 
     session = Session('fake-host', 'fake-user', 'fake-pw')
 
@@ -305,6 +316,11 @@ def test_session_get_notification_topics():
                 'job-notification-topic': 'test-job-topic.1',
                 'session-credential':
                     'un8bu462g37aw9j0o8pltontz3szt35jh4b1qe2toxt6fkhl4',
+            })
+        m.get(
+            '/api/version', json={
+                'api-major-version': 4,
+                'api-minor-version': 10,
             })
         session.logon()
         gnt_uri = "/api/sessions/operations/get-notification-topics"

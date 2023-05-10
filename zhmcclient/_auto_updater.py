@@ -102,8 +102,8 @@ class AutoUpdater(object):
         """
         Open the JMS session with the HMC.
 
-        This creates a STOMP connection with the HMC and subscribes to the
-        object notification topic.
+        This creates a STOMP connection with the actual HMC of the session and
+        subscribes to the object notification topic.
 
         If the session does not yet have an object notification topic set,
         the session is logged on.
@@ -113,16 +113,16 @@ class AutoUpdater(object):
             # pylint: disable=import-outside-toplevel
             from stomp import Connection as Stomp_Connection
 
+        if not self._session.object_topic:
+            self._session.logon()  # This sets actual_host
+
         self._conn = Stomp_Connection(
-            [(self._session.host, DEFAULT_STOMP_PORT)], use_ssl="SSL")
+            [(self._session.actual_host, DEFAULT_STOMP_PORT)], use_ssl="SSL")
         listener = _UpdateListener(self, self._session)
         self._conn.set_listener('', listener)
         # pylint: disable=protected-access
         self._conn.connect(self._session.userid, self._session._password,
                            wait=True)
-
-        if not self._session.object_topic:
-            self._session.logon()
 
         dest = "/topic/" + self._session.object_topic
         self._conn.subscribe(destination=dest, id=self._sub_id, ack='auto')

@@ -326,6 +326,8 @@ The following describes the structure of the HMC inventory file:
 
           ansible_host: <host>          # If real HMC: DNS hostname or IP address of HMC, if
                                         #   arbitrary string was used as HMC nickname.
+                                        #   This can specify a single HMC or a list of redundant
+                                        #   HMCs.
 
           mock_file: <path_name>        # If mocked HMC: Relative path name of HMC mock file.
           cpcs:                         # CPCs to test against. Can be a subset or all CPCs

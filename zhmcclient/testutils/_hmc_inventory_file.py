@@ -40,7 +40,8 @@ __all__ = ['HMCInventoryFileError', 'HMCInventoryFile']
 #         description: <string>
 #         contact: <string>
 #         access_via: <string>
-#         ansible_host: <host>  # if real HMC and an alias is used
+#         ansible_host: <host>  # if real HMC and an alias is used;
+#                               # can also be a list of hosts
 #         mock_file: <path_name>  # if mocked HMC
 #         cpcs:
 #           <cpc_name>:
@@ -101,9 +102,10 @@ HMC_INVENTORY_FILE_SCHEMA = {
                 },
                 "ansible_host": {
                     "description": "For real HMCs: DNS host name or IP "
-                                   "address of the HMC. "
+                                   "address of the HMC or of a list of "
+                                   "redundant HMCs. "
                                    "Mandatory for real HMCs.",
-                    "type": "string",
+                    "type": ["string", "array"],
                 },
                 "mock_file": {
                     "description": "For mocked HMCs: Path name of HMC mock "
