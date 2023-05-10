@@ -31,6 +31,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed a TypeError about 'allowed_methods' in urllib3.Retry by adding a direct
+  dependency to urllib3>=1.26.5 to the zhmcclient install dependencies.
+
 **Enhancements:**
 
 **Cleanup:**
@@ -65,8 +68,8 @@ Released: 2023-05-06
 
 * Changed use of 'method_whitelist' in urllib3.Retry to 'allowed_methods'.
   The old method was deprecated in urllib3 1.26.0 and removed in 2.0.0.
-  Related to that, incrased the minimum versions of urllib3 to 1.26.5 and of
-  requests to 2.25.0. (issue #1145)
+  Related to that, increased the minimum versions of urllib3 to 1.26.5 and of
+  requests to 2.25.0.
 
 
 Version 1.7.0
