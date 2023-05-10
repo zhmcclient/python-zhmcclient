@@ -20,29 +20,15 @@ Change log
 ----------
 
 
-Version 1.7.3.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.7.3
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-05-10
 
 **Bug fixes:**
 
 * Fixed a TypeError about 'allowed_methods' in urllib3.Retry by adding a direct
   dependency to urllib3>=1.26.5 to the zhmcclient install dependencies.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.7.2
