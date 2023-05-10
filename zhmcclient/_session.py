@@ -34,7 +34,7 @@ except ImportError:
     from collections import Iterable
 import six
 import requests
-from requests.packages import urllib3
+import urllib3
 
 from ._exceptions import HTTPError, ServerAuthError, ClientAuthError, \
     ParseError, ConnectTimeout, ReadTimeout, RetriesExceeded, \
