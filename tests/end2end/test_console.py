@@ -32,10 +32,10 @@ from .utils import runtest_find_list, runtest_get_properties
 urllib3.disable_warnings()
 
 # Properties in minimalistic Console objects (e.g. find_by_name())
-CONSOLE_MINIMAL_PROPS = ['object-uri', 'name']
+CONSOLE_MINIMAL_PROPS = ['object-uri']
 
 # Properties in Console objects returned by list() without full props
-CONSOLE_LIST_PROPS = ['object-uri', 'name', 'type']
+CONSOLE_LIST_PROPS = ['object-uri']
 
 # Properties whose values can change between retrievals of Console objects
 CONSOLE_VOLATILE_PROPS = []
