@@ -87,6 +87,13 @@ Released: not yet
 
 **Cleanup:**
 
+* So far, the `Partition.hbas` property was set to `None` for CPCs that have the
+  "dpm-storage-management" feature enabled (i.e. starting with z14), because
+  HBAs are then represented as Virtual Storage Resource objects. For
+  consistency, this property was changed to provide an `HbaManager` object.
+  Since that property uses lazy initialization, there is no change at runtime
+  unless the property is actually accessed.
+
 **Known issues:**
 
 * See `list of open issues`_.
