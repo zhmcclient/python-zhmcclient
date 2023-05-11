@@ -259,17 +259,14 @@ class Partition(BaseResource):
         :class:`~zhmcclient.HbaManager`: Access to the :term:`HBAs <HBA>` in
         this Partition.
 
-        If the "dpm-storage-management" feature is enabled, this property is
-        `None`.
+        If the "dpm-storage-management" feature is enabled (i.e. starting with
+        z14), the CPC will not have any HBA objects anymore (they are now
+        Virtual Storage Resources), but this property still provides a manager
+        object for consistency.
         """
         # We do here some lazy loading.
         if not self._hbas:
-            try:
-                dpm_sm = self.feature_enabled('dpm-storage-management')
-            except ValueError:
-                dpm_sm = False
-            if not dpm_sm:
-                self._hbas = HbaManager(self)
+            self._hbas = HbaManager(self)
         return self._hbas
 
     @property
