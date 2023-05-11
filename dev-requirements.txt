@@ -40,11 +40,10 @@ more-itertools>=4.0.0; python_version >= '3.6'
 
 # packaging is used by pytest, pip-check-reqs, sphinx
 # packaging>=20.5 is needed by pip-check-reqs 2.4.3 but it requires only packaging>=16.0
-# safety 2.3.5 (running only on Python >=3.6) requires packaging<22.0,>=21.0, so we need to pin it here as well
 # packaging 21.0 removed support for py27,35
 # packaging 22.0 removed support for py36
 packaging>=20.5; python_version <= '3.5'
-packaging>=21.0,<22.0; python_version >= '3.6'
+packaging>=21.0; python_version >= '3.6'
 
 # Virtualenv
 # build requires virtualenv.cli_run which was added in 20.1
@@ -70,7 +69,9 @@ coveralls>=3.3.0; python_version >= '3.5'
 # Safety CI by pyup.io
 # Safety is run only on Python >=3.6
 # Safety 2.2.0 and dparse 0.6.2 fix safety issue 51358
-safety>=2.2.0; python_version >= '3.6'
+# Safety 2.3.5 (running only on Python >=3.6) requires packaging<22.0,>=21.0, but safety 2.3.4 does not
+#   and safety 2.4.0 will also no longer pin it (see https://github.com/pyupio/safety/issues/455).
+safety>=2.2.0,!=2.3.5; python_version >= '3.6'
 dparse>=0.6.2; python_version >= '3.6'
 
 # Tox
