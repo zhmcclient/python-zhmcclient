@@ -679,3 +679,59 @@ class Adapter(BaseResource):
                     resource_obj.pull_full_properties()
 
         return resource_obj_list
+
+    @logged_api_call
+    def list_sibling_adapters(self, full_properties=False):
+        """
+        List the other Adapters on the same adapter card as this Adapter.
+
+        Some adapter cards are represented as multiple Adapter objects
+        (for example, 2-port FICON Express cards, or 2-port CNA cards).
+        This method lists the other Adapter objects that are on the same
+        adapter card as this Adapter object.
+
+        This is useful for example to determine the affected Adapter objects
+        when replacing the adapter card, or when changing the type of a FICON
+        Express adepter (see :meth:`~zhmcclient.Adapter.change_adapter_type`).
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Object-access permission to any Adapter to be included in the result.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
+
+        Returns:
+
+          : A list of :class:`~zhmcclient.Adapter` objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        # This algorithm is based on the fact that physical adapter cards
+        # have their PCHIDs always within a range of 4 adjacent PCHIDs that
+        # start at a multiple of 4.
+
+        self_pchid = int(self.prop('adapter-id'), 16)
+        if self_pchid >= int('7c0', 16):
+            # A virtual adapter with a single PCHID -> no siblings
+            return []
+
+        # A physical adapter with a total of 4 PCHIDs reserved for the slot
+        pchid_base = self_pchid // 4 * 4
+        sibling_pchids = list(range(pchid_base, pchid_base + 4))
+        sibling_pchids.remove(self_pchid)
+        sibling_adapter_ids = ['{:03x}'.format(p) for p in sibling_pchids]
+        filter_args = {'adapter-id': sibling_adapter_ids}
+        sibling_adapters = self.manager.cpc.adapters.list(
+            full_properties, filter_args)
+        return sibling_adapters
