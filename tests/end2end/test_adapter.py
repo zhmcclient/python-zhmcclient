@@ -467,3 +467,100 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
             # Cleanup
             if tmp_part:
                 tmp_part.delete()
+
+
+def base_adapter_id(adapter_id, family):
+    """
+    Return the base adapter_id of an adapter_id.
+    Both are in hex.
+    """
+
+    # Adapter families that have no physical adapter card
+    virtual_families = [
+        'hipersocket',
+        'coupling',  # Internal Coupling Facility
+        'ism',  # Internal Shared Memory
+    ]
+
+    pchid = int(adapter_id, 16)
+
+    if family in virtual_families:
+
+        # Make sure the virtual card detection based on the PCHID range in
+        # Adapter.list_sibling_adapters() holds true
+        assert pchid >= int('7c0', 16)
+
+        # Virtual adapters have only 1 PCHID
+        base_pchid = pchid
+
+    else:
+
+        # Make sure the physical card detection based on the PCHID range in
+        # Adapter.list_sibling_adapters() holds true
+        assert pchid < int('7c0', 16)
+
+        # Physical adapters have 4 PCHIDs reeserved for the slot.
+        # Calculate the base PCHID for the slot.
+        base_pchid = pchid // 4 * 4
+
+    return '{:03x}'.format(base_pchid)
+
+
+def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test Adapter.list_sibling_adapters().
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        # Adapter families that have more than one Adapter object (=PCHID) on a
+        # physical adapter card
+        sibling_families = [
+            'ficon',
+            'crypto',
+        ]
+
+        adapters = cpc.adapters.list()
+
+        # Determine the sibling adapters on the CPC, grouped by base PCHID
+        adapters_by_base = {}  # key: base PCHID
+        for adapter in adapters:
+            adapter_id = adapter.get_property('adapter-id')
+            family = adapter.get_property('adapter-family')
+            if family in sibling_families:
+                base_id = base_adapter_id(adapter_id, family)
+                if base_id not in adapters_by_base:
+                    adapters_by_base[base_id] = []
+                adapters_by_base[base_id].append(adapter)
+
+        # Test all adapters for their siblings
+        for adapter in adapters:
+            adapter_id = adapter.get_property('adapter-id')
+            family = adapter.get_property('adapter-family')
+            base_id = base_adapter_id(adapter_id, family)
+
+            # The code to be tested
+            sibling_adapters = adapter.list_sibling_adapters()
+
+            assert isinstance(sibling_adapters, list)
+
+            sibling_ids = set([a.get_property('adapter-id')
+                               for a in sibling_adapters])
+            sibling_names = [a.name for a in sibling_adapters]
+            if base_id not in adapters_by_base:
+                exp_ids = set()
+                exp_names = []
+            else:
+                exp_ids = set([a.get_property('adapter-id')
+                               for a in adapters_by_base[base_id]])
+                exp_ids.remove(adapter_id)
+                exp_names = [a.name for a in adapters_by_base[base_id]]
+                exp_names.remove(adapter.name)
+
+            assert sibling_ids == exp_ids, \
+                "Adapter '{}' has unexpected siblings: got: {}, expected: {}". \
+                format(adapter.name, sibling_names, exp_names)

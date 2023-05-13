@@ -83,6 +83,10 @@ Released: not yet
   parameter defined. This can be used to speed up certain property retrieval
   operations, for example on the Console or on CPCs. (issue #862)
 
+* Added a 'list_sibling_adapters()' method to the zhmcclient.Adapter class
+  that lists the other Adapter objects on the same physical adapter card.
+  Added end2end testcases for the new method.
+
 * Test: Added end2end testcases for property retrieval.
 
 **Cleanup:**
