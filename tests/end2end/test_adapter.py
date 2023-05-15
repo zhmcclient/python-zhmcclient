@@ -477,7 +477,7 @@ def base_adapter_id(adapter_id, family):
 
     # Adapter families that have no physical adapter card
     virtual_families = [
-        'hipersocket',
+        'hipersockets',
         'coupling',  # Internal Coupling Facility
         'ism',  # Internal Shared Memory
     ]
