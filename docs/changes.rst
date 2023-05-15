@@ -20,34 +20,6 @@ Change log
 ----------
 
 
-Version 16.0.0.dev1 (= z16_ga15)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This is the internal development content for z16 GA 1.5 It will be merged into
-an external release not before the WS API book with the zz16 GA 1.5 changes
-is public.
-
-**Incompatible changes:**
-
-**Deprecations:**
-
-**Bug fixes:**
-
-**Enhancements:**
-
-- Enhanced export_dpm_configuration() to include Certificate objects.
-
-- Introduced Certificate objects as new category of resources and added new
-  methods to assign/unassign Certificate objects to/from DPM mode partitions and
-  classic mode LPARs and activation profiles.
-
-- Added two new methods Console.list_api_features() and
-  Cpc.list_api_features() and accompanying documentation to support the
-  new "API features" concept.
-
-**Cleanup:**
-
-
 Version 1.8.0.dev1
 ^^^^^^^^^^^^^^^^^^
 
@@ -121,6 +93,16 @@ Released: not yet
   Group resources represent user-defined groups of resources; they can be used
   for example in User Role permissions. Added zhmcclient mock support for
   Group resources. Added testcases for both of that. (issue #1017)
+
+* Enhanced export_dpm_configuration() to include Certificate objects.
+
+* Introduced Certificate objects as new category of resources and added new
+  methods to assign/unassign Certificate objects to/from DPM mode partitions and
+  classic mode LPARs and activation profiles.
+
+* Added two new methods Console.list_api_features() and
+  Cpc.list_api_features() and accompanying documentation to support the
+  new "API features" concept.
 
 **Cleanup:**
 
