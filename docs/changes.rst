@@ -20,12 +20,12 @@ Change log
 ----------
 
 
-Version 1.8.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.8.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.7.x.
+This version contains all fixes up to version 1.7.3.
 
-Released: not yet
+Released: 2023-05-16
 
 **Incompatible changes:**
 
@@ -46,8 +46,6 @@ Released: not yet
   'full_properties=True'. In cases where you had used 'find()' or 'findall()',
   that parameter cannot be specified, and you need to fall back to using
   'list()'.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -112,12 +110,6 @@ Released: not yet
   consistency, this property was changed to provide an `HbaManager` object.
   Since that property uses lazy initialization, there is no change at runtime
   unless the property is actually accessed.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.7.0
