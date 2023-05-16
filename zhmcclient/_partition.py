@@ -42,7 +42,8 @@ from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
 from ._logging import logged_api_call
-from ._utils import RC_PARTITION, make_query_str
+from ._utils import RC_PARTITION, make_query_str, datetime_from_timestamp, \
+    timestamp_from_datetime
 
 __all__ = ['PartitionManager', 'Partition']
 
@@ -1492,3 +1493,74 @@ class Partition(BaseResource):
             resource_dict['virtual_functions'] = virtual_functions
 
         return resource_dict
+
+    @logged_api_call
+    def get_sustainability_data(
+            self, range="last-week", resolution="one-hour",
+            custom_range_start=None, custom_range_end=None):
+        # pylint: disable=redefined-builtin
+        """
+        Get energy management related metrics for the partition on a specific
+        historical time range. The metrics are returned as multiple data points
+        covering the requested time range with the requested resolution.
+        This method performs the "Get Partition Historical Sustainability Data"
+        HMC operation.
+        Authorization requirements:
+        * Object-access permission to this partition
+        * Task permission to the "Environmental Dashboard" task
+        Parameters:
+          range (:term:`string`):
+            Time range for the requested data points, as follows:
+            * "last-day" - Last 24 hours.
+            * "last-week" - Last 7 days (default).
+            * "last-month" - Last 30 days.
+            * "last-three-months" - Last 90 days.
+            * "last-six-months" - Last 180 days.
+            * "last-year" - Last 365 days.
+            * "custom" - From `custom_range_start` to `custom_range_end`.
+          resolution (:term:`string`):
+            Resolution for the requested data points. This is the time interval
+            in between the data points. For systems where the
+            "environmental-metrics" feature is not available, the minimum
+            resolution is "one-hour".
+            The possible values are as follows:
+            * "fifteen-minutes" - 15 minutes.
+            * "one-hour" - 60 minutes (default).
+            * "one-day" - 24 hours.
+            * "one-week" - 7 days.
+            * "one-month" - 30 days.
+          custom_range_start (:class:`~py:datetime.datetime`):
+            Start of custom time range. Timezone-naive values are interpreted
+            using the local system time. Required if `range` is "custom".
+          custom_range_end (:class:`~py:datetime.datetime`):
+            End of custom time range. Timezone-naive values are interpreted
+            using the local system time. Required if `range` is "custom".
+        Returns:
+          dict: A dictionary with items as described for the response body
+          of the "Get Partition Historical Sustainability Data" HMC operation.
+          Timestamp fields are represented as timezone-aware
+          :class:`~py:datetime.datetime` objects.
+        Raises:
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {
+            'range': range,
+            'resolution': resolution,
+        }
+        if range == "custom":
+            body['custom-range-start'] = \
+                timestamp_from_datetime(custom_range_start)
+            body['custom-range-end'] = \
+                timestamp_from_datetime(custom_range_end)
+        result = self.manager.session.post(
+            self.uri + '/operations/get-historical-sustainability-data',
+            body=body)
+        for field_array in result.values():
+            for item in field_array:
+                if 'timestamp' in item:
+                    item['timestamp'] = \
+                        datetime_from_timestamp(item['timestamp'])
+        return result
