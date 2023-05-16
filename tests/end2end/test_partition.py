@@ -23,6 +23,7 @@ from __future__ import absolute_import, print_function
 
 import warnings
 import random
+from datetime import timedelta, datetime, timezone
 import pytest
 from requests.packages import urllib3
 
@@ -401,3 +402,160 @@ def test_console_list_permitted_partitions(desc, input_kwargs, exp_props,
             filter_args={'name': permitted_part_list[0].name,
                          'cpc-name': 'bad-cpc'}))
         assert len(permitted_partitions_filter_agrs) == 0
+
+
+TESTCASES_PART_GET_SUSTAINABILITY_DATA = [
+    # Test cases for test_part_get_sustainability_data(), each as a tuple with
+    # these items:
+    # * tc: Testcase short description
+    # * input_kwargs: kwargs to be used as input parameters for
+    #   Partition.get_sustainability_data()
+    # * exp_oldest: expected delta time from now to oldest data point,
+    #   as timedelta
+    # * exp_delta: expected delta time between data points, as timedelta
+    (
+        "Default values (range=last-week, resolution=one-hour)",
+        {},
+        timedelta(days=7),
+        timedelta(hours=1),
+    ),
+    (
+        "range=last-day, resolution=one-hour",
+        {
+            "range": "last-day",
+            "resolution": "one-hour",
+        },
+        timedelta(hours=24),
+        timedelta(hours=1),
+    ),
+    (
+        "range=last-day, resolution=fifteen-minutes",
+        {
+            "range": "last-day",
+            "resolution": "fifteen-minutes",
+        },
+        timedelta(hours=24),
+        timedelta(minutes=15),
+    ),
+]
+
+PART_METRICS = {
+    # Metrics returned in "Get Partition Historical Sustainability Data" HMC
+    # operation.
+    # metric name: data type
+    "wattage": int,
+    "processor-utilization": int,
+}
+
+
+@pytest.mark.parametrize(
+    "tc, input_kwargs, exp_oldest, exp_delta",
+    TESTCASES_PART_GET_SUSTAINABILITY_DATA)
+def test_part_get_sustainability_data(
+        tc, input_kwargs, exp_oldest, exp_delta,
+        dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test for Partition.get_sustainability_data(...)
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        if hd.mock_file:
+            skip_warn("zhmcclient mock does not support "
+                      "Partition.get_sustainability_data()")
+
+        # Pick the partition to test with
+        part_list = cpc.partitions.list()
+        if not part_list:
+            skip_warn("No partitions on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+
+        # Pick a random partition to test with
+        part = random.choice(part_list)
+
+        session = part.manager.session
+        hd = session.hmc_definition
+
+        print("Testing with partition {n}".format(n=part.name))
+
+        try:
+
+            # The code to be tested
+            data = part.get_sustainability_data(**input_kwargs)
+
+        except zhmcclient.HTTPError as exc:
+            if exc.http_status == 403 and exc.reason == 1:
+                skip_warn("HMC userid {u!r} is not authorized for task "
+                          "'Environmental Dashboard' on HMC {h}".
+                          format(u=hd.userid, h=hd.host))
+            elif exc.http_status == 404 and exc.reason == 1:
+                skip_warn("Partition {c} on HMC {h} does not support "
+                          "feature: {e}".
+                          format(c=part.name, h=hd.host, e=exc))
+            else:
+                raise
+
+        now_dt = datetime.now(timezone.utc)
+        exp_oldest_dt = now_dt - exp_oldest
+
+        act_metric_names = set(data.keys())
+        exp_metric_names = set(PART_METRICS.keys())
+        assert act_metric_names == exp_metric_names
+
+        for metric_name, metric_array in data.items():
+            metric_type = PART_METRICS[metric_name]
+
+            first_item = True
+            previous_dt = None
+            for dp_item in metric_array:
+                # We assume the order is oldest to newest
+
+                assert 'data' in dp_item
+                assert 'timestamp' in dp_item
+                assert len(dp_item) == 2
+
+                dp_data = dp_item['data']
+                dp_timestamp_dt = dp_item['timestamp']
+
+                assert isinstance(dp_data, metric_type), \
+                    "Invalid data type for metric {!r}".format(metric_name)
+
+                if first_item:
+                    first_item = False
+
+                    # Verify that the oldest timestamp is within a certain
+                    # delta from the range start.
+                    # There are cases where that is not satisfied, so we only
+                    # issue only a warning (as opposed to failing).
+                    delta_sec = abs((dp_timestamp_dt - exp_oldest_dt).seconds)
+                    if delta_sec > 15 * 60:
+                        print("Warning: Oldest data point of metric {!r} is "
+                              "not within 15 minutes of range start: Oldest "
+                              "data point: {}, Range start: {}, Delta: {} sec".
+                              format(metric_name, dp_timestamp_dt,
+                                     exp_oldest_dt, delta_sec))
+                else:
+
+                    # For second oldest timestamp on, verify that the delta
+                    # to the previous data point is the requested resolution.
+                    # There are cases where that is not satisfied, so we only
+                    # issue only a warning (as opposed to failing).
+                    tolerance_pct = 10
+                    delta_td = abs(dp_timestamp_dt - previous_dt)
+                    if abs(delta_td.seconds - exp_delta.seconds) > \
+                            tolerance_pct / 100 * exp_delta.seconds:
+                        print("Warning: Timestamp of a data point of metric "
+                              "{!r} is not within expected delta of its "
+                              "previous data point. Actual delta: {}, "
+                              "Expected delta: {} (+/-{}%)".
+                              format(metric_name, delta_td, exp_delta,
+                                     tolerance_pct))
+
+                previous_dt = dp_timestamp_dt

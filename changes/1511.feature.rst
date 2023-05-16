@@ -1,0 +1,3 @@
+Added support for getting new z16 environmental metrics about CPC and LPAR
+or partitions by adding 'get_sustainability_data()' methods to Cpc, Lpar,
+and Partition.
