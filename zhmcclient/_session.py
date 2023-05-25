@@ -459,7 +459,9 @@ class Session(object):
     @property
     def host(self):
         """
-        :term:`string`: HMC host, in one of the following formats:
+        :term:`string`: HMC host for this session.
+
+        The string will have one of the following formats:
 
           * a short or fully qualified DNS hostname
           * a literal (= dotted) IPv4 address
@@ -473,14 +475,14 @@ class Session(object):
     @property
     def port(self):
         """
-        :term:`integer`: HMC TCP port to be used.
+        :term:`integer`: HMC TCP port that is used for this session.
         """
         return self._port
 
     @property
     def userid(self):
         """
-        :term:`string`: Userid of the HMC user to be used.
+        :term:`string`: HMC userid that is used for this session.
 
         If `None`, only operations that do not require authentication, can be
         performed.
@@ -519,7 +521,7 @@ class Session(object):
     @property
     def base_url(self):
         """
-        :term:`string`: Base URL of the HMC in this session.
+        :term:`string`: Base URL of the HMC that is used for this session.
 
         Example:
 
@@ -532,7 +534,8 @@ class Session(object):
     @property
     def headers(self):
         """
-        :term:`header dict`: HTTP headers to be used in each request.
+        :term:`header dict`: HTTP headers that are used in requests sent
+        for this session.
 
         Initially, this is the following set of headers:
 
@@ -561,7 +564,16 @@ class Session(object):
     @property
     def session_id(self):
         """
-        :term:`string`: Session ID for this session, returned by the HMC.
+        :term:`string`: Session ID (= session token) used for this session.
+
+        If `None`, this session object is considered in a logged-off state.
+        In that state, any request that requires logon will first cause a
+        session to be created on the HMC and will store the session ID
+        returned by the HMC in this property.
+
+        If not `None`, this session object is considered in a logged-on state,
+        and the session ID stored in this property will be used for any
+        requests to the HMC.
         """
         return self._session_id
 
@@ -576,7 +588,7 @@ class Session(object):
     def object_topic(self):
         """
         :term:`string`: Name of the notification topic the HMC will use to send
-        object-related notification messages to this API session.
+        object-related notification messages to this session.
 
         When not logged on, this property is `None`.
 
@@ -588,7 +600,7 @@ class Session(object):
     def job_topic(self):
         """
         :term:`string`: Name of the notification topic the HMC will use to send
-        job notification messages to this API session.
+        job notification messages to this session.
 
         When not logged on, this property is `None`.
 
@@ -607,24 +619,32 @@ class Session(object):
     @logged_api_call
     def logon(self, verify=False):
         """
-        Make sure the session is logged on to the HMC.
+        Make sure this session object is logged on to the HMC.
 
-        By default, this method checks whether there is a session-id set
-        and considers that sufficient for determining that the session is
-        logged on. The `verify` parameter can be used to verify the validity
-        of a session-id that is already set, by issuing a dummy operation
-        ("Get Console Properties") to the HMC.
+        If `verify=False`, this method determines the logged-on state of this
+        session object based on whether there is a session ID set in this
+        session object. If a session ID is set, it is assumed to be valid and
+        no new session is created on the HMC. Otherwise, a new session will be
+        created on the HMC.
 
-        After successful logon to the HMC, the following is stored in this
-        session object for reuse in subsequent operations:
+        If `verify=True`, this method determines the logged-on state of this
+        session object in addition by performing a read operation on the HMC
+        that requires to be logged on but no specific authorizations. If a
+        session ID is set and if that operation succeeds, no new session is
+        created on the HMC. Any failure of that read operation will be ignored.
+        Otherwise, a new session will be created on the HMC.
 
-        * the HMC session-id, in order to avoid extra userid authentications,
-        * a :class:`requests.Session` object, in order to enable connection
-          pooling. Connection pooling avoids repetitive SSL/TLS handshakes.
+        When a new session has been successfully created on the HMC, the
+        :attr:`session_id` attribute of this session object will be set to the
+        session ID returned by the HMC to put it into the logged-on state.
+
+        Any exceptions raised from this method are always related to the
+        creation of a new session on the HMC - any failures of the read
+        operation in the verification case are always ignored.
 
         Parameters:
 
-          verify (bool): If a session-id is already set, verify its validity.
+          verify (bool): Verify the validity of an existing session ID.
 
         Raises:
 
@@ -634,52 +654,83 @@ class Session(object):
           :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if not self.is_logon(verify):
+        need_logon = False
+        if self._session_id is None:
+            need_logon = True
+        elif verify:
+            try:
+                self.get('/api/console', logon_required=False,
+                         renew_session=False)
+            except Error:
+                need_logon = True
+        if need_logon:
             self._do_logon()
 
     @logged_api_call
     def logoff(self, verify=False):
+        # pylint: disable=unused-argument
         """
-        Make sure the session is logged off from the HMC.
+        Make sure this session object is logged off from the HMC.
 
-        After successful logoff, the HMC session-id and
-        :class:`requests.Session` object stored in this object are reset.
+        If a session ID is set in this session object, its session will be
+        deleted on the HMC. If that delete operation fails due to an invalid
+        session ID, that failure will be ignored. Any other failures of that
+        delete operation will be raised as exceptions.
+
+        When the session has been successfully deleted on the HMC, the
+        :attr:`session_id` attribute of this session object will be set to
+        `None` to put it into the logged-off state.
 
         Parameters:
 
-          verify (bool): If a session-id is already set, verify its validity.
+          verify (bool): Deprecated: This parameter will be ignored.
 
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if self.is_logon(verify):
+        if self._session_id:
             self._do_logoff()
 
     @logged_api_call
     def is_logon(self, verify=False):
         """
-        Return a boolean indicating whether the session is currently logged on
-        to the HMC.
+        Return a boolean indicating whether this session object is logged on to
+        the HMC.
 
-        By default, this method checks whether there is a session-id set
-        and considers that sufficient for determining that the session is
-        logged on. The `verify` parameter can be used to verify the validity
-        of a session-id that is already set, by issuing a dummy operation
-        ("Get Console Properties") to the HMC.
+        If `verify=False`, this method determines the logged-on state based
+        on whether there is a session ID set in this object. If a session ID is
+        set, it is assumed to be valid, and `True` is returned. Otherwise,
+        `False` is returned. In that case, no exception is ever raised.
+
+        If `verify=True`, this method determines the logged-on state in
+        addition by verifying a session ID that is set, by performing a read
+        operation on the HMC that requires to be logged on but no specific
+        authorizations. If a session ID is set and if that read operation
+        succeeds, `True` is returned. If no session ID is set or if that read
+        operation fails due to an invalid session ID, `False` is returned.
+        Any other failures of that read operation are raised as exceptions,
+        because that indicates that a verification with the HMC could not be
+        performed.
 
         Parameters:
 
-          verify (bool): If a session-id is already set, verify its validity.
+          verify (bool): Verify the validity of an existing session ID.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         if self._session_id is None:
             return False
         if verify:
             try:
-                self.get('/api/console', logon_required=True)
+                self.get('/api/console', logon_required=False,
+                         renew_session=False)
             except ServerAuthError:
                 return False
         return True
@@ -691,11 +742,11 @@ class Session(object):
 
         Raises:
 
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.ClientAuthError`
           :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.ParseError`
-          :exc:`~zhmcclient.HTTPError`
         """
         if self._userid is None:
             raise ClientAuthError("Userid is not provided.")
@@ -739,15 +790,20 @@ class Session(object):
         """
         Log off, unconditionally.
 
+        This deletes the session on the HMC. If that deletion operation fails
+        due to an invalid session ID, that failure is ignored.
+
         Raises:
 
-          :exc:`~zhmcclient.ServerAuthError`
-          :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.ConnectionError`
         """
         session_uri = '/api/sessions/this-session'
-        self.delete(session_uri, logon_required=False)
+        try:
+            self.delete(session_uri, logon_required=False, renew_session=False)
+        except ServerAuthError:
+            pass
         self._session_id = None
         self._session = None
         self._headers.pop('X-API-Session', None)
@@ -870,7 +926,7 @@ class Session(object):
                          content_label, content_msg)
 
     @logged_api_call
-    def get(self, uri, logon_required=True):
+    def get(self, uri, logon_required=True, renew_session=True):
         """
         Perform the HTTP GET method against the resource identified by a URI.
 
@@ -891,6 +947,10 @@ class Session(object):
             Boolean indicating whether the operation requires that the session
             is logged on to the HMC. For example, the API version retrieval
             operation does not require that.
+
+          renew_session (bool):
+            Boolean indicating whether the session should be renewed in case
+            it is expired.
 
         Returns:
 
@@ -934,21 +994,29 @@ class Session(object):
             reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
-                self._do_logon()
-                return self.get(uri, logon_required)
+                if renew_session:
+                    self._do_logon()
+                    return self.get(
+                        uri, logon_required=False, renew_session=False)
+
             if reason == 1:
                 # Login user's authentication is fine; this is an authorization
                 # issue, so we don't raise ServerAuthError.
                 raise HTTPError(result_object)
+
             msg = result_object.get('message', None)
-            raise ServerAuthError("HTTP authentication failed: {}".
-                                  format(msg), HTTPError(result_object))
+            raise ServerAuthError(
+                "HTTP authentication failed with {},{}: {}".
+                format(result.status_code, reason, msg),
+                HTTPError(result_object))
+
         result_object = _result_object(result)
         raise HTTPError(result_object)
 
     @logged_api_call
     def post(self, uri, body=None, logon_required=True,
-             wait_for_completion=False, operation_timeout=None):
+             wait_for_completion=False, operation_timeout=None,
+             renew_session=True):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -1027,6 +1095,10 @@ class Session(object):
             expires.
 
             For `wait_for_completion=False`, this parameter has no effect.
+
+          renew_session (bool):
+            Boolean indicating whether the session should be renewed in case
+            it is expired.
 
         Returns:
 
@@ -1169,8 +1241,13 @@ class Session(object):
                 reason = result_object.get('reason', None)
                 if reason == 5:
                     # API session token expired: re-logon and retry
-                    self._do_logon()
-                    return self.post(uri, body, logon_required)
+                    if renew_session:
+                        self._do_logon()
+                        return self.post(
+                            uri, body,
+                            logon_required=False, renew_session=False,
+                            wait_for_completion=wait_for_completion,
+                            operation_timeout=operation_timeout)
 
                 if reason == 1:
                     # Login user's authentication is fine; this is an
@@ -1178,9 +1255,10 @@ class Session(object):
                     raise HTTPError(result_object)
 
                 msg = result_object.get('message', None)
-                raise ServerAuthError("HTTP authentication failed: {}".
-                                      format(msg),
-                                      HTTPError(result_object))
+                raise ServerAuthError(
+                    "HTTP authentication failed with {},{}: {}".
+                    format(result.status_code, reason, msg),
+                    HTTPError(result_object))
 
             result_object = _result_object(result)
             raise HTTPError(result_object)
@@ -1190,7 +1268,7 @@ class Session(object):
                 stats_total.end()
 
     @logged_api_call
-    def delete(self, uri, logon_required=True):
+    def delete(self, uri, logon_required=True, renew_session=True):
         """
         Perform the HTTP DELETE method against the resource identified by a
         URI.
@@ -1213,6 +1291,11 @@ class Session(object):
             Boolean indicating whether the operation requires that the session
             is logged on to the HMC. For example, for the logoff operation, it
             does not make sense to first log on.
+
+          renew_session (bool):
+            Boolean indicating whether the session should be renewed in case
+            it is expired. For example, for the logoff operation, it does not
+            make sense to do that.
 
         Raises:
 
@@ -1253,9 +1336,10 @@ class Session(object):
             reason = result_object.get('reason', None)
             if reason == 5:
                 # API session token expired: re-logon and retry
-                self._do_logon()
-                self.delete(uri, logon_required)
-                return
+                if renew_session:
+                    self._do_logon()
+                    self.delete(uri, logon_required=False, renew_session=False)
+                    return
 
             if reason == 1:
                 # Login user's authentication is fine; this is an authorization
@@ -1263,8 +1347,10 @@ class Session(object):
                 raise HTTPError(result_object)
 
             msg = result_object.get('message', None)
-            raise ServerAuthError("HTTP authentication failed: {}".
-                                  format(msg), HTTPError(result_object))
+            raise ServerAuthError(
+                "HTTP authentication failed with {},{}: {}".
+                format(result.status_code, reason, msg),
+                HTTPError(result_object))
 
         result_object = _result_object(result)
         raise HTTPError(result_object)
@@ -1273,8 +1359,7 @@ class Session(object):
     def get_notification_topics(self):
         """
         The 'Get Notification Topics' operation returns a structure that
-        describes the JMS notification topics associated with the
-        API session.
+        describes the JMS notification topics associated with this session.
 
         Returns:
 
@@ -1591,7 +1676,7 @@ def _result_object(result):
         result (requests.Response): HTTP response object.
 
     Raises:
-        zhmcclient.ParseError: Error parsing the returned JSON.
+        :exc:`~zhmcclient.ParseError`: Error parsing the returned JSON.
     """
     content_type = result.headers.get('content-type', None)
 

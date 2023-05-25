@@ -31,7 +31,23 @@ Released: not yet
 
 **Deprecations:**
 
+* Deprecated the 'verify' parameter of 'Session.logoff()'. Its use with
+  verify=True caused an invalid session to first be renewed and then deleted
+  again. It is no longer used.
+
 **Bug fixes:**
+
+* Fixed and improved session creation, deletion and automatic renewal.
+  Fixed the arguments passed to the retried HTTP operations in case the session
+  gets renewed.
+  Added the ability to log off sessions properly in case the session ID is
+  invalid, by adding a 'renew_session' flag to Session.get/post/delete() (this
+  ability is needed for zhmccli to address its issue #421).
+  Fixed Session.is_logon(verify=True) which would log on in certain cases.
+  Optimized Session.logoff(verify=True) which had logged on and then off again
+  in case the session was already invalid.
+  Improved and fixed the descriptions of Session.logon(), logoff(), is_logon()
+  and session_id.
 
 **Enhancements:**
 
