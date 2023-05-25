@@ -947,7 +947,7 @@ class FakedSession(zhmcclient.Session):
 
         return session
 
-    def get(self, uri, logon_required=True):
+    def get(self, uri, logon_required=True, renew_session=True):
         """
         Perform the HTTP GET method against the resource identified by a URI,
         on the faked HMC.
@@ -966,6 +966,13 @@ class FakedSession(zhmcclient.Session):
 
             Because this is a faked HMC, this does not perform a real logon,
             but it is still used to update the state in the faked HMC.
+
+          renew_session (bool):
+            Boolean indicating whether the session should be renewed in case
+            it is expired.
+
+            This parameter exists for compatibility with real HMCs, but is
+            ignored.
 
         Returns:
 
@@ -990,7 +997,8 @@ class FakedSession(zhmcclient.Session):
             raise new_exc  # zhmcclient.ConnectionError
 
     def post(self, uri, body=None, logon_required=True,
-             wait_for_completion=True, operation_timeout=None):
+             wait_for_completion=True, operation_timeout=None,
+             renew_session=True):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body, on the faked HMC.
@@ -1065,6 +1073,13 @@ class FakedSession(zhmcclient.Session):
 
             For `wait_for_completion=False`, this parameter has no effect.
 
+          renew_session (bool):
+            Boolean indicating whether the session should be renewed in case
+            it is expired.
+
+            This parameter exists for compatibility with real HMCs, but is
+            ignored.
+
         Returns:
 
           :term:`json object`:
@@ -1106,7 +1121,7 @@ class FakedSession(zhmcclient.Session):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ConnectionError
 
-    def delete(self, uri, logon_required=True):
+    def delete(self, uri, logon_required=True, renew_session=True):
         """
         Perform the HTTP DELETE method against the resource identified by a
         URI, on the faked HMC.
@@ -1127,6 +1142,13 @@ class FakedSession(zhmcclient.Session):
 
             Because this is a faked HMC, this does not perform a real logon,
             but it is still used to update the state in the faked HMC.
+
+          renew_session (bool):
+            Boolean indicating whether the session should be renewed in case
+            it is expired.
+
+            This parameter exists for compatibility with real HMCs, but is
+            ignored.
 
         Raises:
 
