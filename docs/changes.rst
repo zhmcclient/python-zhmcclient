@@ -20,12 +20,10 @@ Change log
 ----------
 
 
-Version 1.8.1.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.8.1
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
+Released: 2023-05-26
 
 **Deprecations:**
 
@@ -50,16 +48,6 @@ Released: not yet
 * In addition to 403.5 (session ID invalid), 403.4 (no session ID provided) is
   now also automatically handled by the zhmcclient in the same way, i.e. by
   performing a logon to the HMC and a retry of the HMC operation.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.8.0
