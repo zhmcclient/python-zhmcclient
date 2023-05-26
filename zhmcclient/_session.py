@@ -992,8 +992,10 @@ class Session(object):
         if result.status_code == 403:
             result_object = _result_object(result)
             reason = result_object.get('reason', None)
-            if reason == 5:
-                # API session token expired: re-logon and retry
+
+            if reason in (4, 5):
+                # 403.4: No session ID was provided
+                # 403.5: Session ID was invalid
                 if renew_session:
                     self._do_logon()
                     return self.get(
@@ -1239,8 +1241,10 @@ class Session(object):
             if result.status_code == 403:
                 result_object = _result_object(result)
                 reason = result_object.get('reason', None)
-                if reason == 5:
-                    # API session token expired: re-logon and retry
+
+                if reason in (4, 5):
+                    # 403.4: No session ID was provided
+                    # 403.5: Session ID was invalid
                     if renew_session:
                         self._do_logon()
                         return self.post(
@@ -1334,8 +1338,10 @@ class Session(object):
         if result.status_code == 403:
             result_object = _result_object(result)
             reason = result_object.get('reason', None)
-            if reason == 5:
-                # API session token expired: re-logon and retry
+
+            if reason in (4, 5):
+                # 403.4: No session ID was provided
+                # 403.5: Session ID was invalid
                 if renew_session:
                     self._do_logon()
                     self.delete(uri, logon_required=False, renew_session=False)
