@@ -49,6 +49,10 @@ Released: not yet
   Improved and fixed the descriptions of Session.logon(), logoff(), is_logon()
   and session_id.
 
+* In addition to 403.5 (session ID invalid), 403.4 (no session ID provided) is
+  now also automatically handled by the zhmcclient in the same way, i.e. by
+  performing a logon to the HMC and a retry of the HMC operation.
+
 **Enhancements:**
 
 **Cleanup:**
