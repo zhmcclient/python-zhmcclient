@@ -905,22 +905,14 @@ class MetricObjectValues(object):
                            ', '.join([cpc.name for cpc in cpc_list])),
                     Lpar, lpar_managers)
         elif resource_class == 'partition':
-            cpc_list = self.client.cpcs.list()
-            partition_managers = []
-            for cpc in cpc_list:
-                partition_managers.append(cpc.partitions)
-                try:
-                    filter_args = {'object-uri': resource_uri}
-                    resource = cpc.partitions.find(**filter_args)
-                    break
-                except NotFound:
-                    pass  # Try next CPC
-            else:
+            partitions = self.client.consoles.console.list_permitted_partitions(
+                filter_args={'object-uri': resource_uri})
+            if len(partitions) < 1:
                 raise MetricsResourceNotFound(
-                    "{} with URI {} not found in CPCs {}".
-                    format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])),
-                    Partition, partition_managers)
+                    "Partition with URI {} not found".
+                    format(resource_uri),
+                    Partition, [])
+            resource = partitions[0]
         elif resource_class == 'adapter':
             cpc_list = self.client.cpcs.list()
             adapter_managers = []
@@ -939,26 +931,24 @@ class MetricObjectValues(object):
                            ', '.join([cpc.name for cpc in cpc_list])),
                     Adapter, adapter_managers)
         elif resource_class == 'nic':
-            cpc_list = self.client.cpcs.list()
-            nic_managers = []
-            for cpc in cpc_list:
-                found = False
-                for partition in cpc.partitions.list():
-                    nic_managers.append(partition.nics)
-                    try:
-                        filter_args = {'element-uri': resource_uri}
-                        resource = partition.nics.find(**filter_args)
-                        found = True
-                        break
-                    except NotFound:
-                        pass  # Try next partition / next CPC
-                if found:
-                    break
-            else:
+            nic_properties = self.client.session.get(resource_uri)
+            partition_uri = nic_properties['parent']
+            partitions = self.client.consoles.console.list_permitted_partitions(
+                filter_args={'object-uri': partition_uri})
+            if len(partitions) < 1:
                 raise MetricsResourceNotFound(
-                    "{} with URI {} not found in the partitions of CPCs {}".
-                    format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])),
+                    "Parent partition with URI {} of NIC with URI {} not found".
+                    format(partition_uri, resource_uri),
+                    Partition, [])
+            partition = partitions[0]
+            nic_managers = [partition.nics]
+            filter_args = {'element-uri': resource_uri}
+            try:
+                resource = partition.nics.find(**filter_args)
+            except NotFound:
+                raise MetricsResourceNotFound(
+                    "NIC with URI {} not found in its parent partition {}.{}".
+                    format(resource_uri, cpc.name, partition.name),
                     Nic, nic_managers)
         else:
             raise ValueError(

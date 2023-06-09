@@ -60,6 +60,9 @@ Released: not yet
   into problems during export due to problems with any of the CPCs managed by
   the HMC.
 
+* Improved performance of metrics retrieval and processing for NIC and partition
+  related metrics for CPCs in DPM mode.
+
 **Cleanup:**
 
 **Known issues:**
