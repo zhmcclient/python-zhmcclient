@@ -66,7 +66,7 @@ from ._capacity_group import CapacityGroupManager
 from ._logging import logged_api_call
 from ._exceptions import ParseError, ConsistencyError
 from ._utils import get_features, matches_filters, divide_filter_args, \
-    RC_CPC, RC_ADAPTER, RC_CAPACITY_GROUP, RC_HBA, RC_NIC, RC_PARTITION, \
+    RC_CPC, RC_ADAPTER, RC_HBA, RC_NIC, RC_PARTITION, \
     RC_NETWORK_PORT, RC_STORAGE_PORT, RC_STORAGE_TEMPLATE, RC_STORAGE_GROUP, \
     RC_STORAGE_TEMPLATE_VOLUME, RC_STORAGE_VOLUME, RC_VIRTUAL_FUNCTION, \
     RC_VIRTUAL_STORAGE_RESOURCE, RC_VIRTUAL_SWITCH, RC_STORAGE_SITE, \
@@ -2035,9 +2035,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ConsistencyError` - issues with inventory data
         """
         inventory_list = retrieveInventoryData(self.manager.client)
-        cpc_uri = self.get_property('object-uri')
-        config_dict = convertToConfig(self.manager.console, inventory_list,
-                                      cpc_uri, include_unused_adapters)
+        config_dict = self._convert_to_config(inventory_list,
+                                              include_unused_adapters)
         features = self.list_api_features()
         if len(features) > 0:
             config_dict['available-api-features-list'] = features
@@ -2068,6 +2067,176 @@ class Cpc(BaseResource):
         """
         # TODO: add reference to WSAPI book chapter regarding API features
         return get_features(self.manager.session, self.uri, name)
+
+    def _convert_to_config(self, inventory_list, include_unused_adapters):
+        """
+        Convert the inventory list to a DPM configuration dict.
+
+        Important: In order to support export of DPM configs with zhmcclient
+        versions that have support for newer features from older machines and
+        import into older machines, any dictionary items for NEWLY added
+        features must be omitted if empty.
+        """
+        cpc_uri = self.get_property('object-uri')
+        cpc_uris = [cpc_uri]
+
+        config_dict = OrderedDict()
+
+        config_dict['se-version'] = self.prop('se-version')
+        config_dict['available-features-list'] = self.prop(
+            'available-features-list', [])
+        config_dict['cpc-properties'] = {
+            'auto-start-list': self.prop('auto-start-list'),
+            'description': self.prop('description'),
+            'management-world-wide-port-name':
+                self.prop('management-world-wide-port-name'),
+        }
+        config_dict['capacity-groups'] = [
+            dict(group.properties) for group in
+            self.capacity_groups.list(full_properties=True)]
+
+        partitions = extractByParent(
+            RC_PARTITION, cpc_uris, inventory_list)
+        # This item is required by the "Import DPM Configuration" operation
+        config_dict['partitions'] = partitions
+        partition_uris = [x['object-uri'] for x in partitions]
+
+        adapters = extractAdapters(cpc_uri, inventory_list)
+        if adapters:
+            config_dict['adapters'] = adapters
+        adapter_uris = [x['object-uri'] for x in adapters]
+
+        nics = extractByParent(
+            RC_NIC, partition_uris, inventory_list)
+        if nics:
+            config_dict['nics'] = nics
+
+        hbas = extractByParent(
+            RC_HBA, partition_uris, inventory_list)
+        if hbas:
+            config_dict['hbas'] = hbas
+
+        virtual_functions = extractByParent(
+            RC_VIRTUAL_FUNCTION, partition_uris, inventory_list)
+        if virtual_functions:
+            config_dict['virtual-functions'] = virtual_functions
+
+        virtual_switches = extractByParent(
+            RC_VIRTUAL_SWITCH, cpc_uris, inventory_list)
+        if virtual_switches:
+            config_dict['virtual-switches'] = virtual_switches
+
+        storage_sites = extractByValueInListProperty(
+            RC_STORAGE_SITE, cpc_uri, 'cpc-uris', inventory_list)
+        if storage_sites:
+            config_dict['storage-sites'] = storage_sites
+        storage_site_uris = [x['object-uri'] for x in storage_sites]
+
+        storage_subsystems = extractByPropertyInListValue(
+            RC_STORAGE_SUBSYSTEM, 'storage-site-uri', storage_site_uris,
+            inventory_list)
+        if storage_subsystems:
+            config_dict['storage-subsystems'] = storage_subsystems
+        storage_subsystem_uris = [x['object-uri'] for x in storage_subsystems]
+
+        storage_fabrics = extractByPropertyInListValue(
+            RC_STORAGE_FABRIC, 'cpc-uri', cpc_uris, inventory_list)
+        if storage_fabrics:
+            config_dict['storage-fabrics'] = storage_fabrics
+
+        storage_switches = extractByPropertyInListValue(
+            RC_STORAGE_SWITCH, 'storage-site-uri', storage_site_uris,
+            inventory_list)
+        if storage_switches:
+            config_dict['storage-switches'] = storage_switches
+
+        storage_control_units = extractByPropertyInListValue(
+            RC_STORAGE_CONTROL_UNIT, 'parent', storage_subsystem_uris,
+            inventory_list)
+        if storage_control_units:
+            config_dict['storage-control-units'] = storage_control_units
+        storage_control_unit_uris = [x['object-uri']
+                                     for x in storage_control_units]
+
+        storage_paths = extractByPropertyInListValue(
+            RC_STORAGE_PATH, 'parent', storage_control_unit_uris,
+            inventory_list)
+        if storage_paths:
+            config_dict['storage-paths'] = storage_paths
+
+        storage_ports = extractByPropertyInListValue(
+            RC_STORAGE_PORT, 'parent', adapter_uris, inventory_list)
+        if storage_ports:
+            config_dict['storage-ports'] = storage_ports
+
+        network_ports = extractByPropertyInListValue(
+            RC_NETWORK_PORT, 'parent', adapter_uris, inventory_list)
+        if network_ports:
+            config_dict['network-ports'] = network_ports
+
+        storage_groups = extractByPropertyInListValue(
+            RC_STORAGE_GROUP, 'cpc-uri', cpc_uris, inventory_list)
+        if storage_groups:
+            config_dict['storage-groups'] = storage_groups
+        storage_group_uris = [x['object-uri'] for x in storage_groups]
+
+        storage_volumes = extractByPropertyInListValue(
+            RC_STORAGE_VOLUME, 'parent', storage_group_uris, inventory_list)
+        if storage_volumes:
+            config_dict['storage-volumes'] = storage_volumes
+
+        storage_templates = extractByPropertyInListValue(
+            RC_STORAGE_TEMPLATE, 'cpc-uri', cpc_uris, inventory_list)
+        if storage_templates:
+            config_dict['storage-templates'] = storage_templates
+        storage_template_uris = [x['object-uri'] for x in storage_templates]
+
+        storage_template_volumes = extractByPropertyInListValue(
+            RC_STORAGE_TEMPLATE_VOLUME, 'parent', storage_template_uris,
+            inventory_list)
+        if storage_template_volumes:
+            config_dict['storage-template-volumes'] = storage_template_volumes
+
+        virtual_storage_resources = extractByPropertyInListValue(
+            RC_VIRTUAL_STORAGE_RESOURCE, 'parent', storage_group_uris,
+            inventory_list)
+        if virtual_storage_resources:
+            config_dict['virtual-storage-resources'] = virtual_storage_resources
+
+        tape_links = extractByPropertyInListValue(
+            RC_TAPE_LINK, 'cpc-uri', cpc_uris, inventory_list)
+        if tape_links:
+            config_dict['tape-links'] = tape_links
+        tape_link_uris = [x['object-uri'] for x in tape_links]
+
+        tape_libraries = extractByPropertyInListValue(
+            RC_TAPE_LIBRARY, 'cpc-uri', cpc_uris, inventory_list)
+        if tape_libraries:
+            config_dict['tape-libraries'] = tape_libraries
+
+        virtual_tape_resources = extractByParent(
+            RC_VIRTUAL_TAPE_RESOURCE, tape_link_uris, inventory_list)
+        if virtual_tape_resources:
+            config_dict['virtual-tape-resources'] = virtual_tape_resources
+
+        classname_for_partition_links = 'partition-link'
+        partition_links = extractByPropertyInListValue(
+            classname_for_partition_links, 'cpc-uri', cpc_uris, inventory_list)
+        if partition_links:
+            config_dict['partition-links'] = partition_links
+
+        certificates = extractByPropertyInListValue(
+            RC_CERTIFICATE, 'parent', cpc_uris, inventory_list)
+        if certificates:
+            _add_encoded(self.manager.console, certificates)
+            config_dict['certificates'] = certificates
+
+        if not include_unused_adapters:
+            _remove_unreferenced_adapters(config_dict)
+
+        sort_lists(config_dict)
+
+        return config_dict
 
 
 # Functions used by Cpc.export_dpm_configuration().
@@ -2112,25 +2281,6 @@ def extractByValueInListProperty(classname, value, prop_name, inventory_list):
     result_list = [x for x in inventory_list
                    if x['class'] == classname and value in x[prop_name]]
     return result_list
-
-
-def extractCpc(cpc_uri, inventory_list):
-    """
-    Extract the CPC item from inventory_list that has the specified cpc_uri.
-    """
-    cpcs = [x for x in inventory_list
-            if x['class'] == RC_CPC and x['object-uri'] == cpc_uri]
-    cpc_len = len(cpcs)
-    if cpc_len == 0:
-        raise ConsistencyError(
-            "Inventory data does not contain CPC with URI {}".
-            format(cpc_uri))
-    if cpc_len > 1:
-        raise ConsistencyError(
-            "Inventory data contains multiple ({}) CPCs with URI {}".
-            format(cpc_len, cpc_uri))
-    cpc = cpcs[0]
-    return cpc
 
 
 def extractAdapters(cpc_uri, inventory_list):
@@ -2183,7 +2333,7 @@ def retrieveInventoryData(client):
     Retrieve inventory data from the HMC.
     Returns the inventory list from Client.get_inventory().
     """
-    resource_classes = ['dpm-resources', 'cpc']
+    resource_classes = ['dpm-resources']
     api_features = client.consoles.console.list_api_features()
     if 'secure-boot-with-certificates' in api_features:
         resource_classes.append('certificate-resources')
@@ -2204,177 +2354,6 @@ def retrieveInventoryData(client):
             "Some resources could not be fully inventoried:\n  {}".
             format('\n  '.join(error_msgs)))
     return inventory_list
-
-
-def convertToConfig(console, inventory_list, cpc_uri, include_unused_adapters):
-    """
-    Convert the inventory list to a DPM configuration dict.
-
-    Important: In order to support export of DPM configs with zhmcclient
-    versions that have support for newer features from older machines and
-    import into older machines, any dictionary items for newly added features
-    must be omitted if empty.
-    """
-    config_dict = OrderedDict()
-
-    cpc = extractCpc(cpc_uri, inventory_list)
-    cpc_uris = [cpc_uri]
-
-    config_dict['se-version'] = cpc.get('se-version', None)
-    config_dict['available-features-list'] = \
-        cpc.get('available-features-list', [])
-    config_dict['cpc-properties'] = {
-        'auto-start-list': cpc.get('auto-start-list', None),
-        'description': cpc.get('description', None),
-        'management-world-wide-port-name':
-            cpc.get('management-world-wide-port-name', None),
-    }
-
-    partitions = extractByParent(
-        RC_PARTITION, cpc_uris, inventory_list)
-    # This item is required by the "Import DPM Configuration" operation
-    config_dict['partitions'] = partitions
-    partition_uris = [x['object-uri'] for x in partitions]
-
-    adapters = extractAdapters(cpc_uri, inventory_list)
-    if adapters:
-        config_dict['adapters'] = adapters
-    adapter_uris = [x['object-uri'] for x in adapters]
-
-    nics = extractByParent(
-        RC_NIC, partition_uris, inventory_list)
-    if nics:
-        config_dict['nics'] = nics
-
-    hbas = extractByParent(
-        RC_HBA, partition_uris, inventory_list)
-    if hbas:
-        config_dict['hbas'] = hbas
-
-    virtual_functions = extractByParent(
-        RC_VIRTUAL_FUNCTION, partition_uris, inventory_list)
-    if virtual_functions:
-        config_dict['virtual-functions'] = virtual_functions
-
-    virtual_switches = extractByParent(
-        RC_VIRTUAL_SWITCH, cpc_uris, inventory_list)
-    if virtual_switches:
-        config_dict['virtual-switches'] = virtual_switches
-
-    capacity_groups = extractByParent(
-        RC_CAPACITY_GROUP, cpc_uris, inventory_list)
-    if capacity_groups:
-        config_dict['capacity-groups'] = capacity_groups
-
-    storage_sites = extractByValueInListProperty(
-        RC_STORAGE_SITE, cpc_uri, 'cpc-uris', inventory_list)
-    if storage_sites:
-        config_dict['storage-sites'] = storage_sites
-    storage_site_uris = [x['object-uri'] for x in storage_sites]
-
-    storage_subsystems = extractByPropertyInListValue(
-        RC_STORAGE_SUBSYSTEM, 'storage-site-uri', storage_site_uris,
-        inventory_list)
-    if storage_subsystems:
-        config_dict['storage-subsystems'] = storage_subsystems
-    storage_subsystem_uris = [x['object-uri'] for x in storage_subsystems]
-
-    storage_fabrics = extractByPropertyInListValue(
-        RC_STORAGE_FABRIC, 'cpc-uri', cpc_uris, inventory_list)
-    if storage_fabrics:
-        config_dict['storage-fabrics'] = storage_fabrics
-
-    storage_switches = extractByPropertyInListValue(
-        RC_STORAGE_SWITCH, 'storage-site-uri', storage_site_uris,
-        inventory_list)
-    if storage_switches:
-        config_dict['storage-switches'] = storage_switches
-
-    storage_control_units = extractByPropertyInListValue(
-        RC_STORAGE_CONTROL_UNIT, 'parent', storage_subsystem_uris,
-        inventory_list)
-    if storage_control_units:
-        config_dict['storage-control-units'] = storage_control_units
-    storage_control_unit_uris = [x['object-uri'] for x in storage_control_units]
-
-    storage_paths = extractByPropertyInListValue(
-        RC_STORAGE_PATH, 'parent', storage_control_unit_uris, inventory_list)
-    if storage_paths:
-        config_dict['storage-paths'] = storage_paths
-
-    storage_ports = extractByPropertyInListValue(
-        RC_STORAGE_PORT, 'parent', adapter_uris, inventory_list)
-    if storage_ports:
-        config_dict['storage-ports'] = storage_ports
-
-    network_ports = extractByPropertyInListValue(
-        RC_NETWORK_PORT, 'parent', adapter_uris, inventory_list)
-    if network_ports:
-        config_dict['network-ports'] = network_ports
-
-    storage_groups = extractByPropertyInListValue(
-        RC_STORAGE_GROUP, 'cpc-uri', cpc_uris, inventory_list)
-    if storage_groups:
-        config_dict['storage-groups'] = storage_groups
-    storage_group_uris = [x['object-uri'] for x in storage_groups]
-
-    storage_volumes = extractByPropertyInListValue(
-        RC_STORAGE_VOLUME, 'parent', storage_group_uris, inventory_list)
-    if storage_volumes:
-        config_dict['storage-volumes'] = storage_volumes
-
-    storage_templates = extractByPropertyInListValue(
-        RC_STORAGE_TEMPLATE, 'cpc-uri', cpc_uris, inventory_list)
-    if storage_templates:
-        config_dict['storage-templates'] = storage_templates
-    storage_template_uris = [x['object-uri'] for x in storage_templates]
-
-    storage_template_volumes = extractByPropertyInListValue(
-        RC_STORAGE_TEMPLATE_VOLUME, 'parent', storage_template_uris,
-        inventory_list)
-    if storage_template_volumes:
-        config_dict['storage-template-volumes'] = storage_template_volumes
-
-    virtual_storage_resources = extractByPropertyInListValue(
-        RC_VIRTUAL_STORAGE_RESOURCE, 'parent', storage_group_uris,
-        inventory_list)
-    if virtual_storage_resources:
-        config_dict['virtual-storage-resources'] = virtual_storage_resources
-
-    tape_links = extractByPropertyInListValue(
-        RC_TAPE_LINK, 'cpc-uri', cpc_uris, inventory_list)
-    if tape_links:
-        config_dict['tape-links'] = tape_links
-    tape_link_uris = [x['object-uri'] for x in tape_links]
-
-    tape_libraries = extractByPropertyInListValue(
-        RC_TAPE_LIBRARY, 'cpc-uri', cpc_uris, inventory_list)
-    if tape_libraries:
-        config_dict['tape-libraries'] = tape_libraries
-
-    virtual_tape_resources = extractByParent(
-        RC_VIRTUAL_TAPE_RESOURCE, tape_link_uris, inventory_list)
-    if virtual_tape_resources:
-        config_dict['virtual-tape-resources'] = virtual_tape_resources
-
-    classname_for_partition_links = 'partition-link'
-    partition_links = extractByPropertyInListValue(
-        classname_for_partition_links, 'cpc-uri', cpc_uris, inventory_list)
-    if partition_links:
-        config_dict['partition-links'] = partition_links
-
-    certificates = extractByPropertyInListValue(
-        RC_CERTIFICATE, 'parent', cpc_uris, inventory_list)
-    if certificates:
-        _add_encoded(console, certificates)
-        config_dict['certificates'] = certificates
-
-    if not include_unused_adapters:
-        _remove_unreferenced_adapters(config_dict)
-
-    sort_lists(config_dict)
-
-    return config_dict
 
 
 def _add_encoded(console, certificates):
