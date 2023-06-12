@@ -55,6 +55,11 @@ Released: not yet
 
 **Enhancements:**
 
+* Reworked export_dpm_configuration() to avoid using the "cpc" category when
+  doing the initial GET Inventory call. This reduces the likelihood of running
+  into problems during export due to problems with any of the CPCs managed by
+  the HMC.
+
 **Cleanup:**
 
 **Known issues:**
