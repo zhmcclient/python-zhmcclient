@@ -59,6 +59,16 @@ Released: not yet
 * Addressed safety issues from 6/2023, by increasing 'requests' to 2.31.0
   on Python >=3.7.
 
+* Fixed the handling of HTTP status 202 with empty response content: The
+  old code tested the content for '' but the content is always a binary string.
+  In Python 3.x, that check results in False and subsequently in an attempt
+  to parse the empty string using JSON, which failed with a ParseError.
+  Fixed by comparing the empty string against b''.
+
+* Improved the handling of logoff: It now also tolerates a ConnectionError,
+  which may be raised when the console.restart() method is used and the
+  HMC quickly enough becomes unavailable.
+
 **Enhancements:**
 
 * Reworked export_dpm_configuration() to avoid using the "cpc" category when

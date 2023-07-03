@@ -802,7 +802,9 @@ class Session(object):
         session_uri = '/api/sessions/this-session'
         try:
             self.delete(session_uri, logon_required=False, renew_session=False)
-        except ServerAuthError:
+        except (ServerAuthError, ConnectionError):
+            # HMC shutdown or broken network causes ConnectionError.
+            # Invalid credentials cause ServerAuthError.
             pass
         self._session_id = None
         self._session = None
@@ -1223,7 +1225,7 @@ class Session(object):
                 return None
 
             if result.status_code == 202:
-                if result.content == '':
+                if result.content == b'':
                     # Some operations (e.g. "Restart Console",
                     # "Shutdown Console" or "Cancel Job") return 202
                     # with no response content.
