@@ -31,6 +31,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Circumvented the removal of Python 2.7 from the Github Actions plugin
+  setup-python, by using the Docker container python:2.7.18-buster instead.
+
 **Enhancements:**
 
 **Cleanup:**
