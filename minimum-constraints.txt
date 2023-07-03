@@ -99,7 +99,8 @@ wheel==0.38.1; python_version >= '3.7'
 decorator==4.0.11
 pytz==2016.10; python_version <= '3.9'
 pytz==2019.1; python_version >= '3.10'
-requests==2.25.0
+requests==2.25.0; python_version <= '3.6'
+requests==2.31.0; python_version >= '3.7'
 six==1.14.0; python_version <= '3.9'
 six==1.16.0; python_version >= '3.10'
 stomp.py==4.1.23
