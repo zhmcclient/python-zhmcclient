@@ -20,14 +20,10 @@ Change log
 ----------
 
 
-Version 1.8.2.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.8.2
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-07-03
 
 **Bug fixes:**
 
@@ -46,16 +42,6 @@ Released: not yet
 * Improved the handling of logoff: It now also tolerates a ConnectionError,
   which may be raised when the console.restart() method is used and the
   HMC quickly enough becomes unavailable.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.8.1
