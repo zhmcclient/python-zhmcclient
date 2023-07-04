@@ -1029,6 +1029,9 @@ class Session(object):
         if result.status_code == 403:
             result_object = _result_object(result)
             reason = result_object.get('reason', None)
+            message = result_object.get('message', None)
+            HMC_LOGGER.debug("Received HTTP status 403.%d on GET %s: %s",
+                             reason, uri, message)
 
             if reason in (4, 5):
                 # 403.4: No session ID was provided
@@ -1279,6 +1282,9 @@ class Session(object):
             if result.status_code == 403:
                 result_object = _result_object(result)
                 reason = result_object.get('reason', None)
+                message = result_object.get('message', None)
+                HMC_LOGGER.debug("Received HTTP status 403.%d on GET %s: %s",
+                                 reason, uri, message)
 
                 if reason in (4, 5):
                     # 403.4: No session ID was provided
@@ -1378,6 +1384,9 @@ class Session(object):
         if result.status_code == 403:
             result_object = _result_object(result)
             reason = result_object.get('reason', None)
+            message = result_object.get('message', None)
+            HMC_LOGGER.debug("Received HTTP status 403.%d on GET %s: %s",
+                             reason, uri, message)
 
             if reason in (4, 5):
                 # 403.4: No session ID was provided
