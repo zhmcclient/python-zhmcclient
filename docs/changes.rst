@@ -48,6 +48,8 @@ Released: not yet
 * Added support for retrievel of firmware from an FTP server to the
   Cpc/Console.single_step_install() methods. (issue #1342)
 
+* Additional log entries when HTTP status 403 is received, for easier detection.
+
 **Cleanup:**
 
 **Known issues:**
