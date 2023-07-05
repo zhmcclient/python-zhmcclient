@@ -1,0 +1,35 @@
+# Safety policy file for packages needed for installation
+# For documentation, see https://docs.pyup.io/docs/safety-20-policy-file
+
+# Configuration for the 'safety check' command
+security:
+
+    # Ignore certain severities.
+    # A number between 0 and 10, with the following significant values:
+    # - 9: ignore all vulnerabilities except CRITICAL severity
+    # - 7: ignore all vulnerabilities except CRITICAL & HIGH severity
+    # - 4: ignore all vulnerabilities except CRITICAL, HIGH & MEDIUM severity
+    ignore-cvss-severity-below: 0
+
+    # Ignore unknown severities.
+    # Should be set to False.
+    ignore-cvss-unknown-severity: False
+
+    # List of specific vulnerabilities to ignore.
+    # {id}:                 # vulnerability ID
+    #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
+    #     expires: {date}   # optional: Date when this ignore will expire
+    ignore-vulnerabilities:
+        39611:
+            reason: PyYAML full_load method or FullLoader is not used
+        43975:
+            reason: Fixed Urllib3 versions are excluded by requests
+        51499:
+            reason: Fixed Wheel version requires Python>=3.7 and is used there; Risk is on Pypi side
+        52365:
+            reason: Fixed Certifi version requires Python>=3.6 and is used there
+        52495:
+            reason: Fixed Setuptools version requires Python>=3.7 and is used there; Risk is on Pypi side
+
+    # Continue with exit code 0 when vulnerabilities are found.
+    continue-on-vulnerability-error: False
