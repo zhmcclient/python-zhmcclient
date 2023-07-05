@@ -96,6 +96,8 @@ security:
             reason: Fixed notebook version 5.7.11 only works on Python>=3.6 and is used there
         58755:
             reason: Fixed requests version 2.31.0 requires Python>=3.7 and is used there
+        58910:
+            reason: Fixed pygments version 2.15.0 requires Python>=3.7 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
