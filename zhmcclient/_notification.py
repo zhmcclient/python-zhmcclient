@@ -67,12 +67,14 @@ messages issued by the operating system. The following commands use the
     $ zhmc partition start {cpc-name} {partition-name}
 """
 
+import os
 import threading
 import json
 
 from ._logging import logged_api_call
 from ._constants import DEFAULT_STOMP_PORT
-from ._exceptions import NotificationJMSError, NotificationParseError
+from ._exceptions import NotificationJMSError, NotificationParseError, \
+    SubscriptionNotFound
 
 __all__ = ['NotificationReceiver']
 
@@ -131,13 +133,22 @@ class NotificationReceiver(object):
         self._userid = userid
         self._password = password
 
+        # Subscription ID numbers that are in use.
+        # Each subscription for a topic gets its own unique ID.
+        # - key: topic name
+        # - value: Subscription ID number
+        self._sub_ids = {}
+
+        # Next subscription ID number to be used.
+        # After allocating a subscription ID number, this number is increased.
+        # It is never decreased again.
+        self._next_sub_id = 1
+
+        # Process PID, used to ensure uniqueness of subscription ID
+        self._process_pid = os.getpid()
+
         # Wait timeout to honor keyboard interrupts after this time:
         self._wait_timeout = 10.0  # seconds
-
-        # Subscription ID. We use some value that allows to identify on the
-        # HMC that this is the zhmcclient, but otherwise we are not using
-        # this value ourselves.
-        self._sub_id = 'zhmcclient.%s' % id(self)
 
         # Sync variables for thread-safe handover between listener thread and
         # receiver thread:
@@ -157,8 +168,95 @@ class NotificationReceiver(object):
         self._conn.connect(self._userid, self._password, wait=True)
 
         for topic_name in self._topic_names:
-            dest = "/topic/" + topic_name
-            self._conn.subscribe(destination=dest, id=self._sub_id, ack='auto')
+            self.subscribe(topic_name)
+
+    def _id_value(self, sub_id):
+        """
+        Create the subscription ID from the subscription ID number.
+        """
+        id_value = ('zhmcclient.{pid}.{conn_id}.{sub_id}'.
+                    format(pid=self._process_pid, conn_id=id(self),
+                           sub_id=sub_id))
+        return id_value
+
+    @logged_api_call
+    def subscribe(self, topic_name):
+        """
+        Subscribe this notification receiver for a topic.
+
+        Parameters:
+
+          topic_name (:term:`string`): Name of the HMC notification topic.
+            Must not be `None`.
+
+        Returns:
+            string: Subscription ID
+        """
+        dest = "/topic/" + topic_name
+        sub_id = self._next_sub_id
+        self._next_sub_id += 1
+        self._sub_ids[topic_name] = sub_id
+        id_value = self._id_value(sub_id)
+        self._conn.subscribe(destination=dest, id=id_value, ack='auto')
+        return id_value
+
+    @logged_api_call
+    def unsubscribe(self, topic_name):
+        """
+        Unsubscribe this notification receiver from a topic.
+
+        If the topic is not currently subscribed for by this receiver,
+        SubscriptionNotFound is raised.
+
+        Parameters:
+
+          topic_name (:term:`string`): Name of the HMC notification topic.
+            Must not be `None`.
+
+        Raises:
+            SubscriptionNotFound: Topic is not currently subscribed for.
+        """
+        try:
+            sub_id = self._sub_ids[topic_name]
+        except KeyError:
+            raise SubscriptionNotFound(
+                "Subscription topic {!r} is not currently subscribed for")
+        id_value = self._id_value(sub_id)
+        self._conn.unsubscribe(id=id_value)
+
+    @logged_api_call
+    def is_subscribed(self, topic_name):
+        """
+        Return whether this notification receiver is currently subscribed for a
+        topic.
+
+        Parameters:
+
+          topic_name (:term:`string`): Name of the HMC notification topic.
+            Must not be `None`.
+        """
+        return topic_name in self._sub_ids
+
+    @logged_api_call
+    def get_subscription(self, topic_name):
+        """
+        Return the subscription ID for a topic this notification receiver is
+        subscribed for.
+
+        If the topic is not currently subscribed for by this receiver,
+        SubscriptionNotFound is raised.
+
+        Parameters:
+
+          topic_name (:term:`string`): Name of the HMC notification topic.
+            Must not be `None`.
+        """
+        try:
+            sub_id = self._sub_ids[topic_name]
+        except KeyError:
+            raise SubscriptionNotFound(
+                "Subscription topic {!r} is not currently subscribed for")
+        return self._id_value(sub_id)
 
     @logged_api_call
     def notifications(self):

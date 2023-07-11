@@ -25,8 +25,10 @@ import json
 import threading
 from mock import patch
 import six
+import pytest
 
 from zhmcclient._notification import NotificationReceiver
+from zhmcclient._exceptions import SubscriptionNotFound
 
 
 class MockedStompConnection(object):
@@ -74,6 +76,14 @@ class MockedStompConnection(object):
         assert self._state_connected
         self._subscriptions.append((destination, id, ack))
 
+    def unsubscribe(self, id):
+        # pylint: disable=redefined-builtin
+        """Mocks the same-named method of stomp.Connection."""
+        assert self._state_connected
+        for _dest, _id, _ack in self._subscriptions:
+            if _id == id:
+                self._subscriptions.remove((_dest, _id, _ack))
+
     def disconnect(self):
         """Mocks the same-named method of stomp.Connection."""
         assert self._state_connected
@@ -104,6 +114,14 @@ class MockedStompConnection(object):
             headers, message_str = msg_item
             self._listener.on_message(headers, message_str)
         self._listener.on_disconnected()
+
+    def mock_get_subscription(self, topic):
+        """Find the subscription with the specified topic name and return it"""
+        for _dest, _id, _ack in self._subscriptions:
+            dest = '/topic/' + topic
+            if _dest == dest:
+                return (_dest, _id, _ack)
+        return None
 
 
 def receiver_run(receiver, msg_items):
@@ -244,3 +262,131 @@ class TestNotificationTwoTopics(object):
         msg0 = msg_items[0]
         assert msg0[0] == self.std_headers
         assert msg0[1] == message_obj
+
+
+class TestNotificationSubscriptionMgmt(object):
+    """
+    Test class for subscription management.
+    """
+
+    def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
+        self.topics = ('fake-topic1', 'fake-topic2')
+        self.hmc = 'fake-hmc'
+        self.userid = 'fake-userid'
+        self.password = 'fake-password'
+        self.std_headers = {
+            'notification-type': 'fake-type'
+        }
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_is_subscribed(self):
+        """Test function for is_subscribed() method."""
+
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
+                                        self.password)
+        conn = receiver._conn  # pylint: disable=protected-access
+
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic1')
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic2')
+
+        result = receiver.is_subscribed('fake-topic1')
+        assert result is True
+
+        result = receiver.is_subscribed('foo')
+        assert result is False
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_get_subscription(self):
+        """Test function for get_subscription() method."""
+
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
+                                        self.password)
+        conn = receiver._conn  # pylint: disable=protected-access
+
+        id_value1 = receiver.get_subscription('fake-topic1')
+        id_value2 = receiver.get_subscription('fake-topic2')
+        assert id_value1 != id_value2
+
+        # Check that the subscriptions are still in place
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic1')
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic2')
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_get_subscription_nonexisting(self):
+        """Test function for get_subscription() method for a non-existing
+        subscription.."""
+
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
+                                        self.password)
+        conn = receiver._conn  # pylint: disable=protected-access
+
+        with pytest.raises(SubscriptionNotFound):
+            receiver.get_subscription('bla')
+
+        # Check that the subscriptions are still in place
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic1')
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic2')
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_subscribe(self):
+        """Test function for subscribe() method."""
+
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
+                                        self.password)
+        conn = receiver._conn  # pylint: disable=protected-access
+
+        receiver.subscribe('foo')
+
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('foo')
+
+        # Check that the subscriptions are still in place
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic1')
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic2')
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_unsubscribe(self):
+        """Test function for unsubscribe() method."""
+
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
+                                        self.password)
+        conn = receiver._conn  # pylint: disable=protected-access
+
+        receiver.unsubscribe('fake-topic1')
+
+        # pylint: disable=no-member
+        assert not conn.mock_get_subscription('fake-topic1')
+
+        # Check that the subscriptions are still in place
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic2')
+
+    @patch(target='stomp.Connection', new=MockedStompConnection)
+    def test_unsubscribe_nonexisting(self):
+        """Test function for unsubscribe() for a non-existing subscription."""
+
+        receiver = NotificationReceiver(self.topics, self.hmc, self.userid,
+                                        self.password)
+        conn = receiver._conn  # pylint: disable=protected-access
+
+        with pytest.raises(SubscriptionNotFound):
+            receiver.unsubscribe('bla')
+
+        # Check that the subscriptions are still in place
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic1')
+        # pylint: disable=no-member
+        assert conn.mock_get_subscription('fake-topic2')

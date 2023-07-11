@@ -105,6 +105,10 @@ Released: not yet
   classes, described the optimized lookup behavior for auto-updated managers
   and optimized access via the name-to-URI cache.
 
+* In the NotificationReceiver class, added support for managing subscriptions
+  for topics dynamically with new methods 'subscribe()', 'unsubscribe()',
+  'is_subscribed()' and 'get_subscription()'.
+
 **Cleanup:**
 
 **Known issues:**
