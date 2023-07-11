@@ -24,8 +24,8 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'ServerAuthError', 'ParseError', 'VersionError', 'HTTPError',
            'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound',
            'MetricsResourceNotFound', 'NotificationError',
-           'NotificationJMSError', 'NotificationParseError', 'ConsistencyError',
-           'CeasedExistence']
+           'NotificationJMSError', 'NotificationParseError',
+           'SubscriptionNotFound', 'ConsistencyError', 'CeasedExistence']
 
 
 class Error(Exception):
@@ -1358,6 +1358,38 @@ class NotificationParseError(NotificationError):
         """
         return "{}(message={!r}, jms_message={!r})". \
             format(self.__class__.__name__, self.args[0], self.jms_message)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}
+        """
+        return "classname={!r}; message={!r};". \
+            format(self.__class__.__name__, self.args[0])
+
+
+class SubscriptionNotFound(NotificationError):
+    """
+    This exception indicates that a subscripton for a topic was not found.
+
+    Derived from :exc:`~zhmcclient.NotificationError`.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        # pylint: disable=useless-super-delegation
+        super(SubscriptionNotFound, self).__init__(msg)
 
     def str_def(self):
         """
