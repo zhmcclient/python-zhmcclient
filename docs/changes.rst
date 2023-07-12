@@ -69,6 +69,8 @@ Released: not yet
   which may be raised when the console.restart() method is used and the
   HMC quickly enough becomes unavailable.
 
+* Fixed the bug issue template by correcting the command to display debug data.
+
 **Enhancements:**
 
 * Reworked export_dpm_configuration() to avoid using the "cpc" category when
