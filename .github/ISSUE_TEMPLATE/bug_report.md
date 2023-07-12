@@ -17,6 +17,7 @@ assignees: ''
 <-- A clear and concise description of what you expected to happen. -->
 
 **Environment information**
-* Output of `python -m zhmcclient.debuginfo`:
+
 * HMC version:
-* HMC API version:
+
+* Output of `python -c "import zhmcclient; print(zhmcclient.debuginfo())"`:
