@@ -20,12 +20,12 @@ Change log
 ----------
 
 
-Version 1.9.0.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.9.0
+^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.8.x.
+This version contains all fixes up to version 1.8.2.
 
-Released: not yet
+Released: 2023-07-14
 
 **Incompatible changes:**
 
@@ -108,14 +108,6 @@ Released: not yet
 * In the NotificationReceiver class, added support for managing subscriptions
   for topics dynamically with new methods 'subscribe()', 'unsubscribe()',
   'is_subscribed()' and 'get_subscription()'.
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.8.0
