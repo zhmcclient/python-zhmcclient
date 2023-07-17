@@ -20,29 +20,17 @@ Change log
 ----------
 
 
-Version 1.9.1.dev1
-^^^^^^^^^^^^^^^^^^
+Version 1.9.1
+^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-07-17
 
 **Bug fixes:**
 
 * Fixed issue with PyYAML 5.4 installation on Python>=3.10 that fails since
   the recent release of Cython 3.
 
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+* Fixed safety issues from 7/17.
 
 
 Version 1.9.0
