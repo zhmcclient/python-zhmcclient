@@ -792,7 +792,7 @@ local clone of the python-zhmcclient Git repo.
 11. Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
-    https://github.com/zhmcclient/zhmcclient/actions/workflows/publish.yml
+    https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
 
     Then, perform the following verifications:
 
