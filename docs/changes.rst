@@ -33,6 +33,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed issue with PyYAML 5.4 installation on Python>=3.10 that fails since
+  the recent release of Cython 3.
+
 **Enhancements:**
 
 **Cleanup:**
