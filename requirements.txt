@@ -43,8 +43,14 @@ nocasedict>=1.0.2
 # PyYAML 6.0 removed support for py27
 # PyYAML 5.3.1 fixes safety issue 38100
 # PyYAML 5.4 fixes safety issue 39611
+# PyYAML 5.3 has wheel archives for Python 2.7, 3.5 - 3.9
+# PyYAML 5.4 has wheel archives for Python 2.7, 3.6 - 3.9
+# PyYAML 6.0 has wheel archives for Python 3.6 - 3.11
+# PyYAML 5.4 and 6.0.0 fails install since Cython 3 was released, see issue
+#   https://github.com/yaml/pyyaml/issues/724.
 PyYAML>=5.3.1; python_version <= '3.5'
-PyYAML>=5.4; python_version >= '3.6'
+PyYAML>=5.3.1,!=5.4.0,!=5.4.1; python_version >= '3.6' and python_version <= '3.11'
+PyYAML>=5.3.1,!=5.4.0,!=5.4.1,!=6.0.0; python_version >= '3.12'
 
 # yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
 # yamlloader 1.0 removed support for py27,35
