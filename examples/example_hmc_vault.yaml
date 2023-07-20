@@ -14,3 +14,12 @@ hmc_auth:
     userid: ensadmin
     password: password
     verify: false
+
+  MOCKED_Z13_CLASSIC:
+    userid: dummy
+    password: dummy
+  
+  MOCKED_Z13_DPM:
+    userid: dummy
+    password: dummy
+  

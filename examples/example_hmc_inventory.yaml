@@ -30,7 +30,7 @@ all:
       cpcs:
         CPC1:
           machine_type: "2964"
-          dpm_enabled: true
+          dpm_enabled: false
 
     MOCKED_Z13_DPM:
       description: "Example mocked HMC with a z13 in DPM mode"
