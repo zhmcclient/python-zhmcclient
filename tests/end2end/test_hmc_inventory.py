@@ -20,6 +20,7 @@ reality.
 from __future__ import absolute_import, print_function
 
 from requests.packages import urllib3
+import pytest
 
 import zhmcclient
 # pylint: disable=unused-import
@@ -82,6 +83,7 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
                        dv=def_cpc_value, hv=cpc_value)
 
 
+@pytest.mark.skip   # Disabled by default
 def test_hmcdef_check_all_hmcs():
     """
     Check out the HMCs specified in the HMC inventory file.
