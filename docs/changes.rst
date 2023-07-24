@@ -40,6 +40,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Added support for upgrading the HMC and SE to a new bundle level via new
+  zhmcclient.Console.single_step_install() and
+  zhmcclient.Cpc.single_step_install() methods. (issue #1219)
+
 **Cleanup:**
 
 **Known issues:**

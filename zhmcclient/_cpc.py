@@ -2095,6 +2095,96 @@ class Cpc(BaseResource):
         # TODO: add reference to WSAPI book chapter regarding API features
         return get_features(self.manager.session, self.uri, name)
 
+    @logged_api_call
+    def single_step_install(
+            self, bundle_level, accept_firmware=True, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Upgrades the firmware on the Support Element (SE) of this CPC to a new
+        bundle level.
+
+        This is done by performing the "CPC Single Step Install" operation
+        which performs the following steps:
+
+        * A backup of the target CPC is performed to its SE hard drive.
+        * If `accept_firmware` is True, the firmware currently installed on the
+          SE of this CPC is accepted. Note that once firmware is accepted, it
+          cannot be removed.
+        * The new firmware identified by the bundle-level field is retrieved
+          from the IBM support site and installed.
+        * The newly installed firmware is activated, which includes rebooting
+          the SE of this CPC.
+
+        If an error occurrs when installing the upgrades for the components of
+        the new bundle, any components that were successfully installed are
+        rolled back.
+
+        If an error occurs after the firmware is accepted, the firmware remains
+        accepted.
+
+        Note that it is not possible to downgrade the SE firmware with this
+        operation.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Single Step Internal Code Changes" task.
+
+        Parameters:
+
+          bundle_level (string): Name of the bundle to be installed on the SE
+            of this CPC (e.g. 'S51')
+
+          accept_firmware (bool): Accept the previous bundle level before
+            installing the new level.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {
+            'bundle-level': bundle_level,
+            'accept-firmware': accept_firmware,
+        }
+        result = self.manager.session.post(
+            self.uri + '/operations/single-step-install', body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        return result
+
     def _convert_to_config(self, inventory_list, include_unused_adapters):
         """
         Convert the inventory list to a DPM configuration dict.

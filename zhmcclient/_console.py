@@ -863,6 +863,102 @@ class Console(BaseResource):
             self._certificates = CertificateManager(self)
         return self._certificates
 
+    @logged_api_call
+    def single_step_install(
+            self, bundle_level, backup_location_type='usb',
+            accept_firmware=True, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Upgrades the firmware on this HMC to a new bundle level.
+
+        This is done by performing the "Console Single Step Install" operation
+        which performs the following steps:
+
+        * If `accept_firmware` is True, the firmware currently installed on the
+          this HMC is accepted. Note that once firmware is accepted, it
+          cannot be removed.
+        * A backup of the this HMC is performed to the specified backup device.
+        * The new firmware identified by the bundle-level field is retrieved
+          from the IBM support site and installed.
+        * The newly installed firmware is activated, which includes rebooting
+          this HMC.
+
+        Note that it is not possible to downgrade the HMC firmware with this
+        operation.
+
+        For HMCs that run on an HMA that also hosts an SE (e.g. z16 and higher),
+        the HMC firmware can only be upgraded if the HMA hosts an alternate SE.
+
+        Authorization requirements:
+
+        * Task permission to the "Single Step Console Internal Code" task.
+
+        Parameters:
+
+          bundle_level (string): Name of the bundle to be installed on the HMC
+            (e.g. 'H71')
+
+          backup_location_type (string): Type of backup location for the
+            HMC backup that is performed:
+              - "ftp": The FTP server that was used for the last console backup
+                as defined on the "Configure Backup Settings" user interface
+                task in the HMC GUI.
+              - "usb": The USB storage device mounted to the HMC.
+
+          accept_firmware (bool): Accept the previous bundle level before
+            installing the new level.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation including any HMC
+            restarts, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation including any HMC
+              restarts.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation including any HMC restarts. The
+            special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used. If the
+            timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC. The Job object will be valid across
+            any HMC restarts that occur during the upgrade operation.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {
+            'bundle-level': bundle_level,
+            'backup-location-type': backup_location_type,
+            'accept-firmware': accept_firmware,
+        }
+        result = self.manager.session.post(
+            self.uri + '/operations/single-step-install', body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        return result
+
     def dump(self):
         """
         Dump this Console resource with its properties and child resources
