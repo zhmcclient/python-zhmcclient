@@ -252,7 +252,7 @@ class TestFakedBase(object):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.cpc1_oid = '42-abc-543'
-        self.cpc1_uri = '/api/cpcs/%s' % self.cpc1_oid
+        self.cpc1_uri = '/api/cpcs/{}'.format(self.cpc1_oid)
 
         self.cpc1_in_props = {
             # All properties that are otherwise defaulted (but with non-default
@@ -775,10 +775,10 @@ class TestFakedHba(object):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.adapter1_oid = '747-abc-12345'
-        self.adapter1_uri = '/api/adapters/%s' % self.adapter1_oid
+        self.adapter1_uri = '/api/adapters/{}'.format(self.adapter1_oid)
         self.port1_oid = '23'
-        self.port1_uri = '/api/adapters/%s/storage-ports/%s' % \
-            (self.adapter1_oid, self.port1_oid)
+        self.port1_uri = '/api/adapters/{}/storage-ports/{}' \
+            .format(self.adapter1_oid, self.port1_oid)
         self.hba1_oid = '999-123-xyz'
 
         self.cpc1_in_props = {'name': 'cpc1'}
@@ -1050,10 +1050,10 @@ class TestFakedNic(object):
         self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
 
         self.adapter1_oid = '380-xyz-12345'
-        self.adapter1_uri = '/api/adapters/%s' % self.adapter1_oid
+        self.adapter1_uri = '/api/adapters/{}'.format(self.adapter1_oid)
         self.port1_oid = '32'
-        self.port1_uri = '/api/adapters/%s/network-ports/%s' % \
-            (self.adapter1_oid, self.port1_oid)
+        self.port1_uri = '/api/adapters/{}/network-ports/{}' \
+            .format(self.adapter1_oid, self.port1_oid)
         self.nic1_oid = 'ddd-999-123'
 
         self.cpc1_in_props = {'name': 'cpc1'}

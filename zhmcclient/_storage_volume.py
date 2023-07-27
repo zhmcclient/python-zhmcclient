@@ -294,12 +294,12 @@ class StorageVolumeManager(BaseManager):
         else:
             if email_cc_addresses:
                 raise ValueError("email_cc_addresses must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_cc_addresses)
+                                 "there is no email_to_addresses: {}"
+                                 .format(email_cc_addresses))
             if email_insert:
                 raise ValueError("email_insert must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_insert)
+                                 "there is no email_to_addresses: {}"
+                                 .format(email_insert))
 
         result = self.session.post(
             self.storage_group.uri + '/operations/modify',
@@ -338,8 +338,8 @@ class StorageVolume(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, StorageVolumeManager), \
-            "StorageVolume init: Expected manager type %s, got %s" % \
-            (StorageVolumeManager, type(manager))
+            "StorageVolume init: Expected manager type {}, got {}" \
+            .format(StorageVolumeManager, type(manager))
         super(StorageVolume, self).__init__(manager, uri, name, properties)
 
     @property
@@ -420,12 +420,12 @@ class StorageVolume(BaseResource):
         else:
             if email_cc_addresses:
                 raise ValueError("email_cc_addresses must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_cc_addresses)
+                                 "there is no email_to_addresses: {!r}"
+                                 .format(email_cc_addresses))
             if email_insert:
                 raise ValueError("email_insert must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_insert)
+                                 "there is no email_to_addresses: {}"
+                                 .format(email_insert))
 
         self.manager.session.post(
             self.manager.storage_group.uri + '/operations/modify',
@@ -518,12 +518,12 @@ class StorageVolume(BaseResource):
         else:
             if email_cc_addresses:
                 raise ValueError("email_cc_addresses must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_cc_addresses)
+                                 "there is no email_to_addresses: {!r}"
+                                 .format(email_cc_addresses))
             if email_insert:
                 raise ValueError("email_insert must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_insert)
+                                 "there is no email_to_addresses: {!r}"
+                                 .format(email_insert))
 
         self.manager.session.post(
             self.manager.storage_group.uri + '/operations/modify',

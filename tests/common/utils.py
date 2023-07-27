@@ -127,17 +127,17 @@ def print_logger(logger):
     """
     Debug function that prints the relevant settings of a Python logger.
     """
-    print("Debug: Logger %r:" % logger.name)
-    print("Debug:   logger level: %s (%s)" %
-          (logger.level, logging.getLevelName(logger.level)))
+    print("Debug: Logger {!r}:".format(logger.name))
+    print("Debug:   logger level: {} ({})"
+          .format(logger.level, logging.getLevelName(logger.level)))
     if not logger.handlers:
         print("Debug:   No handlers")
     for handler in logger.handlers:
-        print("Debug:   Handler %s:" % type(handler))
-        print("Debug:     handler level: %s (%s)" %
-              (handler.level, logging.getLevelName(handler.level)))
+        print("Debug:   Handler {}:".format(type(handler)))
+        print("Debug:     handler level: {} ({})"
+              .format(handler.level, logging.getLevelName(handler.level)))
         _fmt = getattr(handler.formatter, '_fmt', None)
-        print("Debug:     handler format: %r" % _fmt)
+        print("Debug:     handler format: {!r}".format(_fmt))
 
 
 def setup_logging():

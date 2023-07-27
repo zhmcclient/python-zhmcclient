@@ -349,8 +349,8 @@ class StorageGroup(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, StorageGroupManager), \
-            "StorageGroup init: Expected manager type %s, got %s" % \
-            (StorageGroupManager, type(manager))
+            "StorageGroup init: Expected manager type {}, got {}"  \
+            .format(StorageGroupManager, type(manager))
         super(StorageGroup, self).__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._storage_volumes = None
@@ -509,12 +509,12 @@ class StorageGroup(BaseResource):
         else:
             if email_cc_addresses:
                 raise ValueError("email_cc_addresses must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_cc_addresses)
+                                 "there is no email_to_addresses: {!r}"
+                                 .format(email_cc_addresses))
             if email_insert:
                 raise ValueError("email_insert must not be specified if "
-                                 "there is no email_to_addresses: %r" %
-                                 email_insert)
+                                 "there is no email_to_addresses: {!r}"
+                                 .format(email_insert))
 
         self.manager.session.post(
             uri=self.uri + '/operations/delete', body=body)

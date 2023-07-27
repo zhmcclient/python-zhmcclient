@@ -96,7 +96,7 @@ class AutoUpdater(object):
         # Subscription ID. We use some value that allows to identify on the
         # HMC that this is the zhmcclient, but otherwise we are not using
         # this value ourselves.
-        self._sub_id = 'zhmcclient.%s' % id(self)
+        self._sub_id = 'zhmcclient.{}'.format(id(self))
 
     def open(self):
         """

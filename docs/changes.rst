@@ -48,6 +48,9 @@ Released: not yet
 
 * Fixed new issue reported by flake8 6.1.0.
 
+* Converted all the percent-style string usages to format style except
+  the logging calls. Logging will continue to use percent-style. (issue #663)
+
 **Known issues:**
 
 * See `list of open issues`_.

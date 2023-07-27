@@ -276,8 +276,8 @@ class MetricsContext(BaseResource):
         #     empty.
         if not isinstance(manager, MetricsContextManager):
             raise AssertionError(
-                "MetricsContext init: Expected manager type %s, got %s" %
-                (MetricsContextManager, type(manager)))
+                "MetricsContext init: Expected manager type {}, got {}"
+                .format(MetricsContextManager, type(manager)))
         super(MetricsContext, self).__init__(manager, uri, name, properties)
 
         self._metric_group_definitions = self._setup_metric_group_definitions()

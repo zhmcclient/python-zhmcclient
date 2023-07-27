@@ -193,8 +193,8 @@ class Console(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, ConsoleManager), \
-            "Console init: Expected manager type %s, got %s" % \
-            (ConsoleManager, type(manager))
+            "Console init: Expected manager type {}, got {}" \
+            .format(ConsoleManager, type(manager))
         super(Console, self).__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):

@@ -538,9 +538,9 @@ class BaseResource(object):
                            'type', 'class']
             sorted_keys = sorted([k for k in properties_keys
                                   if k in search_keys])
-            info = ", ".join("%s=%r" % (k, self._properties[k])
+            info = ", ".join("{}={!r}".format(k, self._properties[k])
                              for k in sorted_keys)
-            return "%s(%s)" % (self.__class__.__name__, info)
+            return "{}({})".format(self.__class__.__name__, info)
 
     def __repr__(self):
         """

@@ -260,8 +260,8 @@ class Partition(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, PartitionManager), \
-            "Partition init: Expected manager type %s, got %s" % \
-            (PartitionManager, type(manager))
+            "Partition init: Expected manager type {}, got {}" \
+            .format(PartitionManager, type(manager))
         super(Partition, self).__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._nics = None
@@ -343,14 +343,14 @@ class Partition(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC %s" %
-                             self.manager.cpc.name)
+            raise ValueError("Firmware features are not supported on CPC {}"
+                             .format(self.manager.cpc.name))
         for feature in feature_list:
             if feature['name'] == feature_name:
                 break
         else:
-            raise ValueError("Firmware feature %s is not available on CPC %s" %
-                             (feature_name, self.manager.cpc.name))
+            raise ValueError("Firmware feature {} is not available on CPC {}"
+                             .format(feature_name, self.manager.cpc.name))
         return feature['state']  # pylint: disable=undefined-loop-variable
 
     @logged_api_call
@@ -387,8 +387,8 @@ class Partition(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC %s" %
-                             self.manager.cpc.name)
+            raise ValueError("Firmware features are not supported on CPC {}"
+                             .format(self.manager.cpc.name))
         return feature_list
 
     @logged_api_call

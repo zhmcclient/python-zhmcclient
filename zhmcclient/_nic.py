@@ -289,8 +289,8 @@ class Nic(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, NicManager), \
-            "Nic init: Expected manager type %s, got %s" % \
-            (NicManager, type(manager))
+            "Nic init: Expected manager type {}, got {}" \
+            .format(NicManager, type(manager))
         super(Nic, self).__init__(manager, uri, name, properties)
 
     @logged_api_call

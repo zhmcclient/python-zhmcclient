@@ -210,8 +210,8 @@ class VirtualSwitch(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, VirtualSwitchManager), \
-            "VirtualSwitch init: Expected manager type %s, got %s" % \
-            (VirtualSwitchManager, type(manager))
+            "VirtualSwitch init: Expected manager type {}, got {}" \
+            .format(VirtualSwitchManager, type(manager))
         super(VirtualSwitch, self).__init__(manager, uri, name, properties)
 
     @logged_api_call

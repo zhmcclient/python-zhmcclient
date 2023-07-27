@@ -226,8 +226,8 @@ class Certificate(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, CertificateManager), \
-            "Certificate init: Expected manager type %s, got %s" % \
-            (CertificateManager, type(manager))
+            "Certificate init: Expected manager type {}, got {}" \
+            .format(CertificateManager, type(manager))
         super(Certificate, self).__init__(manager, uri, name, properties)
         self._cpc = None
 

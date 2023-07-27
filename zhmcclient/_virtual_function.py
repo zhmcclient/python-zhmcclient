@@ -227,8 +227,8 @@ class VirtualFunction(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, VirtualFunctionManager), \
-            "VirtualFunction init: Expected manager type %s, got %s" % \
-            (VirtualFunctionManager, type(manager))
+            "VirtualFunction init: Expected manager type {}, got {}" \
+            .format(VirtualFunctionManager, type(manager))
         super(VirtualFunction, self).__init__(manager, uri, name, properties)
 
     @logged_api_call

@@ -168,7 +168,7 @@ class TestConsole(object):
             except Error as exc:
                 pytest.fail(
                     "Unexpected zhmcclient exception during "
-                    "query_api_version() after HMC restart: %s" % exc)
+                    "query_api_version() after HMC restart: {}".format(exc))
         else:
             # The HMC is expected to still be in the restart process, and
             # therefore a simple operation is expected to fail. This test
@@ -180,7 +180,7 @@ class TestConsole(object):
             except Exception as exc:  # pylint: disable=broad-except
                 pytest.fail(
                     "Unexpected non-zhmcclient exception during "
-                    "query_api_version() after HMC restart: %s" % exc)
+                    "query_api_version() after HMC restart: {}".format(exc))
             else:
                 pytest.fail(
                     "Unexpected success of query_api_version() after HMC "
@@ -218,7 +218,7 @@ class TestConsole(object):
         except Exception as exc:  # pylint: disable=broad-except
             pytest.fail(
                 "Unexpected non-zhmcclient exception during "
-                "query_api_version() after HMC shutdown: %s" % exc)
+                "query_api_version() after HMC shutdown: {}".format(exc))
         else:
             pytest.fail(
                 "Unexpected success of query_api_version() after HMC "

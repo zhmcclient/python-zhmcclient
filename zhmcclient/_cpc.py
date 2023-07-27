@@ -263,8 +263,8 @@ class Cpc(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, CpcManager), \
-            "Cpc init: Expected manager type %s, got %s" % \
-            (CpcManager, type(manager))
+            "Cpc init: Expected manager type {}, got {}" \
+            .format(CpcManager, type(manager))
         super(Cpc, self).__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):
@@ -593,14 +593,14 @@ class Cpc(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC %s" %
-                             self.name)
+            raise ValueError("Firmware features are not supported on CPC {}"
+                             .format(self.name))
         for feature in feature_list:
             if feature['name'] == feature_name:
                 break
         else:
-            raise ValueError("Firmware feature %s is not available on CPC %s" %
-                             (feature_name, self.name))
+            raise ValueError("Firmware feature {} is not available on CPC {}"
+                             .format(feature_name, self.name))
         return feature['state']  # pylint: disable=undefined-loop-variable
 
     @logged_api_call
@@ -636,8 +636,8 @@ class Cpc(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC %s" %
-                             self.name)
+            raise ValueError("Firmware features are not supported on CPC {}"
+                             .format(self.name))
         return feature_list
 
     @logged_api_call
@@ -1512,16 +1512,16 @@ class Cpc(BaseResource):
         if len(em_list) != 1:
             uris = [em_obj['object-uri'] for em_obj in em_list]
             raise ParseError("Energy management data returned for no resource "
-                             "or for more than one resource: %r" % uris)
+                             "or for more than one resource: {!r}".format(uris))
         em_cpc_obj = em_list[0]
         if em_cpc_obj['object-uri'] != self.uri:
             raise ParseError("Energy management data returned for an "
-                             "unexpected resource: %r" %
-                             em_cpc_obj['object-uri'])
+                             "unexpected resource: {!r}"
+                             .format(em_cpc_obj['object-uri']))
         if em_cpc_obj['error-occurred']:
             raise ParseError("Errors occurred when retrieving energy "
-                             "management data for CPC. Operation result: %r" %
-                             result)
+                             "management data for CPC. Operation result: {!r}"
+                             .format(result))
         cpc_props = em_cpc_obj['properties']
         return cpc_props
 
@@ -1582,7 +1582,7 @@ class Cpc(BaseResource):
         if 'cpc-uri' in filter_args:
             raise ValueError(
                 "The filter_args parameter specifies the 'cpc-uri' property "
-                "with value: %s" % filter_args['cpc-uri'])
+                "with value: {}".format(filter_args['cpc-uri']))
         filter_args['cpc-uri'] = self.uri
 
         sg_list = self.manager.console.storage_groups.list(

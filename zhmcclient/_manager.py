@@ -608,8 +608,8 @@ class BaseManager(object):
           Session with the HMC.
         """
         assert self._session is not None, \
-            "%s.session: No session set (in top-level resource manager " \
-            "class?)" % self.__class__.__name__
+            "{}.session: No session set (in top-level resource manager " \
+            "class?)" .format(self.__class__.__name__)
         return self._session
 
     @property

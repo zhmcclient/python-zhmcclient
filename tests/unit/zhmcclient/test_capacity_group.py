@@ -30,7 +30,7 @@ from tests.common.utils import assert_resources
 
 # Object IDs and names of our faked capacity groups:
 CPC_OID = 'fake-cpc1-oid'
-CPC_URI = '/api/cpcs/%s' % CPC_OID
+CPC_URI = '/api/cpcs/{}'.format(CPC_OID)
 CG1_OID = 'cg1-oid'
 CG1_NAME = 'cg 1'
 CG1_SHORT_NAME = 'CG1'

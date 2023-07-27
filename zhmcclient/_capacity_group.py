@@ -243,8 +243,8 @@ class CapacityGroup(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, CapacityGroupManager), \
-            "CapacityGroup init: Expected manager type %s, got %s" % \
-            (CapacityGroupManager, type(manager))
+            "CapacityGroup init: Expected manager type {}, got {}" \
+            .format(CapacityGroupManager, type(manager))
         super(CapacityGroup, self).__init__(manager, uri, name, properties)
 
     @logged_api_call

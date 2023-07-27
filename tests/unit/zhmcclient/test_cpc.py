@@ -444,7 +444,7 @@ class TestCpc(object):
                 'available-features-list': [],
             })
         else:
-            raise ValueError("Invalid value for cpc_name: %s" % cpc_name)
+            raise ValueError("Invalid value for cpc_name: {}".format(cpc_name))
         return faked_cpc
 
     @staticmethod
@@ -482,8 +482,8 @@ class TestCpc(object):
                 'adapter-id': '12D',
             })
         else:
-            raise ValueError("Invalid value for crypto_name: %s" %
-                             adapter_name)
+            raise ValueError("Invalid value for crypto_name: {}"
+                             .format(adapter_name))
         return faked_crypto_adapter
 
     @staticmethod
