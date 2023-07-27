@@ -202,6 +202,6 @@ class UnmanagedCpc(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, UnmanagedCpcManager), \
-            "UnmanagedCpc init: Expected manager type %s, got %s" % \
-            (UnmanagedCpcManager, type(manager))
+            "UnmanagedCpc init: Expected manager type {}, got {}" \
+            .format(UnmanagedCpcManager, type(manager))
         super(UnmanagedCpc, self).__init__(manager, uri, name, properties)

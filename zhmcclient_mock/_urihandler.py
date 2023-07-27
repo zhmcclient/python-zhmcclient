@@ -102,7 +102,7 @@ class InvalidResourceError(HTTPError):
     def __init__(self, method, uri, handler_class=None, reason=1,
                  resource_uri=None):
         if handler_class is not None:
-            handler_txt = " (handler class %s)" % handler_class.__name__
+            handler_txt = " (handler class {})".format(handler_class.__name__)
         else:
             handler_txt = ""
         if not resource_uri:
@@ -111,8 +111,8 @@ class InvalidResourceError(HTTPError):
             method, uri,
             http_status=404,
             reason=reason,
-            message="Unknown resource with URI: %s%s" %
-            (resource_uri, handler_txt))
+            message="Unknown resource with URI: {}{}"
+            .format(resource_uri, handler_txt))
 
 
 class InvalidMethodError(HTTPError):
@@ -122,15 +122,15 @@ class InvalidMethodError(HTTPError):
 
     def __init__(self, method, uri, handler_class=None):
         if handler_class is not None:
-            handler_txt = "handler class %s" % handler_class.__name__
+            handler_txt = "handler class {}".format(handler_class.__name__)
         else:
             handler_txt = "no handler class"
         super(InvalidMethodError, self).__init__(
             method, uri,
             http_status=404,
             reason=1,
-            message="Invalid HTTP method %s on URI: %s %s" %
-            (method, uri, handler_txt))
+            message="Invalid HTTP method {} on URI: {} {}"
+            .format(method, uri, handler_txt))
 
 
 class BadRequestError(HTTPError):
@@ -177,7 +177,7 @@ class CpcNotInDpmError(ConflictError):
     def __init__(self, method, uri, cpc):
         super(CpcNotInDpmError, self).__init__(
             method, uri, reason=5,
-            message="CPC is not in DPM mode: %s" % cpc.uri)
+            message="CPC is not in DPM mode: {}".format(cpc.uri))
 
 
 class CpcInDpmError(ConflictError):
@@ -197,7 +197,7 @@ class CpcInDpmError(ConflictError):
     def __init__(self, method, uri, cpc):
         super(CpcInDpmError, self).__init__(
             method, uri, reason=4,
-            message="CPC is in DPM mode: %s" % cpc.uri)
+            message="CPC is in DPM mode: {}".format(cpc.uri))
 
 
 class ServerError(HTTPError):
@@ -1537,8 +1537,8 @@ class CpcSetPowerSaveHandler(object):
         power_saving = body['power-saving']
         if power_saving not in ['high-performance', 'low-power', 'custom']:
             raise BadRequestError(method, uri, reason=7,
-                                  message="Invalid power-saving value: %r" %
-                                  power_saving)
+                                  message="Invalid power-saving value: {!r}"
+                                  .format(power_saving))
 
         cpc.properties['cpc-power-saving'] = power_saving
         cpc.properties['cpc-power-saving-state'] = power_saving
@@ -1572,7 +1572,7 @@ class CpcSetPowerCappingHandler(object):
         if power_capping_state not in ['disabled', 'enabled', 'custom']:
             raise BadRequestError(method, uri, reason=7,
                                   message="Invalid power-capping-state value: "
-                                  "%r" % power_capping_state)
+                                  "{!r}".format(power_capping_state))
 
         if power_capping_state == 'enabled' and power_cap_current is None:
             raise BadRequestError(method, uri, reason=7,
@@ -1880,10 +1880,10 @@ class CpcExportPortNamesListHandler(object):
             if partition_cpc.oid != cpc_oid:
                 raise BadRequestError(
                     method, uri, reason=149,
-                    message="Partition %r specified in 'partitions' field "
-                    "is not in the targeted CPC with ID %r (but in the CPC "
-                    "with ID %r)." %
-                    (partition.uri, cpc_oid, partition_cpc.oid))
+                    message="Partition {!r} specified in 'partitions' field "
+                    "is not in the targeted CPC with ID {!r} (but in the CPC "
+                    "with ID {!r})."
+                    .format(partition.uri, cpc_oid, partition_cpc.oid))
             partition_name = partition.properties.get('name', '')
             for hba in partition.hbas.list():
                 port_uri = hba.properties['adapter-port-uri']
@@ -1892,8 +1892,8 @@ class CpcExportPortNamesListHandler(object):
                 adapter_id = adapter.properties.get('adapter-id', '')
                 devno = hba.properties.get('device-number', '')
                 wwpn = hba.properties.get('wwpn', '')
-                wwpn_str = '%s,%s,%s,%s' % (partition_name, adapter_id,
-                                            devno, wwpn)
+                wwpn_str = '{},{},{},{}'.format(partition_name, adapter_id,
+                                                devno, wwpn)
                 wwpn_list.append(wwpn_str)
         return {
             'wwpn-list': wwpn_list
@@ -2395,8 +2395,8 @@ class AdapterChangeCryptoTypeHandler(object):
                                'ep11-coprocessor']:
             raise BadRequestError(
                 method, uri, reason=8,
-                message="Invalid value for 'crypto-type' field: %s" %
-                crypto_type)
+                message="Invalid value for 'crypto-type' field: {}"
+                .format(crypto_type))
 
         # Reflect the result of changing the crypto type
         adapter.properties['crypto-type'] = crypto_type
@@ -2433,7 +2433,7 @@ class AdapterChangeAdapterTypeHandler(object):
             raise BadRequestError(
                 method, uri, reason=18,
                 message="The adapter type cannot be changed for adapter "
-                "family: %s" % adapter_family)
+                "family: {}".format(adapter_family))
 
         # Check the adapter status
         adapter_status = adapter.properties.get('status', None)
@@ -2441,22 +2441,22 @@ class AdapterChangeAdapterTypeHandler(object):
             raise BadRequestError(
                 method, uri, reason=18,
                 message="The adapter type cannot be changed for adapter "
-                "status: %s" % adapter_status)
+                "status: {}".format(adapter_status))
 
         # Check the validity of the new adapter type
         if new_adapter_type not in ['fc', 'fcp', 'not-configured']:
             raise BadRequestError(
                 method, uri, reason=8,
-                message="Invalid new value for 'type' field: %s" %
-                new_adapter_type)
+                message="Invalid new value for 'type' field: {}"
+                .format(new_adapter_type))
 
         # Check that the new adapter type is not already set
         adapter_type = adapter.properties.get('type', None)
         if new_adapter_type == adapter_type:
             raise BadRequestError(
                 method, uri, reason=8,
-                message="New value for 'type' field is already set: %s" %
-                new_adapter_type)
+                message="New value for 'type' field is already set: {}"
+                .format(new_adapter_type))
 
         # TODO: Reject if adapter is attached to a partition.
 
@@ -3642,7 +3642,7 @@ class StorageGroupsHandler(object):
                     raise BadRequestError(
                         method, uri, 5,
                         "Invalid value for storage-volumes 'operation' "
-                        "field: %s" % operation)
+                        "field: {}".format(operation))
 
         return {
             'object-uri': new_storage_group.uri,
@@ -3713,7 +3713,7 @@ class StorageGroupModifyHandler(object):
                     raise BadRequestError(
                         method, uri, 5,
                         "Invalid value for storage-volumes 'operation' "
-                        "field: %s" % operation)
+                        "field: {}".format(operation))
 
         return {
             'element-uris': sv_uris,  # SVs created, maintaining the order
@@ -3805,8 +3805,8 @@ class StorageGroupAddCandidatePortsHandler(object):
             if ap_uri in candidate_adapter_port_uris:
                 raise ConflictError(method, uri, 483,
                                     "Adapter port is already in candidate "
-                                    "list of storage group %s: %s" %
-                                    (storage_group.name, ap_uri))
+                                    "list of storage group {}: {}"
+                                    .format(storage_group.name, ap_uri))
             candidate_adapter_port_uris.append(ap_uri)
 
 
@@ -3844,8 +3844,8 @@ class StorageGroupRemoveCandidatePortsHandler(object):
             if ap_uri not in candidate_adapter_port_uris:
                 raise ConflictError(method, uri, 479,
                                     "Adapter port is not in candidate "
-                                    "list of storage group %s: %s" %
-                                    (storage_group.name, ap_uri))
+                                    "list of storage group {}: {}"
+                                    .format(storage_group.name, ap_uri))
             candidate_adapter_port_uris.remove(ap_uri)
 
 
@@ -4017,24 +4017,24 @@ class CapacityGroupAddPartitionHandler(object):
         processor_mode = partition.properties.get('processor-mode', 'shared')
         if processor_mode != 'shared':
             raise ConflictError(method, uri, 170,
-                                "Partition %s is in %s processor mode" %
-                                (partition.name, processor_mode))
+                                "Partition {} is in {} processor mode"
+                                .format(partition.name, processor_mode))
 
         # Check the partition is not in this capacity group
         partition_uris = capacity_group.properties['partition-uris']
         if partition.uri in partition_uris:
             raise ConflictError(method, uri, 130,
-                                "Partition %s is already a member of "
-                                "this capacity group %s" %
-                                (partition.name, capacity_group.name))
+                                "Partition {} is already a member of "
+                                "this capacity group {}"
+                                .format(partition.name, capacity_group.name))
 
         # Check the partition is not in any other capacity group
         for cg in cpc.capacity_groups.list():
             if partition.uri in cg.properties['partition-uris']:
                 raise ConflictError(method, uri, 120,
-                                    "Partition %s is already a member of "
-                                    "another capacity group %s" %
-                                    (partition.name, cg.name))
+                                    "Partition {} is already a member of "
+                                    "another capacity group {}"
+                                    .format(partition.name, cg.name))
 
         # Reflect the result of adding the partition to the capacity group
         capacity_group.properties['partition-uris'].append(partition.uri)
@@ -4086,9 +4086,9 @@ class CapacityGroupRemovePartitionHandler(object):
         partition_uris = capacity_group.properties['partition-uris']
         if partition.uri not in partition_uris:
             raise ConflictError(method, uri, 140,
-                                "Partition %s is not a member of "
-                                "capacity group %s" %
-                                (partition.name, capacity_group.name))
+                                "Partition {} is not a member of "
+                                "capacity group {}"
+                                .format(partition.name, capacity_group.name))
 
         # Reflect the result of removing the partition from the capacity group
         capacity_group.properties['partition-uris'].remove(partition.uri)

@@ -238,7 +238,7 @@ class TestManager1(object):
         assert len(wngs) == 1
         wng = wngs[0]
         assert issubclass(wng.category, DeprecationWarning), \
-            "Unexpected warnings class: %s" % wng.category
+            "Unexpected warnings class: {}".format(wng.category)
 
         # Check that on the third find by name, list() is called again, because
         # the cache had been invalidated.
@@ -488,8 +488,8 @@ class TestNameUriCache(object):
         """
         delta = abs(dt2 - dt1).total_seconds()
         assert delta <= max_delta, \
-            "Datetime values are %s s apart, maximum is %s s" % \
-            (delta, max_delta)
+            "Datetime values are {} s apart, maximum is {} s" \
+            .format(delta, max_delta)
 
     def setup_method(self):
         """

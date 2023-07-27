@@ -186,11 +186,11 @@ def repr_list(lst, indent):
         bm = '('
         em = ')'
     else:
-        raise TypeError("Object must be an iterable, but is a %s" %
-                        type(lst))
+        raise TypeError("Object must be an iterable, but is a {}"
+                        .format(type(lst)))
     ret = bm + '\n'
     for value in lst:
-        ret += _indent('%r,\n' % value, 2)
+        ret += _indent('{!r},\n'.format(value), 2)
     ret += em
     ret = repr_text(ret, indent=indent)
     return ret.lstrip(' ')
@@ -203,20 +203,20 @@ def repr_dict(dct, indent):
     if dct is None:
         return 'None'
     if not isinstance(dct, Mapping):
-        raise TypeError("Object must be a mapping, but is a %s" %
-                        type(dct))
+        raise TypeError("Object must be a mapping, but is a {}"
+                        .format(type(dct)))
     if isinstance(dct, OrderedDict):
         kind = 'ordered'
         ret = '%s {\n' % kind  # non standard syntax for the kind indicator
         for key in six.iterkeys(dct):
             value = dct[key]
-            ret += _indent('%r: %r,\n' % (key, value), 2)
+            ret += _indent('{!r}: {!r},\n'.format(key, value), 2)
     else:  # dict
         kind = 'sorted'
         ret = '%s {\n' % kind  # non standard syntax for the kind indicator
         for key in sorted(six.iterkeys(dct)):
             value = dct[key]
-            ret += _indent('%r: %r,\n' % (key, value), 2)
+            ret += _indent('{!r}: {!r},\n'.format(key, value), 2)
     ret += '}'
     ret = repr_text(ret, indent=indent)
     return ret.lstrip(' ')
@@ -227,8 +227,8 @@ def repr_timestamp(timestamp):
     if timestamp is None:
         return 'None'
     dt = datetime_from_timestamp(timestamp)
-    ret = "%d (%s)" % (timestamp,
-                       dt.strftime('%Y-%m-%d %H:%M:%S.%f %Z'))
+    ret = "{} ({})".format(timestamp,
+                           dt.strftime('%Y-%m-%d %H:%M:%S.%f %Z'))
     return ret
 
 

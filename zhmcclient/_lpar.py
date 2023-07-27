@@ -215,8 +215,8 @@ class Lpar(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, LparManager), \
-            "Lpar init: Expected manager type %s, got %s" % \
-            (LparManager, type(manager))
+            "Lpar init: Expected manager type {}, got {}" \
+            .format(LparManager, type(manager))
         super(Lpar, self).__init__(manager, uri, name, properties)
 
     @logged_api_call

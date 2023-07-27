@@ -1813,13 +1813,13 @@ class FakedAdapter(FakedBaseResource):
                 self._properties['adapter-family'] = 'accelerator'
                 self._adapter_kind = 'other'
             else:
-                raise InputError("FakedAdapter with object-id=%s has an "
-                                 "unknown value in its 'type' property: %s." %
-                                 (self.oid, type_))
+                raise InputError("FakedAdapter with object-id={} has an "
+                                 "unknown value in its 'type' property: {}."
+                                 .format(self.oid, type_))
         else:
-            raise InputError("FakedAdapter with object-id=%s must have "
-                             "'adapter-family' or 'type' property specified." %
-                             self.oid)
+            raise InputError("FakedAdapter with object-id={} must have "
+                             "'adapter-family' or 'type' property specified."
+                             .format(self.oid))
         if self.adapter_kind == 'network':
             if 'network-port-uris' not in self._properties:
                 self._properties['network-port-uris'] = []
@@ -2831,9 +2831,9 @@ class FakedPortManager(FakedBaseManager):
             port_uri_segment = 'storage-ports'
             port_class_value = 'storage-port'
         else:
-            raise AssertionError("FakedAdapter with object-id=%s must be a "
-                                 "storage or network adapter to have ports." %
-                                 adapter.oid)
+            raise AssertionError("FakedAdapter with object-id={} must be a "
+                                 "storage or network adapter to have ports."
+                                 .format(adapter.oid))
         super(FakedPortManager, self).__init__(
             hmc=hmc,
             parent=adapter,

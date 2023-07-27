@@ -117,8 +117,8 @@ version = get_version(os.path.join('..', 'zhmcclient', '_version.py'))
 release = version
 
 # Some prints, for extra information
-print("conf.py: pwd: %s" % os.getcwd())
-print("conf.py: zhmcclient version: %s" % version)
+print("conf.py: pwd: {}".format(os.getcwd()))
+print("conf.py: zhmcclient version: {}".format(version))
 print("conf.py: Last 5 commits:")
 sys.stdout.flush()
 os.system('git log --decorate --oneline |head -5')

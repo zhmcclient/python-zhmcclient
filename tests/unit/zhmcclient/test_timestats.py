@@ -87,13 +87,13 @@ def test_timestatskeeper_get():
     snapshot_length = len(keeper.snapshot())
     assert snapshot_length == 0, \
         "Verify that initial state has no time statistics. " \
-        "Actual number = %d" % snapshot_length
+        "Actual number = {}".format(snapshot_length)
 
     stats = keeper.get_stats('foo')
     snapshot_length = len(keeper.snapshot())
     assert snapshot_length == 0, \
         "Verify that getting a new stats with a disabled keeper results " \
-        "in no time statistics. Actual number = %d" % snapshot_length
+        "in no time statistics. Actual number = {}".format(snapshot_length)
     assert stats.keeper == keeper
     assert stats.name == "disabled"  # stats for disabled keeper
     assert stats.count == 0
@@ -107,7 +107,7 @@ def test_timestatskeeper_get():
     snapshot_length = len(keeper.snapshot())
     assert snapshot_length == 1, \
         "Verify that getting a new stats with an enabled keeper results " \
-        "in one time statistics. Actual number = %d" % snapshot_length
+        "in one time statistics. Actual number = {}".format(snapshot_length)
 
     assert stats.keeper == keeper
     assert stats.name == 'foo'
@@ -121,7 +121,7 @@ def test_timestatskeeper_get():
     assert snapshot_length == 1, \
         "Verify that getting an existing stats with an enabled keeper " \
         "results in the same number of time statistics. " \
-        "Actual number = %d" % snapshot_length
+        "Actual number = {}".format(snapshot_length)
 
 
 def test_timestatskeeper_measure_enabled():
@@ -142,14 +142,14 @@ def test_timestatskeeper_measure_enabled():
         stats = stats_dict[op_name]
         assert stats.count == 1
         assert time_abs_delta(stats.avg_time, dur) < delta, \
-            "avg time: actual: %f, expected: %f, delta: %f" % \
-            (stats.avg_time, dur, delta)
+            "avg time: actual: {}, expected: {}, delta: {}" \
+            .format(stats.avg_time, dur, delta)
         assert time_abs_delta(stats.min_time, dur) < delta, \
-            "min time: actual: %f, expected: %f, delta: %f" % \
-            (stats.min_time, dur, delta)
+            "min time: actual: {}, expected: {}, delta: {}" \
+            .format(stats.min_time, dur, delta)
         assert time_abs_delta(stats.max_time, dur) < delta, \
-            "max time: actual: %f, expected: %f, delta: %f" % \
-            (stats.max_time, dur, delta)
+            "max time: actual: {}, expected: {}, delta: {}" \
+            .format(stats.max_time, dur, delta)
 
     stats.reset()
     assert stats.count == 0
@@ -238,14 +238,14 @@ def test_timestatskeeper_measure_avg_min_max():
         stats = stats_dict[op_name]
         assert stats.count == 3
         assert time_abs_delta(stats.avg_time, avg_dur) < delta, \
-            "avg time: actual: %f, expected: %f, delta: %f" % \
-            (stats.avg_time, avg_dur, delta)
+            "avg time: actual: {}, expected: {}, delta: {}" \
+            .format(stats.avg_time, avg_dur, delta)
         assert time_abs_delta(stats.min_time, min_dur) < delta, \
-            "min time: actual: %f, expected: %f, delta: %f" % \
-            (stats.min_time, min_dur, delta)
+            "min time: actual: {}, expected: {}, delta: {}" \
+            .format(stats.min_time, min_dur, delta)
         assert time_abs_delta(stats.max_time, max_dur) < delta, \
-            "max time: actual: %f, expected: %f, delta: %f" % \
-            (stats.max_time, max_dur, delta)
+            "max time: actual: {}, expected: {}, delta: {}" \
+            .format(stats.max_time, max_dur, delta)
 
 
 def test_timestatskeeper_only_end():
@@ -311,10 +311,10 @@ def test_timestatskeeper_str_one():
 
     s = str(keeper)
     assert s.startswith(PRINT_HEADER), \
-        "Unexpected str(keeper): %r" % s
+        "Unexpected str(keeper): {!r}".format(s)
     num_lines = len(s.split('\n'))
     assert num_lines == 3, \
-        "Unexpected str(keeper): %r" % s
+        "Unexpected str(keeper): {!r}".format(s)
 
 
 def test_timestats_str():
@@ -325,7 +325,7 @@ def test_timestats_str():
 
     s = str(timestats)
     assert s.startswith("TimeStats:"), \
-        "Unexpected str(timestats): %r" % s
+        "Unexpected str(timestats): {!r}".format(s)
     num_lines = len(s.split('\n'))
     assert num_lines == 1, \
-        "Unexpected str(timestats): %r" % s
+        "Unexpected str(timestats): {!r}".format(s)

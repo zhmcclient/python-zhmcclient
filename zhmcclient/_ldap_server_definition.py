@@ -245,8 +245,8 @@ class LdapServerDefinition(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, LdapServerDefinitionManager), \
-            "Console init: Expected manager type %s, got %s" % \
-            (LdapServerDefinitionManager, type(manager))
+            "Console init: Expected manager type {}, got {}" \
+            .format(LdapServerDefinitionManager, type(manager))
         super(LdapServerDefinition, self).__init__(
             manager, uri, name, properties)
 

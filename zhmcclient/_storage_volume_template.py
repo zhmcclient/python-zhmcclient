@@ -291,8 +291,8 @@ class StorageVolumeTemplate(BaseResource):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
         assert isinstance(manager, StorageVolumeTemplateManager), \
-            "StorageVolumeTemplate init: Expected manager type %s, got %s" % \
-            (StorageVolumeTemplateManager, type(manager))
+            "StorageVolumeTemplate init: Expected manager type {}, got {}" \
+            .format(StorageVolumeTemplateManager, type(manager))
         super(StorageVolumeTemplate, self).__init__(
             manager, uri, name, properties)
 

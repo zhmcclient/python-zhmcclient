@@ -199,7 +199,7 @@ class TestInit(ResourceTestCase):
         else:
             raise AssertionError(
                 "TypeError was not raised when initializing resource "
-                "with invalid properties: %r" % init_props)
+                "with invalid properties: {!r}".format(init_props))
 
     def test_str(self):
         """Test BaseResource.__str__()."""

@@ -232,10 +232,10 @@ def _do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line, exp_col):
     session = Session('fake-host', 'fake-user', 'fake-pw')
 
     exp_pe_pattern = \
-        r"^JSON parse error in HTTP response: %s\. " \
+        r"^JSON parse error in HTTP response: {}\. " \
         r"HTTP request: [^ ]+ [^ ]+\. " \
-        r"Response status .*" % \
-        exp_msg_pattern
+        r"Response status .*" \
+        .format(exp_msg_pattern)
 
     with pytest.raises(ParseError) as exc_info:
         session.logon()
@@ -689,8 +689,8 @@ def test_job_wait_complete3_timeout():
             job.wait_for_completion(operation_timeout=operation_timeout)
             duration = time.time() - start_time
             raise AssertionError(
-                "No OperationTimeout raised. Actual duration: %s s, "
-                "timeout: %s s" % (duration, operation_timeout))
+                "No OperationTimeout raised. Actual duration: {} s, "
+                "timeout: {} s".format(duration, operation_timeout))
         except OperationTimeout as exc:
             msg = exc.args[0]
             assert msg.startswith("Waiting for completion of job")
