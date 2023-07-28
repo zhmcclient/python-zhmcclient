@@ -4,11 +4,11 @@
 
 hmc_definition:
   host: hmc1
-  api_version: '1.8'
+  api_version: '2.16.0'
   consoles:
   - properties:
       name: HMC 1
-      version: 2.13.1
+      version: 2.16.0
     users:
     - properties:
         object-id: user1
@@ -40,9 +40,9 @@ hmc_definition:
     - properties:
         object-id: cpc1
         name: "CPC1"
-        description: "Fake z13 (classic mode)"
-        machine-type: "2964"
-        machine-model: "NE1"
+        description: "Fake z16 (classic mode)"
+        machine-type: "3906"
+        machine-model: "MO1"
         status: "active"
         dpm-enabled: false
         is-ensemble-member: false

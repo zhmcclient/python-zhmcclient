@@ -4,12 +4,12 @@
 
 hmc_definition:
   host: hmc1
-  api_version: '1.8'
+  api_version: '2.16.0'
   consoles:
   - properties:
       name: HMC 1
-      version: 2.13.1
-      api-version: '1.8'
+      version: 2.16.0
+      api-version: '2.16.0'
     users:
     - properties:
         object-id: user1
@@ -55,9 +55,9 @@ hmc_definition:
     - properties:
         object-id: cpc1
         name: "CPC1"
-        description: "Faked CPC CPC1 (z13 in DPM mode)"
-        machine-type: "2964"
-        machine-model: "NE1"
+        description: "Faked CPC CPC1 (z16 in DPM mode)"
+        machine-type: "3906"
+        machine-model: "MO1"
         status: active
         dpm-enabled: true
         is-ensemble-member: false
@@ -73,8 +73,8 @@ hmc_definition:
             physical-channel-status: operating
             type: osd
             adapter-family: osa
-            detected-card-type: "osa-express-6s-1000base-t"
-            card-location: "A14B-D104J.01-D204J.01"
+            detected-card-type: "osa-express-7s-1000base-t"
+            card-location: "A23B-D107J.01-D207J.02"
             configured-capacity: 63
             maximum-total-capacity: 1920
           ports:
@@ -98,8 +98,8 @@ hmc_definition:
             physical-channel-status: operating
             type: fcp
             adapter-family: ficon
-            detected-card-type: "ficon-express-16s"
-            card-location: "A14B-D114J.01"
+            detected-card-type: "ficon-express-16s-plus"
+            card-location: "Z33B-D114-J.01"
             configured-capacity: 63
             maximum-total-capacity: 1920
           ports:

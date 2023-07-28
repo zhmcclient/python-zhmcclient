@@ -15,11 +15,11 @@ hmc_auth:
     password: password
     verify: false
 
-  MOCKED_Z13_CLASSIC:
+  MOCKED_Z16_CLASSIC:
     userid: dummy
     password: dummy
   
-  MOCKED_Z13_DPM:
+  MOCKED_Z16_DPM:
     userid: dummy
     password: dummy
   
