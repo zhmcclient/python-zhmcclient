@@ -353,15 +353,15 @@ In that example HMC inventory file, the following nicknames of single HMCs are
 defined:
 
 * HMC1 - The HMC at 10.11.12.13.
-* MOCKED_Z13_CLASSIC - The mocked HMC defined in mock file
-  `examples/example_mocked_z13_classic.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_mocked_z13_classic.yaml>`_.
-* MOCKED_Z13_DPM - The mocked HMC defined in mock file
-  `examples/example_mocked_z13_dpm.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_mocked_z13_dpm.yaml>`_.
+* MOCKED_Z16_CLASSIC - The mocked HMC defined in mock file
+  `examples/example_mocked_z16_classic.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_mocked_z16_classic.yaml>`_.
+* MOCKED_Z16_DPM - The mocked HMC defined in mock file
+  `examples/example_mocked_z16_dpm.yaml <https://github.com/zhmcclient/python-zhmcclient/blob/master/examples/example_mocked_z16_dpm.yaml>`_.
 
 The following nicknames of HMC groups are defined:
 
-* all - All HMCs, i.e. HMC1, MOCKED_Z13_CLASSIC, and MOCKED_Z13_DPM.
-* default - The HMCs with nicknames MOCKED_Z13_CLASSIC and MOCKED_Z13_DPM.
+* all - All HMCs, i.e. HMC1, MOCKED_Z16_CLASSIC, and MOCKED_Z16_DPM.
+* default - The HMCs with nicknames MOCKED_Z16_CLASSIC and MOCKED_Z16_DPM.
 * dev - The HMC with nickname HMC1.
 
 The tests that use CPCs or resources within CPCs will be run against
@@ -369,8 +369,8 @@ only the subset of CPCs that are defined in the ``cpcs`` variables of the HMC
 entries. In that example HMC inventory file, those are:
 
 * For HMC1: Only the CPCs XYZ1 and XYZ2.
-* For MOCKED_Z13_CLASSIC: Only the CPC CPC1.
-* For MOCKED_Z13_DPM: Only the CPC CPC1.
+* For MOCKED_Z16_CLASSIC: Only the CPC CPC1.
+* For MOCKED_Z16_DPM: Only the CPC CPC1.
 
 Any variables defined for the HMCs are available to the test functions via an
 :class:`~zhmcclient.testutils.HMCDefinition` object. See pytest fixture
