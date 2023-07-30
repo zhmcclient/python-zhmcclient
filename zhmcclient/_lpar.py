@@ -1259,6 +1259,126 @@ class Lpar(BaseResource):
         return result
 
     @logged_api_call
+    def load_from_ftp(
+            self, host, username, password, load_file, protocol='ftp',
+            wait_for_completion=True, operation_timeout=None,
+            status_timeout=None, allow_status_exceptions=False):
+        """
+        Load (boot) this LPAR from an FTP server, using the HMC operation
+        "Load Logical Partition from FTP".
+
+        This operation is not permitted for an LPAR whose 'activation-mode'
+        property is "zaware" or "ssc".
+
+        This HMC operation has deferred status behavior: If the asynchronous
+        job on the HMC is complete, it takes a few seconds until the LPAR
+        status has reached the desired value. If `wait_for_completion=True`,
+        this method repeatedly checks the status of the LPAR after the HMC
+        operation has completed, and waits until the status is in the desired
+        state "operating", or if `allow_status_exceptions` was
+        set additionally in the state "exceptions".
+
+        Authorization requirements:
+
+        * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
+        * Task permission for the "Load from Removable Media or Server" task.
+
+        Parameters:
+
+          host (string): Host name or IP address of the FTP server.
+
+          username (string): User name for the account on the FTP server.
+
+          password (string): Password that is associated with the user name on
+            the FTP server.
+
+          load_file (string): Path name of the file to be read from the FTP
+            server and loaded into the LPAR.
+
+          protocol (string): Network protocol for transferring files. Must be
+            one of:
+
+              * "ftp" - File Transfer Protocol
+              * "ftps" - FTP Secure
+              * "sftp" - SSH File Transfer Protocol
+
+            Default: "ftp"
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation, and for the status
+              becoming "operating" (or in addition "exceptions", if
+              `allow_status_exceptions` was set.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            Timeout in seconds, for waiting that the status of the LPAR has
+            reached the desired status, after the HMC operation has completed.
+            The special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used.
+            If the timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.StatusTimeout` is raised.
+
+          allow_status_exceptions (bool):
+            Boolean controlling whether LPAR status "exceptions" is considered
+            an additional acceptable end status when `wait_for_completion` is
+            set.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
+            waiting for the desired LPAR status.
+        """
+        body = {
+            'host-name': host,
+            'user-name': username,
+            'password': password,
+            'file-path': load_file,
+            'protocol': protocol,
+        }
+        result = self.manager.session.post(
+            self.uri + '/operations/load-from-ftp', body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        if wait_for_completion:
+            statuses = ["operating"]
+            if allow_status_exceptions:
+                statuses.append("exceptions")
+            self.wait_for_status(statuses, status_timeout)
+        return result
+
+    @logged_api_call
     def stop(self, wait_for_completion=True, operation_timeout=None,
              status_timeout=None, allow_status_exceptions=False):
         """
