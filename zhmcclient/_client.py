@@ -109,7 +109,7 @@ class Client(object):
         """
         if self._api_version is None:
             self.query_api_version()
-        return self._api_version['api-major-version'],\
+        return self._api_version['api-major-version'], \
             self._api_version['api-minor-version']
 
     @logged_api_call
