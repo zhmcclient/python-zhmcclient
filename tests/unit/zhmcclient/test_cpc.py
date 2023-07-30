@@ -21,11 +21,16 @@ from __future__ import absolute_import, print_function
 import re
 import copy
 import pytest
+import requests_mock
 
-from zhmcclient import Client, Cpc, HTTPError
+from zhmcclient import Client, Cpc, HTTPError, STPNode
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
+# pylint: disable=unused-import
+from tests.common.http_mocked_fixtures import http_mocked_session  # noqa: F401
+from tests.common.http_mocked_fixtures import http_mocked_cpc_dpm  # noqa: F401
+# pylint: enable=unused-import
 
 # Object IDs and names of our faked CPCs:
 CPC1_NAME = 'cpc 1'  # z13s in DPM mode
@@ -1767,3 +1772,157 @@ class TestCpc(object):
     # TODO: Test for Cpc.list_associated_storage_groups()
 
     # TODO: Test for Cpc.validate_lun_path()
+
+
+def test_cpc_swap_cts(http_mocked_cpc_dpm):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Cpc.swap_current_time_server()
+    """
+    uri = http_mocked_cpc_dpm.uri + '/operations/swap-cts'
+
+    # Define the input parameters for the test call
+    stp_id = 'stp-1'
+
+    exp_request_body = {
+        'stp-id': stp_id,
+    }
+    exp_status_code = 204
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code)
+
+        result = http_mocked_cpc_dpm.swap_current_time_server(stp_id)
+
+        assert rm_adapter.called
+        request_body = rm_adapter.last_request.json()
+        assert request_body == exp_request_body
+        assert result is None
+
+
+def test_cpc_set_stp_config(http_mocked_cpc_dpm):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Cpc.set_stp_config()
+    """
+    uri = http_mocked_cpc_dpm.uri + '/operations/set-stp-config'
+
+    # Define the input parameters for the test call
+    stp_id = 'stp-1'
+    new_stp_id = None
+    force = True
+    preferred_time_server = STPNode(
+        object_uri=http_mocked_cpc_dpm.uri,
+        type='', model='', manuf='', po_manuf='', seq_num='',
+        node_name=''
+    )
+    backup_time_server = None
+    arbiter = None
+    current_time_server = 'preferred'
+
+    exp_request_body = {
+        'stp-id': stp_id,
+        'force': force,
+        'preferred-time-server': preferred_time_server.json(),
+        'current-time-server': current_time_server,
+    }
+    if new_stp_id:
+        exp_request_body['new-stp-id'] = new_stp_id
+    if backup_time_server:
+        exp_request_body['backup-time-server'] = backup_time_server.json()
+    if arbiter:
+        exp_request_body['arbiter'] = arbiter.json()
+    exp_status_code = 204
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code)
+
+        result = http_mocked_cpc_dpm.set_stp_config(
+            stp_id, new_stp_id, force, preferred_time_server,
+            backup_time_server, arbiter, current_time_server)
+
+        assert rm_adapter.called
+        request_body = rm_adapter.last_request.json()
+        assert request_body == exp_request_body
+        assert result is None
+
+
+def test_cpc_change_stp_id(http_mocked_cpc_dpm):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Cpc.change_stp_id()
+    """
+    uri = http_mocked_cpc_dpm.uri + '/operations/change-stponly-ctn'
+
+    # Define the input parameters for the test call
+    stp_id = 'stp-1'
+
+    exp_request_body = {
+        'stp-id': stp_id,
+    }
+    exp_status_code = 204
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code)
+
+        result = http_mocked_cpc_dpm.change_stp_id(stp_id)
+
+        assert rm_adapter.called
+        request_body = rm_adapter.last_request.json()
+        assert request_body == exp_request_body
+        assert result is None
+
+
+def test_cpc_join_ctn(http_mocked_cpc_dpm):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Cpc.join_ctn()
+    """
+    uri = http_mocked_cpc_dpm.uri + '/operations/join-stponly-ctn'
+
+    # Define the input parameters for the test call
+    stp_id = 'stp-1'
+
+    exp_request_body = {
+        'stp-id': stp_id,
+    }
+    exp_status_code = 204
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code)
+
+        result = http_mocked_cpc_dpm.join_ctn(stp_id)
+
+        assert rm_adapter.called
+        request_body = rm_adapter.last_request.json()
+        assert request_body == exp_request_body
+        assert result is None
+
+
+def test_cpc_leave_ctn(http_mocked_cpc_dpm):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Cpc.leave_ctn()
+    """
+    uri = http_mocked_cpc_dpm.uri + '/operations/leave-stponly-ctn'
+
+    exp_status_code = 204
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code)
+
+        result = http_mocked_cpc_dpm.leave_ctn()
+
+        assert rm_adapter.called
+        assert rm_adapter.last_request.text is None
+        assert result is None

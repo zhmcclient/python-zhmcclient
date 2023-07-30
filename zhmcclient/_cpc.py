@@ -50,6 +50,7 @@ from __future__ import absolute_import
 
 import warnings
 import copy
+import json
 try:
     from collections import OrderedDict
 except ImportError:
@@ -74,7 +75,63 @@ from ._utils import get_features, matches_filters, divide_filter_args, \
     RC_STORAGE_PATH, RC_STORAGE_CONTROL_UNIT, RC_VIRTUAL_TAPE_RESOURCE, \
     RC_TAPE_LINK, RC_TAPE_LIBRARY, RC_CERTIFICATE
 
-__all__ = ['CpcManager', 'Cpc']
+__all__ = ['STPNode', 'CpcManager', 'Cpc']
+
+
+class STPNode(object):
+    # pylint: disable=too-few-public-methods
+    """
+    Data structure defining a CPC that is referenced by an STP configuration.
+
+    That CPC does not need to be managed by the HMC.
+
+    This object is used in the following methods:
+
+      * :meth:`zhmcclient.Cpc.set_stp_config`
+    """
+
+    def __init__(
+            self, object_uri, type, model, manuf, po_manuf, seq_num, node_name):
+        # pylint: disable=redefined-builtin
+        """
+        Parameters:
+          object_uri (string): The object-uri of the CPC, if the CPC is managed
+            by the HMC. Otherwise, `None`.
+          type (string): Machine type of the CPC (6 chars left padded with
+            zeros), or an empty string.
+          model (string): Machine model of the CPC (3 chars), or an empty
+            string.
+          manuf (string): Manufacturer of the CPC (3 chars), or an empty
+            string.
+          po_manuf (string): Plant code of the manufacturer of the CPC
+            (2 chars), or an empty string.
+          seq_num (string): Sequence number of the CPC (12 chars), or an empty
+            string.
+          node_name (string): Name of the CPC (1-8 chars).
+        """
+        self.object_uri = object_uri
+        self.type = type
+        self.model = model
+        self.manuf = manuf
+        self.po_manuf = po_manuf
+        self.seq_num = seq_num
+        self.node_name = node_name
+
+    def json(self):
+        """
+        Returns this data structure as a JSON string suitable for being used as
+        an argument in methods that use this data structure.
+        """
+        ret_dict = {
+            'object-uri': self.object_uri,
+            'type': self.type,
+            'model': self.model,
+            'manuf': self.manuf,
+            'po-manuf': self.po_manuf,
+            'seq-num': self.seq_num,
+            'node-name': self.node_name,
+        }
+        return json.dumps(ret_dict)
 
 
 class CpcManager(BaseManager):
@@ -2180,6 +2237,211 @@ class Cpc(BaseResource):
             body=body, wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
+
+    @logged_api_call
+    def swap_current_time_server(self, stp_id):
+        """
+        Makes this CPC the current time server of an STP-only Coordinated Timing
+        Network (CTN).
+
+        This is done by performing the "Swap Current Time Server" operation.
+
+        The CTN must be STP-only; mixed CTNs will be rejected.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Manage System Time" and "Modify Assigned
+          Server Roles" tasks.
+
+        Parameters:
+
+          stp_id (string): STP identifier of the CTN.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {
+            'stp-id': stp_id,
+        }
+        self.manager.session.post(
+            self.uri + '/operations/swap-cts', body=body)
+
+    @logged_api_call
+    def set_stp_config(
+            self, stp_id, new_stp_id, force, preferred_time_server,
+            backup_time_server, arbiter, current_time_server):
+        """
+        Sets the configuration of the STP-only Coordinated Timing Network
+        (CTN) whose current time server is this CPC.
+
+        This is done by performing the "Set STP Configuration" operation.
+
+        The CTN must be STP-only; mixed CTNs will be rejected.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Manage System Time" and "Modify Assigned
+          Server Roles" tasks.
+
+        Parameters:
+
+          stp_id (string): Current STP identifier of the CTN to be updated.
+            This CPC must be the current time server of the CTN.
+
+          new_stp_id (string): The new STP identifier for the CTN.
+            If `None`, the STP identifier of the CTN is not changed.
+
+          force (bool): Required. Indicates whether a disruptive operation is
+            allowed (`True`) or rejected (`False`). Must not be `None`.
+
+          preferred_time_server (zhmcclient.STPNode): Identifies the CPC to be
+            the preferred time server of the CTN. Must not be `None`.
+
+          backup_time_server (zhmcclient.STPNode): Identifies the CPC to be the
+            backup time server of the CTN. If `None`, the CTN will have no
+            backup time server.
+
+          arbiter (zhmcclient.STPNode): Identifies the CPC to be the arbiter for
+            the CTN. If `None`, the CTN will have no arbiter.
+
+          current_time_server (string): Identifies which time server takes on
+            the role of the current time server. Must be one of:
+
+            * "preferred" - the preferred time server is the current time server
+            * "backup" - the backup time server is the current time server
+
+            Must not be `None`.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {
+            'stp-id': stp_id,
+            'force': force,
+            'preferred-time-server': preferred_time_server.json(),
+            'current-time-server': current_time_server,
+        }
+        if new_stp_id:
+            body['new-stp-id'] = new_stp_id
+        if backup_time_server:
+            body['backup-time-server'] = backup_time_server.json()
+        if arbiter:
+            body['arbiter'] = arbiter.json()
+        self.manager.session.post(
+            self.uri + '/operations/set-stp-config', body=body)
+
+    @logged_api_call
+    def change_stp_id(self, stp_id):
+        """
+        Changes the STP identifier of the STP-only Coordinated Timing Network
+        (CTN) whose current time server is this CPC.
+
+        This is done by performing the "Change STP-only Coordinated Timing
+        Network" operation.
+
+        The CTN must be STP-only; mixed CTNs will be rejected.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Manage System Time" and "Rename CTN" tasks.
+
+        Parameters:
+
+          stp_id (string): STP identifier of the CTN to be updated.
+            This CPC must be the current time server of the CTN.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {
+            'stp-id': stp_id,
+        }
+        self.manager.session.post(
+            self.uri + '/operations/change-stponly-ctn', body=body)
+
+    @logged_api_call
+    def join_ctn(self, stp_id):
+        """
+        Causes this CPC to join an STP-only Coordinated Timing Network (CTN).
+
+        This is done by performing the "Join STP-only Coordinated Timing
+        Network" operation.
+
+        If the CPC is already a member of a different CTN but not in the role
+        of the current time server, it is removed from that CTN.
+
+        If the CPC object has an ETR ID, the ETR ID is removed.
+
+        The CPC must not be the current time server of a different CTN.
+
+        The CTN must be STP-only; mixed CTNs will be rejected.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Manage System Time" and "Add Systems to CTN"
+          tasks.
+
+        Parameters:
+
+          stp_id (string): STP identifier of the CTN to be joined.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        body = {
+            'stp-id': stp_id,
+        }
+        self.manager.session.post(
+            self.uri + '/operations/join-stponly-ctn', body=body)
+
+    @logged_api_call
+    def leave_ctn(self):
+        """
+        Causes this CPC to leave its current STP-only Coordinated Timing
+        Network (CTN).
+
+        This is done by performing the "Leave STP-only Coordinated Timing
+        Network" operation.
+
+        The CTN must be STP-only; mixed CTNs will be rejected.
+
+        The CPC must not be the current time server of its current CTN.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Manage System Time" and "Remove Systems from
+          CTN" tasks.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self.manager.session.post(
+            self.uri + '/operations/leave-stponly-ctn')
 
     def _convert_to_config(self, inventory_list, include_unused_adapters):
         """

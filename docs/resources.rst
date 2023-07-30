@@ -71,6 +71,13 @@ CPCs
    :special-members: __str__
 
 
+.. autoclass:: zhmcclient.STPNode
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Unmanaged CPCs`:
 
 Unmanaged CPCs
@@ -569,4 +576,3 @@ Certificates
    :autosummary:
    :autosummary-inherited-members:
    :special-members: __str__
-

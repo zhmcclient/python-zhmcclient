@@ -52,6 +52,10 @@ Released: not yet
 * Added support for LPAR Load from FTP via a new Lpar.load_from_ftp()
   method. (issue #1048)
 
+* Added support for STP configuration of CPCs via new operations of
+  zhmcclient.Cpc: swap_current_time_server(), set_stp_config(),
+  change_stp_id(), join_ctn(), leave_ctn(). (issue #750)
+
 **Cleanup:**
 
 * Fixed new issue reported by flake8 6.1.0.
