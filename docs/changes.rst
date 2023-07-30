@@ -46,6 +46,9 @@ Released: not yet
 
 * Added resource class and name to HMC log entries. (issue #1058)
 
+* Test: Added pytest fixtures for mocking at the HTTP level for unit tests
+  in cases where zhmcclient mock support is not implemented.
+
 **Cleanup:**
 
 * Fixed new issue reported by flake8 6.1.0.
