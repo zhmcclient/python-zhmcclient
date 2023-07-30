@@ -160,6 +160,39 @@ def http_mocked_cpc_classic(request, http_mocked_session):  # noqa: F811
 @pytest.fixture(
     scope='module'
 )
+def http_mocked_lpar(request, http_mocked_cpc_classic):  # noqa: F811
+    # pylint: disable=unused-argument,redefined-outer-name
+    """
+    Pytest fixture representing a HTTP-mocked LPAR on a CPC in classic mode.
+
+    Its CPC object can be accessed as the parent object.
+
+    A test function parameter using this fixture resolves to a
+    :class:`~zhmcclient.Lpar` object that has only a
+    minimal set of properties in the object (those that are returned with the
+    'List Logical Partitions of CPC' operation).
+    """
+
+    with requests_mock.mock() as m:
+        uri = http_mocked_cpc_classic.uri + '/logical-partitions'
+        m.get(uri, status_code=200, json={
+            'logical-partitions': [
+                {
+                    'object-uri': '/api/logical-partitions/lpar-id-1',
+                    'name': 'LPAR1',
+                    'status': 'operating',
+                }
+            ]
+        })
+        lpars = http_mocked_cpc_classic.lpars.list()
+        lpar = lpars[0]
+
+    return lpar
+
+
+@pytest.fixture(
+    scope='module'
+)
 def http_mocked_console(request, http_mocked_session):  # noqa: F811
     # pylint: disable=unused-argument,redefined-outer-name
     """

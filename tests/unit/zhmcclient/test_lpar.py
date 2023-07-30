@@ -22,11 +22,18 @@ import re
 import copy
 import mock
 import pytest
+import requests_mock
 
-from zhmcclient import Client, Lpar, HTTPError, StatusTimeout
+from zhmcclient import Client, Lpar, HTTPError, StatusTimeout, Job
 from zhmcclient_mock import FakedSession, LparActivateHandler, \
     LparDeactivateHandler, LparLoadHandler
 from tests.common.utils import assert_resources
+
+# pylint: disable=unused-import,line-too-long
+from tests.common.http_mocked_fixtures import http_mocked_session  # noqa: F401
+from tests.common.http_mocked_fixtures import http_mocked_cpc_classic  # noqa: F401,E501
+from tests.common.http_mocked_fixtures import http_mocked_lpar  # noqa: F401
+# pylint: enable=unused-import,line-too-long
 
 
 # Object IDs and names of our faked LPARs:
@@ -1403,3 +1410,50 @@ class TestLpar(object):
     # TODO: Test for Lpar.psw_restart()
     # TODO: Test for Lpar.reset_clear()
     # TODO: Test for Lpar.reset_normal()
+
+
+def test_lpar_load_from_ftp(http_mocked_lpar):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Lpar.load_from_ftp()
+    """
+    session = http_mocked_lpar.manager.session
+    uri = http_mocked_lpar.uri + '/operations/load-from-ftp'
+
+    # Define the input parameters for the test call
+    host = 'test-ftp-host-1'
+    username = 'test-user'
+    password = 'test-pwd'
+    load_file = '/images/load1.img'
+    protocol = 'sftp'
+
+    job_uri = '/api/jobs/job-1'
+
+    exp_request_body = {
+        'host-name': host,
+        'user-name': username,
+        'password': password,
+        'file-path': load_file,
+        'protocol': protocol,
+    }
+    exp_status_code = 202
+    result_body = {
+        'job-uri': job_uri,
+    }
+    exp_result_job = Job(session, job_uri, 'POST', uri)
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code, json=result_body)
+
+        result_job = http_mocked_lpar.load_from_ftp(
+            host, username, password, load_file, protocol,
+            wait_for_completion=False)
+
+        assert rm_adapter.called
+        request_body = rm_adapter.last_request.json()
+        assert request_body == exp_request_body
+        assert result_job.uri == exp_result_job.uri
+        assert result_job.op_method == exp_result_job.op_method
+        assert result_job.op_uri == exp_result_job.op_uri

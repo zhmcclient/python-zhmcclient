@@ -49,6 +49,9 @@ Released: not yet
 * Test: Added pytest fixtures for mocking at the HTTP level for unit tests
   in cases where zhmcclient mock support is not implemented.
 
+* Added support for LPAR Load from FTP via a new Lpar.load_from_ftp()
+  method. (issue #1048)
+
 **Cleanup:**
 
 * Fixed new issue reported by flake8 6.1.0.
