@@ -259,7 +259,7 @@ class Group(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self.uri)
+        self.manager.session.delete(self.uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
@@ -290,7 +290,7 @@ class Group(BaseResource):
         """
         body = {'object-uri': uri}
         ops_uri = self.uri + '/operations/add-member'
-        self.manager.session.post(ops_uri, body=body)
+        self.manager.session.post(ops_uri, resource=self, body=body)
 
     @logged_api_call
     def remove_member(self, uri):
@@ -319,7 +319,7 @@ class Group(BaseResource):
         """
         body = {'object-uri': uri}
         ops_uri = self.uri + '/operations/remove-member'
-        self.manager.session.post(ops_uri, body=body)
+        self.manager.session.post(ops_uri, resource=self, body=body)
 
     @logged_api_call
     def list_members(self):
@@ -347,5 +347,5 @@ class Group(BaseResource):
 
         """
         uri = self.uri + '/members'
-        result = self.manager.session.get(uri)
+        result = self.manager.session.get(uri, resource=self)
         return result['members']

@@ -272,7 +272,7 @@ class UserRole(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self.uri)
+        self.manager.session.delete(self.uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
@@ -307,7 +307,7 @@ class UserRole(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
 
         # The name of User Roles cannot be updated. An attempt to do so should
         # cause HTTPError to be raised in the POST above, so we assert that
@@ -392,7 +392,7 @@ class UserRole(BaseResource):
         if view_only is not None:
             body['view-only-mode'] = view_only
         self.manager.session.post(
-            self.uri + '/operations/add-permission',
+            self.uri + '/operations/add-permission', resource=self,
             body=body)
 
     @logged_api_call
@@ -473,5 +473,5 @@ class UserRole(BaseResource):
         if view_only is not None:
             body['view-only-mode'] = view_only
         self.manager.session.post(
-            self.uri + '/operations/remove-permission',
+            self.uri + '/operations/remove-permission', resource=self,
             body=body)

@@ -762,7 +762,7 @@ class Session(object):
         }
         self._headers.pop('X-API-Session', None)  # Just in case
         self._session = self._new_session(self.retry_timeout_config)
-        logon_res = self.post(logon_uri, logon_body, logon_required=False)
+        logon_res = self.post(logon_uri, body=logon_body, logon_required=False)
         self._session_id = logon_res['api-session']
         self._headers['X-API-Session'] = self._session_id
         self._object_topic = logon_res['notification-topic']
@@ -813,8 +813,9 @@ class Session(object):
         self._job_topic = None
 
     @staticmethod
-    def _log_http_request(method, url, headers=None, content=None,
-                          content_len=None):
+    def _log_http_request(
+            method, url, resource, headers=None, content=None,
+            content_len=None):
         """
         Log the HTTP request of an HMC REST API call, at the debug level.
 
@@ -862,12 +863,28 @@ class Session(object):
             content_label = 'content'
             content_msg = content
 
-        HMC_LOGGER.debug("Request: %s %s, headers: %r, %s: %r",
-                         method, url, _headers_for_logging(headers),
+        if resource:
+            names = []
+            res_class = resource.manager.class_name
+            while resource:
+                # Using resource.name gets into an infinite recursion when
+                # the resource name is not present, due to pulling the
+                # properties in that case. We take the careful approach.
+                name_prop = resource.manager.name_prop
+                name = resource.properties.get(name_prop, '<unknown>')
+                names.insert(0, name)
+                resource = resource.manager.parent
+            res_str = " ({} {})".format(res_class, '.'.join(names))
+        else:
+            res_str = ""
+
+        HMC_LOGGER.debug("Request: %s %s%s, headers: %r, %s: %r",
+                         method, url, res_str, _headers_for_logging(headers),
                          content_label, content_msg)
 
     @staticmethod
-    def _log_http_response(method, url, status, headers=None, content=None):
+    def _log_http_response(
+            method, url, resource, status, headers=None, content=None):
         """
         Log the HTTP response of an HMC REST API call, at the debug level.
 
@@ -923,12 +940,29 @@ class Session(object):
             content_label = 'content'
             content_msg = content
 
-        HMC_LOGGER.debug("Respons: %s %s, status: %s, headers: %r, %s: %r",
-                         method, url, status, _headers_for_logging(headers),
+        if resource:
+            names = []
+            res_class = resource.manager.class_name
+            while resource:
+                # Using resource.name gets into an infinite recursion when
+                # the resource name is not present, due to pulling the
+                # properties in that case. We take the careful approach.
+                name_prop = resource.manager.name_prop
+                name = resource.properties.get(name_prop, '<unknown>')
+                names.insert(0, name)
+                resource = resource.manager.parent
+            res_str = " ({} {})".format(res_class, '.'.join(names))
+        else:
+            res_str = ""
+
+        HMC_LOGGER.debug("Respons: %s %s%s, status: %s, "
+                         "headers: %r, %s: %r",
+                         method, url, res_str, status,
+                         _headers_for_logging(headers),
                          content_label, content_msg)
 
     @logged_api_call
-    def get(self, uri, logon_required=True, renew_session=True):
+    def get(self, uri, resource=None, logon_required=True, renew_session=True):
         """
         Perform the HTTP GET method against the resource identified by a URI.
 
@@ -969,7 +1003,8 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        self._log_http_request('GET', url, headers=self.headers)
+        self._log_http_request('GET', url, resource=resource,
+                               headers=self.headers)
         stats = self.time_stats_keeper.get_stats('get ' + uri)
         stats.begin()
         req = self._session or requests
@@ -984,7 +1019,7 @@ class Session(object):
             _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
-        self._log_http_response('GET', url,
+        self._log_http_response('GET', url, resource=resource,
                                 status=result.status_code,
                                 headers=result.headers,
                                 content=result.content)
@@ -1001,7 +1036,8 @@ class Session(object):
                 if renew_session:
                     self._do_logon()
                     return self.get(
-                        uri, logon_required=False, renew_session=False)
+                        uri, resource=resource, logon_required=False,
+                        renew_session=False)
 
             if reason == 1:
                 # Login user's authentication is fine; this is an authorization
@@ -1018,7 +1054,7 @@ class Session(object):
         raise HTTPError(result_object)
 
     @logged_api_call
-    def post(self, uri, body=None, logon_required=True,
+    def post(self, uri, resource=None, body=None, logon_required=True,
              wait_for_completion=False, operation_timeout=None,
              renew_session=True):
         """
@@ -1184,8 +1220,8 @@ class Session(object):
         else:
             raise TypeError("Body has invalid type: {}".format(type(body)))
 
-        self._log_http_request('POST', url, headers=headers, content=log_data,
-                               content_len=log_len)
+        self._log_http_request('POST', url, resource=resource, headers=headers,
+                               content=log_data, content_len=log_len)
         req = self._session or requests
         req_timeout = (self.retry_timeout_config.connect_timeout,
                        self.retry_timeout_config.read_timeout)
@@ -1212,7 +1248,7 @@ class Session(object):
                 _handle_request_exc(exc, self.retry_timeout_config)
             finally:
                 stats.end()
-            self._log_http_response('POST', url,
+            self._log_http_response('POST', url, resource=resource,
                                     status=result.status_code,
                                     headers=result.headers,
                                     content=result.content)
@@ -1250,7 +1286,7 @@ class Session(object):
                     if renew_session:
                         self._do_logon()
                         return self.post(
-                            uri, body,
+                            uri, resource=resource, body=body,
                             logon_required=False, renew_session=False,
                             wait_for_completion=wait_for_completion,
                             operation_timeout=operation_timeout)
@@ -1274,7 +1310,8 @@ class Session(object):
                 stats_total.end()
 
     @logged_api_call
-    def delete(self, uri, logon_required=True, renew_session=True):
+    def delete(
+            self, uri, resource=None, logon_required=True, renew_session=True):
         """
         Perform the HTTP DELETE method against the resource identified by a
         URI.
@@ -1314,7 +1351,8 @@ class Session(object):
         if logon_required:
             self.logon()
         url = self.base_url + uri
-        self._log_http_request('DELETE', url, headers=self.headers)
+        self._log_http_request('DELETE', url, resource=resource,
+                               headers=self.headers)
         stats = self.time_stats_keeper.get_stats('delete ' + uri)
         stats.begin()
         req = self._session or requests
@@ -1329,7 +1367,7 @@ class Session(object):
             _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
-        self._log_http_response('DELETE', url,
+        self._log_http_response('DELETE', url, resource=resource,
                                 status=result.status_code,
                                 headers=result.headers,
                                 content=result.content)
@@ -1346,7 +1384,8 @@ class Session(object):
                 # 403.5: Session ID was invalid
                 if renew_session:
                     self._do_logon()
-                    self.delete(uri, logon_required=False, renew_session=False)
+                    self.delete(uri, resource=resource, logon_required=False,
+                                renew_session=False)
                     return
 
             if reason == 1:

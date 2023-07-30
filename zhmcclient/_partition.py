@@ -466,7 +466,7 @@ class Partition(BaseResource):
             waiting for the desired partition status.
         """
         result = self.manager.session.post(
-            self.uri + '/operations/start',
+            self.uri + '/operations/start', resource=self,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -538,7 +538,7 @@ class Partition(BaseResource):
             waiting for the desired partition status.
         """
         result = self.manager.session.post(
-            self.uri + '/operations/stop',
+            self.uri + '/operations/stop', resource=self,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -564,7 +564,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self.uri)
+        self.manager.session.delete(self.uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
@@ -597,7 +597,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
         is_rename = self.manager._name_prop in properties
         if is_rename:
             # Delete the old name from the cache
@@ -669,7 +669,7 @@ class Partition(BaseResource):
             waiting for completion of the operation.
         """
         result = self.manager.session.post(
-            self.uri + '/operations/scsi-dump',
+            self.uri + '/operations/scsi-dump', resource=self,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout,
             body=parameters)
@@ -737,7 +737,7 @@ class Partition(BaseResource):
             waiting for completion of the operation.
         """
         result = self.manager.session.post(
-            self.uri + '/operations/start-dump-program',
+            self.uri + '/operations/start-dump-program', resource=self,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout,
             body=parameters)
@@ -795,7 +795,7 @@ class Partition(BaseResource):
             waiting for completion of the operation.
         """
         result = self.manager.session.post(
-            self.uri + '/operations/psw-restart',
+            self.uri + '/operations/psw-restart', resource=self,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -849,7 +849,7 @@ class Partition(BaseResource):
             format(quote(image_name, safe=''), quote(ins_file_name, safe=''))
         self.manager.session.post(
             self.uri + '/operations/mount-iso-image' + query_parms_str,
-            body=image)
+            resource=self, body=image)
 
     @logged_api_call
     def unmount_iso_image(self):
@@ -871,7 +871,7 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         self.manager.session.post(
-            self.uri + '/operations/unmount-iso-image')
+            self.uri + '/operations/unmount-iso-image', resource=self)
 
     @logged_api_call
     def open_os_message_channel(self, include_refresh_messages=True):
@@ -914,7 +914,8 @@ class Partition(BaseResource):
         """
         body = {'include-refresh-messages': include_refresh_messages}
         result = self.manager.session.post(
-            self.uri + '/operations/open-os-message-channel', body)
+            self.uri + '/operations/open-os-message-channel', resource=self,
+            body=body)
         return result['topic-name']
 
     @logged_api_call
@@ -956,7 +957,7 @@ class Partition(BaseResource):
         body = {'is-priority': is_priority,
                 'operating-system-command-text': os_command_text}
         self.manager.session.post(
-            self.uri + '/operations/send-os-cmd', body)
+            self.uri + '/operations/send-os-cmd', resource=self, body=body)
 
     @logged_api_call
     def wait_for_status(self, status, status_timeout=None):
@@ -1090,7 +1091,8 @@ class Partition(BaseResource):
         body = {'crypto-adapter-uris': crypto_adapter_uris,
                 'crypto-domain-configurations': crypto_domain_configurations}
         self.manager.session.post(
-            self.uri + '/operations/increase-crypto-configuration', body)
+            self.uri + '/operations/increase-crypto-configuration',
+            resource=self, body=body)
 
     @logged_api_call
     def decrease_crypto_config(self, crypto_adapters,
@@ -1136,7 +1138,8 @@ class Partition(BaseResource):
         body = {'crypto-adapter-uris': crypto_adapter_uris,
                 'crypto-domain-indexes': crypto_domain_indexes}
         self.manager.session.post(
-            self.uri + '/operations/decrease-crypto-configuration', body)
+            self.uri + '/operations/decrease-crypto-configuration',
+            resource=self, body=body)
 
     @logged_api_call
     def change_crypto_domain_config(self, crypto_domain_index, access_mode):
@@ -1176,7 +1179,8 @@ class Partition(BaseResource):
         body = {'domain-index': crypto_domain_index,
                 'access-mode': access_mode}
         self.manager.session.post(
-            self.uri + '/operations/change-crypto-domain-configuration', body)
+            self.uri + '/operations/change-crypto-domain-configuration',
+            resource=self, body=body)
 
     @logged_api_call
     def zeroize_crypto_domain(self, crypto_adapter, crypto_domain_index):
@@ -1218,7 +1222,8 @@ class Partition(BaseResource):
             'domain-index': crypto_domain_index
         }
         self.manager.session.post(
-            self.uri + '/operations/zeroize-crypto-domain', body)
+            self.uri + '/operations/zeroize-crypto-domain', resource=self,
+            body=body)
 
     @logged_api_call
     def attach_storage_group(self, storage_group):
@@ -1257,7 +1262,8 @@ class Partition(BaseResource):
         """
         body = {'storage-group-uri': storage_group.uri}
         self.manager.session.post(
-            self.uri + '/operations/attach-storage-group', body)
+            self.uri + '/operations/attach-storage-group', resource=self,
+            body=body)
 
     @logged_api_call
     def detach_storage_group(self, storage_group):
@@ -1295,7 +1301,8 @@ class Partition(BaseResource):
         """
         body = {'storage-group-uri': storage_group.uri}
         self.manager.session.post(
-            self.uri + '/operations/detach-storage-group', body)
+            self.uri + '/operations/detach-storage-group', resource=self,
+            body=body)
 
     @logged_api_call
     def list_attached_storage_groups(self, full_properties=False):
@@ -1370,7 +1377,8 @@ class Partition(BaseResource):
         """
         body = {'certificate-uri': certificate.uri}
         self.manager.session.post(
-            self.uri + '/operations/assign-certificate', body)
+            self.uri + '/operations/assign-certificate', resource=self,
+            body=body)
 
     @logged_api_call
     def unassign_certificate(self, certificate):
@@ -1402,7 +1410,8 @@ class Partition(BaseResource):
         """
         body = {'certificate-uri': certificate.uri}
         self.manager.session.post(
-            self.uri + '/operations/unassign-certificate', body)
+            self.uri + '/operations/unassign-certificate', resource=self,
+            body=body)
 
     def dump(self):
         """

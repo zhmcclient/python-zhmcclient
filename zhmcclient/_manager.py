@@ -602,6 +602,13 @@ class BaseManager(object):
         return self._class_name
 
     @property
+    def name_prop(self):
+        """
+        The name of the resource property indicating the resource name
+        """
+        return self._name_prop
+
+    @property
     def session(self):
         """
         :class:`~zhmcclient.Session`:

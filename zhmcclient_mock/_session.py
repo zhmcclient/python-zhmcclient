@@ -947,7 +947,7 @@ class FakedSession(zhmcclient.Session):
 
         return session
 
-    def get(self, uri, logon_required=True, renew_session=True):
+    def get(self, uri, resource=None, logon_required=True, renew_session=True):
         """
         Perform the HTTP GET method against the resource identified by a URI,
         on the faked HMC.
@@ -996,7 +996,7 @@ class FakedSession(zhmcclient.Session):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ConnectionError
 
-    def post(self, uri, body=None, logon_required=True,
+    def post(self, uri, resource=None, body=None, logon_required=True,
              wait_for_completion=True, operation_timeout=None,
              renew_session=True):
         """
@@ -1121,7 +1121,8 @@ class FakedSession(zhmcclient.Session):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ConnectionError
 
-    def delete(self, uri, logon_required=True, renew_session=True):
+    def delete(
+            self, uri, resource=None, logon_required=True, renew_session=True):
         """
         Perform the HTTP DELETE method against the resource identified by a
         URI, on the faked HMC.

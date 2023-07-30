@@ -342,7 +342,7 @@ class MetricsContext(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        metrics_response = self.manager.session.get(self.uri)
+        metrics_response = self.manager.session.get(self.uri, resource=self)
         return metrics_response
 
     @logged_api_call
@@ -358,7 +358,7 @@ class MetricsContext(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self.uri)
+        self.manager.session.delete(self.uri, resource=self)
         self.manager._metrics_contexts.remove(self)
 
 

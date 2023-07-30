@@ -311,7 +311,7 @@ class Nic(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self._uri)
+        self.manager.session.delete(self._uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
@@ -353,7 +353,7 @@ class Nic(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, body=properties, resource=self)
         is_rename = self.manager._name_prop in properties
         if is_rename:
             # Delete the old name from the cache

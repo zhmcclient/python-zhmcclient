@@ -257,7 +257,7 @@ class BaseResource(object):
         with self._property_lock:
             if self._ceased_existence:
                 raise CeasedExistence(self._uri)
-        full_properties = self.manager.session.get(self._uri)
+        full_properties = self.manager.session.get(self._uri, resource=self)
         with self._property_lock:
             self._properties = dict(full_properties)
             self._properties_timestamp = int(time.time())
@@ -309,7 +309,7 @@ class BaseResource(object):
             # not supported for the resource type.
             uri = "{}?properties={}".format(self._uri, ','.join(properties))
             try:
-                subset_properties = self.manager.session.get(uri)
+                subset_properties = self.manager.session.get(uri, resource=self)
                 # pylint: disable=simplifiable-if-statement
                 if len(subset_properties) > len(properties):
                     # We have an older HMC that ignored the query parameter and
@@ -320,13 +320,15 @@ class BaseResource(object):
             except HTTPError as exc:
                 if exc.http_status == 400 and exc.reason == 1:
                     # HMC does not yet support the query parameter, get full set
-                    subset_properties = self.manager.session.get(self._uri)
+                    subset_properties = self.manager.session.get(
+                        self._uri, resource=self)
                     is_full = True
                 else:
                     raise
         else:
             # Resource does not support the query parameter, get full set
-            subset_properties = self.manager.session.get(self._uri)
+            subset_properties = self.manager.session.get(
+                self._uri, resource=self)
             is_full = True
 
         with self._property_lock:

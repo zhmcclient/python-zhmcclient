@@ -302,7 +302,7 @@ class ActivationProfile(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.
         assert self.manager._name_prop not in properties
@@ -338,7 +338,8 @@ class ActivationProfile(BaseResource):
         """
         body = {'certificate-uri': certificate.uri}
         self.manager.session.post(
-            self.uri + '/operations/assign-certificate', body)
+            self.uri + '/operations/assign-certificate', resource=self,
+            body=body)
 
     @logged_api_call
     def unassign_certificate(self, certificate):
@@ -370,4 +371,5 @@ class ActivationProfile(BaseResource):
         """
         body = {'certificate-uri': certificate.uri}
         self.manager.session.post(
-            self.uri + '/operations/unassign-certificate', body)
+            self.uri + '/operations/unassign-certificate', resource=self,
+            body=body)

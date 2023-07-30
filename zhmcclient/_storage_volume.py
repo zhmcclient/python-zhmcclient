@@ -429,7 +429,7 @@ class StorageVolume(BaseResource):
 
         self.manager.session.post(
             self.manager.storage_group.uri + '/operations/modify',
-            body=body)
+            resource=self, body=body)
 
         # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
@@ -527,7 +527,7 @@ class StorageVolume(BaseResource):
 
         self.manager.session.post(
             self.manager.storage_group.uri + '/operations/modify',
-            body=body)
+            resource=self, body=body)
 
         self.update_properties_local(copy.deepcopy(properties))
 
@@ -590,7 +590,7 @@ class StorageVolume(BaseResource):
         }
         self.manager.session.post(
             self.uri + '/operations/fulfill-ficon-storage-volume',
-            body=body)
+            resource=self, body=body)
 
     @logged_api_call
     def indicate_fulfillment_fcp(self, wwpn, lun, host_port):
@@ -662,4 +662,4 @@ class StorageVolume(BaseResource):
         }
         self.manager.session.post(
             self.uri + '/operations/fulfill-fcp-storage-volume',
-            body=body)
+            resource=self, body=body)

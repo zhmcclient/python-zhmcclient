@@ -260,7 +260,7 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.
         assert self.manager._name_prop not in properties
@@ -367,8 +367,7 @@ class Lpar(BaseResource):
         if force:
             body['force'] = force
         result = self.manager.session.post(
-            self.uri + '/operations/activate',
-            body,
+            self.uri + '/operations/activate', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -468,8 +467,7 @@ class Lpar(BaseResource):
         if force:
             body['force'] = force
         result = self.manager.session.post(
-            self.uri + '/operations/deactivate',
-            body,
+            self.uri + '/operations/deactivate', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -646,8 +644,7 @@ class Lpar(BaseResource):
             # Note: Requires SE >= 2.15, but caller needs to control this
             body['secure-boot'] = secure_boot
         result = self.manager.session.post(
-            self.uri + '/operations/scsi-load',
-            body,
+            self.uri + '/operations/scsi-load', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -813,8 +810,7 @@ class Lpar(BaseResource):
             # Note: Requires SE >= 2.15, but caller needs to control this
             body['secure-boot'] = secure_boot
         result = self.manager.session.post(
-            self.uri + '/operations/scsi-dump',
-            body,
+            self.uri + '/operations/scsi-dump', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -974,8 +970,7 @@ class Lpar(BaseResource):
             # Note: Requires SE >= 2.15, but caller needs to control this
             body['secure-boot'] = secure_boot
         result = self.manager.session.post(
-            self.uri + '/operations/nvme-load',
-            body,
+            self.uri + '/operations/nvme-load', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -1124,8 +1119,7 @@ class Lpar(BaseResource):
             # Note: Requires SE >= 2.15, but caller needs to control this
             body['secure-boot'] = secure_boot
         result = self.manager.session.post(
-            self.uri + '/operations/nvme-dump',
-            body,
+            self.uri + '/operations/nvme-dump', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -1254,8 +1248,7 @@ class Lpar(BaseResource):
         if store_status_indicator:
             body['store-status-indicator'] = store_status_indicator
         result = self.manager.session.post(
-            self.uri + '/operations/load',
-            body,
+            self.uri + '/operations/load', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -1346,8 +1339,7 @@ class Lpar(BaseResource):
         """
         body = None
         result = self.manager.session.post(
-            self.uri + '/operations/stop',
-            body,
+            self.uri + '/operations/stop', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -1454,8 +1446,7 @@ class Lpar(BaseResource):
         if os_ipl_token:
             body['os-ipl-token'] = os_ipl_token
         result = self.manager.session.post(
-            self.uri + '/operations/reset-clear',
-            body,
+            self.uri + '/operations/reset-clear', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -1562,8 +1553,7 @@ class Lpar(BaseResource):
         if os_ipl_token:
             body['os-ipl-token'] = os_ipl_token
         result = self.manager.session.post(
-            self.uri + '/operations/reset-normal',
-            body,
+            self.uri + '/operations/reset-normal', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -1614,7 +1604,8 @@ class Lpar(BaseResource):
         """
         body = {'include-refresh-messages': include_refresh_messages}
         result = self.manager.session.post(
-            self.uri + '/operations/open-os-message-channel', body)
+            self.uri + '/operations/open-os-message-channel',
+            resource=self, body=body)
         return result['topic-name']
 
     @logged_api_call
@@ -1656,7 +1647,7 @@ class Lpar(BaseResource):
         body = {'is-priority': is_priority,
                 'operating-system-command-text': os_command_text}
         self.manager.session.post(
-            self.uri + '/operations/send-os-cmd', body)
+            self.uri + '/operations/send-os-cmd', resource=self, body=body)
 
     @logged_api_call
     def psw_restart(self, wait_for_completion=True, operation_timeout=None,
@@ -1737,8 +1728,7 @@ class Lpar(BaseResource):
         """
         body = {}
         result = self.manager.session.post(
-            self.uri + '/operations/psw-restart',
-            body,
+            self.uri + '/operations/psw-restart', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
@@ -1848,7 +1838,8 @@ class Lpar(BaseResource):
         """
         body = {'certificate-uri': certificate.uri}
         self.manager.session.post(
-            self.uri + '/operations/assign-certificate', body)
+            self.uri + '/operations/assign-certificate', resource=self,
+            body=body)
 
     @logged_api_call
     def unassign_certificate(self, certificate):
@@ -1880,4 +1871,5 @@ class Lpar(BaseResource):
         """
         body = {'certificate-uri': certificate.uri}
         self.manager.session.post(
-            self.uri + '/operations/unassign-certificate', body)
+            self.uri + '/operations/unassign-certificate', resource=self,
+            body=body)

@@ -668,7 +668,7 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
         # Attempts to change the 'name' property will be rejected by the HMC,
         # so we don't need to update the name-to-URI cache.
         assert self.manager._name_prop not in properties
@@ -734,7 +734,7 @@ class Cpc(BaseResource):
             waiting for completion of the operation.
         """
         result = self.manager.session.post(
-            self.uri + '/operations/start',
+            self.uri + '/operations/start', resource=self,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -799,7 +799,7 @@ class Cpc(BaseResource):
             waiting for completion of the operation.
         """
         result = self.manager.session.post(
-            self.uri + '/operations/stop',
+            self.uri + '/operations/stop', resource=self,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -881,8 +881,7 @@ class Cpc(BaseResource):
             'force': force,
         }
         result = self.manager.session.post(
-            self.uri + '/operations/activate',
-            body,
+            self.uri + '/operations/activate', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -953,8 +952,7 @@ class Cpc(BaseResource):
         """
         body = {'force': force}
         result = self.manager.session.post(
-            self.uri + '/operations/deactivate',
-            body,
+            self.uri + '/operations/deactivate', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -1019,8 +1017,7 @@ class Cpc(BaseResource):
         """
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            self.uri + '/operations/import-profiles',
-            body,
+            self.uri + '/operations/import-profiles', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -1084,8 +1081,7 @@ class Cpc(BaseResource):
         """
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            self.uri + '/operations/export-profiles',
-            body,
+            self.uri + '/operations/export-profiles', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -1129,8 +1125,9 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         body = {'partitions': [p.uri for p in partitions]}
-        result = self.manager.session.post(self._uri + '/operations/'
-                                           'export-port-names-list', body=body)
+        result = self.manager.session.post(
+            self._uri + '/operations/export-port-names-list', resource=self,
+            body=body)
         # Parse the returned comma-separated string for each WWPN into a dict:
         wwpn_list = []
         dict_keys = ('partition-name', 'adapter-id', 'device-number', 'wwpn')
@@ -1348,9 +1345,8 @@ class Cpc(BaseResource):
         """
         body = {'power-saving': power_saving}
         result = self.manager.session.post(
-            self.uri + '/operations/set-cpc-power-save',
-            body,
-            wait_for_completion=wait_for_completion,
+            self.uri + '/operations/set-cpc-power-save', resource=self,
+            body=body, wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
             # The HMC API book does not document what the result data of the
@@ -1452,9 +1448,8 @@ class Cpc(BaseResource):
         if power_cap is not None:
             body['power-cap-current'] = power_cap
         result = self.manager.session.post(
-            self.uri + '/operations/set-cpc-power-capping',
-            body,
-            wait_for_completion=wait_for_completion,
+            self.uri + '/operations/set-cpc-power-capping', resource=self,
+            body=body, wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
             # The HMC API book does not document what the result data of the
@@ -1507,7 +1502,8 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        result = self.manager.session.get(self.uri + '/energy-management-data')
+        result = self.manager.session.get(
+            self.uri + '/energy-management-data', resource=self)
         em_list = result['objects']
         if len(em_list) != 1:
             uris = [em_obj['object-uri'] for em_obj in em_list]
@@ -1660,7 +1656,7 @@ class Cpc(BaseResource):
             'logical-unit-number': lun_16,
         }
         self.manager.session.post(
-            self.uri + '/operations/validate-lun-path',
+            self.uri + '/operations/validate-lun-path', resource=self,
             body=body)
 
     @logged_api_call
@@ -1751,7 +1747,7 @@ class Cpc(BaseResource):
             body['processor-info'] = pi
 
         self.manager.session.post(
-            self.uri + '/operations/add-temp-capacity',
+            self.uri + '/operations/add-temp-capacity', resource=self,
             body=body)
 
     @logged_api_call
@@ -1839,7 +1835,7 @@ class Cpc(BaseResource):
             body['processor-info'] = pi
 
         self.manager.session.post(
-            self.uri + '/operations/remove-temp-capacity',
+            self.uri + '/operations/remove-temp-capacity', resource=self,
             body=body)
 
     @logged_api_call
@@ -1921,7 +1917,7 @@ class Cpc(BaseResource):
             'auto-start-list': auto_start_body,
         }
         self.manager.session.post(
-            self.uri + '/operations/set-auto-start-list',
+            self.uri + '/operations/set-auto-start-list', resource=self,
             body=body)
 
     @logged_api_call
@@ -1993,7 +1989,7 @@ class Cpc(BaseResource):
         """
         body = dpm_configuration
         result = self.manager.session.post(
-            self.uri + '/operations/import-dpm-config',
+            self.uri + '/operations/import-dpm-config', resource=self,
             body=body)
         return result
 
@@ -2180,8 +2176,8 @@ class Cpc(BaseResource):
             'accept-firmware': accept_firmware,
         }
         result = self.manager.session.post(
-            self.uri + '/operations/single-step-install', body=body,
-            wait_for_completion=wait_for_completion,
+            self.uri + '/operations/single-step-install', resource=self,
+            body=body, wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
 

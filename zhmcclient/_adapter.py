@@ -462,7 +462,7 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self.uri)
+        self.manager.session.delete(self.uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
@@ -495,7 +495,7 @@ class Adapter(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
         is_rename = self.manager._name_prop in properties
         if is_rename:
             # Delete the old name from the cache
@@ -569,7 +569,8 @@ class Adapter(BaseResource):
         if zeroize is not None:
             body['zeroize'] = zeroize
         self.manager.session.post(
-            self.uri + '/operations/change-crypto-type', body)
+            self.uri + '/operations/change-crypto-type', resource=self,
+            body=body)
 
     @logged_api_call
     def change_adapter_type(self, adapter_type):
@@ -614,7 +615,8 @@ class Adapter(BaseResource):
         """
         body = {'type': adapter_type}
         self.manager.session.post(
-            self.uri + '/operations/change-adapter-type', body)
+            self.uri + '/operations/change-adapter-type', resource=self,
+            body=body)
 
     def dump(self):
         """
@@ -688,7 +690,7 @@ class Adapter(BaseResource):
         uri = '{}/operations/get-partitions-assigned-to-adapter{}'.format(
             self.uri, query_parms)
 
-        result = self.manager.session.get(uri)
+        result = self.manager.session.get(uri, resource=self)
 
         partition_mgr = self.manager.parent.partitions
         resource_obj_list = []

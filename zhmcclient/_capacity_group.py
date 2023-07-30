@@ -267,7 +267,7 @@ class CapacityGroup(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self._uri)
+        self.manager.session.delete(self._uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
@@ -300,7 +300,7 @@ class CapacityGroup(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
         is_rename = self.manager._name_prop in properties
         if is_rename:
             # Delete the old name from the cache
@@ -346,7 +346,7 @@ class CapacityGroup(BaseResource):
             'partition-uri': partition.uri,
         }
         self.manager.session.post(
-            self.uri + '/operations/add-partition',
+            self.uri + '/operations/add-partition', resource=self,
             body=body)
 
     @logged_api_call
@@ -381,5 +381,5 @@ class CapacityGroup(BaseResource):
             'partition-uri': partition.uri,
         }
         self.manager.session.post(
-            self.uri + '/operations/remove-partition',
+            self.uri + '/operations/remove-partition', resource=self,
             body=body)
