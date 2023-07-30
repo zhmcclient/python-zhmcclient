@@ -329,7 +329,7 @@ class StorageVolumeTemplate(BaseResource):
         }
         self.manager.session.post(
             self.manager.storage_group_template.uri + '/operations/modify',
-            body=body)
+            resource=self, body=body)
 
         # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
@@ -390,5 +390,5 @@ class StorageVolumeTemplate(BaseResource):
         }
         self.manager.session.post(
             self.manager.storage_group_template.uri + '/operations/modify',
-            body=body)
+            resource=self, body=body)
         self.update_properties_local(copy.deepcopy(properties))

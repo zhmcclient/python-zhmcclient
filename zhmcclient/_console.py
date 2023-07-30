@@ -375,7 +375,8 @@ class Console(BaseResource):
             waiting for the HMC to become available again after the restart.
         """
         body = {'force': force}
-        self.manager.session.post(self.uri + '/operations/restart', body=body)
+        self.manager.session.post(
+            self.uri + '/operations/restart', resource=self, body=body)
         if wait_for_available:
             time.sleep(10)
             self.manager.client.wait_for_available(
@@ -417,7 +418,8 @@ class Console(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         body = {'force': force}
-        self.manager.session.post(self.uri + '/operations/shutdown', body=body)
+        self.manager.session.post(
+            self.uri + '/operations/shutdown', resource=self, body=body)
 
     @logged_api_call
     def make_primary(self):
@@ -442,7 +444,8 @@ class Console(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        self.manager.session.post(self.uri + '/operations/make-primary')
+        self.manager.session.post(
+            self.uri + '/operations/make-primary', resource=self)
 
     @staticmethod
     def _time_query_parms(begin_time, end_time):
@@ -504,7 +507,7 @@ class Console(BaseResource):
         """
         query_parms = self._time_query_parms(begin_time, end_time)
         uri = self.uri + '/operations/get-audit-log' + query_parms
-        result = self.manager.session.get(uri)
+        result = self.manager.session.get(uri, resource=self)
         return result
 
     @logged_api_call
@@ -549,7 +552,7 @@ class Console(BaseResource):
         """
         query_parms = self._time_query_parms(begin_time, end_time)
         uri = self.uri + '/operations/get-security-log' + query_parms
-        result = self.manager.session.get(uri)
+        result = self.manager.session.get(uri, resource=self)
         return result
 
     @logged_api_call
@@ -662,7 +665,7 @@ class Console(BaseResource):
         # filtering.
         # Note: "List Permitted Partitions" was introduced in HMC/SE 2.14.0.
         uri = self.uri + '/operations/list-permitted-partitions' + query_parms
-        result = self.manager.session.get(uri)
+        result = self.manager.session.get(uri, resource=self)
 
         partition_objs = []
         if result:
@@ -779,7 +782,7 @@ class Console(BaseResource):
         # filtering.
         uri = self.uri + '/operations/list-permitted-logical-partitions' + \
             query_parms
-        result = self.manager.session.get(uri)
+        result = self.manager.session.get(uri, resource=self)
 
         lpar_objs = []
         if result:
@@ -954,8 +957,8 @@ class Console(BaseResource):
             'accept-firmware': accept_firmware,
         }
         result = self.manager.session.post(
-            self.uri + '/operations/single-step-install', body=body,
-            wait_for_completion=wait_for_completion,
+            self.uri + '/operations/single-step-install', resource=self,
+            body=body, wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
 

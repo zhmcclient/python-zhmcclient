@@ -448,7 +448,7 @@ class StorageGroup(BaseResource):
         sg_cpc = self.cpc
         part_mgr = sg_cpc.partitions
 
-        result = self.manager.session.get(uri)
+        result = self.manager.session.get(uri, resource=self)
         props_list = result['partitions']
         part_list = []
         for props in props_list:
@@ -517,7 +517,7 @@ class StorageGroup(BaseResource):
                                  email_insert)
 
         self.manager.session.post(
-            uri=self.uri + '/operations/delete', body=body)
+            uri=self.uri + '/operations/delete', resource=self, body=body)
 
         # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
@@ -562,7 +562,7 @@ class StorageGroup(BaseResource):
         """
         # pylint: disable=protected-access
         uri = '{}/operations/modify'.format(self.uri)
-        self.manager.session.post(uri, body=properties)
+        self.manager.session.post(uri, resource=self, body=properties)
         is_rename = self.manager._name_prop in properties
         if is_rename:
             # Delete the old name from the cache
@@ -620,7 +620,7 @@ class StorageGroup(BaseResource):
             'adapter-port-uris': [p.uri for p in ports],
         }
         self.manager.session.post(
-            self.uri + '/operations/add-candidate-adapter-ports',
+            self.uri + '/operations/add-candidate-adapter-ports', resource=self,
             body=body)
 
     @logged_api_call
@@ -662,7 +662,7 @@ class StorageGroup(BaseResource):
         }
         self.manager.session.post(
             self.uri + '/operations/remove-candidate-adapter-ports',
-            body=body)
+            resource=self, body=body)
 
     @logged_api_call
     def list_candidate_adapter_ports(self, full_properties=False):
@@ -787,7 +787,7 @@ class StorageGroup(BaseResource):
         }
         result = self.manager.session.post(
             self.uri + '/operations/start-fcp-storage-discovery',
-            body=body,
+            resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         return result
@@ -836,7 +836,7 @@ class StorageGroup(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """  # noqa: E501
         result = self.manager.session.get(
-            self.uri + '/operations/get-connection-report')
+            self.uri + '/operations/get-connection-report', resource=self)
         return result
 
     # TODO: Add support for "Fulfill FICON Storage Volumes" operation

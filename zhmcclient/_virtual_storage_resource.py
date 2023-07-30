@@ -339,7 +339,7 @@ class VirtualStorageResource(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
         is_rename = self.manager._name_prop in properties
         if is_rename:
             # Delete the old name from the cache

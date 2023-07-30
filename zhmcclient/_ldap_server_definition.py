@@ -267,7 +267,7 @@ class LdapServerDefinition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.delete(self.uri)
+        self.manager.session.delete(self.uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
 
@@ -299,7 +299,7 @@ class LdapServerDefinition(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        self.manager.session.post(self.uri, body=properties)
+        self.manager.session.post(self.uri, resource=self, body=properties)
 
         # The name of LDAP Server Definitions cannot be updated. An attempt to
         # do so should cause HTTPError to be raised in the POST above, so we

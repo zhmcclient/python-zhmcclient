@@ -44,6 +44,8 @@ Released: not yet
   zhmcclient.Console.single_step_install() and
   zhmcclient.Cpc.single_step_install() methods. (issue #1219)
 
+* Added resource class and name to HMC log entries. (issue #1058)
+
 **Cleanup:**
 
 * Fixed new issue reported by flake8 6.1.0.
