@@ -20,16 +20,12 @@ Change log
 ----------
 
 
-Version 1.10.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.10.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.9.x.
+This version contains all fixes up to version 1.9.1.
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-08-04
 
 **Bug fixes:**
 
@@ -62,12 +58,6 @@ Released: not yet
 
 * Converted all the percent-style string usages to format style except
   the logging calls. Logging will continue to use percent-style. (issue #663)
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.9.0
