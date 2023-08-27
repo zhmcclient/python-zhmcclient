@@ -33,6 +33,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed safety issues from 2023-08-27.
+
 **Enhancements:**
 
 **Cleanup:**

@@ -100,6 +100,12 @@ security:
             reason: Fixed pygments version 2.15.0 requires Python>=3.7 and is used there
         59071:
             reason: Fixed tornado version 6.3.2 requires Python>=3.8 and is used there
+        59956:
+            reason: Fixed certifi version 2023.07.22 requires Python>=3.6 and is used there
+        59910:
+            reason: Fixed sphinx version 3.3.0 requires Python>=3.5 and is used there
+        59925:
+            reason: Fixed sphinx version 3.3.0 requires Python>=3.5 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
