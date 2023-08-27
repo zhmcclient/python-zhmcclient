@@ -122,7 +122,7 @@ jsonschema==3.0.1
 
 # certifi 2022.12.07 fixes safety issue 52365
 certifi==2019.9.11; python_version <= '3.5'
-certifi==2022.12.07; python_version >= '3.6'
+certifi==2023.07.22; python_version >= '3.6'
 chardet==3.0.3
 docopt==0.6.2
 idna==2.5
