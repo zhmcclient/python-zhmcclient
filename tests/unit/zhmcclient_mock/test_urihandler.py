@@ -3274,6 +3274,13 @@ class TestLdapServerDefinitionHandlers(object):
             'primary-hostname-ipaddr': '10.11.12.13',
             'connection-port': None,
             'use-ssl': False,
+            'backup-hostname-ipaddr': None,
+            'bind-distinguished-name': None,
+            'location-method': 'pattern',
+            'replication-overwrite-possible': False,
+            'search-filter': None,
+            'search-scope': None,
+            'tolerate-untrusted-certificates': None,
         }
         assert ldap_srv_def1 == exp_ldap_srv_def1
 
@@ -3285,6 +3292,8 @@ class TestLdapServerDefinitionHandlers(object):
         new_ldap_srv_def_input = {
             'name': 'ldap_srv_def_X',
             'description': 'LDAP Srv Def #X',
+            'primary-hostname-ipaddr': '10.11.12.13',
+            'search-distinguished-name': 'test{0}',
         }
 
         # the function to be tested:
@@ -3357,6 +3366,8 @@ class TestLdapServerDefinitionHandlers(object):
         new_ldap_srv_def_input = {
             'name': 'ldap_srv_def_X',
             'description': 'LDAP Srv Def #X',
+            'primary-hostname-ipaddr': '10.11.12.13',
+            'search-distinguished-name': 'test{0}',
         }
 
         # Create the LDAP Srv Def

@@ -145,7 +145,9 @@ class TestLdapServerDefinition(object):
              None,
              HTTPError({'http-status': 400, 'reason': 5})),
             ({'description': 'fake description X',
-              'name': 'a'},
+              'name': 'a',
+              'primary-hostname-ipaddr': '10.11.12.13',
+              'search-distinguished-name': 'test{0}'},
              ['element-uri', 'name', 'description'],
              None),
         ]
@@ -260,7 +262,8 @@ class TestLdapServerDefinition(object):
         sn_ldap_srv_def_props = {
             'name': ldap_srv_def_name,
             'description': 'LDAP Server Definition with same name',
-            'type': 'user-defined',
+            'primary-hostname-ipaddr': '10.11.12.13',
+            'search-distinguished-name': 'test{0}',
         }
 
         ldap_srv_def_mgr = self.console.ldap_server_definitions

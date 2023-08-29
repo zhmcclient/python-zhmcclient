@@ -1444,7 +1444,9 @@ class LdapServerDefinitionsHandler(object):
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
-        check_required_fields(method, uri, body, ['name'])
+        check_required_fields(method, uri, body,
+                              ['name', 'primary-hostname-ipaddr',
+                               'search-distinguished-name'])
         new_ldap_srv_def = console.ldap_server_definitions.add(body)
         return {'element-uri': new_ldap_srv_def.uri}
 
@@ -1474,6 +1476,7 @@ class LdapServerDefinitionHandler(GenericGetPropertiesHandler,
                 'primary-hostname-ipaddr',
                 'connection-port',
                 'backup-hostname-ipaddr',
+                'use-ssl',
                 'tolerate-untrusted-certificates',
                 'bind-distinguished-name',
                 'bind-password',
@@ -1481,6 +1484,7 @@ class LdapServerDefinitionHandler(GenericGetPropertiesHandler,
                 'search-distinguished-name',
                 'search-scope',
                 'search-filter',
+                'replication-overwrite-possible',
             ])
         lsd.update(body)
 
