@@ -35,6 +35,8 @@ Released: not yet
 
 * Fixed safety issues from 2023-08-27.
 
+* Fixed zhmcclient_mock support for LDAP Server Definitions.
+
 **Enhancements:**
 
 **Cleanup:**

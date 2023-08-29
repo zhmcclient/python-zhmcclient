@@ -1602,10 +1602,8 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
               if not specified.
             * 'class' will be auto-generated to 'ldap-server-definition',
               if not specified.
-            * 'connection-port' will be auto-generated to `None`,
-              if not specified.
-            * 'use-ssl' will be auto-generated to `False`,
-              if not specified.
+            * All of the other class-soecific resource properties will be set
+              to a default value consistent with the HMC data model.
 
         Returns:
           :class:`~zhmcclient_mock.FakedLdapServerDefinition`: The faked
@@ -1614,10 +1612,18 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
         new_lsd = super(FakedLdapServerDefinitionManager, self).add(properties)
 
         # Resource type specific default values
-        if 'connection-port' not in new_lsd.properties:
-            new_lsd.properties['connection-port'] = None
-        if 'use-ssl' not in new_lsd.properties:
-            new_lsd.properties['use-ssl'] = False
+        new_lsd.properties.setdefault('description', '')
+        new_lsd.properties.setdefault('connection-port', None)
+        new_lsd.properties.setdefault('backup-hostname-ipaddr', None)
+        new_lsd.properties.setdefault('use-ssl', False)
+        use_ssl = new_lsd.properties['use-ssl']
+        new_lsd.properties.setdefault('tolerate-untrusted-certificates',
+                                      False if use_ssl else None)
+        new_lsd.properties.setdefault('bind-distinguished-name', None)
+        new_lsd.properties.setdefault('location-method', 'pattern')
+        new_lsd.properties.setdefault('search-scope', None)
+        new_lsd.properties.setdefault('search-filter', None)
+        new_lsd.properties.setdefault('replication-overwrite-possible', False)
 
         return new_lsd
 
