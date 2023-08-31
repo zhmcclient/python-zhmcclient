@@ -33,6 +33,8 @@ Released: not yet
 
 * Fixed end2end testcases for adapters, auto-updating, and groups.
 
+* Fixed end2end testcases for adapters, auto-updating, and groups.
+
 **Enhancements:**
 
 **Cleanup:**
