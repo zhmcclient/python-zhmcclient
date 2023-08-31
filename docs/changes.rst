@@ -31,6 +31,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed end2end testcases for adapters, auto-updating, and groups.
+
 **Enhancements:**
 
 **Cleanup:**
