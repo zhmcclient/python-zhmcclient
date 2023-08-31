@@ -29,7 +29,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, RC_VIRTUAL_FUNCTION
+from ._utils import RC_VIRTUAL_FUNCTION
 
 __all__ = ['VirtualFunctionManager', 'VirtualFunction']
 
@@ -129,31 +129,9 @@ class VirtualFunctionManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        resource_obj_list = []
-        if self.auto_update_enabled() and not self.auto_update_needs_pull():
-            for resource_obj in self.list_resources_local():
-                if matches_filters(resource_obj, filter_args):
-                    resource_obj_list.append(resource_obj)
-        else:
-            uris = self.partition.get_property('virtual-function-uris')
-            if uris:
-                for uri in uris:
-
-                    resource_obj = self.resource_class(
-                        manager=self,
-                        uri=uri,
-                        name=None,
-                        properties=None)
-
-                    if matches_filters(resource_obj, filter_args):
-                        resource_obj_list.append(resource_obj)
-                        if full_properties:
-                            resource_obj.pull_full_properties()
-
-            self.add_resources_local(resource_obj_list)
-
-        self._name_uri_cache.update_from(resource_obj_list)
-        return resource_obj_list
+        return self._list_with_parent_array(
+            self.partition, 'virtual-function-uris', full_properties,
+            filter_args)
 
     @logged_api_call
     def create(self, properties):

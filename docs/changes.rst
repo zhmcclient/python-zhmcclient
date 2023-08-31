@@ -64,7 +64,12 @@ Released: not yet
 * Implemented mock support for aggregation service operation "Submit requests"
   (bulk operations) (issue #1250).
 
+* Added support for requesting additional properties in list() methods for
+  Adapter, Certificate, Partition, VirtualSwitch resources.
+
 **Cleanup:**
+
+* Consolidated common code of list() methods into the _utils.py module.
 
 **Known issues:**
 

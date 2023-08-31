@@ -27,7 +27,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
 from ._utils import timestamp_from_datetime, divide_filter_args, \
-    matches_filters, RC_CONSOLE
+    make_query_str, matches_filters, RC_CONSOLE
 from ._storage_group import StorageGroupManager
 from ._storage_group_template import StorageGroupTemplateManager
 from ._user import UserManager
@@ -660,11 +660,13 @@ class Console(BaseResource):
         query_parms, client_filters = divide_filter_args(
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
+        query_parms_str = make_query_str(query_parms)
 
         # Perform the operation with the HMC, including any server-side
         # filtering.
         # Note: "List Permitted Partitions" was introduced in HMC/SE 2.14.0.
-        uri = self.uri + '/operations/list-permitted-partitions' + query_parms
+        uri = '{}/operations/list-permitted-partitions{}'.format(
+            self.uri, query_parms_str)
         result = self.manager.session.get(uri, resource=self)
 
         partition_objs = []
@@ -777,11 +779,12 @@ class Console(BaseResource):
         query_parms, client_filters = divide_filter_args(
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
+        query_parms_str = make_query_str(query_parms)
 
         # Perform the operation with the HMC, including any server-side
         # filtering.
-        uri = self.uri + '/operations/list-permitted-logical-partitions' + \
-            query_parms
+        uri = '{}/operations/list-permitted-logical-partitions{}'.format(
+            self.uri, query_parms_str)
         result = self.manager.session.get(uri, resource=self)
 
         lpar_objs = []
