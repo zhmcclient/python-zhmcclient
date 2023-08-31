@@ -22,7 +22,6 @@ change any existing partitions, but create, modify and delete test partitions.
 from __future__ import absolute_import, print_function
 
 import uuid
-import warnings
 from time import sleep
 import pytest
 from requests.packages import urllib3
@@ -247,7 +246,7 @@ def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
             part_names = set([p.name for p in part_list])
             assert part_names == initial_part_names
 
-            # Disable auto-updating on partition manager and check partition list
+            # Disable auto-updating on partition manager and check part. list
             cpc.partitions.disable_auto_update()
             part_list = cpc.partitions.list()
             part_names = set([p.name for p in part_list])
