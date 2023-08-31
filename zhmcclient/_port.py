@@ -31,7 +31,7 @@ except ImportError:
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, RC_NETWORK_PORT, RC_STORAGE_PORT
+from ._utils import RC_NETWORK_PORT, RC_STORAGE_PORT
 
 __all__ = ['PortManager', 'Port']
 
@@ -164,42 +164,13 @@ class PortManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        resource_obj_list = []
-        if self.auto_update_enabled() and not self.auto_update_needs_pull():
-            for resource_obj in self.list_resources_local():
-                if matches_filters(resource_obj, filter_args):
-                    resource_obj_list.append(resource_obj)
-        else:
-            uris_prop = self.adapter.port_uris_prop
-            if not uris_prop:
-                # Adapter does not have any ports
-                return []
+        uris_prop = self.adapter.port_uris_prop
+        if not uris_prop:
+            # Adapter does not have any ports
+            return []
 
-            uris = self.adapter.get_property(uris_prop)
-            assert uris is not None
-
-            # TODO: Remove the following circumvention once fixed.
-            # The following line circumvents a bug for FCP adapters that
-            # sometimes causes duplicate URIs to show up in this property:
-            uris = list(set(uris))
-
-            for uri in uris:
-
-                resource_obj = self.resource_class(
-                    manager=self,
-                    uri=uri,
-                    name=None,
-                    properties=None)
-
-                if matches_filters(resource_obj, filter_args):
-                    resource_obj_list.append(resource_obj)
-                    if full_properties:
-                        resource_obj.pull_full_properties()
-
-            self.add_resources_local(resource_obj_list)
-
-        self._name_uri_cache.update_from(resource_obj_list)
-        return resource_obj_list
+        return self._list_with_parent_array(
+            self.adapter, uris_prop, full_properties, filter_args)
 
 
 class Port(BaseResource):

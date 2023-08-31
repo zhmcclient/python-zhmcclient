@@ -401,7 +401,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ''
+        assert parm_str == []
         assert cf_args == {}
 
     def test_empty(self):
@@ -411,7 +411,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ''
+        assert parm_str == []
         assert cf_args == {}
 
     def test_one_string_qp(self):
@@ -421,7 +421,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp1=bar'
+        assert parm_str == ['qp1=bar']
         assert cf_args == {}
 
     def test_one_string_cf(self):
@@ -431,7 +431,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ''
+        assert parm_str == []
         assert cf_args == {'foo': 'bar'}
 
     def test_one_integer_qp(self):
@@ -441,7 +441,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp2=42'
+        assert parm_str == ['qp2=42']
         assert cf_args == {}
 
     def test_one_integer_cf(self):
@@ -451,7 +451,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ''
+        assert parm_str == []
         assert cf_args == {'foo': 42}
 
     def test_one_str_reserved_val_qp(self):
@@ -464,7 +464,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp1={}'.format(escape_str)
+        assert parm_str == ['qp1={}'.format(escape_str)]
         assert cf_args == {}
 
     def test_one_str_reserved_val_cf(self):
@@ -476,7 +476,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ''
+        assert parm_str == []
         assert cf_args == {'foo': char_str}
 
     def test_one_str_dash_name_qp(self):
@@ -488,7 +488,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?foo-boo=bar'
+        assert parm_str == ['foo-boo=bar']
         assert cf_args == {}
 
     def test_one_str_reserved_name_qp(self):
@@ -502,7 +502,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?{}=bar'.format(escape_str)
+        assert parm_str == ['{}=bar'.format(escape_str)]
         assert cf_args == {}
 
     def test_two_qp(self):
@@ -512,7 +512,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp1=bar&qp2=42'
+        assert parm_str == ['qp1=bar', 'qp2=42']
         assert cf_args == {}
 
     def test_two_qp_cf(self):
@@ -523,7 +523,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp1=bar'
+        assert parm_str == ['qp1=bar']
         assert cf_args == {'foo': 42}
 
     def test_two_cf_qp(self):
@@ -534,7 +534,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp1=42'
+        assert parm_str == ['qp1=42']
         assert cf_args == {'foo': 'bar'}
 
     def test_two_two_qp(self):
@@ -545,7 +545,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp1=bar&qp2=42&qp2=7'
+        assert parm_str == ['qp1=bar', 'qp2=42', 'qp2=7']
         assert cf_args == {}
 
     def test_two_str_reserved_val_qp(self):
@@ -558,7 +558,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == '?qp1=bar&qp2=42&qp2={}'.format(escape_str)
+        assert parm_str == ['qp1=bar', 'qp2=42', 'qp2={}'.format(escape_str)]
         assert cf_args == {}
 
 

@@ -55,8 +55,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
-from ._utils import matches_filters, divide_filter_args, \
-    RC_VIRTUAL_STORAGE_RESOURCE
+from ._utils import RC_VIRTUAL_STORAGE_RESOURCE
 
 __all__ = ['VirtualStorageResourceManager', 'VirtualStorageResource']
 
@@ -168,44 +167,10 @@ class VirtualStorageResourceManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        resource_obj_list = []
-        if self.auto_update_enabled() and not self.auto_update_needs_pull():
-            for resource_obj in self.list_resources_local():
-                if matches_filters(resource_obj, filter_args):
-                    resource_obj_list.append(resource_obj)
-        else:
-            resource_obj = self._try_optimized_lookup(filter_args)
-            if resource_obj:
-                resource_obj_list.append(resource_obj)
-                # It already has full properties
-            else:
-                query_parms, client_filters = divide_filter_args(
-                    self._query_props, filter_args)
-
-                resources_name = 'virtual-storage-resources'
-                uri = '{}/{}{}'.format(self.storage_group.uri, resources_name,
-                                       query_parms)
-
-                result = self.session.get(uri)
-                if result:
-                    props_list = result[resources_name]
-                    for props in props_list:
-
-                        resource_obj = self.resource_class(
-                            manager=self,
-                            uri=props[self._uri_prop],
-                            name=props.get(self._name_prop, None),
-                            properties=props)
-
-                        if matches_filters(resource_obj, client_filters):
-                            resource_obj_list.append(resource_obj)
-                            if full_properties:
-                                resource_obj.pull_full_properties()
-
-            self.add_resources_local(resource_obj_list)
-
-        self._name_uri_cache.update_from(resource_obj_list)
-        return resource_obj_list
+        result_prop = 'virtual-storage-resources'
+        list_uri = '{}/virtual-storage-resources'.format(self.storage_group.uri)
+        return self._list_with_operation(
+            list_uri, result_prop, full_properties, filter_args, None)
 
 
 class VirtualStorageResource(BaseResource):

@@ -404,7 +404,7 @@ def divide_filter_args(query_props, filter_args):
 
     Returns:
 
-      : tuple (query_parms_str, client_filter_args)
+      : tuple (query_parms, client_filter_args)
     """
     query_parms = []  # query parameter strings
     client_filter_args = {}
@@ -416,11 +416,33 @@ def divide_filter_args(query_props, filter_args):
                 append_query_parms(query_parms, prop_name, prop_match)
             else:
                 client_filter_args[prop_name] = prop_match
+    # query_parms_str = '&'.join(query_parms)
+    # if query_parms_str:
+    #     query_parms_str = '?{}'.format(query_parms_str)
+
+    return query_parms, client_filter_args
+
+
+def make_query_str(query_parms):
+    """
+    Return the query parms as a string ready to be appended to a URI.
+
+    If the list of query parms is empty, an empty string is returned.
+
+    Parameters:
+
+      query_parms (iterable of strings):
+        List of query parameters, each being a string "name=value", where
+        value is already URI-escaped if needed.
+
+    Returns:
+
+      str: query parms string
+    """
     query_parms_str = '&'.join(query_parms)
     if query_parms_str:
         query_parms_str = '?{}'.format(query_parms_str)
-
-    return query_parms_str, client_filter_args
+    return query_parms_str
 
 
 def matches_filters(obj, filter_args):

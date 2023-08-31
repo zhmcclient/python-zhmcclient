@@ -69,7 +69,7 @@ from ._resource import BaseResource
 from ._port import PortManager
 from ._logging import logged_api_call
 from ._utils import repr_dict, repr_manager, repr_timestamp, matches_filters, \
-    divide_filter_args, RC_ADAPTER
+    divide_filter_args, make_query_str, RC_ADAPTER
 
 __all__ = ['AdapterManager', 'Adapter']
 
@@ -136,7 +136,9 @@ class AdapterManager(BaseManager):
         return self._parent
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    # pylint: disable=arguments-differ
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the Adapters in this CPC.
 
@@ -180,6 +182,12 @@ class AdapterManager(BaseManager):
             `None` causes no filtering to happen, i.e. all resources are
             returned.
 
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+            This parameter requires HMC 2.16.0 or higher.
+
         Returns:
 
           : A list of :class:`~zhmcclient.Adapter` objects.
@@ -191,44 +199,11 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        resource_obj_list = []
-        if self.auto_update_enabled() and not self.auto_update_needs_pull():
-            for resource_obj in self.list_resources_local():
-                if matches_filters(resource_obj, filter_args):
-                    resource_obj_list.append(resource_obj)
-        else:
-            resource_obj = self._try_optimized_lookup(filter_args)
-            if resource_obj:
-                resource_obj_list.append(resource_obj)
-                # It already has full properties
-            else:
-                query_parms, client_filters = divide_filter_args(
-                    self._query_props, filter_args)
-
-                resources_name = 'adapters'
-                uri = '{}/{}{}'.format(self.cpc.uri, resources_name,
-                                       query_parms)
-
-                result = self.session.get(uri)
-                if result:
-                    props_list = result[resources_name]
-                    for props in props_list:
-
-                        resource_obj = self.resource_class(
-                            manager=self,
-                            uri=props[self._uri_prop],
-                            name=props.get(self._name_prop, None),
-                            properties=props)
-
-                        if matches_filters(resource_obj, client_filters):
-                            resource_obj_list.append(resource_obj)
-                            if full_properties:
-                                resource_obj.pull_full_properties()
-
-            self.add_resources_local(resource_obj_list)
-
-        self._name_uri_cache.update_from(resource_obj_list)
-        return resource_obj_list
+        result_prop = 'adapters'
+        list_uri = '{}/adapters'.format(self.cpc.uri)
+        return self._list_with_operation(
+            list_uri, result_prop, full_properties, filter_args,
+            additional_properties)
 
     @logged_api_call
     def create_hipersocket(self, properties):
@@ -687,8 +662,9 @@ class Adapter(BaseResource):
         query_props = ['name', 'status']
         query_parms, client_filters = divide_filter_args(
             query_props, filter_args)
+        query_parms_str = make_query_str(query_parms)
         uri = '{}/operations/get-partitions-assigned-to-adapter{}'.format(
-            self.uri, query_parms)
+            self.uri, query_parms_str)
 
         result = self.manager.session.get(uri, resource=self)
 

@@ -36,7 +36,8 @@ from nocasedict import NocaseDict
 
 from ._logging import logged_api_call
 from ._exceptions import NotFound, NoUniqueMatch, HTTPError
-from ._utils import repr_list
+from ._utils import repr_list, matches_filters, divide_filter_args, \
+    make_query_str, RC_LOGICAL_PARTITION
 
 __all__ = ['BaseManager']
 
@@ -671,6 +672,204 @@ class BaseManager(object):
           released version of the HMC.
         """
         return self._supports_properties
+
+    def _list_with_operation(
+            self, list_uri, result_prop, full_properties, filter_args,
+            additional_properties):
+        """
+        List resource objects by using a List operation.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled in an optimized way:
+
+        * If this manager is enabled for :ref:`auto-updating`, a locally
+          maintained resource list is used (which is automatically updated via
+          inventory notifications from the HMC) and the provided filter
+          arguments are applied.
+
+        * Otherwise, if the filter arguments specify the resource name as a
+          single filter argument with a straight match string (i.e. without
+          regular expressions), an optimized lookup is performed based on a
+          locally maintained name-URI cache.
+
+        * Otherwise, the HMC List operation is performed with the subset of the
+          provided filter arguments that can be handled on the HMC side and the
+          remaining filter arguments are applied on the client side on the list
+          result.
+
+        Parameters:
+
+          list_uri (string):
+            Canonical URI for the list operation.
+
+          result_prop (string):
+            Name of property in result of list operation that contains
+            the resource list.
+
+          full_properties (bool):
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
+
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+            Must be `None` for resource types whose List operation does not
+            support the 'additional-properties' query parameter.
+
+        Returns:
+
+          : A list of zhmcclient resource objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        resource_obj_list = []
+        if self.auto_update_enabled() and not self.auto_update_needs_pull():
+            for resource_obj in self.list_resources_local():
+                if matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
+        else:
+            resource_obj = self._try_optimized_lookup(filter_args)
+            if resource_obj:
+                resource_obj_list.append(resource_obj)
+                # It already has full properties
+            else:
+                query_parms, client_filters = divide_filter_args(
+                    self._query_props, filter_args)
+                if additional_properties:
+                    ap_parm = 'additional_properties={}'.format(
+                        ','.join(additional_properties))
+                    query_parms.append(ap_parm)
+                query_parms_str = make_query_str(query_parms)
+                uri = '{}{}'.format(list_uri, query_parms_str)
+
+                try:
+                    result = self.session.get(uri)
+                except HTTPError as exc:
+                    if self.class_name == RC_LOGICAL_PARTITION and \
+                            exc.http_status == 404 and exc.reason == 1:
+                        # Unlike other list operations, "List Logical Partitions
+                        # of CPC" fails with 404.1 "ERROR: found no Images" if
+                        # no LPAR matches the filters in the query parms.
+                        result = []
+                    else:
+                        raise
+
+                if result:
+                    props_list = result[result_prop]
+                    for props in props_list:
+                        resource_obj = self.resource_class(
+                            manager=self,
+                            uri=props[self._uri_prop],
+                            name=props.get(self._name_prop, None),
+                            properties=props)
+                        if matches_filters(resource_obj, client_filters):
+                            resource_obj_list.append(resource_obj)
+                            if full_properties:
+                                resource_obj.pull_full_properties()
+
+            self.add_resources_local(resource_obj_list)
+
+        self._name_uri_cache.update_from(resource_obj_list)
+        return resource_obj_list
+
+    def _list_with_parent_array(
+            self, parent_obj, uris_prop, full_properties, filter_args):
+        """
+        List resource objects by using an array of URIs in the parent object.
+
+        Any resource property may be specified in a filter argument. For
+        details about filter arguments, see :ref:`Filtering`.
+
+        The listing of resources is handled in an optimized way:
+
+        * If this manager is enabled for :ref:`auto-updating`, a locally
+          maintained resource list is used (which is automatically updated via
+          inventory notifications from the HMC) and the provided filter
+          arguments are applied.
+
+        * Otherwise, if the filter arguments specify the resource name as a
+          single filter argument with a straight match string (i.e. without
+          regular expressions), an optimized lookup is performed based on a
+          locally maintained name-URI cache.
+
+        * Otherwise, the corresponding array property for this resource in the
+          parent object is used to list the resources, and the provided filter
+          arguments are applied.
+
+        Parameters:
+
+          parent_obj (zhmcclient.BaseResource):
+            The parent object.
+
+          uris_prop (string):
+            Name of the array property with URIs in the parent object.
+
+          full_properties (bool):
+            Controls whether the full set of resource properties should be
+            retrieved, vs. only the short set as returned by the list
+            operation.
+
+          filter_args (dict):
+            Filter arguments that narrow the list of returned resources to
+            those that match the specified filter arguments. For details, see
+            :ref:`Filtering`.
+
+            `None` causes no filtering to happen, i.e. all resources are
+            returned.
+
+        Returns:
+
+          : A list of zhmcclient resource objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        resource_obj_list = []
+        if self.auto_update_enabled() and not self.auto_update_needs_pull():
+            for resource_obj in self.list_resources_local():
+                if matches_filters(resource_obj, filter_args):
+                    resource_obj_list.append(resource_obj)
+        else:
+            uris = parent_obj.get_property(uris_prop)
+            if uris:
+                for uri in uris:
+
+                    resource_obj = self.resource_class(
+                        manager=self,
+                        uri=uri,
+                        name=None,
+                        properties=None)
+
+                    if matches_filters(resource_obj, filter_args):
+                        resource_obj_list.append(resource_obj)
+                        if full_properties:
+                            resource_obj.pull_full_properties()
+
+            self.add_resources_local(resource_obj_list)
+
+        self._name_uri_cache.update_from(resource_obj_list)
+        return resource_obj_list
 
     def auto_update_enabled(self):
         """
