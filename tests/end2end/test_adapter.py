@@ -363,6 +363,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         for part in before_parts:
                             sgroups = part.list_attached_storage_groups()
                             for sg in sgroups:
+                                if sg.get_property('type') != 'fcp':
+                                    # This test works only for FCP stogrps
+                                    continue
                                 vsrs = sg.virtual_storage_resources.list()
                                 for vsr in vsrs:
                                     port = vsr.adapter_port

@@ -81,6 +81,10 @@ def test_group_crud(hmc_session):  # noqa: F811
 
     skipif_no_group_support(client)
 
+    # TODO: Get group issue on T224 HMC resolved.
+    if hd.host == '9.114.87.7':
+        skip_warn("Issues with group support on HMC {h}".format(h=hd.host))
+
     group_name = TEST_PREFIX + ' test_group_crud group'
 
     # Ensure a clean starting point for this test

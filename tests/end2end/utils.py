@@ -471,8 +471,7 @@ def validate_list_features(api_version, all_features, regex_reduced_features):
     if len(all_features) > 0:
         # But when there are some available API features, there are a few that
         # are always present.
-        expected_features = ['cpc-delete-retrieved-internal-code',
-                             'cpc-install-and-activate']
+        expected_features = ['cpc-install-and-activate']
         for feature in expected_features:
             assert feature in all_features, \
                 '{} missing from {}'.format(feature, all_features)

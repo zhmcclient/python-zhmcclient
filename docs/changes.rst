@@ -37,6 +37,8 @@ Released: not yet
 
 * Fixed zhmcclient_mock support for LDAP Server Definitions.
 
+* Fixed end2end testcases for adapters, auto-updating, and groups.
+
 **Enhancements:**
 
 **Cleanup:**
