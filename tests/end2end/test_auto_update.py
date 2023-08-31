@@ -216,18 +216,7 @@ def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        new_part_name = TEST_PREFIX + ' test_part_list_auto part1'
-
-        # Ensure a clean starting point for this test
-        try:
-            new_part = cpc.partitions.find(name=new_part_name)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            warnings.warn(
-                "Deleting test partition from previous run: {p!r} on CPC {c}".
-                format(p=new_part_name, c=cpc.name), UserWarning)
-            new_part.delete()
+        new_part_name = "{}_{}".format(TEST_PREFIX, uuid.uuid4().hex)
 
         # Get the initial set of partitions, for later comparison
         initial_part_list = cpc.partitions.list()
@@ -242,36 +231,51 @@ def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
         part_names = set([p.name for p in part_list])
         assert part_names == initial_part_names
 
-        # Create a partition and check partition list
-        new_part_input_props = standard_partition_props(cpc, new_part_name)
-        new_part = cpc.partitions.create(new_part_input_props)
-        part_list = cpc.partitions.list()
-        part_names = set([p.name for p in part_list])
-        exp_part_names = initial_part_names | set([new_part.name])
-        assert part_names == exp_part_names
+        try:
 
-        # Delete the partition and check partition list
-        new_part.delete()
-        part_list = cpc.partitions.list()
-        part_names = set([p.name for p in part_list])
-        assert part_names == initial_part_names
+            # Create a partition and check partition list
+            new_part_input_props = standard_partition_props(cpc, new_part_name)
+            new_part = cpc.partitions.create(new_part_input_props)
+            part_list = cpc.partitions.list()
+            part_names = set([p.name for p in part_list])
+            exp_part_names = initial_part_names | set([new_part.name])
+            assert part_names == exp_part_names
 
-        # Disable auto-updating on partition manager and check partition list
-        cpc.partitions.disable_auto_update()
-        part_list = cpc.partitions.list()
-        part_names = set([p.name for p in part_list])
-        assert part_names == initial_part_names
+            # Delete the partition and check partition list
+            new_part.delete()
+            part_list = cpc.partitions.list()
+            part_names = set([p.name for p in part_list])
+            assert part_names == initial_part_names
 
-        # Create a partition and check partition list
-        new_part_input_props = standard_partition_props(cpc, new_part_name)
-        new_part = cpc.partitions.create(new_part_input_props)
-        part_list = cpc.partitions.list()
-        part_names = set([p.name for p in part_list])
-        exp_part_names = initial_part_names | set([new_part.name])
-        assert part_names == exp_part_names
+            # Disable auto-updating on partition manager and check partition list
+            cpc.partitions.disable_auto_update()
+            part_list = cpc.partitions.list()
+            part_names = set([p.name for p in part_list])
+            assert part_names == initial_part_names
 
-        # Delete the partition and check partition list
-        new_part.delete()
-        part_list = cpc.partitions.list()
-        part_names = set([p.name for p in part_list])
-        assert part_names == initial_part_names
+            # Create a partition and check partition list
+            new_part_input_props = standard_partition_props(cpc, new_part_name)
+            new_part = cpc.partitions.create(new_part_input_props)
+            part_list = cpc.partitions.list()
+            part_names = set([p.name for p in part_list])
+            exp_part_names = initial_part_names | set([new_part.name])
+            assert part_names == exp_part_names
+
+            # Delete the partition and check partition list
+            new_part.delete()
+            part_list = cpc.partitions.list()
+            part_names = set([p.name for p in part_list])
+            assert part_names == initial_part_names
+
+        finally:
+            # We want to make sure the test partition gets cleaned up after
+            # the test, e.g. if the test is interrupted with Ctrl-C.
+            try:
+                new_part.delete()
+            except zhmcclient.HTTPError as exc:
+                # Since it normally will have been deleted already, we need to
+                # allow for "not found".
+                if exc.http_status == 404 and exc.reason == 1:
+                    pass
+                else:
+                    raise
