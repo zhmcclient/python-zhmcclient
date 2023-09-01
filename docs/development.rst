@@ -457,10 +457,21 @@ that run against real HMCs or mocked HMCs defined with the :ref:`mock support`.
 These HMCs are defined in an :ref:`HMC inventory file`, and their credentials
 are defined in an :ref:`HMC vault file`.
 
+
+zhmcclient.testutils module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: zhmcclient.testutils
+
 This module defines
 `pytest fixtures <https://docs.pytest.org/en/latest/explanation/fixtures.html>`_
 for use by the test functions and encapsulates the access to the HMC inventory
 and vault files.
+
+Look at the existing test functions in
+https://github.com/zhmcclient/python-zhmcclient/tree/master/tests for real-life
+examples.
+
 
 Pytest fixtures
 ^^^^^^^^^^^^^^^
@@ -468,6 +479,10 @@ Pytest fixtures
 Pytest fixtures are used as parameters of test functions. When used, they are
 specified just with their name. Pytest resolves the parameters of test
 functions to its known fixtures, based upon the parameter name.
+For more details on pytest fixtures in general, see
+`pytest fixtures <https://docs.pytest.org/en/latest/explanation/fixtures.html>`_.
+
+The :mod:`zhmcclient.testutils` module provides the following pytest fixtures:
 
 .. autofunction:: zhmcclient.testutils.hmc_definition
 
@@ -481,6 +496,9 @@ functions to its known fixtures, based upon the parameter name.
 
 Encapsulation of HMC inventory file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :mod:`zhmcclient.testutils` module provides the following elements to
+encapsulate access to the :ref:`HMC inventory file`, e.g. by test functions:
 
 .. autofunction:: zhmcclient.testutils.hmc_definitions
 
@@ -503,12 +521,17 @@ Encapsulation of HMC inventory file
 Encapsulation of HMC vault file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The :mod:`zhmcclient.testutils` module provides the following elements to
+encapsulate access to the :ref:`HMC vault file`, e.g. by test functions:
+
 .. autoclass:: zhmcclient.testutils.HMCVaultFile
    :members:
    :autosummary:
 
 Exceptions
 ^^^^^^^^^^
+
+The :mod:`zhmcclient.testutils` module may raise the following exceptions:
 
 .. autoclass:: zhmcclient.testutils.HMCInventoryFileError
    :members:

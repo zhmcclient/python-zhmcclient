@@ -72,9 +72,12 @@ def hmc_definition(request):
     """
     Pytest fixture representing the set of HMC definitions to use for a test.
 
-    A test function parameter using this fixture resolves to the
+    A test function parameter with the name of this fixture resolves to the
     :class:`~zhmcclient.testutils.HMCDefinition`
     object of each HMC to test against.
+
+    The test function is called once for each HMC, if the targeted HMC is a
+    group.
     """
     return request.param
 
@@ -87,7 +90,7 @@ def hmc_session(request, hmc_definition):
     """
     Pytest fixture representing the set of HMC sessions to run a test against.
 
-    A test function parameter using this fixture resolves to the
+    A test function parameter with the name of this fixture resolves to the
     :class:`zhmcclient.Session` or :class:`zhmcclient_mock.FakedSession` object
     for each HMC to test against.
 

@@ -107,7 +107,7 @@ class HMCNoVaultError(Exception):
 
 class HMCNotFound(Exception):
     """
-    The HMC group was not found in the :ref:`HMC inventory file`.
+    The HMC group or nickname was not found in the :ref:`HMC inventory file`.
     """
     pass
 

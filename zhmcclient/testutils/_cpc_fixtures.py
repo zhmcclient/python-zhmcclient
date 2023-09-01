@@ -57,9 +57,12 @@ def all_cpcs(request, hmc_session):  # noqa: F811
     The CPCs to test against are defined in the ``cpcs`` variable for the
     HMC entry in the :ref:`HMC inventory file`.
 
-    A test function parameter using this fixture resolves to a list of
-    :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
+    A test function parameter with the name of this fixture resolves to a list
+    of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
     objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
+
+    The test function is invoked just once with the list of CPCs, and the
+    test function needs to loop through the CPCs (or a subset).
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
     the :func:`zhmcclient.testutils.hmc_session`
@@ -81,9 +84,12 @@ def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
     HMC entry in the :ref:`HMC inventory file` and have their ``dpm_enabled``
     property set to ``true``.
 
-    A test function parameter using this fixture resolves to a list of
-    :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
+    A test function parameter with the name of this fixture resolves to a list
+    of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
     objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
+
+    The test function is invoked just once with the list of CPCs, and the
+    test function needs to loop through the CPCs (or a subset).
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
     the :func:`zhmcclient.testutils.hmc_session`
@@ -105,9 +111,12 @@ def classic_mode_cpcs(request, hmc_session):  # noqa: F811
     HMC entry in the :ref:`HMC inventory file` and have their ``dpm_enabled``
     property set to ``false``.
 
-    A test function parameter using this fixture resolves to a list of
-    :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
+    A test function parameter with the name of this fixture resolves to a list
+    of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
     objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
+
+    The test function is invoked just once with the list of CPCs, and the
+    test function needs to loop through the CPCs (or a subset).
 
     Because the `hmc_session` parameter of this fixture is again a fixture,
     the :func:`zhmcclient.testutils.hmc_session`
