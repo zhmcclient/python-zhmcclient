@@ -59,6 +59,8 @@ Released: not yet
 
 **Enhancements:**
 
+* Docs: Improved documentation for developing tests.
+
 **Cleanup:**
 
 **Known issues:**
