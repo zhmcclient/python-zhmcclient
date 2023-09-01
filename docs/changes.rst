@@ -35,6 +35,9 @@ Released: not yet
 
 * Fixed end2end testcases for adapters, auto-updating, and groups.
 
+* Fixed that SubscriptionNotFound exception message did not resolve its
+  format string.
+
 **Enhancements:**
 
 **Cleanup:**
