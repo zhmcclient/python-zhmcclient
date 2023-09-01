@@ -220,7 +220,8 @@ class NotificationReceiver(object):
             sub_id = self._sub_ids[topic_name]
         except KeyError:
             raise SubscriptionNotFound(
-                "Subscription topic {!r} is not currently subscribed for")
+                "Subscription topic {!r} is not currently subscribed for".
+                format(topic_name))
         id_value = self._id_value(sub_id)
         self._conn.unsubscribe(id=id_value)
 
@@ -255,7 +256,8 @@ class NotificationReceiver(object):
             sub_id = self._sub_ids[topic_name]
         except KeyError:
             raise SubscriptionNotFound(
-                "Subscription topic {!r} is not currently subscribed for")
+                "Subscription topic {!r} is not currently subscribed for".
+                format(topic_name))
         return self._id_value(sub_id)
 
     @logged_api_call
