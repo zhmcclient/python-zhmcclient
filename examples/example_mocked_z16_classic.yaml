@@ -8,34 +8,47 @@ hmc_definition:
   consoles:
   - properties:
       name: HMC 1
+      description: "Console: HMC 1"
       version: 2.16.0
+      api-version: '2.16.0'
     users:
     - properties:
         object-id: user1
         name: User 1
+        description: "User: User 1"
     user_roles:
     - properties:
         object-id: userrole1
         name: User role 1
+        description: "UserRole: User role 1"
+    - properties:
+        object-id: userrole_optasks
+        name: "hmc-operator-tasks"
+        description: "UserRole: hmc-operator-tasks"
     user_patterns:
     - properties:
         element-id: userpattern1
         name: User pattern 1
+        description: "UserPattern: User pattern 1"
     password_rules:
     - properties:
         element-id: passwordrule1
         name: Password rule 1
+        description: "PasswordRule: Password rule 1"
     - properties:
         element-id: Basic
         name: Basic
+        description: "PasswordRule: Basic"
     tasks:
     - properties:
         element-id: task1
         name: Task 1
+        description: "Task: Task 1"
     ldap_server_definitions:
     - properties:
         element-id: lsd1
         name: LDAP server definition 1
+        description: "LSD: LDAP server definition 1"
   cpcs:
     - properties:
         object-id: cpc1
@@ -51,6 +64,7 @@ hmc_definition:
         - properties:
             object-id: lpar1
             name: "LPAR1"
+            description: "LPAR: LPAR1"
             partition-number: 0x41
             partition-identifier: 0x41
             status: "operating"
@@ -60,6 +74,7 @@ hmc_definition:
         - properties:
             object-id: lpar2
             name: "LPAR2"
+            description: "LPAR: LPAR2"
             partition-number: 0x42
             partition-identifier: 0x42
             status: "not-activated"
@@ -69,14 +84,17 @@ hmc_definition:
       reset_activation_profiles:
         - properties:
             name: "CPC1"
+            description: "ResetProfile: CPC1"
             iocds-name: "ABC"
       load_activation_profiles:
         - properties:
             name: "STANDARDLOAD"
+            description: "LoadProfile: STANDARDLOAD"
             ipl-type: "ipltype-standard"
             ipl-address: "189AB"
         - properties:
             name: "SCSILOAD"
+            description: "LoadProfile: SCSILOAD"
             ipl-type: "ipltype-scsi"
             worldwide-port-name: "1234"
             logical-unit-number: "1234"
@@ -85,7 +103,9 @@ hmc_definition:
       image_activation_profiles:
         - properties:
             name: "LPAR1"
+            description: "ImageProfile: LPAR1"
             # TODO: Add more properties
         - properties:
             name: "LPAR2"
+            description: "ImageProfile: LPAR2"
             # TODO: Add more properties

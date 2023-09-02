@@ -301,123 +301,123 @@ TESTCASES_PARSE_QUERY_PARMS = [
     # Testcases for parse_query_parms()
 
     # Each testcase is a tuple of:
-    # * dec: description
-    # * query_str: value for query_str parameter
+    # * desc: testcase description
+    # * uri: URI with query parameter to be parsed
     # * exp_result: expected return value, or expected exception object
 
     (
-        "query_str is None",
-        None,
-        None
+        "URI without query parms",
+        'fake-uri',
+        ('fake-uri', {})
     ),
     (
-        "query_str is empty string",
-        '',
-        None
+        "URI without query parms but with ?",
+        'fake-uri?',
+        ('fake-uri', {})
     ),
     (
         "a normal parameter",
-        'a=b',
-        {'a': 'b'}
+        'fake-uri?a=b',
+        ('fake-uri', {'a': 'b'})
     ),
     (
         "two normal parameters",
-        'a=b&c=d',
-        {'a': 'b', 'c': 'd'}
+        'fake-uri?a=b&c=d',
+        ('fake-uri', {'a': 'b', 'c': 'd'})
     ),
     (
         "trailing ampersand",
-        'a=b&',
-        {'a': 'b'}
+        'fake-uri?a=b&',
+        ('fake-uri', {'a': 'b'})
     ),
     (
         "leading ampersand",
-        '&a=b',
-        {'a': 'b'}
+        'fake-uri?&a=b',
+        ('fake-uri', {'a': 'b'})
     ),
     (
         "parameter with missing value",
-        'a=',
-        {'a': ''}
+        'fake-uri?a=',
+        ('fake-uri', {'a': ''})
     ),
     (
         "parameter with missing name",
-        '=b',
-        {'': 'b'}
+        'fake-uri?=b',
+        ('fake-uri', {'': 'b'})
     ),
     (
         "two occurrences of same parameter",
-        'a=b&a=c',
-        {'a': ['b', 'c']}
+        'fake-uri?a=b&a=c',
+        ('fake-uri', {'a': ['b', 'c']})
     ),
     (
         "two occurrences of same parameter and another in between",
-        'a=b&d=e&a=c',
-        {'a': ['b', 'c'], 'd': 'e'}
+        'fake-uri?a=b&d=e&a=c',
+        ('fake-uri', {'a': ['b', 'c'], 'd': 'e'})
     ),
     (
         "parameter value with percent-escaped space in middle",
-        'a=b%20c',
-        {'a': 'b c'}
+        'fake-uri?a=b%20c',
+        ('fake-uri', {'a': 'b c'})
     ),
     (
         "parameter value with percent-escaped space at begin",
-        'a=%20c',
-        {'a': ' c'}
+        'fake-uri?a=%20c',
+        ('fake-uri', {'a': ' c'})
     ),
     (
         "parameter value with percent-escaped space at end",
-        'a=b%20',
-        {'a': 'b '}
+        'fake-uri?a=b%20',
+        ('fake-uri', {'a': 'b '})
     ),
     (
         "parameter value that is a percent-escaped space",
-        'a=%20',
-        {'a': ' '}
+        'fake-uri?a=%20',
+        ('fake-uri', {'a': ' '})
     ),
     (
         "parameter name with percent-escaped space in middle",
-        'a%20b=c',
-        {'a b': 'c'}
+        'fake-uri?a%20b=c',
+        ('fake-uri', {'a b': 'c'})
     ),
     (
         "parameter name with percent-escaped space at begin",
-        '%20b=c',
-        {' b': 'c'}
+        'fake-uri?%20b=c',
+        ('fake-uri', {' b': 'c'})
     ),
     (
         "parameter name with percent-escaped space at end",
-        'a%20=c',
-        {'a ': 'c'}
+        'fake-uri?a%20=c',
+        ('fake-uri', {'a ': 'c'})
     ),
     (
         "parameter name that is a percent-escaped space",
-        '%20=c',
-        {' ': 'c'}
+        'fake-uri?%20=c',
+        ('fake-uri', {' ': 'c'})
     ),
     (
         "two equal signs (invalid format)",
-        'a==b',
+        'fake-uri?a==b',
         HTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
     ),
     (
         "two assignments (invalid format)",
-        'a=b=c',
+        'fake-uri?a=b=c',
         HTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
     ),
     (
         "missing assignment (invalid format)",
-        'a',
+        'fake-uri?a',
         HTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, query_str, exp_result",
+    "desc, uri, exp_result",
     TESTCASES_PARSE_QUERY_PARMS
 )
-def test_parse_query_parms(desc, query_str, exp_result):
+def test_parse_query_parms(desc, uri, exp_result):
     # pylint: disable=unused-argument
     """
     Test function for parse_query_parms().
@@ -428,7 +428,7 @@ def test_parse_query_parms(desc, query_str, exp_result):
         with pytest.raises(type(exp_result)) as exc_info:
 
             # The code to be tested
-            parse_query_parms('fake-meth', 'fake-uri', query_str)
+            parse_query_parms('fake-meth', uri)
 
         if isinstance(exp_result, HTTPError):
             exc = exc_info.value
@@ -438,7 +438,7 @@ def test_parse_query_parms(desc, query_str, exp_result):
     else:
 
         # The code to be tested
-        filter_args = parse_query_parms('fake-meth', 'fake-uri', query_str)
+        filter_args = parse_query_parms('fake-meth', uri)
 
         assert filter_args == exp_result
 
@@ -4826,8 +4826,9 @@ class TestPartitionScsiDumpHandler(object):
         }
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'stopped'
+
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'stopped'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -4847,8 +4848,8 @@ class TestPartitionScsiDumpHandler(object):
         }
 
         # Set the partition status to a valid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'active'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'active'
 
         # the function to be tested:
         resp = self.urihandler.post(
@@ -4920,8 +4921,8 @@ class TestPartitionStartDumpProgramHandler(object):
         }
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'stopped'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'stopped'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -4942,8 +4943,8 @@ class TestPartitionStartDumpProgramHandler(object):
         }
 
         # Set the partition status to a valid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'active'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'active'
 
         # the function to be tested:
         resp = self.urihandler.post(
@@ -4980,8 +4981,8 @@ class TestPartitionPswRestartHandler(object):
         """
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'stopped'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'stopped'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -4995,8 +4996,8 @@ class TestPartitionPswRestartHandler(object):
         """
 
         # Set the partition status to a valid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'active'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'active'
 
         # the function to be tested:
         resp = self.urihandler.post(
@@ -5058,8 +5059,8 @@ class TestPartitionMountIsoImageHandler(object):
         """
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'starting'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'starting'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -5074,8 +5075,8 @@ class TestPartitionMountIsoImageHandler(object):
         """
 
         # Set the partition status to a valid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'active'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'active'
 
         # the function to be tested:
         resp = self.urihandler.post(
@@ -5085,10 +5086,10 @@ class TestPartitionMountIsoImageHandler(object):
 
         assert resp == {}
 
-        boot_iso_image_name = partition1['boot-iso-image-name']
+        boot_iso_image_name = partition1.properties['boot-iso-image-name']
         assert boot_iso_image_name == 'fake-image'
 
-        boot_iso_ins_file = partition1['boot-iso-ins-file']
+        boot_iso_ins_file = partition1.properties['boot-iso-ins-file']
         assert boot_iso_ins_file == 'fake-ins'
 
 
@@ -5118,8 +5119,8 @@ class TestPartitionUnmountIsoImageHandler(object):
         """
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'starting'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'starting'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -5133,8 +5134,8 @@ class TestPartitionUnmountIsoImageHandler(object):
         """
 
         # Set the partition status to a valid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'active'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'active'
 
         # the function to be tested:
         resp = self.urihandler.post(
@@ -5143,10 +5144,10 @@ class TestPartitionUnmountIsoImageHandler(object):
 
         assert resp == {}
 
-        boot_iso_image_name = partition1['boot-iso-image-name']
+        boot_iso_image_name = partition1.properties['boot-iso-image-name']
         assert boot_iso_image_name is None
 
-        boot_iso_ins_file = partition1['boot-iso-ins-file']
+        boot_iso_ins_file = partition1.properties['boot-iso-ins-file']
         assert boot_iso_ins_file is None
 
 
@@ -5191,8 +5192,8 @@ class TestPartitionIncreaseCryptoConfigHandler(object):
         """
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'starting'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'starting'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -5241,12 +5242,11 @@ class TestPartitionIncreaseCryptoConfigHandler(object):
                     input_domain_configs
 
             # Set the partition status to a valid status for this operation
-            partition1 = self.urihandler.get(
-                self.hmc, '/api/partitions/1', True)
-            partition1['status'] = 'active'
+            partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+            partition1.properties['status'] = 'active'
 
             # Set up the initial partition config
-            partition1['crypto-configuration'] = None
+            partition1.properties['crypto-configuration'] = None
 
             # the function to be tested:
             resp = self.urihandler.post(
@@ -5256,7 +5256,7 @@ class TestPartitionIncreaseCryptoConfigHandler(object):
 
             assert resp is None
 
-            crypto_config = partition1['crypto-configuration']
+            crypto_config = partition1.properties['crypto-configuration']
             assert isinstance(crypto_config, dict)
 
             adapter_uris = crypto_config['crypto-adapter-uris']
@@ -5313,8 +5313,8 @@ class TestPartitionDecreaseCryptoConfigHandler(object):
         """
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'starting'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'starting'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -5361,12 +5361,11 @@ class TestPartitionDecreaseCryptoConfigHandler(object):
                     input_domain_indexes
 
             # Set the partition status to a valid status for this operation
-            partition1 = self.urihandler.get(
-                self.hmc, '/api/partitions/1', True)
-            partition1['status'] = 'active'
+            partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+            partition1.properties['status'] = 'active'
 
             # Set up the initial partition config
-            partition1['crypto-configuration'] = {
+            partition1.properties['crypto-configuration'] = {
                 'crypto-adapter-uris': ['fake-uri1', 'fake-uri2'],
                 'crypto-domain-configurations': [
                     {'domain-index': 17,
@@ -5384,7 +5383,7 @@ class TestPartitionDecreaseCryptoConfigHandler(object):
 
             assert resp is None
 
-            crypto_config = partition1['crypto-configuration']
+            crypto_config = partition1.properties['crypto-configuration']
             assert isinstance(crypto_config, dict)
 
             adapter_uris = crypto_config['crypto-adapter-uris']
@@ -5474,8 +5473,8 @@ class TestPartitionChangeCryptoConfigHandler(object):
         """
 
         # Set the partition status to an invalid status for this operation
-        partition1 = self.urihandler.get(self.hmc, '/api/partitions/1', True)
-        partition1['status'] = 'starting'
+        partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+        partition1.properties['status'] = 'starting'
 
         # the function to be tested:
         with pytest.raises(HTTPError):
@@ -5509,12 +5508,11 @@ class TestPartitionChangeCryptoConfigHandler(object):
                 operation_body['access-mode'] = input_access_mode
 
             # Set the partition status to a valid status for this operation
-            partition1 = self.urihandler.get(
-                self.hmc, '/api/partitions/1', True)
-            partition1['status'] = 'active'
+            partition1 = self.hmc.lookup_by_uri('/api/partitions/1')
+            partition1.properties['status'] = 'active'
 
             # Set up the initial partition config
-            partition1['crypto-configuration'] = {
+            partition1.properties['crypto-configuration'] = {
                 'crypto-adapter-uris': ['fake-uri1', 'fake-uri2'],
                 'crypto-domain-configurations': [
                     {'domain-index': 17,
@@ -5533,7 +5531,7 @@ class TestPartitionChangeCryptoConfigHandler(object):
 
             assert resp is None
 
-            crypto_config = partition1['crypto-configuration']
+            crypto_config = partition1.properties['crypto-configuration']
             assert isinstance(crypto_config, dict)
 
             adapter_uris = crypto_config['crypto-adapter-uris']
@@ -6092,9 +6090,8 @@ class TestVirtualSwitchGetVnicsHandler(object):
         connected_nic_uris = ['/api/adapters/1/ports/1']
 
         # Set up the connected vNICs in the vswitch
-        vswitch1 = self.urihandler.get(self.hmc, '/api/virtual-switches/1',
-                                       True)
-        vswitch1['connected-vnic-uris'] = connected_nic_uris
+        vswitch1 = self.hmc.lookup_by_uri('/api/virtual-switches/1')
+        vswitch1.properties['connected-vnic-uris'] = connected_nic_uris
 
         # the function to be tested:
         # XXX: Fix this to be get instead of post, also in handler itself.

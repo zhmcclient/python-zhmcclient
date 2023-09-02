@@ -213,22 +213,31 @@ class ServerError(HTTPError):
             message=message)
 
 
-def parse_query_parms(method, uri, query_str):
+def parse_query_parms(method, uri):
     """
-    Parse the specified query parms string and return a dictionary of query
-    parameters. The key of each dict item is the query parameter name, and the
+    Parse the specified URI into URI without query parms and query parms,
+    and return a dictionary of query parameters.
+
+    The key of each dict item is the query parameter name, and the
     value of each dict item is the query parameter value. If a query parameter
     shows up more than once, the resulting dict item value is a list of all
     those values.
 
-    query_str is the query string from the URL, everything after the '?'. If
-    it is empty or None, None is returned.
-
     If a query parameter is not of the format "name=value", an HTTPError 400,1
     is raised.
+
+    Returns:
+        tuple(uri, query_parms) with:
+        - uri(str): Input URI without query parms
+        - query_parms(dict): Query parms as dict (name, value). Empty if no
+          query parms were specified.
     """
-    if not query_str:
-        return None
+    uri_split = uri.split('?')
+    uri = uri_split[0]
+    try:
+        query_str = uri_split[1]
+    except IndexError:
+        query_str = ''
     query_parms = {}
     for query_item in query_str.split('&'):
         # Example for these items: 'name=a%20b'
@@ -251,7 +260,7 @@ def parse_query_parms(method, uri, query_str):
             query_parms[name].append(value)
         else:
             query_parms[name] = value
-    return query_parms
+    return uri, query_parms
 
 
 def check_required_fields(method, uri, body, field_names):
@@ -387,6 +396,23 @@ def check_set_noninput(method, uri, properties, prop_name, prop_value):
     properties[prop_name] = prop_value
 
 
+def check_invalid_query_parms(method, uri, query_parms, valid_query_parms):
+    """
+    Check that the query parameters are valid.
+
+    Raises:
+      BadRequestError with reason 1.
+    """
+    for qp in query_parms:
+        if qp not in valid_query_parms:
+            new_exc = BadRequestError(
+                method, uri, reason=1,
+                message="Unrecognized or unsupported query parameter: "
+                "{!r}".format(qp))
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.BadRequestError
+
+
 class UriHandler(object):
     """
     Handle HTTP methods against a set of known URIs and invoke respective
@@ -453,17 +479,37 @@ class GenericGetPropertiesHandler(object):
     Handler class for generic get of resource properties.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    # List of supported query parameters for the Get Properties operation
+    # of the resource type using this class.
+    # Must be overridden in the derived resource handler class, if it supports
+    # query parameters.
+    valid_query_parms_get = []
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: Get <resource> Properties."""
+        # All URI patterns for Get Properties operations must have a last
+        # match group for the query parms.
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+
         try:
             resource = hmc.lookup_by_uri(uri)
         except KeyError:
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
-        return resource.properties
+
+        subset_pnames = query_parms.get('properties', None)
+        if subset_pnames:
+            subset_pnames = subset_pnames.split(',')
+            ret_props = {}
+            for pname in subset_pnames:
+                ret_props[pname] = resource.properties[pname]
+            return ret_props
+        return dict(resource.properties)
 
 
 class GenericUpdatePropertiesHandler(object):
@@ -513,7 +559,7 @@ class VersionHandler(object):
     def get(method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: Get version."""
-        api_major, api_minor = hmc.api_version.split('.')
+        api_major, api_minor = hmc.api_version.split('.')[0:2]
         return {
             'hmc-name': hmc.hmc_name,
             'hmc-version': hmc.hmc_version,
@@ -526,7 +572,8 @@ class ConsoleHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on Console resource.
     """
-    pass
+
+    valid_query_parms_get = ['properties']
 
 
 class ConsoleRestartHandler(object):
@@ -677,11 +724,15 @@ class ConsoleListUnmanagedCpcsHandler(object):
     Handler class for Console operation: List Unmanaged CPCs.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Unmanaged CPCs."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -690,7 +741,7 @@ class ConsoleListUnmanagedCpcsHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
 
         result_ucpcs = []
-        filter_args = parse_query_parms(method, uri, query_str)
+        filter_args = query_parms
         for ucpc in console.unmanaged_cpcs.list(filter_args):
             result_ucpc = {}
             for prop in ucpc.properties:
@@ -705,12 +756,17 @@ class ConsoleListPermittedPartitionsHandler(object):
     Handler class for Console operation: List Permitted Partitions (DPM).
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'type', 'status',
+                             'has-unacceptable-status', 'cpc-name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Permitted Partitions."""
-        query_str = uri_parms[0]
-        filter_args = parse_query_parms(method, uri, query_str)
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
 
         result_partitions = []
         for cpc in hmc.cpcs.list():
@@ -751,12 +807,18 @@ class ConsoleListPermittedLparsHandler(object):
     Handler class for Console operation: List Permitted LPARs (classic).
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'activation-mode', 'status',
+                             'has-unacceptable-status', 'cpc-name',
+                             'additional-properties']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Permitted LPARs."""
-        query_str = uri_parms[0]
-        filter_args = parse_query_parms(method, uri, query_str)
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
 
         result_lpars = []
         for cpc in hmc.cpcs.list():
@@ -797,11 +859,17 @@ class UsersHandler(object):
     Handler class for HTTP methods on set of User resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Users."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -809,7 +877,6 @@ class UsersHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_users = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for user in console.users.list(filter_args):
             result_user = {}
             for prop in user.properties:
@@ -1055,11 +1122,17 @@ class UserRolesHandler(object):
     Handler class for HTTP methods on set of UserRole resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List User Roles."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -1067,7 +1140,6 @@ class UserRolesHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_user_roles = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for user_role in console.user_roles.list(filter_args):
             result_user_role = {}
             for prop in user_role.properties:
@@ -1230,11 +1302,17 @@ class TasksHandler(object):
     Handler class for HTTP methods on set of Task resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Tasks."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -1242,7 +1320,6 @@ class TasksHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_tasks = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for task in console.tasks.list(filter_args):
             result_task = {}
             for prop in task.properties:
@@ -1264,11 +1341,17 @@ class UserPatternsHandler(object):
     Handler class for HTTP methods on set of UserPattern resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List User Patterns."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -1276,7 +1359,6 @@ class UserPatternsHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_user_patterns = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for user_pattern in console.user_patterns.list(filter_args):
             result_user_pattern = {}
             for prop in user_pattern.properties:
@@ -1318,11 +1400,17 @@ class PasswordRulesHandler(object):
     Handler class for HTTP methods on set of PasswordRule resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Password Rules."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -1330,7 +1418,6 @@ class PasswordRulesHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_password_rules = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for password_rule in console.password_rules.list(filter_args):
             result_password_rule = {}
             for prop in password_rule.properties:
@@ -1411,11 +1498,17 @@ class LdapServerDefinitionsHandler(object):
     Handler class for HTTP methods on set of LdapServerDefinition resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List LDAP Server Definitions."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -1423,7 +1516,6 @@ class LdapServerDefinitionsHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_ldap_srv_defs = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for ldap_srv_def in console.ldap_server_definitions.list(filter_args):
             result_ldap_srv_def = {}
             for prop in ldap_srv_def.properties:
@@ -1494,13 +1586,18 @@ class CpcsHandler(object):
     Handler class for HTTP methods on set of Cpc resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List CPCs."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         result_cpcs = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for cpc in hmc.cpcs.list(filter_args):
             result_cpc = {}
             for prop in cpc.properties:
@@ -1515,7 +1612,8 @@ class CpcHandler(GenericGetPropertiesHandler,
     """
     Handler class for HTTP methods on single Cpc resource.
     """
-    pass
+
+    valid_query_parms_get = ['properties', 'cached-acceptable', 'group-uri']
 
 
 class CpcSetPowerSaveHandler(object):
@@ -2074,11 +2172,17 @@ class GroupsHandler(object):
     Handler class for HTTP methods on set of Group resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Custom Groups."""
-        query_str = uri_parms[0]
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         try:
             console = hmc.consoles.lookup_by_oid(None)
         except KeyError:
@@ -2086,7 +2190,6 @@ class GroupsHandler(object):
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_groups = []
-        filter_args = parse_query_parms(method, uri, query_str)
         for group in console.groups.list(filter_args):
             result_group = {}
             for prop in group.properties:
@@ -2155,9 +2258,16 @@ class GroupAddMemberHandler(object):
         # pylint: disable=unused-argument
         """Operation: Add Member to Custom Group."""
         assert wait_for_completion is True  # async not supported yet
+        console_uri = '/api/console'
+        try:
+            console = hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         group_oid = uri_parms[0]
         try:
-            group = hmc.groups.lookup_by_oid(group_oid)
+            group = console.groups.lookup_by_oid(group_oid)
         except KeyError:
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
@@ -2180,9 +2290,16 @@ class GroupRemoveMemberHandler(object):
         # pylint: disable=unused-argument
         """Operation: Remove Member from Custom Group."""
         assert wait_for_completion is True  # async not supported yet
+        console_uri = '/api/console'
+        try:
+            console = hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
         group_oid = uri_parms[0]
         try:
-            group = hmc.groups.lookup_by_oid(group_oid)
+            group = console.groups.lookup_by_oid(group_oid)
         except KeyError:
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
@@ -2204,14 +2321,32 @@ class GroupMembersHandler(object):
         # pylint: disable=unused-argument
         """Operation: List Custom Group Members."""
         group_oid = uri_parms[0]
+        console_uri = '/api/console'
         try:
-            group = hmc.groups.lookup_by_oid(group_oid)
+            console = hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        try:
+            group = console.groups.lookup_by_oid(group_oid)
         except KeyError:
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
 
-        result = {'members': group.properties['members']}
+        member_uris = group.properties['members']
+        members = []
+        for member_uri in member_uris:
+            try:
+                member = hmc.lookup_by_uri(member_uri)
+            except KeyError:
+                new_exc = InvalidResourceError(method, member_uri)
+                new_exc.__cause__ = None
+                raise new_exc  # zhmcclient_mock.InvalidResourceError
+            member_item = {'object-uri': member_uri, 'name': member.name}
+            members.append(member_item)
+        result = {'members': members}
         return result
 
 
@@ -2272,13 +2407,20 @@ class AdaptersHandler(object):
     Handler class for HTTP methods on set of Adapter resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'adapter-id', 'adapter-family', 'type',
+                             'status', 'additional-properties']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Adapters of a CPC (empty result if not in DPM
         mode)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
-        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
@@ -2287,7 +2429,6 @@ class AdaptersHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_adapters = []
         if cpc.dpm_enabled:
-            filter_args = parse_query_parms(method, uri, query_str)
             for adapter in cpc.adapters.list(filter_args):
                 result_adapter = {}
                 for prop in adapter.properties:
@@ -2524,13 +2665,19 @@ class PartitionsHandler(object):
     Handler class for HTTP methods on set of Partition resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'status', 'type', 'additional-properties']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Partitions of a CPC (empty result if not in DPM
         mode)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
-        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
@@ -2541,7 +2688,6 @@ class PartitionsHandler(object):
         # Reflect the result of listing the partition
         result_partitions = []
         if cpc.dpm_enabled:
-            filter_args = parse_query_parms(method, uri, query_str)
             for partition in cpc.partitions.list(filter_args):
                 result_partition = {}
                 for prop in partition.properties:
@@ -2768,6 +2914,8 @@ class PartitionHandler(GenericGetPropertiesHandler,
     Handler class for HTTP methods on single Partition resource.
     """
 
+    valid_query_parms_get = ['properties']
+
     # TODO: Add check_valid_cpc_status() in Update Partition Properties
     # TODO: Add check_partition_status(transitional) in Update Partition Props
     # TODO: Add check whether properties are modifiable in Update Part. Props
@@ -2965,11 +3113,17 @@ class PartitionMountIsoImageHandler(object):
     Handler class for operation: Mount ISO Image.
     """
 
-    @staticmethod
-    def post(method, hmc, uri, uri_parms, body, logon_required,
+    valid_query_parms_post = ['image-name', 'ins-file-name']
+
+    @classmethod
+    def post(cls, method, hmc, uri, uri_parms, body, logon_required,
              wait_for_completion):
         # pylint: disable=unused-argument
         """Operation: Mount ISO Image (requires DPM mode)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_post)
+
         assert wait_for_completion is True  # synchronous operation
         partition_oid = uri_parms[0]
         partition_uri = '/api/partitions/' + partition_oid
@@ -2987,7 +3141,6 @@ class PartitionMountIsoImageHandler(object):
                                invalid_statuses=['starting', 'stopping'])
 
         # Parse and check required query parameters
-        query_parms = parse_query_parms(method, uri, uri_parms[1])
         try:
             image_name = query_parms['image-name']
         except KeyError:
@@ -3521,13 +3674,19 @@ class VirtualSwitchesHandler(object):
     Handler class for HTTP methods on set of VirtualSwitch resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'type', 'additional-properties']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Virtual Switches of a CPC (empty result if not in
         DPM mode)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
-        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
@@ -3536,7 +3695,6 @@ class VirtualSwitchesHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_vswitches = []
         if cpc.dpm_enabled:
-            filter_args = parse_query_parms(method, uri, query_str)
             for vswitch in cpc.virtual_switches.list(filter_args):
                 result_vswitch = {}
                 for prop in vswitch.properties:
@@ -3587,12 +3745,17 @@ class StorageGroupsHandler(object):
     Handler class for HTTP methods on set of StorageGroup resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['cpc-uri', 'name', 'fulfillment-state', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Storage Groups (always global but with filters)."""
-        query_str = uri_parms[0]
-        filter_args = parse_query_parms(method, uri, query_str)
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         result_storage_groups = []
         for sg in hmc.consoles.console.storage_groups.list(filter_args):
             result_sg = {}
@@ -3858,10 +4021,18 @@ class StorageVolumesHandler(object):
     Handler class for HTTP methods on set of StorageVolume resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'fulfillment-state', 'maximum-size',
+                             'minimum-size', 'usage']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Storage Volumes of a Storage Group."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         sg_uri = re.sub('/storage-volumes$', '', uri)
         try:
             sg = hmc.lookup_by_uri(sg_uri)
@@ -3869,8 +4040,6 @@ class StorageVolumesHandler(object):
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
-        query_str = uri_parms[1]
-        filter_args = parse_query_parms(method, uri, query_str)
         result_storage_volumes = []
         for sv in sg.storage_volumes.list(filter_args):
             result_sv = {}
@@ -3894,10 +4063,17 @@ class CapacityGroupsHandler(object):
     Handler class for HTTP methods on set of CapacityGroup resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Capacity Groups (always global but with filters)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
         cpc_uri = '/api/cpcs/' + cpc_oid
         try:
@@ -3906,8 +4082,6 @@ class CapacityGroupsHandler(object):
             new_exc = InvalidResourceError(method, uri)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
-        query_str = uri_parms[1]
-        filter_args = parse_query_parms(method, uri, query_str)
         result_capacity_groups = []
         for cg in cpc.capacity_groups.list(filter_args):
             result_cg = {}
@@ -4103,13 +4277,19 @@ class LparsHandler(object):
     Handler class for HTTP methods on set of Lpar resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: List Logical Partitions of CPC (empty result in DPM
         mode."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
-        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
@@ -4118,7 +4298,6 @@ class LparsHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_lpars = []
         if not cpc.dpm_enabled:
-            filter_args = parse_query_parms(method, uri, query_str)
             for lpar in cpc.lpars.list(filter_args):
                 result_lpar = {}
                 for prop in lpar.properties:
@@ -4132,6 +4311,8 @@ class LparHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single Lpar resource.
     """
+
+    valid_query_parms_get = ['properties', 'cached-acceptable', 'group-uri']
 
     @staticmethod
     def post(method, hmc, uri, uri_parms, body, logon_required,
@@ -4733,18 +4914,24 @@ class LparNvmeDumpHandler(object):
 
 class ResetActProfilesHandler(object):
     """
-    Handler class for HTTP methods on set of ResetActProfile resources.
+    Handler class for HTTP methods on set of Reset ActivationProfile resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """
         Operation: List Reset Activation Profiles.
         In case of DPM mode, an empty list is returned.
         """
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
-        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
@@ -4753,7 +4940,6 @@ class ResetActProfilesHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_profiles = []
         if not cpc.dpm_enabled:
-            filter_args = parse_query_parms(method, uri, query_str)
             for profile in cpc.reset_activation_profiles.list(filter_args):
                 result_profile = {}
                 for prop in profile.properties:
@@ -4766,25 +4952,32 @@ class ResetActProfilesHandler(object):
 class ResetActProfileHandler(GenericGetPropertiesHandler,
                              GenericUpdatePropertiesHandler):
     """
-    Handler class for HTTP methods on single ResetActProfile resource.
+    Handler class for HTTP methods on single Reset ActivationProfile resource.
     """
-    pass
+
+    valid_query_parms_get = ['properties', 'cached-acceptable']
 
 
 class ImageActProfilesHandler(object):
     """
-    Handler class for HTTP methods on set of ImageActProfile resources.
+    Handler class for HTTP methods on set of Image ActivationProfile resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name', 'additional-properties']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """
         Operation: List Image Activation Profiles.
         In case of DPM mode, an empty list is returned.
         """
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
-        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
@@ -4793,7 +4986,6 @@ class ImageActProfilesHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_profiles = []
         if not cpc.dpm_enabled:
-            filter_args = parse_query_parms(method, uri, query_str)
             for profile in cpc.image_activation_profiles.list(filter_args):
                 result_profile = {}
                 for prop in profile.properties:
@@ -4806,25 +4998,32 @@ class ImageActProfilesHandler(object):
 class ImageActProfileHandler(GenericGetPropertiesHandler,
                              GenericUpdatePropertiesHandler):
     """
-    Handler class for HTTP methods on single ImageActProfile resource.
+    Handler class for HTTP methods on single Image ActivationProfile resource.
     """
-    pass
+
+    valid_query_parms_get = ['properties', 'cached-acceptable']
 
 
 class LoadActProfilesHandler(object):
     """
-    Handler class for HTTP methods on set of LoadActProfile resources.
+    Handler class for HTTP methods on set of Load ActivationProfile resources.
     """
 
-    @staticmethod
-    def get(method, hmc, uri, uri_parms, logon_required):
+    valid_query_parms_get = ['name']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """
         Operation: List Load Activation Profiles.
         In case of DPM mode, an empty list is returned.
         """
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
         cpc_oid = uri_parms[0]
-        query_str = uri_parms[1]
         try:
             cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
         except KeyError:
@@ -4833,7 +5032,6 @@ class LoadActProfilesHandler(object):
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         result_profiles = []
         if not cpc.dpm_enabled:
-            filter_args = parse_query_parms(method, uri, query_str)
             for profile in cpc.load_activation_profiles.list(filter_args):
                 result_profile = {}
                 for prop in profile.properties:
@@ -4846,9 +5044,10 @@ class LoadActProfilesHandler(object):
 class LoadActProfileHandler(GenericGetPropertiesHandler,
                             GenericUpdatePropertiesHandler):
     """
-    Handler class for HTTP methods on single LoadActProfile resource.
+    Handler class for HTTP methods on single Load ActivationProfile resource.
     """
-    pass
+
+    valid_query_parms_get = ['properties', 'cached-acceptable']
 
 
 # URIs to be handled
@@ -4861,10 +5060,11 @@ URIS = (
 
     (r'/api/version', VersionHandler),
 
-    (r'/api/console', ConsoleHandler),
+    (r'/api/console(?:\?(.*))?', ConsoleHandler),
     (r'/api/console/operations/restart', ConsoleRestartHandler),
     (r'/api/console/operations/shutdown', ConsoleShutdownHandler),
     (r'/api/console/operations/make-primary', ConsoleMakePrimaryHandler),
+    # make-primary was removed in HMC 2.15.0
     (r'/api/console/operations/reorder-user-patterns',
      ConsoleReorderUserPatternsHandler),
     (r'/api/console/operations/get-audit-log(?:\?(.*))?',
@@ -4879,35 +5079,35 @@ URIS = (
      ConsoleListPermittedLparsHandler),
 
     (r'/api/console/users(?:\?(.*))?', UsersHandler),
-    (r'/api/users/([^/]+)', UserHandler),
+    (r'/api/users/([^?/]+)(?:\?(.*))?', UserHandler),
     (r'/api/users/([^/]+)/operations/add-user-role',
      UserAddUserRoleHandler),
     (r'/api/users/([^/]+)/operations/remove-user-role',
      UserRemoveUserRoleHandler),
 
     (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
-    (r'/api/user-roles/([^/]+)', UserRoleHandler),
+    (r'/api/user-roles/([^?/]+)(?:\?(.*))?', UserRoleHandler),
     (r'/api/user-roles/([^/]+)/operations/add-permission',
      UserRoleAddPermissionHandler),
     (r'/api/user-roles/([^/]+)/operations/remove-permission',
      UserRoleRemovePermissionHandler),
 
     (r'/api/console/tasks(?:\?(.*))?', TasksHandler),
-    (r'/api/console/tasks/([^/]+)', TaskHandler),
+    (r'/api/console/tasks/([^?/]+)(?:\?(.*))?', TaskHandler),
 
     (r'/api/console/user-patterns(?:\?(.*))?', UserPatternsHandler),
-    (r'/api/console/user-patterns/([^/]+)', UserPatternHandler),
+    (r'/api/console/user-patterns/([^?/]+)(?:\?(.*))?', UserPatternHandler),
 
     (r'/api/console/password-rules(?:\?(.*))?', PasswordRulesHandler),
-    (r'/api/console/password-rules/([^/]+)', PasswordRuleHandler),
+    (r'/api/console/password-rules/([^?/]+)(?:\?(.*))?', PasswordRuleHandler),
 
     (r'/api/console/ldap-server-definitions(?:\?(.*))?',
      LdapServerDefinitionsHandler),
-    (r'/api/console/ldap-server-definitions/([^/]+)',
+    (r'/api/console/ldap-server-definitions/([^?/]+)(?:\?(.*))?',
      LdapServerDefinitionHandler),
 
     (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
-    (r'/api/cpcs/([^/]+)', CpcHandler),
+    (r'/api/cpcs/([^?/]+)(?:\?(.*))?', CpcHandler),
     (r'/api/cpcs/([^/]+)/operations/set-cpc-power-save',
      CpcSetPowerSaveHandler),
     (r'/api/cpcs/([^/]+)/operations/set-cpc-power-capping',
@@ -4916,7 +5116,7 @@ URIS = (
      CpcGetEnergyManagementDataHandler),
 
     (r'/api/groups(?:\?(.*))?', GroupsHandler),
-    (r'/api/groups/([^/]+)', GroupHandler),
+    (r'/api/groups/([^?/]+)(?:\?(.*))?', GroupHandler),
     (r'/api/groups/([^/]+)/operations/add-member', GroupAddMemberHandler),
     (r'/api/groups/([^/]+)/operations/remove-member', GroupRemoveMemberHandler),
     (r'/api/groups/([^/]+)/members', GroupMembersHandler),
@@ -4934,18 +5134,20 @@ URIS = (
      CpcExportPortNamesListHandler),
 
     (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
-    (r'/api/adapters/([^/]+)', AdapterHandler),
+    (r'/api/adapters/([^?/]+)(?:\?(.*))?', AdapterHandler),
     (r'/api/adapters/([^/]+)/operations/change-crypto-type',
      AdapterChangeCryptoTypeHandler),
     (r'/api/adapters/([^/]+)/operations/change-adapter-type',
      AdapterChangeAdapterTypeHandler),
 
-    (r'/api/adapters/([^/]+)/network-ports/([^/]+)', NetworkPortHandler),
+    (r'/api/adapters/([^/]+)/network-ports/([^?/]+)(?:\?(.*))?',
+     NetworkPortHandler),
 
-    (r'/api/adapters/([^/]+)/storage-ports/([^/]+)', StoragePortHandler),
+    (r'/api/adapters/([^/]+)/storage-ports/([^?/]+)(?:\?(.*))?',
+     StoragePortHandler),
 
     (r'/api/cpcs/([^/]+)/partitions(?:\?(.*))?', PartitionsHandler),
-    (r'/api/partitions/([^/]+)', PartitionHandler),
+    (r'/api/partitions/([^?/]+)(?:\?(.*))?', PartitionHandler),
     (r'/api/partitions/([^/]+)/operations/start', PartitionStartHandler),
     (r'/api/partitions/([^/]+)/operations/stop', PartitionStopHandler),
     (r'/api/partitions/([^/]+)/operations/scsi-dump',
@@ -4966,25 +5168,25 @@ URIS = (
      PartitionChangeCryptoConfigHandler),
 
     (r'/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
-    (r'/api/partitions/([^/]+)/hbas/([^/]+)', HbaHandler),
+    (r'/api/partitions/([^/]+)/hbas/([^?/]+)(?:\?(.*))?', HbaHandler),
     (r'/api/partitions/([^/]+)/hbas/([^/]+)/operations/'\
      'reassign-storage-adapter-port', HbaReassignPortHandler),
 
     (r'/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
-    (r'/api/partitions/([^/]+)/nics/([^/]+)', NicHandler),
+    (r'/api/partitions/([^/]+)/nics/([^?/]+)(?:\?(.*))?', NicHandler),
 
     (r'/api/partitions/([^/]+)/virtual-functions(?:\?(.*))?',
      VirtualFunctionsHandler),
-    (r'/api/partitions/([^/]+)/virtual-functions/([^/]+)',
+    (r'/api/partitions/([^/]+)/virtual-functions/([^?/]+)(?:\?(.*))?',
      VirtualFunctionHandler),
 
     (r'/api/cpcs/([^/]+)/virtual-switches(?:\?(.*))?', VirtualSwitchesHandler),
-    (r'/api/virtual-switches/([^/]+)', VirtualSwitchHandler),
+    (r'/api/virtual-switches/([^?/]+)(?:\?(.*))?', VirtualSwitchHandler),
     (r'/api/virtual-switches/([^/]+)/operations/get-connected-vnics',
      VirtualSwitchGetVnicsHandler),
 
     (r'/api/storage-groups(?:\?(.*))?', StorageGroupsHandler),
-    (r'/api/storage-groups/([^/]+)', StorageGroupHandler),
+    (r'/api/storage-groups/([^?/]+)(?:\?(.*))?', StorageGroupHandler),
     (r'/api/storage-groups/([^/]+)/operations/delete',
      StorageGroupDeleteHandler),
     (r'/api/storage-groups/([^/]+)/operations/modify',
@@ -4998,11 +5200,12 @@ URIS = (
 
     (r'/api/storage-groups/([^/]+)/storage-volumes(?:\?(.*))?',
      StorageVolumesHandler),
-    (r'/api/storage-groups/([^/]+)/storage-volumes/([^/]+)',
+    (r'/api/storage-groups/([^/]+)/storage-volumes/([^?/]+)(?:\?(.*))?',
      StorageVolumeHandler),
 
     (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?', CapacityGroupsHandler),
-    (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)', CapacityGroupHandler),
+    (r'/api/cpcs/([^/]+)/capacity-groups/([^?/]+)(?:\?(.*))?',
+     CapacityGroupHandler),
     (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)/operations/add-partition',
      CapacityGroupAddPartitionHandler),
     (r'/api/cpcs/([^/]+)/capacity-groups/([^/]+)/operations/remove-partition',
@@ -5024,7 +5227,7 @@ URIS = (
      CpcSetAutoStartListHandler),
 
     (r'/api/cpcs/([^/]+)/logical-partitions(?:\?(.*))?', LparsHandler),
-    (r'/api/logical-partitions/([^/]+)', LparHandler),
+    (r'/api/logical-partitions/([^?/]+)(?:\?(.*))?', LparHandler),
     (r'/api/logical-partitions/([^/]+)/operations/activate',
      LparActivateHandler),
     (r'/api/logical-partitions/([^/]+)/operations/deactivate',
@@ -5046,16 +5249,16 @@ URIS = (
 
     (r'/api/cpcs/([^/]+)/reset-activation-profiles(?:\?(.*))?',
      ResetActProfilesHandler),
-    (r'/api/cpcs/([^/]+)/reset-activation-profiles/([^/]+)',
+    (r'/api/cpcs/([^/]+)/reset-activation-profiles/([^?/]+)(?:\?(.*))?',
      ResetActProfileHandler),
 
     (r'/api/cpcs/([^/]+)/image-activation-profiles(?:\?(.*))?',
      ImageActProfilesHandler),
-    (r'/api/cpcs/([^/]+)/image-activation-profiles/([^/]+)',
+    (r'/api/cpcs/([^/]+)/image-activation-profiles/([^?/]+)(?:\?(.*))?',
      ImageActProfileHandler),
 
     (r'/api/cpcs/([^/]+)/load-activation-profiles(?:\?(.*))?',
      LoadActProfilesHandler),
-    (r'/api/cpcs/([^/]+)/load-activation-profiles/([^/]+)',
+    (r'/api/cpcs/([^/]+)/load-activation-profiles/([^?/]+)(?:\?(.*))?',
      LoadActProfileHandler),
 )
