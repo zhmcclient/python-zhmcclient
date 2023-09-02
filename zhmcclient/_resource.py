@@ -269,6 +269,8 @@ class BaseResource(object):
         Retrieve the specified set of resource properties and cache them in
         this zhmcclient object.
 
+        If no properties are specified, the method does nothing.
+
         The values of other properties that may already exist in this
         zhmcclient object remain unchanged.
 
@@ -298,6 +300,9 @@ class BaseResource(object):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.CeasedExistence`
         """
+        if not properties:
+            return
+
         with self._property_lock:
             if self._ceased_existence:
                 raise CeasedExistence(self._uri)

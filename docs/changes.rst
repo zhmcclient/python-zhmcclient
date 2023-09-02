@@ -29,6 +29,15 @@ Released: not yet
 
 **Incompatible changes:**
 
+* Fixed BaseResource.pull_properties() by returning None when no properties
+  were specified. Before that, it returned the full set of properties when
+  the Get Properties operation for the resource does not support the 'properties'
+  query parameter, and produced 'properties=' as a query parameter when
+  the resource does support the 'properties' query parameter.
+
+  This is incompatible when your code uses pull_properties() on resource objects
+  and relies on the prior behavior.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -41,6 +50,12 @@ Released: not yet
 
 * Fixed that SubscriptionNotFound exception message did not resolve its
   format string.
+
+* Fixed the zhmcclient_mock support by adding support for query parameters,
+  fixing the the Group operations and the "Query API Version" operation,
+  and fixing the z16 mock environment definitions.
+  Auto-update tests are now skipped when testing against mocked environments,
+  because the mock support does not support notifications.
 
 **Enhancements:**
 

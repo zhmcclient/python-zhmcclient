@@ -8,35 +8,47 @@ hmc_definition:
   consoles:
   - properties:
       name: HMC 1
+      description: "Console: HMC 1"
       version: 2.16.0
       api-version: '2.16.0'
     users:
     - properties:
         object-id: user1
         name: User 1
+        description: "User: User 1"
     user_roles:
     - properties:
         object-id: userrole1
         name: User role 1
+        description: "UserRole: User role 1"
+    - properties:
+        object-id: userrole_optasks
+        name: "hmc-operator-tasks"
+        description: "UserRole: hmc-operator-tasks"
     user_patterns:
     - properties:
         element-id: userpattern1
         name: User pattern 1
+        description: "UserPattern: User pattern 1"
     password_rules:
     - properties:
         element-id: passwordrule1
         name: Password rule 1
+        description: "PasswordRule: Password rule 1"
     - properties:
         element-id: Basic
         name: Basic
+        description: "PasswordRule: Basic"
     tasks:
     - properties:
         element-id: task1
         name: Task 1
+        description: "Task: Task 1"
     ldap_server_definitions:
     - properties:
         element-id: lsd1
         name: LDAP server definition 1
+        description: "LSD: LDAP server definition 1"
     storage_groups:
     - properties:
         object-id: sg1

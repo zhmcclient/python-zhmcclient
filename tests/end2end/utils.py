@@ -24,7 +24,7 @@ import random
 import time
 import warnings
 import pytest
-from zhmcclient import HTTPError, BaseManager
+from zhmcclient import BaseManager
 
 import zhmcclient
 
@@ -384,37 +384,32 @@ def runtest_get_properties(
     resource = random.choice(resources)
 
     local_pnames = set(resource.properties.keys())
+    local_pnames_plus = local_pnames | set([non_list_prop])
+
+    # Validate initial state of the resource w.r.t. properties
     assert resource.full_properties is False
 
-    # Validate that pull_properties() with no properties fails
+    # Validate that pull_properties() with no properties does not fetch props
     if supports_properties:
-        with pytest.raises(HTTPError) as exc_info:
-            resource.pull_properties([])
-        exc = exc_info.value
-        assert exc.http_status == 400
-        assert exc.reason == 14
-        # Verify that the properties are unchanged
-        assert resource.full_properties is False, \
-            "resource={!r}".format(resource)
+        prior_pnames = set(resource.properties.keys())
+        resource.pull_properties([])
         current_pnames = set(resource.properties.keys())
-        assert current_pnames == local_pnames, \
-            "current_pnames={!r}, local_pnames={!r}". \
-            format(current_pnames, local_pnames)
+        assert current_pnames == prior_pnames, \
+            "current_pnames={!r}, prior_pnames={!r}". \
+            format(current_pnames, prior_pnames)
 
-    # Validate pull_properties() with the specified property
+    # Validate pull_properties() with a non-list-result property
     resource.pull_properties([non_list_prop])
     current_pnames = set(resource.properties.keys())
     if supports_properties:
-        # We get just the specified property
+        # We get just the specified property in addition
         assert current_pnames == local_pnames_plus, \
             "current_pnames={!r}, local_pnames_plus={!r}". \
             format(current_pnames, local_pnames_plus)
         assert resource.full_properties is False, \
             "resource={!r}".format(resource)
     else:
-        assert current_pnames > local_pnames_plus, \
-            "current_pnames={!r}, local_pnames_plus={!r}". \
-            format(current_pnames, local_pnames_plus)
+        # We get the full set of properties
         assert resource.full_properties is True, \
             "resource={!r}".format(resource)
 

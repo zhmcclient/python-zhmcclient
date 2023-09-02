@@ -24,7 +24,7 @@ all:
           machine_type: "3906"
           dpm_enabled: true
 
-    MOCKED_Z13_CLASSIC:
+    MOCKED_Z16_CLASSIC:
       description: "Example mocked HMC with a z16 in classic mode"
       mock_file: "example_mocked_z16_classic.yaml"
       cpcs:
@@ -32,7 +32,7 @@ all:
           machine_type: "3906"
           dpm_enabled: false
 
-    MOCKED_Z13_DPM:
+    MOCKED_Z16_DPM:
       description: "Example mocked HMC with a z16 in DPM mode"
       mock_file: "example_mocked_z16_dpm.yaml"
       cpcs:
