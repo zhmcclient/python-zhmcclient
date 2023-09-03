@@ -28,8 +28,8 @@ from requests.packages import urllib3
 from mock import MagicMock
 import pytest
 
-from zhmcclient_mock._hmc import FakedHmc, FakedMetricObjectValues
-
+from zhmcclient_mock._session import FakedSession
+from zhmcclient_mock._hmc import FakedMetricObjectValues
 from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     InvalidMethodError, CpcNotInDpmError, CpcInDpmError, BadRequestError, \
     ConflictError, \
@@ -80,7 +80,8 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     LparNvmeLoadHandler, LparNvmeDumpHandler, \
     ResetActProfilesHandler, ResetActProfileHandler, \
     ImageActProfilesHandler, ImageActProfileHandler, \
-    LoadActProfilesHandler, LoadActProfileHandler
+    LoadActProfilesHandler, LoadActProfileHandler, \
+    SubmitRequestsHandler
 # pylint: disable=redefined-builtin
 from zhmcclient_mock._urihandler import ConnectionError
 
@@ -259,7 +260,8 @@ def test_cpcnotindpmerror_attrs():
     """
 
     # Set up a faked Cpc for use in exception
-    hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+    session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+    hmc = session.hmc
     cpc1 = hmc.cpcs.add({'name': 'cpc1'})
 
     method = 'GET'
@@ -281,7 +283,8 @@ def test_cpcindpmerror_attrs():
     """
 
     # Set up a faked Cpc for use in exception
-    hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+    session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+    hmc = session.hmc
     cpc1 = hmc.cpcs.add({'name': 'cpc1'})
 
     method = 'GET'
@@ -618,7 +621,8 @@ class TestUriHandlerMethod(object):
         DummyHandler2.delete = staticmethod(MagicMock(
             return_value=None))
         self.urihandler = UriHandler(self.uris)
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
 
     def teardown_method(self):
         # pylint: disable=no-self-use
@@ -1029,7 +1033,8 @@ def standard_test_hmc():
             },
         ],
     }
-    hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+    session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+    hmc = session.hmc
     hmc.add_resources(hmc_resources)
     return hmc, hmc_resources
 
@@ -6984,3 +6989,193 @@ class TestLoadActProfileHandlers(object):
             'description': 'Load profile #1 in CPC #1',
         }
         assert lap1 == exp_lap1
+
+
+class TestSubmitRequestsHandler(object):
+    """
+    All tests for class SubmitRequestsHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        SubmitRequestsHandler and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/services/aggregation/submit', SubmitRequestsHandler),
+            (r'/api/console/users(?:\?(.*))?', UsersHandler),
+            (r'/api/console/user-roles(?:\?(.*))?', UserRolesHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_bulk_two_get_success(self):
+        """
+        Test two successful GET in the bulk operation.
+        """
+
+        body = {
+            'requests': [
+                {
+                    'method': 'GET',
+                    'uri': '/api/console/users',
+                    'id': '1',
+                },
+                {
+                    'method': 'GET',
+                    'uri': '/api/console/user-roles',
+                    'id': '2',
+                },
+            ],
+        }
+
+        # the function to be tested:
+        result = self.urihandler.post(
+            self.hmc, '/api/services/aggregation/submit', body, True, True)
+
+        exp_result = [
+            {
+                'body': {
+                    'users': [
+                        {
+                            'name': 'fake_user_name_1',
+                            'object-uri': '/api/users/fake-user-oid-1',
+                            'type': 'system-defined',
+                        },
+                    ],
+                },
+                'status': 200,
+                'headers': [],
+                'id': '1',
+            },
+            {
+                'body': {
+                    'user-roles': [
+                        {
+                            'name': 'fake_user_role_name_1',
+                            'object-uri':
+                                '/api/user-roles/fake-user-role-oid-1',
+                            'type': 'system-defined',
+                        },
+                        {
+                            'name': 'hmc-operator-tasks',
+                            'object-uri':
+                                '/api/user-roles/fake-hmc-operator-tasks',
+                            'type': 'system-defined',
+                        },
+                    ],
+                },
+                'status': 200,
+                'headers': [],
+                'id': '2',
+            },
+        ]
+        assert result == exp_result
+
+    def test_bulk_one_post_success(self):
+        """
+        Test one successful POST in the bulk operation.
+        """
+
+        body = {
+            'requests': [
+                {
+                    'method': 'POST',
+                    'uri': '/api/console/users',
+                    'body': {
+                        'name': 'bulk-user',
+                        'type': 'standard',
+                        'authentication-type': 'local',
+                        'password-rule-uri':
+                            '/api/password-rules/fake-password-rule-oid-1',
+                        'password': 'abcde1234',
+                    },
+                    'id': '1',
+                },
+            ],
+        }
+
+        # the function to be tested:
+        result = self.urihandler.post(
+            self.hmc, '/api/services/aggregation/submit', body, True, True)
+
+        exp_result = [
+            {
+                'body': {
+                    'object-uri': '/api/users/1',
+                },
+                'status': 200,
+                'headers': [],
+                'id': '1',
+            },
+        ]
+        assert result == exp_result
+
+    def test_bulk_one_delete_success(self):
+        """
+        Test one successful DELETE in the bulk operation.
+        """
+
+        body = {
+            'requests': [
+                {
+                    'method': 'DELETE',
+                    'uri': '/api/users/fake-user-oid-1',
+                    'id': '1',
+                },
+            ],
+        }
+
+        # the function to be tested:
+        result = self.urihandler.post(
+            self.hmc, '/api/services/aggregation/submit', body, True, True)
+
+        exp_result = [
+            {
+                'body': None,
+                'status': 200,
+                'headers': [],
+                'id': '1',
+            },
+        ]
+        assert result == exp_result
+
+    def test_bulk_one_get_fail(self):
+        """
+        Test one failed GET in the bulk operation.
+        """
+
+        body = {
+            'requests': [
+                {
+                    'method': 'GET',
+                    'uri': '/api/console/usersxx',
+                    'id': '1',
+                },
+            ],
+        }
+
+        # the function to be tested:
+        result = self.urihandler.post(
+            self.hmc, '/api/services/aggregation/submit', body, True, True)
+
+        exp_result = [
+            {
+                'body': {
+                    'http-status': 404,
+                    'message':
+                        'Unknown resource with URI: /api/console/usersxx',
+                    'reason': 1,
+                    'request-authenticated-as': None,
+                    'request-headers': [],
+                    'request-method': 'GET',
+                    'request-uri': '/api/console/usersxx',
+                },
+                'status': 404,
+                'headers': [],
+                'id': '1',
+            },
+        ]
+        assert result == exp_result
