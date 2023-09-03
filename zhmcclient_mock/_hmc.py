@@ -883,8 +883,9 @@ class FakedHmc(FakedBaseResource):
     access the :attr:`zhmcclient_mock.FakedSession.hmc` attribute.
     """
 
-    def __init__(self, hmc_name, hmc_version, api_version):
+    def __init__(self, session, hmc_name, hmc_version, api_version):
         super(FakedHmc, self).__init__(manager=None, properties=None)
+        self._session = session
         self.hmc_name = hmc_name
         self.hmc_version = hmc_version
         self.api_version = api_version
@@ -914,6 +915,7 @@ class FakedHmc(FakedBaseResource):
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
+            "  session = {session_class}(...)\n"
             "  hmc_name = {hmc_name!r}\n"
             "  hmc_version = {hmc_version!r}\n"
             "  api_version = {api_version!r}\n"
@@ -927,6 +929,7 @@ class FakedHmc(FakedBaseResource):
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
+                session_class=self._session.__class__.__name__,
                 hmc_name=self.hmc_name,
                 hmc_version=self.hmc_version,
                 api_version=self.api_version,
@@ -940,6 +943,13 @@ class FakedHmc(FakedBaseResource):
                                             indent=2),
             ))
         return ret
+
+    @property
+    def session(self):
+        """
+        Return the faked session of the faked HMC.
+        """
+        return self._session
 
     @property
     def metric_values(self):

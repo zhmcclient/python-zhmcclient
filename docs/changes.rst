@@ -61,6 +61,9 @@ Released: not yet
 
 * Docs: Improved documentation for developing tests.
 
+* Implemented mock support for aggregation service operation "Submit requests"
+  (bulk operations) (issue #1250).
+
 **Cleanup:**
 
 **Known issues:**

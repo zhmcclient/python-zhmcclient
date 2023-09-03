@@ -25,7 +25,8 @@ from datetime import datetime
 from dateutil import tz
 import pytz
 
-from zhmcclient_mock._hmc import FakedHmc, \
+from zhmcclient_mock._session import FakedSession
+from zhmcclient_mock._hmc import \
     FakedBaseManager, FakedBaseResource, \
     FakedActivationProfileManager, FakedActivationProfile, \
     FakedAdapterManager, FakedAdapter, \
@@ -53,7 +54,8 @@ class TestFakedHmc(object):
 
         Creates a faked HMC with attributes set but no child resourcs.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
 
     def test_hmc_repr(self):
         """Test FakedHmc.__repr__()."""
@@ -249,7 +251,8 @@ class TestFakedBase(object):
 
         Creates a faked HMC that has one managed CPC.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
 
         self.cpc1_oid = '42-abc-543'
         self.cpc1_uri = '/api/cpcs/{}'.format(self.cpc1_oid)
@@ -340,7 +343,8 @@ class TestFakedActivationProfile(object):
         Creates a faked HMC that has a CPC in classic mode with some
         activation profiles.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.resetprofile1_in_props = {'name': 'resetprofile1'}
         self.imageprofile1_in_props = {'name': 'imageprofile1'}
@@ -517,7 +521,8 @@ class TestFakedAdapter(object):
 
         Creates a faked HMC that has a CPC with one ROCE adapter.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.adapter1_in_props = {'name': 'adapter1', 'type': 'roce'}
         rd = {
@@ -648,7 +653,8 @@ class TestFakedCpc(object):
 
         Creates a faked HMC that has a CPC.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         rd = {
             'cpcs': [
@@ -772,7 +778,8 @@ class TestFakedHba(object):
         Creates a faked HMC that has a CPC with an FCP adapter, and a partition
         that has an HBA.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
 
         self.adapter1_oid = '747-abc-12345'
         self.adapter1_uri = '/api/adapters/{}'.format(self.adapter1_oid)
@@ -938,7 +945,8 @@ class TestFakedLpar(object):
 
         Creates a faked HMC that has a CPC with an LPAR.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.lpar1_in_props = {'name': 'lpar1'}
         rd = {
@@ -1047,7 +1055,8 @@ class TestFakedNic(object):
         Creates a faked HMC that has a CPC with a ROCE adapter and one
         partition that has a NIC.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
 
         self.adapter1_oid = '380-xyz-12345'
         self.adapter1_uri = '/api/adapters/{}'.format(self.adapter1_oid)
@@ -1212,7 +1221,8 @@ class TestFakedPartition(object):
 
         Creates a faked HMC that has a CPC with a partition.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
         rd = {
@@ -1350,7 +1360,8 @@ class TestFakedPort(object):
 
         Creates a faked HMC that has a CPC with an OSA adapter with one Port.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.adapter1_in_props = {'name': 'adapter1', 'adapter-family': 'osa'}
         self.port1_in_props = {'name': 'port1'}
@@ -1476,7 +1487,8 @@ class TestFakedVirtualFunction(object):
         Creates a faked HMC that has a CPC with a partition that has a virtual
         function.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
         self.virtual_function1_in_props = {'name': 'virtual_function1'}
@@ -1605,7 +1617,8 @@ class TestFakedVirtualSwitch(object):
 
         Creates a faked HMC that has a CPC with a virtual switch.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.virtual_switch1_in_props = {'name': 'virtual_switch1'}
         rd = {
@@ -1716,7 +1729,8 @@ class TestFakedCapacityGroup(object):
 
         Creates a faked HMC that has a CPC with a capacity group.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.capacity_group1_in_props = {'name': 'capacity_group1'}
         rd = {
@@ -1829,7 +1843,8 @@ class TestFakedMetricsContext(object):
 
         Creates a faked HMC that has a CPC with a partition.
         """
-        self.hmc = FakedHmc('fake-hmc', '2.13.1', '1.8')
+        session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.hmc = session.hmc
         self.cpc1_in_props = {'name': 'cpc1'}
         self.partition1_in_props = {'name': 'partition1'}
         rd = {

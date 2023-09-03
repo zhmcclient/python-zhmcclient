@@ -31,6 +31,7 @@ import copy
 from random import randrange
 from requests.utils import unquote
 
+from zhmcclient._exceptions import HTTPError as HTTPError_zhmc
 from ._hmc import InputError
 
 __all__ = ['UriHandler', 'LparActivateHandler', 'LparDeactivateHandler',
@@ -225,8 +226,8 @@ class MockedResourceError(Exception):
 
 def parse_query_parms(method, uri):
     """
-    Parse the specified URI into URI without query parms and query parms,
-    and return a dictionary of query parameters.
+    Parse the specified URI with optional query parms and return the URI
+    without query parms and a dictionary of query parms.
 
     The key of each dict item is the query parameter name, and the
     value of each dict item is the query parameter value. If a query parameter
@@ -293,6 +294,22 @@ def check_required_fields(method, uri, body, field_names):
             raise BadRequestError(method, uri, reason=5,
                                   message="Missing required field in request "
                                   "body: {}".format(field_name))
+
+
+def check_required_subfields(method, uri, element, element_str, field_names):
+    """
+    Check required fields in an element within the request body.
+
+    Raises:
+      BadRequestError with reason 5: Missing required field in request body
+    """
+
+    for field_name in field_names:
+        if field_name not in element:
+            raise BadRequestError(method, uri, reason=5,
+                                  message="Missing required field in request "
+                                  "body within {}: {}".
+                                  format(element_str, field_name))
 
 
 def check_valid_cpc_status(method, uri, cpc):
@@ -5070,6 +5087,105 @@ class LoadActProfileHandler(GenericGetPropertiesHandler,
     valid_query_parms_get = ['properties', 'cached-acceptable']
 
 
+class SubmitRequestsHandler(object):
+    """
+    Handler class for "Submit Requests" operation (= aggregation service).
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Submit Requests."""
+        assert wait_for_completion is True  # async not supported yet
+
+        check_required_fields(method, uri, body, ['requests'])
+
+        # Process each operation in the request list
+        # We process this serially, ignoring the 'threads' paramneter.
+        responses = []
+        # TODO: Support for general 'req-headers' and 'resp-headers'
+        for request in body['requests']:
+            check_required_subfields(method, uri, request, "requests",
+                                     ['method', 'uri'])
+            op_id = request['id']
+            op_uri = request['uri']
+            op_method = request['method']
+            # TODO: Support for op-specific 'req-headers' and 'resp-headers'
+            if op_method == 'GET':
+                try:
+                    result = hmc.session.get(op_uri)
+                except HTTPError_zhmc as exc:
+                    op_uri_plain, op_query_parms = parse_query_parms(
+                        op_method, op_uri)
+                    result = {
+                        'request-method': op_method,
+                        'request-uri': op_uri_plain,
+                        'request-headers': [],  # TODO: Implement
+                        'request-authenticated-as': hmc.session.userid,
+                        'http-status': exc.http_status,
+                        'reason': exc.reason,
+                        'message': exc.message,
+                    }
+                    if op_query_parms:
+                        result['request-query-parms'] = op_query_parms
+                    status = exc.http_status
+                else:
+                    status = 200
+            elif op_method == 'POST':
+                body = request.get('body', None)
+                try:
+                    result = hmc.session.post(op_uri, body=body)
+                except HTTPError_zhmc as exc:
+                    op_uri_plain, op_query_parms = parse_query_parms(
+                        op_method, op_uri)
+                    result = {
+                        'request-method': op_method,
+                        'request-uri': op_uri_plain,
+                        'request-headers': [],  # TODO: Implement
+                        'request-authenticated-as': hmc.session.userid,
+                        'request-body': body,
+                        'http-status': exc.http_status,
+                        'reason': exc.reason,
+                        'message': exc.message,
+                    }
+                    if op_query_parms:
+                        result['request-query-parms'] = op_query_parms
+                    status = exc.http_status
+                else:
+                    status = 200
+            elif op_method == 'DELETE':
+                try:
+                    result = hmc.session.delete(op_uri)
+                except HTTPError_zhmc as exc:
+                    op_uri_plain, op_query_parms = parse_query_parms(
+                        op_method, op_uri)
+
+                    result = {
+                        'request-method': op_method,
+                        'request-uri': op_uri_plain,
+                        'request-headers': [],  # TODO: Implement
+                        'request-authenticated-as': hmc.session.userid,
+                        'http-status': exc.http_status,
+                        'reason': exc.reason,
+                        'message': exc.message,
+                    }
+                    if op_query_parms:
+                        result['request-query-parms'] = op_query_parms
+                    status = exc.http_status
+                else:
+                    status = 200
+            response = {
+                'status': status,
+                'headers': [],  # TODO: Implement
+            }
+            response['body'] = result if result else None
+            if op_id:
+                response['id'] = op_id
+            responses.append(response)
+        return responses
+
+
 # URIs to be handled
 # Note: This list covers only the HMC operations implemented in the zhmcclient.
 # The HMC supports several more operations.
@@ -5281,4 +5397,8 @@ URIS = (
      LoadActProfilesHandler),
     (r'/api/cpcs/([^/]+)/load-activation-profiles/([^?/]+)(?:\?(.*))?',
      LoadActProfileHandler),
+
+    (r'/api/services/aggregation/submit',
+     SubmitRequestsHandler),
+
 )

@@ -715,7 +715,7 @@ class FakedSession(zhmcclient.Session):
         """
         super(FakedSession, self).__init__(
             host, userid=userid, password=password)
-        self._hmc = FakedHmc(hmc_name, hmc_version, api_version)
+        self._hmc = FakedHmc(self, hmc_name, hmc_version, api_version)
         self._urihandler = UriHandler(URIS)
         self._object_topic = 'faked-notification-topic'
         self._job_topic = 'faked-job-notification-topic'
