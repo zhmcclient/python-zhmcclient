@@ -29,6 +29,7 @@ from __future__ import absolute_import
 
 import re
 from datetime import datetime, timedelta
+import time
 import warnings
 import threading
 import six
@@ -773,20 +774,100 @@ class BaseManager(object):
 
                 if result:
                     props_list = result[result_prop]
-                    for props in props_list:
-                        resource_obj = self.resource_class(
-                            manager=self,
-                            uri=props[self._uri_prop],
-                            name=props.get(self._name_prop, None),
-                            properties=props)
-                        if matches_filters(resource_obj, client_filters):
-                            resource_obj_list.append(resource_obj)
-                            if full_properties:
-                                resource_obj.pull_full_properties()
+                    if full_properties:
+                        resource_obj_list.extend(
+                            self._get_properties_bulk(
+                                props_list, client_filters))
+                    else:
+                        for props in props_list:
+                            resource_obj = self.resource_class(
+                                manager=self,
+                                uri=props[self._uri_prop],
+                                name=props.get(self._name_prop, None),
+                                properties=props)
+                            if matches_filters(resource_obj, client_filters):
+                                resource_obj_list.append(resource_obj)
 
             self.add_resources_local(resource_obj_list)
 
         self._name_uri_cache.update_from(resource_obj_list)
+        return resource_obj_list
+
+    def _get_properties_bulk(self, props_list, client_filters):
+        """
+        Get resource properties using a bulk operation.
+
+        Parameters:
+
+          props_list (list of dict):
+            List of resource properties from List operation.
+            Must contain the resource URIs.
+
+          client_filters (dict):
+            Filter arguments to be applied on the client side after the
+            resource properties have been retrieved.
+            `None` causes no client filtering to happen.
+
+        Returns:
+
+          : A list of zhmcclient resource objects.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        resource_obj_list = []
+
+        bulk_reqs = []
+        req_by_id = {}
+        req_id = 0
+        for props in props_list:
+            req_id += 1
+            req_id_str = str(req_id)
+            req = {
+                'method': 'GET',
+                'uri': props[self._uri_prop],
+                'id': req_id_str,
+            }
+            bulk_reqs.append(req)
+            req_by_id[req_id_str] = req
+
+        if bulk_reqs:
+            uri = '/api/services/aggregation/submit'
+            threads = min(16, round(len(props_list) / 2 + 0.51))
+            body = {
+                'requests': bulk_reqs,
+                'threads': threads,
+            }
+            result = self.session.post(uri, body=body)
+            for res in result:
+                req_id = res['id']
+                req = req_by_id[req_id]
+                resource_props = res['body']
+                if res['status'] != 200:
+                    # Similar to the non-full case: The first
+                    # error raises an exception.
+                    raise HTTPError(resource_props)
+
+                resource_obj = self.resource_class(
+                    manager=self,
+                    uri=req['uri'],
+                    name=resource_props.get(self._name_prop, None),
+                    properties=resource_props)
+
+                # pylint: disable=protected-access
+                with resource_obj._property_lock:
+                    resource_obj._properties = dict(resource_props)
+                    resource_obj._properties_timestamp = int(time.time())
+                    resource_obj._full_properties = True
+                # pylint: enable=protected-access
+
+                if matches_filters(resource_obj, client_filters):
+                    resource_obj_list.append(resource_obj)
+
         return resource_obj_list
 
     def _list_with_parent_array(
