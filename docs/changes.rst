@@ -67,6 +67,9 @@ Released: not yet
 * Added support for requesting additional properties in list() methods for
   Adapter, Certificate, Partition, VirtualSwitch resources.
 
+* Improved performance of list() method of all resource types when called
+  with full_properties=True by using a bulk operation (aggregation service).
+
 **Cleanup:**
 
 * Consolidated common code of list() methods into the _utils.py module.

@@ -136,26 +136,34 @@ class TestVirtualSwitch(object):
 
             m.get('/api/cpcs/vswitch-cpc-id-1/virtual-switches', json=result)
 
-            mock_result_virtual_switch1 = {
-                'name': 'VSWITCH1',
-                'object-uri': '/api/virtual-switches/fake-vswitch-id1',
-                'type': 'osd',
-                'class': 'virtual-switch',
-                'description': 'Test VirtualSwitch',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/virtual-switches/fake-vswitch-id1',
-                  json=mock_result_virtual_switch1)
-            mock_result_virtual_switch2 = {
-                'name': 'VSWITCH2',
-                'object-uri': '/api/virtual-switches/fake-vswitch-id2',
-                'type': 'hipersockets',
-                'class': 'virtual-switch',
-                'description': 'Test VirtualSwitch',
-                'more_properties': 'bliblablub'
-            }
-            m.get('/api/virtual-switches/fake-vswitch-id2',
-                  json=mock_result_virtual_switch2)
+            mock_result_get_bulk = [
+                {
+                    'id': '1',
+                    'status': 200,
+                    'body': {
+                        'name': 'VSWITCH1',
+                        'object-uri': '/api/virtual-switches/fake-vswitch-id1',
+                        'type': 'osd',
+                        'class': 'virtual-switch',
+                        'description': 'Test VirtualSwitch',
+                        'more_properties': 'bliblablub'
+                    }
+                },
+                {
+                    'id': '2',
+                    'status': 200,
+                    'body': {
+                        'name': 'VSWITCH2',
+                        'object-uri': '/api/virtual-switches/fake-vswitch-id2',
+                        'type': 'hipersockets',
+                        'class': 'virtual-switch',
+                        'description': 'Test VirtualSwitch',
+                        'more_properties': 'bliblablub'
+                    }
+                }
+            ]
+            m.post('/api/services/aggregation/submit',
+                   json=mock_result_get_bulk)
 
             vswitches = vswitch_mgr.list(full_properties=True)
 

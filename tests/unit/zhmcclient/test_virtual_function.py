@@ -83,36 +83,44 @@ class TestVirtualFunction(object):
 
             m.get('/api/cpcs/fake-cpc-id-1/partitions', json=result)
 
-            mock_result_part1 = {
-                'status': 'active',
-                'object-uri': '/api/partitions/fake-part-id-1',
-                'name': 'PART1',
-                'description': 'Test Partition',
-                'more_properties': 'bliblablub',
-                'virtual-function-uris': [
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-1',
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-2'
-                ]
-            }
-            m.get('/api/partitions/fake-part-id-1',
-                  json=mock_result_part1)
-            mock_result_part2 = {
-                'status': 'stopped',
-                'object-uri': '/api/partitions/fake-lpar-id-2',
-                'name': 'PART2',
-                'description': 'Test Partition',
-                'more_properties': 'bliblablub',
-                'virtual-function-uris': [
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-1',
-                    '/api/partitions/fake-part-id-1/virtual-functions/'
-                    'fake-vf-id-2'
-                ]
-            }
-            m.get('/api/partitions/fake-part-id-2',
-                  json=mock_result_part2)
+            mock_result_get_bulk = [
+                {
+                    'id': '1',
+                    'status': 200,
+                    'body': {
+                        'status': 'active',
+                        'object-uri': '/api/partitions/fake-part-id-1',
+                        'name': 'PART1',
+                        'description': 'Test Partition',
+                        'more_properties': 'bliblablub',
+                        'virtual-function-uris': [
+                            '/api/partitions/fake-part-id-1/virtual-functions/'
+                            'fake-vf-id-1',
+                            '/api/partitions/fake-part-id-1/virtual-functions/'
+                            'fake-vf-id-2'
+                        ]
+                    },
+                },
+                {
+                    'id': '2',
+                    'status': 200,
+                    'body': {
+                        'status': 'stopped',
+                        'object-uri': '/api/partitions/fake-part-id-2',
+                        'name': 'PART2',
+                        'description': 'Test Partition',
+                        'more_properties': 'bliblablub',
+                        'virtual-function-uris': [
+                            '/api/partitions/fake-part-id-2/virtual-functions/'
+                            'fake-vf-id-1',
+                            '/api/partitions/fake-part-id-2/virtual-functions/'
+                            'fake-vf-id-2'
+                        ]
+                    }
+                }
+            ]
+            m.post('/api/services/aggregation/submit',
+                   json=mock_result_get_bulk)
 
             partitions = partition_mgr.list(full_properties=True)
             self.partition = partitions[0]
