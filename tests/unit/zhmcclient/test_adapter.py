@@ -280,6 +280,40 @@ class TestAdapter(object):
         assert_resources(adapters, exp_faked_adapters, prop_names)
 
     @pytest.mark.parametrize(
+        "list_kwargs, prop_names", [
+            ({},
+             ['object-uri', 'name', 'status']),
+            (dict(additional_properties=[]),
+             ['object-uri', 'name', 'status']),
+            (dict(additional_properties=['description']),
+             ['object-uri', 'name', 'status', 'description']),
+            (dict(additional_properties=['description', 'detected-card-type']),
+             ['object-uri', 'name', 'status', 'description',
+              'detected-card-type']),
+            (dict(additional_properties=['port-count']),
+             ['object-uri', 'name', 'status', 'port-count']
+             # port-count is not on every adapter
+             ),
+        ]
+    )
+    def test_adaptermanager_list_add_props(
+            self, list_kwargs, prop_names):
+        """Test AdapterManager.list() with additional_properties."""
+
+        # Add two faked adapters
+        faked_osa1 = self.add_standard_osa()
+        faked_hs2 = self.add_standard_hipersocket()
+        faked_cr3 = self.add_crypto_ce5s(self.faked_cpc)
+
+        exp_faked_adapters = [faked_osa1, faked_hs2, faked_cr3]
+        adapter_mgr = self.cpc.adapters
+
+        # Execute the code to be tested
+        adapters = adapter_mgr.list(**list_kwargs)
+
+        assert_resources(adapters, exp_faked_adapters, prop_names)
+
+    @pytest.mark.parametrize(
         "filter_args, exp_names", [
             ({'object-id': OSA1_OID},
              [OSA1_NAME]),

@@ -176,6 +176,44 @@ class TestVirtualSwitch(object):
                 assert vswitch.full_properties
                 assert vswitch.manager == vswitch_mgr
 
+    def test_list_add_props(self):
+        """
+        Test successful list() with additional_properties.
+        """
+        vswitch_mgr = self.cpc.virtual_switches
+        with requests_mock.mock() as m:
+            result = {
+                'virtual-switches': [
+                    {
+                        'name': 'VSWITCH1',
+                        'object-uri': '/api/virtual-switches/fake-vswitch-id1',
+                        'type': 'osd',
+                        'port': 1,
+                    },
+                    {
+                        'name': 'VSWITCH2',
+                        'object-uri': '/api/virtual-switches/fake-vswitch-id2',
+                        'type': 'hipersockets',
+                        'port': 0,
+                    }
+                ]
+            }
+
+            m.get('/api/cpcs/vswitch-cpc-id-1/virtual-switches', json=result)
+
+            vswitches = vswitch_mgr.list(additional_properties=['port'])
+
+            assert len(vswitches) == len(result['virtual-switches'])
+            for idx, vswitch in enumerate(vswitches):
+                assert vswitch.properties['name'] == \
+                    result['virtual-switches'][idx]['name']
+                assert vswitch.uri == \
+                    result['virtual-switches'][idx]['object-uri']
+                assert 'port' in vswitch.properties
+                assert vswitch.properties['port'] == \
+                    result['virtual-switches'][idx]['port']
+                assert vswitch.manager == vswitch_mgr
+
     def test_update_properties(self):
         """
         This tests the 'Update VirtualSwitch Properties' operation.

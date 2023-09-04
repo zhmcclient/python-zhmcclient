@@ -248,6 +248,41 @@ class TestPartition(object):
             assert set(names) == set(exp_names)
 
     @pytest.mark.parametrize(
+        "list_kwargs, prop_names", [
+            ({},
+             ['object-uri', 'name', 'status']),
+            (dict(additional_properties=[]),
+             ['object-uri', 'name', 'status']),
+            (dict(additional_properties=['description']),
+             ['object-uri', 'name', 'status', 'description']),
+            (dict(additional_properties=['description', 'se-version']),
+             ['object-uri', 'name', 'status', 'description', 'se-version']),
+            (dict(additional_properties=['ssc-host-name']),
+             ['object-uri', 'name', 'status', 'ssc-host-name']
+             # ssc-host-name is not on every partition
+             ),
+        ]
+    )
+    def test_pm_list_add_props(
+            self, list_kwargs, prop_names):
+        """
+        Test PartitionManager.list() with additional_properties.
+        """
+
+        # Add two faked partitions
+        faked_part1 = self.add_partition1()
+        faked_part2 = self.add_partition2()
+
+        partition_mgr = self.cpc.partitions
+
+        # Execute the code to be tested
+        parts = partition_mgr.list(**list_kwargs)
+
+        exp_faked_parts = [faked_part1, faked_part2]
+
+        assert_resources(parts, exp_faked_parts, prop_names)
+
+    @pytest.mark.parametrize(
         "input_props, exp_prop_names, exp_exc", [
             ({},
              None,

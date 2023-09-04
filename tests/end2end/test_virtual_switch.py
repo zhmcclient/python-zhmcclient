@@ -33,13 +33,16 @@ from .utils import skip_warn, pick_test_resources, runtest_find_list, \
 
 urllib3.disable_warnings()
 
-# Properties in minimalistic Task objects (e.g. find_by_name())
+# Properties in minimalistic VirtualSwitch objects (e.g. find_by_name())
 VSWITCH_MINIMAL_PROPS = ['object-uri', 'name']
 
-# Properties in Task objects returned by list() without full props
+# Properties in VirtualSwitch objects returned by list() without full props
 VSWITCH_LIST_PROPS = ['object-uri', 'name', 'type']
 
-# Properties whose values can change between retrievals of Task objects
+# Properties in VirtualSwitch objects for list(additional_properties)
+VSWITCH_ADDITIONAL_PROPS = ['description', 'port']
+
+# Properties whose values can change between retrievals of VirtualSwitch objects
 VSWITCH_VOLATILE_PROPS = []
 
 
@@ -71,7 +74,7 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
             runtest_find_list(
                 session, cpc.virtual_switches, vswitch.name, 'name',
                 'description', VSWITCH_VOLATILE_PROPS, VSWITCH_MINIMAL_PROPS,
-                VSWITCH_LIST_PROPS)
+                VSWITCH_LIST_PROPS, VSWITCH_ADDITIONAL_PROPS)
 
 
 def test_vswitch_property(dpm_mode_cpcs):  # noqa: F811

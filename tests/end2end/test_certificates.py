@@ -39,6 +39,9 @@ CERT_MINIMAL_PROPS = ['object-uri', 'name']
 # Properties in Certificate objects returned by list() without full props
 CERT_LIST_PROPS = ['object-uri', 'name', 'type', 'parent', 'parent-name']
 
+# Properties in Certificate objects for list(additional_properties)
+CERT_ADDITIONAL_PROPS = ['description', 'assigned']
+
 # Properties whose values can change between retrievals of Certificate objects
 CERT_VOLATILE_PROPS = []
 
@@ -71,7 +74,8 @@ def test_certificates_find_list(all_cpcs):  # noqa: F811
             # noinspection PyTypeChecker
             runtest_find_list(
                 session, console.certificates, cert.name, 'name', None,
-                CERT_VOLATILE_PROPS, CERT_MINIMAL_PROPS, CERT_LIST_PROPS)
+                CERT_VOLATILE_PROPS, CERT_MINIMAL_PROPS, CERT_LIST_PROPS,
+                CERT_ADDITIONAL_PROPS)
 
 
 def test_cert_crud(all_cpcs):  # noqa: F811

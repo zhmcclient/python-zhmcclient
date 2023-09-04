@@ -855,6 +855,7 @@ class ConsoleListPermittedLparsHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = query_parms.pop('additional-properties', [])
         filter_args = query_parms
 
         result_lpars = []
@@ -886,6 +887,11 @@ class ConsoleListPermittedLparsHandler(object):
                     result_lpar['cpc-object-uri'] = cpc.uri
                     result_lpar['se-version'] = \
                         cpc.properties.get('se-version', None)
+                    for prop in add_props:
+                        try:
+                            result_lpar[prop] = lpar.properties[prop]
+                        except KeyError:
+                            pass
                     result_lpars.append(result_lpar)
 
         return {'logical-partitions': result_lpars}
@@ -2455,6 +2461,7 @@ class AdaptersHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = query_parms.pop('additional-properties', [])
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -2471,6 +2478,8 @@ class AdaptersHandler(object):
                 for prop in adapter.properties:
                     if prop in ('object-uri', 'name', 'adapter-id',
                                 'adapter-family', 'type', 'status'):
+                        result_adapter[prop] = adapter.properties[prop]
+                    if prop in add_props:
                         result_adapter[prop] = adapter.properties[prop]
                 result_adapters.append(result_adapter)
         return {'adapters': result_adapters}
@@ -2712,6 +2721,7 @@ class PartitionsHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = query_parms.pop('additional-properties', [])
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -2729,6 +2739,8 @@ class PartitionsHandler(object):
                 result_partition = {}
                 for prop in partition.properties:
                     if prop in ('object-uri', 'name', 'status', 'type'):
+                        result_partition[prop] = partition.properties[prop]
+                    if prop in add_props:
                         result_partition[prop] = partition.properties[prop]
                 result_partitions.append(result_partition)
         return {'partitions': result_partitions}
@@ -3721,6 +3733,7 @@ class VirtualSwitchesHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = query_parms.pop('additional-properties', [])
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -3736,6 +3749,8 @@ class VirtualSwitchesHandler(object):
                 result_vswitch = {}
                 for prop in vswitch.properties:
                     if prop in ('object-uri', 'name', 'type'):
+                        result_vswitch[prop] = vswitch.properties[prop]
+                    if prop in add_props:
                         result_vswitch[prop] = vswitch.properties[prop]
                 result_vswitches.append(result_vswitch)
         return {'virtual-switches': result_vswitches}
@@ -5012,6 +5027,7 @@ class ImageActProfilesHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = query_parms.pop('additional-properties', [])
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -5027,6 +5043,8 @@ class ImageActProfilesHandler(object):
                 result_profile = {}
                 for prop in profile.properties:
                     if prop in ('element-uri', 'name'):
+                        result_profile[prop] = profile.properties[prop]
+                    if prop in add_props:
                         result_profile[prop] = profile.properties[prop]
                 result_profiles.append(result_profile)
         return {'image-activation-profiles': result_profiles}

@@ -78,6 +78,7 @@ class TestActivationProfile(object):
             'parent': self.faked_cpc.uri,
             'class': 'image-activation-profile',
             'description': 'IAP #1',
+            'ipl-address': '0010',
         })
         self.faked_image_ap_2 = self.faked_cpc.image_activation_profiles.add({
             # element-uri is set up automatically
@@ -85,6 +86,7 @@ class TestActivationProfile(object):
             'parent': self.faked_cpc.uri,
             'class': 'image-activation-profile',
             'description': 'IAP #2',
+            'ipl-address': '0010',
         })
         self.faked_load_ap_1 = self.faked_cpc.load_activation_profiles.add({
             # element-uri is set up automatically
@@ -266,6 +268,38 @@ class TestActivationProfile(object):
         if exp_names:
             names = [ap.properties['name'] for ap in profiles]
             assert set(names) == set(exp_names)
+
+    @pytest.mark.parametrize(
+        "list_kwargs, prop_names", [
+            ({},
+             ['element-uri', 'name']),
+            (dict(additional_properties=[]),
+             ['element-uri', 'name']),
+            (dict(additional_properties=['description']),
+             ['element-uri', 'name', 'description']),
+            (dict(additional_properties=['description', 'ipl-address']),
+             ['element-uri', 'name', 'description', 'ipl-address']),
+            (dict(additional_properties=['ssc-host-name']),
+             ['element-uri', 'name', 'ssc-host-name']
+             # ssc-host-name is not on every image profile
+             ),
+        ]
+    )
+    def test_profilemanager_list_add_props(
+            self, list_kwargs, prop_names):
+        """
+        Test ActivationProfileManager.list() for image profiles with
+        additional_properties.
+        """
+        mgr_attr = 'image_activation_profiles'
+        profile_mgr = getattr(self.cpc, mgr_attr)
+
+        # Execute the code to be tested
+        profiles = profile_mgr.list(**list_kwargs)
+
+        exp_faked_profiles = [self.faked_image_ap_1, self.faked_image_ap_2]
+
+        assert_resources(profiles, exp_faked_profiles, prop_names)
 
     # TODO: Test for initial ActivationProfile attributes
 

@@ -125,7 +125,7 @@ def pick_test_resources(res_list):
 
 
 def runtest_find_list(session, manager, name, server_prop, client_prop,
-                      volatile_props, minimal_props, list_props,
+                      volatile_props, minimal_props, list_props, add_props=None,
                       unique_name=True):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
@@ -138,8 +138,9 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
       - no filter
       - server-side filter
       - client-side filter
-    - list(full_properties=False, filter_args=None)
+    - list(full_properties=False, filter_args=None, additional_properties=None)
       - no filter + short
+      - no filter + additional_properties
       - server-side filter + full
       - server-side filter + short
       - client-side filter + short
@@ -166,6 +167,10 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
 
       list_props (list of string): Names of properties that are returned by
         list()).
+
+      add_props (list of string): Names of additional properties to be returned
+        by list(additional_properties)). If None, the additional properties test
+        is not executed.
 
       unique_name (bool): Indicates that the resource name is expected to be
         unique within its parent resource. That is normally the case, the only
@@ -257,6 +262,8 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
     # The code to be tested: list() with no filter and short properties
     found_res_list = manager.list()
 
+    # Because we have only the expected properties for the resource with
+    # the specified name, we only compare that one resource.
     assert name in map(lambda _res: _res.name, found_res_list)
     found_res_list = list(filter(lambda _res: _res.name == name,
                                  found_res_list))
@@ -267,6 +274,23 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             format(k=found_res.prop('class'), n=name, o=found_res_list))
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
+
+    if add_props is not None:
+        # The code to be tested: list() with no filter and additional properties
+        found_res_list = manager.list(additional_properties=add_props)
+
+        # Because we have only the expected properties for the resource with
+        # the specified name, we only compare that one resource.
+        assert name in map(lambda _res: _res.name, found_res_list)
+        found_res_list = list(filter(lambda _res: _res.name == name,
+                                     found_res_list))
+        found_res = found_res_list[0]
+        if len(found_res_list) > 1:
+            raise AssertionError(
+                "{k} list() result with non-unique name {n!r}: {o}".
+                format(k=found_res.prop('class'), n=name, o=found_res_list))
+        assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                         prop_names=list_props + add_props)
 
     if server_prop:
         # The code to be tested: list() with server-side filter and full props

@@ -42,6 +42,9 @@ PART_MINIMAL_PROPS = ['object-uri', 'name']
 # Properties in Partition objects returned by list() without full props
 PART_LIST_PROPS = ['object-uri', 'name', 'status', 'type']
 
+# Properties in Partition objects for list(additional_properties)
+PART_ADDITIONAL_PROPS = ['description', 'short-name']
+
 # Properties whose values can change between retrievals of Partition objects
 PART_VOLATILE_PROPS = []
 
@@ -72,7 +75,8 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
                   format(c=cpc.name, p=part.name))
             runtest_find_list(
                 session, cpc.partitions, part.name, 'name', 'status',
-                PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS)
+                PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS,
+                PART_ADDITIONAL_PROPS)
 
 
 def test_part_property(dpm_mode_cpcs):  # noqa: F811

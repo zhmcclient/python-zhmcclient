@@ -715,7 +715,8 @@ class Console(BaseResource):
 
     @logged_api_call
     def list_permitted_lpars(
-            self, full_properties=False, filter_args=None):
+            self, full_properties=False, filter_args=None,
+            additional_properties=None):
         """
         List the permitted LPARs of CPCs in classic mode managed by this HMC.
 
@@ -764,6 +765,12 @@ class Console(BaseResource):
 
             * <property-name>: Any other property of LPARs.
 
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+            This parameter requires HMC 2.16.0 or higher.
+
         Returns:
 
           : A list of :class:`~zhmcclient.Lpar` objects.
@@ -775,7 +782,6 @@ class Console(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-
         query_parms, client_filters = divide_filter_args(
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
@@ -813,15 +819,22 @@ class Console(BaseResource):
                     cpc_props,
                 )
 
+                lpar_props = {
+                    'name': lpar_item['name'],
+                    'activation-mode': lpar_item['activation-mode'],
+                    'status': lpar_item['status'],
+                    'has-unacceptable-status':
+                        lpar_item['has-unacceptable-status'],
+                }
+                if additional_properties:
+                    for prop in additional_properties:
+                        try:
+                            lpar_props[prop] = lpar_item[prop]
+                        except KeyError:
+                            pass
                 lpar_obj = cpc.lpars.resource_object(
                     lpar_item['object-uri'],
-                    {
-                        'name': lpar_item['name'],
-                        'activation-mode': lpar_item['activation-mode'],
-                        'status': lpar_item['status'],
-                        'has-unacceptable-status':
-                            lpar_item['has-unacceptable-status'],
-                    },
+                    lpar_props,
                 )
 
                 # Apply client-side filtering
