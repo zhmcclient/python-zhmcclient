@@ -64,7 +64,8 @@ def assert_resources(resources, exp_resources, prop_names):
     # Assert the resource URIs
     uris = set([res.uri for res in resources])
     exp_uris = set([res.uri for res in exp_resources])
-    assert uris == exp_uris
+    assert uris == exp_uris, \
+        "Unexpected URIs: got: {}, expected: {}".format(uris, exp_uris)
 
     for res in resources:
 
@@ -82,9 +83,12 @@ def assert_resources(resources, exp_resources, prop_names):
         else:
             _prop_names = prop_names
         for prop_name in _prop_names:
-            prop_value = res.properties[prop_name]
-            exp_prop_value = exp_res.properties[prop_name]
-            assert prop_value == exp_prop_value
+            if prop_name in res.properties:
+                # Not all resources in a list have all properties
+                # (e.g. Crypto adapter does not have 'port-count')
+                prop_value = res.properties[prop_name]
+                exp_prop_value = exp_res.properties[prop_name]
+                assert prop_value == exp_prop_value
 
 
 def info(capsys, format_str, format_args=None):

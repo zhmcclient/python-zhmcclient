@@ -147,7 +147,9 @@ class ActivationProfileManager(BaseManager):
         return self._profile_type
 
     @logged_api_call
-    def list(self, full_properties=False, filter_args=None):
+    # pylint: disable=arguments-differ
+    def list(self, full_properties=False, filter_args=None,
+             additional_properties=None):
         """
         List the Activation Profiles of this CPC, of the profile type
         managed by this object.
@@ -191,6 +193,13 @@ class ActivationProfileManager(BaseManager):
             `None` causes no filtering to happen, i.e. all resources are
             returned.
 
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+            This parameter requires HMC 2.16.0 or higher, and is supported
+            only for image profiles.
+
         Returns:
 
           : A list of :class:`~zhmcclient.ActivationProfile` objects.
@@ -204,8 +213,13 @@ class ActivationProfileManager(BaseManager):
         """
         result_prop = self._profile_type + '-activation-profiles'
         list_uri = '{}/{}'.format(self.cpc.uri, result_prop)
+        if self._profile_type != 'image' and additional_properties is not None:
+            raise TypeError(
+                "list() for {} profiles does not support "
+                "'additional_properties' parameter".format(self._profile_type))
         return self._list_with_operation(
-            list_uri, result_prop, full_properties, filter_args, None)
+            list_uri, result_prop, full_properties, filter_args,
+            additional_properties)
 
 
 class ActivationProfile(BaseResource):

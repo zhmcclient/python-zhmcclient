@@ -39,6 +39,9 @@ ACTPROF_MINIMAL_PROPS = ['element-uri', 'name']
 # Properties in ActivationProfile objects returned by list() without full props
 ACTPROF_LIST_PROPS = ['element-uri', 'name', 'target-name']
 
+# Properties in image ActivationProfile objects for list(additional_properties)
+ACTPROF_ADDITIONAL_PROPS = ['description', 'ipl-address']
+
 # Properties whose values can change between retrievals
 ACTPROF_VOLATILE_PROPS = []
 
@@ -72,10 +75,14 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
         for actprof in actprof_list:
             print("Testing on CPC {c} with {t} activation profile {p!r}".
                   format(c=cpc.name, t=profile_type, p=actprof.name))
+            if profile_type == 'image':
+                actprof_additional_props = ACTPROF_ADDITIONAL_PROPS
+            else:
+                actprof_additional_props = None
             runtest_find_list(
                 session, actprof_mgr, actprof.name, 'name', 'element-uri',
                 ACTPROF_VOLATILE_PROPS, ACTPROF_MINIMAL_PROPS,
-                ACTPROF_LIST_PROPS)
+                ACTPROF_LIST_PROPS, actprof_additional_props)
 
 
 @pytest.mark.parametrize(

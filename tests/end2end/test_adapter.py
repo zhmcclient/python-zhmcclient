@@ -44,6 +44,9 @@ ADAPTER_MINIMAL_PROPS = ['object-uri', 'name']
 ADAPTER_LIST_PROPS = ['object-uri', 'name', 'adapter-id', 'adapter-family',
                       'type', 'status']
 
+# Properties in Adapter objects for list(additional_properties)
+ADAPTER_ADDITIONAL_PROPS = ['description', 'detected-card-type']
+
 # Properties whose values can change between retrievals of Adapter objects
 ADAPTER_VOLATILE_PROPS = []
 
@@ -75,7 +78,7 @@ def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
             runtest_find_list(
                 session, cpc.adapters, adapter.name, 'name', 'object-uri',
                 ADAPTER_VOLATILE_PROPS, ADAPTER_MINIMAL_PROPS,
-                ADAPTER_LIST_PROPS)
+                ADAPTER_LIST_PROPS, ADAPTER_ADDITIONAL_PROPS)
 
 
 def test_adapter_property(dpm_mode_cpcs):  # noqa: F811

@@ -1405,6 +1405,51 @@ class TestLpar(object):
             names = [p.properties['name'] for p in lpars]
             assert set(names) == set(exp_names)
 
+    @pytest.mark.parametrize(
+        "list_kwargs, prop_names", [
+            ({},
+             ['object-uri', 'name', 'status']),
+            (dict(additional_properties=[]),
+             ['object-uri', 'name', 'status']),
+            (dict(additional_properties=['description']),
+             ['object-uri', 'name', 'status', 'description']),
+            (dict(additional_properties=['description', 'activation-mode']),
+             ['object-uri', 'name', 'status', 'description',
+              'activation-mode']),
+            (dict(additional_properties=['ssc-host-name']),
+             ['object-uri', 'name', 'status', 'ssc-host-name']
+             # ssc-host-name is not on every lpar
+             ),
+        ]
+    )
+    def test_console_list_permlpars_add_props(
+            self, list_kwargs, prop_names):
+        """
+        Test Console.list_permitted_lpars() with additional_properties.
+        """
+
+        # Add two faked partitions
+        faked_lpar1 = self.add_lpar1()
+        faked_lpar2 = self.add_lpar2()
+
+        self.session.hmc.consoles.add({
+            'object-id': None,
+            # object-uri will be automatically set
+            'parent': None,
+            'class': 'console',
+            'name': 'fake-console1',
+            'description': 'Console #1',
+        })
+
+        console = self.client.consoles.console
+
+        # Execute the code to be tested
+        lpars = console.list_permitted_lpars(**list_kwargs)
+
+        exp_faked_lpars = [faked_lpar1, faked_lpar2]
+
+        assert_resources(lpars, exp_faked_lpars, prop_names)
+
     # TODO: Test for Lpar.start()
     # TODO: Test for Lpar.stop()
     # TODO: Test for Lpar.psw_restart()

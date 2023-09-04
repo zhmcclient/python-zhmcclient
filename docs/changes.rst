@@ -65,7 +65,8 @@ Released: not yet
   (bulk operations) (issue #1250).
 
 * Added support for requesting additional properties in list() methods for
-  Adapter, Certificate, Partition, VirtualSwitch resources.
+  Adapter, Certificate, Partition, VirtualSwitch, ImageActivationProfile
+  resources, and for Console.list_permitted_lpars().
 
 * Improved performance of list() method of all resource types when called
   with full_properties=True by using a bulk operation (aggregation service).

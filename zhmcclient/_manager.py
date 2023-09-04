@@ -754,7 +754,7 @@ class BaseManager(object):
                 query_parms, client_filters = divide_filter_args(
                     self._query_props, filter_args)
                 if additional_properties:
-                    ap_parm = 'additional_properties={}'.format(
+                    ap_parm = 'additional-properties={}'.format(
                         ','.join(additional_properties))
                     query_parms.append(ap_parm)
                 query_parms_str = make_query_str(query_parms)
