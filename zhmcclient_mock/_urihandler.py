@@ -213,6 +213,16 @@ class ServerError(HTTPError):
             message=message)
 
 
+class MockedResourceError(Exception):
+    """
+    Indicates that there is an issue with the setup of a mocked resource.
+    """
+
+    def __init__(self, message):
+        super(MockedResourceError, self).__init__()
+        self.message = message
+
+
 def parse_query_parms(method, uri):
     """
     Parse the specified URI into URI without query parms and query parms,
@@ -403,14 +413,17 @@ def check_invalid_query_parms(method, uri, query_parms, valid_query_parms):
     Raises:
       BadRequestError with reason 1.
     """
+    invalid_parms = []
     for qp in query_parms:
         if qp not in valid_query_parms:
-            new_exc = BadRequestError(
-                method, uri, reason=1,
-                message="Unrecognized or unsupported query parameter: "
-                "{!r}".format(qp))
-            new_exc.__cause__ = None
-            raise new_exc  # zhmcclient_mock.BadRequestError
+            invalid_parms.append(qp)
+    if invalid_parms:
+        new_exc = BadRequestError(
+            method, uri, reason=1,
+            message="Unrecognized or unsupported query parameters: "
+            "{!r}".format(invalid_parms))
+        new_exc.__cause__ = None
+        raise new_exc  # zhmcclient_mock.BadRequestError
 
 
 class UriHandler(object):
@@ -507,7 +520,14 @@ class GenericGetPropertiesHandler(object):
             subset_pnames = subset_pnames.split(',')
             ret_props = {}
             for pname in subset_pnames:
-                ret_props[pname] = resource.properties[pname]
+                try:
+                    ret_props[pname] = resource.properties[pname]
+                except KeyError:
+                    new_exc = MockedResourceError(
+                        "Mocked resource with URI {!r} misses property {!r}".
+                        format(uri, pname))
+                    new_exc.__cause__ = None
+                    raise new_exc  # MockedResourceError
             return ret_props
         return dict(resource.properties)
 
