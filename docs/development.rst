@@ -208,6 +208,30 @@ Examples:
       $ TESTHMC=`HMC1` make end2end
 
 
+.. _`Running end2end tests against example mocked environments`:
+
+Running end2end tests against example mocked environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``examples`` directory contains example mocked environments defined in the
+following YAML files:
+
+* ``examples/example_mocked_z16_classic.yaml`` - HMC with a z16 in classic mode
+* ``examples/example_mocked_z16_dpm.yaml`` - HMC with a z16 in DPM mode
+
+It also contains an inventory and vault file for these mocked environments.
+The inventory file defines its default group to use these mocked environments:
+
+* ``examples/example_hmc_inventory.yaml``
+* ``examples/example_hmc_vault.yaml``
+
+These mock environments can be used to run the end2end tests against, by executing:
+
+.. code-block:: text
+
+    $ make end2end_mocked
+
+
 .. _`Enabling logging during end2end tests`:
 
 Enabling logging during end2end tests
