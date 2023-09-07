@@ -20,12 +20,12 @@ Change log
 ----------
 
 
-Version 1.11.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.11.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.10.x.
+This version contains all fixes up to version 1.10.1.
 
-Released: not yet
+Released: 2023-09-07
 
 **Incompatible changes:**
 
@@ -37,8 +37,6 @@ Released: not yet
 
   This is incompatible when your code uses pull_properties() on resource objects
   and relies on the prior behavior.
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -79,12 +77,6 @@ Released: not yet
 **Cleanup:**
 
 * Consolidated common code of list() methods into the _utils.py module.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.10.0
