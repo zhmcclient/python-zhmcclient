@@ -71,6 +71,11 @@ Released: not yet
 * Improved performance of list() method of all resource types when called
   with full_properties=True by using a bulk operation (aggregation service).
 
+* Test: Added a new make target "end2end_mocked" to run the end2end tests against
+  the mocked environments in the "examples" directory. As part of that, combined
+  the coverage results of unit tests and end2end tests into a single data file
+  that each test contributes to.
+
 **Cleanup:**
 
 * Consolidated common code of list() methods into the _utils.py module.

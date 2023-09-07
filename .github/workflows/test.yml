@@ -251,12 +251,18 @@ jobs:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
       run: |
         make pylint
-    - name: Run test
+    - name: Run unit test
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
         # TESTCASES: test_cim_obj.py
       run: |
         make test
+    - name: Run end2end_mocked test
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        # TESTCASES: test_cim_obj.py
+      run: |
+        make end2end_mocked
     - name: Send coverage result to coveralls.io
       shell: bash -l {0}
       env:
