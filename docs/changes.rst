@@ -64,6 +64,9 @@ Released: 2023-09-07
   This is incompatible when your code uses pull_properties() on resource objects
   and relies on the prior behavior.
 
+* Installation of this package using "setup.py" is no longer supported.
+  Use "pip" instead.
+
 **Bug fixes:**
 
 * Fixed safety issues from 2023-08-27.
