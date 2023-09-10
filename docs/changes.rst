@@ -33,6 +33,8 @@ Released: not yet
 
 **Bug fixes:**
 
+* Test: Circumvented a pip-check-reqs issue by excluding its version 2.5.0.
+
 **Enhancements:**
 
 **Cleanup:**
