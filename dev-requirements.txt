@@ -259,8 +259,9 @@ pipdeptree>=2.2.0
 # pip-check-reqs 2.3.2 is needed to have proper support for pip<21.3.
 # pip-check-reqs 2.4.0 requires Python>=3.8.
 # pip-check-reqs 2.4.3 fixes a speed issue on Python 3.11 and requires pip>=21.2.4
+# pip-check-reqs 2.5.0 has issue https://github.com/r1chardj0n3s/pip-check-reqs/issues/143
 pip-check-reqs>=2.3.2; python_version >= '3.5' and python_version <= '3.7'
-pip-check-reqs>=2.4.3; python_version >= '3.8'
+pip-check-reqs>=2.4.3,!=2.5.0; python_version >= '3.8'
 
 # Indirect dependencies are not specified in this file unless constraints are needed.
 
