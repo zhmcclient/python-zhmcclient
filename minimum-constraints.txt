@@ -176,6 +176,7 @@ coveralls==3.3.0; python_version >= '3.5'
 # Safety is run only on Python >=3.6
 safety==2.2.0; python_version >= '3.6'
 dparse==0.6.2; python_version >= '3.6'
+ruamel.yaml==0.17.21; python_version >= '3.6'
 
 # Tox
 tox==2.5.0
