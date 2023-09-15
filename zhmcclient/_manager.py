@@ -837,7 +837,8 @@ class BaseManager(object):
 
         if bulk_reqs:
             uri = '/api/services/aggregation/submit'
-            threads = min(16, round(len(props_list) / 2 + 0.51))
+            # 10 threads is the supported maximum
+            threads = min(10, round(len(props_list) / 2 + 0.51))
             body = {
                 'requests': bulk_reqs,
                 'threads': threads,
