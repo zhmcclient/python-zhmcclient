@@ -37,6 +37,9 @@ Released: not yet
 
 * Addressed safety issues fro 2023-09-15.
 
+* Fixed the maximum number of concurrent threads in bulk operations to be
+  the documented maximum of 10.
+
 **Enhancements:**
 
 **Cleanup:**
