@@ -63,6 +63,8 @@ Released: not yet
 * Fixed the maximum number of concurrent threads in bulk operations to be
   the documented maximum of 10.
 
+* Test: Added unit tests and end2end tests for list permitted partitions operation
+
 **Enhancements:**
 
 * Mock support: Improved mocked Hipersocket adapters; they now have all their

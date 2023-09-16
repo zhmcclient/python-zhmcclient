@@ -140,6 +140,7 @@ hmc_definition:
             processor-mode: shared
             ifl-processors: 2
             initial-ifl-processing-weight: 20
+            has-unacceptable-status: false
             initial-memory: 4096
             maximum-memory: 4096
             boot-device: network-adapter
