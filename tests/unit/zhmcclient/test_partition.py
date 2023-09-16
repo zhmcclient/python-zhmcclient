@@ -26,7 +26,6 @@ from zhmcclient import Client, Partition, HTTPError, NotFound
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
-
 # Object IDs and names of our faked partitions:
 PART1_OID = 'part1-oid'
 PART1_NAME = 'part 1'
@@ -954,6 +953,10 @@ class TestPartition(object):
              [PART1_NAME, PART2_NAME]),
             ({'name': PART1_NAME},
              [PART1_NAME]),
+            ({'name': PART1_NAME, 'cpc-name': CPC_NAME},
+             [PART1_NAME]),
+            ({'name': PART1_NAME, 'cpc-name': 'bad'},
+             [])
         ]
     )
     def test_console_list_permitted_partitions(self, filter_args, exp_names):

@@ -296,3 +296,96 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
         assert len(messages) == end - begin + 1
         for message in messages:
             assert message in all_messages
+
+
+# Full set of properties that are common on all types of partitions:
+COMMON_PROPS_LIST = ['name', 'object-uri', 'type', 'status',
+                     'has-unacceptable-status']
+FULL_PROPS_LIST = COMMON_PROPS_LIST + [
+    'initial-memory', 'maximum-memory', 'partition-id', 'processor-mode',
+    'autogenerate-partition-id', 'boot-device', 'boot-network-device',
+    'description', 'hba-uris', 'ifl-processors',
+    'initial-ifl-processing-weight', 'nic-uris', 'partition-link-uris',
+    'storage-group-uris', 'tape-link-uris', 'virtual-function-uris'
+]
+LIST_PERMITTED_PARTITION_TESTCASES = [
+    # The list items are tuples with the following items:
+    # - desc (string): description of the testcase.
+    # - input_kwargs (dict): Input parameters for the function.
+    # - exp_props (List) : Expected properties in the output
+    (
+        "Default parameters",
+        dict(),
+        COMMON_PROPS_LIST,
+    ),
+    (
+        "full_properties",
+        dict(
+            full_properties=True,
+        ),
+        FULL_PROPS_LIST
+    ),
+    (
+        "full_properties and filtering",
+        dict(
+            full_properties=True,
+            filter_args={'type': 'linux'},
+        ),
+        FULL_PROPS_LIST
+    ),
+    (
+        "Bad request in filter_args",
+        dict(
+            filter_args={'name': '@#1c'}
+        ),
+        COMMON_PROPS_LIST
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, input_kwargs, exp_props",
+    LIST_PERMITTED_PARTITION_TESTCASES)
+def test_console_list_permitted_partitions(desc, input_kwargs, exp_props,
+                                           dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name, unused-argument
+    """
+    Test list permitted partitions on a cpc
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+        session = cpc.manager.session
+        hd = session.hmc_definition
+        client = zhmcclient.Client(session)
+        console = client.consoles.console
+
+        permitted_part_list = console.list_permitted_partitions(**input_kwargs)
+        if not permitted_part_list:
+            skip_warn("No partitions on CPC {c} managed by HMC {h} for "
+                      "the user {u}".format(c=cpc.name, h=hd.host,
+                                            u=session.userid))
+
+        permitted_part_list = pick_test_resources(permitted_part_list)
+        for partition in permitted_part_list:
+            assert isinstance(partition, zhmcclient.Partition)
+            for pname in exp_props:
+                # The property is supposed to be in the result
+                actual_pnames = list(partition.properties.keys())
+                assert pname in actual_pnames, \
+                    "Actual partition: {p!r}".format(p=partition)
+
+        # Test list permitted partitions with filtering
+        permitted_partitions_filter_agrs = (console.list_permitted_partitions(
+            filter_args={'name': permitted_part_list[0].name,
+                         'cpc-name': permitted_part_list[
+                             0].manager.parent.name}))
+        assert len(permitted_partitions_filter_agrs) == 1
+
+        # Test list permitted partitions with bad filter args
+        permitted_partitions_filter_agrs = (console.list_permitted_partitions(
+            filter_args={'name': permitted_part_list[0].name,
+                         'cpc-name': 'bad-cpc'}))
+        assert len(permitted_partitions_filter_agrs) == 0
