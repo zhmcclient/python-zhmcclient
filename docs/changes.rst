@@ -20,16 +20,38 @@ Change log
 ----------
 
 
+Version 1.11.2.dev1
+^^^^^^^^^^^^^^^^^^^
+
+Released: not yet
+
+**Incompatible changes:**
+
+**Deprecations:**
+
+**Bug fixes:**
+
+**Enhancements:**
+
+**Cleanup:**
+
+**Known issues:**
+
+* See `list of open issues`_.
+
+.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+
+
 Version 1.11.1
 ^^^^^^^^^^^^^^
 
-Released: 20233-09-15
+Released: 2023-09-15
 
 **Bug fixes:**
 
 * Test: Circumvented a pip-check-reqs issue by excluding its version 2.5.0.
 
-* Addressed safety issues fro 2023-09-15.
+* Addressed safety issues from 2023-09-15.
 
 * Fixed the maximum number of concurrent threads in bulk operations to be
   the documented maximum of 10.
