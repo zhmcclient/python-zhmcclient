@@ -20,29 +20,15 @@ Change log
 ----------
 
 
-Version 1.11.2.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.11.2
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
-
-**Bug fixes:**
+Released: 2023-09-20
 
 **Enhancements:**
 
 * Mock support: Improved mocked Hipersocket adapters; they now have all their
   properties and default values for all except adapter-id and channel-path-id.
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.11.1
