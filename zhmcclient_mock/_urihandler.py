@@ -2507,8 +2507,27 @@ class AdaptersHandler(object):
         # type, but because the behavior of the Adapter resource object is
         # that it only has its input properties set, we add the 'type'
         # property on a copy of the input properties.
-        body2 = body.copy()
-        body2['type'] = 'hipersockets'
+        # the other properties are added in order to satisfy the end2end tests,
+        # but some of their values are None or other dummy values.
+        body2 = {
+            'description': '',
+            'status': 'active',
+            'type': 'hipersockets',
+            'adapter-id': None,  # TODO: Provide unique PCHID
+            'adapter-family': 'hipersockets',
+            'detected-card-type': 'hipersockets',
+            'port-count': 1,
+            'network-port-uris': [],  # Will be updated when adding port to HMC
+            'state': 'online',
+            'maximum-transmission-unit-size': 8,
+            'configured-capacity': 42,
+            'used-capacity': 42,
+            'allowed-capacity': 42,
+            'maximum-total-capacity': 42,
+            'channel-path-id': None,  # TODO: Provide unique CHPID
+            'physical-channel-status': 'operating',
+        }
+        body2.update(body)
         try:
             new_adapter = cpc.adapters.add(body2)
         except InputError as exc:
