@@ -33,6 +33,9 @@ Released: not yet
 
 **Enhancements:**
 
+* Mock support: Improved mocked Hipersocket adapters; they now have all their
+  properties and default values for all except adapter-id and channel-path-id.
+
 **Cleanup:**
 
 **Known issues:**
