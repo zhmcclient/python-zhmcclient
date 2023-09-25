@@ -45,6 +45,9 @@ Released: not yet
 * Mock support: Improved mocked Hipersocket adapters; they now have all their
   properties and default values for all except adapter-id and channel-path-id.
 
+* Added support for the "List OS Messages" operation on partitions (in DPM mode)
+  and LPARs (in classic mode). (issue #1278)
+
 **Cleanup:**
 
 **Known issues:**

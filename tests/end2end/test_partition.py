@@ -22,6 +22,7 @@ test partitions.
 from __future__ import absolute_import, print_function
 
 import warnings
+import random
 import pytest
 from requests.packages import urllib3
 
@@ -35,6 +36,9 @@ from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
+
+# Print debug messages in tests
+DEBUG = False
 
 # Properties in minimalistic Partition objects (e.g. find_by_name())
 PART_MINIMAL_PROPS = ['object-uri', 'name']
@@ -204,3 +208,91 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
 
         with pytest.raises(zhmcclient.NotFound):
             cpc.partitions.find(name=part_name_new)
+
+
+def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test "List OS Messages" operation on partitions
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        if hd.mock_file:
+            skip_warn("zhmcclient mock does not support 'List OS Messages' "
+                      "operation")
+
+        # Pick the partition to test with
+        part_list = cpc.partitions.list()
+        if not part_list:
+            skip_warn("No partitions on CPC {c} managed by HMC {h}".
+                      format(c=cpc.name, h=hd.host))
+
+        test_part = None
+        for part in part_list:
+
+            # Test: List all messages (without begin or end)
+            try:
+                if DEBUG:
+                    print("Debug: Test: Listing OS messages of partition {} "
+                          "with no begin/end".format(part.name))
+                result = part.list_os_messages()
+            except zhmcclient.HTTPError as exc:
+                if exc.http_status == 409 and exc.reason == 332:
+                    # Meaning: The messages interface for the partition is not
+                    # available
+                    if DEBUG:
+                        print("Debug: Partition {} cannot list OS messages".
+                              format(part.name))
+                    continue
+                raise
+
+            all_messages = result['os-messages']
+            if len(all_messages) >= 3:
+                test_part = part
+                break
+
+            if DEBUG:
+                print("Debug: Partition {} has only {} OS messages".
+                      format(part.name, len(all_messages)))
+
+        if test_part is None:
+            skip_warn("No partition on CPC {c} has the minimum number of 3 OS "
+                      "messages for the test".format(c=cpc.name))
+
+        # Test with begin/end selecting the full set of messages
+        all_begin = all_messages[0]['sequence-number']
+        all_end = all_messages[-1]['sequence-number']
+        if DEBUG:
+            print("Debug: Test: Listing OS messages of partition {} with "
+                  "begin={}, end={}".format(test_part.name, all_begin, all_end))
+        result = test_part.list_os_messages(begin=all_begin, end=all_end)
+        messages = result['os-messages']
+        assert len(messages) == all_end - all_begin + 1
+        assert messages == all_messages
+
+        # Test with begin/end selecting a subset of messages
+        while True:
+            seq1 = random.choice(all_messages)['sequence-number']
+            if seq1 not in {all_begin, all_end}:
+                break
+        while True:
+            seq2 = random.choice(all_messages)['sequence-number']
+            if seq2 not in {all_begin, all_end, seq1}:
+                break
+        begin = min(seq1, seq2)
+        end = max(seq1, seq2)
+        if DEBUG:
+            print("Debug: Test: Listing OS messages of partition {} with "
+                  "begin={}, end={}".format(test_part.name, begin, end))
+        result = test_part.list_os_messages(begin=begin, end=end)
+        messages = result['os-messages']
+        assert len(messages) == end - begin + 1
+        for message in messages:
+            assert message in all_messages
