@@ -23,13 +23,14 @@ from __future__ import absolute_import, print_function
 
 import uuid
 import warnings
+import pdb
 import pytest
 from requests.packages import urllib3
 
 import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
+from zhmcclient.testutils import dpm_mode_cpcs, all_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
@@ -570,3 +571,138 @@ def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
             assert sibling_ids == exp_ids, \
                 "Adapter '{}' has unexpected siblings: got: {}, expected: {}". \
                 format(adapter.name, sibling_names, exp_names)
+
+
+# Properties in returned adapters, where each list item is a
+# tuple(prop name, minimum CPC version).
+
+# Default properties when no full/additional properties are requested:
+DEFAULT_PROPS_LIST_PERMITTED_ADAPTERS = [
+    ('object-uri', [2, 13, 1]),
+    ('name', [2, 13, 1]),
+    ('adapter-id', [2, 13, 1]),
+    ('adapter-family', [2, 13, 1]),
+    ('type', [2, 13, 1]),
+    ('status', [2, 13, 1]),
+    # The 'firmware-update-pending' property requires the
+    # LI_1580_CRYPTO_AUTO_TOGGLE feature to be enabled:
+    ('firmware-update-pending', [2, 16, 0]),
+    ('cpc-name', [2, 13, 1]),
+    ('cpc-object-uri', [2, 13, 1]),
+    ('se-version', [2, 13, 1]),
+    ('dpm-enabled', [2, 13, 1]),
+]
+
+# Full set of properties that are common on all types of adapters:
+COMMON_FULL_PROPS_ADAPTERS = DEFAULT_PROPS_LIST_PERMITTED_ADAPTERS + [
+    ('object-id', [2, 13, 1]),
+    ('class', [2, 13, 1]),
+    ('parent', [2, 13, 1]),
+    ('description', [2, 13, 1]),
+    ('detected-card-type', [2, 13, 1]),
+    ('state', [2, 13, 1]),
+    ('physical-channel-status', [2, 13, 1]),
+]
+
+LIST_PERMITTED_ADAPTERS_TESTCASES = [
+    # The list items are tuples with the following items:
+    # - desc (string): description of the testcase.
+    # - input_kwargs (dict): Input parameters for the function.
+    # - exp_props (list): List of expected properties in the result. Each list
+    #     item is a tuple(prop name, minimum CPC version).
+    # - exp_exc_type (class): Expected exception type, or None for success.
+    # - run (bool or 'pdb'): Whether to run the test or call the debugger.
+
+    (
+        "Default parameters",
+        dict(),
+        DEFAULT_PROPS_LIST_PERMITTED_ADAPTERS,
+        None,
+        True,
+    ),
+    (
+        "full_properties",
+        dict(
+            full_properties=True,
+        ),
+        COMMON_FULL_PROPS_ADAPTERS,
+        None,
+        True,
+    ),
+    (
+        "'detected-card-type' in additional_properties",
+        dict(
+            additional_properties=['detected-card-type'],
+        ),
+        DEFAULT_PROPS_LIST_PERMITTED_ADAPTERS + [
+            ('detected-card-type', [2, 13, 1]),
+        ],
+        None,
+        True,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, input_kwargs, exp_props, exp_exc_type, run",
+    LIST_PERMITTED_ADAPTERS_TESTCASES)
+def test_adapter_list_permitted(
+        desc, input_kwargs, exp_props, exp_exc_type, run,
+        all_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name, unused-argument
+    """
+    Test Console.list_permitted_adapters() without filtering, but with
+    different variations of returned properties.
+    """
+    if not all_cpcs:
+        pytest.skip("HMC definition does not include any CPCs")
+
+    console = all_cpcs[0].manager.console
+    session = console.manager.session
+    hd = session.hmc_definition
+
+    if hd.mock_file:
+        skip_warn("zhmcclient mock does not support 'List Permitted Adapters' "
+                  "operation")
+
+    if run == 'pdb':
+        # pylint: disable=forgotten-debug-statement
+        pdb.set_trace()
+
+    if not run:
+        skip_warn("Testcase is disabled in testcase definition")
+
+    if exp_exc_type:
+
+        with pytest.raises(exp_exc_type) as exc_info:
+
+            # Exercise the code to be tested
+            _ = console.list_permitted_adapters(**input_kwargs)
+
+        _ = exc_info.value
+    else:
+
+        # Exercise the code to be tested
+        adapters = console.list_permitted_adapters(**input_kwargs)
+
+        # Verify the result
+        for adapter in adapters:
+            cpc = adapter.manager.parent
+            cpc_version = list(map(int, cpc.prop('se-version').split('.')))
+            assert isinstance(adapter, zhmcclient.Adapter)
+            for pname, min_cpc_version in exp_props:
+                if cpc_version >= min_cpc_version:
+                    # The property is supposed to be in the result
+                    actual_pnames = list(adapter.properties.keys())
+                    if pname == 'firmware-update-pending' \
+                            and pname not in actual_pnames:
+                        warnings.warn(
+                            "The 'firmware-update-pending' property is not "
+                            "returned for adapters on CPC {cn!r} (SE "
+                            "version {cv}). Check on the SE 'Manage Firmware "
+                            "Features' task whether feature "
+                            "LI_1580_CRYPTO_AUTO_TOGGLE is enabled.".
+                            format(cn=cpc.name, cv=cpc.prop('se-version')))
+                    else:
+                        assert pname in actual_pnames, \
+                            "Actual adapter: {a!r}".format(a=adapter)
