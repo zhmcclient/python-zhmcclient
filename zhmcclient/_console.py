@@ -846,6 +846,165 @@ class Console(BaseResource):
         return lpar_objs
 
     @logged_api_call
+    def list_permitted_adapters(
+            self, full_properties=False, filter_args=None,
+            additional_properties=None):
+        """
+        List the permitted adapters of all CPCs managed by this HMC.
+
+        The result will include all adapters of any DPM CPCs and z15 or later
+        classic-mode CPCs that are managed by the targeted HMC and to which the
+        user has object-access permission.
+
+        *Requires HMC 2.16.0 or later and otherwise raises HTTPError(404.4).*
+
+        The adapters in the result can be additionally limited by specifying
+        filter arguments.
+
+        Authorization requirements:
+
+        * Object permission to the adapter objects included in the result.
+
+        Parameters:
+
+          full_properties (bool):
+            Controls whether the full set of resource properties for the
+            returned Adapter objects should be retrieved, vs. only a short
+            set.
+
+          filter_args (dict):
+            Filter arguments for limiting the adapters in the result.
+            `None` causes no filtering to happen.
+
+            The following filter arguments are supported by server-side
+            filtering:
+
+            * name (string): Limits the result to adapters whose name
+              match the specified regular expression.
+
+            * adapter-id (string): Limits the result to adapters with a matching
+              "adapter-id" property value (i.e. PCHID).
+
+            * adapter-family (string): Limits the result to adapters with a
+              matching "adapter-family" property value (e.g. "hipersockets").
+
+            * type (string): Limits the result to adapters with a matching
+              "type" property value (e.g. "hipersockets").
+
+            * status (string): Limits the result to adapters with a matching
+              "status" property value.
+
+            * firmware-update-pending (bool): Limits the result to adapters with
+              a matching firmware-update-pending state.
+
+            * cpc-name (string): Limits the result to adapters whose CPC
+              has a name that matches the specified regular expression.
+
+            * dpm-enabled (bool): Limits the result to adapters whose CPC
+              has a matching "dpm-enabled" property.
+
+            Any other valid property of adapters is supported by
+            client-side filtering:
+
+            * <property-name>: Any other property of adapters.
+
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+        Returns:
+
+          : A list of :class:`~zhmcclient.Adapter` objects.
+
+          If no additional or full properties are specified, the returned
+          adapters will have the following properties:
+
+          * object-uri, name, adapter-id, adapter-family, type, status,
+          * firmware-update-pending (if CPC >=2.16 and
+            LI_1580_CRYPTO_AUTO_TOGGLE feature is enabled)
+
+          and the following properties for their parent CPC:
+
+          * cpc-name (CPC property 'name')
+          * cpc-object-uri (CPC property 'object-uri')
+          * se-version (CPC property 'se-version')
+          * dpm-enabled (CPC property 'dpm-enabled')
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        query_parms, client_filters = divide_filter_args(
+            ['name', 'adapter-id', 'adapter-family', 'type', 'status',
+             'firmware-update-pending', 'cpc-name', 'dpm-enabled'],
+            filter_args)
+        if additional_properties:
+            ap_parm = 'additional-properties={}'.format(
+                ','.join(additional_properties))
+            query_parms.append(ap_parm)
+        query_parms_str = make_query_str(query_parms)
+
+        # Perform the operation with the HMC, including any server-side
+        # filtering.
+        # Note: "List Permitted Adapters" was introduced in HMC/SE 2.14.0.
+        uri = '{}/operations/list-permitted-adapters{}'.format(
+            self.uri, query_parms_str)
+        result = self.manager.session.get(uri, resource=self)
+
+        adapter_obj_list = []
+        if result:
+
+            # Group the returned adapters by CPC
+            adapter_items_by_cpc = {}
+            cpcs_by_cpc = {}
+            for adapter_item in result['adapters']:
+                cpc_name = adapter_item['cpc-name']
+                if cpc_name not in adapter_items_by_cpc:
+                    adapter_items_by_cpc[cpc_name] = []
+                adapter_items_by_cpc[cpc_name].append(adapter_item)
+                if cpc_name not in cpcs_by_cpc:
+                    # Create a 'skeleton' local Cpc object we can hang the
+                    # Adapter objects off of, even if the user does not have
+                    # access permissions to these CPCs. Note that different
+                    # adapters can have different parent CPCs.
+                    cpc_props = {
+                        'dpm-enabled': adapter_item['dpm-enabled']
+                    }
+                    if 'se-version' in adapter_item:
+                        cpc_props['se-version'] = adapter_item['se-version']
+                    cpc = self.manager.client.cpcs.find_local(
+                        name=adapter_item['cpc-name'],
+                        uri=adapter_item['cpc-object-uri'],
+                        properties=cpc_props,
+                    )
+                    cpcs_by_cpc[cpc_name] = cpc
+
+            # Process the returned adapters
+            for cpc_name, cpc in cpcs_by_cpc.items():
+                adapter_items = adapter_items_by_cpc[cpc_name]
+                adapter_manager = cpc.adapters
+                if full_properties:
+                    # pylint: disable=protected-access
+                    adapters = adapter_manager._get_properties_bulk(
+                        adapter_items, client_filters)
+                    adapter_obj_list.extend(adapters)
+                else:
+                    for adapter_item in adapter_items:
+                        # pylint: disable=protected-access
+                        adapter = adapter_manager.resource_class(
+                            manager=adapter_manager,
+                            uri=adapter_item[adapter_manager._uri_prop],
+                            name=adapter_item[adapter_manager._name_prop],
+                            properties=adapter_item)
+                        if matches_filters(adapter, client_filters):
+                            adapter_obj_list.append(adapter)
+
+        return adapter_obj_list
+
+    @logged_api_call
     def list_api_features(self, name=None):
         """
         Returns information about the Web Services API features (introduced with

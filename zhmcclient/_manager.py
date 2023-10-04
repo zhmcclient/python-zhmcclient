@@ -803,6 +803,10 @@ class BaseManager(object):
             List of resource properties from List operation.
             Must contain the resource URIs.
 
+            These properties will appear in the returned zhmcclient resource
+            objects, updated by the actual property values from the HMC.
+            This allows adding properties to those returned by the HMC.
+
           client_filters (dict):
             Filter arguments to be applied on the client side after the
             resource properties have been retrieved.
@@ -833,7 +837,7 @@ class BaseManager(object):
                 'id': req_id_str,
             }
             bulk_reqs.append(req)
-            req_by_id[req_id_str] = req
+            req_by_id[req_id_str] = (req, props)
 
         if bulk_reqs:
             uri = '/api/services/aggregation/submit'
@@ -846,8 +850,14 @@ class BaseManager(object):
             result = self.session.post(uri, body=body)
             for res in result:
                 req_id = res['id']
-                req = req_by_id[req_id]
-                resource_props = res['body']
+                req, props = req_by_id[req_id]
+
+                # We first use the properties from the props_list parameter,
+                # and then update that with the properties returned from the
+                # HMC:
+                resource_props = dict(props)
+                resource_props.update(res['body'])
+
                 if res['status'] != 200:
                     # Similar to the non-full case: The first
                     # error raises an exception.
