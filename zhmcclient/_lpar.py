@@ -34,7 +34,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._exceptions import StatusTimeout
 from ._logging import logged_api_call
-from ._utils import RC_LOGICAL_PARTITION
+from ._utils import RC_LOGICAL_PARTITION, make_query_str
 
 __all__ = ['LparManager', 'Lpar']
 
@@ -1727,6 +1727,84 @@ class Lpar(BaseResource):
                 'operating-system-command-text': os_command_text}
         self.manager.session.post(
             self.uri + '/operations/send-os-cmd', resource=self, body=body)
+
+    @logged_api_call
+    def list_os_messages(
+            self, begin=None, end=None, is_held=None, is_priority=None,
+            max_messages=0):
+        """
+        List all currently available operating system messages for this
+        LPAR.
+
+        Only a certain amount of OS message data from each LPAR is
+        preserved by the HMC for retrieval by this operation. If the OS
+        produces more than that amount, the oldest non-held, non-priority
+        OS messages are no longer available. A gap in the sequence numbers
+        indicates a loss of messages. A loss may be due to that space
+        limitation, or it may be due to the deletion of messages by a console
+        user or the OS.
+
+        Authorization requirements:
+
+        * Object-access permission to this LPAR.
+        * Task permission to the "Operating System Messages" task (optionally
+          in view-only mode).
+
+        Parameters:
+
+          begin (integer): A message sequence number to limit returned
+            messages. OS messages with a sequence number less than this are
+            omitted from the results. If `None`, no such filtering is
+            performed.
+
+          end (integer): A message sequence number to limit returned
+            messages. OS messages with a sequence number greater than this are
+            omitted from the results. If `None`, no such filtering is
+            performed.
+
+          is_held(bool): Limit the returned messages to only held (if `True`)
+            or only non-held (if `False`) messages. If `None`, no such filtering
+            is performed.
+
+          is_priority(bool): Limit the returned messages to only priority (if
+            `True`) or non-priority (if `False`) messages. If `None`, no such
+            filtering is performed.
+
+          max_messages(int): Limits the returned messages to the specified
+            maximum number, starting from the begin of the sequence numbers
+            in the result that would otherwise be returned.
+            If 0, no such filtering is performed.
+
+        Returns:
+
+          list of dict: List of OS messages, where each OS message is a dict
+          with the items defined for the "os-message-info" data structure
+          in the :term:`HMC WS-API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        query_parms = []
+        if begin is not None:
+            query_parms.append('begin-sequence-number={}'.format(begin))
+        if end is not None:
+            query_parms.append('end-sequence-number={}'.format(end))
+        if is_held is not None:
+            query_parms.append('is-held={}'.format(str(is_held).lower()))
+        if is_priority is not None:
+            query_parms.append(
+                'is-priority={}'.format(str(is_priority).lower()))
+        if max_messages > 0:
+            query_parms.append('max-messages={}'.format(max_messages))
+        query_str = make_query_str(query_parms)
+        result = self.manager.session.get(
+            '{}/operations/list-os-messages{}'.format(self.uri, query_str),
+            resource=self)
+        return result
 
     @logged_api_call
     def psw_restart(self, wait_for_completion=True, operation_timeout=None,

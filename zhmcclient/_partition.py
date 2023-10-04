@@ -42,7 +42,7 @@ from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
 from ._logging import logged_api_call
-from ._utils import RC_PARTITION
+from ._utils import RC_PARTITION, make_query_str
 
 __all__ = ['PartitionManager', 'Partition']
 
@@ -933,6 +933,62 @@ class Partition(BaseResource):
                 'operating-system-command-text': os_command_text}
         self.manager.session.post(
             self.uri + '/operations/send-os-cmd', resource=self, body=body)
+
+    @logged_api_call
+    def list_os_messages(self, begin=None, end=None):
+        """
+        List all currently available operating system messages for this
+        partition.
+
+        Only a certain amount of OS message data from each partition is
+        preserved by the HMC for retrieval by this operation. If the OS
+        produces more than that amount, the oldest non-held, non-priority
+        OS messages are no longer available. A gap in the sequence numbers
+        indicates a loss of messages. A loss may be due to that space
+        limitation, or it may be due to the deletion of messages by a console
+        user or the OS.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Operating System Messages" task (optionally
+          in view-only mode).
+
+        Parameters:
+
+          begin (integer): A message sequence number to limit returned
+            messages. OS messages with a sequence number less than this are
+            omitted from the results. If `None`, no such filtering is
+            performed.
+
+          end (integer): A message sequence number to limit returned
+            messages. OS messages with a sequence number greater than this are
+            omitted from the results. If `None`, no such filtering is
+            performed.
+
+        Returns:
+
+          list of dict: List of OS messages, where each OS message is a dict
+          with the items defined for the "os-message-info" data structure
+          in the :term:`HMC WS-API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        query_parms = []
+        if begin is not None:
+            query_parms.append('begin-sequence-number={}'.format(begin))
+        if end is not None:
+            query_parms.append('end-sequence-number={}'.format(end))
+        query_str = make_query_str(query_parms)
+        result = self.manager.session.get(
+            '{}/operations/list-os-messages{}'.format(self.uri, query_str),
+            resource=self)
+        return result
 
     @logged_api_call
     def wait_for_status(self, status, status_timeout=None):
