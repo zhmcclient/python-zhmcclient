@@ -369,7 +369,7 @@ toml==0.10.0
 # tomli 2.0.0 removed support for py36
 tomli==1.1.0; python_version == '3.6'
 tomli==2.0.1; python_version >= '3.7'
-tornado==4.1; python_version == '2.7'
+tornado==4.2.1; python_version == '2.7'
 tornado==6.1; python_version >= '3.5' and python_version <= '3.7'
 tornado==6.3.3; python_version >= '3.8'
 tqdm==4.11.2; python_version <= '3.5'
