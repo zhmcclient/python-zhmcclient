@@ -168,7 +168,7 @@ The package provides an extra named 'testutils' that installs additional
 Python packages that are needed for using the 'zhmcclient.testutils'
 sub-package which provides support for end2end testing against a real HMC,
 and is also used in the example scripts.
-See :ref:`zhmcclient.testutils module` for details.
+See :mod:`zhmcclient.testutils` module for details.
 
 That extra is installed with:
 
