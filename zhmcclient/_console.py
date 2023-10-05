@@ -1078,6 +1078,7 @@ class Console(BaseResource):
 
           backup_location_type (string): Type of backup location for the
             HMC backup that is performed:
+
               - "ftp": The FTP server that was used for the last console backup
                 as defined on the "Configure Backup Settings" user interface
                 task in the HMC GUI.

@@ -1779,7 +1779,7 @@ class Lpar(BaseResource):
 
           list of dict: List of OS messages, where each OS message is a dict
           with the items defined for the "os-message-info" data structure
-          in the :term:`HMC WS-API` book.
+          in the :term:`HMC API` book.
 
         Raises:
 
