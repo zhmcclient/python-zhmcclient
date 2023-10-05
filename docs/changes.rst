@@ -48,6 +48,9 @@ Released: not yet
 * Added support for the "List OS Messages" operation on partitions (in DPM mode)
   and LPARs (in classic mode). (issue #1278)
 
+* Examples: Added example script increase_crypto_config.py for increasing the
+  crypto configuration of a partition on a CPC in DPM mode.
+
 **Cleanup:**
 
 **Known issues:**
