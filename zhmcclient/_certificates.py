@@ -21,8 +21,8 @@ specific :term:`CPC`. They can only be used if the API feature
 "secure-boot-with-certificates" is available on both, :term:`HMC` and
 :term:`CPC`.
 
-They can be assigned to one or more :term:`LPAR`s, :term:`Partition`s, or
-:term:`Image Activation Profile`s to be used during the load/start of the
+They can be assigned to one or more :term:`LPAR`, :term:`Partition`, or
+:term:`Image Activation Profile` to be used during the load/start of the
 corresponding entities when doing a "secure boot" load for an LPAR, respectively
 a Partition start.
 """
