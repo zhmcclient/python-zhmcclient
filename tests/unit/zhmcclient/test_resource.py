@@ -28,8 +28,7 @@ from collections import OrderedDict
 from immutable_views import DictView
 import pytest
 
-from zhmcclient import BaseResource, BaseManager, Session, Client, \
-    CeasedExistence
+from zhmcclient import BaseResource, BaseManager, Session, Client, HTTPError
 from zhmcclient._utils import divide_filter_args
 from zhmcclient_mock import FakedSession
 
@@ -764,7 +763,7 @@ class TestPropertyMethodsMocked(object):
         if delete:
             resource.delete()
 
-            with pytest.raises(CeasedExistence):
+            with pytest.raises(HTTPError):
 
                 # The code to be tested
                 resource.pull_full_properties()
@@ -877,7 +876,7 @@ class TestPropertyMethodsMocked(object):
             False,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(properties=['object-id']),
@@ -885,7 +884,7 @@ class TestPropertyMethodsMocked(object):
             True,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
 
         (
@@ -900,9 +899,9 @@ class TestPropertyMethodsMocked(object):
             dict(properties=['invalid-property']),
             False,
             True,
-            {'name', 'object-uri', 'object-id'},
-            True,
             None,
+            None,
+            HTTPError,
         ),
         (
             dict(properties=['invalid-property']),
@@ -910,7 +909,7 @@ class TestPropertyMethodsMocked(object):
             False,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(properties=['invalid-property']),
@@ -918,7 +917,7 @@ class TestPropertyMethodsMocked(object):
             True,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
     ]
 
@@ -1039,7 +1038,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(name='object-id'),
@@ -1048,7 +1047,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
 
         (
@@ -1076,7 +1075,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(name='invalid-property'),
@@ -1085,7 +1084,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
     ]
 
@@ -1245,7 +1244,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(name='object-id'),
@@ -1254,7 +1253,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
 
         (
@@ -1282,7 +1281,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(name='object-id', default='foo'),
@@ -1291,7 +1290,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
 
         (
@@ -1319,7 +1318,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(name='invalid-property'),
@@ -1328,7 +1327,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
 
         (
@@ -1356,7 +1355,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
         (
             dict(name='invalid-property', default='foo'),
@@ -1365,7 +1364,7 @@ class TestPropertyMethodsMocked(object):
             None,
             None,
             None,
-            CeasedExistence,
+            HTTPError,
         ),
     ]
 
