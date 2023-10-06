@@ -540,11 +540,13 @@ class GenericGetPropertiesHandler(object):
                 try:
                     ret_props[pname] = resource.properties[pname]
                 except KeyError:
-                    new_exc = MockedResourceError(
-                        "Mocked resource with URI {!r} misses property {!r}".
-                        format(uri, pname))
+                    new_exc = BadRequestError(
+                        method, uri, reason=14,
+                        message="Invalid property {!r} in 'properties' query "
+                        "parameter for resource with URI {!r}".
+                        format(pname, uri))
                     new_exc.__cause__ = None
-                    raise new_exc  # MockedResourceError
+                    raise new_exc  # BadRequestError
             return ret_props
         return dict(resource.properties)
 

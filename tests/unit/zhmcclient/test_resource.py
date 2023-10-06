@@ -28,8 +28,9 @@ from collections import OrderedDict
 from immutable_views import DictView
 import pytest
 
-from zhmcclient import BaseResource, BaseManager, Session
+from zhmcclient import BaseResource, BaseManager, Session, Client, HTTPError
 from zhmcclient._utils import divide_filter_args
+from zhmcclient_mock import FakedSession
 
 
 class MyResource(BaseResource):
@@ -642,3 +643,778 @@ class TestThreadingSerialization(ResourceTestCase):
 
             assert value == exp_value, \
                 "Unexpected property value for '{}'".format(name)
+
+
+class TestPropertyMethodsMocked(object):
+    """
+    All tests of property methods that need mocked resources.
+    """
+
+    RESOURCE_OID = 'res-oid'
+    RESOURCE_NAME = 'res-name'
+    RESOURCE_DESC = 'Resource Description'
+
+    def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+
+        Set up a faked session, and add a faked CPC in DPM mode without any
+        child resources.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.client = Client(self.session)
+
+        self.faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'fake-cpc1-oid',
+            # object-uri is set up automatically
+            'parent': None,
+            'class': 'cpc',
+            'name': 'fake-cpc1-name',
+            'description': 'CPC #1 (DPM mode)',
+            'status': 'active',
+            'dpm-enabled': True,
+            'is-ensemble-member': False,
+            'iml-mode': 'dpm',
+            'machine-type': '2964',  # z13
+            'machine-model': 'N10',
+        })
+        self.cpc = self.client.cpcs.find(name='fake-cpc1-name')
+
+    def add_standard_hipersocket(self):
+        """
+        Add a standard Hipersocket adapter with one port to the faked HMC.
+
+        Adapter resources do not support the 'properties' query parameter.
+        """
+
+        # Adapter properties that will be auto-set:
+        # - object-uri
+        # - adapter-family
+        # - network-port-uris (to empty array)
+        faked_hs = self.faked_cpc.adapters.add({
+            'object-id': self.RESOURCE_OID,
+            'parent': self.faked_cpc.uri,
+            'class': 'adapter',
+            'name': self.RESOURCE_NAME,
+            'description': self.RESOURCE_DESC,
+            'status': 'active',
+            'type': 'hipersockets',
+            'adapter-id': '123',
+            'detected-card-type': 'hipersockets',
+            'port-count': 1,
+            'network-port-uris': [],
+            'state': 'online',
+            'configured-capacity': 32,
+            'used-capacity': 0,
+            'allowed-capacity': 32,
+            'maximum-total-capacity': 32,
+            'physical-channel-status': 'operating',
+            'maximum-transmission-unit-size': 56,
+        })
+
+        # Port properties that will be auto-set:
+        # - element-uri
+        # Properties in parent adapter that will be auto-set:
+        # - network-port-uris
+        faked_hs.ports.add({
+            'element-id': 'fake-port1-oid',
+            'parent': faked_hs.uri,
+            'class': 'network-port',
+            'index': 0,
+            'name': 'fake-port1-name',
+            'description': 'Hipersocket #1 Port #1',
+        })
+        return faked_hs
+
+    def add_standard_partition(self):
+        """
+        Add a standard partition.
+
+        Partition resources support the 'properties' query parameter.
+        """
+
+        # Partition properties that will be auto-set:
+        # - object-uri
+        faked_part = self.faked_cpc.partitions.add({
+            'object-id': self.RESOURCE_OID,
+            'parent': self.faked_cpc.uri,
+            'class': 'partition',
+            'name': self.RESOURCE_NAME,
+            'description': self.RESOURCE_DESC,
+            'status': 'stopped',
+        })
+        return faked_part
+
+    @pytest.mark.parametrize(
+        # Indicates whether to delete the resource before test
+        "delete", [False, True])
+    def test_pull_full_properties(self, delete):
+        """
+        Test BaseResource.pull_full_properties().
+        """
+        faked_res = self.add_standard_hipersocket()
+        res_mgr = self.cpc.adapters
+        resource = res_mgr.find(name=faked_res.name)
+        propnames_find = set(resource.properties.keys())
+        assert resource.full_properties is False
+
+        if delete:
+            resource.delete()
+
+            with pytest.raises(HTTPError):
+
+                # The code to be tested
+                resource.pull_full_properties()
+
+        else:
+
+            # The code to be tested
+            resource.pull_full_properties()
+
+            assert resource.full_properties is True
+            propnames_pull = set(resource.properties.keys())
+            assert propnames_pull.issuperset(propnames_find)
+            assert dict(resource.properties) == faked_res.properties
+
+    TESTCASES_PULL_PROPERTIES = [
+        # Testcases for test_pull_properties().
+        # Each list item is a tuple defining a testcase in the following format:
+        # - input_kwargs: keyword input parameters for the function
+        # - delete: Indicates whether to delete the resource before test
+        # - supports_properties: Resource supports 'properties' query parm
+        # - exp_propnames: Expected property names in resource after test
+        # - exp_full_props: Expected value for full_properties attribute
+        # - exp_exc_type: Expected type of exception, or None for success
+
+        (
+            dict(properties=None),
+            False,
+            False,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(properties=None),
+            False,
+            True,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(properties=None),
+            True,
+            False,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(properties=None),
+            True,
+            True,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+
+        (
+            dict(properties=[]),
+            False,
+            False,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(properties=[]),
+            False,
+            True,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(properties=[]),
+            True,
+            False,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(properties=[]),
+            True,
+            True,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+
+        (
+            dict(properties=['object-id']),
+            False,
+            False,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(properties=['object-id']),
+            False,
+            True,
+            {'name', 'object-uri', 'object-id'},
+            False,
+            None,
+        ),
+        (
+            dict(properties=['object-id']),
+            True,
+            False,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(properties=['object-id']),
+            True,
+            True,
+            None,
+            None,
+            HTTPError,
+        ),
+
+        (
+            dict(properties=['invalid-property']),
+            False,
+            False,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(properties=['invalid-property']),
+            False,
+            True,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(properties=['invalid-property']),
+            True,
+            False,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(properties=['invalid-property']),
+            True,
+            True,
+            None,
+            None,
+            HTTPError,
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "input_kwargs, delete, supports_properties, exp_propnames, "
+        "exp_full_props, exp_exc_type",
+        TESTCASES_PULL_PROPERTIES)
+    def test_pull_properties(
+            self, input_kwargs, delete, supports_properties, exp_propnames,
+            exp_full_props, exp_exc_type):
+        """
+        Test BaseResource.pull_properties().
+        """
+        if supports_properties:
+            # Partitions support the properties query parm
+            faked_res = self.add_standard_partition()
+            res_mgr = self.cpc.partitions
+        else:
+            # Adapters do not support the properties query parm
+            faked_res = self.add_standard_hipersocket()
+            res_mgr = self.cpc.adapters
+        assert res_mgr.supports_properties == supports_properties
+
+        resource = res_mgr.find(name=faked_res.name)
+        assert resource.full_properties is False
+
+        if delete:
+            resource.delete()
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # The code to be tested
+                resource.pull_properties(**input_kwargs)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+        else:
+
+            # The code to be tested
+            resource.pull_properties(**input_kwargs)
+
+            propnames = set(resource.properties.keys())
+            assert propnames.issuperset(exp_propnames)
+
+            assert resource.full_properties == exp_full_props
+
+    TESTCASES_GET_PROPERTY = [
+        # Testcases for test_get_property().
+        # Each list item is a tuple defining a testcase in the following format:
+        # - input_kwargs: keyword input parameters for the function
+        # - delete: Indicates whether to delete the resource before test
+        # - supports_properties: Resource supports 'properties' query parm
+        # - exp_value: Expected return value of the function
+        # - exp_propnames: Expected property names in resource after test
+        # - exp_full_props: Expected value for full_properties attribute
+        # - exp_exc_type: Expected type of exception, or None for success
+
+        (
+            dict(name='name'),
+            False,
+            False,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name'),
+            False,
+            True,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name'),
+            True,
+            False,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name'),
+            True,
+            True,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+
+        (
+            dict(name='object-id'),
+            False,
+            False,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(name='object-id'),
+            False,
+            True,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(name='object-id'),
+            True,
+            False,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(name='object-id'),
+            True,
+            True,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+
+        (
+            dict(name='invalid-property'),
+            False,
+            False,
+            None,
+            None,
+            None,
+            KeyError,
+        ),
+        (
+            dict(name='invalid-property'),
+            False,
+            True,
+            None,
+            None,
+            None,
+            KeyError,
+        ),
+        (
+            dict(name='invalid-property'),
+            True,
+            False,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(name='invalid-property'),
+            True,
+            True,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "input_kwargs, delete, supports_properties, exp_value, exp_propnames, "
+        "exp_full_props, exp_exc_type",
+        TESTCASES_GET_PROPERTY)
+    def test_get_property(
+            self, input_kwargs, delete, supports_properties, exp_value,
+            exp_propnames, exp_full_props, exp_exc_type):
+        """
+        Test BaseResource.get_property().
+        """
+        if supports_properties:
+            # Partitions support the properties query parm
+            faked_res = self.add_standard_partition()
+            res_mgr = self.cpc.partitions
+        else:
+            # Adapters do not support the properties query parm
+            faked_res = self.add_standard_hipersocket()
+            res_mgr = self.cpc.adapters
+        assert res_mgr.supports_properties == supports_properties
+
+        resource = res_mgr.find(name=faked_res.name)
+        assert resource.full_properties is False
+
+        if delete:
+            resource.delete()
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # The code to be tested
+                resource.get_property(**input_kwargs)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+        else:
+
+            # The code to be tested
+            value = resource.get_property(**input_kwargs)
+
+            assert value == exp_value
+
+            propnames = set(resource.properties.keys())
+            assert propnames.issuperset(exp_propnames)
+
+            assert resource.full_properties == exp_full_props
+
+    TESTCASES_PROP = [
+        # Testcases for test_prop().
+        # Each list item is a tuple defining a testcase in the following format:
+        # - input_kwargs: keyword input parameters for the function
+        # - delete: Indicates whether to delete the resource before test
+        # - supports_properties: Resource supports 'properties' query parm
+        # - exp_value: Expected return value of the function
+        # - exp_propnames: Expected property names in resource after test
+        # - exp_full_props: Expected value for full_properties attribute
+        # - exp_exc_type: Expected type of exception, or None for success
+
+        (
+            dict(name='name'),
+            False,
+            False,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name'),
+            False,
+            True,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name'),
+            True,
+            False,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name'),
+            True,
+            True,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+
+        (
+            dict(name='name', default='foo'),
+            False,
+            False,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name', default='foo'),
+            False,
+            True,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name', default='foo'),
+            True,
+            False,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+        (
+            dict(name='name', default='foo'),
+            True,
+            True,
+            RESOURCE_NAME,
+            {'name', 'object-uri'},
+            False,
+            None,
+        ),
+
+        (
+            dict(name='object-id'),
+            False,
+            False,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(name='object-id'),
+            False,
+            True,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(name='object-id'),
+            True,
+            False,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(name='object-id'),
+            True,
+            True,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+
+        (
+            dict(name='object-id', default='foo'),
+            False,
+            False,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(name='object-id', default='foo'),
+            False,
+            True,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            True,
+            None,
+        ),
+        (
+            dict(name='object-id', default='foo'),
+            True,
+            False,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(name='object-id', default='foo'),
+            True,
+            True,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+
+        (
+            dict(name='invalid-property'),
+            False,
+            False,
+            None,
+            {'name', 'object-uri', 'invalid-property'},
+            True,
+            None,
+        ),
+        (
+            dict(name='invalid-property'),
+            False,
+            True,
+            None,
+            {'name', 'object-uri', 'invalid-property'},
+            True,
+            None,
+        ),
+        (
+            dict(name='invalid-property'),
+            True,
+            False,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(name='invalid-property'),
+            True,
+            True,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+
+        (
+            dict(name='invalid-property', default='foo'),
+            False,
+            False,
+            'foo',
+            {'name', 'object-uri', 'invalid-property'},
+            True,
+            None,
+        ),
+        (
+            dict(name='invalid-property', default='foo'),
+            False,
+            True,
+            'foo',
+            {'name', 'object-uri', 'invalid-property'},
+            True,
+            None,
+        ),
+        (
+            dict(name='invalid-property', default='foo'),
+            True,
+            False,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+        (
+            dict(name='invalid-property', default='foo'),
+            True,
+            True,
+            None,
+            None,
+            None,
+            HTTPError,
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "input_kwargs, delete, supports_properties, exp_value, exp_propnames, "
+        "exp_full_props, exp_exc_type",
+        TESTCASES_PROP)
+    def test_prop(
+            self, input_kwargs, delete, supports_properties, exp_value,
+            exp_propnames, exp_full_props, exp_exc_type):
+        """
+        Test BaseResource.prop().
+        """
+        if supports_properties:
+            # Partitions support the properties query parm
+            faked_res = self.add_standard_partition()
+            res_mgr = self.cpc.partitions
+        else:
+            # Adapters do not support the properties query parm
+            faked_res = self.add_standard_hipersocket()
+            res_mgr = self.cpc.adapters
+        assert res_mgr.supports_properties == supports_properties
+
+        resource = res_mgr.find(name=faked_res.name)
+        assert resource.full_properties is False
+
+        if delete:
+            resource.delete()
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # The code to be tested
+                resource.prop(**input_kwargs)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+        else:
+
+            # The code to be tested
+            value = resource.prop(**input_kwargs)
+
+            assert value == exp_value
+
+            propnames = set(resource.properties.keys())
+            # prop() always adds the requested property
+            if 'name' in input_kwargs:
+                propnames.add(input_kwargs['name'])
+            assert propnames.issuperset(exp_propnames)
+
+            assert resource.full_properties == exp_full_props
+
+    # TODO: Add test function for get_properties_pulled()
