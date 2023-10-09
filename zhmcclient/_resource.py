@@ -236,11 +236,14 @@ class BaseResource(object):
     @logged_api_call
     def pull_full_properties(self):
         """
-        Retrieve the full set of resource properties and cache them in this
-        object.
+        Retrieve the full set of resource properties from the HMC and cache
+        them in this Python object.
+
+        If the resource no longer exists on the HMC,
+        :exc:`~zhmcclient.CeasedExistence` will be raised.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Authorization requirements:
 
@@ -257,7 +260,16 @@ class BaseResource(object):
         with self._property_lock:
             if self._ceased_existence:
                 raise CeasedExistence(self._uri)
-        full_properties = self.manager.session.get(self._uri, resource=self)
+
+        try:
+            full_properties = self.manager.session.get(self._uri, resource=self)
+        except HTTPError as exc:
+            if exc.http_status == 404 and exc.reason == 1:
+                # The resource no longer exists
+                self.cease_existence_local()
+                raise CeasedExistence(self._uri)
+            raise
+
         with self._property_lock:
             self._properties = dict(full_properties)
             self._properties_timestamp = int(time.time())
@@ -266,20 +278,24 @@ class BaseResource(object):
     @logged_api_call
     def pull_properties(self, properties):
         """
-        Retrieve the specified set of resource properties and cache them in
-        this zhmcclient object.
+        Retrieve the specified set of resource properties from the HMC and
+        cache them in this Python object.
 
         If no properties are specified, the method does nothing.
 
-        The values of other properties that may already exist in this
-        zhmcclient object remain unchanged.
+        The values of other properties that may already be cached in this
+        Python object remain unchanged.
 
-        If the HMC does not yet support property filtering for this type of
-        resource, the full set of properties is retrieved, as in
-        :meth:`pull_full_properties`.
+        If the HMC does not support property filtering for this type of
+        resource, or if the resource on the HMC does not have one or more of
+        the specified properties, the full set of properties is retrieved from
+        the HMC and cached in this Python object.
+
+        If the resource no longer exists on the HMC,
+        :exc:`~zhmcclient.CeasedExistence` will be raised.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Authorization requirements:
 
@@ -287,9 +303,9 @@ class BaseResource(object):
 
         Parameters:
 
-          properties (iterable of :term:`string`):
-            The names of one or more properties to be retrieved, using the
-            names defined in the respective 'Data model' section in the
+          properties (:term:`string` or list/tuple of strings):
+            Single name or list/tuple of names of the resource properties, using
+            the names defined in the respective 'Data model' sections in the
             :term:`HMC API` book.
 
         Raises:
@@ -302,6 +318,9 @@ class BaseResource(object):
         """
         if not properties:
             return
+
+        if not isinstance(properties, (list, tuple)):
+            properties = [properties]
 
         with self._property_lock:
             if self._ceased_existence:
@@ -328,13 +347,30 @@ class BaseResource(object):
                     subset_properties = self.manager.session.get(
                         self._uri, resource=self)
                     is_full = True
+                elif exc.http_status == 400 and exc.reason == 14:
+                    # The resource does not have one or more of the specified
+                    # properties, get full set
+                    subset_properties = self.manager.session.get(
+                        self._uri, resource=self)
+                    is_full = True
+                elif exc.http_status == 404 and exc.reason == 1:
+                    # The resource no longer exists
+                    self.cease_existence_local()
+                    raise CeasedExistence(self._uri)
                 else:
                     raise
         else:
             # Resource does not support the query parameter, get full set
-            subset_properties = self.manager.session.get(
-                self._uri, resource=self)
-            is_full = True
+            try:
+                subset_properties = self.manager.session.get(
+                    self._uri, resource=self)
+                is_full = True
+            except HTTPError as exc:
+                if exc.http_status == 404 and exc.reason == 1:
+                    # The resource no longer exists
+                    self.cease_existence_local()
+                    raise CeasedExistence(self._uri)
+                raise
 
         with self._property_lock:
             if is_full:
@@ -355,12 +391,18 @@ class BaseResource(object):
         """
         Return the value of a resource property.
 
-        If the resource property is not cached in this object yet, the full set
-        of resource properties is retrieved and cached in this object, and the
-        resource property is again attempted to be returned.
+        If the resource property is not cached in this Python object, the full
+        set of resource properties is retrieved from the HMC and cached in this
+        Python object.
+
+        If the resource no longer exists on the HMC,
+        :exc:`~zhmcclient.CeasedExistence` will be raised.
+
+        If the resource on the HMC does not have the property, :exc:`KeyError`
+        will be raised.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Authorization requirements:
 
@@ -378,8 +420,7 @@ class BaseResource(object):
 
         Raises:
 
-          KeyError: The resource property could not be found (also not in the
-            full set of resource properties).
+          KeyError: The resource does not have a property with that name.
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
@@ -401,15 +442,18 @@ class BaseResource(object):
     @logged_api_call
     def prop(self, name, default=None):
         """
-        Return the value of a resource property, applying a default if it
-        does not exist.
+        Return the value of a resource property, applying a default if the
+        resource does not have a property with that name.
 
-        If the resource property is not cached in this object yet, the full set
-        of resource properties is retrieved and cached in this object, and the
-        resource property is again attempted to be returned.
+        If the resource property is cached in this Python object, its value is
+        used. Otherwise, the full set of resource properties is retrieved from
+        the HMC and cached in this Python object.
+
+        If the resource no longer exists on the HMC,
+        :exc:`~zhmcclient.CeasedExistence` is raised.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Authorization requirements:
 
@@ -422,7 +466,8 @@ class BaseResource(object):
             respective 'Data model' sections in the :term:`HMC API` book.
 
           default:
-            Default value to be used, if the resource property does not exist.
+            Default value to be used, if the resource does not have a property
+            with the specified name.
 
         Returns:
 
@@ -441,14 +486,58 @@ class BaseResource(object):
         except KeyError:
             return default
 
+    def get_properties_pulled(self, names):
+        """
+        Return a set of resource properties with the values they currently have
+        on the HMC.
+
+        If auto-update is enabled for the resource, the property value is
+        returned from the (automatically updated) local cache. Otherwise, a
+        "Get Properties" operation is performed to get the current values. If
+        supported by the type of resource, the operation uses the 'properties'
+        query parameter to restrict the response to the desired properties.
+
+        If the resource on the HMC does not have a property that was specified,
+        its value will default to `None`.
+
+        If the resource no longer exists on the HMC,
+        :exc:`~zhmcclient.CeasedExistence` is raised.
+
+        This method serializes with other methods that access or change
+        resource properties on the same Python object.
+
+        Authorization requirements:
+
+        * Object-access permission to this resource.
+
+        Parameters:
+
+          names (:term:`string` or list/tuple of strings):
+            Single name or list/tuple of names of the resource properties, using
+            the names defined in the respective 'Data model' sections in the
+            :term:`HMC API` book.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.CeasedExistence`
+        """
+        if not self.auto_update_enabled():
+            self.pull_properties(names)
+
+        return self.get_properties_local(names)
+
     def get_properties_local(self, names, defaults=None):
         """
         Return the values of a set of resource properties, using default values
-        for those that are not present in this Python object, without
+        for those that are not cached in this Python object, without
         retrieving them from the HMC.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Parameters:
 
@@ -459,9 +548,10 @@ class BaseResource(object):
 
           defaults:
             Single value or list/tuple of values to be used as a default for
-            resource properties that are not present. If a single value, it is
-            used for all properties that are not present. If a list/tuple, it
-            must be index-correlated with the names list/tuple.
+            resource properties that are not cached in this Python object. If a
+            single value, it is used for all properties that are not cached.
+            If a list/tuple, it must be index-correlated with the names
+            list/tuple.
 
         Returns:
 
@@ -491,13 +581,13 @@ class BaseResource(object):
     def update_properties_local(self, properties):
         """
         Update the values of a set of resource properties on this Python object
-        without propagating the updates the HMC.
+        without propagating the updates to the HMC.
 
         If a property to be updated is not present in the Python object, it
         is added.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Parameters:
 
@@ -519,7 +609,7 @@ class BaseResource(object):
         no longer exists.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
         """
         with self._property_lock:
             self._ceased_existence = True
@@ -529,7 +619,7 @@ class BaseResource(object):
         Return a human readable string representation of this resource.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Example result:
 
@@ -554,7 +644,7 @@ class BaseResource(object):
         Return a string with the state of this resource, for debug purposes.
 
         This method serializes with other methods that access or change
-        properties on the same Python object.
+        resource properties on the same Python object.
 
         Note that the derived resource classes that have child resources
         have their own ``__repr__()`` methods, because only they know which
@@ -605,9 +695,9 @@ class BaseResource(object):
         :meth:`~zhmcclient.Session.subscribe_auto_update`), the resource
         object is registered with the session's auto updater via
         :meth:`~zhmcclient.AutoUpdater.register_object`, and all properties
-        of this resource object are retrieved using :meth:`pull_full_properties`
-        in order to have the most current values as a basis for the future
-        auto-updating.
+        of this resource object are retrieved from the HMC using
+        :meth:`pull_full_properties` in order to have the most current values
+        as a basis for the future auto-updating.
 
         Raises:
 

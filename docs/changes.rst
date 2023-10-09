@@ -29,6 +29,29 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The pull_full_properties(), pull_properties(), get_property() and props()
+  methods on resource objects
+  now raise zhmcclient.CeasedExistence in all cases where the resource no
+  longer exists on the HMC. This provides a consistent behavior across different
+  cases the method can encounter. Previously, that exception was raised only for
+  resources that had auto-update enabled, and resources with auto-update
+  disabled raised zhmcclient.HTTPError(404,1) instead when the resource no
+  longer existed on the HMC.
+  If you use these methods and check for resource existence using
+  HTTPError(404,1), you need to change this to check for CeasedExistence
+  instead.
+
+* The pull_properties() methods on resource objects now retrieves all properties
+  from the HMC when one or more of the specified properties are not supported
+  by the resource. This provides a consistent behavior across the different
+  cases the method can encounter. Previously, that method behaved differently
+  when the property was not supported by the resource: It has retrieved all
+  properties when the resource type or HMC version does not support property
+  filtering, but has raised HTTPError(400,14) in case the resource type and
+  HMC version did support property filtering.
+  If you use this method and check for HTTPError(400,14), this check can now be
+  removed.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -50,6 +73,16 @@ Released: not yet
 
 * Examples: Added example script increase_crypto_config.py for increasing the
   crypto configuration of a partition on a CPC in DPM mode.
+
+* The pull_properties() method on resource objects was extended so that its
+  'properties' parameter can now also be a single string (in addition to the
+  already supported list or tuple of strings).
+
+* Added a get_properties_pulled() method for resource objects, which gets the
+  current value of a set of properties from the HMC. If the resource has
+  auto-update enabled, it gets the value from the (automatically updated) local
+  cache. Otherwise, it retrieves the properties from the HMC in the fastest
+  possible way, considering property filtering if supported.
 
 **Cleanup:**
 

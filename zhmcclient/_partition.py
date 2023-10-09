@@ -1028,14 +1028,9 @@ class Partition(BaseResource):
             statuses = status
         else:
             statuses = [status]
-        while True:
 
-            # Fastest way to get actual status value:
-            parts = self.manager.cpc.partitions.list(
-                filter_args={'name': self.name})
-            assert len(parts) == 1
-            this_part = parts[0]
-            actual_status = this_part.get_property('status')
+        while True:
+            actual_status = self.get_properties_pulled('status')
 
             if actual_status in statuses:
                 return

@@ -22,7 +22,7 @@ import copy
 import re
 import pytest
 
-from zhmcclient import Client, Adapter, NotFound, HTTPError
+from zhmcclient import Client, Adapter, NotFound, HTTPError, CeasedExistence
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -471,20 +471,11 @@ class TestAdapter(object):
         # Execute the code to be tested
         hs_adapter.delete()
 
-        with pytest.raises(NotFound):
-            hs_adapter = adapter_mgr.find(type='hipersockets')
-
-        with pytest.raises(NotFound):
-            hs_adapter = adapter_mgr.find(name=faked_hs.name)
-
-        adapters = adapter_mgr.list()
-        assert len(adapters) == 1
-
-        with pytest.raises(HTTPError) as exc_info:
+        with pytest.raises(CeasedExistence):
             hs_adapter.pull_full_properties()
-        exc = exc_info.value
-        assert exc.http_status == 404
-        assert exc.reason == 1
+
+        with pytest.raises(NotFound):
+            adapter_mgr.find(name=faked_hs.name)
 
     @pytest.mark.parametrize(
         "input_props", [
