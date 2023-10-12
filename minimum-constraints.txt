@@ -191,7 +191,7 @@ docutils==0.14; python_version == '3.10'
 docutils==0.16; python_version >= '3.11'
 sphinx-git==10.1.1
 GitPython==2.1.1; python_version <= '3.6'
-GitPython==3.1.34; python_version >= '3.7'
+GitPython==3.1.37; python_version >= '3.7'
 sphinxcontrib-websupport==1.1.2
 Pygments==2.4.1; python_version == '2.7'
 Pygments==2.7.4; python_version >= '3.5' and python_version <= '3.6'
