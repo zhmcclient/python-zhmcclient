@@ -65,6 +65,10 @@ Released: not yet
 
 * Test: Added unit tests and end2end tests for list permitted partitions operation
 
+* Docs: Corrected and improved the description of the Lpar.activate() method.
+
+* Test: Added end2end tests for LPAR activation in classic mode.
+
 **Enhancements:**
 
 * Added support for Python 3.12. Had to increase the minimum versions of
