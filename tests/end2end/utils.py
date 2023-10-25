@@ -23,13 +23,89 @@ import re
 import random
 import time
 import warnings
+import logging
 import pytest
-from zhmcclient import BaseManager
 
 import zhmcclient
 
 # Prefix used for names of resources that are created during tests
 TEST_PREFIX = 'zhmcclient_tests_end2end'
+
+
+def setup_logging(enable_logging, testfunc_name, log_file=None):
+    """
+    Set up logging for end2end testcases.
+
+    If enable_logging is True, two loggers are created and enabled for logging
+    to the specified log_file:
+      * A logger named "zhmcclient.hmc" for logging the HMC interactions.
+        That logger is used by the zhmcclient package.
+      * A logger named testfunc_name for logging additional information the
+        test function may need to log. This logger is returned.
+    Because this setup function is called for each invocation of a test
+    function, it ends up being called multiple times within the same Python
+    process. Therefore, the loggers are set up only when they do not exist yet.
+
+    If enable_logging is False, the same two loggers are created and logging
+    is disabled on them by setting the log level to NOTSET. The testfunc_name
+    logger is also returned in this case.
+
+    Returns:
+        logging.Logger: Logger for testfunc_name
+    """
+    # log level and format for both loggers
+    log_level = logging.DEBUG
+    log_format = '%(asctime)s %(levelname)s %(name)s: %(message)s'
+    datetime_format = '%Y-%m-%d %H:%M:%S %Z'
+    log_converter = time.gmtime
+
+    zhmcclient_logger = logging.getLogger(zhmcclient.HMC_LOGGER_NAME)
+    testfunc_logger = logging.getLogger(testfunc_name)
+
+    if enable_logging:
+        assert log_file
+
+        abs_log_file = os.path.abspath(log_file)
+
+        zhmcclient_handler = None
+        for handler in zhmcclient_logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                bfn = handler.baseFilename  # pylint: disable=no-member
+                abs_handler_file = os.path.abspath(bfn)
+                if abs_handler_file == abs_log_file:
+                    zhmcclient_handler = handler
+                    break
+        if not zhmcclient_handler:
+            zhmcclient_handler = logging.FileHandler(log_file)
+            zhmcclient_logger.addHandler(zhmcclient_handler)
+
+        testfunc_handler = None
+        for handler in testfunc_logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                bfn = handler.baseFilename  # pylint: disable=no-member
+                abs_handler_file = os.path.abspath(bfn)
+                if abs_handler_file == abs_log_file:
+                    testfunc_handler = handler
+                    break
+        if not testfunc_handler:
+            testfunc_handler = logging.FileHandler(log_file)
+            testfunc_logger.addHandler(testfunc_handler)
+
+        logging.Formatter.converter = log_converter
+        formatter = logging.Formatter(
+            log_format, datefmt=datetime_format)
+
+        zhmcclient_handler.setFormatter(formatter)
+        testfunc_handler.setFormatter(formatter)
+
+        zhmcclient_logger.setLevel(log_level)
+        testfunc_logger.setLevel(log_level)
+
+    else:
+        zhmcclient_logger.setLevel(logging.NOTSET)
+        testfunc_logger.setLevel(logging.NOTSET)
+
+    return testfunc_logger
 
 
 class End2endTestWarning(UserWarning):
@@ -340,7 +416,7 @@ def runtest_get_properties(
         introduced the 'properties' query parameter for this resource type.
     """
 
-    assert isinstance(manager, BaseManager)
+    assert isinstance(manager, zhmcclient.BaseManager)
 
     # Get HMC version as a tuple (major, minor)
     av = client.query_api_version()
@@ -664,3 +740,91 @@ def cleanup_and_import_example_certificate(cpc):
     }
 
     return console.certificates.import_certificate(cpc, props), props
+
+
+class StatusError(Exception):
+    """
+    Indicates that a desired status cannot be reached.
+    """
+    pass
+
+
+def ensure_lpar_inactive(lpar):
+    """
+    Ensure that the LPAR is inactive, regardless of what its current status is.
+
+    If this function returns, the status of the LPAR will be 'not-activated'.
+
+    If that status cannot be reached within the operation and status timeout
+    of the session, StatusError is raised.
+
+    Parameters:
+
+      lpar (zhmcclient.Lpar): The LPAR (must exist).
+
+    Raises:
+      StatusError: The inactive status cannot be reached.
+      zhmcclient.CeasedExistence: The LPAR no longer exists.
+      zhmcclient.Error: Any zhmcclient exception can happen, except
+        OperationTimeout and StatusTimeout (which result in StatusError).
+    """
+    org_status = pull_lpar_status(lpar)
+    if org_status == 'not-activated':
+        return
+
+    try:
+        lpar.deactivate(force=True)
+    except zhmcclient.OperationTimeout:
+        status = pull_lpar_status(lpar)
+        timeout = lpar.manager.session.retry_timeout_config.operation_timeout
+        raise StatusError(
+            "Could not get LPAR {lp!r} from status {os!r} into "
+            "status 'not-activated' within operation timeout {to}; "
+            "current status is: {s!r}".
+            format(lp=lpar.name, os=org_status, s=status, to=timeout))
+    except zhmcclient.StatusTimeout:
+        status = pull_lpar_status(lpar)
+        timeout = lpar.manager.session.retry_timeout_config.status_timeout
+        raise StatusError(
+            "Could not get LPAR {lp!r} from status {os!r} into "
+            "status 'not-activated' within status timeout {to}; "
+            "current status is: {s!r}".
+            format(lp=lpar.name, os=org_status, s=status, to=timeout))
+
+    # This is just an additional check which should not fail.
+    status = pull_lpar_status(lpar)
+    if status != 'not-activated':
+        raise StatusError(
+            "Could not get LPAR {lp!r} from status {os!r} into "
+            "status 'not-activated' for unknown reasons; "
+            "current status is: {s!r}".
+            format(lp=lpar.name, os=org_status, s=status))
+
+
+def pull_lpar_status(lpar):
+    """
+    Retrieve the current LPAR status on the HMC as fast as possible and return
+    it.
+
+    LPAR status values and their meaning:
+
+    Status         Resources allocated  OS running  Notes
+    ---------------------------------------------------------------------------
+    not-activated  no                   no
+    not-operating  yes                  no          All CPUs are stopped
+    operating      yes                  yes         No degradations
+    exceptions     yes                  yes         Some CPUs are stopped
+
+    Note that the status "acceptable" is only shown on the SE GUI, but will
+    never appear at the WS-API.
+
+    Raises:
+      zhmcclient.CeasedExistence: The LPAR no longer exists.
+      zhmcclient.Error: Any zhmcclient exception can happen.
+    """
+    lpars = lpar.manager.cpc.lpars.list(filter_args={'name': lpar.name})
+    if len(lpars) != 1:
+        raise zhmcclient.CeasedExistence(lpar.uri)
+    this_lpar = lpars[0]
+    actual_status = this_lpar.get_property('status')
+    return actual_status
