@@ -33,6 +33,8 @@ Released: not yet
 
 * Addressed safety issues up to 2023-10-05.
 
+* Docs: Corrected and improved the description of the Lpar.activate() method.
+
 **Enhancements:**
 
 **Cleanup:**

@@ -235,7 +235,7 @@ class Lpar(BaseResource):
         Partition".
 
         This HMC operation has deferred status behavior: If the asynchronous
-        job on the HMC is complete, it takes a few seconds until the LPAR
+        job on the HMC is complete, it may take a few seconds until the LPAR
         status has reached the desired value. If `wait_for_completion=True`,
         this method repeatedly checks the status of the LPAR after the HMC
         operation has completed, and waits until the status is in the desired
@@ -287,10 +287,29 @@ class Lpar(BaseResource):
             set.
 
           activation_profile_name (:term:`string`):
-            Name of the image :class:`ActivationProfile` to use for activation.
+            Name of the load or image activation profile to be used instead
+            of the one specified in the `next-activation-profile-name` property
+            of the LPAR, or `None`.
 
-            `None` means that the activation profile specified in the
-            `next-activation-profile-name` property of the LPAR is used.
+            If this parameter specifies an image activation profile, its name
+            must match the LPAR name. For non-SSC partitions, the image
+            profile's `load-at-activation` property determines whether the
+            activation is followed by a load of the control program using the
+            load-related parameters from the image profile. SSC partitions are
+            always auto-loaded (regardless of the `load-at-activation`
+            property).
+
+            If this parameter specifies a load activation profile, the
+            activation uses the image profile with the same name as the LPAR.
+            The activation is always followed by a load of the control program
+            (regardless of the image profile's `load-at-activation` property)
+            using the parameters from the load profile.
+
+            If this parameter is `None`, the `next-activation-profile-name`
+            property of the LPAR will be used. That property can again specify
+            an image profile or a load profile which are treated as described
+            above. If that property is `None`, the image profile with the same
+            name as the LPAR is used and is treated as described above.
 
           force (bool):
             Boolean controlling whether this operation is permitted when the
@@ -345,7 +364,7 @@ class Lpar(BaseResource):
         Logical Partition".
 
         This HMC operation has deferred status behavior: If the asynchronous
-        job on the HMC is complete, it takes a few seconds until the LPAR
+        job on the HMC is complete, it may take a few seconds until the LPAR
         status has reached the desired value. If `wait_for_completion=True`,
         this method repeatedly checks the status of the LPAR after the HMC
         operation has completed, and waits until the status is in the desired
