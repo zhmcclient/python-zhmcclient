@@ -35,7 +35,8 @@ from ._resource import BaseResource
 from ._exceptions import StatusTimeout
 from ._constants import HMC_LOGGER_NAME
 from ._logging import get_logger, logged_api_call
-from ._utils import RC_LOGICAL_PARTITION, make_query_str
+from ._utils import RC_LOGICAL_PARTITION, make_query_str, \
+    warn_deprecated_parameter
 
 __all__ = ['LparManager', 'Lpar']
 
@@ -403,7 +404,7 @@ class Lpar(BaseResource):
 
             * If `True`, this method will wait for completion of the
               asynchronous job performing the operation, and for the status
-              becoming "non-activated" (or in addition "exceptions", if
+              becoming "not-activated" (or in addition "exceptions", if
               `allow_status_exceptions` was set.
 
             * If `False`, this method will return immediately once the HMC has
@@ -1381,13 +1382,15 @@ class Lpar(BaseResource):
         Partition". The stop operation stops the processors from
         processing instructions.
 
-        This HMC operation has deferred status behavior: If the asynchronous
-        job on the HMC is complete, it takes a few seconds until the LPAR
-        status has reached the desired value. If `wait_for_completion=True`,
-        this method repeatedly checks the status of the LPAR after the HMC
-        operation has completed, and waits until the status is in the desired
-        state "not-operating", or if `allow_status_exceptions` was
-        set additionally in the state "exceptions".
+        This operation is not permitted for an LPAR whose 'activation-mode'
+        property is "zaware" or "ssc".
+
+        In order to succeed, the 'status' property of the LPAR must have one of
+        the following values:
+
+        * "not-operating"
+        * "operating"
+        * "exceptions"
 
         Authorization requirements:
 
@@ -1403,9 +1406,7 @@ class Lpar(BaseResource):
             of the requested asynchronous HMC operation, as follows:
 
             * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation, and for the status
-              becoming "not-operating" (or in addition "exceptions", if
-              `allow_status_exceptions` was set.
+              asynchronous job performing the operation.
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
@@ -1419,17 +1420,16 @@ class Lpar(BaseResource):
             :exc:`~zhmcclient.OperationTimeout` is raised.
 
           status_timeout (:term:`number`):
-            Timeout in seconds, for waiting that the status of the LPAR has
-            reached the desired status, after the HMC operation has completed.
-            The special value 0 means that no timeout is set. `None` means that
-            the default async operation timeout of the session is used.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.StatusTimeout` is raised.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
           allow_status_exceptions (bool):
-            Boolean controlling whether LPAR status "exceptions" is considered
-            an additional acceptable end status when `wait_for_completion` is
-            set.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
         Returns:
 
@@ -1449,19 +1449,17 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
-          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
-            waiting for the desired LPAR status.
         """
+        warn_deprecated_parameter(
+            Lpar, Lpar.stop, 'status_timeout', status_timeout, None)
+        warn_deprecated_parameter(
+            Lpar, Lpar.stop, 'allow_status_exceptions',
+            allow_status_exceptions, False)
         body = None
         result = self.manager.session.post(
             self.uri + '/operations/stop', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
-        if wait_for_completion:
-            statuses = ["not-operating"]
-            if allow_status_exceptions:
-                statuses.append("exceptions")
-            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
@@ -1475,13 +1473,12 @@ class Lpar(BaseResource):
         subsystem and resetting its processors, and clearing its memory, using
         the HMC operation "Reset Clear".
 
-        This HMC operation has deferred status behavior: If the asynchronous
-        job on the HMC is complete, it takes a few seconds until the LPAR
-        status has reached the desired value. If `wait_for_completion=True`,
-        this method repeatedly checks the status of the LPAR after the HMC
-        operation has completed, and waits until the status is in the desired
-        state "operating", or if `allow_status_exceptions` was
-        set additionally in the state "exceptions".
+        In order to succeed, the 'status' property of the LPAR must have one of
+        the following values:
+
+        * "not-operating"
+        * "operating" - this requires setting the "force" flag
+        * "exceptions" - this requires setting the "force" flag
 
         Authorization requirements:
 
@@ -1501,9 +1498,7 @@ class Lpar(BaseResource):
             of the requested asynchronous HMC operation, as follows:
 
             * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation, and for the status
-              becoming "operating" (or in addition "exceptions", if
-              `allow_status_exceptions` was set.
+              asynchronous job performing the operation.
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
@@ -1517,17 +1512,16 @@ class Lpar(BaseResource):
             :exc:`~zhmcclient.OperationTimeout` is raised.
 
           status_timeout (:term:`number`):
-            Timeout in seconds, for waiting that the status of the LPAR has
-            reached the desired status, after the HMC operation has completed.
-            The special value 0 means that no timeout is set. `None` means that
-            the default async operation timeout of the session is used.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.StatusTimeout` is raised.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
           allow_status_exceptions (bool):
-            Boolean controlling whether LPAR status "exceptions" is considered
-            an additional acceptable end status when `wait_for_completion` is
-            set.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
           os_ipl_token (:term:`string`):
             Applicable only to z/OS, this parameter requests that this
@@ -1552,9 +1546,12 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
-          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
-            waiting for the desired LPAR status.
         """
+        warn_deprecated_parameter(
+            Lpar, Lpar.reset_clear, 'status_timeout', status_timeout, None)
+        warn_deprecated_parameter(
+            Lpar, Lpar.reset_clear, 'allow_status_exceptions',
+            allow_status_exceptions, False)
         body = {}
         if force:
             body['force'] = force
@@ -1564,11 +1561,6 @@ class Lpar(BaseResource):
             self.uri + '/operations/reset-clear', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
-        if wait_for_completion:
-            statuses = ["operating"]
-            if allow_status_exceptions:
-                statuses.append("exceptions")
-            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
@@ -1582,13 +1574,12 @@ class Lpar(BaseResource):
         subsystem and resetting its processors, using the HMC operation
         "Reset Normal".
 
-        This HMC operation has deferred status behavior: If the asynchronous
-        job on the HMC is complete, it takes a few seconds until the LPAR
-        status has reached the desired value. If `wait_for_completion=True`,
-        this method repeatedly checks the status of the LPAR after the HMC
-        operation has completed, and waits until the status is in the desired
-        state "operating", or if `allow_status_exceptions` was
-        set additionally in the state "exceptions".
+        In order to succeed, the 'status' property of the LPAR must have one of
+        the following values:
+
+        * "not-operating"
+        * "operating" - this requires setting the "force" flag
+        * "exceptions" - this requires setting the "force" flag
 
         Authorization requirements:
 
@@ -1608,9 +1599,7 @@ class Lpar(BaseResource):
             of the requested asynchronous HMC operation, as follows:
 
             * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation, and for the status
-              becoming "operating" (or in addition "exceptions", if
-              `allow_status_exceptions` was set.
+              asynchronous job performing the operation.
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
@@ -1624,17 +1613,16 @@ class Lpar(BaseResource):
             :exc:`~zhmcclient.OperationTimeout` is raised.
 
           status_timeout (:term:`number`):
-            Timeout in seconds, for waiting that the status of the LPAR has
-            reached the desired status, after the HMC operation has completed.
-            The special value 0 means that no timeout is set. `None` means that
-            the default async operation timeout of the session is used.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.StatusTimeout` is raised.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
           allow_status_exceptions (bool):
-            Boolean controlling whether LPAR status "exceptions" is considered
-            an additional acceptable end status when `wait_for_completion` is
-            set.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
           os_ipl_token (:term:`string`):
             Applicable only to z/OS, this parameter requests that this
@@ -1659,9 +1647,12 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
-          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
-            waiting for the desired LPAR status.
         """
+        warn_deprecated_parameter(
+            Lpar, Lpar.reset_normal, 'status_timeout', status_timeout, None)
+        warn_deprecated_parameter(
+            Lpar, Lpar.reset_normal, 'allow_status_exceptions',
+            allow_status_exceptions, False)
         body = {}
         if force:
             body['force'] = force
@@ -1671,11 +1662,6 @@ class Lpar(BaseResource):
             self.uri + '/operations/reset-normal', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
-        if wait_for_completion:
-            statuses = ["operating"]
-            if allow_status_exceptions:
-                statuses.append("exceptions")
-            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
@@ -1848,13 +1834,12 @@ class Lpar(BaseResource):
         """
         Restart this LPAR, using the HMC operation "PSW Restart".
 
-        This HMC operation has deferred status behavior: If the asynchronous
-        job on the HMC is complete, it takes a few seconds until the LPAR
-        status has reached the desired value. If `wait_for_completion=True`,
-        this method repeatedly checks the status of the LPAR after the HMC
-        operation has completed, and waits until the status is in the desired
-        state "operating", or if `allow_status_exceptions` was
-        set additionally in the state "exceptions".
+        In order to succeed, the 'status' property of the LPAR must have one of
+        the following values:
+
+        * "not-operating"
+        * "operating"
+        * "exceptions"
 
         Authorization requirements:
 
@@ -1870,9 +1855,7 @@ class Lpar(BaseResource):
             of the requested asynchronous HMC operation, as follows:
 
             * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation, and for the status
-              becoming "operating" (or in addition "exceptions", if
-              `allow_status_exceptions` was set.
+              asynchronous job performing the operation.
 
             * If `False`, this method will return immediately once the HMC has
               accepted the request to perform the operation.
@@ -1886,17 +1869,16 @@ class Lpar(BaseResource):
             :exc:`~zhmcclient.OperationTimeout` is raised.
 
           status_timeout (:term:`number`):
-            Timeout in seconds, for waiting that the status of the LPAR has
-            reached the desired status, after the HMC operation has completed.
-            The special value 0 means that no timeout is set. `None` means that
-            the default async operation timeout of the session is used.
-            If the timeout expires when `wait_for_completion=True`, a
-            :exc:`~zhmcclient.StatusTimeout` is raised.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
           allow_status_exceptions (bool):
-            Boolean controlling whether LPAR status "exceptions" is considered
-            an additional acceptable end status when `wait_for_completion` is
-            set.
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
 
         Returns:
 
@@ -1916,19 +1898,17 @@ class Lpar(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
-          :exc:`~zhmcclient.StatusTimeout`: The timeout expired while
-            waiting for the desired LPAR status.
         """
-        body = {}
+        warn_deprecated_parameter(
+            Lpar, Lpar.psw_restart, 'status_timeout', status_timeout, None)
+        warn_deprecated_parameter(
+            Lpar, Lpar.psw_restart, 'allow_status_exceptions',
+            allow_status_exceptions, False)
+        body = None
         result = self.manager.session.post(
             self.uri + '/operations/psw-restart', resource=self, body=body,
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
-        if wait_for_completion:
-            statuses = ["operating"]
-            if allow_status_exceptions:
-                statuses.append("exceptions")
-            self.wait_for_status(statuses, status_timeout)
         return result
 
     @logged_api_call
