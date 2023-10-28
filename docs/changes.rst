@@ -29,6 +29,15 @@ Released: not yet
 
 **Deprecations:**
 
+* Use of the 'status_timeout' and 'allow_status_exceptions' parameters of the
+  following methods has been deprecated because the underlying HMC operations
+  do not actually have deferred status behavior. The waiting for an expected
+  status has been removed from these methods:
+  - Lpar.stop()
+  - Lpar.psw_restart()
+  - Lpar.reset_normal()
+  - Lpar.reset_clear()
+
 **Bug fixes:**
 
 * Addressed safety issues up to 2023-10-05.
@@ -45,6 +54,14 @@ Released: not yet
 * Added a debug log entry when Lpar.wait_for_status() is called. This happens
   for example when Lpar.activate/deactivate/load() are called with
   wait_for_completion.
+
+* Fixed that the Lpar.reset_normal() and Lpar.reset_clear() methods were
+  waiting for a status "operational", which never happens with these operations.
+  This was fixed by removing the waiting for an expected status, because the
+  underlying HMC operations do not actually have deferred status behavior.
+  (issue #1304)
+
+* Fixed the incorrect empty request body in Lpar.psw_restart().
 
 **Enhancements:**
 
