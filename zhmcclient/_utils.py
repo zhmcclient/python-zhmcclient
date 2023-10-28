@@ -20,13 +20,14 @@ from __future__ import absolute_import
 
 import re
 from collections import OrderedDict
-
 try:
     from collections.abc import Mapping, MutableSequence, Iterable
 except ImportError:
     # pylint: disable=deprecated-class
     from collections import Mapping, MutableSequence, Iterable
 from datetime import datetime
+import warnings
+
 from dateutil import parser
 import six
 import pytz
@@ -610,3 +611,29 @@ def get_features(session, base_uri, name):
         if e.http_status == 404:
             return []
         raise e
+
+
+def warn_deprecated_parameter(cls, method, name, value, default):
+    """
+    Issue a DeprecationWarning for a zhmcclient method parameter.
+
+    The method must use the @logged_api_call decorator.
+
+    Parameters:
+      cls (class): The class object that defines the method.
+      method (method): The method object that has the parameter.
+      name (str): The name of the parameter.
+      value (object): The value of the parameter.
+      default (object): The default value of the parameter.
+    """
+    if value != default:
+        warnings.warn(
+            "Use of the '{pn}' parameter of zhmcclient.{cn}.{mn}() has no "
+            "function anymore and is deprecated".
+            format(pn=name, cn=cls.__name__, mn=method.__name__),
+            DeprecationWarning, stacklevel=5)
+        # Note on stacklevel=5:
+        # * base value 1 (get out of warnings.warn)
+        # * +1 to get out of this function
+        # * +1 to get out of method
+        # * +2 to get over the @logged_api_call decorator of method
