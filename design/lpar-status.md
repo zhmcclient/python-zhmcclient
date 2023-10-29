@@ -10,13 +10,15 @@ mode; DPM mode is not described here.
 All behaviors and properties are described from a perspective of the WS API
 of the HMC.
 
-Status of this document: Draft, with review comments applied as of 2/22.
+Last updated: 2023-10-30
 
 
 ## Behavior of LPAR activation and loading
 
-This section describes the actual behavior of the "Activate LPAR" and
-"Load LPAR" WS-API operations.
+This section describes the actual behavior of the "Activate Logical Partition"
+and "Load Logical Partition" WS-API operations.
+
+Note: The "Load" WS-API operation introduced with HMC 2.16 is not covered yet.
 
 ### Requirements and facts
 
@@ -31,62 +33,105 @@ This section describes the actual behavior of the "Activate LPAR" and
 * An image profile contains activation parameters and load parameters.
   A load profile contains only load parameters.
 
-### Behavior of "Activate LPAR" operation
+### Behavior of "Activate Logical Partition" operation
 
-The activation parameters are always taken from the image profile that has the
-same name as the LPAR.
+If an image profile is specified in any way, it always must have the same name
+as the LPAR. Therefore, the activation parameters are always taken from the
+image profile that has the same name as the LPAR.
 
-The load parameters are taken from an image profile or load profile as follows:
+The load parameters (for an auto-load) can be taken from the image profile or
+from a load profile, and since HMC 2.16, also from the "Activate Logical
+Partition" operation parameters. Note that the `last-used-...` properties
+of the LPAR object are never used for a load performed as part of the
+"Activate Logical Partition" operation.
 
-* If the 'activation-profile-name' operation parameter is specified, the
-  specified image or load profile is used.
+The following table shows whether activation or load happens and where the
+parameters for the load come from, for all valid combinations of the relevant
+operation parameters and profile & LPAR properties.
 
-* Otherwise, if the 'next-activation-profile-name' LPAR property is not null,
-  the image or load profile specified in that property is used.
+Any other combinations than those listed in the table are invalid and will
+cause the "Activate Logical Partition" operation to fail.
 
-* Otherwise, the image profile with the same name as the LPAR is used.
+Note: The influence of the LPAR 'group-uri' property is ignored for now (see
+question 1, below).
 
-* Note that the load profile named 'DEFAULTLOAD' is not automatically used by
-  default; it is only used when specified.
+The meaning of the columns is described below the table.
 
-The operation behavior depends on the LPAR status as follows:
+| AM         | LT (2.16)    | APN     | NAPN  | LAA   | Force | Status        | Activation | Load    | Load parameters |
+|:---------- |:------------ |:------- |:----- |:----- |:----- |:------------- |:---------- |:------- |:--------------- |
+| ssc/zaware | none/omitted | image   | any   | any   | any   | not-activated | activate   | load    | N/A (internal)  |
+| ssc/zaware | none/omitted | image   | any   | any   | True  | operating     | reactivate | reload  | N/A (internal)  |
+| ssc/zaware | none/omitted | omitted | image | any   | any   | not-activated | activate   | load    | N/A (internal)  |
+| ssc/zaware | none/omitted | omitted | image | any   | True  | operating     | reactivate | reload  | N/A (internal)  |
+| other      | none/omitted | image   | any   | False | any   | not-activated | activate   | no load | N/A (no load)   |
+| other      | none/omitted | image   | any   | False | any   | not-operating | reactivate | no load | N/A (no load)   |
+| other      | none/omitted | image   | any   | False | True  | operating     | reactivate | no load | N/A (no load)   |
+| other      | none/omitted | image   | any   | True  | any   | not-activated | activate   | load    | image profile   |
+| other      | none/omitted | image   | any   | True  | any   | not-operating | reactivate | load    | image profile   |
+| other      | none/omitted | image   | any   | True  | True  | operating     | reactivate | load    | image profile   |
+| other      | none/omitted | omitted | image | False | any   | not-activated | activate   | no load | N/A (no load)   |
+| other      | none/omitted | omitted | image | False | any   | not-operating | reactivate | no load | N/A (no load)   |
+| other      | none/omitted | omitted | image | False | True  | operating     | reactivate | no load | N/A (no load)   |
+| other      | none/omitted | omitted | image | True  | any   | not-activated | activate   | load    | image profile   |
+| other      | none/omitted | omitted | image | True  | any   | not-operating | reactivate | load    | image profile   |
+| other      | none/omitted | omitted | image | True  | True  | operating     | reactivate | reload  | image profile   |
+| other      | none/omitted | load    | any   | any   | any   | not-activated | activate   | load    | load profile    |
+| other      | none/omitted | load    | any   | any   | any   | not-operating | no change  | load    | load profile    |
+| other      | none/omitted | load    | any   | any   | True  | operating     | no change  | reload  | load profile    |
+| other      | none/omitted | omitted | load  | any   | any   | not-activated | activate   | load    | load profile    |
+| other      | none/omitted | omitted | load  | any   | any   | not-operating | no change  | load    | load profile    |
+| other      | none/omitted | omitted | load  | any   | True  | operating     | no change  | reload  | load profile    |
+| other      | other        | any     | any   | any   | any   | not-activated | activate   | load    | operation parms |
+| other      | other        | any     | any   | any   | any   | not-operating | no change  | load    | operation parms |
+| other      | other        | any     | any   | any   | True  | operating     | no change  | reload  | operation parms |
 
-* If the LPAR has status 'not-activated', it will be activated and if
-  'load-at-activation=True' it will also be loaded.
+Columns:
 
-* If the LPAR has status 'not-operating', the behavior depends on whether a load
-  profile or an image profile is used (see above, where load parameters are
-  taken from):
+* AM = `activation-mode` property of the Image Activation Profile object
+* LT (2.16) = `load-type` parameter of the "Activate Logical Partition" operation
+  (requires HMC>=2.16, and HMC<=2.15 behaves is if it was omitted)
+* LAA = `load-at-activation` property of the Image Activation Profile object
+* APN = `activation-profile-name` parameter of the "Activate Logical Partition" operation
+* NAPN = `next-activation-profile-name` property of the LPAR object
+* Force = `force` parameter of the "Activate Logical Partition" operation
+* Status = `status` property of the LPAR object before the operation
+* Activation = what happens related to activation when the activation operation
+  is performed
+* Load = what happens related to load when the activation operation is performed
+* Load parameters = where are the parameters for the load taken from
+
+Values:
+
+* omitted = this optional operation parameter has not been provided
+* other = any other value than those in the table rows above
+* any = the property or parameter can have any valid value and is not relevant
+  for this case
+
+Some more notable details about some of these cases:
+
+* If the LPAR has status 'not-operating', the activation behavior depends on
+  whether a load profile or an image profile is used:
 
   - If an image profile is used, the LPAR will be deactivated and reactivated
-    and dependent on the 'load-at-activation' property, it will also be loaded.
+    (and possibly loaded).
     The deactivation happens always and does not dependent on whether the
     activation parameters in the image profile have changed.
 
   - If a load profile is used, the LPAR remains active and it will just be
     loaded.
 
-    **TBD: Does the loading in this case only happen when 'load-at-activation=True'?**
-
-* If the LPAR has status 'operating' and 'force=False' is specified or
-  defaulted, the "Activate LPAR" operation will fail, regardless of whether an
-  image or load profile or no profile has been specified.
-
 * If the LPAR has status 'operating' and 'force=True' is specified, the behavior
   depends on whether a load profile or an image profile is used:
 
   - If an image profile is used, the control program in the LPAR will get the
     shutdown signal so it can perform an orderly shutdown. After the control
-    program has stopped, the LPAR will be deactivated and reactivated and
-    dependent on the 'load-at-activation' property, it will be loaded. The
-    deactivation happens always and does not dependent on whether the activation
-    parameters in the image profile have changed.
+    program has stopped, the LPAR will be deactivated and reactivated (and
+    possibly loaded). The deactivation happens always and does not dependent
+    on whether the activation parameters in the image profile have changed.
 
   - If a load profile is used, the control program in the LPAR will get the
     shutdown signal so it can perform an orderly shutdown. After the control
     program has stopped, the LPAR remains active and will be loaded again.
-
-Notes:
 
 * If a load is performed, the resulting LPAR status will go to 'operating' if
   the loading has succeeded and the control program got started. If the load
@@ -94,7 +139,7 @@ Notes:
   are not valid for the control program, the LPAR status will go to
   'not-operating'.
 
-### Behavior of "Load LPAR" operation
+### Behavior of "Load Logical Partition" operation
 
 The load parameters are taken from an image profile or load profile as follows:
 
@@ -108,14 +153,15 @@ The load parameters are taken from an image profile or load profile as follows:
 
 The operation behavior depends on the LPAR status as follows:
 
-* If the LPAR has status 'not-activated', the "Load LPAR" operation will fail.
+* If the LPAR has status 'not-activated', the "Load Logical Partition" operation
+  will fail.
 
 * If the LPAR has status 'not-operating', the LPAR will be loaded with the
   load parameters from the image or load profile that is used (see above, where
   load parameters are taken from).
 
 * If the LPAR has status 'operating' and 'force=False' is specified or
-  defaulted, the "Load LPAR" operation will fail.
+  defaulted, the "Load Logical Partition" operation will fail.
 
 * If the LPAR has status 'operating' and 'force=True' is specified, the control
   program in the LPAR will get the shutdown signal so it can perform an orderly
@@ -137,7 +183,8 @@ Notes:
 This section lists some issues with the documentation in the z15 HMC WS API
 book.
 
-* Description of behavior of the "Activate LPAR" and "Load LPAR" operations:
+* Description of behavior of the "Activate Logical Partition" and "Load Logical
+  Partition" operations:
 
   The description of the operation behavior in the current documentation does
   not allow understanding the behavior for all the cases described in the
@@ -145,8 +192,8 @@ book.
 
   The documentation for these operations should be updated accordingly.
 
-* The "Activate LPAR" operation describes its 'activation-profile-name'
-  parameter as follows:
+* The "Activate Logical Partition" operation describes its
+  'activation-profile-name' parameter as follows:
 
       The name of the activation profile to be used for the request. If not
       provided, the request uses the profile name specified in the
@@ -212,73 +259,41 @@ book.
     That should be clarified in the description.
 
 
-## Verification
+## Questions
 
-This section shows the actual behavior of WS-API operations on LPARs that
-affect its status.
+1. LPAR 'group-uri' and 'next-activation-profile-name' properties
 
-For simplicity, the tables below only show the three main status values
-'not-activated', 'not-operating', and 'operating'.
+   The 'next-activation-profile-name' property is defined to be writeable,
+   which normally means a value written to the property sticks and is returned
+   when the LPAR properties are retrieved.
 
-If any of these main status values is not shown as a before-status for an
-operation, this means the operation will fail when performed with that
-before-status.
+   However, the property description includes this statement:
 
-### Linux-type LPAR without auto-loading
+   "The 'group-uri' query parameter can be used on a 'Get Logical Partition
+   Properties' operation to specify the object URI of the Custom Group object
+   used for determining the next activation profile name to be used. If not
+   specified, the system-defined Logical Partition group is used for this
+   determination."
 
-Image Profile:
-* load-at-activation = False
-* ipl-type = ipl-type-standard
+   Questions:
 
-LPAR:
-* activation-mode = linux
+   - Does the specification of a group-uri query parameter on a Get Logical
+     Partition Properties operation influence the 'next-activation-profile-name'
+     property that is returned?
 
-| LPAR operation                              | Status before    | Expected status after                | Verified    |
-|:------------------------------------------- |:---------------- |:------------------------------------ |:----------- |
-| Activate w/ image profile                   | not-activated    | not-operating                        | Yes         |
-| Activate w/ load profile                    | not-activated    | not-operating                        | No          |
-| Activate w/ image profile (unchanged)       | not-operating    | not-operating (no reactivation)      | No          |
-| Activate w/ load pr. (image pr. unchanged)  | not-operating    | not-operating (no reactivation)      | No          |
-| Activate w/ image profile (modified)        | not-operating    | not-operating (reactivation)         | No          |
-| Activate w/ force (image pr. unchanged)     | operating        | not-operating (no reactivation)      | No          |
-| Activate w/ force (image pr. modified)      | operating        | not-operating (reactivation)         | No          |
-| Load                                        | not-operating    | operating                            | ? (500,263) |
-| Load (force)                                | operating        | operating (newly loaded) (8)         | No          |
-| Deactivate                                  | not-operating    | not-activated                        | Yes         |
-| Deactivate (force)                          | operating        | not-activated                        | No          |
-| Stop                                        | not-operating    | not-operating (noop ?)               | Yes         |
-| Stop                                        | operating        | ?                                    | No          |
-| Start                                       | not-operating    | ?                                    | No          |
-| Start                                       | operating        | ?                                    | No          |
-| Reset Normal/Clear                          | operating        | ?                                    | No          |
-| Reset Normal/Clear                          | not-operating    | ?                                    | No          |
+   - If so, what does it mean for the 'next-activation-profile-name' property
+     to be writeable?
 
-### Linux-type LPAR with auto-loading
+   - What is the "system-defined Logical Partition group"?
 
-Image Profile:
-* load-at-activation = True
-* ipl-type = ipl-type-standard
+2. 'load-type' parameter of activate operation for SSC/zAware partitions
 
-LPAR:
-* activation-mode = linux
+   The new 'load-type' parameter of the "Activate Logical Partition" operation
+   in HMC>=2.16 is silent about whether it can be used for LPARs whose
+   image activation profile specifies 'activation-mode' as 'ssc' or 'zaware'.
 
-Same as without auto-loading, except that activation is followed by a load:
+   Answer: it cannot be used, and using it will fail with reason code 306.
 
-| LPAR operation                              | Status before    | Expected status after                | Verified    |
-|:------------------------------------------- |:---------------- |:------------------------------------ |:----------- |
-| Activate w/ image profile                   | not-activated    | operating                            | No          |
-| Activate w/ load profile                    | not-activated    | operating                            | No          |
-| Activate w/ image profile (unchanged)       | not-operating    | operating (no reactivation)          | No          |
-| Activate w/ load pr. (image pr. unchanged)  | not-operating    | operating (no reactivation)          | No          |
-| Activate w/ image profile (modified)        | not-operating    | operating (reactivation)             | No          |
-| Activate w/ force (image+load pr. unchanged)| operating        | operating (no react./no reload)      | No          |
-| Activate w/ force (image pr. modified)      | operating        | operating (react+reload)             | No          |
-| Activate w/ force (load pr. modified)       | operating        | operating (react+reload)             | No          |
-
-### SSC-type LPAR
-
-Same as Linux-type: Yes?
-
-### ESA390-type LPAR
-
-Same as Linux-type: Yes?
+3. Is it possible that the 'next-activation-profile-name' LPAR property does not
+   specify an activation profile, and how is that done? Note that its
+   description requires a string that is at least one character long.
