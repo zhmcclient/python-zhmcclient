@@ -42,6 +42,12 @@ LPAR1_NAME = 'lpar 1'
 LPAR2_OID = 'lpar2-oid'
 LPAR2_NAME = 'lpar 2'
 
+# Object IDs and names of our faked image activation profiles:
+IMAGEPROFILE1_OID = 'imageprofile1-oid'
+IMAGEPROFILE1_NAME = 'imageprofile 1'
+IMAGEPROFILE2_OID = 'imageprofile2-oid'
+IMAGEPROFILE2_NAME = 'imageprofile 2'
+
 CPC_NAME = 'fake-cpc1-name'
 
 
@@ -100,6 +106,23 @@ class TestLpar(object):
         })
         return faked_lpar
 
+    def add_imageprofile1(self):
+        """Add image profile for lpar 1 (no auto-load)."""
+
+        faked_imageprofile = self.faked_cpc.image_activation_profiles.add({
+            'object-id': IMAGEPROFILE1_OID,
+            # object-uri will be automatically set
+            'parent': self.faked_cpc.uri,
+            'class': 'image-activation-profile',
+            'name': LPAR1_NAME,
+            'description': 'Image profile for LPAR #1 (Linux)',
+            'ipl-address': '00000',
+            'ipl-parameter': '',
+            'ipl-type': 'ipltype-standard',
+            'load-at-activation': False,
+        })
+        return faked_imageprofile
+
     def add_lpar2(self):
         """Add lpar 2 (type ssc)."""
 
@@ -124,6 +147,23 @@ class TestLpar(object):
             'last-used-clear-indicator': True,
         })
         return faked_lpar
+
+    def add_imageprofile2(self):
+        """Add image profile for lpar 2 (auto-load due to SSC)."""
+
+        faked_imageprofile = self.faked_cpc.image_activation_profiles.add({
+            'object-id': IMAGEPROFILE2_OID,
+            # object-uri will be automatically set
+            'parent': self.faked_cpc.uri,
+            'class': 'image-activation-profile',
+            'name': LPAR2_NAME,
+            'description': 'Image profile for LPAR #2 (SSC)',
+            'ipl-address': '00000',
+            'ipl-parameter': '',
+            'ipl-type': 'ipltype-standard',
+            'load-at-activation': False,
+        })
+        return faked_imageprofile
 
     def test_lparmanager_initial_attrs(self):
         """Test initial attributes of LparManager."""
@@ -382,6 +422,9 @@ class TestLpar(object):
         faked_lpar.properties['status'] = initial_status
         faked_lpar.properties['next-activation-profile-name'] = initial_profile
 
+        # Add a faked image profile
+        self.add_imageprofile1()
+
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
@@ -620,6 +663,9 @@ class TestLpar(object):
         faked_lpar.properties['last-used-load-parameter'] = initial_loadparm
         faked_lpar.properties['memory'] = initial_memory
 
+        # Add a faked image profile
+        self.add_imageprofile1()
+
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
@@ -838,6 +884,9 @@ class TestLpar(object):
         faked_lpar = self.add_lpar1()
         faked_lpar.properties['status'] = initial_status
 
+        # Add a faked image profile
+        self.add_imageprofile1()
+
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
@@ -1026,6 +1075,9 @@ class TestLpar(object):
         faked_lpar = self.add_lpar1()
         faked_lpar.properties['status'] = initial_status
 
+        # Add a faked image profile
+        self.add_imageprofile1()
+
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
@@ -1179,6 +1231,9 @@ class TestLpar(object):
         faked_lpar = self.add_lpar1()
         faked_lpar.properties['status'] = initial_status
 
+        # Add a faked image profile
+        self.add_imageprofile1()
+
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
 
@@ -1329,6 +1384,9 @@ class TestLpar(object):
         # Add a faked LPAR and set its properties
         faked_lpar = self.add_lpar1()
         faked_lpar.properties['status'] = initial_status
+
+        # Add a faked image profile
+        self.add_imageprofile1()
 
         lpar_mgr = self.cpc.lpars
         lpar = lpar_mgr.find(name=faked_lpar.name)
