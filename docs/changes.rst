@@ -69,6 +69,17 @@ Released: not yet
 
 * Test: Added end2end tests for LPAR activation in classic mode.
 
+* Fixed the waiting for LPAR status in Lpar.activate(). Previously, the method
+  was waiting for 'operating' or 'not-operating', so when an auto-load
+  happened it already returned when status 'not-operating' was reached, but
+  the load was still going on in parallel. Now, the method finds out whether
+  the LPAR is expected to auto-load or not and waits for the corresponding
+  status.
+
+* Added a debug log entry when Lpar.wait_for_status() is called. This happens
+  for example when Lpar.activate/deactivate/load() are called with
+  wait_for_completion.
+
 **Enhancements:**
 
 * Added support for Python 3.12. Had to increase the minimum versions of
