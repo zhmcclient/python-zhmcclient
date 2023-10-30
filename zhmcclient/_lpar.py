@@ -33,10 +33,13 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._exceptions import StatusTimeout
-from ._logging import logged_api_call
+from ._constants import HMC_LOGGER_NAME
+from ._logging import get_logger, logged_api_call
 from ._utils import RC_LOGICAL_PARTITION, make_query_str
 
 __all__ = ['LparManager', 'Lpar']
+
+HMC_LOGGER = get_logger(HMC_LOGGER_NAME)
 
 
 class LparManager(BaseManager):
@@ -349,7 +352,21 @@ class Lpar(BaseResource):
             wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
         if wait_for_completion:
-            statuses = ["not-operating", "operating"]
+            # If an automatic load is performed, the LPAR status will first go
+            # to 'not-operating' and then later to 'operating'. So we cannot
+            # just wait for any of those two, but need to have an understanding
+            # whether we expect auto-load.
+            image_profile_mgr = self.manager.parent.image_activation_profiles
+            image_profile = image_profile_mgr.find(name=self.name)
+            auto_load = image_profile.get_property('load-at-activation')
+            activation_mode = self.get_property('activation-mode')
+            load_profile_specified = activation_profile_name is not None and \
+                activation_profile_name != self.name
+            is_ssc = activation_mode in ('ssc', 'zaware')
+            if auto_load or load_profile_specified or is_ssc:
+                statuses = ["operating"]
+            else:
+                statuses = ["not-operating"]
             if allow_status_exceptions:
                 statuses.append("exceptions")
             self.wait_for_status(statuses, status_timeout)
@@ -1963,6 +1980,9 @@ class Lpar(BaseResource):
             statuses = status
         else:
             statuses = [status]
+        HMC_LOGGER.debug("Waiting for LPAR %r to have status: %s "
+                         "(timeout: %s sec)",
+                         self.name, status, status_timeout)
         while True:
 
             # Fastest way to get actual status value:
