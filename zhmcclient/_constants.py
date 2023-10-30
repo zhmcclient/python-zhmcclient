@@ -95,14 +95,10 @@ DEFAULT_MAX_REDIRECTS = 30
 DEFAULT_OPERATION_TIMEOUT = 3600
 
 #: Default timeout in seconds for waiting for completion of deferred status
-#: changes for LPARs,
+#: changes for LPARs and Partitions,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
-#:
-#: This is used as a default value in asynchronous methods
-#: of the :class:`~zhmcclient.Lpar` class that change its status (e.g.
-#: :meth:`zhmcclient.Lpar.activate`)).
-DEFAULT_STATUS_TIMEOUT = 900
+DEFAULT_STATUS_TIMEOUT = 60
 
 #: Default time to the next automatic invalidation of the Name-URI cache of
 #: manager objects, in seconds since the last invalidation,
