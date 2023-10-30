@@ -63,6 +63,17 @@ Released: not yet
 
 * Fixed the incorrect empty request body in Lpar.psw_restart().
 
+* Shortened the status timeout from 900 sec to 60 sec. This timeout is used
+  when waiting for an expected Partition or LPAR status after operations
+  that change the status and that have deferred status behavior (ie. the
+  status changes only after the asynchronous HMC job is complete).
+  This change allows to more reasonably surface the situation where an LPAR
+  load succeeds but the status of the LPAR does not go to 'operating' due to
+  issues with the operating system.
+
+* Docs: Fixed the description of the 'status_timeout' parameter of the Partition
+  and Lpar methods that have deferred status behavior.
+
 **Enhancements:**
 
 **Cleanup:**

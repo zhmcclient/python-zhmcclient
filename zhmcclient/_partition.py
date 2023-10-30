@@ -414,7 +414,7 @@ class Partition(BaseResource):
             has reached the desired status, after the HMC operation has
             completed.
             The special value 0 means that no timeout is set. `None` means that
-            the default async operation timeout of the session is used.
+            the default status timeout of the session is used.
             If the timeout expires when `wait_for_completion=True`, a
             :exc:`~zhmcclient.StatusTimeout` is raised.
 
@@ -486,7 +486,7 @@ class Partition(BaseResource):
             has reached the desired status, after the HMC operation has
             completed.
             The special value 0 means that no timeout is set. `None` means that
-            the default async operation timeout of the session is used.
+            the default status timeout of the session is used.
             If the timeout expires when `wait_for_completion=True`, a
             :exc:`~zhmcclient.StatusTimeout` is raised.
 
