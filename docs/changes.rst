@@ -20,12 +20,10 @@ Change log
 ----------
 
 
-Version 1.11.3.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.11.3
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
+Released: 2023-10-31
 
 **Deprecations:**
 
@@ -73,16 +71,6 @@ Released: not yet
 
 * Docs: Fixed the description of the 'status_timeout' parameter of the Partition
   and Lpar methods that have deferred status behavior.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.11.2
