@@ -33,7 +33,8 @@ from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, runtest_find_list, \
-    runtest_get_properties, ensure_lpar_inactive, setup_logging
+    runtest_get_properties, ensure_lpar_inactive, set_resource_property, \
+    setup_logging
 
 urllib3.disable_warnings()
 
@@ -236,57 +237,17 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
                 assert message['is-priority'] == is_priority
 
 
-# Test LPARs for test_lpar_activate().
-# The outer dict is for different types of LPARs:
-#   Key: LPAR kind, Value: Dict of LPAR names by CPC
-ACTIVATE_TEST_LPARS = {
-    'linux-no-autoload': {
-        # Linux LPAR whose next profile does not auto-load
-        'P0000M96': 'LINUX28',
-        'T28': 'BLUEC1',
-    },
-    'linux-with-autoload': {
-        # Linux LPAR whose next profile auto-loads, and which boots an OS
-        'P0000M96': 'HISOCKE1',
-        # 'T28': 'BCORE2',  # fails with HTTP 500,263: The load failed.
-    },
-    'ssc': {
-        # SSC LPAR (which always auto-loads), and which boots the SSC installer
-        # or an SSC appliance
-        'P0000M96': 'ANGEL',
-        'T28': 'BCORE1',
-    },
-}
-
-# Test image profiles for test_lpar_activate().
-# The outer dict is for different types of image profiles:
-#   Key: LPAR kind, Value: Dict of image profile names by CPC
-ACTIVATE_TEST_PROFILES = {
-    'linux-no-autoload': {
-        # Linux profile that does not auto-load
-        'P0000M96': 'LINUX28',
-        'T28': 'BLUEC1',
-    },
-    'linux-with-autoload': {
-        # Linux profile that does auto-load and specifies a bootable OS
-        'P0000M96': 'HISOCKE1',
-        'T28': 'BCORE2',
-    },
-    'ssc': {
-        # SSC profile (which always auto-loads), that specifies a bootable
-        # SSC image (installer or appliance)
-        'P0000M96': 'ANGEL',
-        'T28': 'BCORE1',
-    },
-}
-
 LPAR_ACTIVATE_TESTCASES = [
     # Testcases for test_lpar_activate().
     # The list items are tuples with the following items:
     # - desc (string): description of the testcase.
-    # - lpar_kind (string): LPAR kind to be used (from ACTIVATE_TEST_LPARS).
-    # - profile_kind (string): Image profile kind to be used (from
-    #   ACTIVATE_TEST_PROFILES). None means to use default (next profile).
+    # - lpar_mode (string): Activation mode of the LPAR.
+    # - ap_type (string): Type of activation profile to be used for
+    #   activation_profile_name parm in Lpar.activate(): 'image', 'wrongimage',
+    #   'load', None.
+    # - nap_type (string): Type of activation profile to be used for
+    #   'next-activation-profile-name' prop of LPAR: 'image', 'load'.
+    # - auto_load (bool): Value for 'load-at-activation' in image profile.
     # - input_kwargs (dict): Input parameters for Lpar.activate() in addition
     #   to activation_profile_name.
     # - exp_props (dict): Dict of expected properties of the Lpar after
@@ -295,9 +256,11 @@ LPAR_ACTIVATE_TESTCASES = [
     # - run (bool or 'pdb'): Whether to run the test or call the debugger.
 
     (
-        "Linux LPAR whose same-named profile is w/o auto-load, default parms",
-        'linux-no-autoload',
+        "General LPAR w/o auto-load, default parms, next profile is image",
+        'general',
         None,
+        'image',
+        False,
         dict(),
         {
             'status': 'not-operating',
@@ -306,9 +269,11 @@ LPAR_ACTIVATE_TESTCASES = [
         True,
     ),
     (
-        "Linux LPAR whose same-named profile is with auto-load, default parms",
-        'linux-with-autoload',
+        "General LPAR with auto-load, default parms, next profile is image",
+        'general',
         None,
+        'image',
+        True,
         dict(),
         {
             'status': 'operating',
@@ -317,9 +282,91 @@ LPAR_ACTIVATE_TESTCASES = [
         True,
     ),
     (
-        "SSC LPAR (always auto-loads), default parms",
+        "General LPAR w/o auto-load, image profile as parm",
+        'general',
+        'image',
+        'image',
+        False,
+        dict(),
+        {
+            'status': 'not-operating',
+        },
+        None,
+        True,
+    ),
+    (
+        "Linux LPAR with auto-load, image profile as parm",
+        'linux',
+        'image',
+        'image',
+        True,
+        dict(),
+        {
+            'status': 'operating',
+        },
+        None,
+        True,
+    ),
+
+    (
+        "Linux LPAR w/o auto-load, default parms, next profile is image",
+        'linux',
+        None,
+        'image',
+        False,
+        dict(),
+        {
+            'status': 'not-operating',
+        },
+        None,
+        True,
+    ),
+    (
+        "Linux LPAR with auto-load, default parms, next profile is image",
+        'linux',
+        None,
+        'image',
+        True,
+        dict(),
+        {
+            'status': 'operating',
+        },
+        None,
+        True,
+    ),
+    (
+        "Linux LPAR w/o auto-load, image profile as parm",
+        'linux',
+        'image',
+        'image',
+        False,
+        dict(),
+        {
+            'status': 'not-operating',
+        },
+        None,
+        True,
+    ),
+    (
+        "Linux LPAR with auto-load, image profile as parm",
+        'linux',
+        'image',
+        'image',
+        True,
+        dict(),
+        {
+            'status': 'operating',
+        },
+        None,
+        True,
+    ),
+
+    (
+        "SSC LPAR (always auto-loads), default parms, next profile is image",
         'ssc',
         None,
+        'image',
+        False,
         dict(),
         {
             'status': 'operating',
@@ -328,27 +375,91 @@ LPAR_ACTIVATE_TESTCASES = [
         True,
     ),
     (
-        "Linux LPAR, different image profile name than LPAR name specified",
-        'linux-no-autoload',
-        'linux-with-autoload',
+        "SSC LPAR (always auto-loads), image profile as parm",
+        'ssc',
+        'image',
+        'image',
+        False,
+        dict(),
+        {
+            'status': 'operating',
+        },
+        None,
+        True,
+    ),
+    (
+        "Linux LPAR, wrong image profile",
+        'linux',
+        'wrongimage',
+        'image',
+        False,
         dict(),
         None,
         # HTTP 500,263: LPAR name and image profile name must match
         zhmcclient.HTTPError,
         True,
     ),
+    (
+        "SSC LPAR, wrong image profile",
+        'ssc',
+        'wrongimage',
+        'image',
+        False,
+        dict(),
+        None,
+        # HTTP 500,263: LPAR name and image profile name must match
+        zhmcclient.HTTPError,
+        True,
+    ),
+
+    # TODO: Add testcases with load profiles
 ]
 
 
 @pytest.mark.parametrize(
-    "desc, lpar_kind, profile_kind, input_kwargs, exp_props, exp_exc_type, run",
+    "desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs, "
+    "exp_props, exp_exc_type, run",
     LPAR_ACTIVATE_TESTCASES)
 def test_lpar_activate(
-        desc, lpar_kind, profile_kind, input_kwargs, exp_props, exp_exc_type,
-        run, classic_mode_cpcs):  # noqa: F811
+        desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs, exp_props,
+        exp_exc_type, run, classic_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name, unused-argument
     """
     Test Lpar.activate().
+
+    Note: These tests require that the following properties are present in the
+    HMC inventory file for the CPC item of the HMC that is tested against:
+
+    * 'loadable_lpars' - The names of LPARs for some operating modes, that
+      properly reach the 'operating' status when activated under auto-load
+      conditions. If this item is missing, all tests will be skipped.
+      If the entries for certain operating modes are missing, the tests
+      for these operating modes are skipped.
+
+    * 'load_profiles' - The names of load profiles that can be used to properly
+      load the corresponding partitions in 'loadable_lpars'. If this item is
+      missing, all tests will be skipped. If the entries for certain operating
+      modes are missing, the load-profile related tests for these operating
+      modes are skipped.
+
+    Example::
+
+        A01:
+          . . .
+          cpcs:
+            P0000A01:           # <- CPC item of the HMC that is tested against
+              machine_type: "3931"
+              machine_model: "A01"
+              dpm_enabled: false
+              loadable_lpars:   # <- specific entry for this test
+                general: "LP01"      # key: operating mode, value: LPAR name
+                linux: "LP02
+                ssc: "LP03"
+              load_profiles:    # <- specific entry for this test
+                general: "LP01LOAD"  # key: op. mode, value: load profile name
+                linux: "LP02LOAD"
+                ssc: "LP03LOAD"
+
     """
     if not classic_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in classic mode")
@@ -361,30 +472,104 @@ def test_lpar_activate(
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
 
-        test_lpars = ACTIVATE_TEST_LPARS[lpar_kind]
-        try:
-            lpar_name = test_lpars[cpc.name]
-        except KeyError:
-            pytest.skip("CPC {c} does not have a definition in the "
-                        "ACTIVATE_TEST_LPARS: {tl}".
-                        format(c=cpc.name, tl=test_lpars))
+        hd = cpc.manager.session.hmc_definition
 
-        if profile_kind:
-            test_profiles = ACTIVATE_TEST_PROFILES[profile_kind]
-            try:
-                profile_name = test_profiles[cpc.name]
-            except KeyError:
-                pytest.skip("CPC {c} does not have a definition in the "
-                            "ACTIVATE_TEST_PROFILES: {tp}".
-                            format(c=cpc.name, tp=test_profiles))
+        try:
+            hd_cpcs = hd.cpcs
+        except AttributeError:
+            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
+                        "have a 'cpcs' property".
+                        format(h=hd.nickname))
+        try:
+            hd_cpc = hd_cpcs[cpc.name]
+        except KeyError:
+            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
+                        "have an entry for CPC {c!r} in its 'cpcs' property".
+                        format(h=hd.nickname, c=cpc.name))
+        try:
+            loadable_lpars = hd_cpc['loadable_lpars']
+        except KeyError:
+            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
+                        "have a 'loadable_lpars' property in its entry for "
+                        "CPC {c!r}".
+                        format(h=hd.nickname, c=cpc.name))
+        try:
+            load_profiles = hd_cpc['load_profiles']
+        except KeyError:
+            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
+                        "have a 'load_profiles' property in its entry for "
+                        "CPC {c!r}".
+                        format(h=hd.nickname, c=cpc.name))
+
+        try:
+            lpar_name = loadable_lpars[lpar_mode]
+        except (KeyError, TypeError):
+            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
+                        "have an entry for operating mode {om!r} in its "
+                        "'loadable_lpars' property for CPC {c!r}".
+                        format(h=hd.nickname, c=cpc.name, om=lpar_mode))
+
+        # Find the image profile corresponding to the LPAR, and the other
+        # (wrong) image profile names for specific tests with that.
+        iap_name = lpar_name
+        all_iaps = cpc.image_activation_profiles.list()
+        lpar_iaps = [_iap for _iap in all_iaps if _iap.name == lpar_name]
+        if len(lpar_iaps) >= 1:
+            iap = lpar_iaps[0]
         else:
-            profile_name = None
+            pytest.skip("Image activation profile {p!r} does not exist on "
+                        "CPC {c}.".format(c=cpc.name, p=iap_name))
+        wrong_iap_names = [_iap.name for _iap in all_iaps
+                           if _iap.name != lpar_name]
+
+        if ap_type == 'image':
+            ap_name = lpar_name
+        if ap_type == 'wrongimage':
+            ap_name = random.choice(wrong_iap_names)
+        elif ap_type == 'load':
+            try:
+                ap_name = load_profiles[lpar_mode]
+            except (KeyError, TypeError):
+                pytest.skip("Inventory file entry for HMC nickname {h!r} does "
+                            "not have an entry for operating mode {om!r} in "
+                            "its 'load_profiles' property for CPC {c!r}".
+                            format(h=hd.nickname, c=cpc.name, om=lpar_mode))
+        else:
+            ap_name = None
+
+        if nap_type == 'image':
+            nap_name = lpar_name
+        elif nap_type == 'load':
+            try:
+                nap_name = load_profiles[lpar_mode]
+            except (KeyError, TypeError):
+                pytest.skip("Inventory file entry for HMC nickname {h!r} does "
+                            "not have an entry for operating mode {om!r} in "
+                            "its 'load_profiles' property for CPC {c!r}".
+                            format(h=hd.nickname, c=cpc.name, om=lpar_mode))
+        else:
+            nap_name = None
 
         try:
             lpar = cpc.lpars.find(name=lpar_name)
         except zhmcclient.NotFound:
             pytest.skip("LPAR {p!r} does not exist on CPC {c}.".
                         format(c=cpc.name, p=lpar_name))
+
+        if ap_type == 'load' or nap_type == 'load':
+            lap_name = load_profiles[lpar_mode]
+            try:
+                cpc.load_activation_profiles.find(name=lap_name)
+            except zhmcclient.NotFound:
+                pytest.skip("Load activation profile {p!r} does not exist on "
+                            "CPC {c}.".format(c=cpc.name, p=lap_name))
+
+        op_mode = iap.get_property('operating-mode')
+        assert op_mode == lpar_mode, (
+            "Incorrect testcase definition: Operating mode {om!r} in image "
+            "activation profile {p!r} on CPC {c} does not match the "
+            "lpar_mode {lm!r} of the testcase".
+            format(c=cpc.name, p=iap_name, om=op_mode, lm=lpar_mode))
 
         msg = ("Testing on CPC {c} with LPAR {p!r}".
                format(c=cpc.name, p=lpar.name))
@@ -399,11 +584,19 @@ def test_lpar_activate(
                     lpar.name)
         ensure_lpar_inactive(lpar)
 
+        logger.info("Preparation: Setting 'next-activation-profile-name' = %r "
+                    "in LPAR %r", nap_name, lpar.name)
+        saved_nap_name = set_resource_property(
+            lpar, 'next-activation-profile-name', nap_name)
+
+        logger.info("Preparation: Setting 'load-at-activation' = %r in image "
+                    "profile %r", auto_load, iap.name)
+        saved_auto_load = set_resource_property(
+            iap, 'load-at-activation', auto_load)
+
         try:
-            next_profile = lpar.get_property('next-activation-profile-name')
-            logger.info("Test: Activating LPAR %r (next profile: %r, "
-                        "profile arg: %r, add. args: %r)",
-                        lpar.name, next_profile, profile_name, input_kwargs)
+            logger.info("Test: Activating LPAR %r (profile arg: %r, "
+                        "add. args: %r)", lpar.name, ap_name, input_kwargs)
 
             if exp_exc_type:
 
@@ -411,25 +604,17 @@ def test_lpar_activate(
 
                     # Exercise the code to be tested
                     lpar.activate(
-                        activation_profile_name=profile_name, **input_kwargs)
+                        activation_profile_name=ap_name, **input_kwargs)
 
             else:
 
                 # Exercise the code to be tested
                 lpar.activate(
-                    activation_profile_name=profile_name, **input_kwargs)
+                    activation_profile_name=ap_name, **input_kwargs)
 
                 # In case of an image profile with auto-load, the activate()
-                # method returns already when status 'non-operating' is reached.
-                # However, we want to see that the LPAR actually gets to
-                # status 'operating' when auto-load is set. So we need to
-                # wait for the desired state to cover for that case.
-                exp_status = exp_props['status']
-                if exp_status == 'operating':
-                    logger.info("Waiting for status of LPAR %r to become %r "
-                                "after test",
-                                lpar.name, exp_status)
-                    lpar.wait_for_status(exp_status, status_timeout=60)
+                # method waits until status 'operating' is reached. If that
+                # cannot be reached, StatusTimeout is raised.
 
                 # Check the expected properties
                 lpar.pull_full_properties()
@@ -450,3 +635,12 @@ def test_lpar_activate(
             logger.info("Cleanup: Ensuring that LPAR %r is inactive",
                         lpar.name)
             ensure_lpar_inactive(lpar)
+
+            logger.info("Cleanup: Setting 'next-activation-profile-name' = %r "
+                        "in LPAR %r", saved_nap_name, lpar.name)
+            set_resource_property(
+                lpar, 'next-activation-profile-name', saved_nap_name)
+
+            logger.info("Cleanup: Setting 'load-at-activation' = %r in image "
+                        "profile %r", saved_auto_load, iap.name)
+            set_resource_property(iap, 'load-at-activation', saved_auto_load)
