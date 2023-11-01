@@ -248,6 +248,18 @@ class Lpar(BaseResource):
         `allow_status_exceptions` was set additionally in the state
         "exceptions".
 
+        The following approach is used to determine the desired state to wait
+        for if `wait_for_completion=True`:
+
+        - if the 'operating-mode' property of the image profile is 'ssc' or
+          'zaware', the desired state is "operating".
+        - if the profile specified in `activation_profile_name` is not the
+          LPAR's image profile, it is assumed to be a load profile and
+          the desired state is "operating".
+        - if the 'load-at-activation' property of the image profile is True,
+          the desired state is "operating".
+        - else, the desired state is "not-operating".
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -360,11 +372,14 @@ class Lpar(BaseResource):
             image_profile_mgr = self.manager.parent.image_activation_profiles
             image_profile = image_profile_mgr.find(name=self.name)
             auto_load = image_profile.get_property('load-at-activation')
-            activation_mode = self.get_property('activation-mode')
+            # Note that the LPAR 'activation-mode' property is 'not-set' while
+            # the LPAR is inactive, so we need to look at the image profile
+            # to determine the mode.
+            op_mode = image_profile.get_property('operating-mode')
             load_profile_specified = activation_profile_name is not None and \
                 activation_profile_name != self.name
-            is_ssc = activation_mode in ('ssc', 'zaware')
-            if auto_load or load_profile_specified or is_ssc:
+            mode_load = op_mode in ('ssc', 'zaware')
+            if auto_load or load_profile_specified or mode_load:
                 statuses = ["operating"]
             else:
                 statuses = ["not-operating"]
