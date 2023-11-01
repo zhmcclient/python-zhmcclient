@@ -801,6 +801,31 @@ def ensure_lpar_inactive(lpar):
             format(lp=lpar.name, os=org_status, s=status))
 
 
+def set_resource_property(resource, name, value):
+    """
+    Set a property on a zhmcclient resource to a value and return the current
+    value (retrieved freshly from the HMC).
+
+    Parameters:
+
+      resource (zhmcclient.BaseResource): The resource (e.g. LPAR).
+      name (string): Name of the property.
+      value (object): New value for the property.
+
+    Returns:
+      object: Old value of the property.
+
+    Raises:
+      zhmcclient.CeasedExistence: The resource no longer exists.
+      zhmcclient.Error: Any zhmcclient exception can happen, except
+        OperationTimeout and StatusTimeout.
+    """
+    resource.pull_full_properties()
+    old_value = resource.get_property(name)
+    resource.update_properties({name: value})
+    return old_value
+
+
 def pull_lpar_status(lpar):
     """
     Retrieve the current LPAR status on the HMC as fast as possible and return
