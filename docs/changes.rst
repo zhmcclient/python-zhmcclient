@@ -31,6 +31,9 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed the expected status to wait for in Lpar.activate() for inactive
+  SSC or Aware LPARs to be 'operating'.
+
 **Enhancements:**
 
 **Cleanup:**

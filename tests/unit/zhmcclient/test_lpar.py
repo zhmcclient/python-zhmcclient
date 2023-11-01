@@ -120,6 +120,7 @@ class TestLpar(object):
             'ipl-parameter': '',
             'ipl-type': 'ipltype-standard',
             'load-at-activation': False,
+            'operating-mode': 'linux',
         })
         return faked_imageprofile
 
@@ -162,6 +163,7 @@ class TestLpar(object):
             'ipl-parameter': '',
             'ipl-type': 'ipltype-standard',
             'load-at-activation': False,
+            'operating-mode': 'ssc',
         })
         return faked_imageprofile
 
