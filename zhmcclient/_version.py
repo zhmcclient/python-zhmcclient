@@ -27,7 +27,7 @@ __all__ = ['__version__']
 #:
 #: * "M.N.P.dev1": A not yet released version M.N.P
 #: * "M.N.P": A released version M.N.P
-__version__ = '1.11.4.dev1'
+__version__ = '1.11.4'
 
 # Check supported Python versions
 # Keep these Python versions in sync with:
