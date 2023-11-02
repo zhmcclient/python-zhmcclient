@@ -453,11 +453,11 @@ def test_lpar_activate(
               dpm_enabled: false
               loadable_lpars:   # <- specific entry for this test
                 general: "LP01"      # key: operating mode, value: LPAR name
-                linux: "LP02
+                linux-only: "LP02
                 ssc: "LP03"
               load_profiles:    # <- specific entry for this test
                 general: "LP01LOAD"  # key: op. mode, value: load profile name
-                linux: "LP02LOAD"
+                linux-only: "LP02LOAD"
                 ssc: "LP03LOAD"
 
     """
@@ -472,20 +472,13 @@ def test_lpar_activate(
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
 
-        hd = cpc.manager.session.hmc_definition
+        session = cpc.manager.session
+        hd = session.hmc_definition
 
-        try:
-            hd_cpcs = hd.cpcs
-        except AttributeError:
-            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
-                        "have a 'cpcs' property".
-                        format(h=hd.nickname))
-        try:
-            hd_cpc = hd_cpcs[cpc.name]
-        except KeyError:
-            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
-                        "have an entry for CPC {c!r} in its 'cpcs' property".
-                        format(h=hd.nickname, c=cpc.name))
+        # The following has no check since classic_mode_cpcs only contains
+        # CPCs that have such an item:
+        hd_cpc = hd.cpcs[cpc.name]
+
         try:
             loadable_lpars = hd_cpc['loadable_lpars']
         except KeyError:
