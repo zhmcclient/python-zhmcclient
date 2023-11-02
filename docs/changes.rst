@@ -20,29 +20,15 @@ Change log
 ----------
 
 
-Version 1.11.4.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.11.4
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-11-02
 
 **Bug fixes:**
 
 * Fixed the expected status to wait for in Lpar.activate() for inactive
   SSC or Aware LPARs to be 'operating'.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.11.3
