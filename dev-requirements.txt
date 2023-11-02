@@ -75,7 +75,8 @@ coveralls>=3.3.0; python_version >= '3.5'
 #   and safety 2.4.0 will also no longer pin it (see https://github.com/pyupio/safety/issues/455).
 safety>=2.2.0,!=2.3.5; python_version >= '3.6'
 dparse>=0.6.2; python_version >= '3.6'
-ruamel.yaml>=0.17.21; python_version >= '3.6'
+ruamel.yaml>=0.17.21,<0.17.22; python_version == '3.6'
+ruamel.yaml>=0.17.21; python_version >= '3.7'
 
 # Tox
 tox>=2.5.0
