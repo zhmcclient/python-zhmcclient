@@ -70,7 +70,6 @@ coveralls>=3.3.0; python_version >= '3.5'
 
 # Safety CI by pyup.io
 # Safety is run only on Python >=3.6
-# Safety 2.2.0 and dparse 0.6.2 fix safety issue 51358
 # Safety 2.3.5 (running only on Python >=3.6) requires packaging<22.0,>=21.0, but safety 2.3.4 does not
 #   and safety 2.4.0 will also no longer pin it (see https://github.com/pyupio/safety/issues/455).
 safety>=2.2.0,!=2.3.5; python_version >= '3.6'
@@ -85,7 +84,6 @@ tox>=2.5.0
 # Sphinx 2.0.0 removed support for Python 2.7 and 3.4
 # Sphinx 4.0.0 breaks autodocsumm and needs to be excluded
 # Sphinx <4.3.0 requires docutils <0.18 due to an incompatibility
-# Sphinx 3.0.4 fixes safety issues 45775,38330
 Sphinx>=1.7.6,<2.0.0; python_version == '2.7'
 Sphinx>=3.5.4,!=4.0.0,<4.3.0; python_version >= '3.5' and python_version <= '3.9'
 Sphinx>=4.2.0; python_version >= '3.10'
@@ -95,12 +93,10 @@ docutils>=0.14,<0.17; python_version == '3.10'
 docutils>=0.16,<0.17; python_version >= '3.11'
 sphinx-git>=10.1.1
 # GitPython 3.0.0 removed support for Python 2.7
-# GitPython 3.1.30 fixes safety issues 52322,52518
 GitPython>=2.1.1,<3.0.0; python_version == '2.7'
 GitPython>=2.1.1; python_version >= '3.5' and python_version <= '3.6'
 GitPython>=3.1.37; python_version >= '3.7'
 sphinxcontrib-websupport>=1.1.2
-# Pygments 2.7.4 fixes safety issues 50885,50886
 Pygments>=2.4.1; python_version == '2.7'
 Pygments>=2.7.4; python_version >= '3.5' and python_version <= '3.6'
 Pygments>=2.15.0; python_version >= '3.7'
@@ -109,7 +105,6 @@ autodocsumm>=0.1.13,<0.2.0; python_version == '2.7'
 autodocsumm>=0.1.13; python_version >= '3.5' and python_version <= '3.9'
 autodocsumm>=0.2.5; python_version >= '3.10'
 # Babel 2.7.0 fixes an ImportError for MutableMapping which starts failing on Python 3.10
-# Babel 2.9.1 fixes safety issue 42203
 Babel>=2.9.1
 
 # PyLint (no imports, invoked via pylint script)
@@ -121,8 +116,6 @@ Babel>=2.9.1
 # Issue #2673: Pinning Pylint to <2.7.0 is a circumvention for Pylint issue
 #   https://github.com/PyCQA/pylint/issues/4120 that appears in Pylint 2.7.0.
 #   Pylint 2.10 has fixed the issue.
-# Pylint 2.7.0 fixes safety issue 39621
-# Pylint 2.13.0 fixes safety issue 45185
 pylint>=2.5.2,<2.7.0; python_version == '3.5'
 pylint>=2.13.0,<2.14.0; python_version == '3.6'
 pylint>=2.13.0; python_version >= '3.7' and python_version <= '3.10'
@@ -163,7 +156,6 @@ functools32>=3.2.3.post2; python_version == '2.7'  # technically: python_version
 
 # Twine (no imports, invoked via twine script):
 # twine 2.0.0 removed support for Python < 3.6
-# twine 2.0.0 fixes safety issue 37504
 twine>=1.8.1,<2.0.0; python_version <= '3.5'
 twine>=3.0.0; python_version >= '3.6'
 # readme-renderer 23.0 has made cmarkgfm part of extras (it fails on Cygwin)
@@ -183,11 +175,7 @@ pywin32-ctypes>=0.2.0; sys_platform=="win32"
 #       so we need to pin notebook to <6.1 on Python<=3.5.
 # Note: notebook 6.5.1 starts using nbclassic which seems to introduce some challenges for pip
 #       dependency resolution, so for now we pin notebook to <6.5.
-# notebook 5.7.8 fixes safety issue 54678
-# notebook 5.7.11 fixes safety issue 54689
-# notebook 6.1.5 fixes safety issue 40380
 # notebook 6.4.11 removed support for Python 3.6
-# notebook 6.4.12 fixes safety issue 54684
 notebook>=4.3.1,<6.1; python_version <= '3.5'
 notebook>=6.4.10,<6.5; python_version == '3.6'
 notebook>=6.4.12,<6.5; python_version >= '3.7'
@@ -196,7 +184,6 @@ jupyter-console>=5.2.0,<6.0.0; python_version == '2.7'
 jupyter-console>=5.2.0,<6.0.0; python_version >= '3.5'
 ipywidgets>=5.2.2,<6.0.0; python_version <= '3.6'
 ipywidgets>=5.2.2,<6.0.0; python_version >= '3.7'
-# nbconvert 6.5.1 fixes safety issue 50792
 nbconvert>=5.0.0,<6.0.0; python_version <= '3.6'
 nbconvert>=6.0.0,<7.0.0; python_version >= '3.7'
 # nbconvert 6.x requires nbclient>=0.5.0,<0.6.0
@@ -227,7 +214,6 @@ ipython>=5.1.0,<6.0; python_version >= '3.7'
 # Pywin32 is used (at least?) by jupyter.
 # Pywin32 version 226 needs to be excluded, see issues #1946 and #1975.
 # pywin32 version 300 removed support for Python 2.7
-# pywin32 version 301 fixes safety issue 54687
 # pywin32 version 302 removed support for Python 3.5 and added support for Python 3.10
 # pywin32 version 303 added support for Python 3.11
 pywin32>=222,!=226,<300; sys_platform == 'win32' and python_version == '2.7'
