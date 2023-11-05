@@ -47,6 +47,7 @@ There are three types of Activation Profiles:
 from __future__ import absolute_import
 
 import copy
+import warnings
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -221,6 +222,67 @@ class ActivationProfileManager(BaseManager):
             list_uri, result_prop, full_properties, filter_args,
             additional_properties)
 
+    @logged_api_call
+    def create(self, properties):
+        """
+        Create and configure an Activation Profiles on this CPC, of the profile
+        type managed by this object.
+
+        Supported only on z16 and later CPCs.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Customize/Delete Activation Profiles" task.
+
+        Parameters:
+
+          properties (dict): Initial property values.
+            Allowable properties are defined in section 'Request body contents'
+            in section 'Create Reset/Image/Load Activation Profile' in the
+            :term:`HMC API` book.
+
+            Note that the input profile name for creation must be provided in
+            property 'profile-name', even though it shows up on the created
+            resource in property 'name'. This applies to all three types of
+            activation profiles.
+
+        Returns:
+
+          ActivationProfile:
+            The resource object for the new Activation Profile.
+            The object will have its 'element-uri' property set, and will also
+            have the input properties set.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        ap_selector = self._profile_type + '-activation-profiles'
+        uri = '{}/{}'.format(self.cpc.uri, ap_selector)
+
+        result = self.session.post(uri, body=properties)
+
+        # The "Create ... Activation Profile" operations do not return the
+        # resource URI, so we construct it ourselves. Also, these operations
+        # specify the profile name in input property 'profile-name'.
+        if result is not None:
+            warnings.warn(
+                "The Create {pt} Activation Profile operation now has "
+                "response data with properties: {pl!r}".
+                format(pt=self._profile_type, pl=result.keys()), UserWarning)
+        name = properties['profile-name']
+        uri = '{}/{}'.format(uri, name)
+
+        props = copy.deepcopy(properties)
+        props[self._uri_prop] = uri
+        profile = ActivationProfile(self, uri, name, props)
+        self._name_uri_cache.update(name, uri)
+        return profile
+
 
 class ActivationProfile(BaseResource):
     """
@@ -249,6 +311,29 @@ class ActivationProfile(BaseResource):
             "ActivationProfile init: Expected manager type {}, got {}" \
             .format(ActivationProfileManager, type(manager))
         super(ActivationProfile, self).__init__(manager, uri, name, properties)
+
+    @logged_api_call
+    def delete(self):
+        """
+        Delete this Activation Profile.
+
+        Supported only on z16 and later CPCs.
+
+        Authorization requirements:
+
+        * Task permission to the "Customize/Delete Activation Profiles" task.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        # pylint: disable=protected-access
+        self.manager.session.delete(self.uri, resource=self)
+        self.manager._name_uri_cache.delete(
+            self.get_properties_local(self.manager._name_prop, None))
 
     @logged_api_call
     def update_properties(self, properties):
