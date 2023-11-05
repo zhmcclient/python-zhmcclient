@@ -154,6 +154,11 @@ Released: not yet
   Job.check_for_completion() and Job.wait_for_completion() already existed.
   (issue #1299)
 
+* Added support for creation and deletion of activation profiles on z16.
+  This requires the SE to have a code level that has the
+  'create-delete-activation-profiles' API feature enabled.
+  (issue #1329)
+
 **Cleanup:**
 
 **Known issues:**
