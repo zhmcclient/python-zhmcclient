@@ -1553,6 +1553,102 @@ class Job(object):
         return self._op_uri
 
     @logged_api_call
+    def query_status(self):
+        """
+        Get the current status of this job, and if completed also the
+        operation results.
+
+        This method performs the "Query Job Status" operation on the job.
+
+        This is a low level operation, consider using
+        :meth:`~zhmcclient.Job.check_for_completion` or
+        :meth:`~zhmcclient.Job.wait_for_completion` instead.
+
+        If the job no longer exists, :exc:`~zhmcclient.HTTPError` is raised
+        with status code 404 and reason code 1.
+
+        Returns:
+          tuple(job_status, op_status, op_reason, op_result): With the following
+          items:
+
+          * job_status(string): Job status, one of:
+            - "running" - indicates that the job was found and it has not ended
+              at the time of the query.
+            - "cancel-pending" - indicates that the job was found and it has
+              not ended but cancellation has been requested.
+            - "canceled" - indicates that the job's normal course of execution
+              was interrupted by a cancel request, and the job has now ended.
+            - "complete" - indicates that the job was found and has completed
+              the operation, and the job has now ended.
+
+          * op_status(int): HTTP status code of the operation performed by
+            the job. Will be `None` if the job has not ended.
+
+          * op_reason(int): HTTP reason code of the operation performed by
+            the job. Will be `None` if the job has not ended.
+
+          * op_result(dict): Result of the operation performed by
+            the job, as described in the zhmcclient method that performed
+            the operation. Will be `None` if the job has not ended.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        try:
+            result = self.session.get(self.uri)
+        except Error as exc:
+            HMC_LOGGER.debug("Request: GET %s failed with %s: %s",
+                             self.uri, exc.__class__.__name__, exc)
+            raise
+
+        job_status = result['status']
+        op_status = result.get('job-status-code', None)
+        op_reason = result.get('job-reason-code', None)
+        op_result = result.get('job-results', None)
+
+        return job_status, op_status, op_reason, op_result
+
+    @logged_api_call
+    def delete(self):
+        """
+        Delete this ended job on the HMC.
+
+        This method performs the "Delete Completed Job Status" operation on the
+        job.
+
+        This is a low level operation, consider using
+        :meth:`~zhmcclient.Job.check_for_completion` or
+        :meth:`~zhmcclient.Job.wait_for_completion` instead, which delete the
+        ended job.
+
+        If the job has not ended (i.e. its `status` property is not "canceled"
+        or"complete"), :exc:`~zhmcclient.HTTPError` is raised with status code
+        409 and reason code 40.
+
+        If the job no longer exists, :exc:`~zhmcclient.HTTPError` is raised
+        with status code 404 and reason code 1.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        try:
+            self.session.delete(self.uri)
+        except Error as exc:
+            HMC_LOGGER.debug("Request: DELETE %s failed with %s: %s",
+                             self.uri, exc.__class__.__name__, exc)
+            raise
+
+    @logged_api_call
     def check_for_completion(self):
         """
         Check once for completion of the job and return completion status and
@@ -1698,6 +1794,57 @@ class Job(object):
                         operation_timeout)
 
             time.sleep(10)  # Avoid hot spin loop
+
+    @logged_api_call
+    def cancel(self):
+        """
+        Attempt to cancel this job.
+
+        This method performs the "Cancel Job" operation on the job.
+
+        The specific nature of the job and its current state of execution can
+        affect the success of the cancellation.
+
+        Not all jobs support cancellation; this is described in each zhmcclient
+        method that can return a job.
+
+        If the job exists, supports cancellation and has not yet completed (i.e.
+        its `status` property is "running"), the cancellation is made pending
+        for the job and its `status` property is changed to "cancel-pending".
+
+        If the operation performed by the job does not support cancellation,
+        :exc:`~zhmcclient.HTTPError` is raised with status code 404 and reason
+        code 4.
+
+        If the job supports cancellation and exists, but already has a
+        cancellation request pending (i.e. its `status` property is
+        "cancel-pending"), :exc:`~zhmcclient.HTTPError` is raised with status
+        409 and reason code 42.
+
+        If the job supports cancellation and exists, but already has ended
+        (i.e. its `status` property is "complete" or "canceled"),
+        :exc:`~zhmcclient.HTTPError` is raised with status code 409 and reason
+        code 41.
+
+        If the job supports cancellation but no longer exists,
+        :exc:`~zhmcclient.HTTPError` is raised with status code 404 and reason
+        code 1.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`: The job cancellation attempt failed.
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.ClientAuthError`
+          :exc:`~zhmcclient.ServerAuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        uri = '{}/operations/cancel'.format(self.uri)
+        try:
+            self.session.post(uri)
+        except Error as exc:
+            HMC_LOGGER.debug("Request: POST %s failed with %s: %s",
+                             uri, exc.__class__.__name__, exc)
+            raise
 
 
 def _text_repr(text, max_len=1000):

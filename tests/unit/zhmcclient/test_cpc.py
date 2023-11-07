@@ -1105,22 +1105,15 @@ class TestCpc(object):
             assert status == exp_status
 
     @pytest.mark.parametrize(
-        "wait_for_completion", [True]
-    )
-    @pytest.mark.parametrize(
         "cpc_name, exp_error", [
             (CPC1_NAME, HTTPError_409_4),
             (CPC2_NAME, None),
             (CPC3_NAME, None),
         ]
     )
-    def test_cpc_import_profiles(self, cpc_name, exp_error,
-                                 wait_for_completion):
+    def test_cpc_import_profiles(self, cpc_name, exp_error):
         """Test Cpc.import_profiles()."""
 
-        # wait_for_completion=False not implemented in mock support:
-        assert wait_for_completion is True
-
         # Add a faked CPC
         self.add_cpc(cpc_name)
 
@@ -1132,8 +1125,7 @@ class TestCpc(object):
             with pytest.raises(HTTPError) as exc_info:
 
                 # Execute the code to be tested
-                result = cpc.import_profiles(
-                    profile_area, wait_for_completion=wait_for_completion)
+                result = cpc.import_profiles(profile_area)
 
             exc = exc_info.value
             assert exc.http_status == exp_error.http_status
@@ -1141,17 +1133,10 @@ class TestCpc(object):
         else:
 
             # Execute the code to be tested
-            result = cpc.import_profiles(
-                profile_area, wait_for_completion=wait_for_completion)
+            result = cpc.import_profiles(profile_area)
 
-            if wait_for_completion:
-                assert result is None
-            else:
-                raise NotImplementedError
+            assert result is None
 
-    @pytest.mark.parametrize(
-        "wait_for_completion", [True]
-    )
     @pytest.mark.parametrize(
         "cpc_name, exp_error", [
             (CPC1_NAME, HTTPError_409_4),
@@ -1159,12 +1144,8 @@ class TestCpc(object):
             (CPC3_NAME, None),
         ]
     )
-    def test_cpc_export_profiles(self, cpc_name, exp_error,
-                                 wait_for_completion):
+    def test_cpc_export_profiles(self, cpc_name, exp_error):
         """Test Cpc.export_profiles()."""
-
-        # wait_for_completion=False not implemented in mock support:
-        assert wait_for_completion is True
 
         # Add a faked CPC
         self.add_cpc(cpc_name)
@@ -1177,8 +1158,7 @@ class TestCpc(object):
             with pytest.raises(HTTPError) as exc_info:
 
                 # Execute the code to be tested
-                result = cpc.export_profiles(
-                    profile_area, wait_for_completion=wait_for_completion)
+                result = cpc.export_profiles(profile_area)
 
             exc = exc_info.value
             assert exc.http_status == exp_error.http_status
@@ -1186,13 +1166,9 @@ class TestCpc(object):
         else:
 
             # Execute the code to be tested
-            result = cpc.export_profiles(
-                profile_area, wait_for_completion=wait_for_completion)
+            result = cpc.export_profiles(profile_area)
 
-            if wait_for_completion:
-                assert result is None
-            else:
-                raise NotImplementedError
+            assert result is None
 
     @pytest.mark.parametrize(
         "cpc_name, exp_error", [

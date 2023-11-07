@@ -108,6 +108,13 @@ Released: not yet
 * Docs: Fixed the description of the 'status_timeout' parameter of the Partition
   and Lpar methods that have deferred status behavior.
 
+* The 'wait_for_completion' and 'operation_timeout' parameters of
+  Cpc.export_profiles() and Cpc.import_profiles() have never worked, because
+  the underlying HMC operations are not actually asynchronous. This has been
+  fixed by removing these parameters from these functions. This does not count
+  as an incompatible change because using these parameters with non-default
+  values has failed.  (part of issue #1299)
+
 **Enhancements:**
 
 * Added support for Python 3.12. Had to increase the minimum versions of
@@ -137,6 +144,15 @@ Released: not yet
 * Added support for passing an exception message directly to the
   zhmcclient.NotFound exception, instead of creating it from the 'manager' and
   'filter_args' parameters, which are now optional.
+
+* Added support for asynchronous job cancellation via a new method Job.cancel().
+  Documented for all asynchronous methods returning Job objects whether or not
+  they can be cancelled. (issue #1299)
+
+* Added support for low level management of asynchronous jobs via new methods
+  Job.query_status() and Job.delete(). Note that higher level methods
+  Job.check_for_completion() and Job.wait_for_completion() already existed.
+  (issue #1299)
 
 **Cleanup:**
 

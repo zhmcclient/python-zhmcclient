@@ -1118,6 +1118,14 @@ class Console(BaseResource):
             executing job on the HMC. The Job object will be valid across
             any HMC restarts that occur during the upgrade operation.
 
+            This job supports cancellation. Note there are only a few
+            interruption points in the firmware install process, so it may be
+            some time before the job is canceled, and after some point, will
+            continue on to completion. The job status and reason codes will
+            indicate whether the job was canceled or ran to completion. If the
+            job is successfully canceled, any steps that were successfully
+            completed will not be rolled back.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`

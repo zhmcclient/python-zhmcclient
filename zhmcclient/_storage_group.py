@@ -738,6 +738,7 @@ class StorageGroup(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 

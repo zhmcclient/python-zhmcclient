@@ -748,6 +748,11 @@ class Cpc(BaseResource):
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
 
+            This job supports cancellation. Note that it may no longer be
+            possible to cancel the job after some point. The job status and
+            reason codes will indicate whether the job was canceled or ran to
+            completion.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -812,6 +817,7 @@ class Cpc(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
@@ -890,6 +896,7 @@ class Cpc(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
@@ -964,6 +971,7 @@ class Cpc(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
@@ -982,8 +990,7 @@ class Cpc(BaseResource):
         return result
 
     @logged_api_call
-    def import_profiles(self, profile_area, wait_for_completion=True,
-                        operation_timeout=None):
+    def import_profiles(self, profile_area):
         """
         Import activation profiles and/or system activity profiles for this CPC
         from the SE hard drive into the CPC using the HMC operation
@@ -1002,53 +1009,20 @@ class Cpc(BaseResource):
             The numbered hard drive area (1-4) from which the profiles are
             imported.
 
-          wait_for_completion (bool):
-            Boolean controlling whether this method should wait for completion
-            of the requested asynchronous HMC operation, as follows:
-
-            * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation.
-
-            * If `False`, this method will return immediately once the HMC has
-              accepted the request to perform the operation.
-
-          operation_timeout (:term:`number`):
-            Timeout in seconds, for waiting for completion of the asynchronous
-            job performing the operation. The special value 0 means that no
-            timeout is set. `None` means that the default async operation
-            timeout of the session is used. If the timeout expires when
-            `wait_for_completion=True`, a
-            :exc:`~zhmcclient.OperationTimeout` is raised.
-
-        Returns:
-
-          `None` or :class:`~zhmcclient.Job`:
-
-            If `wait_for_completion` is `True`, returns `None`.
-
-            If `wait_for_completion` is `False`, returns a
-            :class:`~zhmcclient.Job` object representing the asynchronously
-            executing job on the HMC.
-
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
-            waiting for completion of the operation.
         """
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            self.uri + '/operations/import-profiles', resource=self, body=body,
-            wait_for_completion=wait_for_completion,
-            operation_timeout=operation_timeout)
+            self.uri + '/operations/import-profiles', resource=self, body=body)
         return result
 
     @logged_api_call
-    def export_profiles(self, profile_area, wait_for_completion=True,
-                        operation_timeout=None):
+    def export_profiles(self, profile_area):
         """
         Export activation profiles and/or system activity profiles from this
         CPC to the SE hard drive using the HMC operation "Export Profiles".
@@ -1066,48 +1040,16 @@ class Cpc(BaseResource):
              The numbered hard drive area (1-4) to which the profiles are
              exported. Any existing data is overwritten.
 
-          wait_for_completion (bool):
-            Boolean controlling whether this method should wait for completion
-            of the requested asynchronous HMC operation, as follows:
-
-            * If `True`, this method will wait for completion of the
-              asynchronous job performing the operation.
-
-            * If `False`, this method will return immediately once the HMC has
-              accepted the request to perform the operation.
-
-          operation_timeout (:term:`number`):
-            Timeout in seconds, for waiting for completion of the asynchronous
-            job performing the operation. The special value 0 means that no
-            timeout is set. `None` means that the default async operation
-            timeout of the session is used. If the timeout expires when
-            `wait_for_completion=True`, a
-            :exc:`~zhmcclient.OperationTimeout` is raised.
-
-        Returns:
-
-          `None` or :class:`~zhmcclient.Job`:
-
-            If `wait_for_completion` is `True`, returns `None`.
-
-            If `wait_for_completion` is `False`, returns a
-            :class:`~zhmcclient.Job` object representing the asynchronously
-            executing job on the HMC.
-
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
-          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
-            waiting for completion of the operation.
         """
         body = {'profile-area': profile_area}
         result = self.manager.session.post(
-            self.uri + '/operations/export-profiles', resource=self, body=body,
-            wait_for_completion=wait_for_completion,
-            operation_timeout=operation_timeout)
+            self.uri + '/operations/export-profiles', resource=self, body=body)
         return result
 
     @logged_api_call
@@ -1356,6 +1298,7 @@ class Cpc(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
@@ -1457,6 +1400,7 @@ class Cpc(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
@@ -2185,6 +2129,14 @@ class Cpc(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+
+            This job supports cancellation. Note there are only a few
+            interruption points in the firmware install process, so it may be
+            some time before the job is canceled, and after some point, will
+            continue on to completion. The job status and reason codes will
+            indicate whether the job was canceled or ran to completion. If the
+            job is successfully canceled, any steps that were successfully
+            completed will not be rolled back.
 
         Raises:
 
