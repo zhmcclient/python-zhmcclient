@@ -429,6 +429,11 @@ class Partition(BaseResource):
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
 
+            This job supports cancellation. Note that it may no longer be
+            possible to cancel the job after some point. The job status and
+            reason codes will indicate whether the job was canceled or ran to
+            completion.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -500,6 +505,11 @@ class Partition(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+
+            This job supports cancellation. Note that it may no longer be
+            possible to cancel the job after some point. The job status and
+            reason codes will indicate whether the job was canceled or ran to
+            completion.
 
         Raises:
 
@@ -633,6 +643,7 @@ class Partition(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
@@ -701,6 +712,7 @@ class Partition(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
@@ -759,6 +771,7 @@ class Partition(BaseResource):
             If `wait_for_completion` is `False`, returns a
             :class:`~zhmcclient.Job` object representing the asynchronously
             executing job on the HMC.
+            This job does not support cancellation.
 
         Raises:
 
