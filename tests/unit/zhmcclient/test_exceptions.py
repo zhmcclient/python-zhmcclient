@@ -1514,8 +1514,8 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
             filter_args={"adapter-id": "1c0", "name": "foo"},
             manager=NOTFOUND_MANAGER,
         ),
-        r"^Could not find Adapter using filter arguments {'adapter-id': '1c0', "
-        r"'name': 'foo'} in Cpc "
+        r"^Could not find Adapter using filter arguments "
+        r".*(?=.*'adapter-id': '1c0')(?=.*'name': 'foo').* in Cpc "
     ),
     (
         "message overwrites manager/filter_arg",
