@@ -1406,6 +1406,134 @@ class TestNoUniqueMatch(object):
         assert str_def.find(' message=') >= 0
 
 
+class NotFoundManagerIndicator(object):
+    # pylint: disable=too-few-public-methods
+    """
+    Indicator class for the 'manager' argument of NotFound().
+    """
+    pass
+
+
+# Indicator for the 'manager' argument of NotFound().
+NOTFOUND_MANAGER = NotFoundManagerIndicator()
+
+
+TESTCASES_NOTFOUND_INITIAL_ATTRS = [
+    # Testcases for test_notfound_initial_attrs()
+    #
+    # Each list item is a testcase with the following tuple items:
+    # * desc (str) - Testcase description.
+    # * input_args (list) - Positional arguments for NotFound() init.
+    # * input_kwargs (dict) - Keyword arguments for NotFound() init.
+    # * exp_attrs (dict) - Expected attributes of the NotFound() object.
+    # * exp_message_pattern (str) - Regexp pattern to match expected exception
+    #   message, or None to not perform a match.
+    #
+    # The tests all lead to a successful reation of a NotFound object.
+    # In all input and expected items, NOTFOUND_MANAGER can be used to
+    # specify the value for the 'manager' argument or attribute; it will
+    # be replaced with a manager object.
+
+    (
+        "msessage as positional arg",
+        [None, None, "foo"],
+        dict(),
+        dict(
+            filter_args=None,
+            manager=None,
+        ),
+        r"^foo$"
+    ),
+    (
+        "message as keyword arg",
+        [],
+        dict(
+            message="foo",
+        ),
+        dict(
+            filter_args=None,
+            manager=None,
+        ),
+        r"^foo$"
+    ),
+    (
+        "manager but no filter_args as positional arg",
+        [None, NOTFOUND_MANAGER],
+        dict(),
+        dict(
+            filter_args=None,
+            manager=NOTFOUND_MANAGER,
+        ),
+        r"^Could not find Adapter using filter arguments None in Cpc "
+    ),
+    (
+        "manager but no filter_args as keyword arg",
+        [],
+        dict(
+            manager=NOTFOUND_MANAGER,
+        ),
+        dict(
+            filter_args=None,
+            manager=NOTFOUND_MANAGER,
+        ),
+        r"^Could not find Adapter using filter arguments None in Cpc "
+    ),
+    (
+        "manager and one filter_arg as positional arg",
+        [{"adapter-id": "1c0"}, NOTFOUND_MANAGER],
+        dict(),
+        dict(
+            filter_args={"adapter-id": "1c0"},
+            manager=NOTFOUND_MANAGER,
+        ),
+        r"^Could not find Adapter using filter arguments {'adapter-id': '1c0'} "
+        r"in Cpc "
+    ),
+    (
+        "manager and one filter_arg as keyword arg",
+        [],
+        dict(
+            filter_args={"adapter-id": "1c0"},
+            manager=NOTFOUND_MANAGER,
+        ),
+        dict(
+            filter_args={"adapter-id": "1c0"},
+            manager=NOTFOUND_MANAGER,
+        ),
+        r"^Could not find Adapter using filter arguments {'adapter-id': '1c0'} "
+        r"in Cpc "
+    ),
+    (
+        "manager and two filter_arg items as keyword arg",
+        [],
+        dict(
+            filter_args={"adapter-id": "1c0", "name": "foo"},
+            manager=NOTFOUND_MANAGER,
+        ),
+        dict(
+            filter_args={"adapter-id": "1c0", "name": "foo"},
+            manager=NOTFOUND_MANAGER,
+        ),
+        r"^Could not find Adapter using filter arguments {'adapter-id': '1c0', "
+        r"'name': 'foo'} in Cpc "
+    ),
+    (
+        "message overwrites manager/filter_arg",
+        [],
+        dict(
+            message="foo",
+            filter_args={"adapter-id": "1c0"},
+            manager=NOTFOUND_MANAGER,
+        ),
+        dict(
+            filter_args=None,
+            manager=None,
+        ),
+        r"^foo$"
+    ),
+]
+
+
 class TestNotFound(object):
     """All tests for exception class NotFound."""
 
@@ -1439,44 +1567,48 @@ class TestNotFound(object):
         self.client = Client(self.session)
 
     @pytest.mark.parametrize(
-        # Input and expected arguments.
-        "args", [
-            # args: (filter_args,) - manager is added dynamically
-            ({'type': 'osa', 'status': 'active'},),
-            ({},),
-            (None,),
-        ]
-    )
-    @pytest.mark.parametrize(
-        # Whether each input arg is passed as pos.arg (None) or keyword arg
-        # (arg name), or is defaulted (omitted from right).
-        "arg_names", [
-            (None, None),
-            ('filter_args', 'manager'),
-        ]
-    )
-    def test_notfound_initial_attrs(self, arg_names, args):
+        "desc, input_args, input_kwargs, exp_attrs, exp_message_pattern",
+        TESTCASES_NOTFOUND_INITIAL_ATTRS)
+    def test_notfound_initial_attrs(
+            self, desc, input_args, input_kwargs, exp_attrs,
+            exp_message_pattern):
+        # pylint: disable=unused-argument
         """Test initial attributes of NotFound."""
-
-        filter_args = args[0]
 
         cpc = self.client.cpcs.find(name='cpc_1')
         manager = cpc.adapters
 
-        _args = list(args)
-        _args.append(manager)
+        args = []
+        for value in input_args:
+            if value == NOTFOUND_MANAGER:
+                value = manager
+            args.append(value)
 
-        posargs, kwargs = func_args(_args, arg_names)
+        kwargs = {}
+        for name, value in input_kwargs.items():
+            if value == NOTFOUND_MANAGER:
+                value = manager
+            kwargs[name] = value
 
         # Execute the code to be tested
-        exc = NotFound(*posargs, **kwargs)
+        exc = NotFound(*args, **kwargs)
 
         assert isinstance(exc, Error)
+
+        # Validate exception message
         assert len(exc.args) == 1
-        assert isinstance(exc.args[0], six.string_types)
-        # auto-generated message, we don't expect a particular value
-        assert exc.filter_args == filter_args
-        assert exc.manager == manager
+        message = exc.args[0]
+        assert isinstance(message, six.string_types)
+        if exp_message_pattern:
+            assert re.match(exp_message_pattern, message)
+
+        # Validate other exception attributes
+        for name, exp_value in exp_attrs.items():
+            if exp_value == NOTFOUND_MANAGER:
+                exp_value = manager
+            assert hasattr(exc, name)
+            value = getattr(exc, name)
+            assert value == exp_value
 
     @pytest.mark.parametrize(
         "filter_args", [
