@@ -1076,7 +1076,7 @@ class NotFound(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, filter_args, manager):
+    def __init__(self, filter_args=None, manager=None, message=None):
         """
         Parameters:
 
@@ -1085,29 +1085,45 @@ class NotFound(Error):
             to be found. Keys are the resource property names, values are
             the match values for that property.
 
+            May be `None` if the `message` parameter is `None`.
+            Will be ignored if the `message` parameter is not `None`.
+
           manager (:class:`~zhmcclient.BaseManager`):
             The manager of the resource, in whose scope the resource was
             attempted to be found.
 
-            Must not be `None`.
+            Must not be `None` if the `message` parameter is `None`.
+            Will be ignored if the `message` parameter is not `None`.
+
+          message (string):
+            The exception message.
+
+            If `None`, the message will be automatically created from the
+            `filter_args` and `manager` parameters.
 
         ``args[0]`` will be set to an exception message that is automatically
         constructed from the input parameters.
         """
-        parent = manager.parent
-        if parent:
-            in_str = " in {} {!r}". \
-                format(parent.__class__.__name__, parent.name)
+        if message is not None:
+            msg = message
+            filter_args = None
+            manager = None
         else:
-            in_str = ""
-        if filter_args and len(filter_args) == 1 and \
-                manager._name_prop in filter_args:
-            msg = "Could not find {} {!r}{}.". \
-                format(manager.resource_class.__name__,
-                       filter_args[manager._name_prop], in_str)
-        else:
-            msg = "Could not find {} using filter arguments {!r}{}.".\
-                format(manager.resource_class.__name__, filter_args, in_str)
+            assert manager is not None
+            parent = manager.parent
+            if parent:
+                in_str = " in {} {!r}". \
+                    format(parent.__class__.__name__, parent.name)
+            else:
+                in_str = ""
+            if filter_args and len(filter_args) == 1 and \
+                    manager._name_prop in filter_args:
+                msg = "Could not find {} {!r}{}.". \
+                    format(manager.resource_class.__name__,
+                           filter_args[manager._name_prop], in_str)
+            else:
+                msg = "Could not find {} using filter arguments {!r}{}.".\
+                    format(manager.resource_class.__name__, filter_args, in_str)
         super(NotFound, self).__init__(msg)
         self._filter_args = filter_args
         self._manager = manager
@@ -1118,6 +1134,8 @@ class NotFound(Error):
         dict: Dictionary of filter arguments by which the resource was
         attempted to be found. Keys are the resource property names, values
         are the match values for that property.
+
+        Will be `None` if the `message` init parameter was not `None`.
         """
         return self._filter_args
 
@@ -1126,6 +1144,8 @@ class NotFound(Error):
         """
         :class:`~zhmcclient.BaseManager`: The manager of the resource, in whose
         scope the resource was attempted to be found.
+
+        Will be `None` if the `message` init parameter was not `None`.
         """
         return self._manager
 
@@ -1134,14 +1154,15 @@ class NotFound(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        parent = self.manager.parent
+        resource_classname = self.manager.resource_class.__name__ \
+            if self.manager else None
+        parent = self.manager.parent if self.manager else None
+        parent_classname = parent.__class__.__name__ if parent else None
+        parent_name = parent.name if parent else None
         return "{}(message={!r}, resource_classname={!r}, filter_args={!r}, " \
                "parent_classname={!r}, parent_name={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.manager.resource_class.__name__,
-                      self.filter_args,
-                      parent.__class__.__name__ if parent else None,
-                      parent.name if parent else None)
+               format(self.__class__.__name__, self.args[0], resource_classname,
+                      self.filter_args, parent_classname, parent_name)
 
     def str_def(self):
         # pylint: disable=line-too-long
@@ -1154,14 +1175,15 @@ class NotFound(Error):
             classname={}; resource_classname={}; filter_args={}; parent_classname={}; parent_name={}; message={};
         """  # noqa: E501
         # pylint: enable=line-too-long
-        parent = self.manager.parent
+        resource_classname = self.manager.resource_class.__name__ \
+            if self.manager else None
+        parent = self.manager.parent if self.manager else None
+        parent_classname = parent.__class__.__name__ if parent else None
+        parent_name = parent.name if parent else None
         return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
                "parent_classname={!r}; parent_name={!r}; message={!r};". \
-               format(self.__class__.__name__,
-                      self.manager.resource_class.__name__,
-                      self.filter_args,
-                      parent.__class__.__name__ if parent else None,
-                      parent.name if parent else None,
+               format(self.__class__.__name__, resource_classname,
+                      self.filter_args, parent_classname, parent_name,
                       self.args[0])
 
 

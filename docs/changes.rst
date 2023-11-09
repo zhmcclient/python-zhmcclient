@@ -134,6 +134,10 @@ Released: not yet
   cache. Otherwise, it retrieves the properties from the HMC in the fastest
   possible way, considering property filtering if supported.
 
+* Added support for passing an exception message directly to the
+  zhmcclient.NotFound exception, instead of creating it from the 'manager' and
+  'filter_args' parameters, which are now optional.
+
 **Cleanup:**
 
 **Known issues:**
