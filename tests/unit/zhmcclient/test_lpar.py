@@ -1510,8 +1510,70 @@ class TestLpar(object):
 
         assert_resources(lpars, exp_faked_lpars, prop_names)
 
-    # TODO: Test for Lpar.start()
-    # TODO: Test for Lpar.stop()
+
+def test_lpar_start(http_mocked_lpar):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Lpar.start()
+    """
+    session = http_mocked_lpar.manager.session
+    uri = http_mocked_lpar.uri + '/operations/start'
+
+    job_uri = '/api/jobs/job-1'
+
+    exp_request_body = None
+    exp_status_code = 202
+    result_body = {
+        'job-uri': job_uri,
+    }
+    exp_result_job = Job(session, job_uri, 'POST', uri)
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code, json=result_body)
+
+        result_job = http_mocked_lpar.start(wait_for_completion=False)
+
+        assert rm_adapter.called
+        request_body = rm_adapter.last_request.body
+        assert request_body == exp_request_body
+        assert result_job.uri == exp_result_job.uri
+        assert result_job.op_method == exp_result_job.op_method
+        assert result_job.op_uri == exp_result_job.op_uri
+
+
+def test_lpar_stop(http_mocked_lpar):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Lpar.stop()
+    """
+    session = http_mocked_lpar.manager.session
+    uri = http_mocked_lpar.uri + '/operations/stop'
+
+    job_uri = '/api/jobs/job-1'
+
+    exp_request_body = None
+    exp_status_code = 202
+    result_body = {
+        'job-uri': job_uri,
+    }
+    exp_result_job = Job(session, job_uri, 'POST', uri)
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(uri, status_code=exp_status_code, json=result_body)
+
+        result_job = http_mocked_lpar.stop(wait_for_completion=False)
+
+        assert rm_adapter.called
+        request_body = rm_adapter.last_request.body
+        assert request_body == exp_request_body
+        assert result_job.uri == exp_result_job.uri
+        assert result_job.op_method == exp_result_job.op_method
+        assert result_job.op_uri == exp_result_job.op_uri
+
     # TODO: Test for Lpar.psw_restart()
     # TODO: Test for Lpar.reset_clear()
     # TODO: Test for Lpar.reset_normal()

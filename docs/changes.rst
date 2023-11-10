@@ -159,6 +159,9 @@ Released: not yet
   'create-delete-activation-profiles' API feature enabled.
   (issue #1329)
 
+* Added Lpar.start() to perform the "Start Logical Partition" operation in
+  classic mode. (issue #1308)
+
 **Cleanup:**
 
 **Known issues:**

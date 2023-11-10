@@ -1487,6 +1487,94 @@ class Lpar(BaseResource):
         return result
 
     @logged_api_call
+    def start(self, wait_for_completion=True, operation_timeout=None,
+              status_timeout=None, allow_status_exceptions=False):
+        """
+        Start this LPAR, using the HMC operation "Start Logical
+        Partition". The start operation starts the processors to process
+        instructions.
+
+        This operation is not permitted for an LPAR whose 'activation-mode'
+        property is "zaware" or "ssc".
+
+        In order to succeed, the 'status' property of the LPAR must have one of
+        the following values:
+
+        * "not-operating"
+        * "operating"
+        * "exceptions"
+
+        Authorization requirements:
+
+        * Object-access permission to this LPAR.
+        * Before HMC API version 3.6 in an update to HMC 2.15.0: Object-access
+          permission to the CPC of this LPAR.
+        * Task permission for the "Start" task.
+
+        Parameters:
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+          status_timeout (:term:`number`):
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
+
+          allow_status_exceptions (bool):
+            **Deprecated:** This property was used for handling deferred status
+            behavior, which is not actually needed. Setting it to a non-default
+            value will cause a :exc:`~py:exceptions.DeprecationWarning` to be
+            issued.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        warn_deprecated_parameter(
+            Lpar, Lpar.start, 'status_timeout', status_timeout, None)
+        warn_deprecated_parameter(
+            Lpar, Lpar.start, 'allow_status_exceptions',
+            allow_status_exceptions, False)
+        body = None
+        result = self.manager.session.post(
+            self.uri + '/operations/start', resource=self, body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+        return result
+
+    @logged_api_call
     def reset_clear(self, force=False, wait_for_completion=True,
                     operation_timeout=None, status_timeout=None,
                     allow_status_exceptions=False, os_ipl_token=None):
