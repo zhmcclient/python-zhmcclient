@@ -20,12 +20,12 @@ Change log
 ----------
 
 
-Version 1.12.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.12.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.11.x.
+This version contains all fixes up to version 1.11.4.
 
-Released: not yet
+Released: 2023-11-16
 
 **Incompatible changes:**
 
@@ -161,14 +161,6 @@ Released: not yet
 
 * Added Lpar.start() to perform the "Start Logical Partition" operation in
   classic mode. (issue #1308)
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.11.0
