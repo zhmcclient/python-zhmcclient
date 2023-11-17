@@ -55,6 +55,7 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -2061,11 +2062,13 @@ class Cpc(BaseResource):
 
     @logged_api_call
     def single_step_install(
-            self, bundle_level, accept_firmware=True, wait_for_completion=True,
+            self, bundle_level=None, accept_firmware=True,
+            ftp_host=None, ftp_protocol=None,
+            ftp_user=None, ftp_password=None,
+            ftp_directory=None, wait_for_completion=True,
             operation_timeout=None):
         """
-        Upgrades the firmware on the Support Element (SE) of this CPC to a new
-        bundle level.
+        Upgrades the firmware on the Support Element (SE) of this CPC.
 
         This is done by performing the "CPC Single Step Install" operation
         which performs the following steps:
@@ -2075,13 +2078,13 @@ class Cpc(BaseResource):
           SE of this CPC is accepted. Note that once firmware is accepted, it
           cannot be removed.
         * The new firmware identified by the bundle-level field is retrieved
-          from the IBM support site and installed.
+          from the IBM support site or from an FTP server, and installed.
         * The newly installed firmware is activated, which includes rebooting
           the SE of this CPC.
 
-        If an error occurrs when installing the upgrades for the components of
-        the new bundle, any components that were successfully installed are
-        rolled back.
+        If an error occurs when installing the upgrades for the different
+        firmware components, any components that were successfully installed
+        are rolled back.
 
         If an error occurs after the firmware is accepted, the firmware remains
         accepted.
@@ -2097,10 +2100,31 @@ class Cpc(BaseResource):
         Parameters:
 
           bundle_level (string): Name of the bundle to be installed on the SE
-            of this CPC (e.g. 'S51')
+            of this CPC (e.g. 'S51').
+            If `None`, all locally available code changes, or in case of
+            retrieving code changes from an FTP server, all code changes on
+            the FTP server, will be installed.
 
           accept_firmware (bool): Accept the previous bundle level before
             installing the new level.
+
+          ftp_host (string): The hostname for the FTP server from which
+            the firmware will be retrieved, or `None` to retrieve it from the
+            IBM support site.
+
+          ftp_protocol (string): The protocol to connect to the FTP
+            server, if the firmware will be retrieved from an FTP server,
+            or `None`. Valid values are: "ftp", "ftps", "sftp".
+
+          ftp_user (string): The username for the FTP server login,
+            if the firmware will be retrieved from an FTP server, or `None`.
+
+          ftp_password (string): The password for the FTP server login,
+            if the firmware will be retrieved from an FTP server, or `None`.
+
+          ftp_directory (string): The path name of the directory on the
+            FTP server with the firmware files,
+            if the firmware will be retrieved from an FTP server, or `None`.
 
           wait_for_completion (bool):
             Boolean controlling whether this method should wait for completion
@@ -2147,14 +2171,33 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for completion of the operation.
         """
+
+        # The 'wait_for_completion' parameter from 2.12.0 became
+        # 'ftp_host' after that, so we detect the passing of
+        # 'wait_for_completion' as a positional argument.
+        assert ftp_host is None or \
+            isinstance(ftp_host, six.string_types)
+
         body = {
-            'bundle-level': bundle_level,
             'accept-firmware': accept_firmware,
         }
+
+        if bundle_level is not None:
+            body['bundle-level'] = bundle_level
+
+        if ftp_host is not None:
+            body['ftp-retrieve'] = True
+            body['ftp-server-host'] = ftp_host
+            body['ftp-server-user'] = ftp_user
+            body['ftp-server-password'] = ftp_password
+            body['ftp-server-directory'] = ftp_directory
+            body['ftp-server-protocol'] = ftp_protocol
+
         result = self.manager.session.post(
             self.uri + '/operations/single-step-install', resource=self,
             body=body, wait_for_completion=wait_for_completion,
             operation_timeout=operation_timeout)
+
         return result
 
     @logged_api_call
