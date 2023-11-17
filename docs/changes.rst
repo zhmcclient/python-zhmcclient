@@ -27,6 +27,14 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The 'Cpc.single_step_install()' and 'Console.single_step_install()' methods
+  added in version 1.12.0 got additional optional parameters for FTP server
+  retrieval added before the existing 'wait_for_completion' parameter. If you
+  were using these methods and specified 'wait_for_completion' or
+  'operation_timeout' as positional arguments, these methods will now raise
+  an AssertionError and you need to change your code to specify them as keyword
+  arguments, instead.
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -34,6 +42,9 @@ Released: not yet
 * Addressed safety issues up to 2023-11-22.
 
 **Enhancements:**
+
+* Added support for retrievel of firmware from an FTP server to the
+  Cpc/Console.single_step_install() methods. (issue #1342)
 
 **Cleanup:**
 
