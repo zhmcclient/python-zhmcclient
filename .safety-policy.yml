@@ -114,6 +114,8 @@ security:
             reason: Fixed gitpython version 3.1.34 requires Python>=3.7 and is used there
         61601:
             reason: Fixed urllib3 version 1.26.17 requires Python>=3.6 and is used there
+        61893:
+            reason: Fixed urllib3 version 1.26.18 requires Python>=3.6 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False

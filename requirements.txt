@@ -66,9 +66,9 @@ jsonschema>=3.0.1,!=4.0.0
 # 1.26.0, and our minimum version of requests (2.25.0) only requires
 # urllib3>=1.21.0, we need to require a minimum version of urllib3.
 # urllib3 1.26.10 removed support for py35
-urllib3>=1.26.17; python_version == '2.7'
+urllib3>=1.26.18; python_version == '2.7'
 urllib3>=1.26.9; python_version == '3.5'
-urllib3>=1.26.17; python_version >= '3.6'
+urllib3>=1.26.18; python_version >= '3.6'
 
 # MIT, from jsonschema>=3.0
 # pyrsistent 0.15.0 started using the FileNotFoundError built-in exception that
