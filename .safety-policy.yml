@@ -116,6 +116,8 @@ security:
             reason: Fixed urllib3 version 1.26.17 requires Python>=3.6 and is used there
         61893:
             reason: Fixed urllib3 version 1.26.18 requires Python>=3.6 and is used there
+        61949:
+            reason: Fixed tornado version 6.3.3 requires Python>=3.8 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
