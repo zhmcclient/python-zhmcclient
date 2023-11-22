@@ -18,7 +18,8 @@
 .testrepository
 MANIFEST
 MANIFEST.in
-*.done
+/*.done
+/done/*.done
 *.log
 *.tmp
 tmp.*
