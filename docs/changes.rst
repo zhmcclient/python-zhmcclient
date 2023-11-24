@@ -20,10 +20,10 @@ Change log
 ----------
 
 
-Version 1.12.1.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.12.1
+^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2023-11-24
 
 **Incompatible changes:**
 
@@ -35,8 +35,6 @@ Released: not yet
   an AssertionError and you need to change your code to specify them as keyword
   arguments, instead.
 
-**Deprecations:**
-
 **Bug fixes:**
 
 * Addressed safety issues up to 2023-11-22.
@@ -47,14 +45,6 @@ Released: not yet
   Cpc/Console.single_step_install() methods. (issue #1342)
 
 * Additional log entries when HTTP status 403 is received, for easier detection.
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.12.0
