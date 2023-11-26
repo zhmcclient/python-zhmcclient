@@ -41,7 +41,7 @@ Released: not yet
 
 **Bug fixes:**
 
-* Addressed safety issues up to 2023-11-22.
+* Addressed safety issues up to 2023-11-26.
 
 **Enhancements:**
 
