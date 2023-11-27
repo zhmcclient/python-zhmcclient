@@ -61,7 +61,10 @@ backports.statistics>=0.1.0; python_version == '2.7'
 
 
 # Coverage reporting (no imports, invoked via coveralls script):
-coverage>=5.0
+# coveralls pins coverage to <7.0, causing pip backtracking to happen. Pinning
+# it to <7.0 in this file saves the time for backtracking, but requires to
+# occasionally check for new versions of coveralls without pinning.
+coverage>=5.0,<7.0
 pytest-cov>=2.7.0
 # coveralls 2.0 has removed support for Python 2.7
 git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
