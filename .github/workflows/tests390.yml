@@ -1,0 +1,306 @@
+# This GitHub workflow will setup and run various kinds of tests with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: test
+
+on:
+  schedule:
+    # The schedule event always (and only) runs on the master branch.
+    - # cron (in UTC): minute hour day_of_month month day_of_week
+      cron: '00 22 * * SAT'
+  pull_request:  # When creating a PR targeting these branches
+    branches:
+    - master
+    - stable_*
+  push:  # When merging a PR targeting these branches (direct push is disabled)
+    branches:
+    - master
+    - stable_*
+
+jobs:
+
+  set_matrix:
+    runs-on: self-hosted
+    outputs:
+      matrix: ${{ steps.select_matrix.outputs.matrix }}
+    steps:
+    - name: "Select matrix"
+      id: select_matrix
+      # Select full matrix when scheduled or when releasing, and normal matrix
+      # otherwise. The matrix is defined as a JSON string.
+      # This technique documented in:
+      #    https://stackoverflow.com/questions/65384420/how-to-make-a-github-action-matrix-element-conditional
+      # TODO: Find a way to define this with less escapes.
+      run: |
+        if [[ "${{ github.event_name }}" == "schedule" || "${{ github.head_ref }}" =~ ^release_ ]]; then \
+          echo "matrix={ \
+            \"os\": [ \"self-hosted\", \"macos-latest\", \"windows-latest\" ], \
+            \"python-version\": [ \"3.5\", \"3.6\", \"3.7\", \"3.8\", \"3.9\", \"3.10\", \"3.11\", \"3.12\" ], \
+            \"package_level\": [ \"minimum\", \"latest\" ], \
+            \"exclude\": [ \
+              { \
+                \"os\": \"self-hosted\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"self-hosted\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"self-hosted\", \
+                \"python-version\": \"3.6\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"self-hosted\", \
+                \"python-version\": \"3.6\", \
+                \"package_level\": \"latest\" \
+              } \
+            ], \
+            \"include\": [ \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"2.7\", \
+                \"package_level\": \"minimum\", \
+                \"container\": {\"image\": \"python:2.7.18-buster\"} \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"2.7\", \
+                \"package_level\": \"latest\", \
+                \"container\": {\"image\": \"python:2.7.18-buster\"} \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.6\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.6\", \
+                \"package_level\": \"latest\" \
+              } \
+            ] \
+          }" >> $GITHUB_OUTPUT; \
+        else \
+          echo "matrix={ \
+            \"os\": [ \"self-hosted\" ], \
+            \"python-version\": [ \"3.12\" ], \
+            \"package_level\": [ \"minimum\", \"latest\" ], \
+            \"include\": [ \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"2.7\", \
+                \"package_level\": \"minimum\", \
+                \"container\": {\"image\": \"python:2.7.18-buster\"} \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"2.7\", \
+                \"package_level\": \"latest\", \
+                \"container\": {\"image\": \"python:2.7.18-buster\"} \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"ubuntu-20.04\", \
+                \"python-version\": \"3.6\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"self-hosted\", \
+                \"python-version\": \"3.7\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.12\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.12\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.5\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.12\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.12\", \
+                \"package_level\": \"latest\" \
+              } \
+            ] \
+          }" >> $GITHUB_OUTPUT; \
+        fi
+    - name: Show matrix in JSON
+      run: echo '${{ steps.select_matrix.outputs.matrix }}'
+
+  test:
+    needs: set_matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.set_matrix.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: 1
+      PIP_NO_PYTHON_VERSION_WARNING: 1
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up Python ${{ matrix.python-version }}
+      if: ${{ ! ( matrix.python-version == '2.7' ) }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Display initial Python packages
+      run: |
+        echo "Installed Python packages:"
+        pip list
+    - name: Display platform and env vars
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make platform env
+    - name: Install the package and its dependents
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make install
+    - name: Show installed package versions
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        echo "Installed Python packages:"
+        pip list
+    - name: Development setup
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make develop
+    - name: Show installed package versions
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        echo "Installed Python packages:"
+        pip list
+    - name: Show package dependency tree
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        echo "Package dependency tree of installed Python packages:"
+        pipdeptree --all
+    - name: Run build
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make build
+    - name: Run builddoc
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make builddoc
+    - name: Run check
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make check
+    - name: Run pylint
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make pylint
+    - name: Run unit test
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        # TESTCASES: test_cim_obj.py
+      run: |
+        make test
+    - name: Run end2end_mocked test
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        # TESTCASES: test_cim_obj.py
+      run: |
+        make end2end_mocked
+    - name: Send coverage result to coveralls.io
+      shell: bash -l {0}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_PARALLEL: true
+        COVERALLS_FLAG_NAME: "${{ matrix.os }},${{ matrix.python-version }},${{ matrix.package_level }}"
+        COVERALLS_SERVICE_NAME: github
+        COVERALLS_SERVICE_JOB_ID: "${{ github.run_id }}"
+        COVERALLS_SERVICE_NUMBER: "${{ github.workflow }}-${{ github.run_number }}"
+      run: |
+        coveralls
+    - name: Run installtest
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make installtest
+    - name: Run debuginfo
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make debuginfo
+    - name: Run check_reqs
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make check_reqs
+    - name: Run safety
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+      run: |
+        make safety
+
+  test_finish:
+    needs: test
+    runs-on: self-hosted
+    container: python:3-slim
+    steps:
+    - name: Install coveralls
+      run: |
+        pip3 install --upgrade coveralls
+    - name: Send coverage finish to coveralls.io
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_SERVICE_NUMBER: "${{ github.workflow }}-${{ github.run_number }}"
+      run: |
+        coveralls --finish
