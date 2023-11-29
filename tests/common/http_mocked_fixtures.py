@@ -77,6 +77,8 @@ def http_mocked_session(request):  # noqa: F811
             'api-major-version': 4,
             'api-minor-version': 10,
             'password-expires': 90,
+            'session-credential':
+                'un8bu462g37aw9j0o8pltontz3szt35jh4b1qe2toxt6fkhl4'
         })
         session.logon()
 

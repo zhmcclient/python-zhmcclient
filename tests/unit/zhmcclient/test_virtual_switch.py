@@ -45,6 +45,8 @@ class TestVirtualSwitch(object):
                     'api-session': 'test-session-id',
                     'notification-topic': 'test-obj-topic.1',
                     'job-notification-topic': 'test-job-topic.1',
+                    'session-credential':
+                        'un8bu462g37aw9j0o8pltontz3szt35jh4b1qe2toxt6fkhl4',
                 })
             self.session.logon()
 
