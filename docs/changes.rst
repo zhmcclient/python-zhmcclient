@@ -50,6 +50,12 @@ Released: not yet
 
 * Additional log entries when HTTP status 403 is received, for easier detection.
 
+* Added support for additional SE firmware upgrade related HMC operations:
+  (issue #1357)
+
+  - "CPC Install and Activate" as 'Cpc.install_and_activate()'
+  - "CPC Delete Retrieved Internal Code" as 'Cpc.delete_retrieved_internal_code()'
+
 **Cleanup:**
 
 **Known issues:**
