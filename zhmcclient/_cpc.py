@@ -2201,6 +2201,262 @@ class Cpc(BaseResource):
         return result
 
     @logged_api_call
+    def install_and_activate(
+            self, bundle_level=None, ec_levels=None,
+            install_disruptive=False, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Installs and activates firmware on the Support Element (SE) of this CPC.
+
+        Brief summary of firmware levels:
+
+            The firmware is segmented into different subsystems called
+            "Engineering Change" (EC), or sometimes "EC stream". An EC stream
+            is identified by an EC number (e.g. "P30719").
+
+            Each EC stream is at a particular code level called "Microcode
+            Level" (MCL), or sometimes "MCL level". An MCL level for an EC
+            stream is identified by an MCL number (e.g. "001"). MCL numbers
+            are unique only within their EC stream and are consecutive numbers
+            that increase towards newer MCL levels. Updates within an EC stream
+            are installed sequentially, so if an EC stream has a particular
+            MCL level installed, that implies that all earlier MCL levels
+            within that EC stream are also installed.
+
+            A particular set of MCL numbers for each EC stream is collected
+            into a "bundle level" for the SE (e.g. "S81") or HMC (e.g. "H20").
+
+        The firmware level for this method can be specified in three ways:
+
+        * By specifying `bundle_level`: The updates for the specified bundle
+          level will be installed.
+        * By specifying `ec_levels`: Specific MCL levels for the specified EC
+          streams will be installed.
+        * By not specifying `bundle_level and `ec_levels`: All locally
+          available updates will be installed.
+
+        In all cases, the updates to be installed must already be available on
+        the SE; they are *not* automatically downloaded from the IBM support
+        site or from an FTP server.
+
+        This method is implemented by performing the "CPC Install and Activate"
+        operation which performs the following steps:
+
+        * The specified updates are installed.
+        * If all updates are installed successfully, they are activated, which
+          includes rebooting the SE of this CPC.
+
+        If an error occurs when installing the updates, any updates that were
+        successfully installed are rolled back.
+
+        Note that this operation does *not* perform a backup, an accept of
+        previously activated updates, or an accept of the newly installed
+        updates.
+
+        Note that this operation does not require that previously activated
+        updates are first accepted before invoking this operation.
+
+        Note that it is not possible to downgrade the SE firmware with this
+        operation.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Change Internal Code" task.
+
+        Parameters:
+
+          bundle_level (string): Name of the bundle to be installed on the SE
+            of this CPC (e.g. 'S51').
+
+            This parameter is mutually exclusive with `ec_levels`. If both
+            are not provided, all locally available updates will be installed.
+
+          ec_levels (list of tuple(ec,mcl)): Updates to be installed on the
+            SE of this CPC, as a list of tuples (ec, mcl) where:
+
+              - ec (string): EC number of the EC stream (e.g. "P30719")
+              - mcl (string): MCL number within the EC stream (e.g. "001")
+
+            This parameter is mutually exclusive with `bundle_level`. If both
+            are not provided, all locally available updates will be installed.
+
+          install_disruptive (bool):
+            Install disruptive changes.
+
+            - If `True`, all firmware will be installed regardless of whether
+              it is disruptive to CPC operations.
+            - If `False` and `bundle_level` or `ec_levels` is specified, the
+              request will fail if the operation encounters a disruptive
+              change.
+            - If `False` and neither `bundle_level` or `ec_levels` are
+              specified, all concurrent changes will be installed, and the
+              disruptive ones will be left uninstalled.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          string or `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns a string that is the
+            'message' field of the successfully completed job, or `None` if the
+            successfully completed job has no message.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+            This job does not support cancellation.
+            Once that job successfully completes, it may optionally have a
+            'message' field in its 'job-results' field.
+
+            In all cases, if a message is returned it may indicate that
+            disruptive updates were not installed, or that updates are in
+            pending state because some follow-up action is needed. In the
+            latter case, the "View Internal Code Changes Summary" task on the
+            HMC or SE GUI will provide a list of the additional actions that
+            are required. It is not possible to query this information via the
+            API.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+
+        body = {}
+        if bundle_level is not None:
+            body['bundle-level'] = bundle_level
+        if ec_levels is not None:
+            body['ec-levels'] = ec_levels
+        if install_disruptive:
+            body['install-disruptive'] = True
+
+        job = self.manager.session.post(
+            self.uri + '/operations/install-and-activate', resource=self,
+            body=body, wait_for_completion=False)
+
+        if wait_for_completion:
+            job_result_obj = job.wait_for_completion(operation_timeout)
+            if job_result_obj:
+                return job_result_obj.get('message', None)
+            return None
+
+        return job
+
+    @logged_api_call
+    def delete_retrieved_internal_code(
+            self, ec_levels=None, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Deletes retrieved updates that have not been installed on the Support
+        Element (SE) of this CPC.
+
+        This is done by performing the "CPC Delete Retrieved Internal Code"
+        operation which performs the following steps:
+
+        * The specified retrieved and uninstalled firmware updates are deleted
+          from the SE of this CPC.
+
+        If an error occurs when deleting the updates, then only the updates
+        that were unsuccessfully deleted will remain on the system; any updates
+        that were deleted before reaching an error will remain deleted upon
+        completion of the operation.
+
+        Note that it is not possible to downgrade the SE firmware with this
+        operation.
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "Change Internal Code" task.
+
+        Parameters:
+
+          ec_levels (list of tuple(ec,mcl)): The MCL levels of retrieved and
+            uninstalled updates that will be deleted on the SE of this CPC, as
+            a list of tuples (ec, mcl) where:
+
+              - ec (string): EC number of the EC stream (e.g. "P30719")
+              - mcl (string): MCL number within the EC stream (e.g. "001")
+
+            Within each specified EC stream, only the one update for the
+            specified MCL level will be deleted.
+
+            If `None`, all retrieved and uninstalled updates are deleted on the
+            SE of this CPC.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation. The special value 0 means that no
+            timeout is set. `None` means that the default async operation
+            timeout of the session is used. If the timeout expires when
+            `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          `None` or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns `None`.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+            This job does not support cancellation.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+
+        body = {}
+        if ec_levels is not None:
+            body['ec-levels'] = ec_levels
+
+        result = self.manager.session.post(
+            self.uri + '/operations/delete-retrieved-internal-code',
+            resource=self, body=body, wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+
+        return result
+
+    @logged_api_call
     def swap_current_time_server(self, stp_id):
         """
         Makes this CPC the current time server of an STP-only Coordinated Timing
