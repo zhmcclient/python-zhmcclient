@@ -47,6 +47,8 @@ def mock_server_1(m):
                        'api-session': 'test-session-id',
                        'notification-topic': 'test-obj-topic.1',
                        'job-notification-topic': 'test-job-topic.1',
+                       'session-credential':
+                           'un8bu462g37aw9j0o8pltontz3szt35jh4b1qe2toxt6fkhl4',
                    },
                    headers={'X-Request-Id': 'fake-request-id'})
     m.register_uri('DELETE', '/api/sessions/this-session',
@@ -301,6 +303,8 @@ def test_session_get_notification_topics():
                 'api-session': 'test-session-id',
                 'notification-topic': 'test-obj-topic.1',
                 'job-notification-topic': 'test-job-topic.1',
+                'session-credential':
+                    'un8bu462g37aw9j0o8pltontz3szt35jh4b1qe2toxt6fkhl4',
             })
         session.logon()
         gnt_uri = "/api/sessions/operations/get-notification-topics"
