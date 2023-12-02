@@ -488,6 +488,7 @@ class StorageGroup(BaseResource):
         # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
+        self.cease_existence_local()
 
     @logged_api_call
     def update_properties(self, properties):

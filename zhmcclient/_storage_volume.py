@@ -409,6 +409,8 @@ class StorageVolume(BaseResource):
             except ValueError:
                 pass
 
+        self.cease_existence_local()
+
     @logged_api_call
     def update_properties(self, properties, email_to_addresses=None,
                           email_cc_addresses=None, email_insert=None):

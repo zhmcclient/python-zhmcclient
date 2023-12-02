@@ -384,7 +384,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         assert len(found_res_list) == 1
         found_res = found_res_list[0]
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                         prop_names=list_props)
+                         prop_names=minimal_props)
 
     if client_prop:
         # The code to be tested: list() with client-side filter and short props
@@ -393,7 +393,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         assert name in [_res.name for _res in found_res_list]
         found_res = [_res for _res in found_res_list if _res.name == name][0]
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                         prop_names=list_props)
+                         prop_names=minimal_props)
 
 
 def runtest_get_properties(

@@ -44,6 +44,23 @@ Released: not yet
 * The 'base_url' property of the 'zhmcclient.Session' object is now 'None' when
   the session is in the logged-off state. (related to issue #1024)
 
+* The 'list()' methods of zhmcclient manager objects when invoked with
+  full_properties=False and with the resource name as the only filter argument
+  now return only a minimal set of properties for the returned resource:
+  'class', 'parent', 'name', 'object/element-id', 'object/element-uri'.
+  Previously, the full set of properties was returned in such a case.
+  Code that accesses one of the no longer returned properties via
+  'resource.properties' will now fail with KeyError. This can be fixed by
+  changing such code to access the property via 'resource.get_property()',
+  or by specifying 'full_properties=True' on the 'list()' method.
+  (part of issue #1070)
+
+* The 'delete()' methods of zhmcclient resource objects now also set the
+  ceased-existence flag on the resource object. This causes 'get_property()'
+  and prop()' when called for locally available properties to now raise
+  CeasedExistence. Previously, the locally available property value was
+  returned. (part of issue #1070)
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -66,6 +83,10 @@ Released: not yet
 
 * Docs: Clarified in 'StorageGroup.list_candidate_adapter_ports()' that the
   method is only for FCP-type storage groups.
+
+* Fixed that the 'find()' and 'findall()' methods now also support regular
+  expression matching when the resource name is passed as a filter argument.
+  (issue #1070)
 
 **Enhancements:**
 
@@ -109,6 +130,19 @@ Released: not yet
 
 * Mock support: Added mock support for the Logon and Logoff HMC operations.
   (related to issue #1024)
+
+* Improved the 'list()' methods of zhmcclient manager classes by using the
+  name-to-URI cache when the resource name is passed as a filter argument.
+  This improvement avoids retrieving the resource from the HMC when it can be
+  found in the name-to-URI case, and therefore the resource will have only a
+  minimal set of properties in that case. See the corresponding entry in the
+  Incompatibilities section. (part of issue #1070)
+
+* Improved the 'delete()' methods of zhmcclient resource classes by setting
+  the ceased-existence flag on the resource. This will cause optimized
+  find-like methods that operate on local data to properly raise
+  CeasedExistence when used on the deleted resource object.
+  (part of issue #1070)
 
 **Cleanup:**
 

@@ -167,30 +167,32 @@ def test_autoupdate_prop(dpm_mode_cpcs):  # noqa: F811
 
             _ = repr(part_auto)
 
-            # Test that accessing properties of the first partition does not
-            # raise CeasedExistence
-
-            desc = part.get_property('description')
-            assert desc == new_desc
-
-            desc = part.prop('description')
-            assert desc == new_desc
+            # Test that accessing properties of the first partition also
+            # raises CeasedExistence (the ceased-existence state is set by
+            # the delete() method).
 
             ce = part.ceased_existence
-            assert ce is False
+            assert ce is True
 
-            # Test that using methods of the first partition that need to
-            # use the partition on the HMC raise HTTP 404.1
+            with pytest.raises(zhmcclient.CeasedExistence) as exc_info:
+                _ = part.get_property('description')
+            exc = exc_info.value
+            assert exc.resource_uri == part.uri
 
-            with pytest.raises(zhmcclient.HTTPError) as exc_info:
+            with pytest.raises(zhmcclient.CeasedExistence) as exc_info:
+                _ = part.prop('description')
+            exc = exc_info.value
+            assert exc.resource_uri == part.uri
+
+            with pytest.raises(zhmcclient.CeasedExistence) as exc_info:
                 part.pull_full_properties()
             exc = exc_info.value
-            assert exc.http_status == 404 and exc.reason == 1
+            assert exc.resource_uri == part.uri
 
-            with pytest.raises(zhmcclient.HTTPError) as exc_info:
+            with pytest.raises(zhmcclient.CeasedExistence) as exc_info:
                 _ = part.dump()
             exc = exc_info.value
-            assert exc.http_status == 404 and exc.reason == 1
+            assert exc.resource_uri == part.uri
 
         finally:
             # We want to make sure the test partition gets cleaned up after
