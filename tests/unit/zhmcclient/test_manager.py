@@ -201,14 +201,13 @@ class TestManager1(object):
 
     def test_invalidate_cache(self):
         """Test invalidate_cache()."""
-        filter_args = {self.manager._name_prop: self.resource_name}
 
         # Populate the cache by finding a resource by name.
-        self.manager.find(**filter_args)
+        self.manager.find_by_name(self.resource_name)
         assert self.manager._list_called == 1
 
         # Check that on the second find by name, list() is not called again.
-        self.manager.find(**filter_args)
+        self.manager.find_by_name(self.resource_name)
         assert self.manager._list_called == 1
 
         # Invalidate the cache via invalidate_cache().
@@ -216,19 +215,18 @@ class TestManager1(object):
 
         # Check that on the third find by name, list() is called again, because
         # the cache had been invalidated.
-        self.manager.find(**filter_args)
+        self.manager.find_by_name(self.resource_name)
         assert self.manager._list_called == 2
 
     def test_flush(self):
         """Test flush() and verify that it raises a DeprecationWarning."""
-        filter_args = {self.manager._name_prop: self.resource_name}
 
         # Populate the cache by finding a resource by name.
-        self.manager.find(**filter_args)
+        self.manager.find_by_name(self.resource_name)
         assert self.manager._list_called == 1
 
         # Check that on the second find by name, list() is not called again.
-        self.manager.find(**filter_args)
+        self.manager.find_by_name(self.resource_name)
         assert self.manager._list_called == 1
 
         # Invalidate the cache via flush().
@@ -242,7 +240,7 @@ class TestManager1(object):
 
         # Check that on the third find by name, list() is called again, because
         # the cache had been invalidated.
-        self.manager.find(**filter_args)
+        self.manager.find_by_name(self.resource_name)
         assert self.manager._list_called == 2
 
     def test_list_not_implemented(self):
@@ -538,14 +536,15 @@ class TestNameUriCache(object):
         # Check that accessing an existing resource name that is not yet in the
         # cache brings all resources into the cache and causes list() to be
         # called once.
-        resource1_uri = self.cache.get(self.resource1_name)
+        resource1_name, resource1_uri = self.cache.get(self.resource1_name)
+        assert resource1_name == self.resource1.name
         assert resource1_uri == self.resource1.uri
         assert set(self.cache._uris.keys()) == self.all_names
         assert self.manager._list_called == 1
 
         # Check that on the second access of the same name, list() is not
         # called again.
-        resource1_uri = self.cache.get(self.resource1_name)
+        self.cache.get(self.resource1_name)
         assert self.manager._list_called == 1
 
     def test_get_non_existing(self):
@@ -736,9 +735,10 @@ class TestNameUriCache(object):
 
         # Access the modified entry, and check that the entry has changed
         # (and that list() has not been called again).
-        resource2_uri = self.cache.get(self.resource2_name)
+        resource2_name, resource2_uri = self.cache.get(self.resource2_name)
         assert self.manager._list_called == 1
-        assert resource2_uri == resource2_new_uri
+        assert resource2_uri == resource2_new.uri
+        assert resource2_name == resource2_new.name
 
     def test_update_empty(self):
         """Test update() on an empty cache."""
@@ -752,9 +752,10 @@ class TestNameUriCache(object):
 
         # Access the new entry, and check the entry (and that list() has not
         # been called).
-        act_resource3_uri = self.cache.get(resource3_name)
+        act_resource3_name, act_resource3_uri = self.cache.get(resource3_name)
         assert self.manager._list_called == 0
         assert act_resource3_uri == resource3_uri
+        assert act_resource3_name == resource3_name
 
     def test_update_empty_empty(self):
         """Test update() on an empty cache with an empty resource name."""
@@ -798,9 +799,10 @@ class TestNameUriCache(object):
 
         # Access the new entry, and check the entry (and that list() has not
         # been called).
-        act_resource3_uri = self.cache.get(resource3_name)
+        act_resource3_name, act_resource3_uri = self.cache.get(resource3_name)
         assert self.manager._list_called == 1
         assert act_resource3_uri == resource3_uri
+        assert act_resource3_name == resource3_name
 
     def test_update_populated_modify(self):
         """Test update() on a populated cache by modifying an existing
@@ -820,6 +822,214 @@ class TestNameUriCache(object):
 
         # Access the new entry, and check the entry (and that list() has not
         # been called again).
-        act_resource2_uri = self.cache.get(self.resource2_name)
+        act_resource2_name, act_resource2_uri = \
+            self.cache.get(self.resource2_name)
         assert self.manager._list_called == 1
         assert act_resource2_uri == resource2_new_uri
+        assert act_resource2_name == self.resource2_name
+
+
+TESTCASES_FINDALL_NAME_PARMS = [
+    # Testcases for test_findall_name_parms().
+    # Each list item is a tuple defining a testcase in the following format:
+    # - res_names: List of names of existing resources
+    # - name_filter: Filter value for matching the resource name
+    # - exp_names: Expected resource names in result
+    # - exp_exc: Expected exception, or None
+    (
+        ['name1', 'name2'],
+        'name1',
+        ['name1'],
+        None
+    ),
+    (
+        ['name1', 'name2'],
+        'name.*',
+        ['name1', 'name2'],
+        None
+    ),
+    (
+        ['name1', 'name2'],
+        'ame',
+        [],
+        None
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        'name.1',
+        ['name-1', 'name.1'],
+        None
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        r'name\.1',
+        ['name.1'],
+        None
+    ),
+    (
+        ['nax', 'nam', 'name', 'name1'],
+        'name?',
+        ['nam', 'name'],
+        None
+    ),
+    (
+        ['nax', 'nam', 'name', 'namee', 'name1'],
+        'name*',
+        ['nam', 'name', 'namee'],
+        None
+    ),
+    (
+        ['nax', 'nam', 'name', 'namee', 'name1'],
+        'name+',
+        ['name', 'namee'],
+        None
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "res_names, name_filter, exp_names, exp_exc",
+    TESTCASES_FINDALL_NAME_PARMS)
+def test_findall_name_parms(res_names, name_filter, exp_names, exp_exc):
+    """
+    Test BaseManager.findall() with filter args for matching the resource name.
+    """
+
+    session = Session(host='fake-host', userid='fake-user', password='fake-pw')
+    manager = MyManager(session)
+    all_resources = []
+    for res_name in res_names:
+        uri = res_name + '-uri'
+        res = MyResource(
+            manager,
+            uri=uri,
+            properties={
+                manager._name_prop: res_name,
+                "other": "fake-other",
+                "same": "fake-same",
+                "int_other": 23,
+                "int_same": 42,
+            })
+        all_resources.append(res)
+    # pylint: disable=attribute-defined-outside-init
+    manager._list_resources = all_resources
+
+    filter_args = {manager._name_prop: name_filter}
+
+    if exp_exc:
+        with pytest.raises(exp_exc):
+
+            manager.findall(**filter_args)
+
+    else:
+
+        resources = manager.findall(**filter_args)
+
+        act_names = [_res.name for _res in resources]
+        assert act_names == exp_names
+
+
+TESTCASES_FIND_NAME_PARMS = [
+    # Testcases for test_find_name_parms().
+    # Each list item is a tuple defining a testcase in the following format:
+    # - res_names: List of names of existing resources
+    # - name_filter: Filter value for matching the resource name
+    # - exp_name: Expected resource name in result
+    # - exp_exc: Expected exception, or None
+    (
+        ['name1', 'name2'],
+        'name1',
+        'name1',
+        None
+    ),
+    (
+        ['name1', 'name2'],
+        'name.*',
+        None,
+        NoUniqueMatch
+    ),
+    (
+        ['name1', 'name2'],
+        'n.*1',
+        'name1',
+        None
+    ),
+    (
+        ['name1', 'name2'],
+        'ame',
+        None,
+        NotFound
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        'name.1',
+        None,
+        NoUniqueMatch
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        r'name\.1',
+        'name.1',
+        None
+    ),
+    (
+        ['nax', 'nam', 'name', 'name1'],
+        'name?',
+        None,
+        NoUniqueMatch
+    ),
+    (
+        ['nax', 'nam', 'name', 'namee', 'name1'],
+        'name*',
+        None,
+        NoUniqueMatch
+    ),
+    (
+        ['nax', 'nam', 'name', 'namee', 'name1'],
+        'name+',
+        None,
+        NoUniqueMatch
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "res_names, name_filter, exp_name, exp_exc",
+    TESTCASES_FIND_NAME_PARMS)
+def test_find_name_parms(res_names, name_filter, exp_name, exp_exc):
+    """
+    Test BaseManager.find() with filter args for matching the resource name.
+    """
+
+    session = Session(host='fake-host', userid='fake-user', password='fake-pw')
+    manager = MyManager(session)
+    all_resources = []
+    for res_name in res_names:
+        uri = res_name + '-uri'
+        res = MyResource(
+            manager,
+            uri=uri,
+            properties={
+                manager._name_prop: res_name,
+                "other": "fake-other",
+                "same": "fake-same",
+                "int_other": 23,
+                "int_same": 42,
+            })
+        all_resources.append(res)
+    # pylint: disable=attribute-defined-outside-init
+    manager._list_resources = all_resources
+
+    filter_args = {manager._name_prop: name_filter}
+
+    if exp_exc:
+        with pytest.raises(exp_exc):
+
+            manager.find(**filter_args)
+
+    else:
+
+        resource = manager.find(**filter_args)
+
+        act_name = resource.name
+        assert act_name == exp_name

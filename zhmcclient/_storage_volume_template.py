@@ -309,6 +309,8 @@ class StorageVolumeTemplate(BaseResource):
             except ValueError:
                 pass
 
+        self.cease_existence_local()
+
     @logged_api_call
     def update_properties(self, properties):
         """

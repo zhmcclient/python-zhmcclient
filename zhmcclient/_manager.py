@@ -43,6 +43,9 @@ from ._utils import repr_list, matches_filters, divide_filter_args, \
 __all__ = ['BaseManager']
 
 
+REGEXP_SPECIAL_CHAR = re.compile(r'[\^\$\.\+\*\?\(\)\[\]\{\}\|\\]')
+
+
 class _NameUriCache(object):
     """
     A Name-URI cache, that caches the mapping between resource names and
@@ -72,8 +75,10 @@ class _NameUriCache(object):
         self._dict_type = NocaseDict if case_insensitive_names else dict
 
         # The cached data, as a dictionary with:
-        # Key (string): Name of a resource (unique within its parent resource)
-        # Value (string): URI of that resource
+        # Key (string): Name of a resource (unique within its parent resource).
+        # Value (string): tuple(name, uri) where name is the original name
+        # of the resource (important for resources with case-insensitive names)
+        # and uri is the URI of the resource.
         self._uris = self._dict_type()
 
         # Point in time when the cache was last invalidated
@@ -81,7 +86,11 @@ class _NameUriCache(object):
 
     def get(self, name):
         """
-        Get the resource URI for a specified resource name.
+        Get the resource name and URI for a specified resource name as a
+        tuple(name, uri).
+
+        Note that for case-inensitive caches, it may be important to get back
+        the original name, so both name and URI are returned.
 
         If an entry for the specified resource name does not exist in the
         Name-URI cache, the cache is refreshed from the HMC with all resources
@@ -154,12 +163,13 @@ class _NameUriCache(object):
     def update(self, name, uri):
         """
         Update or create the entry for the specified resource name in the
-        Name-URI cache, and set it to the specified URI.
+        Name-URI cache, and set it to the specified name and URI as a
+        tuple(name, uri).
 
         If the specified name is `None` or the empty string, do nothing.
         """
         if name:
-            self._uris[name] = uri
+            self._uris[name] = (name, uri)
 
     def delete(self, name):
         """
@@ -537,57 +547,74 @@ class BaseManager(object):
 
     def _try_optimized_lookup(self, filter_args):
         """
-        Try to optimize the lookup by checking whether the filter arguments
-        specify the property that is used as the last segment in the resource
-        URI, with a plain string as match value (i.e. not using regular
-        expression matching).
+        Try to find a resource in an optimized way when the filter arguments
+        allow for that.
 
-        If so, the lookup is performed by constructing the resource URI from
-        the specified filter argument, and by issuing a Get Properties
-        operation on that URI, returning a single resource object.
+        The following cases of optimized filtering are supported:
+
+        - A single filter on the resource name, that does not use regular
+          expression matching.
+        - A single filter on the resource object/element ID, that does not use
+          regular expression matching.
+
+        Returns `None` if the filter arguments do not meet these optimization
+        criteria, or if they do but no resource was found.
 
         Parameters:
-
           filter_args (dict):
             Filter arguments. For details, see :ref:`Filtering`.
 
         Returns:
-
-          resource object, or `None` if the optimization was not possible.
+          resource object, or `None` if the the filter arguments did not meet
+            the optimization criteria, or if they did but no resource was found.
         """
-        if filter_args is None or len(filter_args) != 1 or \
-                self._oid_prop not in filter_args:
+        if filter_args is None or len(filter_args) != 1:
             return None
 
-        oid_match = filter_args[self._oid_prop]
-        if not isinstance(oid_match, six.string_types) or \
-                not re.match(r'^[a-zA-Z0-9_\-]+$', oid_match):
-            return None
+        if self._name_prop in filter_args:
 
-        # The match string is a plain string (not a reg.expression)
-
-        # Construct the resource URI from the filter property
-        # and issue a Get <Resource> Properties on that URI
-        uri = self._base_uri + '/' + oid_match
-
-        try:
-            props = self.session.get(uri)
-        except HTTPError as exc:
-            if exc.http_status == 404 and exc.reason == 1:
-                # No such resource
+            name_match = filter_args[self._name_prop]
+            if not isinstance(name_match, six.string_types) or \
+                    REGEXP_SPECIAL_CHAR.search(name_match):
                 return None
-            raise
 
-        resource_obj = self.resource_class(
-            manager=self,
-            uri=props[self._uri_prop],
-            name=props.get(self._name_prop, None),
-            properties=props)
+            try:
+                resource_obj = self.find_by_name(name_match)
+            except NotFound:
+                return None
 
-        # pylint: disable=protected-access
-        resource_obj._full_properties = True
+            return resource_obj
 
-        return resource_obj
+        if self._oid_prop in filter_args:
+
+            oid_match = filter_args[self._oid_prop]
+            if not isinstance(oid_match, six.string_types) or \
+                    REGEXP_SPECIAL_CHAR.search(oid_match):
+                return None
+
+            # Construct the resource URI from the filter property
+            # and issue a Get <Resource> Properties on that URI
+            uri = self._base_uri + '/' + oid_match
+            try:
+                props = self.session.get(uri)
+            except HTTPError as exc:
+                if exc.http_status == 404 and exc.reason == 1:
+                    # No such resource
+                    return None
+                raise
+
+            resource_obj = self.resource_class(
+                manager=self,
+                uri=props[self._uri_prop],
+                name=props.get(self._name_prop, None),
+                properties=props)
+
+            # pylint: disable=protected-access
+            resource_obj._full_properties = True
+
+            return resource_obj
+
+        return None
 
     @property
     def resource_class(self):
@@ -749,7 +776,10 @@ class BaseManager(object):
             resource_obj = self._try_optimized_lookup(filter_args)
             if resource_obj:
                 resource_obj_list.append(resource_obj)
-                # It already has full properties
+                # Depending on how the resource was found, it may or may not
+                # already have full properties.
+                if full_properties and not resource_obj.full_properties:
+                    resource_obj.pull_full_properties()
             else:
                 query_parms, client_filters = divide_filter_args(
                     self._query_props, filter_args)
@@ -1072,8 +1102,8 @@ class BaseManager(object):
         The returned resource object will have the following minimal set of
         properties set automatically:
 
-          * `object-uri`
-          * `object-id`
+          * `object-uri` or `element-uri`
+          * `object-id` or `element-id`
           * `parent`
           * `class`
 
@@ -1179,13 +1209,6 @@ class BaseManager(object):
               filter_args = {'adapter-family': 'osa', 'status': 'active'}
               active_osa_adapters = cpc.adapters.findall(**filter_args)
         """
-        if len(filter_args) == 1 and self._name_prop in filter_args:
-            try:
-                obj = self.find_by_name(filter_args[self._name_prop])
-            except NotFound:
-                return []
-            return [obj]
-
         obj_list = self.list(filter_args=filter_args)
         return obj_list
 
@@ -1341,12 +1364,12 @@ class BaseManager(object):
     @logged_api_call
     def find_by_name(self, name):
         """
-        Find a resource by name (i.e. value of its 'name' resource property)
-        and return its Python resource object (e.g. for a CPC, a
-        :class:`~zhmcclient.Cpc` object is returned).
+        Find a resource by name and return its Python resource object (e.g.
+        for a CPC, a :class:`~zhmcclient.Cpc` object is returned).
 
         This method performs an optimized lookup that uses a name-to-URI
         mapping cached in this manager object.
+        Regular expression matching is not supported for the name.
 
         This method is automatically used by the
         :meth:`~zhmcclient.BaseManager.find` and
@@ -1360,15 +1383,14 @@ class BaseManager(object):
         Parameters:
 
           name (string):
-            Name of the resource (value of its 'name' resource property).
-            Regular expression matching is not supported for the name for this
-            optimized lookup.
+            Name of the resource.
+            Regular expression matching is not supported for the name.
+            Must not be `None`.
 
         Returns:
 
-          Resource object in scope of this manager object that matches the
-          filter arguments. This resource object has a minimal set of
-          properties.
+          Resource object in scope of this manager object that has the specified
+          name. This resource object has a minimal set of properties.
 
         Raises:
 
@@ -1382,13 +1404,12 @@ class BaseManager(object):
 
               cpc = client.cpcs.find_by_name('CPC001')
         """
-        uri = self._name_uri_cache.get(name)
-        obj = self.resource_class(
-            manager=self,
-            uri=uri,
-            name=name,
-            properties=None)
-        return obj
+        name, uri = self._name_uri_cache.get(name)
+        resource_props = {
+            self._name_prop: name,
+        }
+        resource_obj = self.resource_object(uri, resource_props)
+        return resource_obj
 
     @logged_api_call
     def find_local(self, name, uri, properties=None):
@@ -1410,7 +1431,9 @@ class BaseManager(object):
         Parameters:
 
           name (string):
-            Name of the resource. Must not be `None`.
+            Name of the resource.
+            Regular expression matching is not supported for the name.
+            Must not be `None`.
 
           uri (string):
             Object URI of the resource. Must not be `None`.

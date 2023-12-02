@@ -236,6 +236,7 @@ class CapacityGroup(BaseResource):
         self.manager.session.delete(self._uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
+        self.cease_existence_local()
 
     @logged_api_call
     def update_properties(self, properties):

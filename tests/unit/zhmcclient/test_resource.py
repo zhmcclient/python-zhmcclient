@@ -773,7 +773,11 @@ class TestPropertyMethodsMocked(object):
         assert resource.full_properties is False
 
         if delete:
-            resource.delete()
+            # Delete the resource on the HMC, without affecting the state of
+            # the local zhmcclient resource object. This simulates some other
+            # user who has deleted the resource on the HMC while we have it
+            # here as a zhmcclient resource object.
+            resource.manager.session.delete(resource.uri)
 
             with pytest.raises(CeasedExistence):
 
@@ -991,7 +995,11 @@ class TestPropertyMethodsMocked(object):
         assert resource.full_properties is False
 
         if delete:
-            resource.delete()
+            # Delete the resource on the HMC, without affecting the state of
+            # the local zhmcclient resource object. This simulates some other
+            # user who has deleted the resource on the HMC while we have it
+            # here as a zhmcclient resource object.
+            resource.manager.session.delete(resource.uri)
 
         if exp_exc_type:
             with pytest.raises(exp_exc_type) as exc_info:
@@ -1076,7 +1084,7 @@ class TestPropertyMethodsMocked(object):
             False,
             RESOURCE_OID,
             {'name', 'object-uri', 'object-id'},
-            True,
+            False,
             None,
         ),
         (
@@ -1087,7 +1095,7 @@ class TestPropertyMethodsMocked(object):
             True,
             RESOURCE_OID,
             {'name', 'object-uri', 'object-id'},
-            True,
+            False,
             None,
         ),
         (
@@ -1096,10 +1104,10 @@ class TestPropertyMethodsMocked(object):
             dict(name='object-id'),
             True,
             False,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            False,
             None,
-            None,
-            None,
-            CeasedExistence,
         ),
         (
             "Valid not locally existing property requested; "
@@ -1107,10 +1115,10 @@ class TestPropertyMethodsMocked(object):
             dict(name='object-id'),
             True,
             True,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            False,
             None,
-            None,
-            None,
-            CeasedExistence,
         ),
 
         (
@@ -1184,7 +1192,11 @@ class TestPropertyMethodsMocked(object):
         assert resource.full_properties is False
 
         if delete:
-            resource.delete()
+            # Delete the resource on the HMC, without affecting the state of
+            # the local zhmcclient resource object. This simulates some other
+            # user who has deleted the resource on the HMC while we have it
+            # here as a zhmcclient resource object.
+            resource.manager.session.delete(resource.uri)
 
         if exp_exc_type:
             with pytest.raises(exp_exc_type) as exc_info:
@@ -1316,7 +1328,7 @@ class TestPropertyMethodsMocked(object):
             False,
             RESOURCE_OID,
             {'name', 'object-uri', 'object-id'},
-            True,
+            False,
             None,
         ),
         (
@@ -1327,7 +1339,7 @@ class TestPropertyMethodsMocked(object):
             True,
             RESOURCE_OID,
             {'name', 'object-uri', 'object-id'},
-            True,
+            False,
             None,
         ),
         (
@@ -1336,10 +1348,10 @@ class TestPropertyMethodsMocked(object):
             dict(name='object-id'),
             True,
             False,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            False,
             None,
-            None,
-            None,
-            CeasedExistence,
         ),
         (
             "Valid not locally existing property requested without default; "
@@ -1347,10 +1359,10 @@ class TestPropertyMethodsMocked(object):
             dict(name='object-id'),
             True,
             True,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            False,
             None,
-            None,
-            None,
-            CeasedExistence,
         ),
 
         (
@@ -1361,7 +1373,7 @@ class TestPropertyMethodsMocked(object):
             False,
             RESOURCE_OID,
             {'name', 'object-uri', 'object-id'},
-            True,
+            False,
             None,
         ),
         (
@@ -1372,7 +1384,7 @@ class TestPropertyMethodsMocked(object):
             True,
             RESOURCE_OID,
             {'name', 'object-uri', 'object-id'},
-            True,
+            False,
             None,
         ),
         (
@@ -1381,10 +1393,10 @@ class TestPropertyMethodsMocked(object):
             dict(name='object-id', default='foo'),
             True,
             False,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            False,
             None,
-            None,
-            None,
-            CeasedExistence,
         ),
         (
             "Valid not locally existing property requested with default; "
@@ -1392,10 +1404,10 @@ class TestPropertyMethodsMocked(object):
             dict(name='object-id', default='foo'),
             True,
             True,
+            RESOURCE_OID,
+            {'name', 'object-uri', 'object-id'},
+            False,
             None,
-            None,
-            None,
-            CeasedExistence,
         ),
 
         (
@@ -1514,7 +1526,11 @@ class TestPropertyMethodsMocked(object):
         assert resource.full_properties is False
 
         if delete:
-            resource.delete()
+            # Delete the resource on the HMC, without affecting the state of
+            # the local zhmcclient resource object. This simulates some other
+            # user who has deleted the resource on the HMC while we have it
+            # here as a zhmcclient resource object.
+            resource.manager.session.delete(resource.uri)
 
         if exp_exc_type:
             with pytest.raises(exp_exc_type) as exc_info:

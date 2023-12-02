@@ -88,7 +88,11 @@ def assert_resources(resources, exp_resources, prop_names):
                 # (e.g. Crypto adapter does not have 'port-count')
                 prop_value = res.properties[prop_name]
                 exp_prop_value = exp_res.properties[prop_name]
-                assert prop_value == exp_prop_value
+                assert prop_value == exp_prop_value, (
+                    "Unexpected value for property {n!r}: got: {av!r}, "
+                    "expected: {ev!r}".
+                    format(n=prop_name, av=prop_value, ev=exp_prop_value)
+                )
 
 
 def info(capsys, format_str, format_args=None):
