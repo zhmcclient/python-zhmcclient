@@ -35,6 +35,10 @@ Released: not yet
 
 **Enhancements:**
 
+* Added support for tolerating HMC restarts while waiting for a job to complete.
+  Session.wait_for_completion() now retries in case of ConnectionError instead of
+  raising the error. (issue #1365)
+
 **Cleanup:**
 
 **Known issues:**

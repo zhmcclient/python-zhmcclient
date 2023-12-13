@@ -1773,7 +1773,6 @@ class Job(object):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.ClientAuthError`
           :exc:`~zhmcclient.ServerAuthError`
-          :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
             waiting for job completion.
         """
@@ -1785,7 +1784,13 @@ class Job(object):
             start_time = time.time()
 
         while True:
-            job_status, op_result_obj = self.check_for_completion()
+            try:
+                job_status, op_result_obj = self.check_for_completion()
+            except ConnectionError:
+                HMC_LOGGER.debug("Retrying after ConnectionError while waiting"
+                                 " for completion of job %s. This could be "
+                                 "because HMC is restarting.", self.uri)
+                job_status = None
 
             # We give completion of status priority over strictly achieving
             # the timeout, so we check status first. This may cause a longer
