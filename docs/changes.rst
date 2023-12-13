@@ -56,6 +56,10 @@ Released: not yet
   - "CPC Install and Activate" as 'Cpc.install_and_activate()'
   - "CPC Delete Retrieved Internal Code" as 'Cpc.delete_retrieved_internal_code()'
 
+* Added support for tolerating HMC restarts while waiting for a job to complete.
+  Session.wait_for_completion() now retries in case of ConnectionError instead of
+  raising the error. (issue #1365)
+
 **Cleanup:**
 
 **Known issues:**
