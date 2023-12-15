@@ -20,14 +20,10 @@ Change log
 ----------
 
 
-Version 1.12.2.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.12.2
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2023-12-15
 
 **Bug fixes:**
 
@@ -38,14 +34,6 @@ Released: not yet
 * Added support for tolerating HMC restarts while waiting for a job to complete.
   Session.wait_for_completion() now retries in case of ConnectionError instead of
   raising the error. (issue #1365)
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.12.1
