@@ -60,6 +60,10 @@ Released: not yet
   Session.wait_for_completion() now retries in case of ConnectionError instead of
   raising the error. (issue #1365)
 
+* Added the session-credential value returned by HMC logon as a new property
+  'session_credential' to the 'zhmcclient.Session' object. (related to issue
+  #1350)
+
 **Cleanup:**
 
 **Known issues:**
