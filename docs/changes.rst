@@ -64,6 +64,12 @@ Released: not yet
   'session_credential' to the 'zhmcclient.Session' object. (related to issue
   #1350)
 
+* Clarified in the description of 'zhmcclient.NotificationReceiver' that
+  its userid and password init parameters are actually the message broker's
+  userid and password, and that in case of MFA being configured, they must be
+  the session ID and session credential returned from the HMC logon.
+  (issue #1350)
+
 **Cleanup:**
 
 **Known issues:**
