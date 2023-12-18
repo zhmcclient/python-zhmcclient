@@ -38,7 +38,8 @@ for a DPM partition::
     print("Subscribing for OS messages for partition %s on CPC %s using "
           "notifications..." % (partition.name, cpc.name))
 
-    receiver = zhmcclient.NotificationReceiver(topic, hmc, userid, password)
+    receiver = zhmcclient.NotificationReceiver(
+        topic, hmc, session.session_id, session.session_credential)
 
     try:
         for headers, message in receiver.notifications():
@@ -114,12 +115,21 @@ class NotificationReceiver(object):
             Must not be `None`.
 
           userid (:term:`string`):
-            Userid of the HMC user to be used.
+            Userid for logging on to the HMC message broker.
             Must not be `None`.
 
+            If the HMC userid is configured to use MFA, this must be the
+            session ID of a session that user has with the HMC.
+            Otherwise, it can either be the session ID, or the HMC userid.
+
           password (:term:`string`):
-            Password of the HMC user to be used.
+            Password for logging on to the HMC message broker.
             Must not be `None`.
+
+            If `userid` specifies a session ID, this must be the session
+            credential for that session ID.
+            If `userid` specifies an HMC userid, this must be the password
+            for that userid.
 
           port (:term:`integer`):
             STOMP TCP port. Defaults to
@@ -276,7 +286,8 @@ class NotificationReceiver(object):
                            if t['topic-type'] in desired_topic_types]
 
             receiver = zhmcclient.NotificationReceiver(
-                topic_names, hmc, userid, password)
+                topic_names, hmc, session.session_id,
+                session.session_credential)
 
             for headers, message in receiver.notifications():
                 . . . # processing of topic-specific message format
