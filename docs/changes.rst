@@ -47,6 +47,10 @@ Released: not yet
   'loadable_lpars' and 'load_profiles' properties in HMC inventory file.
   (issue #1374)
 
+* Test: Fixed end2end testcase 'test_actprof_crud()' to skip the test when the
+  required 'create-delete-activation-profiles' API feature is not available.
+  (issue #1375)
+
 **Enhancements:**
 
 * Added support for retrievel of firmware from an FTP server to the
