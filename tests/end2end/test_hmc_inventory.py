@@ -27,6 +27,8 @@ import zhmcclient
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401
 from zhmcclient.testutils import HMCDefinitions
 
+from .utils import is_cpc_property_hmc_inventory
+
 urllib3.disable_warnings()
 
 
@@ -65,6 +67,9 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
 
         cpc_props = dict(cpc.properties)
         for def_prop_name in def_cpc_props:
+
+            if not is_cpc_property_hmc_inventory(def_prop_name):
+                continue
 
             hmc_prop_name = def_prop_name.replace('_', '-')
             assert hmc_prop_name in cpc_props, \

@@ -853,3 +853,15 @@ def pull_lpar_status(lpar):
     this_lpar = lpars[0]
     actual_status = this_lpar.get_property('status')
     return actual_status
+
+
+def is_cpc_property_hmc_inventory(name):
+    """
+    Return whether a CPC property defined in the HMC inventory file is
+    actually a CPC property (vs. a special property).
+    """
+    special_properties = (
+        'loadable_lpars',
+        'load_profiles',
+    )
+    return name not in special_properties
