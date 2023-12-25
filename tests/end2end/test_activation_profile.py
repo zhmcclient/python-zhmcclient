@@ -32,7 +32,8 @@ from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, runtest_find_list, \
-    runtest_get_properties, setup_logging, End2endTestWarning
+    runtest_get_properties, setup_logging, End2endTestWarning, \
+    skip_missing_api_feature
 
 urllib3.disable_warnings()
 
@@ -97,6 +98,11 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
+
+        console = cpc.manager.console
+        skip_missing_api_feature(
+            console, 'create-delete-activation-profiles',
+            cpc, 'create-delete-activation-profiles')
 
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
 
