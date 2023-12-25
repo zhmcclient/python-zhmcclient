@@ -31,6 +31,10 @@ Released: not yet
 
 **Bug fixes:**
 
+* Test: Fixed end2end test function test_hmcdef_cpcs() to no longer stumble over
+  'loadable_lpars' and 'load_profiles' properties in HMC inventory file.
+  (issue #1374)
+
 **Enhancements:**
 
 **Cleanup:**
