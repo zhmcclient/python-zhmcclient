@@ -865,3 +865,28 @@ def is_cpc_property_hmc_inventory(name):
         'load_profiles',
     )
     return name not in special_properties
+
+
+def skip_missing_api_feature(
+        console, console_feature, cpc=None, cpc_feature=None):
+    """
+    Skip pytest testcase if an HMC Console or CPC API feature is not
+    available.
+    """
+    client = console.manager.client
+
+    api_version_info = client.version_info()
+    if api_version_info < (4, 10):
+        pytest.skip("HMC API version {} is below minimum version 4.10 "
+                    "required for API features".
+                    format('.'.join(api_version_info)))
+
+    if console_feature:
+        if not console.list_api_features(console_feature):
+            pytest.skip("Console API feature {!r} is not available".
+                        format(console_feature))
+
+    if cpc_feature:
+        if not cpc.list_api_features(cpc_feature):
+            pytest.skip("CPC API feature {!r} is not available for CPC {!r}".
+                        format(cpc_feature, cpc.name))
