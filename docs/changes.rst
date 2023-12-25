@@ -43,6 +43,10 @@ Released: not yet
 
 * Addressed safety issues up to 2023-11-26.
 
+* Test: Fixed end2end test function test_hmcdef_cpcs() to no longer stumble over
+  'loadable_lpars' and 'load_profiles' properties in HMC inventory file.
+  (issue #1374)
+
 **Enhancements:**
 
 * Added support for retrievel of firmware from an FTP server to the
