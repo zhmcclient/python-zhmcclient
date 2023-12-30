@@ -2348,7 +2348,8 @@ class Cpc(BaseResource):
         if bundle_level is not None:
             body['bundle-level'] = bundle_level
         if ec_levels is not None:
-            body['ec-levels'] = ec_levels
+            body['ec-levels'] = \
+                [{"number": ec[0], "mcl": ec[1]} for ec in ec_levels]
         if install_disruptive:
             body['install-disruptive'] = True
 
