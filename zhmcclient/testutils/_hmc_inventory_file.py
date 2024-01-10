@@ -40,9 +40,8 @@ __all__ = ['HMCInventoryFileError', 'HMCInventoryFile']
 #         description: <string>
 #         contact: <string>
 #         access_via: <string>
-#         ansible_host: <host>  # if real HMC and an alias is used;
-#                               # can also be a list of hosts
-#         mock_file: <path_name>  # if mocked HMC
+#         ansible_host: <host> or [<host>, ...]   # if real HMC
+#         mock_file: <path_name>                  # if mocked HMC
 #         cpcs:
 #           <cpc_name>:
 #             <prop_name>: <prop_value>
