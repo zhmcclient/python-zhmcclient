@@ -857,7 +857,13 @@ class Console(BaseResource):
         classic-mode CPCs that are managed by the targeted HMC and to which the
         user has object-access permission.
 
-        *Requires HMC 2.16.0 or later and otherwise raises HTTPError(404.4).*
+        *If 'additional_properties' is not used, requires HMC API version 4.1 or
+        later (= HMC version 2.16.0 GA-level) and otherwise raises
+        HTTPError(404.4).*
+
+        *If 'additional_properties' is used, requires HMC API version 4.10 or
+        later (= HMC version 2.16.0 plus some post-GA code level) and
+        otherwise raises HTTPError(404.4).*
 
         The adapters in the result can be additionally limited by specifying
         filter arguments.
