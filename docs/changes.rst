@@ -64,6 +64,9 @@ Released: not yet
 
 * Clarified the HMC version requirements for 'Console.list_permitted_adapters()'.
 
+* Docs: Clarified in 'StorageGroup.list_candidate_adapter_ports()' that the
+  method is only for FCP-type storage groups.
+
 **Enhancements:**
 
 * Added support for retrievel of firmware from an FTP server to the
