@@ -62,6 +62,8 @@ Released: not yet
   'zhmcclient.Session' object are 'None' when the session is in the logged-off
   state. (related to issue #1024)
 
+* Clarified the HMC version requirements for 'Console.list_permitted_adapters()'.
+
 **Enhancements:**
 
 * Added support for retrievel of firmware from an FTP server to the
