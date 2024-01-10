@@ -633,8 +633,10 @@ class StorageGroup(BaseResource):
     @logged_api_call
     def list_candidate_adapter_ports(self, full_properties=False):
         """
-        Return the current candidate storage adapter port list of this storage
-        group.
+        Return the current candidate storage adapter port list of this FCP
+        storage group.
+
+        This operation only applies to storage groups of type "fcp".
 
         The result reflects the actual list of ports used by the CPC, including
         any changes that have been made during discovery. The source for this
