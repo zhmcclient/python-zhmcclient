@@ -39,6 +39,9 @@ Released: not yet
   required 'create-delete-activation-profiles' API feature is not available.
   (issue #1375)
 
+* Docs: Clarified in 'StorageGroup.list_candidate_adapter_ports()' that the
+  method is only for FCP-type storage groups.
+
 **Enhancements:**
 
 **Cleanup:**
