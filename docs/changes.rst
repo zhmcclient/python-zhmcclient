@@ -20,14 +20,10 @@ Change log
 ----------
 
 
-Version 1.12.3.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.12.3
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2024-01-11
 
 **Bug fixes:**
 
@@ -41,16 +37,6 @@ Released: not yet
 
 * Docs: Clarified in 'StorageGroup.list_candidate_adapter_ports()' that the
   method is only for FCP-type storage groups.
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.12.2
