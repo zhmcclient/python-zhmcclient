@@ -78,7 +78,9 @@ def print_hmc_definitions():
           format("HMC nickname", "HMC host / mock file", "Description"))
     for hd in hmcdefs.list_all_hmcs():
         host = hd.mock_file or hd.host
-        print("{:20s} {:24s} {}".format(hd.nickname, host, hd.description))
+        if isinstance(host, list):
+            host = ','.join(host)
+        print("{:20s} {:24s} {}".format(hd.nickname, str(host), hd.description))
 
     print("\nGroups in inventory file:")
     print("{:20s} {}".format("Group name", "HMCs in the group"))
