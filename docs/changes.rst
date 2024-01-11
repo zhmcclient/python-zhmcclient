@@ -20,12 +20,12 @@ Change log
 ----------
 
 
-Version 1.13.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.13.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.12.x.
+This version contains all fixes up to version 1.12.2.
 
-Released: not yet
+Released: 2024-01-11
 
 **Incompatible changes:**
 
@@ -60,8 +60,6 @@ Released: not yet
   and prop()' when called for locally available properties to now raise
   CeasedExistence. Previously, the locally available property value was
   returned. (part of issue #1070)
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -143,14 +141,6 @@ Released: not yet
   find-like methods that operate on local data to properly raise
   CeasedExistence when used on the deleted resource object.
   (part of issue #1070)
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.12.0
