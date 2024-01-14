@@ -1708,6 +1708,7 @@ class Job(object):
           items:
 
           * job_status(string): Job status, one of:
+
             - "running" - indicates that the job was found and it has not ended
               at the time of the query.
             - "cancel-pending" - indicates that the job was found and it has
