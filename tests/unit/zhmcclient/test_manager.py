@@ -53,7 +53,7 @@ class MyManager(BaseManager):
 
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
-    def __init__(self, session):
+    def __init__(self, session, case_insensitive_names=False):
         super(MyManager, self).__init__(
             resource_class=MyResource,
             class_name='myresource',
@@ -63,7 +63,8 @@ class MyManager(BaseManager):
             oid_prop='fake_object_id',
             uri_prop='fake_uri_prop',
             name_prop='fake_name_prop',
-            query_props=[])
+            query_props=[],
+            case_insensitive_names=case_insensitive_names)
         self._list_resources = []  # resources to return in list()
         self._list_called = 0  # number of calls to list()
 
@@ -833,70 +834,94 @@ TESTCASES_FINDALL_NAME_PARMS = [
     # Testcases for test_findall_name_parms().
     # Each list item is a tuple defining a testcase in the following format:
     # - res_names: List of names of existing resources
+    # - case_insensitive_names(bool): Whether the resource type has case
+    #   insensitive name matching.
     # - name_filter: Filter value for matching the resource name
     # - exp_names: Expected resource names in result
     # - exp_exc: Expected exception, or None
     (
         ['name1', 'name2'],
+        False,
         'name1',
         ['name1'],
         None
     ),
     (
         ['name1', 'name2'],
+        False,
         'name.*',
         ['name1', 'name2'],
         None
     ),
     (
         ['name1', 'name2'],
+        False,
         'ame',
         [],
         None
     ),
     (
         ['name-1', 'name.1', 'name1'],
+        False,
         'name.1',
         ['name-1', 'name.1'],
         None
     ),
     (
         ['name-1', 'name.1', 'name1'],
+        False,
         r'name\.1',
         ['name.1'],
         None
     ),
     (
         ['nax', 'nam', 'name', 'name1'],
+        False,
         'name?',
         ['nam', 'name'],
         None
     ),
     (
         ['nax', 'nam', 'name', 'namee', 'name1'],
+        False,
         'name*',
         ['nam', 'name', 'namee'],
         None
     ),
     (
         ['nax', 'nam', 'name', 'namee', 'name1'],
+        False,
         'name+',
         ['name', 'namee'],
+        None
+    ),
+    (
+        ['nax', 'naM', 'Name', 'nAmee', 'Name1'],
+        True,
+        'Nam',
+        ['naM'],
+        None
+    ),
+    (
+        ['nax', 'naM', 'Name', 'nAmee', 'Name1'],
+        True,
+        'Name+',
+        ['Name', 'nAmee'],
         None
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "res_names, name_filter, exp_names, exp_exc",
+    "res_names, case_insensitive_names, name_filter, exp_names, exp_exc",
     TESTCASES_FINDALL_NAME_PARMS)
-def test_findall_name_parms(res_names, name_filter, exp_names, exp_exc):
+def test_findall_name_parms(
+        res_names, case_insensitive_names, name_filter, exp_names, exp_exc):
     """
     Test BaseManager.findall() with filter args for matching the resource name.
     """
-
     session = Session(host='fake-host', userid='fake-user', password='fake-pw')
-    manager = MyManager(session)
+    manager = MyManager(session, case_insensitive_names=case_insensitive_names)
     all_resources = []
     for res_name in res_names:
         uri = res_name + '-uri'
@@ -933,76 +958,67 @@ TESTCASES_FIND_NAME_PARMS = [
     # Testcases for test_find_name_parms().
     # Each list item is a tuple defining a testcase in the following format:
     # - res_names: List of names of existing resources
+    # - case_insensitive_names(bool): Whether the resource type has case
+    #   insensitive name matching.
     # - name_filter: Filter value for matching the resource name
     # - exp_name: Expected resource name in result
     # - exp_exc: Expected exception, or None
     (
         ['name1', 'name2'],
+        False,
         'name1',
         'name1',
         None
     ),
     (
         ['name1', 'name2'],
+        False,
         'name.*',
         None,
-        NoUniqueMatch
+        NotFound
     ),
     (
         ['name1', 'name2'],
-        'n.*1',
-        'name1',
-        None
-    ),
-    (
-        ['name1', 'name2'],
+        False,
         'ame',
         None,
         NotFound
     ),
     (
         ['name-1', 'name.1', 'name1'],
+        False,
         'name.1',
-        None,
-        NoUniqueMatch
-    ),
-    (
-        ['name-1', 'name.1', 'name1'],
-        r'name\.1',
         'name.1',
         None
     ),
     (
-        ['nax', 'nam', 'name', 'name1'],
-        'name?',
+        ['name-1', 'name.1', 'name1'],
+        False,
+        r'name\.1',
         None,
-        NoUniqueMatch
+        NotFound
     ),
     (
-        ['nax', 'nam', 'name', 'namee', 'name1'],
-        'name*',
-        None,
-        NoUniqueMatch
-    ),
-    (
-        ['nax', 'nam', 'name', 'namee', 'name1'],
-        'name+',
-        None,
-        NoUniqueMatch
+        ['nAme1', 'name2'],
+        True,
+        'Name1',
+        'nAme1',
+        None
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "res_names, name_filter, exp_name, exp_exc",
+    "res_names, case_insensitive_names, name_filter, exp_name, exp_exc",
     TESTCASES_FIND_NAME_PARMS)
-def test_find_name_parms(res_names, name_filter, exp_name, exp_exc):
+def test_find_name_parms(
+        res_names, case_insensitive_names, name_filter, exp_name, exp_exc):
     """
     Test BaseManager.find() with filter args for matching the resource name.
     """
 
     session = Session(host='fake-host', userid='fake-user', password='fake-pw')
-    manager = MyManager(session)
+    manager = MyManager(session, case_insensitive_names=case_insensitive_names)
     all_resources = []
     for res_name in res_names:
         uri = res_name + '-uri'
