@@ -1214,6 +1214,16 @@ class BaseManager(object):
             keyword arguments causes no filtering to happen. See the examples
             for usage details.
 
+            If the resource name is specified in the filter arguments, it
+            is matched with string comparison (i.e. not as a regular
+            expression).
+            The string comparison is case sensitive or case insensitive,
+            dependent on the resource type.
+
+            Any other filter arguments are ignored if the resource name is
+            specified, because the name is unique within the scope of this
+            resource manager.
+
         Returns:
 
           Resource object in scope of this manager object that matches the
@@ -1252,6 +1262,9 @@ class BaseManager(object):
               filter_args = {'object-id': '12345-abc...de-12345'}
               cpc = client.cpcs.find(**filter_args)
         """
+        if self._name_prop in filter_args:
+            return self.find_by_name(filter_args[self._name_prop])
+
         obj_list = self.findall(**filter_args)
         num_objs = len(obj_list)
         if num_objs == 0:
@@ -1360,9 +1373,10 @@ class BaseManager(object):
         Parameters:
 
           name (string):
-            Name of the resource (value of its 'name' resource property).
-            Regular expression matching is not supported for the name for this
-            optimized lookup.
+            Name of the resource. The name is matched with string comparison
+            (i.e. not as a regular expression). The string comparison is case
+            sensitive or case insensitive, dependent on the resource type.
+            Must not be `None`.
 
         Returns:
 
@@ -1410,7 +1424,10 @@ class BaseManager(object):
         Parameters:
 
           name (string):
-            Name of the resource. Must not be `None`.
+            Name of the resource. The name is matched with string comparison
+            (i.e. not as a regular expression). The string comparison is case
+            sensitive or case insensitive, dependent on the resource type.
+            Must not be `None`.
 
           uri (string):
             Object URI of the resource. Must not be `None`.

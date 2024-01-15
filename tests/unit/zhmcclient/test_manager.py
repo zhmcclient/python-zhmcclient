@@ -53,7 +53,7 @@ class MyManager(BaseManager):
 
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
-    def __init__(self, session):
+    def __init__(self, session, case_insensitive_names=False):
         super(MyManager, self).__init__(
             resource_class=MyResource,
             class_name='myresource',
@@ -63,7 +63,8 @@ class MyManager(BaseManager):
             oid_prop='fake_object_id',
             uri_prop='fake_uri_prop',
             name_prop='fake_name_prop',
-            query_props=[])
+            query_props=[],
+            case_insensitive_names=case_insensitive_names)
         self._list_resources = []  # resources to return in list()
         self._list_called = 0  # number of calls to list()
 
@@ -823,3 +824,196 @@ class TestNameUriCache(object):
         act_resource2_uri = self.cache.get(self.resource2_name)
         assert self.manager._list_called == 1
         assert act_resource2_uri == resource2_new_uri
+
+
+TESTCASES_FINDALL_NAME_PARMS = [
+    # Testcases for test_findall_name_parms().
+    # Each list item is a tuple defining a testcase in the following format:
+    # - res_names: List of names of existing resources
+    # - case_insensitive_names(bool): Whether the resource type has case
+    #   insensitive name matching.
+    # - name_filter: Filter value for matching the resource name
+    # - exp_names: Expected resource names in result
+    # - exp_exc: Expected exception, or None
+    (
+        ['name1', 'name2'],
+        False,
+        'name1',
+        ['name1'],
+        None
+    ),
+    (
+        ['name1', 'name2'],
+        False,
+        'name.*',
+        [],
+        None,
+    ),
+    (
+        ['name1', 'name2'],
+        False,
+        'ame',
+        [],
+        None,
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        False,
+        'name.1',
+        ['name.1'],
+        None
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        False,
+        r'name\.1',
+        [],
+        None,
+    ),
+    (
+        ['nAme1', 'name2'],
+        True,
+        'Name1',
+        ['Name1'],  # getting back original-cased name is not in 1.12
+        None
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "res_names, case_insensitive_names, name_filter, exp_names, exp_exc",
+    TESTCASES_FINDALL_NAME_PARMS)
+def test_findall_name_parms(
+        res_names, case_insensitive_names, name_filter, exp_names, exp_exc):
+    """
+    Test BaseManager.findall() with filter args for matching the resource name.
+    """
+    session = Session(host='fake-host', userid='fake-user', password='fake-pw')
+    manager = MyManager(session, case_insensitive_names=case_insensitive_names)
+    all_resources = []
+    for res_name in res_names:
+        uri = res_name + '-uri'
+        res = MyResource(
+            manager,
+            uri=uri,
+            properties={
+                manager._name_prop: res_name,
+                "other": "fake-other",
+                "same": "fake-same",
+                "int_other": 23,
+                "int_same": 42,
+            })
+        all_resources.append(res)
+    # pylint: disable=attribute-defined-outside-init
+    manager._list_resources = all_resources
+
+    filter_args = {manager._name_prop: name_filter}
+
+    if exp_exc:
+        with pytest.raises(exp_exc):
+
+            manager.findall(**filter_args)
+
+    else:
+
+        resources = manager.findall(**filter_args)
+
+        act_names = [_res.name for _res in resources]
+        assert act_names == exp_names
+
+
+TESTCASES_FIND_NAME_PARMS = [
+    # Testcases for test_find_name_parms().
+    # Each list item is a tuple defining a testcase in the following format:
+    # - res_names: List of names of existing resources
+    # - case_insensitive_names(bool): Whether the resource type has case
+    #   insensitive name matching.
+    # - name_filter: Filter value for matching the resource name
+    # - exp_name: Expected resource name in result
+    # - exp_exc: Expected exception, or None
+    (
+        ['name1', 'name2'],
+        False,
+        'name1',
+        'name1',
+        None
+    ),
+    (
+        ['name1', 'name2'],
+        False,
+        'name.*',
+        None,
+        NotFound
+    ),
+    (
+        ['name1', 'name2'],
+        False,
+        'ame',
+        None,
+        NotFound
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        False,
+        'name.1',
+        'name.1',
+        None
+    ),
+    (
+        ['name-1', 'name.1', 'name1'],
+        False,
+        r'name\.1',
+        None,
+        NotFound
+    ),
+    (
+        ['nAme1', 'name2'],
+        True,
+        'Name1',
+        'Name1',  # getting back original-cased name is not in 1.12
+        None
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "res_names, case_insensitive_names, name_filter, exp_name, exp_exc",
+    TESTCASES_FIND_NAME_PARMS)
+def test_find_name_parms(
+        res_names, case_insensitive_names, name_filter, exp_name, exp_exc):
+    """
+    Test BaseManager.find() with filter args for matching the resource name.
+    """
+
+    session = Session(host='fake-host', userid='fake-user', password='fake-pw')
+    manager = MyManager(session, case_insensitive_names=case_insensitive_names)
+    all_resources = []
+    for res_name in res_names:
+        uri = res_name + '-uri'
+        res = MyResource(
+            manager,
+            uri=uri,
+            properties={
+                manager._name_prop: res_name,
+                "other": "fake-other",
+                "same": "fake-same",
+                "int_other": 23,
+                "int_same": 42,
+            })
+        all_resources.append(res)
+    # pylint: disable=attribute-defined-outside-init
+    manager._list_resources = all_resources
+
+    filter_args = {manager._name_prop: name_filter}
+
+    if exp_exc:
+        with pytest.raises(exp_exc):
+
+            manager.find(**filter_args)
+
+    else:
+
+        resource = manager.find(**filter_args)
+
+        act_name = resource.name
+        assert act_name == exp_name

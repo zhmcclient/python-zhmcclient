@@ -473,12 +473,16 @@ def matches_filters(obj, filter_args):
     if filter_args is not None:
         for prop_name in filter_args:
             prop_match = filter_args[prop_name]
-            if not matches_prop(obj, prop_name, prop_match):
+            if prop_name == obj.manager.name_prop:
+                case_insensitive = obj.manager.case_insensitive_names
+            else:
+                case_insensitive = False
+            if not matches_prop(obj, prop_name, prop_match, case_insensitive):
                 return False
     return True
 
 
-def matches_prop(obj, prop_name, prop_match):
+def matches_prop(obj, prop_name, prop_match, case_insensitive):
     """
     Return a boolean indicating whether a resource object matches with
     a single property against a property match value.
@@ -507,6 +511,10 @@ def matches_prop(obj, prop_name, prop_match):
         - Else the property value is matched by exact value comparison
           with the match value.
 
+      case_insensitive (bool):
+        Controls whether the values of string typed properties are matched
+        case insensitively.
+
     Returns:
 
       bool: Boolean indicating whether the resource object matches w.r.t.
@@ -515,7 +523,7 @@ def matches_prop(obj, prop_name, prop_match):
     if isinstance(prop_match, (list, tuple)):
         # List items are logically ORed, so one matching item suffices.
         for pm in prop_match:
-            if matches_prop(obj, prop_name, pm):
+            if matches_prop(obj, prop_name, pm, case_insensitive):
                 return True
     else:
         # Some lists of resources do not have all properties, for example
@@ -540,7 +548,8 @@ def matches_prop(obj, prop_name, prop_match):
             # pattern, and begin matching is done by re.match()
             # automatically.
             re_match = prop_match + '$'
-            m = re.match(re_match, prop_value)
+            re_flags = re.IGNORECASE if case_insensitive else 0
+            m = re.match(re_match, prop_value, flags=re_flags)
             if m:
                 return True
         else:
