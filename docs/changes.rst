@@ -20,10 +20,10 @@ Change log
 ----------
 
 
-Version 1.13.1.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.13.1
+^^^^^^^^^^^^^^
 
-Released: not yet
+Released: 2014-01-15
 
 **Incompatible changes:**
 
@@ -34,8 +34,6 @@ Released: not yet
   'find()'. The 'findall()' method which was also changed in these releases
   keeps the regular expression matching for consistency with 'list()'.
   (issue #1395)
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -59,14 +57,6 @@ Released: not yet
 
 * Test: Added Python 3.8 with latest package levels to normal tests because
   that is now the minimum version to run Sphinx. (related to issue #1396)
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.13.0
