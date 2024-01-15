@@ -27,6 +27,14 @@ Released: not yet
 
 **Incompatible changes:**
 
+* The incompatibility caused by the recent change to support regular expression
+  matching for the resource name in the 'find()' method, which was released in
+  zhmcclient versions 1.12.3 and 1.13.0, turned out to be too heavy. The change
+  is now undone to go back to string comparison for the name matching in
+  'find()'. The 'findall()' method which was also changed in these releases
+  keeps the regular expression matching for consistency with 'list()'.
+  (issue #1395)
+
 **Deprecations:**
 
 **Bug fixes:**
@@ -36,6 +44,16 @@ Released: not yet
   incompatibility between sphinxcontrib-applehelp and Sphinx.
   Disabled Sphinx runs on Python <=3.7 in order to no longer having to deal
   with older Sphinx versions. (issue #1396)
+
+* Changed the recently released support for regular expression matching for the
+  resource name in 'find()' back to matching by string comparison. The
+  'findall()' method keeps the regular expression matching for consistency
+  with 'list()'. (issue #1395)
+
+* Fixed that the resource name in the filter arguments of 'findall()' and
+  'list()' was not matched case insensitvely with regular expressions for the
+  resource types that have case insensitive names (user, user pattern, password
+  rule, LDAP server definition). (related to issue #1395)
 
 **Enhancements:**
 
