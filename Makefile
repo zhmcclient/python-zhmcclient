@@ -346,7 +346,7 @@ $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done: Makefile
 develop: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt requirements.txt
+$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt requirements.txt minimum-constraints.txt
 	-$(call RM_FUNC,$@)
 	@echo 'Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
@@ -456,7 +456,7 @@ safety: $(done_dir)/safety_all_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/safety_
 install: $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt
+$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -e .
