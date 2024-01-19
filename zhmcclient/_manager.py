@@ -717,11 +717,6 @@ class BaseManager(object):
           inventory notifications from the HMC) and the provided filter
           arguments are applied.
 
-        * Otherwise, if the filter arguments specify the resource name as a
-          single filter argument with a straight match string (i.e. without
-          regular expressions), an optimized lookup is performed based on a
-          locally maintained name-URI cache.
-
         * Otherwise, the HMC List operation is performed with the subset of the
           provided filter arguments that can be handled on the HMC side and the
           remaining filter arguments are applied on the client side on the list
@@ -773,50 +768,42 @@ class BaseManager(object):
                 if matches_filters(resource_obj, filter_args):
                     resource_obj_list.append(resource_obj)
         else:
-            resource_obj = self._try_optimized_lookup(filter_args)
-            if resource_obj:
-                resource_obj_list.append(resource_obj)
-                # Depending on how the resource was found, it may or may not
-                # already have full properties.
-                if full_properties and not resource_obj.full_properties:
-                    resource_obj.pull_full_properties()
-            else:
-                query_parms, client_filters = divide_filter_args(
-                    self._query_props, filter_args)
-                if additional_properties:
-                    ap_parm = 'additional-properties={}'.format(
-                        ','.join(additional_properties))
-                    query_parms.append(ap_parm)
-                query_parms_str = make_query_str(query_parms)
-                uri = '{}{}'.format(list_uri, query_parms_str)
+            query_parms, client_filters = divide_filter_args(
+                self._query_props, filter_args)
+            if additional_properties:
+                ap_parm = 'additional-properties={}'.format(
+                    ','.join(additional_properties))
+                query_parms.append(ap_parm)
+            query_parms_str = make_query_str(query_parms)
+            uri = '{}{}'.format(list_uri, query_parms_str)
 
-                try:
-                    result = self.session.get(uri)
-                except HTTPError as exc:
-                    if self.class_name == RC_LOGICAL_PARTITION and \
-                            exc.http_status == 404 and exc.reason == 1:
-                        # Unlike other list operations, "List Logical Partitions
-                        # of CPC" fails with 404.1 "ERROR: found no Images" if
-                        # no LPAR matches the filters in the query parms.
-                        result = []
-                    else:
-                        raise
+            try:
+                result = self.session.get(uri)
+            except HTTPError as exc:
+                if self.class_name == RC_LOGICAL_PARTITION and \
+                        exc.http_status == 404 and exc.reason == 1:
+                    # Unlike other list operations, "List Logical Partitions
+                    # of CPC" fails with 404.1 "ERROR: found no Images" if
+                    # no LPAR matches the filters in the query parms.
+                    result = []
+                else:
+                    raise
 
-                if result:
-                    props_list = result[result_prop]
-                    if full_properties:
-                        resource_obj_list.extend(
-                            self._get_properties_bulk(
-                                props_list, client_filters))
-                    else:
-                        for props in props_list:
-                            resource_obj = self.resource_class(
-                                manager=self,
-                                uri=props[self._uri_prop],
-                                name=props.get(self._name_prop, None),
-                                properties=props)
-                            if matches_filters(resource_obj, client_filters):
-                                resource_obj_list.append(resource_obj)
+            if result:
+                props_list = result[result_prop]
+                if full_properties:
+                    resource_obj_list.extend(
+                        self._get_properties_bulk(
+                            props_list, client_filters))
+                else:
+                    for props in props_list:
+                        resource_obj = self.resource_class(
+                            manager=self,
+                            uri=props[self._uri_prop],
+                            name=props.get(self._name_prop, None),
+                            properties=props)
+                        if matches_filters(resource_obj, client_filters):
+                            resource_obj_list.append(resource_obj)
 
             self.add_resources_local(resource_obj_list)
 
@@ -925,11 +912,6 @@ class BaseManager(object):
           maintained resource list is used (which is automatically updated via
           inventory notifications from the HMC) and the provided filter
           arguments are applied.
-
-        * Otherwise, if the filter arguments specify the resource name as a
-          single filter argument with a straight match string (i.e. without
-          regular expressions), an optimized lookup is performed based on a
-          locally maintained name-URI cache.
 
         * Otherwise, the corresponding array property for this resource in the
           parent object is used to list the resources, and the provided filter
@@ -1312,11 +1294,6 @@ class BaseManager(object):
           maintained resource list is used (which is automatically updated via
           inventory notifications from the HMC) and the provided filter
           arguments are applied.
-
-        * Otherwise, if the filter arguments specify the resource name as a
-          single filter argument with a straight match string (i.e. without
-          regular expressions), an optimized lookup is performed based on a
-          locally maintained name-URI cache.
 
         * Otherwise, for resources that have a List operation, the List
           operation is performed with the subset of the provided filter
