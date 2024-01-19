@@ -895,7 +895,7 @@ class ConsoleListPermittedLparsHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', [])
+        add_props = query_parms.pop('additional-properties', '').split(',')
         filter_args = query_parms
 
         result_lpars = []
@@ -2501,7 +2501,7 @@ class AdaptersHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', [])
+        add_props = query_parms.pop('additional-properties', '').split(',')
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -2780,7 +2780,7 @@ class PartitionsHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', [])
+        add_props = query_parms.pop('additional-properties', '').split(',')
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -3792,7 +3792,7 @@ class VirtualSwitchesHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', [])
+        add_props = query_parms.pop('additional-properties', '').split(',')
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -5086,7 +5086,7 @@ class ImageActProfilesHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', [])
+        add_props = query_parms.pop('additional-properties', '').split(',')
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
