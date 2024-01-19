@@ -786,6 +786,10 @@ class Console(BaseResource):
         query_parms, client_filters = divide_filter_args(
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
+        if additional_properties:
+            ap_parm = 'additional-properties={}'.format(
+                ','.join(additional_properties))
+            query_parms.append(ap_parm)
         query_parms_str = make_query_str(query_parms)
 
         # Perform the operation with the HMC, including any server-side
