@@ -58,7 +58,8 @@ def assert_resources(resources, exp_resources, prop_names):
       exp_resources (list): List of BaseResource or FakedResource objects
         defining the expected number of objects and property values.
 
-      prop_names (list): List of property names to be checked.
+      prop_names (list): List of property names to be checked. If `None`, all
+        properties in the expected resource object are checked.
     """
 
     # Assert the resource URIs
@@ -69,7 +70,7 @@ def assert_resources(resources, exp_resources, prop_names):
 
     for res in resources:
 
-        # Search for the corresponding expected profile
+        # Search for the corresponding expected resource
         exp_res = None
         for _exp_res in exp_resources:
             if _exp_res.uri == res.uri:
@@ -77,21 +78,32 @@ def assert_resources(resources, exp_resources, prop_names):
                 break
         assert exp_res is not None
 
-        # Assert the specified property names
+        # Assert the property names to be checked
         if prop_names is None:
             _prop_names = exp_res.properties.keys()
         else:
             _prop_names = prop_names
         for prop_name in _prop_names:
-            if prop_name in res.properties:
-                # Not all resources in a list have all properties
-                # (e.g. Crypto adapter does not have 'port-count')
+
+            # Not all resources in a list result have all properties
+            # (e.g. Crypto adapter does not have 'port-count'), so we check
+            # the property on the actual resource only when the expected
+            # resource has the property.
+            if prop_name in exp_res.properties:
+
+                assert prop_name in res.properties, (
+                    "Expected property {pn!r} missing in resource {rn!r}: "
+                    "Resource: {ro!r}".
+                    format(pn=prop_name, rn=res.name, ro=res)
+                )
+
                 prop_value = res.properties[prop_name]
                 exp_prop_value = exp_res.properties[prop_name]
                 assert prop_value == exp_prop_value, (
-                    "Unexpected value for property {n!r}: got: {av!r}, "
-                    "expected: {ev!r}".
-                    format(n=prop_name, av=prop_value, ev=exp_prop_value)
+                    "Unexpected value for property {pn!r} in resource {rn!r}: "
+                    "got: {av!r}, expected: {ev!r}, resource: {ro!r}".
+                    format(pn=prop_name, rn=res.name, av=prop_value,
+                           ev=exp_prop_value, ro=res)
                 )
 
 
