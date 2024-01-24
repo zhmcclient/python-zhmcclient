@@ -75,6 +75,8 @@ Released: not yet
   'Cpc.adapters.list()', 'Cpc.partitions.list()', 'Cpc.virtual_switches.list()',
   'Cpc.image_activation_profiles.list()'. (related to issue #1410)
 
+* Development: Fixed dependency issue with safety 3.0.0 by pinning it.
+
 **Enhancements:**
 
 * Test: Added Python 3.8 with latest package levels to normal tests because
