@@ -20,26 +20,32 @@ Change log
 ----------
 
 
-Version 1.13.2.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.13.2
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2024-01-24
 
 **Bug fixes:**
 
-**Enhancements:**
+* Development: Fixed dependency issue with safety 3.0.0 by pinning it.
 
-**Cleanup:**
+* In the zhmcclient mock support, fixed the processing of the
+  'additional-properties' query parameters for the mock support of the following
+  zhmcclient list methods: 'Console.list_permitted_lpars()',
+  'Cpc.adapters.list()', 'Cpc.partitions.list()', 'Cpc.virtual_switches.list()',
+  'Cpc.image_activation_profiles.list()'. (related to issue #1410)
 
-**Known issues:**
+* Fixed that 'Console.list_permitted_lpars()' ignored the
+  'additional_properties' parameter. (issue #1410)
 
-* See `list of open issues`_.
+* Test: Fixed that unit tests did not properly check missing properties in
+  the returned resources. (related to issue #1410)
 
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
+* Fixed that 'list()' methods returned only a minimal set of properties
+  for each resource when the resource was found in the name-to-URI cache,
+  and in that case missed some properties that are documented for the
+  corresponding HMC list operation. This was fixed by removing the optimization
+  of using the name-to-URI cache in 'list()' methods. (related to issue #1410)
 
 
 Version 1.13.1
@@ -74,24 +80,6 @@ Released: 2014-01-15
   'list()' was not matched case insensitvely with regular expressions for the
   resource types that have case insensitive names (user, user pattern, password
   rule, LDAP server definition). (related to issue #1395)
-
-* Fixed that 'Console.list_permitted_lpars()' ignored the
-  'additional_properties' parameter. (issue #1410)
-
-* Test: Fixed that unit tests did not properly check missing properties in
-  the returned resources. (related to issue #1410)
-
-* Fixed that 'list()' methods returned only a minimal set of properties
-  for each resource when the resource was found in the name-to-URI cache,
-  and in that case missed some properties that are documented for the
-  corresponding HMC list operation. This was fixed by removing the optimization
-  of using the name-to-URI cache in 'list()' methods. (related to issue #1410)
-
-* In the zhmcclient mock support, fixed the processing of the
-  'additional-properties' query parameters for the mock support of the following
-  zhmcclient list methods: 'Console.list_permitted_lpars()',
-  'Cpc.adapters.list()', 'Cpc.partitions.list()', 'Cpc.virtual_switches.list()',
-  'Cpc.image_activation_profiles.list()'. (related to issue #1410)
 
 **Enhancements:**
 
