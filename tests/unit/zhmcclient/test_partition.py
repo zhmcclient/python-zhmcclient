@@ -36,6 +36,14 @@ PART3_NAME = 'part 3'
 
 CPC_NAME = 'fake-cpc1-name'
 
+# Properties returned by default from list_permitted_partitions()
+LIST_PERMITTED_PARTITIONS_PROPS = [
+    'name', 'object-uri', 'type', 'status', 'has-unacceptable-status',
+    'cpc-name', 'cpc-object-uri',
+    # The zhmcclient_mock support always returns 'se-version'
+    'se-version'
+]
+
 
 class TestPartition(object):
     """All tests for the Partition and PartitionManager classes."""
@@ -984,6 +992,13 @@ class TestPartition(object):
         if exp_names:
             names = [p.properties['name'] for p in partitions]
             assert set(names) == set(exp_names)
+
+        for partition in partitions:
+            partition_props = dict(partition.properties)
+            for pname in LIST_PERMITTED_PARTITIONS_PROPS:
+                assert pname in partition_props, (
+                    "Property {!r} missing from returned partition properties, "
+                    "got: {!r}".format(pname, partition_props))
 
     # TODO: Test for Partition.send_os_command()
 

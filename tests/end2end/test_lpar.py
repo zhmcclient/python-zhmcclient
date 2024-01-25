@@ -51,6 +51,14 @@ LPAR_MINIMAL_PROPS = ['object-uri', 'name']
 # Properties in Lpar objects returned by list() without full props
 LPAR_LIST_PROPS = ['object-uri', 'name', 'status']
 
+# Properties returned by default from list_permitted_lpars()
+LPAR_LIST_PERMITTED_PROPS = [
+    'name', 'object-uri', 'activation-mode', 'status',
+    'has-unacceptable-status', 'cpc-name', 'cpc-object-uri',
+    # HMCs return 'se-version' on HMC API version 4.10 or higher
+]
+
+
 # Properties whose values can change between retrievals of Lpar objects
 LPAR_VOLATILE_PROPS = []
 
@@ -114,6 +122,109 @@ def test_lpar_property(classic_mode_cpcs):  # noqa: F811
             non_list_prop = 'description'
 
             runtest_get_properties(client, lpar.manager, non_list_prop, (2, 14))
+
+
+TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
+    # Testcases for test_console_list_permitted_lpars()
+
+    # Each testcase is a tuple of:
+    # * desc: description
+    # * input_kwargs: Keyword arguments to the test function
+    # * exp_prop_names: List of expected property names
+    (
+        "Default arguments",
+        {},
+        LPAR_LIST_PERMITTED_PROPS,
+    ),
+    (
+        "Explicit defaults for arguments",
+        {
+            'full_properties': False,
+            'filter_args': None,
+            'additional_properties': None
+        },
+        LPAR_LIST_PERMITTED_PROPS,
+    ),
+    (
+        "One server-side filter",
+        {
+            'filter_args': {'status': 'not-operating'},
+        },
+        LPAR_LIST_PERMITTED_PROPS,
+    ),
+    (
+        "One client-side filter that is not in result",
+        {
+            'filter_args': {'has-operating-system-messages': False},
+        },
+        LPAR_LIST_PERMITTED_PROPS,
+    ),
+    (
+        "Empty additional properties",
+        {
+            'additional_properties': [],
+        },
+        LPAR_LIST_PERMITTED_PROPS,
+    ),
+    (
+        "One additional property",
+        {
+            'additional_properties': ['description'],
+        },
+        LPAR_LIST_PERMITTED_PROPS + ['description'],
+    ),
+    (
+        "Full properties",
+        {
+            'full_properties': True,
+        },
+        LPAR_LIST_PERMITTED_PROPS + ['has-operating-system-messages'],
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, input_kwargs, exp_prop_names",
+    TESTCASES_CONSOLE_LIST_PERMITTED_LPARS)
+def test_console_list_permitted_lpars(
+        classic_mode_cpcs, desc, input_kwargs, exp_prop_names):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test Console.list_permitted_lpars() method
+    """
+    if not classic_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in classic mode")
+
+    logger = setup_logging(LOGGING, 'test_console_list_permitted_lpars',
+                           LOG_FILE)
+    logger.debug("Entered test function with: "
+                 "desc=%r, input_kwargs=%r, exp_prop_names=%r",
+                 desc, input_kwargs, exp_prop_names)
+
+    for cpc in classic_mode_cpcs:
+        assert not cpc.dpm_enabled
+
+        logger.debug("Testing with CPC %s", cpc.name)
+
+        client = cpc.manager.client
+        console = client.consoles.console
+
+        logger.debug("Calling list_permitted_lpars() with kwargs: %r",
+                     input_kwargs)
+
+        # Execute the code to be tested
+        lpars = console.list_permitted_lpars(**input_kwargs)
+
+        logger.debug("list_permitted_lpars() returned %d LPARs", len(lpars))
+
+        for lpar in lpars:
+            lpar_props = dict(lpar.properties)
+            for pname in exp_prop_names:
+                assert pname in lpar_props, (
+                    "Property {!r} missing from returned LPAR properties, "
+                    "got: {!r}".format(pname, lpar_props))
+
+    logger.debug("Leaving test function")
 
 
 def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
