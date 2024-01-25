@@ -101,6 +101,20 @@ Released: not yet
   the description of how to release a version in the development
   documentation. (issue #1393)
 
+* In Console.list_permitted_lpars/partitions(), added CPC-related properties
+  to the returned resource objects, that are returned by the HMC: 'cpc-name',
+  'cpc-object-uri', 'se-version'. (issue #1421)
+
+* In Console.list_permitted_lpars(), the additional_properties parameter
+  is now supported also for HMC versions older than 2.16 GA 1.5. In that
+  case, the zhmcclient handles adding the properties. (related to issue #1421)
+
+* The pull_full_properties() and pull_properties() methods of zhmcclient
+  resource objects no longer replace existing properties but now update them,
+  so that additionally present properties (e.g. the CPC-related properties
+  returned from Console.list_permitted_lpars/partitions()) are preserved.
+  (related to issue #1421)
+
 **Cleanup:**
 
 * Increased versions of GitHub Actions plugins to increase node.js runtime
