@@ -50,6 +50,14 @@ IMAGEPROFILE2_NAME = 'imageprofile 2'
 
 CPC_NAME = 'fake-cpc1-name'
 
+# Properties returned by default from list_permitted_lpars()
+LIST_PERMITTED_LPARS_PROPS = [
+    'name', 'object-uri', 'activation-mode', 'status',
+    'has-unacceptable-status', 'cpc-name', 'cpc-object-uri',
+    # The zhmcclient_mock support always returns 'se-version'
+    'se-version'
+]
+
 
 class TestLpar(object):
     """All tests for Lpar and LparManager classes."""
@@ -1465,21 +1473,25 @@ class TestLpar(object):
             names = [p.properties['name'] for p in lpars]
             assert set(names) == set(exp_names)
 
+        for lpar in lpars:
+            lpar_props = dict(lpar.properties)
+            for pname in LIST_PERMITTED_LPARS_PROPS:
+                assert pname in lpar_props, (
+                    "Property {!r} missing from returned LPAR properties, "
+                    "got: {!r}".format(pname, lpar_props))
+
     @pytest.mark.parametrize(
         "list_kwargs, prop_names", [
             ({},
-             ['object-uri', 'name', 'status']),
+             LIST_PERMITTED_LPARS_PROPS),
             (dict(additional_properties=[]),
-             ['object-uri', 'name', 'status']),
+             LIST_PERMITTED_LPARS_PROPS),
             (dict(additional_properties=['description']),
-             ['object-uri', 'name', 'status', 'description']),
+             LIST_PERMITTED_LPARS_PROPS + ['description']),
             (dict(additional_properties=['description', 'activation-mode']),
-             ['object-uri', 'name', 'status', 'description',
-              'activation-mode']),
+             LIST_PERMITTED_LPARS_PROPS + ['description', 'activation-mode']),
             (dict(additional_properties=['ssc-host-name']),
-             ['object-uri', 'name', 'status', 'ssc-host-name']
-             # ssc-host-name is not on every lpar
-             ),
+             LIST_PERMITTED_LPARS_PROPS + ['ssc-host-name']),
         ]
     )
     def test_console_list_permlpars_add_props(

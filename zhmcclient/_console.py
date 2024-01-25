@@ -609,6 +609,32 @@ class Console(BaseResource):
         The partitions in the result can be additionally limited by specifying
         filter arguments.
 
+        The partitions in the result will have the following partition
+        properties:
+
+        * name (string): Name of the partition.
+
+        * object-uri (string): Object URI of the partition.
+
+        * type (string): Type of the partition (i.e. "linux", "ssc", "zvm").
+
+        * status (string): Status of the partition. See the data model of
+          the Partition object in the :term:`HMC API` book for values.
+
+        * has-unacceptable-status (bool): Whether the status is unacceptable,
+          according to the values in the 'acceptable-status' property.
+
+        and the following properties from their parent CPC:
+
+        * cpc-name (string): Name of the parent CPC of the partition.
+
+        * cpc-object-uri (string): Object URI of the parent CPC of the
+          partition.
+
+        * se-version (string): SE version of the parent CPC of the partition,
+          as M.N.U string. Note that this property is returned only on newer
+          HMC 2.16 versions (HMC API version 4.10 or higher).
+
         Authorization requirements:
 
         * Object permission to the partition objects included in the result.
@@ -677,12 +703,10 @@ class Console(BaseResource):
             partition_items = result['partitions']
             for partition_item in partition_items:
 
-                # The partition items have the following partition properties:
-                # * name, object-uri, type, status, has-unacceptable-status
-                # And the following properties for their parent CPC:
-                # * cpc-name (CPC property 'name')
-                # * cpc-object-uri (CPC property 'object-uri')
-                # * se-version (CPC property 'se-version') (if >=2.14.1)
+                # The partition_item dicts have the following properties:
+                # * name, object-uri, type, status, has-unacceptable-status,
+                #   cpc-name, cpc-object-uri
+                # * se-version (if HMC>=2.14.1)
 
                 cpc_uri = partition_item['cpc-object-uri']
                 try:
@@ -700,16 +724,9 @@ class Console(BaseResource):
 
                     cpcs_by_uri[cpc_uri] = cpc
 
+                partition_props = dict(partition_item)
                 partition_obj = cpc.partitions.resource_object(
-                    partition_item['object-uri'],
-                    {
-                        'name': partition_item['name'],
-                        'type': partition_item['type'],
-                        'status': partition_item['status'],
-                        'has-unacceptable-status':
-                            partition_item['has-unacceptable-status'],
-                    },
-                )
+                    partition_item['object-uri'], partition_props)
 
                 # Apply client-side filtering
                 if matches_filters(partition_obj, client_filters):
@@ -733,6 +750,32 @@ class Console(BaseResource):
 
         The LPARs in the result can be additionally limited by specifying
         filter arguments.
+
+        The LPARs in the result will have the following LPAR properties:
+
+        * name (string): Name of the LPAR.
+
+        * object-uri (string): Object URI of the LPAR.
+
+        * activation-mode (string): Activation mode of the LPAR. See the data
+          model of the Logical Partition object in the :term:`HMC API` book for
+          values.
+
+        * status (string): Status of the LPAR. See the data model of
+          the Logical Partition object in the :term:`HMC API` book for values.
+
+        * has-unacceptable-status (bool): Whether the status is unacceptable,
+          according to the values in the 'acceptable-status' property.
+
+        and the following properties from their parent CPC:
+
+        * cpc-name (string): Name of the parent CPC of the LPAR.
+
+        * cpc-object-uri (string): Object URI of the parent CPC of the LPAR.
+
+        * se-version (string): SE version of the parent CPC of the LPAR, as
+          M.N.U string. Note that this property is returned only on newer HMC
+          2.16 versions (HMC API version 4.10 or higher).
 
         Authorization requirements:
 
@@ -775,7 +818,9 @@ class Console(BaseResource):
             List of property names that are to be returned in addition to the
             default properties.
 
-            This parameter requires HMC 2.16.0 or higher.
+            Note: This parameter is handled by the HMC starting with HMC API
+            version 4.10 (HMC 2.16 GA 1.5); with older HMC API versions it is
+            handled by zhmcclient.
 
         Returns:
 
@@ -791,7 +836,11 @@ class Console(BaseResource):
         query_parms, client_filters = divide_filter_args(
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
-        if additional_properties:
+
+        api_version_info = self.manager.client.version_info()
+        hmc_supports_additional_properties = api_version_info >= (4, 10)
+
+        if additional_properties and hmc_supports_additional_properties:
             ap_parm = 'additional-properties={}'.format(
                 ','.join(additional_properties))
             query_parms.append(ap_parm)
@@ -834,23 +883,20 @@ class Console(BaseResource):
 
                     cpcs_by_uri[cpc_uri] = cpc
 
-                lpar_props = {
-                    'name': lpar_item['name'],
-                    'activation-mode': lpar_item['activation-mode'],
-                    'status': lpar_item['status'],
-                    'has-unacceptable-status':
-                        lpar_item['has-unacceptable-status'],
-                }
+                lpar_props = dict(lpar_item)
+                pull_props = []
                 if additional_properties:
                     for prop in additional_properties:
                         try:
                             lpar_props[prop] = lpar_item[prop]
                         except KeyError:
-                            pass
+                            pull_props.append(prop)
                 lpar_obj = cpc.lpars.resource_object(
                     lpar_item['object-uri'],
                     lpar_props,
                 )
+                if pull_props:
+                    lpar_obj.pull_properties(pull_props)
 
                 # Apply client-side filtering
                 if matches_filters(lpar_obj, client_filters):
