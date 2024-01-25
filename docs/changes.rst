@@ -77,6 +77,17 @@ Released: not yet
 
 * Development: Fixed dependency issue with safety 3.0.0 by pinning it.
 
+* Performance: In zhmcclient version 1.13.0, an optimization was added where
+  list() and find_local() were now utilizing the name-to-URI cache when only the
+  resource name was specified as a filter argument. This caused the 'se-version'
+  property to no longer be in the local zhmcclient.Cpc objects that were used
+  as the parent objects of the Lpar/Partition objects returned by
+  Console.list_permitted_lpars/partitions() and caused a performance
+  degradation in the zhmc_lpar_list and zhmc_partition_list Ansible modules due
+  to repeated "Get CPC Properties" operations for retrieving the 'se-version'
+  property. This was fixed in the Console.list_permitted_lpars/partitions()
+  methods.
+
 **Enhancements:**
 
 * Test: Added Python 3.8 with latest package levels to normal tests because

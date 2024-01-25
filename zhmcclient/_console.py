@@ -670,8 +670,10 @@ class Console(BaseResource):
             self.uri, query_parms_str)
         result = self.manager.session.get(uri, resource=self)
 
+        cpcs_by_uri = {}  # caches local Cpc objects for CPCs already seen
         partition_objs = []
         if result:
+            cpc_manager = self.manager.client.cpcs
             partition_items = result['partitions']
             for partition_item in partition_items:
 
@@ -682,18 +684,21 @@ class Console(BaseResource):
                 # * cpc-object-uri (CPC property 'object-uri')
                 # * se-version (CPC property 'se-version') (if >=2.14.1)
 
-                # Create a 'skeleton' local Cpc object we can hang the
-                # Partition objects off of, even if the user does not have
-                # access permissions to these CPCs. Note that different
-                # partitions can have different parent CPCs.
-                cpc_props = {}
-                if 'se-version' in partition_item:
-                    cpc_props['se-version'] = partition_item['se-version']
-                cpc = self.manager.client.cpcs.find_local(
-                    partition_item['cpc-name'],
-                    partition_item['cpc-object-uri'],
-                    cpc_props,
-                )
+                cpc_uri = partition_item['cpc-object-uri']
+                try:
+                    cpc = cpcs_by_uri[cpc_uri]
+                except KeyError:
+                    # Create a 'skeleton' local Cpc object we can hang the
+                    # Partition objects off of, even if the user does not have
+                    # access permissions to these CPCs. Note that different
+                    # partitions can have different parent CPCs.
+                    cpc_props = {}
+                    cpc_props['name'] = partition_item['cpc-name']
+                    if 'se-version' in partition_item:
+                        cpc_props['se-version'] = partition_item['se-version']
+                    cpc = cpc_manager.resource_object(cpc_uri, cpc_props)
+
+                    cpcs_by_uri[cpc_uri] = cpc
 
                 partition_obj = cpc.partitions.resource_object(
                     partition_item['object-uri'],
@@ -798,8 +803,10 @@ class Console(BaseResource):
             self.uri, query_parms_str)
         result = self.manager.session.get(uri, resource=self)
 
+        cpcs_by_uri = {}  # caches local Cpc objects for CPCs already seen
         lpar_objs = []
         if result:
+            cpc_manager = self.manager.client.cpcs
             lpar_items = result['logical-partitions']
             for lpar_item in lpar_items:
 
@@ -811,18 +818,21 @@ class Console(BaseResource):
                 # * cpc-object-uri (CPC property 'object-uri')
                 # * se-version (CPC property 'se-version') (if >=2.14.1)
 
-                # Create a 'skeleton' local Cpc object we can hang the
-                # Partition objects off of, even if the user does not have
-                # access permissions to these CPCs. Note that different
-                # partitions can have different parent CPCs.
-                cpc_props = {}
-                if 'se-version' in lpar_item:
-                    cpc_props['se-version'] = lpar_item['se-version']
-                cpc = self.manager.client.cpcs.find_local(
-                    lpar_item['cpc-name'],
-                    lpar_item['cpc-object-uri'],
-                    cpc_props,
-                )
+                cpc_uri = lpar_item['cpc-object-uri']
+                try:
+                    cpc = cpcs_by_uri[cpc_uri]
+                except KeyError:
+                    # Create a 'skeleton' local Cpc object we can hang the
+                    # Partition objects off of, even if the user does not have
+                    # access permissions to these CPCs. Note that different
+                    # partitions can have different parent CPCs.
+                    cpc_props = {}
+                    cpc_props['name'] = lpar_item['cpc-name']
+                    if 'se-version' in lpar_item:
+                        cpc_props['se-version'] = lpar_item['se-version']
+                    cpc = cpc_manager.resource_object(cpc_uri, cpc_props)
+
+                    cpcs_by_uri[cpc_uri] = cpc
 
                 lpar_props = {
                     'name': lpar_item['name'],
@@ -970,13 +980,13 @@ class Console(BaseResource):
 
             # Group the returned adapters by CPC
             adapter_items_by_cpc = {}
-            cpcs_by_cpc = {}
+            cpcs_by_name = {}
             for adapter_item in result['adapters']:
                 cpc_name = adapter_item['cpc-name']
                 if cpc_name not in adapter_items_by_cpc:
                     adapter_items_by_cpc[cpc_name] = []
                 adapter_items_by_cpc[cpc_name].append(adapter_item)
-                if cpc_name not in cpcs_by_cpc:
+                if cpc_name not in cpcs_by_name:
                     # Create a 'skeleton' local Cpc object we can hang the
                     # Adapter objects off of, even if the user does not have
                     # access permissions to these CPCs. Note that different
@@ -991,10 +1001,10 @@ class Console(BaseResource):
                         uri=adapter_item['cpc-object-uri'],
                         properties=cpc_props,
                     )
-                    cpcs_by_cpc[cpc_name] = cpc
+                    cpcs_by_name[cpc_name] = cpc
 
             # Process the returned adapters
-            for cpc_name, cpc in cpcs_by_cpc.items():
+            for cpc_name, cpc in cpcs_by_name.items():
                 adapter_items = adapter_items_by_cpc[cpc_name]
                 adapter_manager = cpc.adapters
                 if full_properties:
