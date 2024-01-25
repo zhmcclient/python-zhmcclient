@@ -271,7 +271,7 @@ class BaseResource(object):
             raise
 
         with self._property_lock:
-            self._properties = dict(full_properties)
+            self._properties.update(full_properties)
             self._properties_timestamp = int(time.time())
             self._full_properties = True
 
@@ -374,7 +374,7 @@ class BaseResource(object):
 
         with self._property_lock:
             if is_full:
-                self._properties = dict(subset_properties)
+                self._properties.update(subset_properties)
                 self._properties_timestamp = int(time.time())
                 self._full_properties = True
             else:
