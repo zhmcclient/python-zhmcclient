@@ -82,6 +82,11 @@ Released: not yet
 * Test: Added Python 3.8 with latest package levels to normal tests because
   that is now the minimum version to run Sphinx. (related to issue #1396)
 
+* Added support for a new make target 'authors' that generates an AUTHORS.md
+  file from the git commit history. Added the invocation of 'make authors' to
+  the description of how to release a version in the development
+  documentation. (issue #1393)
+
 **Cleanup:**
 
 **Known issues:**
