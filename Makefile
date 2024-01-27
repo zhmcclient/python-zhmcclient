@@ -273,6 +273,7 @@ help:
 	@echo "  all        - Do all of the above"
 	@echo "  end2end    - Run end2end tests (adds to coverage results)"
 	@echo "  end2end_show - Show HMCs defined for end2end tests"
+	@echo "  authors - Generate AUTHORS.md file from git log"
 	@echo "  uninstall  - Uninstall package from active Python environment"
 	@echo "  upload     - Upload the distribution files to PyPI"
 	@echo "  clean      - Remove any temporary files"
@@ -627,6 +628,16 @@ end2end_mocked: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(pac
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
 	-bash -c "TESTEND2END_LOAD=true TESTINVENTORY=examples/example_hmc_inventory.yaml TESTVAULT=examples/example_hmc_vault.yaml py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
+
+.PHONY: authors
+authors: _check_version
+	echo "# Authors of this project" >AUTHORS.md
+	echo "" >>AUTHORS.md
+	echo "Sorted list of authors derived from git commit history:" >>AUTHORS.md
+	echo '```' >>AUTHORS.md
+	git shortlog --summary --email | cut -f 2 | sort >>AUTHORS.md
+	echo '```' >>AUTHORS.md
+	@echo '$@ done.'
 
 .PHONY:	end2end_show
 end2end_show:

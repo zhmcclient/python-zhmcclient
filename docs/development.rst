@@ -788,14 +788,20 @@ local clone of the python-zhmcclient Git repo.
       add text for any known issues you want users to know about.
     * Remove all empty list items.
 
-6.  Commit your changes and push the topic branch to the remote repo:
+6. Update the authors:
+
+    .. code-block:: sh
+
+        make authors
+
+7.  Commit your changes and push the topic branch to the remote repo:
 
     .. code-block:: sh
 
         git commit -asm "Release ${MNU}"
         git push --set-upstream origin release_${MNU}
 
-7.  On GitHub, create a Pull Request for branch ``release_M.N.U``.
+8.  On GitHub, create a Pull Request for branch ``release_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
@@ -810,19 +816,19 @@ local clone of the python-zhmcclient Git repo.
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-8.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+9.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-9.  On GitHub, close milestone ``M.N.U``.
+10.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix. If the milestone does not have open items
     anymore, close the milestone.
 
-10. Publish the package
+11. Publish the package
 
     .. code-block:: sh
 
@@ -838,7 +844,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-11. Verify the publishing
+12. Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
