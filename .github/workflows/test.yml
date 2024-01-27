@@ -230,7 +230,7 @@ jobs:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
       run: |
         echo "Package dependency tree of installed Python packages:"
-        pipdeptree --all
+        python -m pipdeptree --all
     - name: Run build
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}

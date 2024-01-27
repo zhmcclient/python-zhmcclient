@@ -42,6 +42,9 @@ Released: not yet
   property. This was fixed in the Console.list_permitted_lpars/partitions()
   methods.
 
+* Fixed the call to pipdeptree in the test workflow to use 'python -m'
+  because otherwise it does not show the correct packages of the virtual env.
+
 **Enhancements:**
 
 **Cleanup:**
