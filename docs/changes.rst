@@ -20,14 +20,10 @@ Change log
 ----------
 
 
-Version 1.13.3.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.13.3
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2024-01-28
 
 **Bug fixes:**
 
@@ -60,14 +56,6 @@ Released: not yet
   so that additionally present properties (e.g. the CPC-related properties
   returned from Console.list_permitted_lpars/partitions()) are preserved.
   (related to issue #1421)
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.13.2
