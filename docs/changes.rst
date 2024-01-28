@@ -103,6 +103,9 @@ Released: not yet
 
 **Cleanup:**
 
+* Increased versions of GitHub Actions plugins to increase node.js runtime
+  to version 20.
+
 **Known issues:**
 
 * See `list of open issues`_.
