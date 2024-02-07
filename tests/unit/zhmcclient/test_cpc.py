@@ -23,7 +23,7 @@ import copy
 import pytest
 import requests_mock
 
-from zhmcclient import Client, Cpc, HTTPError, STPNode
+from zhmcclient import Client, Cpc, HTTPError, STPNode, Job
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -1902,3 +1902,265 @@ def test_cpc_leave_ctn(http_mocked_cpc_dpm):  # noqa: F811
         assert rm_adapter.called
         assert rm_adapter.last_request.text is None
         assert result is None
+
+
+TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
+    # Testcases for test_cpc_install_and_activate()
+
+    # Each list item is a tuple defining a testcase in the following format:
+    # - desc (str): Testcase description
+    # - input_kwargs (dict): Input kwargs for method to be tested
+    # - exp_request_body (dict): Expected request body for HMC operation
+    # - response_status (int): HTTP status code to be returned from HMC op.
+    # - response_body (dict): Response body to be returned from HMC operation
+    # - exp_exc_type: Expected exception type raised from method to be tested,
+    #   or None for success.
+
+    (
+        "Install all locally available updates - fail on disruptive",
+        dict(
+            wait_for_completion=False,
+        ),
+        {},
+        202,
+        {
+            'job-uri': '/api/jobs/1',
+        },
+        None,
+    ),
+    (
+        "Install all locally available updates - including disruptive",
+        dict(
+            install_disruptive=True,
+            wait_for_completion=False,
+        ),
+        {
+            'install-disruptive': True,
+        },
+        202,
+        {
+            'job-uri': '/api/jobs/1',
+        },
+        None,
+    ),
+    (
+        "Install a bundle level - fail on disruptive",
+        dict(
+            bundle_level='S78',
+            wait_for_completion=False,
+        ),
+        {
+            'bundle-level': 'S78',
+        },
+        202,
+        {
+            'job-uri': '/api/jobs/1',
+        },
+        None,
+    ),
+    (
+        "Install EC levels - fail on disruptive",
+        dict(
+            ec_levels=[('P12345', '001')],
+            wait_for_completion=False,
+        ),
+        {
+            'ec-levels': [{'number': 'P12345', 'mcl': '001'}],
+        },
+        202,
+        {
+            'job-uri': '/api/jobs/1',
+        },
+        None,
+    ),
+    (
+        "Install EC levels - including disruptive",
+        dict(
+            ec_levels=[('P12345', '001')],
+            install_disruptive=True,
+            wait_for_completion=False,
+        ),
+        {
+            'ec-levels': [{'number': 'P12345', 'mcl': '001'}],
+            'install-disruptive': True,
+        },
+        202,
+        {
+            'job-uri': '/api/jobs/1',
+        },
+        None,
+    ),
+    (
+        "Error: bundle-level and ec-levels specified",
+        dict(
+            bundle_level='S78',
+            ec_levels=[('P12345', '001')],
+            wait_for_completion=False,
+        ),
+        {},
+        400,
+        {   # partial error response body
+            'http-status': 400,
+            'reason': 1,
+            'message': "bundle-level and ec-levels are both specified",
+        },
+        HTTPError,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, input_kwargs, exp_request_body, response_status, response_body, "
+    "exp_exc_type",
+    TESTCASES_CPC_INSTALL_AND_ACTIVATE)
+def test_cpc_install_and_activate(
+        http_mocked_cpc_dpm,  # noqa: F811
+        desc, input_kwargs, exp_request_body, response_status, response_body,
+        exp_exc_type):
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Cpc.install_and_activate()
+    """
+    op_uri = http_mocked_cpc_dpm.uri + '/operations/install-and-activate'
+    op_method = 'POST'
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(op_uri, status_code=response_status, json=response_body)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # The code to be tested
+                http_mocked_cpc_dpm.install_and_activate(**input_kwargs)
+
+            exc = exc_info.value
+            if isinstance(exc, HTTPError):
+                assert exc.http_status == response_body['http-status']
+                assert exc.reason == response_body['reason']
+                assert exc.message == response_body['message']
+            else:
+                raise AssertionError(
+                    "Unexpected exception: {}: {}".
+                    format(exc.__class__.__name__, exc))
+
+        else:
+
+            # The code to be tested
+            result = http_mocked_cpc_dpm.install_and_activate(**input_kwargs)
+
+            assert rm_adapter.called
+            request_body = rm_adapter.last_request.json()
+            assert request_body == exp_request_body
+            if response_status == 202:
+                # Async job started
+                job_uri = response_body['job-uri']
+                assert isinstance(result, Job)
+                assert result.uri == job_uri
+                assert result.op_method == op_method
+                assert result.op_uri == op_uri
+            else:
+                raise AssertionError(
+                    "Unexpected HTTP status: {}".format(response_status))
+
+
+TESTCASES_CPC_DELETE_RETRIEVED_INTERNAL_CODE = [
+    # Testcases for test_delete_retrieved_internal_code()
+
+    # Each list item is a tuple defining a testcase in the following format:
+    # - desc (str): Testcase description
+    # - input_kwargs (dict): Input kwargs for method to be tested
+    # - exp_request_body (dict): Expected request body for HMC operation
+    # - response_status (int): HTTP status code to be returned from HMC op.
+    # - response_body (dict): Response body to be returned from HMC operation
+    # - exp_exc_type: Expected exception type raised from method to be tested,
+    #   or None for success.
+
+    (
+        "Delete all retrieved but uninstalled updates",
+        dict(
+            wait_for_completion=False,
+        ),
+        {},
+        202,
+        {
+            'job-uri': '/api/jobs/1',
+        },
+        None,
+    ),
+    (
+        "Delete specific EC levels",
+        dict(
+            ec_levels=[('P12345', '001')],
+            wait_for_completion=False,
+        ),
+        {
+            'ec-levels': [{'number': 'P12345', 'mcl': '001'}],
+        },
+        202,
+        {
+            'job-uri': '/api/jobs/1',
+        },
+        None,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, input_kwargs, exp_request_body, response_status, response_body, "
+    "exp_exc_type",
+    TESTCASES_CPC_DELETE_RETRIEVED_INTERNAL_CODE)
+def test_delete_retrieved_internal_code(
+        http_mocked_cpc_dpm,  # noqa: F811
+        desc, input_kwargs, exp_request_body, response_status, response_body,
+        exp_exc_type):
+    # pylint: disable=redefined-outer-name,unused-argument
+    """
+    Test function for Cpc.delete_retrieved_internal_code()
+    """
+    op_uri = http_mocked_cpc_dpm.uri + \
+        '/operations/delete-retrieved-internal-code'
+    op_method = 'POST'
+
+    rm_adapter = requests_mock.Adapter(case_sensitive=True)
+    with requests_mock.mock(adapter=rm_adapter) as m:
+
+        m.post(op_uri, status_code=response_status, json=response_body)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # The code to be tested
+                http_mocked_cpc_dpm.delete_retrieved_internal_code(
+                    **input_kwargs)
+
+            exc = exc_info.value
+            if isinstance(exc, HTTPError):
+                assert exc.http_status == response_body['http-status']
+                assert exc.reason == response_body['reason']
+                assert exc.message == response_body['message']
+            else:
+                raise AssertionError(
+                    "Unexpected exception: {}: {}".
+                    format(exc.__class__.__name__, exc))
+
+        else:
+
+            # The code to be tested
+            result = http_mocked_cpc_dpm.delete_retrieved_internal_code(
+                **input_kwargs)
+
+            assert rm_adapter.called
+            request_body = rm_adapter.last_request.json()
+            assert request_body == exp_request_body
+            if response_status == 202:
+                # Async job started
+                job_uri = response_body['job-uri']
+                assert isinstance(result, Job)
+                assert result.uri == job_uri
+                assert result.op_method == op_method
+                assert result.op_uri == op_uri
+            else:
+                raise AssertionError(
+                    "Unexpected HTTP status: {}".format(response_status))

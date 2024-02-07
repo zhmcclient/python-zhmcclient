@@ -91,6 +91,10 @@ Released: not yet
 * Fixed the call to pipdeptree in the test workflow to use 'python -m'
   because otherwise it does not show the correct packages of the virtual env.
 
+* Fixed the 'Cpc.delete_retrieved_internal_code()' method which passed its
+  'ec_level' parameter incorrectly to the HMC operation. Added unit tests.
+  (issue #1432)
+
 **Enhancements:**
 
 * Test: Added Python 3.8 with latest package levels to normal tests because
