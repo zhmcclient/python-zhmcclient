@@ -31,6 +31,10 @@ Released: not yet
 
 **Bug fixes:**
 
+* Fixed the 'Cpc.delete_retrieved_internal_code()' method which passed its
+  'ec_level' parameter incorrectly to the HMC operation. Added unit tests.
+  (issue #1432)
+
 **Enhancements:**
 
 **Cleanup:**
