@@ -2448,7 +2448,8 @@ class Cpc(BaseResource):
 
         body = {}
         if ec_levels is not None:
-            body['ec-levels'] = ec_levels
+            body['ec-levels'] = \
+                [{"number": ec[0], "mcl": ec[1]} for ec in ec_levels]
 
         result = self.manager.session.post(
             self.uri + '/operations/delete-retrieved-internal-code',
