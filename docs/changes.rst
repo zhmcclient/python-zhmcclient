@@ -20,30 +20,16 @@ Change log
 ----------
 
 
-Version 1.13.4.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.13.4
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2024-02-08
 
 **Bug fixes:**
 
 * Fixed the 'Cpc.delete_retrieved_internal_code()' method which passed its
   'ec_level' parameter incorrectly to the HMC operation. Added unit tests.
   (issue #1432)
-
-**Enhancements:**
-
-**Cleanup:**
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.13.3
