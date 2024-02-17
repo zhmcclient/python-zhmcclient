@@ -1,4 +1,7 @@
 name: debug_create_branch
+on:
+  milestone:
+    types: [edited]
 jobs:
   debug_create_branch:
     name: Create a branch
