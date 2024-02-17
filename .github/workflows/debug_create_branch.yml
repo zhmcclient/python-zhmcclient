@@ -1,0 +1,19 @@
+name: debug_create_branch
+jobs:
+  debug_create_branch:
+    name: Create a branch
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Create a branch
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: "refs/heads/stable_1.14",
+            sha: "${{ github.sha }}",
+          })
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
