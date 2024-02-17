@@ -165,18 +165,3 @@ jobs:
         INPUT_TAG_NAME: ${{ steps.set-tag.outputs.result }}
         INPUT_NAME: "Release ${{ steps.set-tag.outputs.result }}"
         INPUT_BODY: "Change log https://python-zhmcclient.readthedocs.io/en/${{ steps.set-tag.outputs.result }}/changes.html"
-
-    #-------- Creation of stable branch
-    - name: Create new stable branch when releasing master branch
-      if: steps.set-is-master-branch.outputs.result == 'true'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          github.rest.git.createRef({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            ref: "refs/heads/${{ steps.set-stable-branch.outputs.result }}",
-            sha: "${{ github.sha }}",
-          })
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
