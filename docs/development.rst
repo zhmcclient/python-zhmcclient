@@ -844,16 +844,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-12. If releasing based on the master branch, create a new stable branch for
-    upcoming fix releases:
-
-    .. code-block:: sh
-
-        git checkout master
-        git checkout -b stable_${MN}
-        git push --set-upstream origin stable_${MN}
-
-13. Verify the publishing
+12. Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
