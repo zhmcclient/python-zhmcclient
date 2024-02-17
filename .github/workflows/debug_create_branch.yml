@@ -8,15 +8,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Create a branch
+    - name: Create a branch using actions plugin
       uses: actions/github-script@v6
       with:
         script: |
           github.rest.git.createRef({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            ref: "refs/heads/stable_1.14",
+            ref: "refs/heads/stable_debug_actions",
             sha: "${{ github.sha }}",
           })
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create a branch using actions plugin
+      uses: actions/github-script@v6
+      run: |
+        git checkout master;
+        git checkout -b stable_debug_git;
+        git push --set-upstream origin stable_debug_git;
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
