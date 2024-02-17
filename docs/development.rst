@@ -788,7 +788,7 @@ local clone of the python-zhmcclient Git repo.
       add text for any known issues you want users to know about.
     * Remove all empty list items.
 
-6. Update the authors:
+6.  Update the authors:
 
     .. code-block:: sh
 
@@ -822,7 +822,7 @@ local clone of the python-zhmcclient Git repo.
 
     If the PR did not succeed, fix the issues.
 
-10.  On GitHub, close milestone ``M.N.U``.
+10. On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix. If the milestone does not have open items

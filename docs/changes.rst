@@ -20,12 +20,12 @@ Change log
 ----------
 
 
-Version 1.14.0.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.14.0
+^^^^^^^^^^^^^^
 
-This version contains all fixes up to version 1.13.x.
+This version contains all fixes up to version 1.13.4.
 
-Released: not yet
+Released: 2024-02-17
 
 **Incompatible changes:**
 
@@ -36,8 +36,6 @@ Released: not yet
   'find()'. The 'findall()' method which was also changed in these releases
   keeps the regular expression matching for consistency with 'list()'.
   (issue #1395)
-
-**Deprecations:**
 
 **Bug fixes:**
 
@@ -123,12 +121,6 @@ Released: not yet
 
 * Increased versions of GitHub Actions plugins to increase node.js runtime
   to version 20.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.13.0
