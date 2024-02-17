@@ -8,6 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    - name: Checkout repo
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
     # - name: Create a branch using actions plugin
     #   uses: actions/github-script@v6
     #   with:
@@ -21,10 +26,20 @@ jobs:
     #   env:
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create a branch using actions plugin
+    - name: Create a branch using git (checkout)
       run: |
-        git checkout master;
-        git checkout -b stable_debug_git;
-        git push --set-upstream origin stable_debug_git;
+        git checkout master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create a branch using git (create)
+      run: |
+        git checkout -b stable_debug_git
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create a branch using git (push)
+      run: |
+        git push --set-upstream origin stable_debug_git
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
