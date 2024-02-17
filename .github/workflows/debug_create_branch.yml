@@ -22,7 +22,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create a branch using actions plugin
-      uses: actions/github-script@v6
       run: |
         git checkout master;
         git checkout -b stable_debug_git;
