@@ -187,7 +187,7 @@ pydantic==1.10.13; python_version >= '3.7'
 typer==0.9.0; python_version >= '3.7'
 
 # Tox
-tox==2.5.0
+tox==3.1.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
 Sphinx==7.1.0; python_version == '3.8'

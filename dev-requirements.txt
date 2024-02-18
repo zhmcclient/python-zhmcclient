@@ -77,7 +77,7 @@ coveralls>=3.3.0; python_version >= '3.5'
 safety>=3.0.1; python_version >= '3.7'
 
 # Tox
-tox>=2.5.0
+tox>=3.1.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
 # Sphinx 6.0.0 started requiring Python>=3.8
