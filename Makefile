@@ -216,7 +216,7 @@ ifeq ($(python_mn_version),3.5)
   check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook
 else
 ifeq ($(python_mn_version),3.6)
-  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook safety
+  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook
 else
 ifeq ($(python_mn_version),3.7)
   check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook safety
@@ -551,11 +551,15 @@ else
 ifeq ($(python_mn_version),3.5)
 	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
 else
+ifeq ($(python_mn_version),3.6)
+	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
+else
 	@echo "Makefile: Running Safety for all packages"
 	-$(call RM_FUNC,$@)
 	-safety check --policy-file $(safety_all_policy_file) -r minimum-constraints.txt --full-report
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for all packages"
+endif
 endif
 endif
 
@@ -566,11 +570,15 @@ else
 ifeq ($(python_mn_version),3.5)
 	@echo "Makefile: Warning: Skipping Safety for install packages on Python $(python_version)" >&2
 else
+ifeq ($(python_mn_version),3.6)
+	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
+else
 	@echo "Makefile: Running Safety for install packages"
 	-$(call RM_FUNC,$@)
 	safety check --policy-file $(safety_install_policy_file) -r requirements.txt --full-report
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for install packages"
+endif
 endif
 endif
 

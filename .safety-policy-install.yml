@@ -15,6 +15,10 @@ security:
     # Should be set to False.
     ignore-cvss-unknown-severity: False
 
+    # Ignore unpinned requirements.
+    # Should be set to False.
+    ignore-unpinned-requirements: False
+
     # List of specific vulnerabilities to ignore.
     # {id}:                 # vulnerability ID
     #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
@@ -30,6 +34,12 @@ security:
             reason: Fixed Certifi version requires Python>=3.6 and is used there
         52495:
             reason: Fixed Setuptools version requires Python>=3.7 and is used there; Risk is on Pypi side
+        58755:
+            reason: Fixed requests version 2.31.0 requires Python>=3.7 and is used there
+        61601:
+            reason: Fixed urllib3 version 1.26.17 requires Python>=3.6 and is used there
+        61893:
+            reason: Fixed urllib3 version 1.26.18 requires Python>=3.6 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
