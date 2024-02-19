@@ -22,6 +22,7 @@ and delete test partitions with NICs.
 from __future__ import absolute_import, print_function
 
 import warnings
+import random
 import pytest
 from requests.packages import urllib3
 
@@ -32,7 +33,12 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
-    standard_partition_props, runtest_find_list, runtest_get_properties
+    standard_partition_props, runtest_find_list, runtest_get_properties, \
+    setup_logging
+
+# Logging for zhmcclient HMC interactions and test functions
+LOGGING = False
+LOG_FILE = 'test_nic.log'
 
 urllib3.disable_warnings()
 
@@ -241,3 +247,145 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
                 part.delete()
             if adapter:
                 adapter.delete()
+
+
+def test_nic_backing_port_port_based(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test Nic.backing_port() for port-based NICs (e.g. RoCE, CNA).
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    logger = setup_logging(LOGGING, 'test_nic_backing_port_port_based',
+                           LOG_FILE)
+    logger.debug("Entered test function")
+
+    cpc = random.choice(dpm_mode_cpcs)
+    logger.debug("Testing with CPC %s", cpc.name)
+    client = cpc.manager.client
+
+    port_nics = []
+    partitions = cpc.partitions.list()
+    for partition in random.sample(partitions, k=len(partitions)):
+        for nic in partition.nics.list():
+            try:
+                _ = nic.get_property('virtual-switch-uri')
+            except KeyError:
+                # port-based NIC (e.g. RoCE, CNA)
+                logger.debug("Found port-based NIC %s", nic.name)
+                port_nics.append(nic)
+            else:
+                # vswitch-based NIC (e.g. OSA, HS)
+                pass
+        if len(port_nics) >= 5:
+            break
+
+    if not port_nics:
+        pytest.skip("CPC {c} does not have any partitions with port-based NICs".
+                    format(c=cpc.name))
+
+    # Pick the port-based NIC to test with
+    nic = random.choice(port_nics)
+    partition = nic.manager.parent
+    logger.debug("Testing with NIC %r in partition %r",
+                 nic.name, partition.name)
+
+    port_uri = nic.get_property('network-adapter-port-uri')
+    port_props = client.session.get(port_uri)
+    adapter_uri = port_props['parent']
+    adapter = cpc.adapters.resource_object(adapter_uri)
+    port = adapter.ports.resource_object(port_uri)
+
+    logger.debug("Calling Nic.backing_port()")
+
+    # The code to be tested
+    result_port = nic.backing_port()
+
+    logger.debug("Returned from Nic.backing_port()")
+
+    assert isinstance(result_port, zhmcclient.Port)
+    assert result_port.uri == port.uri
+
+    result_adapter = result_port.manager.parent
+    assert result_adapter.uri == adapter.uri
+
+    result_cpc = result_adapter.manager.parent
+    assert result_cpc.uri == cpc.uri
+
+    logger.debug("Leaving test function")
+
+
+def test_nic_backing_port_vswitch_based(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test Nic.backing_port() for vswitch-based NICs (e.g. OSA, HS).
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    logger = setup_logging(LOGGING, 'test_nic_backing_port_vswitch_based',
+                           LOG_FILE)
+    logger.debug("Entered test function")
+
+    cpc = random.choice(dpm_mode_cpcs)
+    logger.debug("Testing with CPC %s", cpc.name)
+    client = cpc.manager.client
+
+    vswitch_nics = []
+    partitions = cpc.partitions.list()
+    for partition in random.sample(partitions, k=len(partitions)):
+        for nic in partition.nics.list():
+            try:
+                _ = nic.get_property('virtual-switch-uri')
+            except KeyError:
+                # port-based NIC (e.g. RoCE, CNA)
+                pass
+            else:
+                # vswitch-based NIC (e.g. OSA, HS)
+                logger.debug("Found vswitch-based NIC %s", nic.name)
+                vswitch_nics.append(nic)
+        if len(vswitch_nics) >= 5:
+            break
+
+    if not vswitch_nics:
+        pytest.skip("CPC {c} does not have any partitions with vswitch-based "
+                    "NICs".format(c=cpc.name))
+
+    # Pick the port-based NIC to test with
+    nic = random.choice(vswitch_nics)
+    partition = nic.manager.parent
+    logger.debug("Testing with NIC %r in partition %r",
+                 nic.name, partition.name)
+
+    vswitch_uri = nic.get_property('virtual-switch-uri')
+    vswitch_props = client.session.get(vswitch_uri)
+    adapter_uri = vswitch_props['backing-adapter-uri']
+    port_index = vswitch_props['port']
+    adapter = cpc.adapters.resource_object(adapter_uri)
+    port_uris = adapter.get_property('network-port-uris')
+    for port_uri in port_uris:
+        port = adapter.ports.resource_object(port_uri)
+        port_index_ = port.get_property('index')
+        if port_index_ == port_index:
+            break
+    else:
+        raise AssertionError  # Would be an HMC inconsistency
+
+    logger.debug("Calling Nic.backing_port()")
+
+    # The code to be tested
+    result_port = nic.backing_port()
+
+    logger.debug("Returned from Nic.backing_port()")
+
+    assert isinstance(result_port, zhmcclient.Port)
+    assert result_port.uri == port.uri
+
+    result_adapter = result_port.manager.parent
+    assert result_adapter.uri == adapter.uri
+
+    result_cpc = result_adapter.manager.parent
+    assert result_cpc.uri == cpc.uri
+
+    logger.debug("Leaving test function")
