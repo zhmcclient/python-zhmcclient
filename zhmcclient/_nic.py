@@ -31,6 +31,7 @@ import copy
 from ._manager import BaseManager
 from ._resource import BaseResource
 from ._logging import logged_api_call
+from ._exceptions import ConsistencyError
 from ._utils import RC_NIC
 
 __all__ = ['NicManager', 'Nic']
@@ -341,3 +342,77 @@ class Nic(BaseResource):
         if is_rename:
             # Add the new name to the cache
             self.manager._name_uri_cache.update(self.name, self.uri)
+
+    @logged_api_call
+    def backing_port(self):
+        """
+        Return the backing adapter port of the NIC.
+
+        For vswitch-based NICs (e.g. OSA, HiperSocket), the NIC references the
+        backing vswitch which references its backing adapter and port index.
+        In this case, 'Retrieve ... Properties' operations are performed for
+        the vswitch, the adapter and the port.
+
+        For port-based NICs (e.g. RoCE, CNA), the NIC references directly the
+        backing port.
+        In this case, 'Retrieve ... Properties' operations are performed for
+        the port and the adapter.
+
+        Returns:
+            Port: A resource object for the backing adapter port.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        partition = self.manager.parent
+        cpc = partition.manager.parent
+        client = cpc.manager.client
+
+        # Handle vswitch-based NICs (OSA, HS)
+        try:
+            vswitch_uri = self.get_property('virtual-switch-uri')
+        except KeyError:
+            pass
+        else:
+            vswitch_props = client.session.get(vswitch_uri)
+            adapter_uri = vswitch_props['backing-adapter-uri']
+            port_index = vswitch_props['port']
+            adapter = cpc.adapters.resource_object(adapter_uri)
+            port_uris = adapter.get_property('network-port-uris')
+            for port_uri in port_uris:
+                port = adapter.ports.resource_object(port_uri)
+                port_index_ = port.get_property('index')
+                if port_index_ == port_index:
+                    break
+            else:
+                raise ConsistencyError(
+                    "HMC inconsistency: NIC {c}.{p}.{n} (URI {nu}) has a "
+                    "backing adapter {c}.{a} (URI {au}) that does not have a "
+                    "port with the required port index {i} ".
+                    format(c=cpc.name, p=partition.name, n=self.name,
+                           nu=self.uri, a=adapter.name, au=adapter.uri,
+                           i=port_index)
+                )
+            return port
+
+        # Handle port-based NICs (RoCE, CNA)
+        try:
+            port_uri = self.get_property('network-adapter-port-uri')
+        except KeyError:
+            pass
+        else:
+            port_props = client.session.get(port_uri)
+            adapter_uri = port_props['parent']
+            adapter = cpc.adapters.resource_object(adapter_uri)
+            port = adapter.ports.resource_object(port_uri)
+            return port
+
+        raise ConsistencyError(
+            "HMC inconsistency: NIC {c}.{p}.{n} (URI {nu}) has neither "
+            "'virtual-switch-uri' nor 'network-adapter-port-uri' properties".
+            format(c=cpc.name, p=partition.name, n=self.name, nu=self.uri)
+        )

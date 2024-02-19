@@ -22,7 +22,7 @@ import re
 import copy
 import pytest
 
-from zhmcclient import Client, Nic, HTTPError, NotFound
+from zhmcclient import Client, Nic, Port, HTTPError, NotFound
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -109,6 +109,8 @@ class TestNic(object):
             'channel-path-id': '1D',
             'physical-channel-status': 'operating',
         })
+        self.osa1 = self.cpc.adapters.find(name='osa1')
+
         self.faked_port11 = self.faked_osa1.ports.add({
             'element-id': 'fake-port11-oid',
             'parent': self.faked_osa1.uri,
@@ -117,6 +119,8 @@ class TestNic(object):
             'name': 'fake-port11-name',
             'description': 'OSA #1 Port #1',
         })
+        self.port11 = self.osa1.ports.find(name='fake-port11-name')
+
         self.faked_vswitch11 = self.faked_cpc.virtual_switches.add({
             'object-id': VSWITCH11_OID,
             'parent': self.faked_cpc.uri,
@@ -128,6 +132,8 @@ class TestNic(object):
             'port': self.faked_port11.properties['index'],
             'connected-vnic-uris': [],
         })
+        self.vswitch11 = self.cpc.virtual_switches.find(
+            name='fake-vswitch11-name')
         assert VSWITCH11_URI == self.faked_vswitch11.uri
 
         # Add a ROCE adapter and port to the CPC
@@ -151,6 +157,8 @@ class TestNic(object):
             'maximum-total-capacity': 80,
             'physical-channel-status': 'operating',
         })
+        self.roce2 = self.cpc.adapters.find(name='roce2')
+
         self.faked_port21 = self.faked_roce2.ports.add({
             'element-id': PORT21_OID,
             'parent': self.faked_roce2.uri,
@@ -159,6 +167,7 @@ class TestNic(object):
             'name': 'fake-port21-name',
             'description': 'ROCE #2 Port #1',
         })
+        self.port21 = self.roce2.ports.find(name='fake-port21-name')
         assert PORT21_URI == self.faked_port21.uri
 
     def add_nic1(self):
@@ -618,3 +627,35 @@ class TestNic(object):
         assert nic.properties['element-id'] == nic_oid
         assert nic.properties['class'] == 'nic'
         assert nic.properties['parent'] == self.partition.uri
+
+    def test_nic_backing_port_vswitch_based(self):
+        """Test Nic.backing_port() for vswitch-based NICs."""
+
+        # Add a faked nic
+        faked_nic = self.add_nic1()
+        nic = self.partition.nics.find(name=faked_nic.name)
+
+        # Execute the code to be tested
+        port = nic.backing_port()
+
+        assert isinstance(port, Port)
+        assert port.uri == self.port11.uri
+
+        adapter = port.manager.parent
+        assert adapter.uri == self.osa1.uri
+
+    def test_nic_backing_port_port_based(self):
+        """Test Nic.backing_port() for port-based NICs."""
+
+        # Add a faked nic
+        faked_nic = self.add_nic2()
+        nic = self.partition.nics.find(name=faked_nic.name)
+
+        # Execute the code to be tested
+        port = nic.backing_port()
+
+        assert isinstance(port, Port)
+        assert port.uri == self.port21.uri
+
+        adapter = port.manager.parent
+        assert adapter.uri == self.roce2.uri

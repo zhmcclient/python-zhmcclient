@@ -42,6 +42,9 @@ Released: not yet
   tolerated by safety 2.x. Safety now runs only on Python >=3.7 because
   that is what safetx 3.0 requires.
 
+* Added new method Nic.backing_port() to return the backing adapter port
+  of the NIC. (issue #1451)
+
 **Cleanup:**
 
 **Known issues:**
