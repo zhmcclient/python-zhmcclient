@@ -35,6 +35,8 @@ Released: not yet
 
 **Cleanup:**
 
+* Addressed new issues raised by Pylint 3.1.
+
 **Known issues:**
 
 * See `list of open issues`_.
