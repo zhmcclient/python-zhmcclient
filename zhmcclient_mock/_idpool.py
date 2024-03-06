@@ -73,10 +73,11 @@ class IdPool(object):
         """
         assert not self._free  # free pool is empty
         expand_end = self._expand_start + self._expand_len
-        if expand_end > self._range_end:
-            # This happens if the size of the value range is not a multiple
-            # of the expansion chunk size.
-            expand_end = self._range_end
+
+        # Limit the expansion. This happens if the size of the value range is
+        # not a multiple of the expansion chunk size.
+        expand_end = min(expand_end, self._range_end)
+
         if self._expand_start == expand_end:
             raise ValueError("Out of capacity in ID pool")
         self._free = set(range(self._expand_start, expand_end))
