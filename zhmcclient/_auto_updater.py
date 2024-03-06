@@ -193,6 +193,7 @@ class AutoUpdater(object):
         """
         if uri in self._registered_objects:
             id_dict = self._registered_objects[uri]
+            # pylint: disable=use-yield-from
             for res_obj in id_dict.values():
                 yield res_obj
 

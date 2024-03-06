@@ -187,10 +187,8 @@ class TimeStats(object):
             self._begin_time = None
             self._count += 1
             self._sum += dt
-            if dt > self._max:
-                self._max = dt
-            if dt < self._min:
-                self._min = dt
+            self._max = max(self._max, dt)
+            self._min = min(self._min, dt)
 
     def __str__(self):
         """
