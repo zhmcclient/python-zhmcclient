@@ -620,15 +620,18 @@ class SessionsHandler(object):
         """Operation: Logon."""
         assert wait_for_completion is True  # synchronous operation
         check_required_fields(method, uri, body, ['userid', 'password'])
+        session_id = uuid.uuid4().hex
+        session_cred = session_id + '-cred'
+        hmc.add_session_id(session_id)
         result = {
-            'api-session': 'fake-session-id',
+            'api-session': session_id,
             'notification-topic': 'fake-topic-1',
             'job-notification-topic': 'fake-topic-2',
             'api-major-version': 4,
             'api-minor-version': 40,
             'password-expires': -1,
             # 'shared-secret-key' not included
-            'session-credential': uuid.uuid4().hex,
+            'session-credential': session_cred,
         }
         return result
 
@@ -642,6 +645,9 @@ class ThisSessionHandler(object):
     def delete(method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
         """Operation: Logoff."""
+        # TODO: Add support for removing the current session ID. This requires
+        #       passing the request headers, which requires changing the
+        #       FakedSession class to get control at the HTTP level.
         pass
 
 

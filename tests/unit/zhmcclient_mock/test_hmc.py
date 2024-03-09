@@ -24,6 +24,7 @@ import re
 from datetime import datetime
 from dateutil import tz
 import pytz
+import pytest
 
 from zhmcclient_mock._session import FakedSession
 from zhmcclient_mock._hmc import \
@@ -240,6 +241,31 @@ class TestFakedHmc(object):
         assert isinstance(port1, FakedPort)
         assert port1.properties == port1_out_props
         assert port1.manager == adapter1.ports
+
+    def test_hmc_session_id(self):
+        """Test FakedHmc.validate/add/remove_session_id()."""
+
+        hmc = self.hmc
+
+        session_id = 'valid_id'
+
+        hmc.add_session_id(session_id)
+
+        result = hmc.validate_session_id(session_id)
+        assert result is True
+
+        # Adding an already valid ID fails
+        with pytest.raises(ValueError):
+            hmc.add_session_id(session_id)
+
+        hmc.remove_session_id(session_id)
+
+        result = hmc.validate_session_id(session_id)
+        assert result is False
+
+        # Removing an invalid ID fails
+        with pytest.raises(ValueError):
+            hmc.remove_session_id(session_id)
 
 
 class TestFakedBase(object):
