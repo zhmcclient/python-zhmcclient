@@ -889,6 +889,7 @@ class FakedHmc(FakedBaseResource):
         self.hmc_name = hmc_name
         self.hmc_version = hmc_version
         self.api_version = api_version
+        self._valid_session_ids = set()
 
         self._metric_groups = {}  # by metric group name
         for mg_dict in METRIC_GROUPS:
@@ -926,6 +927,7 @@ class FakedHmc(FakedBaseResource):
             "  metrics_contexts = {metrics_contexts}\n"
             "  consoles = {consoles}\n"
             "  all_resources (keys only) = {all_resource_keys}\n"
+            "  valid_session_ids = {valid_session_ids}\n"
             ")".format(
                 classname=self.__class__.__name__,
                 id=id(self),
@@ -941,6 +943,7 @@ class FakedHmc(FakedBaseResource):
                 consoles=repr_manager(self.consoles, indent=2),
                 all_resource_keys=repr_list(self.all_resources.keys(),
                                             indent=2),
+                valid_session_ids=self._valid_session_ids,
             ))
         return ret
 
@@ -998,6 +1001,59 @@ class FakedHmc(FakedBaseResource):
         a faked session attempts to communicate with the disabled HMC.
         """
         self._enabled = False
+
+    def validate_session_id(self, session_id):
+        """
+        Return boolean indicating whether a session ID is valid.
+
+        Parameters:
+
+          session_id (string):
+            The session ID to be validated.
+
+        Returns:
+          bool: Whether the session ID is valid.
+        """
+        return session_id in self._valid_session_ids
+
+    def add_session_id(self, session_id):
+        """
+        Add a session ID to the valid session IDs.
+
+        If the session ID already exists, ValueError is raised.
+
+        Parameters:
+
+          session_id (string):
+            The session ID to be added.
+
+        Raises:
+            ValueError: Session ID already exists.
+        """
+        if session_id in self._valid_session_ids:
+            raise ValueError(
+                "Session ID {} already exists".format(session_id))
+
+        self._valid_session_ids.add(session_id)
+
+    def remove_session_id(self, session_id):
+        """
+        Remove a session ID from the valid session IDs.
+
+        If the session ID does not exist, ValueError is raised.
+
+        Parameters:
+
+          session_id (string):
+            The session ID to be removed.
+
+        Raises:
+            ValueError: Session ID does not exist.
+        """
+        try:
+            self._valid_session_ids.remove(session_id)
+        except KeyError:
+            raise ValueError("Session ID {} does not exist".format(session_id))
 
     def lookup_by_uri(self, uri):
         """
