@@ -840,7 +840,8 @@ class ConsoleListPermittedPartitionsHandler(object):
     """
 
     valid_query_parms_get = ['name', 'type', 'status',
-                             'has-unacceptable-status', 'cpc-name']
+                             'has-unacceptable-status', 'cpc-name',
+                             'additional-properties']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -849,6 +850,7 @@ class ConsoleListPermittedPartitionsHandler(object):
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = query_parms.pop('additional-properties', '').split(',')
         filter_args = query_parms
 
         result_partitions = []
@@ -865,21 +867,17 @@ class ConsoleListPermittedPartitionsHandler(object):
 
                 for partition in cpc.partitions.list(filter_args):
                     result_partition = {}
-                    result_partition['object-uri'] = \
-                        partition.properties.get('object-uri', None)
-                    result_partition['name'] = \
-                        partition.properties.get('name', None)
-                    result_partition['type'] = \
-                        partition.properties.get('type', None)
-                    result_partition['status'] = \
-                        partition.properties.get('status', None)
-                    result_partition['has-unacceptable-status'] = \
-                        partition.properties.get(
-                            'has-unacceptable-status', None)
+                    for prop in ('object-uri', 'name', 'status',
+                                 'type', 'has-unacceptable-status'):
+                        result_partition[prop] = \
+                            partition.properties.get(prop, None)
                     result_partition['cpc-name'] = cpc.name
                     result_partition['cpc-object-uri'] = cpc.uri
                     result_partition['se-version'] = \
                         cpc.properties.get('se-version', None)
+                    for prop in add_props:
+                        result_partition[prop] = \
+                            partition.properties.get(prop, None)
                     result_partitions.append(result_partition)
 
         return {'partitions': result_partitions}
