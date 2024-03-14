@@ -950,24 +950,32 @@ class TestPartition(object):
         assert ret is None
 
     @pytest.mark.parametrize(
-        "filter_args, exp_names", [
+        "filter_args, additional_props, exp_names", [
             ({'cpc-name': 'bad'},
+             None,
              []),
             ({'cpc-name': CPC_NAME},
+             ['ifl-processors', 'maximum-memory'],
              [PART1_NAME, PART2_NAME]),
             ({},
+             None,
              [PART1_NAME, PART2_NAME]),
             (None,
+             None,
              [PART1_NAME, PART2_NAME]),
             ({'name': PART1_NAME},
+             ['maximum-memory'],
              [PART1_NAME]),
             ({'name': PART1_NAME, 'cpc-name': CPC_NAME},
+             None,
              [PART1_NAME]),
             ({'name': PART1_NAME, 'cpc-name': 'bad'},
+             None,
              [])
         ]
     )
-    def test_console_list_permitted_partitions(self, filter_args, exp_names):
+    def test_console_list_permitted_partitions(self, filter_args,
+                                               additional_props, exp_names):
         """Test Console.list_permitted_partitions() with filter_args."""
 
         # Add two faked partitions
@@ -986,7 +994,9 @@ class TestPartition(object):
         console = self.client.consoles.console
 
         # Execute the code to be tested
-        partitions = console.list_permitted_partitions(filter_args=filter_args)
+        partitions = console.list_permitted_partitions(
+            filter_args=filter_args,
+            additional_properties=additional_props)
 
         assert len(partitions) == len(exp_names)
         if exp_names:
@@ -999,43 +1009,11 @@ class TestPartition(object):
                 assert pname in partition_props, (
                     "Property {!r} missing from returned partition properties, "
                     "got: {!r}".format(pname, partition_props))
-
-    def test_console_list_permitted_partitions_with_additional_properties(self):
-        """
-        Test Console.list_permitted_partitions() with additional properties.
-        """
-
-        # Add two faked partitions
-        self.add_partition1()
-        self.add_partition2()
-
-        self.session.hmc.consoles.add({
-            'object-id': None,
-            # object-uri will be automatically set
-            'parent': None,
-            'class': 'console',
-            'name': 'fake-console1',
-            'description': 'Console #1',
-        })
-        console = self.client.consoles.console
-
-        additional_properties = ['ifl-processors', 'maximum-memory']
-        # Execute the code to be tested
-        partitions = console.list_permitted_partitions(
-            additional_properties=additional_properties)
-
-        assert len(partitions) == 2
-
-        for partition in partitions:
-            partition_props = dict(partition.properties)
-            for pname in LIST_PERMITTED_PARTITIONS_PROPS:
-                assert pname in partition_props, (
-                    "Property {!r} missing from returned partition properties, "
-                    "got: {!r}".format(pname, partition_props))
-            for pname in additional_properties:
-                assert pname in partition_props, (
-                    "Property {!r} missing from returned partition properties, "
-                    "got: {!r}".format(pname, partition_props))
+            if additional_props:
+                for pname in additional_props:
+                    assert pname in partition_props, (
+                        "Property {!r} missing from returned partition "
+                        "properties, got: {!r}".format(pname, partition_props))
 
     # TODO: Test for Partition.send_os_command()
 
