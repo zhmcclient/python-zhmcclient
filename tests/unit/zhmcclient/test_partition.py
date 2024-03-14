@@ -1000,6 +1000,43 @@ class TestPartition(object):
                     "Property {!r} missing from returned partition properties, "
                     "got: {!r}".format(pname, partition_props))
 
+    def test_console_list_permitted_partitions_with_additional_properties(self):
+        """
+        Test Console.list_permitted_partitions() with additional properties.
+        """
+
+        # Add two faked partitions
+        self.add_partition1()
+        self.add_partition2()
+
+        self.session.hmc.consoles.add({
+            'object-id': None,
+            # object-uri will be automatically set
+            'parent': None,
+            'class': 'console',
+            'name': 'fake-console1',
+            'description': 'Console #1',
+        })
+        console = self.client.consoles.console
+
+        additional_properties = ['ifl-processors', 'maximum-memory']
+        # Execute the code to be tested
+        partitions = console.list_permitted_partitions(
+            additional_properties=additional_properties)
+
+        assert len(partitions) == 2
+
+        for partition in partitions:
+            partition_props = dict(partition.properties)
+            for pname in LIST_PERMITTED_PARTITIONS_PROPS:
+                assert pname in partition_props, (
+                    "Property {!r} missing from returned partition properties, "
+                    "got: {!r}".format(pname, partition_props))
+            for pname in additional_properties:
+                assert pname in partition_props, (
+                    "Property {!r} missing from returned partition properties, "
+                    "got: {!r}".format(pname, partition_props))
+
     # TODO: Test for Partition.send_os_command()
 
     # TODO: Test for Partition.wait_for_status()

@@ -596,7 +596,8 @@ class Console(BaseResource):
 
     @logged_api_call
     def list_permitted_partitions(
-            self, full_properties=False, filter_args=None):
+            self, full_properties=False, filter_args=None,
+            additional_properties=None):
         """
         List the permitted partitions of CPCs in DPM mode managed by this HMC.
 
@@ -673,6 +674,14 @@ class Console(BaseResource):
 
             * <property-name>: Any other property of partitions.
 
+          additional_properties (list of string):
+            List of property names that are to be returned in addition to the
+            default properties.
+
+            This parameter requires API feature
+            "dpm-hipersockets-partition-link-management" or
+            "dpm-ctc-partition-link-management".
+
         Returns:
 
           : A list of :class:`~zhmcclient.Partition` objects.
@@ -687,6 +696,10 @@ class Console(BaseResource):
         query_parms, client_filters = divide_filter_args(
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
+        if additional_properties:
+            ap_parm = 'additional-properties={}'.format(
+                ','.join(additional_properties))
+            query_parms.append(ap_parm)
         query_parms_str = make_query_str(query_parms)
 
         # Perform the operation with the HMC, including any server-side
