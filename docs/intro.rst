@@ -420,8 +420,6 @@ accordingly:
 
    * LPARs to be accessed
 
-For details, see the :term:`HMC Operations Guide`.
-
 
 .. _`Setting up firewalls or proxies`:
 
