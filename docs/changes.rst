@@ -45,6 +45,11 @@ Released: not yet
 * Added new method Nic.backing_port() to return the backing adapter port
   of the NIC. (issue #1451)
 
+* Changed safety run for install dependencies to use the exact minimum versions
+  of the dependent packages, by moving them into a separate
+  minimum-constraints-install.txt file that is included by the existing
+  minimum-constraints.txt file.
+
 **Cleanup:**
 
 * Addressed new issues raised by Pylint 3.1.

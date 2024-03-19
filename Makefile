@@ -264,7 +264,7 @@ help:
 	@echo "  check_reqs - Perform missing dependency checks"
 	@echo "  check      - Run Flake8 on sources"
 	@echo "  pylint     - Run PyLint on sources"
-	@echo "  safety     - Run safety on sources"
+	@echo "  safety     - Run safety for install and all"
 	@echo "  test       - Run unit tests (adds to coverage results)"
 	@echo "  end2end_mocked - Run end2end tests against example mock environments (adds to coverage results)"
 	@echo "  installtest - Run install tests"
@@ -347,7 +347,7 @@ $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done: Makefile
 develop: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt requirements.txt minimum-constraints.txt
+$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt requirements.txt minimum-constraints.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
 	@echo 'Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
@@ -457,7 +457,7 @@ safety: $(done_dir)/safety_all_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/safety_
 install: $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints.txt
+$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -e .
@@ -544,7 +544,7 @@ else
 	@echo "Makefile: Done running Pylint"
 endif
 
-$(done_dir)/safety_all_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_all_policy_file) minimum-constraints.txt
+$(done_dir)/safety_all_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_all_policy_file) minimum-constraints.txt minimum-constraints-install.txt
 ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
 else
@@ -563,7 +563,7 @@ endif
 endif
 endif
 
-$(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_install_policy_file) requirements.txt
+$(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_install_policy_file) minimum-constraints-install.txt
 ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping Safety for install packages on Python $(python_version)" >&2
 else
@@ -575,7 +575,7 @@ ifeq ($(python_mn_version),3.6)
 else
 	@echo "Makefile: Running Safety for install packages"
 	-$(call RM_FUNC,$@)
-	safety check --policy-file $(safety_install_policy_file) -r requirements.txt --full-report
+	safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for install packages"
 endif
@@ -588,14 +588,14 @@ $(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(
 	echo "done" >$@
 
 .PHONY: check_reqs
-check_reqs: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints.txt requirements.txt extra-testutils-requirements.txt
+check_reqs: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
 ifeq ($(python_m_version),2)
 	@echo "Makefile: Warning: Skipping the checking of missing dependencies on Python $(python_version)" >&2
 else
 	@echo "Makefile: Checking missing dependencies of this package"
 	bash -c "cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt; pip-missing-reqs $(package_name) --requirements-file=tmp_requirements.txt"
 	-$(call RM_FUNC,tmp_requirements.txt)
-	pip-missing-reqs $(package_name) --requirements-file=minimum-constraints.txt
+	pip-missing-reqs $(package_name) --requirements-file=minimum-constraints-install.txt
 	@echo "Makefile: Done checking missing dependencies of this package"
 ifeq ($(PLATFORM),Windows_native)
 # Reason for skipping on Windows is https://github.com/r1chardj0n3s/pip-check-reqs/issues/67

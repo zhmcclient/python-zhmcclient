@@ -26,6 +26,10 @@ security:
     ignore-vulnerabilities:
         39611:
             reason: PyYAML full_load method or FullLoader is not used
+        40291:
+            reason: Fixed Pip version requires Python>=3.6 and is used there
+        42559:
+            reason: Fixed Pip version requires Python>=3.6 and is used there; Pip is not shipped with this package
         43975:
             reason: Fixed Urllib3 versions are excluded by requests
         51499:
@@ -36,10 +40,14 @@ security:
             reason: Fixed Setuptools version requires Python>=3.7 and is used there; Risk is on Pypi side
         58755:
             reason: Fixed requests version 2.31.0 requires Python>=3.7 and is used there
+        59956:
+            reason: Fixed certifi version 2023.07.22 requires Python>=3.6 and is used there
         61601:
             reason: Fixed urllib3 version 1.26.17 requires Python>=3.6 and is used there
         61893:
             reason: Fixed urllib3 version 1.26.18 requires Python>=3.6 and is used there
+        62044:
+            reason: Fixed pip version 23.3 requires Python>=3.7 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
