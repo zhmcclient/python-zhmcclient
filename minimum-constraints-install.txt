@@ -1,0 +1,79 @@
+# Pip constraints file for install dependencies.
+#
+# This file specifies constraints that define the minimum versions of any
+# direct and indirect dependent packages for installation of the project.
+# They are used when setting up test environments with the minimum versions of
+# any dependent packages.
+
+
+# Base dependencies
+
+# pip 10.0.0 introduced the --exclude-editable option.
+# pip 18.0 is needed on pypy3 (py36) to support constraints like cffi!=1.11.3,>=1.8.
+# Pip 20.2 introduced a new resolver whose backtracking had issues that were resolved only in 21.2.2.
+# Pip 21.0 removed support for Python<=3.5
+# pip>=21.0 is needed for the cryptography package on Windows on GitHub Actions.
+pip==19.3.1; python_version <= '3.5'
+pip==21.3.1; python_version == '3.6'
+pip==23.3; python_version >= '3.7'
+
+# setuptools 51.0.0 removed support for py35
+# setuptools 59.7.0 removed support for py36
+setuptools==39.0.1; python_version == '2.7'
+setuptools==50.3.2; python_version == '3.5'
+setuptools==59.6.0; python_version == '3.6'
+setuptools==65.5.1; python_version >= '3.7' and python_version <= '3.11'
+setuptools==66.1.0; python_version >= '3.12'
+
+wheel==0.30.0; python_version <= '3.6'
+wheel==0.38.1; python_version >= '3.7'
+
+
+# Direct dependencies for installation (must be consistent with requirements.txt)
+
+decorator==4.0.11
+pytz==2016.10; python_version <= '3.9'
+pytz==2019.1; python_version >= '3.10'
+requests==2.25.0; python_version <= '3.6'
+requests==2.31.0; python_version >= '3.7'
+six==1.14.0; python_version <= '3.9'
+six==1.16.0; python_version >= '3.10'
+stomp.py==4.1.23
+python-dateutil==2.8.2
+immutable-views==0.6.0
+nocasedict==1.0.2
+
+# PyYAML pulled in by zhmcclient_mock (and zhmcclient examples, and python-coveralls)
+PyYAML==5.3.1
+
+# yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
+yamlloader==0.5.5
+
+# jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils and jupyter
+jsonschema==3.0.1
+
+# Used by zhmcclient.testutils
+# pytest 6.2.5 is needed on Python 3.10 to address issues.
+pytest==4.3.1; python_version <= '3.6'
+pytest==4.4.0; python_version >= '3.7' and python_version <= '3.9'
+pytest==6.2.5; python_version >= '3.10'
+
+
+# Indirect dependencies for installation (must be consistent with requirements.txt)
+
+attrs==19.2.0; python_version >= '3.5'
+certifi==2019.9.11; python_version <= '3.5'
+certifi==2023.07.22; python_version >= '3.6'
+chardet==3.0.3
+docopt==0.6.2
+idna==2.5
+urllib3==1.26.18; python_version == '2.7'
+urllib3==1.26.9; python_version == '3.5'
+urllib3==1.26.18; python_version >= '3.6'
+pyrsistent==0.15.1
+
+# Used by zhmcclient.testutils
+packaging==20.5; python_version <= '3.5'
+packaging==21.0; python_version >= '3.6'
+pluggy==0.7.1; python_version >= '2.7' and python_version <= '3.6'
+pluggy==0.13.0; python_version >= '3.7'
