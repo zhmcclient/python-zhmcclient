@@ -41,6 +41,11 @@ Released: not yet
 
 * Dev: Fixed new issue 'possibly-used-before-assignment' in Pylint 3.2.0.
 
+* Docs: Fixed broken links to HMC books since IBM changed the links. As part
+  of that, removed Bibliography entries for the HMC API book versions 2.11/2.12,
+  and for all versions of the HMC Operations Guide (which changed to become the
+  HMC Help System PDFs). (issue #1459)
+
 **Enhancements:**
 
 **Cleanup:**
