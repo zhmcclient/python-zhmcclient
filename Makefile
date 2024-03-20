@@ -52,6 +52,11 @@ else
   endif
 endif
 
+# Run type (normal, scheduled, release)
+ifndef RUN_TYPE
+  RUN_TYPE := normal
+endif
+
 # Make variables are case sensitive and some native Windows environments have
 # ComSpec set instead of COMSPEC.
 ifndef COMSPEC
@@ -556,7 +561,7 @@ ifeq ($(python_mn_version),3.6)
 else
 	@echo "Makefile: Running Safety for all packages"
 	-$(call RM_FUNC,$@)
-	-safety check --policy-file $(safety_all_policy_file) -r minimum-constraints.txt --full-report
+	bash -c "safety check --policy-file $(safety_all_policy_file) -r minimum-constraints.txt --full-report || test '$(RUN_TYPE)' != 'release' || exit 1"
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for all packages"
 endif

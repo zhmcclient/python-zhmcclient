@@ -185,6 +185,22 @@ jobs:
       PIP_DISABLE_PIP_VERSION_CHECK: 1
       PIP_NO_PYTHON_VERSION_WARNING: 1
     steps:
+    - name: Set run type (normal, scheduled, release)
+      id: set-run-type
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          var result
+          if ("${{ github.event_name }}" == "schedule") {
+            result = "scheduled"
+          } else if ("${{ github.head_ref }}".match(/^release_/)) {
+            result = "release"
+          } else {
+            result = "normal"
+          }
+          console.log(result)
+          return result
     - name: Checkout repo
       uses: actions/checkout@v4
       with:
@@ -201,65 +217,71 @@ jobs:
     - name: Display platform and env vars
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make platform env
     - name: Install the package and its dependents
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make install
     - name: Show installed package versions
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         echo "Installed Python packages:"
         pip list
     - name: Development setup
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make develop
     - name: Show installed package versions
-      env:
-        PACKAGE_LEVEL: ${{ matrix.package_level }}
       run: |
         echo "Installed Python packages:"
         pip list
     - name: Show package dependency tree
-      env:
-        PACKAGE_LEVEL: ${{ matrix.package_level }}
       run: |
         echo "Package dependency tree of installed Python packages:"
         python -m pipdeptree --all
     - name: Run build
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make build
     - name: Run builddoc
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make builddoc
     - name: Run check
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make check
     - name: Run pylint
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make pylint
     - name: Run unit test
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
         # TESTCASES: test_cim_obj.py
       run: |
         make test
     - name: Run end2end_mocked test
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
         # TESTCASES: test_cim_obj.py
       run: |
         make end2end_mocked
@@ -277,21 +299,25 @@ jobs:
     - name: Run installtest
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make installtest
     - name: Run debuginfo
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make debuginfo
     - name: Run check_reqs
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make check_reqs
     - name: Run safety
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make safety
 
