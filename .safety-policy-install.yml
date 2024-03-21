@@ -30,8 +30,6 @@ security:
             reason: Fixed Pip version requires Python>=3.6 and is used there
         42559:
             reason: Fixed Pip version requires Python>=3.6 and is used there; Pip is not shipped with this package
-        43975:
-            reason: Fixed Urllib3 versions are excluded by requests
         51499:
             reason: Fixed Wheel version requires Python>=3.7 and is used there; Risk is on Pypi side
         52365:
