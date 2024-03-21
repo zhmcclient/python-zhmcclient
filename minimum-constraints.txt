@@ -1,10 +1,9 @@
 # Pip constraints file for install and development dependencies.
 #
-# This file specifies constraints that define the minimum versions of any
-# direct and indirect dependent packages for installation and development of
-# the project.
-# They are used when setting up test environments with the minimum versions of
-# any dependent packages.
+# This file specifies constraints that match the minimum versions specified in
+# the requirement files for install and development. They are used for example
+# when setting up test environments with the minimum versions of any dependent
+# packages.
 
 
 # Note: The included file is processed by Pip but ignored by the Safety tool.
@@ -13,7 +12,8 @@
 -c minimum-constraints-install.txt
 
 
-# Direct dependencies for development (must be consistent with dev-requirements.txt)
+# Direct dependencies for development and indirect dependencies for development
+# that are needed for some reason (must be consistent with dev-requirements.txt)
 
 # PEP517 package builder, used in Makefile
 build==0.5.0
@@ -178,7 +178,8 @@ pip-check-reqs==2.5.1; python_version >= '3.12'
 # pywinpty is used by terminado <- notebook <- jupyter
 pywinpty==0.5; os_name == "nt"
 
-# Indirect dependencies for develop (not in dev-requirements.txt)
+
+# Indirect dependencies for development that are not in dev-requirements.txt
 
 alabaster==0.7.9
 anyio==3.1.0

@@ -1,9 +1,8 @@
 # Pip constraints file for install dependencies.
 #
-# This file specifies constraints that define the minimum versions of any
-# direct and indirect dependent packages for installation of the project.
-# They are used when setting up test environments with the minimum versions of
-# any dependent packages.
+# This file specifies constraints that match the minimum versions specified in
+# the requirement files for install. They are used for example when setting up
+# test environments with the minimum versions of any dependent packages.
 
 
 # Base dependencies
@@ -29,7 +28,7 @@ wheel==0.30.0; python_version <= '3.6'
 wheel==0.38.1; python_version >= '3.7'
 
 
-# Direct dependencies for installation (must be consistent with requirements.txt)
+# Direct dependencies for install (must be consistent with requirements.txt)
 
 decorator==4.0.11
 pytz==2016.10; python_version <= '3.9'
@@ -52,6 +51,9 @@ yamlloader==0.5.5
 # jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils and jupyter
 jsonschema==3.0.1
 
+
+# Direct dependencies for install of extra 'testutils' (must be consistent with extra-testutils-requirements)
+
 # Used by zhmcclient.testutils
 # pytest 6.2.5 is needed on Python 3.10 to address issues.
 pytest==4.3.1; python_version <= '3.6'
@@ -59,7 +61,16 @@ pytest==4.4.0; python_version >= '3.7' and python_version <= '3.9'
 pytest==6.2.5; python_version >= '3.10'
 
 
-# Indirect dependencies for installation (must be consistent with requirements.txt)
+# Indirect dependencies for install that are needed for some reason (must be consistent with requirements.txt)
+
+urllib3==1.26.18; python_version == '2.7'
+urllib3==1.26.9; python_version == '3.5'
+urllib3==1.26.18; python_version >= '3.6'
+
+pyrsistent==0.15.1
+
+
+# All other indirect dependencies for install that are not in requirements.txt
 
 attrs==19.2.0; python_version >= '3.5'
 certifi==2019.9.11; python_version <= '3.5'
@@ -67,10 +78,6 @@ certifi==2023.07.22; python_version >= '3.6'
 chardet==3.0.3
 docopt==0.6.2
 idna==2.5
-urllib3==1.26.18; python_version == '2.7'
-urllib3==1.26.9; python_version == '3.5'
-urllib3==1.26.18; python_version >= '3.6'
-pyrsistent==0.15.1
 
 # Used by zhmcclient.testutils
 packaging==20.5; python_version <= '3.5'

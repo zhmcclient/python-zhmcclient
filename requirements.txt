@@ -1,22 +1,18 @@
-# Pip requirements file for zhmcclient runtime dependencies.
-#
-# The order of packages is significant, because pip processes them in the order
-# of appearance. Changing the order has an impact on the overall integration
-# process, which may cause wedges in the gate later.
+# Pip requirements file for install dependencies (without extras).
 
-# Make sure that the package versions in minimum-constraints.txt are also
-# the minimum versions required in requirements.txt and dev-requirements.txt.
+# Note: The dependencies in this file will become the dependencies stated
+# in the Pypi package metadata.
 
 
-# Direct dependencies (except pip, setuptools, wheel):
+# Direct dependencies for install (must be consistent with minimum-constraints-install.txt)
 
 # decorator 5.0.0 removes support for Python 2.7 and 3.4
-decorator>=4.0.11,<5.0; python_version == '2.7'  # new BSD
-decorator>=4.0.11; python_version >= '3.5'  # new BSD
+decorator>=4.0.11,<5.0; python_version == '2.7'
+decorator>=4.0.11; python_version >= '3.5'
 
 # pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
-pytz>=2016.10; python_version <= '3.9'  # MIT
-pytz>=2019.1; python_version >= '3.10'  # MIT
+pytz>=2016.10; python_version <= '3.9'
+pytz>=2019.1; python_version >= '3.10'
 
 # requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
 #   remove ImportWarning in six
@@ -24,14 +20,14 @@ requests>=2.25.0; python_version <= '3.6'
 requests>=2.31.0; python_version >= '3.7'
 
 # six 1.16.0 removes the ImportWarning raised by Python 3.10
-six>=1.14.0; python_version <= '3.9'  # MIT
-six>=1.16.0; python_version >= '3.10'  # MIT
+six>=1.14.0; python_version <= '3.9'
+six>=1.16.0; python_version >= '3.10'
 
 # stomp.py 5.0.0 (now deleted) and 6.0.0 removed support for Python 2.7, 3.4 and 3.5
 # stomp.py 6.1.0 on Pypi contained older code than v6.1.0 in the repo -> will be yanked on Pypi
 # stomp.py 6.1.1 broke compatibility -> will be yanked on Pypi and re-released as 7.0.0
-stomp.py>=4.1.23,<5.0.0; python_version <= '3.5'  # Apache
-stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version >= '3.6'  # Apache
+stomp.py>=4.1.23,<5.0.0; python_version <= '3.5'
+stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version >= '3.6'
 
 python-dateutil>=2.8.2
 immutable-views>=0.6.0
@@ -60,7 +56,8 @@ yamlloader>=0.5.5
 # jsonschema is also used by jupyter and requires >=3.0.1
 jsonschema>=3.0.1,!=4.0.0
 
-# Indirect dependencies (commented out, only listed to document their license):
+
+# Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
 
 # Since we changed to use the allowed_methods attribute introduced in urllib3
 # 1.26.0, and our minimum version of requests (2.25.0) only requires
@@ -70,12 +67,7 @@ urllib3>=1.26.18; python_version == '2.7'
 urllib3>=1.26.9; python_version == '3.5'
 urllib3>=1.26.18; python_version >= '3.6'
 
-# MIT, from jsonschema>=3.0
+# pyrsistent is used by jsonschema>=3.0
 # pyrsistent 0.15.0 started using the FileNotFoundError built-in exception that
 # was added only in Python 3. pyrsistent 0.15.1 fixed that by defining it locally for py27.
 pyrsistent>=0.15.1
-
-# certifi # ISC, from requests>=2.20
-# chardet # LGPL, from requests>=2.20
-# docopt # MIT, from stomp.py>=4.1
-# idna # BSD-like, from requests>=2.20
