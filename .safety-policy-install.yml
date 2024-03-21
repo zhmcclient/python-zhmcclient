@@ -1,6 +1,8 @@
 # Safety policy file for packages needed for installation
 # For documentation, see https://docs.pyup.io/docs/safety-20-policy-file
 
+# Note: This policy file is used against the versions in minimum-constraints-install.txt.
+
 # Configuration for the 'safety check' command
 security:
 
