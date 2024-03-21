@@ -1,4 +1,4 @@
-# Pip constraints file.
+# Pip constraints file for install and development dependencies.
 #
 # This file specifies constraints that define the minimum versions of any
 # direct and indirect dependent packages for installation and development of
@@ -7,6 +7,9 @@
 # any dependent packages.
 
 
+# Note: The included file is processed by Pip but ignored by the Safety tool.
+# Thus, safety with the 'all' profile actually only checks development packages,
+# but that's ok since the 'install' profile checks the install packages.
 -c minimum-constraints-install.txt
 
 
