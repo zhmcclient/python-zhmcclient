@@ -1,4 +1,10 @@
-# Pip requirements file for zhmcclient extra 'testutils' dependencies.
+# Pip requirements file for install dependencies of extra 'testutils'.
+
+# Note: The dependencies in this file will become the additional dependencies
+# stated in the Pypi package metadata for extra 'testutils'.
+
+
+# Direct dependencies for install of extra 'testutils' (must be consistent with minimum-constraints-install.txt)
 
 # zhmcclient.testutils defines pytest fixtures:
 # pytest 5.0.0 has removed support for Python < 3.5

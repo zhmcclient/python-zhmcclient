@@ -1,21 +1,15 @@
-# Pip requirements file for development.
-#
-# The order of packages is significant, because pip processes them in the order
-# of appearance.
-#
-# Make sure that the minimum versions required in this file are consistent with
-# the minimum versions specified in minimum-constraints.txt.
+# Pip requirements file for development dependencies.
 
 
-# Runtime dependencies:
+# Include install dependencies
 -r requirements.txt
 
 
-# Direct dependencies:
+# Direct dependencies for development and indirect dependencies for development
+# that are needed for some reason (must be consistent with minimum-constraints.txt)
 
 # PEP517 package builder, used in Makefile
 build>=0.5.0
-
 
 # Unit test (imports into testcases):
 funcsigs>=1.0.2; python_version < '3.3'
@@ -29,7 +23,7 @@ testfixtures>=6.9.0
 # flake8 up to 6.0.0 has not yet adjusted to the removed interfaces of importlib-metadata 5.0
 importlib-metadata>=2.1.3,<5; python_version <= '3.6'
 importlib-metadata>=4.8.3,<5; python_version >= '3.7'
-mock>=2.0.0 # BSD
+mock>=2.0.0
 # requests: covered in direct deps for installation
 requests-mock>=1.6.0
 requests-toolbelt>=0.8.0
@@ -58,7 +52,6 @@ pluggy>=0.7.1; python_version >= '2.7' and python_version <= '3.6'
 pluggy>=0.13.0; python_version >= '3.7'
 # decorator: covered in requirements.txt
 backports.statistics>=0.1.0; python_version == '2.7'
-
 
 # Coverage reporting (no imports, invoked via coveralls script):
 # coveralls pins coverage to <7.0, causing pip backtracking to happen. Pinning
@@ -253,8 +246,6 @@ pipdeptree>=2.2.0
 pip-check-reqs>=2.3.2; python_version >= '3.5' and python_version <= '3.7'
 pip-check-reqs>=2.4.3,!=2.5.0; python_version >= '3.8' and python_version <= '3.11'
 pip-check-reqs>=2.5.1; python_version >= '3.12'
-
-# Indirect dependencies are not specified in this file unless constraints are needed.
 
 # pywinpty is used by terminado <- notebook <- jupyter
 # pywinpty <1.1.1 does not have metadata for required Python or dependent packages.
