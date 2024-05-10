@@ -47,7 +47,8 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'JMS_LOGGER_NAME',
            'API_LOGGER_NAME',
            'HTML_REASON_WEB_SERVICES_DISABLED',
-           'HTML_REASON_OTHER']
+           'HTML_REASON_OTHER',
+           'STOMP_MIN_CONNECTION_CHECK_TIME']
 
 
 #: Default HTTP connect timeout in seconds,
@@ -174,3 +175,6 @@ HTML_REASON_WEB_SERVICES_DISABLED = 900
 #: HTTP reason code: Other HTML-formatted error response. Note that over time,
 #: there may be more specific reason codes introduced for such situations.
 HTML_REASON_OTHER = 999
+
+#: Minimum time between checks for STOMP connection loss.
+STOMP_MIN_CONNECTION_CHECK_TIME = 5.0

@@ -1,0 +1,40 @@
+Improved the notification support in several ways:
+
+- Replaced the event-based handover of a single item from the notification
+  listener thread to the caller's thread with a Python Queue, for better
+  reliability. It turned out that messages could have been lost in some cases
+  with the previous design.
+
+- The 'NotificationReceiver.notifications()' method now continues running
+  when there are no notifications, and only ever returns when
+  'NotificationReceiver.close()' is called (by some other thread).
+
+- Added methods 'connect()' and 'is_connected()' to the 'NotificationReceiver'
+  class. The init method of 'NotificationReceiver' no longer connects,
+  but the 'notifications()' method now calls 'connect()', so overall this is
+  compatible with the prior behavior.
+
+- Added new exceptions 'NotificationConnectionError' and
+  'NotificationSubscriptionError' that may be raised by some
+  'NotificationReceiver' methods.
+
+- Documented the stomp-py exceptions that can be raised from
+  'NotificationReceiver' methods.
+
+- Added proper detection of STOMP connection loss if STOMP heartbeating is
+  enabled. The connection loss is surfaced by raising
+  'NotificationConnectionError' in 'NotificationReceiver.notifications()'.
+  This allows users to retry 'NotificationReceiver.notifications()' upon
+  connection loss.
+
+- Added a new public constant 'STOMP_MIN_CONNECTION_CHECK_TIME' that defines
+  the minimum time between checks for STOMP connection loss. The actual check
+  time is determined by the heartbeat receive time and is bound by this minimum
+  time.
+
+- Added the missing event methods to the internal '_NotificationListener' class
+  in case they are ever invoked (needed due to lazy importing of stomp-py).
+
+- Added more log messages around STOMP connect / disconnect.
+
+Issue:

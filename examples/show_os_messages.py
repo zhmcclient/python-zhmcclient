@@ -20,7 +20,7 @@ in DPM mode.
 
 import sys
 import requests.packages.urllib3
-
+import stomp
 import zhmcclient
 from zhmcclient.testutils import hmc_definitions
 
@@ -92,27 +92,37 @@ try:
         print("Error: Cannot create notification receiver: {}".format(exc))
         sys.exit(1)
 
+    print("Debug: STOMP retry/timeout config: {}".format(receiver._rt_config))
+
     print("Showing OS messages ...")
     print("-----------------------")
-    try:
-        for headers, message in receiver.notifications():
-            os_msg_list = message['os-messages']
-            for os_msg in os_msg_list:
-                if PRINT_METADATA:
-                    msg_id = os_msg['message-id']
-                    held = os_msg['is-held']
-                    priority = os_msg['is-priority']
-                    prompt = os_msg.get('prompt-text', None)
-                    print("# OS message {} (held: {}, priority: {}, "
-                          "prompt: {}):".
-                          format(msg_id, held, priority, prompt))
-                msg_txt = os_msg['message-text'].strip('\n')
-                print(msg_txt)
-    except KeyboardInterrupt:
-        print("Keyboard interrupt - leaving receiver loop")
-    finally:
-        print("Closing receiver ...")
-        receiver.close()
+    while True:
+        try:
+            for headers, message in receiver.notifications():
+                os_msg_list = message['os-messages']
+                for os_msg in os_msg_list:
+                    if PRINT_METADATA:
+                        msg_id = os_msg['message-id']
+                        held = os_msg['is-held']
+                        priority = os_msg['is-priority']
+                        prompt = os_msg.get('prompt-text', None)
+                        print("# OS message {} (held: {}, priority: {}, "
+                              "prompt: {}):".
+                              format(msg_id, held, priority, prompt))
+                    msg_txt = os_msg['message-text'].strip('\n')
+                    print(msg_txt)
+        except zhmcclient.NotificationError as exc:
+            print("Notification Error: {} - reconnecting".format(exc))
+            continue
+        except stomp.exception.StompException as exc:
+            print("STOMP Error: {} - reconnecting".format(exc))
+            continue
+        except KeyboardInterrupt:
+            print("Keyboard interrupt - leaving receiver loop")
+            receiver.close()
+            break
+        else:
+            raise AssertionError("Receiver was closed - should not happen")
 
 finally:
     print("Logging off ...")

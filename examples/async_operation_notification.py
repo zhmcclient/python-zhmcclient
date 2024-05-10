@@ -21,7 +21,7 @@ completion notification.
 import sys
 import uuid
 import requests.packages.urllib3
-
+import stomp
 import zhmcclient
 from zhmcclient.testutils import hmc_definitions
 
@@ -105,30 +105,28 @@ try:
             sys.exit(1)
 
         print("Waiting for job completion notifications ...")
-        try:
-            for headers, _ in receiver.notifications():
-                # message is None for job completion notifications
-                if headers['job-uri'] == job.uri:
-                    print("Received completion notification for the start job")
-                    break
-                else:
-                    print("Received completion notification for another job: "
-                          "{} - continue to wait".format(headers['job-uri']))
-        except zhmcclient.NotificationJMSError as exc:
-            print("Error: {}: {}, JMS headers: {!r}, JMS message: {!r}".
-                  format(exc.__class__.__name__, exc, exc.jms_headers,
-                         exc.jms_message))
-            sys.exit(1)
-        except zhmcclient.NotificationParseError as exc:
-            print("Error: {}: {}, JMS message: {!r}".
-                  format(exc.__class__.__name__, exc, exc.jms_message))
-            sys.exit(1)
-        except KeyboardInterrupt:
-            print("Keyboard Interrupt - Leaving ...")
-            sys.exit(1)
-        finally:
-            print("Closing notification receiver ...")
-            receiver.close()
+        while True:
+            try:
+                for headers, _ in receiver.notifications():
+                    # message is None for job completion notifications
+                    if headers['job-uri'] == job.uri:
+                        print("Received completion notification for the start job")
+                        break
+                    else:
+                        print("Received completion notification for another job: "
+                              "{} - continue to wait".format(headers['job-uri']))
+            except zhmcclient.NotificationError as exc:
+                print("Notification Error: {} - reconnecting".format(exc))
+                continue
+            except stomp.exception.StompException as exc:
+                print("STOMP Error: {} - reconnecting".format(exc))
+                continue
+            except KeyboardInterrupt:
+                print("Keyboard interrupt - leaving receiver loop")
+                receiver.close()
+                break
+            else:
+                raise AssertionError("Receiver was closed - should not happen")
 
         print("Job completed; Getting job status and result ...")
         try:

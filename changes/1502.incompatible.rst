@@ -1,0 +1,22 @@
+Incompatible changes in the notification support:
+
+- The 'NotificationReceiver.notifications()' method now continues running when
+  there are no notifications, and only ever returns when
+  'NotificationReceiver.close()' is called (in some other thread).
+  Before this change, the method returned when there were no notifications, so
+  it had to be invoked by the user in a loop. Such user code should be adjusted
+  to remove the loop and deal with the return indicating a close of the
+  receiver.
+
+- In addition, the 'NotificationReceiver.notifications()' method can now raise
+  the new exceptions 'zhmcclient.NotificationConnectionError' and
+  'zhmcclient.NotificationSubscriptionError'.
+
+- The 'NotificationReceiver.subscribe/unsubscribe()' methods can now raise the
+  new exception 'zhmcclient.NotificationSubscriptionError'.
+
+- Note that the 'NotificationReceiver.close()' method can raise
+  'stomp.exception.StompException'. This could already be raised before this
+  change, but had not been documented before.
+
+Issue:
