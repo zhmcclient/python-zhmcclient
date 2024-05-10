@@ -25,6 +25,7 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'OperationTimeout', 'StatusTimeout', 'NoUniqueMatch', 'NotFound',
            'MetricsResourceNotFound', 'NotificationError',
            'NotificationJMSError', 'NotificationParseError',
+           'NotificationConnectionError', 'NotificationSubscriptionError',
            'SubscriptionNotFound', 'ConsistencyError', 'CeasedExistence']
 
 
@@ -1380,6 +1381,71 @@ class NotificationParseError(NotificationError):
         """
         return "{}(message={!r}, jms_message={!r})". \
             format(self.__class__.__name__, self.args[0], self.jms_message)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}
+        """
+        return "classname={!r}; message={!r};". \
+            format(self.__class__.__name__, self.args[0])
+
+
+class NotificationConnectionError(NotificationError):
+    """
+    This exception indicates an issue with the STOMP connection to the HMC.
+
+    Derived from :exc:`~zhmcclient.NotificationError`.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        # pylint: disable=useless-super-delegation
+        super(NotificationConnectionError, self).__init__(msg)
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}
+        """
+        return "classname={!r}; message={!r};". \
+            format(self.__class__.__name__, self.args[0])
+
+
+class NotificationSubscriptionError(NotificationError):
+    """
+    This exception indicates an issue with the STOMP subscription or
+    unsubscription to the HMC.
+
+    Derived from :exc:`~zhmcclient.NotificationError`.
+    """
+
+    def __init__(self, msg):
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        # pylint: disable=useless-super-delegation
+        super(NotificationSubscriptionError, self).__init__(msg)
 
     def str_def(self):
         """

@@ -41,21 +41,28 @@ for a DPM partition::
     receiver = zhmcclient.NotificationReceiver(
         topic, hmc, session.session_id, session.session_credential)
 
-    try:
-        for headers, message in receiver.notifications():
-            print("HMC notification #%s:" % headers['session-sequence-nr'])
-            os_msg_list = message['os-messages']
-            for os_msg in os_msg_list:
-                msg_txt = os_msg['message-text'].strip('\\n')
-                msg_id = os_msg['message-id']
-                print("OS message #%s:\\n%s" % (msg_id, msg_txt))
-    except zhmcclient.NotificationError as exc:
-        print("Notification Error: {}".format(exc))
-    except KeyboardInterrupt:
-        print("Keyboard Interrupt - Leaving notification receiver loop...")
-    finally:
-        print("Closing notification receiver...")
-        receiver.close()
+    while True:
+        try:
+            for headers, message in receiver.notifications():
+                print("HMC notification #%s:" % headers['session-sequence-nr'])
+                os_msg_list = message['os-messages']
+                for os_msg in os_msg_list:
+                    msg_txt = os_msg['message-text'].strip('\\n')
+                    msg_id = os_msg['message-id']
+                    print("OS message #%s:\\n%s" % (msg_id, msg_txt))
+        except zhmcclient.NotificationError as exc:
+            print("Notification Error: {} - reconnecting".format(exc))
+            continue
+        except stomp.exception.StompException as exc:
+            print("STOMP Error: {} - reconnecting".format(exc))
+            continue
+        except KeyboardInterrupt:
+            print("Keyboard Interrupt - leaving")
+            receiver.close()
+            break
+        else:
+            print("Receiver has been closed  - leaving")
+            break
 
 When running this example code in one terminal, and stopping or starting
 the partition in another terminal, one can monitor the shutdown or boot
@@ -70,9 +77,15 @@ messages issued by the operating system. The following commands use the
 
 import sys
 import os
-import threading
 import json
 import ssl
+try:
+    import queue
+except ImportError:
+    import Queue as queue  # Python 2.7
+from collections import namedtuple
+import logging
+import uuid
 
 from ._logging import logged_api_call
 from ._constants import DEFAULT_STOMP_PORT, DEFAULT_STOMP_CONNECT_TIMEOUT, \
@@ -80,12 +93,19 @@ from ._constants import DEFAULT_STOMP_PORT, DEFAULT_STOMP_CONNECT_TIMEOUT, \
     DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE, DEFAULT_STOMP_RECONNECT_SLEEP_MAX, \
     DEFAULT_STOMP_RECONNECT_SLEEP_JITTER, DEFAULT_STOMP_KEEPALIVE, \
     DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE, DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE, \
-    DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK
+    DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK, STOMP_MIN_CONNECTION_CHECK_TIME, \
+    JMS_LOGGER_NAME
 from ._exceptions import NotificationJMSError, NotificationParseError, \
-    SubscriptionNotFound
+    SubscriptionNotFound, NotificationConnectionError, \
+    NotificationSubscriptionError
 from ._utils import get_stomp_rt_kwargs, get_headers_message
 
 __all__ = ['NotificationReceiver', 'StompRetryTimeoutConfig']
+
+# Write a log message for each STOMP heartbeat sent or received
+DEBUG_HEARTBEATS = False
+
+JMS_LOGGER = logging.getLogger(JMS_LOGGER_NAME)
 
 
 class StompRetryTimeoutConfig(object):
@@ -318,13 +338,15 @@ class NotificationReceiver(object):
         # Process PID, used to ensure uniqueness of subscription ID
         self._process_pid = os.getpid()
 
-        # Wait timeout to honor keyboard interrupts after this time:
-        self._wait_timeout = 10.0  # seconds
+        # Thread-safe handover queue between listener thread and receiver
+        # thread
+        self._handover_queue = queue.Queue(10)
 
-        # Sync variables for thread-safe handover between listener thread and
-        # receiver thread:
-        self._handover_dict = {}
-        self._handover_cond = threading.Condition()
+        # STOMP connection
+        self._conn = None
+
+        # Open/closed state of the receiver
+        self._closed = False
 
         # Lazy importing of the stomp module, because the import is slow in some
         # versions.
@@ -332,6 +354,33 @@ class NotificationReceiver(object):
         import stomp
         self._stomp = stomp
 
+    @logged_api_call
+    def connect(self):
+        """
+        Create a listener, connect to the HMC and subscribe for the specified
+        topics.
+
+        If a connection exists with the HMC, it is first closed.
+
+        Note: STOMP does not nicely recover when just performing a STOMP connect
+        after a connection loss, because there are occurrences of
+        ssl.SSLError: PROTOCOL_IS_SHUTDOWN. Therefore, we create a new
+        listener as well.
+
+        Raises:
+            NotificationConnectionError: STOMP connection failed.
+            NotificationSubscriptionError: STOMP subscription failed.
+        """
+
+        # In case of reconnect, close the previous connection. This will also
+        # stop the listener thread.
+        if self._conn:
+            JMS_LOGGER.info(
+                "Disconnecting previous STOMP connection")
+            self._conn.disconnect(receipt=uuid.uuid4())
+
+        # Set up the STOMP listener
+        JMS_LOGGER.info("Setting up a STOMP connection")
         rt_kwargs = get_stomp_rt_kwargs(self._rt_config)
         self._conn = self._stomp.Connection(
             [(self._host, self._port)], **rt_kwargs)
@@ -339,14 +388,36 @@ class NotificationReceiver(object):
         if sys.version_info >= (3, 6):
             set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
         self._conn.set_ssl(for_hosts=[(self._host, self._port)], **set_kwargs)
-
-        listener = _NotificationListener(self._handover_dict,
-                                         self._handover_cond)
+        listener = _NotificationListener(self._handover_queue)
         self._conn.set_listener('', listener)
-        self._conn.connect(self._userid, self._password, wait=True)
+
+        connected = self.is_connected()
+        JMS_LOGGER.info(
+            "Connecting via STOMP to the HMC (currently connected: %s)",
+            connected)
+        try:
+            # wait=True causes the connection to be retried for some times
+            # and finally raises stomp.ConnectFailedException
+            self._conn.connect(self._userid, self._password, wait=True)
+        except Exception as exc:
+            msg = ("STOMP connection failed: {}: {}".
+                   format(exc.__class__.__name__, exc))
+            JMS_LOGGER.warning(msg)
+            raise NotificationConnectionError(msg)
+        JMS_LOGGER.info("STOMP connection successfully established")
 
         for topic_name in self._topic_names:
             self.subscribe(topic_name)
+
+    @logged_api_call
+    def is_connected(self):
+        """
+        Return whether this notification receiver is currently connected to
+        the HMC.
+        """
+        if self._conn:
+            return self._conn.is_connected()
+        return False
 
     def _id_value(self, sub_id):
         """
@@ -369,13 +440,25 @@ class NotificationReceiver(object):
 
         Returns:
             string: Subscription ID
+
+        Raises:
+            NotificationSubscriptionError: STOMP subscription failed.
         """
         dest = "/topic/" + topic_name
         sub_id = self._next_sub_id
         self._next_sub_id += 1
         self._sub_ids[topic_name] = sub_id
         id_value = self._id_value(sub_id)
-        self._conn.subscribe(destination=dest, id=id_value, ack='auto')
+        JMS_LOGGER.info(
+            "Subscribing via STOMP for object notification topic '%s'",
+            topic_name)
+        try:
+            self._conn.subscribe(destination=dest, id=id_value, ack='auto')
+        except Exception as exc:
+            msg = ("STOMP subscription failed: {}: {}".
+                   format(exc.__class__.__name__, exc))
+            JMS_LOGGER.warning(msg)
+            raise NotificationSubscriptionError(msg)
         return id_value
 
     @logged_api_call
@@ -393,6 +476,7 @@ class NotificationReceiver(object):
 
         Raises:
             SubscriptionNotFound: Topic is not currently subscribed for.
+            NotificationSubscriptionError: STOMP unsubscription failed.
         """
         try:
             sub_id = self._sub_ids[topic_name]
@@ -401,7 +485,16 @@ class NotificationReceiver(object):
                 "Subscription topic {!r} is not currently subscribed for".
                 format(topic_name))
         id_value = self._id_value(sub_id)
-        self._conn.unsubscribe(id=id_value)
+        JMS_LOGGER.info(
+            "Unsubscribing via STOMP from object notification topic '%s'",
+            topic_name)
+        try:
+            self._conn.unsubscribe(id=id_value)
+        except Exception as exc:
+            msg = ("STOMP unsubscription failed: {}: {}".
+                   format(exc.__class__.__name__, exc))
+            JMS_LOGGER.warning(msg)
+            raise NotificationSubscriptionError(msg)
 
     @logged_api_call
     def is_subscribed(self, topic_name):
@@ -444,21 +537,18 @@ class NotificationReceiver(object):
         Generator method that yields all HMC notifications (= JMS messages)
         received by this notification receiver.
 
-        Example::
+        The method connects to the HMC if needed, so after raising
+        :exc:`~zhmcclient.NotificationConnectionError` or
+        :exc:`stomp.exception.StompException`, it can simply be called
+        again to reconnect and resume waiting for notifications.
 
-            desired_topic_types = ('security-notification',
-                                   'audit-notification')
-            topics = session.get_notification_topics()
-            topic_names = [t['topic-name']
-                           for t in topics
-                           if t['topic-type'] in desired_topic_types]
+        This method returns only when the receiver is closed
+        (using :meth:`~zhmcclient.NotificationRecever.close`) by some other
+        thread; any errors do not cause the method to return but always cause
+        an exception to be raised.
 
-            receiver = zhmcclient.NotificationReceiver(
-                topic_names, hmc, session.session_id,
-                session.session_credential)
-
-            for headers, message in receiver.notifications():
-                . . . # processing of topic-specific message format
+        For an example how to use this method, see
+        :ref:`Notifications` or the example scripts.
 
         Yields:
 
@@ -498,76 +588,138 @@ class NotificationReceiver(object):
             formats" in chapter 4. "Asynchronous notification" in the
             :term:`HMC API` book.
 
+        Returns:
+            None
+
         Raises:
             :exc:`~zhmcclient.NotificationJMSError`: Received JMS error from
               the HMC.
             :exc:`~zhmcclient.NotificationParseError`: Cannot parse JMS message
               body as JSON.
+            :exc:`~zhmcclient.NotificationConnectionError`: Issue with STOMP
+              connection to HMC. Detecting lost connections requires that
+              heartbeating is enabled in the stomp retry/timeout configuration.
+            :exc:`~zhmcclient.NotificationSubscriptionError`: STOMP subscription
+              failed.
         """
 
+        # The timeout for getting an item from the handover queue. If the
+        # timeout expires, a check for connection loss is performed and then
+        # a new get from the handover queue. Since the connection loss
+        # detection is based on heartbeat loss, it does not make sense to check
+        # more often than the heartbeat receive cycle.
+        ho_get_timeout = STOMP_MIN_CONNECTION_CHECK_TIME
+        if self._rt_config:
+            ho_get_timeout = max(
+                ho_get_timeout, self._rt_config.heartbeat_receive_cycle + 1)
+
+        self.connect()
+
         while True:
-            with self._handover_cond:  # serialize body via lock
 
-                # Wait until MessageListener has a new notification
-                while len(self._handover_dict) == 0:
-                    self._handover_cond.wait(self._wait_timeout)
+            # Get an item from the listener
+            while True:
 
-                if self._handover_dict['headers'] is None:
+                if self._closed:
                     return
 
-                # Process the notification
-                headers = self._handover_dict['headers']
-                message = self._handover_dict['message']
-                msgtype = self._handover_dict['msgtype']
+                try:
+                    item = self._handover_queue.get(timeout=ho_get_timeout)
+                except queue.Empty:
+                    # This check detects a disconnect only when heartbeating is
+                    # enabled in the stomp retry/timeout configuration.
+                    if not self._conn.is_connected():
+                        raise NotificationConnectionError(
+                            "Lost STOMP connection to HMC")
+                    continue
+                break
 
-                if msgtype == 'error':
-                    if 'message' in headers:
-                        # Not sure that is always the case, but it was the case
-                        # in issue #770.
-                        details = ": {}".format(headers['message'].strip())
-                    else:
-                        details = ""
-                    raise NotificationJMSError(
-                        "Received JMS error from HMC{}".format(details),
-                        headers, message)
-
-                if message:
-                    try:
-                        msg_obj = json.loads(message)
-                    except Exception as exc:
-                        raise NotificationParseError(
-                            "Cannot convert JMS message body to JSON: {}: {}".
-                            format(exc.__class__.__name__, exc),
-                            message)
+            # Now we have an item from the listener
+            if item.msgtype == 'message':
+                try:
+                    msg_obj = json.loads(item.message)
+                except Exception as exc:
+                    raise NotificationParseError(
+                        "Cannot convert JMS message body to JSON: {}: {}".
+                        format(exc.__class__.__name__, exc),
+                        item.message)
+            elif item.msgtype == 'error':
+                if 'message' in item.headers:
+                    # Not sure that is always the case, but it was the case
+                    # in issue #770.
+                    details = ": {}".format(item.headers['message'].strip())
                 else:
-                    msg_obj = None
+                    details = ""
+                raise NotificationJMSError(
+                    "Received JMS error from HMC{}".format(details),
+                    item.headers, item.message)
+            elif item.msgtype in ('disconnected', 'heartbeat_timeout'):
+                # Get all contiguous such entries to handle them just once
+                num_disc = 0
+                num_hbto = 0
+                if item.msgtype == 'disconnected':
+                    num_disc += 1
+                elif item.msgtype == 'heartbeat_timeout':
+                    num_hbto += 1
+                while True:
+                    try:
+                        item_ = self._handover_queue.get(timeout=ho_get_timeout)
+                    except queue.Empty:
+                        break
+                    if item_.msgtype == 'disconnected':
+                        num_disc += 1
+                    elif item_.msgtype == 'heartbeat_timeout':
+                        num_hbto += 1
+                    else:
+                        # Put the item back.
+                        # TODO: Find way to put it to the front of the queue.
+                        try:
+                            self._handover_queue.put(item_)
+                        except queue.Full:
+                            JMS_LOGGER.error(
+                                "Handover queue is full (put-back) - "
+                                "dropping %s event", item_.msgtype)
+                        break
+                raise NotificationConnectionError(
+                    "STOMP received {} heartbeat timeouts and "
+                    "{} disconnect messages".format(num_hbto, num_disc))
+            else:
+                raise RuntimeError(
+                    "Invalid handover item: {}".format(item.msgtype))
 
-                yield headers, msg_obj
-
-                del self._handover_dict['headers']
-                del self._handover_dict['message']
-                del self._handover_dict['msgtype']
-
-                # Indicate to MessageListener that we are ready for next
-                # notification
-                self._handover_cond.notify_all()
+            yield item.headers, msg_obj
 
     @logged_api_call
     def close(self):
         """
-        Disconnect and close the JMS session with the HMC.
+        Close the receiver and cause its
+        :meth:`~zhmcclient.NotificationReceiver.notifications` method
+        to return.
 
-        This implicitly unsubscribes from the notification topic this receiver
-        was created for, and causes the
-        :meth:`~zhmcclient.NotificationReceiver.notifications` method to
-        stop its iterations.
+        This also disconnects the STOMP session from the HMC, unsubscribing
+        for any topics.
+
+        Raises:
+            stomp.exception.StompException: From stomp.Connection.disconnect()
         """
+        self._closed = True
         self._conn.disconnect()
+
+
+_NotificationItem = namedtuple(
+    '_NotificationItem',
+    [
+        'msgtype',  # str: message type: 'message', 'error', 'disconnected',
+                    #   'heartbeat_timeout'
+        'headers',  # dict: STOMP headers (only for msgtype='message')
+        'message',  # str: STOMP message in JSON (only for msgtype='message')
+    ]
+)
 
 
 class _NotificationListener(object):
     """
-    A notification listener class for use by the Python `stomp` package.
+    A notification listener class for use by the Python `stomp-py` package.
 
     This is an internal class that does not need to be accessed or created by
     the user. An object of this class is automatically created by the
@@ -575,31 +727,73 @@ class _NotificationListener(object):
     topic.
 
     Note: In the stomp examples, this class inherits from
-    stomp.ConnectionListener. However, since that class defines only empty
-    methods and since we want to import the stomp module in a lazy manner,
-    we are not using that class, and stomp does not require us to.
+    stomp.ConnectionListener. However, since we want to import the stomp module
+    in a lazy manner, we are not inheriting from that class, but repeat its
+    methods here.
     """
 
-    def __init__(self, handover_dict, handover_cond):
+    def __init__(self, handover_queue):
         """
         Parameters:
 
-          handover_dict (dict): Dictionary for handing over the notification
-            header and message from this listener thread to the receiver
-            thread. Must initially be an empty dictionary.
-
-          handover_cond (threading.Condition): Condition object for handing
-            over the notification from this listener thread to the receiver
-            thread. Must initially be a new threading.Condition object.
+          handover_queue (Queue): Thread-safe queue between this listener
+            object in the listener thread and the notification receiver object
+            in the main thread. The queue items are _NotificationItem objects.
         """
+        self._handover_queue = handover_queue
 
-        # Sync variables for thread-safe handover between listener thread and
-        # receiver thread:
-        self._handover_dict = handover_dict  # keys: headers, message
-        self._handover_cond = handover_cond
+        # Lazy importing of the stomp module, because the import is slow in some
+        # versions.
+        # pylint: disable=import-outside-toplevel
+        import stomp
+        self._stomp = stomp
 
-        # Wait timeout to honor keyboard interrupts after this time:
-        self._wait_timeout = 10.0  # seconds
+    def on_connecting(self, host_and_port):
+        """
+        Event method that gets called when the TCP/IP connection to the
+        HMC has been established or re-established.
+
+        Note that at this point, no connection has been established at the
+        STOMP protocol level.
+
+        Parameters:
+            host_and_port (tuple(str, int)): Host name and port number to which
+              the TCP/IP connection has been established.
+        """
+        pass
+
+    def on_connected(self, *frame_args):
+        # pylint: disable=no-self-use
+        """
+        Event method that gets called when a STOMP CONNECTED frame has been
+        received from the HMC (after a TCP/IP connection has been established
+        or re-established).
+
+        Parameters:
+
+          frame_args: The STOMP frame. For details, see get_headers_message().
+        """
+        headers, _ = get_headers_message(frame_args)
+        heartbeat = headers.get('heart-beat', '0,0')
+        can_send, want_receive = map(int, heartbeat.split(','))
+        if can_send == 0:
+            can_send_str = "cannot send heartbeats"
+        else:
+            can_send_str = "can send heartbeats every {} msec".format(can_send)
+        if want_receive == 0:
+            want_receive_str = "does not want to receive heartbeats"
+        else:
+            want_receive_str = \
+                "wants to receive heartbeats every {} msec".format(want_receive)
+        JMS_LOGGER.info(
+            "Connected. The HMC %s and %s", can_send_str, want_receive_str)
+
+    def on_disconnecting(self):
+        """
+        Event method that gets called before a STOMP DISCONNECT frame is sent
+        to the HMC.
+        """
+        pass
 
         # Lazy importing of the stomp module, because the import is slow in some
         # versions.
@@ -609,68 +803,122 @@ class _NotificationListener(object):
 
     def on_disconnected(self):
         """
-        Event method that gets called when the JMS session has been
-        disconnected.
+        Event method that gets called when the TCP/IP connection to the HMC
+        has been lost.
 
-        It hands over a termination notification (headers and message are
-        None).
+        No messages should be sent via the connection until it has been
+        re-established.
         """
+        # We detect disconnects in the notifications() method by checking the
+        # connection status, because this event method is called not when the
+        # disconnect happens, but when the connection is re-established.
+        # And it is called twice.
+        pass
 
-        with self._handover_cond:  # serialize body via lock
-
-            # Wait until receiver has processed the previous notification
-            while len(self._handover_dict) > 0:
-                self._handover_cond.wait(self._wait_timeout)
-
-            # Indicate to receiver that there is a termination notification
-            self._handover_dict['headers'] = None  # terminate receiver
-            self._handover_dict['message'] = None
-            self._handover_dict['msgtype'] = 'disconnected'
-            self._handover_cond.notify_all()
-
-    def on_error(self, *frame_args):
+    def on_heartbeat_timeout(self):
         """
-        Event method that gets called when this listener has received a JMS
-        error. This happens for example when the client registers for a
-        non-existing topic.
+        Event method that gets called when a STOMP heartbeat has not been
+        received from the HMC within the specified period.
+        """
+        # We detect heartbeat issues in the notifications() method by checking
+        # the connection status, because this heartbeat event method is called
+        # not when the hearbeat is missing, but when the connection is
+        # re-established.
+        pass
+
+    def on_before_message(self, *frame_args):
+        """
+        Event method that gets called when a STOMP MESSAGE frame has been
+        received from the HMC, but before the on_message() method is called.
 
         Parameters:
 
           frame_args: The STOMP frame. For details, see get_headers_message().
         """
-        headers, message = get_headers_message(frame_args)
-
-        with self._handover_cond:  # serialize body via lock
-
-            # Wait until receiver has processed the previous notification
-            while len(self._handover_dict) > 0:
-                self._handover_cond.wait(self._wait_timeout)
-
-            # Indicate to receiver that there is a new notification
-            self._handover_dict['headers'] = headers
-            self._handover_dict['message'] = message
-            self._handover_dict['msgtype'] = 'error'
-            self._handover_cond.notify_all()
+        pass
 
     def on_message(self, *frame_args):
         """
-        Event method that gets called when this listener has received a JMS
-        message (representing an HMC notification).
+        Event method that gets called when a STOMP MESSAGE frame has been
+        received from the HMC (representing an HMC notification).
 
         Parameters:
 
           frame_args: The STOMP frame. For details, see get_headers_message().
         """
         headers, message = get_headers_message(frame_args)
+        item = _NotificationItem(
+            headers=headers, message=message, msgtype='message')
+        try:
+            self._handover_queue.put(item, timeout=5)
+        except queue.Full:
+            JMS_LOGGER.error(
+                "Handover queue is full - dropping 'message' event")
 
-        with self._handover_cond:  # serialize body via lock
+    def on_receipt(self, *frame_args):
+        """
+        Event method that gets called when a STOMP RECEIPT frame has been
+        received from the HMC.
 
-            # Wait until receiver has processed the previous notification
-            while len(self._handover_dict) > 0:
-                self._handover_cond.wait(self._wait_timeout)
+        This is sent by the HMC if requested by the client using the 'receipt'
+        header.
 
-            # Indicate to receiver that there is a new notification
-            self._handover_dict['headers'] = headers
-            self._handover_dict['message'] = message
-            self._handover_dict['msgtype'] = 'message'
-            self._handover_cond.notify_all()
+        Parameters:
+
+          frame_args: The STOMP frame. For details, see get_headers_message().
+        """
+        pass
+
+    def on_error(self, *frame_args):
+        """
+        Event method that gets called when a STOMP ERROR frame has been
+        received from the HMC.
+
+        This happens for example when the client registers for a non-existing
+        HMC notification topic.
+
+        Parameters:
+
+          frame_args: The STOMP frame. For details, see get_headers_message().
+        """
+        headers, message = get_headers_message(frame_args)
+        item = _NotificationItem(
+            headers=headers, message=message, msgtype='error')
+        try:
+            self._handover_queue.put(item, timeout=5)
+        except queue.Full:
+            JMS_LOGGER.error(
+                "Handover queue is full - dropping 'error' event")
+
+    def on_send(self, *frame_args):
+        # pylint: disable=no-self-use
+        """
+        Event method that gets called when the STOMP connection is in the
+        process of sending a message.
+
+        Parameters:
+
+          frame_args: The STOMP frame. For details, see get_headers_message().
+        """
+        _, message = get_headers_message(frame_args)
+        if message is None and DEBUG_HEARTBEATS:
+            JMS_LOGGER.info("Sending STOMP heartbeat to HMC")
+
+    def on_heartbeat(self):
+        # pylint: disable=no-self-use
+        """
+        Event method that gets called when a STOMP heartbeat has been received.
+        """
+        if DEBUG_HEARTBEATS:
+            JMS_LOGGER.info("Received STOMP heartbeat from HMC")
+
+    def on_receiver_loop_completed(self, *frame_args):
+        """
+        Event method that gets called when the connection receiver_loop has
+        finished.
+
+        Parameters:
+
+          frame_args: The STOMP frame. For details, see get_headers_message().
+        """
+        pass
