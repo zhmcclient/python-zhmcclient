@@ -280,6 +280,9 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+      env:
+        # Workaround for cert issue on Python 3.5, see https://github.com/actions/setup-python/issues/866
+        PIP_TRUSTED_HOST: "pypi.python.org pypi.org files.pythonhosted.org"
     - name: Display initial Python packages
       run: |
         echo "Installed Python packages:"

@@ -9,6 +9,9 @@ VERBOSE="true"
 
 PACKAGE_NAME=zhmcclient
 
+# Workaround for cert issue on Python 3.5, see https://github.com/actions/setup-python/issues/866
+export PIP_TRUSTED_HOST=pypi.python.org pypi.org files.pythonhosted.org
+
 function abspath()
 {
     # return absolute path name, normalizing ".."
