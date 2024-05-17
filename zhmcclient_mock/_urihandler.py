@@ -5253,6 +5253,7 @@ class SubmitRequestsHandler(object):
                 else:
                     status = 200
             response = {
+                # pylint: disable=possibly-used-before-assignment
                 'status': status,
                 'headers': [],  # TODO: Implement
             }
