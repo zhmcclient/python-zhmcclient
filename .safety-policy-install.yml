@@ -48,6 +48,16 @@ security:
             reason: Fixed urllib3 version 1.26.18 requires Python>=3.6 and is used there
         62044:
             reason: Fixed pip version 23.3 requires Python>=3.7 and is used there
+        67599:
+            reason: There is no fixed pip version
+        67884:
+            # TODO: Adjust once we remove stomp-py pinning
+            reason: Fixed stomp-py version 8.1.1 conflicts with our pinning of stomp-py to <7.0.0
+        67894:
+            # TODO: Adjust once we remove stomp-py pinning
+            reason: Fixed stomp-py version 8.1.1 conflicts with our pinning of stomp-py to <7.0.0
+        67895:
+            reason: Fixed idna version 3.7 requires requests>=2.26.0 which requires Python>=3.6 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
