@@ -704,6 +704,7 @@ class MetricsResponse(object):
                     # Process the metric values in the ValueRow line
                     str_values = mr_line.split(',')
                     metrics = {}
+                    # pylint: disable=possibly-used-before-assignment
                     for m_name in m_defs:
                         m_def = m_defs[m_name]
                         m_type = m_def.type

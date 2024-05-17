@@ -136,7 +136,8 @@ class TestPartition(object):
             faked_partition = self.add_partition1()
         elif part_name == PART2_NAME:
             faked_partition = self.add_partition2()
-        elif part_name == PART3_NAME:
+        else:
+            assert part_name == PART3_NAME
             faked_partition = self.add_partition3()
         return faked_partition
 

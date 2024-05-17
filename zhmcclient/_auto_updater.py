@@ -116,6 +116,7 @@ class AutoUpdater(object):
         if not self._session.object_topic:
             self._session.logon()  # This sets actual_host
 
+        # pylint: disable=possibly-used-before-assignment
         self._conn = Stomp_Connection(
             [(self._session.actual_host, DEFAULT_STOMP_PORT)], use_ssl="SSL")
         listener = _UpdateListener(self, self._session)

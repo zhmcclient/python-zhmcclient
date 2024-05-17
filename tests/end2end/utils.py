@@ -257,39 +257,94 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         # The code to be tested: find_by_name(name)
         found_res = manager.find_by_name(name)
 
-    # Get full properties directly, for comparison
-    exp_props = session.get(found_res.uri)
+        # Get full properties directly, for comparison
+        exp_props = session.get(found_res.uri)
 
-    # Get the object-id of the resource from its URI
-    oid = found_res.uri.split('/')[-1]
-    oid_prop = manager._oid_prop  # pylint: disable=protected-access
+        if client_prop:
+            client_value = exp_props[client_prop]
 
-    if client_prop:
-        client_value = exp_props[client_prop]
+        if server_prop:
+            server_value = exp_props[server_prop]
 
-    if server_prop:
-        server_value = exp_props[server_prop]
-
-    assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                     prop_names=minimal_props)
-
-    # The code to be tested: find(oid), for optimized lookup
-    found_res = manager.find(**{oid_prop: oid})
-
-    assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                     prop_names=minimal_props)
-
-    # The code to be tested: pull_full_properties()
-    found_res.pull_full_properties()
-
-    assert_res_props(found_res, exp_props, ignore_values=volatile_props)
-
-    if server_prop:
-        # The code to be tested: find() with server-side filter
-        found_res = manager.find(**{server_prop: server_value})
+        # Get the object-id of the resource from its URI
+        oid = found_res.uri.split('/')[-1]
+        oid_prop = manager._oid_prop  # pylint: disable=protected-access
 
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                          prop_names=minimal_props)
+
+        # The code to be tested: find(oid), for optimized lookup
+        found_res = manager.find(**{oid_prop: oid})
+
+        assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                         prop_names=minimal_props)
+
+        # The code to be tested: pull_full_properties()
+        found_res.pull_full_properties()
+
+        assert_res_props(found_res, exp_props, ignore_values=volatile_props)
+
+        if server_prop:
+            # The code to be tested: find() with server-side filter
+            found_res = manager.find(**{server_prop: server_value})
+
+            assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                             prop_names=minimal_props)
+
+            # The code to be tested: findall() with server-side filter
+            found_res_list = manager.findall(**{server_prop: server_value})
+
+            assert len(found_res_list) == 1
+            found_res = found_res_list[0]
+            assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                             prop_names=minimal_props)
+
+        if client_prop:
+            # The code to be tested: findall() with client-side filter
+            # pylint: disable=used-before-assignment
+            found_res_list = manager.findall(**{client_prop: client_value})
+
+            assert name in map(lambda _res: _res.name, found_res_list)
+            found_res_list = list(filter(lambda _res: _res.name == name,
+                                         found_res_list))
+            found_res = found_res_list[0]
+            if len(found_res_list) > 1:
+                raise AssertionError(
+                    "{k} findall(client_filter) result with non-unique name "
+                    "{n!r}: {o}".
+                    format(k=found_res.prop('class'), n=name, o=found_res_list))
+            assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                             prop_names=list_props)
+
+        if server_prop:
+            # Code to be tested: list() with server-side filter and full props
+            found_res_list = manager.list(
+                full_properties=True, filter_args={server_prop: server_value})
+
+            assert len(found_res_list) == 1
+            found_res = found_res_list[0]
+            assert_res_props(found_res, exp_props, ignore_values=volatile_props)
+
+        if server_prop:
+            # Code to be tested: list() with server-side filter and short props
+            found_res_list = manager.list(
+                filter_args={server_prop: server_value})
+
+            assert len(found_res_list) == 1
+            found_res = found_res_list[0]
+            assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                             prop_names=minimal_props)
+
+        if client_prop:
+            # Code to be tested: list() with client-side filter and short props
+            found_res_list = manager.list(
+                filter_args={client_prop: client_value})
+
+            assert name in [_res.name for _res in found_res_list]
+            found_res = [_res for _res in found_res_list
+                         if _res.name == name][0]
+            assert_res_props(found_res, exp_props, ignore_values=volatile_props,
+                             prop_names=minimal_props)
 
     # The code to be tested: findall() with no filter
     found_res_list = manager.findall()
@@ -309,31 +364,6 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
                    o='\n'.join(found_uri_list)))
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
-
-    if server_prop:
-        # The code to be tested: findall() with server-side filter
-        found_res_list = manager.findall(**{server_prop: server_value})
-
-        assert len(found_res_list) == 1
-        found_res = found_res_list[0]
-        assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                         prop_names=minimal_props)
-
-    if client_prop:
-        # The code to be tested: findall() with client-side filter
-        found_res_list = manager.findall(**{client_prop: client_value})
-
-        assert name in map(lambda _res: _res.name, found_res_list)
-        found_res_list = list(filter(lambda _res: _res.name == name,
-                                     found_res_list))
-        found_res = found_res_list[0]
-        if len(found_res_list) > 1:
-            raise AssertionError(
-                "{k} findall(client_filter) result with non-unique name {n!r}: "
-                "{o}".
-                format(k=found_res.prop('class'), n=name, o=found_res_list))
-        assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                         prop_names=list_props)
 
     # The code to be tested: list() with no filter and short properties
     found_res_list = manager.list()
@@ -367,33 +397,6 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
                 format(k=found_res.prop('class'), n=name, o=found_res_list))
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                          prop_names=list_props + add_props)
-
-    if server_prop:
-        # The code to be tested: list() with server-side filter and full props
-        found_res_list = manager.list(full_properties=True,
-                                      filter_args={server_prop: server_value})
-
-        assert len(found_res_list) == 1
-        found_res = found_res_list[0]
-        assert_res_props(found_res, exp_props, ignore_values=volatile_props)
-
-    if server_prop:
-        # The code to be tested: list() with server-side filter and short props
-        found_res_list = manager.list(filter_args={server_prop: server_value})
-
-        assert len(found_res_list) == 1
-        found_res = found_res_list[0]
-        assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                         prop_names=minimal_props)
-
-    if client_prop:
-        # The code to be tested: list() with client-side filter and short props
-        found_res_list = manager.list(filter_args={client_prop: client_value})
-
-        assert name in [_res.name for _res in found_res_list]
-        found_res = [_res for _res in found_res_list if _res.name == name][0]
-        assert_res_props(found_res, exp_props, ignore_values=volatile_props,
-                         prop_names=minimal_props)
 
 
 def runtest_get_properties(

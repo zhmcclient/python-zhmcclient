@@ -1049,6 +1049,7 @@ class Partition(BaseResource):
             if actual_status in statuses:
                 return
 
+            # pylint: disable=possibly-used-before-assignment
             if status_timeout > 0 and time.time() > end_time:
                 raise StatusTimeout(
                     "Waiting for partition {} to reach status(es) '{}' timed "
