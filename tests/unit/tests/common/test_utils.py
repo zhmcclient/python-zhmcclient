@@ -88,7 +88,7 @@ class TestUtilsAssertResources(object):
 
         if props == 'all':
             prop_names = exp_resources[0].properties.keys()
-        if props == 'some':
+        elif props == 'some':
             prop_names = ['name', 'status']
             # We change a property that is not being checked:
             exp_resources[0].properties['description'] = 'changed description'
@@ -96,7 +96,8 @@ class TestUtilsAssertResources(object):
             prop_names = []
             # No properties are checked, we change a property:
             exp_resources[0].properties['description'] = 'changed description'
-        elif props == 'none':
+        else:
+            assert props == 'none'
             # All properties are checked.
             prop_names = None
 
@@ -126,11 +127,12 @@ class TestUtilsAssertResources(object):
             prop_names = exp_resources[0].properties.keys()
             # We change a property that is being checked:
             exp_resources[0].properties['description'] = 'changed description'
-        if props == 'some':
+        elif props == 'some':
             prop_names = ['name', 'status']
             # We change a property that is being checked:
             exp_resources[0].properties['status'] = 'not-operating'
-        elif props == 'none':
+        else:
+            assert props == 'none'
             # All properties are checked.
             prop_names = None
             # We change a property that is being checked:

@@ -668,6 +668,7 @@ def test_lpar_activate(
                 pytest.skip("Load activation profile {p!r} does not exist on "
                             "CPC {c}.".format(c=cpc.name, p=lap_name))
 
+        # pylint: disable=possibly-used-before-assignment
         op_mode = iap.get_property('operating-mode')
         assert op_mode == lpar_mode, (
             "Incorrect testcase definition: Operating mode {om!r} in image "

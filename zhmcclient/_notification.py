@@ -170,6 +170,7 @@ class NotificationReceiver(object):
             # pylint: disable=import-outside-toplevel
             from stomp import Connection as Stomp_Connection
 
+        # pylint: disable=possibly-used-before-assignment
         self._conn = Stomp_Connection(
             [(self._host, self._port)], use_ssl="SSL")
         listener = _NotificationListener(self._handover_dict,
