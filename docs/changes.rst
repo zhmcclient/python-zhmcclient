@@ -35,9 +35,9 @@ Released: not yet
   macos-latest back to macos-12 because macos-latest got upgraded from macOS 12
   to macOS 14 which no longer supports these Python versions.
 
-* Dev: Fixed new issue 'possibly-used-before-assignment' in Pylint 3.2.0.
-
 * Dev: Workaround for cert issue with pip in Python 3.5 in Github Actions.
+
+* Dev: Fixed new issue 'possibly-used-before-assignment' in Pylint 3.2.0.
 
 **Enhancements:**
 
