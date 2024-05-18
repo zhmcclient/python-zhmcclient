@@ -103,8 +103,8 @@ setuptools.setup(
 
     description=''
     'A pure Python client library for the IBM Z HMC Web Services API.',
-    long_description=read_file('README.rst'),
-    long_description_content_type='text/x-rst',
+    long_description=read_file('README.md'),
+    long_description_content_type='text/markdown',
     license='Apache License, Version 2.0',
     author='Juergen Leopold, Andreas Maier',
     author_email='leopoldj@de.ibm.com, maiera@de.ibm.com',
