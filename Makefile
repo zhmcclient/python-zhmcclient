@@ -250,7 +250,7 @@ build_files := $(bdist_file) $(sdist_file)
 dist_included_files := \
     setup.py \
     LICENSE \
-    README.rst \
+    README.md \
     requirements.txt \
     extra-testutils-requirements.txt \
     $(package_py_files) \
