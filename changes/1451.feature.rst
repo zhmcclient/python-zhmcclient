@@ -1,0 +1,2 @@
+Added new method Nic.backing_port() to return the backing adapter port
+of the NIC.

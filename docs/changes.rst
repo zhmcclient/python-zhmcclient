@@ -19,64 +19,7 @@
 Change log
 ----------
 
-
-Version 1.15.0.dev1
-^^^^^^^^^^^^^^^^^^^
-
-This version contains all fixes up to version 1.14.x.
-
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
-
-**Bug fixes:**
-
-* Fixed safety issues up to 2024-05-17.
-
-* In the Github Actions test workflow for Python 3.5, 3.6 and 3.7, changed
-  macos-latest back to macos-12 because macos-latest got upgraded from macOS 12
-  to macOS 14 which no longer supports these Python versions.
-
-* Dev: Workaround for cert issue with pip in Python 3.5 in Github Actions.
-
-* Dev: Fixed new issue 'possibly-used-before-assignment' in Pylint 3.2.0.
-
-* Docs: Fixed formatting of badges on README page by converting it to
-  Markdown. (issue #1473)
-
-**Enhancements:**
-
-* Test: Added the option 'ignore-unpinned-requirements: False' to both
-  safety policy files because for safety 3.0, the default is to ignore
-  unpinned requirements (in requirements.txt).
-  Increased safety minimum version to 3.0 because the new option is not
-  tolerated by safety 2.x. Safety now runs only on Python >=3.7 because
-  that is what safetx 3.0 requires.
-
-* Added new method Nic.backing_port() to return the backing adapter port
-  of the NIC. (issue #1451)
-
-* Changed safety run for install dependencies to use the exact minimum versions
-  of the dependent packages, by moving them into a separate
-  minimum-constraints-install.txt file that is included by the existing
-  minimum-constraints.txt file.
-
-* The safety run for all dependencies now must succeed when the test workflow
-  is run for a release (i.e. branch name 'release_...').
-
-**Cleanup:**
-
-* Addressed new issues raised by Pylint 3.1.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
-
-
+.. towncrier start
 Version 1.14.0
 ^^^^^^^^^^^^^^
 

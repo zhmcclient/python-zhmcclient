@@ -1,0 +1,77 @@
+{#
+ # Jinja2 template for towncrier to generate the change log from change fragments.
+ #
+ # Input variables (as of towncrier 22.8.0):
+ # - render_title (bool): Indicates whether a title should be rendered by the
+ #   template. If False, the title is being added by towncrier to the result of
+ #   the template.
+ # - sections: The change fragments, as a dict with key: section
+ #   name, value: dict with key: category (=type) name, value: dict with key:
+ #   change fragment text, value: list of issues.
+ # - definitions: The definitions of change categories (=types), as a dict
+ #   with key: type name, value: dict with items 'name', 'showcontent'.
+ # - underlines (str): The underline characters to use for the different heading
+ #   levels (following the top heading level)
+ # - versiondata (dict): Project name and version data, as a dict with items
+ #   'name', 'version', 'date'.
+ # - top_underline (str): The underline character to be used for the title
+ #   of the change log when the template generates the title.
+ # - get_indent (func): Function to get the indentation for subsequent lines
+ #   given the first line of a multi-line change fragment text.
+ #}
+{% if render_title %}
+{%   if versiondata.name %}
+{{ versiondata.name }} {{ versiondata.version }} ({{ versiondata.date }})
+{{ top_underline * ((versiondata.name + versiondata.version + versiondata.date)|length + 4)}}
+{%   else %}
+{{ versiondata.version }} ({{ versiondata.date }})
+{{ top_underline * ((versiondata.version + versiondata.date)|length + 3)}}
+{%   endif %}
+{% endif %}
+
+Released: {{ versiondata.date }}
+
+{% for section, _ in sections.items() %}
+{%   set underline = underlines[0] %}
+{%   if section %}
+{{ section }}
+{{ underline * section|length }}
+
+{%     set underline = underlines[1] %}
+{%   endif %}
+{%   if sections[section] %}
+{%     for category, val in definitions.items() if category in sections[section] and category != 'notshown' %}
+**{{ definitions[category]['name'] }}:**
+
+{%       if definitions[category]['showcontent'] %}
+{%         for text, values in sections[section][category].items() %}
+{%           set issue_values = [] %}
+{%           for v in values if 'noissue' not in v %}
+{%             set _ = issue_values.append(v) %}
+{%           endfor %}
+{%           set issue_values_str = ' (' + issue_values|join(', ') + ')' if issue_values else '' %}
+* {{ text }}{{ issue_values_str }}
+
+{%         endfor %}
+{%       else %}
+{%         set issue_values = [] %}
+{%         for v in sections[section][category][''] if 'noissue' not in v %}
+{%           set _ = issue_values.append(v) %}
+{%         endfor %}
+{%         if issue_values %}
+* {{ issue_values|join(', ') }}
+
+{%         endif %}
+{%       endif %}
+{%       if sections[section][category]|length == 0 %}
+No significant changes.
+
+{%       endif %}
+{%     endfor %}
+{%   else %}
+No significant changes.
+
+{%   endif %}
+{% endfor %}
+{{ '' }}
+{{ '' }}

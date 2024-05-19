@@ -11,6 +11,9 @@
 # PEP517 package builder, used in Makefile
 build>=0.5.0
 
+# Change log
+towncrier>=22.8.0; python_version >= '3.7'
+
 # Unit test (imports into testcases):
 funcsigs>=1.0.2; python_version < '3.3'
 # pytest 5.0.0 has removed support for Python < 3.5
