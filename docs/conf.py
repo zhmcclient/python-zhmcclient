@@ -140,7 +140,7 @@ language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["README.md", "try", "design",
+exclude_patterns = ["README.md", "try", "design", "changes",
                     "tests", ".tox", ".git", "attic", "dist",
                     "build_doc", "zhmcclient.egg-info", ".eggs"]
 

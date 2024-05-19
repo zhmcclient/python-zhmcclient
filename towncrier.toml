@@ -1,0 +1,46 @@
+# Config file for towncrier change log tool
+
+[tool.towncrier]
+directory = "changes"
+package = "zhmcclient"
+# package_dir = "."
+filename = "docs/changes.rst"
+template = "changes/changes.rst.j2"
+start_string = ".. towncrier start"
+title_format = "Version {version}"
+underlines = "^~"
+issue_format = "`#{issue} <https://github.com/zhmcclient/python-zhmcclient/issues/{issue}>`_"
+
+# The following array defines the allowable change types, in order
+
+[[tool.towncrier.type]]
+directory = "incompatible"
+name = "Incompatible changes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "deprecation"
+name = "Deprecations"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fix"
+name = "Bug fixes"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "Enhancements"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "cleanup"
+name = "Cleanup"
+showcontent = true
+
+# Type that is not shown in the change log at all, because the towncrier template
+# is skipping this change type. The 'showcontent' flag is not strong enough for that.
+[[tool.towncrier.type]]
+directory = "notshown"
+name = "Changes not shown"
+showcontent = false

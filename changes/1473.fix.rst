@@ -1,0 +1,2 @@
+Docs: Fixed formatting of badges on README page by converting it to
+Markdown.

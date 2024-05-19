@@ -214,22 +214,17 @@ check_py_files := \
     $(wildcard docs/notebooks/*.py) \
 
 # Packages whose dependencies are checked using pip-missing-reqs
+check_reqs_base_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook
 ifeq ($(python_m_version),2)
-  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook
+  check_reqs_packages := $(check_reqs_base_packages)
+else ifeq ($(python_mn_version),3.5)
+  check_reqs_packages := $(check_reqs_base_packages)
+else ifeq ($(python_mn_version),3.6)
+  check_reqs_packages := $(check_reqs_base_packages)
+else ifeq ($(python_mn_version),3.7)
+  check_reqs_packages := $(check_reqs_base_packages) safety towncrier
 else
-ifeq ($(python_mn_version),3.5)
-  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook
-else
-ifeq ($(python_mn_version),3.6)
-  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook
-else
-ifeq ($(python_mn_version),3.7)
-  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook safety
-else
-  check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook safety sphinx
-endif
-endif
-endif
+  check_reqs_packages := $(check_reqs_base_packages) safety towncrier sphinx
 endif
 
 ifdef TESTCASES

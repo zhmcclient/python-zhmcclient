@@ -20,6 +20,11 @@ build==0.5.0
 # build up to version 0.9 requires pep517>=0.9.1
 pep517==0.9.1
 
+# Change log
+towncrier==22.8.0; python_version >= '3.7'
+incremental==22.10.0; python_version >= '3.7'
+click-default-group==1.2.4; python_version >= '3.7'
+
 # Unit test (imports into testcases):
 # Note: pytest is covered in minimum-constraints-install.txt
 funcsigs==1.0.2; python_version == '2.7'

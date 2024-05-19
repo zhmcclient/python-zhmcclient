@@ -612,6 +612,103 @@ For further discussion of good and bad practices regarding commits, see:
 .. _How to Get Your Change Into the Linux Kernel: https://www.kernel.org/doc/Documentation/process/submitting-patches.rst
 
 
+.. _`Making a change`:
+
+Making a change
+---------------
+
+To make a change, create a topic branch. You can assume that you are the only
+one using that branch, so force-pushes to that branch and rebasing that branch
+is fine.
+
+When you are ready to push your change, describe the change for users of the
+package in a change fragment file. To create a change fragment file, execute:
+
+For changes that have a corresponding issue:
+
+.. code-block:: sh
+
+    towncrier create <issue>.<type>.rst --edit
+
+For changes that have no corresponding issue:
+
+.. code-block:: sh
+
+    towncrier create noissue.<number>.<type>.rst --edit
+
+For changes where you do not want to create a change log entry:
+
+.. code-block:: sh
+
+    towncrier create noissue.<number>.notshown.rst --edit
+    # The file content will be ignored - it can also be empty
+
+where:
+
+* ``<issue>`` - The issue number of the issue that is addressed by the change.
+  If the change addresses more than one issue, copy the new change fragment file
+  after its content has been edited, using the other issue number in the file
+  name. It is important that the file content is exactly the same, so that
+  towncrier can create a single change log entry from the two (or more) files.
+
+  If the change has no related issue, use the ``noissue.<number>.<type>.rst``
+  file name format, where ``<number>`` is any number that results in a file name
+  that does not yet exist in the ``changes`` directory.
+
+* ``<type>`` - The type of the change, using one of the following values:
+
+  - ``incompatible`` - An incompatible change. This will show up in the
+    "Incompatible Changes" section of the change log. The text should include
+    a description of the incompatibility from a user perspective and if
+    possible, how to mitigate the change or what replacement functionality
+    can be used instead.
+
+  - ``deprecation`` - An externally visible functionality is being deprecated
+    in this release.
+    This will show up in the "Deprecations" section of the change log.
+    The deprecated functionality still works in this release, but may go away
+    in a future release. If there is a replacement functionality, the text
+    should mention it.
+
+  - ``fix`` - A bug fix in the code, documentation or development environment.
+    This will show up in the "Bug fixes" section of the change log.
+
+  - ``feature`` - A feature or enhancement in the code, documentation or
+    development environment.
+    This will show up in the "Enhancements" section of the change log.
+
+  - ``cleanup`` - A cleanup in the code, documentation or development
+    environment, that does not fix a bug and is not an enhanced functionality.
+    This will show up in the "Cleanup" section of the change log.
+
+  - ``notshown`` - The change will not be shown in the change log.
+
+This command will create a new change fragment file in the ``changes``
+directory and will bring up your editor (usually vim).
+
+If your change does multiple things of different types listed above, create
+a separate change fragment file for each type.
+
+If you need to modify an existing change log entry as part of your change,
+edit the existing corresponding change fragment file.
+
+Add the new or changed change fragment file(s) to your commit. The test
+workflow running on your Pull Request will check whether your change adds or
+modifies change fragment files.
+
+You can review how your changes will show up in the final change log for
+the upcoming release by running:
+
+.. code-block:: sh
+
+    towncrier build --draft
+
+Always make sure that your pushed branch has either just one commit, or if you
+do multiple things, one commit for each logical change. What is not OK is to
+keep the possibly multiple commits it took you to get to the final result for
+the change.
+
+
 .. _`Format of commit messages`:
 
 Format of commit messages
@@ -770,23 +867,23 @@ local clone of the python-zhmcclient Git repo.
 
         __version__ = 'M.N.U'
 
-5.  Edit the change log:
+5.  Update the change log:
+
+    First make a dry-run to print the change log as it would be:
 
     .. code-block:: sh
 
-        vi docs/changes.rst
+        towncrier build --draft
 
-    and make the following changes in the section of the version that is being
-    released:
+    If you are satisfied with the change log, update the change log:
 
-    * Finalize the version.
-    * Change the release date to today's date.
-    * Make sure that all changes are described.
-    * Make sure the items shown in the change log are relevant for and
-      understandable by users.
-    * In the "Known issues" list item, remove the link to the issue tracker and
-      add text for any known issues you want users to know about.
-    * Remove all empty list items.
+    .. code-block:: sh
+
+        towncrier build --yes
+
+    This will update the change log file ``docs/changes.rst`` with the
+    information from the change fragment files in the ``changes`` directory, and
+    will delete these change fragment files.
 
 6.  Update the authors:
 
@@ -960,52 +1057,19 @@ local clone of the python-zhmcclient Git repo.
 
         __version__ = 'M.N.U.dev1'
 
-4.  Edit the change log:
-
-    .. code-block:: sh
-
-        vi docs/changes.rst
-
-    and insert the following section before the top-most section:
-
-    .. code-block:: rst
-
-        Version M.N.U.dev1
-        ^^^^^^^^^^^^^^^^^^
-
-        This version contains all fixes up to version M.N-1.x.
-
-        Released: not yet
-
-        **Incompatible changes:**
-
-        **Deprecations:**
-
-        **Bug fixes:**
-
-        **Enhancements:**
-
-        **Cleanup:**
-
-        **Known issues:**
-
-        * See `list of open issues`_.
-
-        .. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
-
-5.  Commit your changes and push them to the remote repo:
+4.  Commit your changes and push them to the remote repo:
 
     .. code-block:: sh
 
         git commit -asm "Start ${MNU}"
         git push --set-upstream origin start_${MNU}
 
-7.  On GitHub, create a milestone for the new version ``M.N.U``.
+5.  On GitHub, create a milestone for the new version ``M.N.U``.
 
     You can create a milestone in GitHub via Issues -> Milestones -> New
     Milestone.
 
-7.  On GitHub, create a Pull Request for branch ``start_M.N.U``.
+6.  On GitHub, create a Pull Request for branch ``start_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When starting a version based on a stable branch, you
@@ -1015,7 +1079,7 @@ local clone of the python-zhmcclient Git repo.
 
     Set the milestone of that PR to the new version ``M.N.U``.
 
-8.  On GitHub, go through all open issues and pull requests that still have
+7.  On GitHub, go through all open issues and pull requests that still have
     milestones for previous releases set, and either set them to the new
     milestone, or to have no milestone.
 
@@ -1023,11 +1087,11 @@ local clone of the python-zhmcclient Git repo.
     should not be any such issues or pull requests anymore. So this step here
     is just an additional safeguard.
 
-9.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
+8.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
     have succeeded, merge the Pull Request (no review is needed). This
     automatically deletes the branch on GitHub.
 
-10. Update and clean up the local repo:
+9.  Update and clean up the local repo:
 
     .. code-block:: sh
 
