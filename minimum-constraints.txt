@@ -20,6 +20,9 @@ build==0.5.0
 # build up to version 0.9 requires pep517>=0.9.1
 pep517==0.9.1
 
+# Change log
+towncrier==21.9.0
+
 # Unit test (imports into testcases):
 # Note: pytest is covered in minimum-constraints-install.txt
 funcsigs==1.0.2; python_version == '2.7'
