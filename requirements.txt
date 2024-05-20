@@ -1,4 +1,4 @@
-# Pip requirements file for install dependencies (without extras).
+# Pip requirements file for packages needed for installation.
 
 # Note: The dependencies in this file will become the dependencies stated
 # in the Pypi package metadata.

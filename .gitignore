@@ -34,6 +34,7 @@ cover
 *.eggs
 *egg-info
 .vagrant
+zhmcclient/_version_scm.py
 hmccreds.yaml
 hmc_definitions.yaml
 /try/

@@ -1,14 +1,16 @@
-# Pip constraints file for install dependencies.
+# Pip constraints file for packages needed for installation.
 #
 # This file specifies constraints that match the minimum versions specified in
-# the requirement files for install. They are used for example when setting up
-# test environments with the minimum versions of any dependent packages.
+# requirements.txt. They are used for example when setting up test
+# environments with the minimum versions of any dependent packages.
 
 
 # Base dependencies
 
 pip==23.3
 setuptools==66.1.0
+# Note on not specifying 'setuptools-scm[toml]': Extras cannot be in constraints files
+setuptools-scm==6.4.0
 wheel==0.38.1
 
 

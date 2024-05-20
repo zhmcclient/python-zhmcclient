@@ -1,11 +1,7 @@
 # Safety policy file for packages needed for development.
 # For documentation, see https://docs.pyup.io/docs/safety-20-policy-file
 
-# Note: This policy file is used against the versions in minimum-constraints.txt
-# That file includes minimum-constraints-install.txt with '-c'. Since that is
-# not supported and ignored by the safety tool, this policy file ends up being
-# checked just against the minimum versions for development, without install.
-# That's ok since the 'install' safety profile checks the install packages.
+# Note: This policy file is used against the versions in minimum-constraints-develop.txt.
 
 # Configuration for the 'safety check' command
 security:
