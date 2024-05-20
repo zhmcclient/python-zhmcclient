@@ -34,7 +34,7 @@ fi
 if [[ "$PACKAGE_LEVEL" == "latest" ]]; then
   PIP_OPTS="--upgrade"
 elif [[ "$PACKAGE_LEVEL" == "minimum" ]]; then
-  PIP_OPTS="-c $(abspath ${ROOT_DIR}/minimum-constraints.txt)"
+  PIP_OPTS="-c $(abspath ${ROOT_DIR}/minimum-constraints-develop.txt) -c $(abspath ${ROOT_DIR}/minimum-constraints-install.txt)"
 fi
 
 # Path of temporary test directory, as seen by caller.

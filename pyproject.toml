@@ -1,0 +1,77 @@
+# pyproject.toml file for zhmcclient
+# Documentation:
+# pyproject.toml: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+# setuptools items: https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+
+[build-system]
+requires = [
+    # Keep in sync with base-requirements.txt and the base dependencies in
+    # minimum-constraints-install.txt
+    "setuptools>=66.1.0",
+    "setuptools-scm[toml]>=6.4.0",
+    "wheel>=0.38.1"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+platforms = ["any"]
+script-files = []
+zip-safe = true
+
+[tool.setuptools.packages.find]
+# setuptools needs all sub-packages to be specified as well to avoid the
+# ambiguity warning. That can be done by specifyng 'packages' with a full list
+# of packages including sub-packages, or by specifying 'packages.find' with
+# wildcards. The strings in 'packages.find' are matched using glob pattern
+# matching against the package path.
+include = ["zhmcclient", "zhmcclient.*", "zhmcclient_mock", "zhmcclient_mock.*"]
+
+[project]
+name = "zhmcclient"
+description = "A pure Python client library for the IBM Z HMC Web Services API"
+authors = [
+    {name = "Juergen Leopold", email = "leopoldj@de.ibm.com"},
+    {name = "Andreas Maier", email = "maiera@de.ibm.com"}
+]
+maintainers = [
+    {name = "Andreas Maier", email = "maiera@de.ibm.com"},
+    {name = "Kathir Velusamy", email = "kathir.velu@in.ibm.com'"}
+]
+readme = "README.md"
+license = {text = "Apache License, Version 2.0"}
+keywords = ["hmc", "client"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Systems Administration",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.8"
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/zhmcclient/python-zhmcclient"
+"Bug Tracker" = "https://github.com/zhmcclient/python-zhmcclient/issues"
+Documentation = "https://python-zhmcclient.readthedocs.io/en/stable/"
+"Source Code" = "https://github.com/zhmcclient/python-zhmcclient"
+Changelog = "https://python-zhmcclient.readthedocs.io/en/stable/changes.html"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.dynamic.optional-dependencies]
+testutils = {file = ['extra-testutils-requirements.txt']}
+
+[tool.setuptools_scm]
+# Get the version from the Git tag, and write a version file:
+write_to = "zhmcclient/_version_scm.py"

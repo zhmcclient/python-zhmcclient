@@ -9,6 +9,7 @@ on:
   push:  # When pushing a tag
     tags:
     - "*"
+    - "!*a0"  # Exclude initial tag for a new version
 
 jobs:
   publish:

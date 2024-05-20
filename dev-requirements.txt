@@ -1,12 +1,8 @@
-# Pip requirements file for development dependencies.
-
-
-# Include install dependencies
--r requirements.txt
+# Pip requirements file for packages needed for development.
 
 
 # Direct dependencies for development and indirect dependencies for development
-# that are needed for some reason (must be consistent with minimum-constraints.txt)
+# that are needed for some reason (must be consistent with minimum-constraints-develop.txt)
 
 # PEP517 package builder, used in Makefile
 build>=1.0.0

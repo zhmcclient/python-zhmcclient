@@ -41,7 +41,7 @@ ifndef PACKAGE_LEVEL
   PACKAGE_LEVEL := latest
 endif
 ifeq ($(PACKAGE_LEVEL),minimum)
-  pip_level_opts := -c minimum-constraints.txt
+  pip_level_opts := -c minimum-constraints-develop.txt -c minimum-constraints-install.txt
   pip_level_opts_new :=
 else
   ifeq ($(PACKAGE_LEVEL),latest)
@@ -97,6 +97,7 @@ ifeq ($(PLATFORM),Windows_native)
   CP_FUNC = copy /y $(subst /,\\,$(1)) $(subst /,\\,$(2))
   ENV = set
   WHICH = where
+  DEV_NULL = nul
 else
   RM_FUNC = rm -f $(1)
   RM_R_FUNC = find . -type f -name '$(1)' -delete
@@ -105,6 +106,7 @@ else
   CP_FUNC = cp -r $(1) $(2)
   ENV = env | sort
   WHICH = which
+  DEV_NULL = /dev/null
 endif
 
 # Default path names of HMC inventory and vault files used for end2end tests.
@@ -120,9 +122,19 @@ default_testhmc := default
 package_name := zhmcclient
 mock_package_name := zhmcclient_mock
 
-# Package version (full version, including any pre-release suffixes, e.g. "0.1.0.dev1")
-# Note: The package version is defined in zhmcclient/_version.py.
-package_version := $(shell $(PYTHON_CMD) setup.py --version)
+# Package version (e.g. "1.8.0a1.dev10+gd013028e" during development, or "1.8.0"
+# when releasing).
+# Note: The package version is automatically calculated by setuptools_scm based
+# on the most recent tag in the commit history, increasing the least significant
+# version indicator by 1.
+# Note: Errors in getting the version (e.g. if setuptools-scm is not installed)
+# are detected in _check_version. We avoid confusion by suppressing such errors
+# here.
+package_version := $(shell $(PYTHON_CMD) -m setuptools_scm 2>$(DEV_NULL))
+
+# The version file is recreated by setuptools-scm on every build, so it is
+# excluuded from git, and also from some dependency lists.
+version_file := $(package_name)/_version_scm.py
 
 # Python versions
 python_version := $(shell $(PYTHON_CMD) tools/python_version.py 3)
@@ -134,14 +146,14 @@ pymn := py$(python_mn_version)
 dist_dir := dist
 
 # Distribution archives (as built by 'build' tool)
-bdist_file := $(dist_dir)/$(package_name)-$(package_version)-py2.py3-none-any.whl
+bdist_file := $(dist_dir)/$(package_name)-$(package_version)-py3-none-any.whl
 sdist_file := $(dist_dir)/$(package_name)-$(package_version).tar.gz
 
 dist_files := $(bdist_file) $(sdist_file)
 
 # Source files in the packages
 package_py_files := \
-    $(wildcard $(package_name)/*.py) \
+    $(filter-out $(version_file), $(wildcard $(package_name)/*.py)) \
     $(wildcard $(package_name)/*/*.py) \
     $(wildcard $(mock_package_name)/*.py) \
     $(wildcard $(mock_package_name)/*/*.py) \
@@ -204,11 +216,10 @@ pylint_opts := --disable=fixme
 
 # Safety policy file (for packages needed for installation)
 safety_install_policy_file := .safety-policy-install.yml
-safety_all_policy_file := .safety-policy-all.yml
+safety_develop_policy_file := .safety-policy-develop.yml
 
 # Source files for check (with PyLint and Flake8)
 check_py_files := \
-    setup.py \
     $(package_py_files) \
     $(test_unit_py_files) \
     $(test_end2end_py_files) \
@@ -235,7 +246,7 @@ build_files := $(bdist_file) $(sdist_file)
 # This is also used for 'include' statements in MANIFEST.in.
 # Wildcards can be used directly (i.e. without wildcard function).
 dist_included_files := \
-    setup.py \
+    pyproject.toml \
     LICENSE \
     README.md \
     requirements.txt \
@@ -289,7 +300,7 @@ help:
 	@echo "  PACKAGE_LEVEL - Package level to be used for installing dependent Python"
 	@echo "      packages in 'install' and 'develop' targets:"
 	@echo "        latest - Latest package versions available on Pypi"
-	@echo "        minimum - A minimum version as defined in minimum-constraints.txt"
+	@echo "        minimum - Minimum versions as defined in minimum-constraints*.txt"
 	@echo "      Optional, defaults to 'latest'."
 	@echo "  PYTHON_CMD=... - Name of python command. Default: python"
 	@echo "  PIP_CMD=... - Name of pip command. Default: pip"
@@ -329,18 +340,17 @@ ifeq (,$(package_version))
 	$(error Package version could not be determined)
 endif
 
-$(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done: Makefile
+$(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done: Makefile base-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
-	bash -c 'pv=$$($(PIP_CMD) --version); if [[ $$pv =~ (^pip [1-8]\..*) ]]; then $(PYTHON_CMD) -m pip install pip==9.0.1; fi'
 	@echo "Installing/upgrading pip, setuptools and wheel with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
-	$(PYTHON_CMD) -m pip install $(pip_level_opts) pip setuptools wheel
+	$(PYTHON_CMD) -m pip install $(pip_level_opts) -r base-requirements.txt
 	echo "done" >$@
 
 .PHONY: develop
 develop: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt requirements.txt minimum-constraints.txt minimum-constraints-install.txt
+$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
 	@echo 'Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
@@ -358,7 +368,7 @@ builddoc: html
 html: $(doc_build_dir)/html/docs/index.html
 	@echo "Makefile: $@ done."
 
-$(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
+$(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files) $(bdist_file)
 	@echo "Running Sphinx to create HTML pages"
 	-$(call RM_FUNC,$@)
 	$(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
@@ -366,7 +376,7 @@ $(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PA
 	@echo "Done: Created the HTML pages with top level file: $@"
 
 .PHONY: pdf
-pdf: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
+pdf: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files) $(bdist_file)
 	@echo "Running Sphinx to create PDF files"
 	$(doc_cmd) -b latex $(doc_opts) $(doc_build_dir)/pdf
 	@echo "Running LaTeX files through pdflatex..."
@@ -376,7 +386,7 @@ pdf: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_
 	@echo "Makefile: $@ done."
 
 .PHONY: man
-man: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
+man: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files) $(bdist_file)
 	@echo "Running Sphinx to create manual pages"
 	$(doc_cmd) -b man $(doc_opts) $(doc_build_dir)/man
 	@echo
@@ -384,7 +394,7 @@ man: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_
 	@echo "Makefile: $@ done."
 
 .PHONY: docchanges
-docchanges:
+docchanges: $(bdist_file)
 	@echo "Running Sphinx to create the doc changes overview file"
 	$(doc_cmd) -b changes $(doc_opts) $(doc_build_dir)/changes
 	@echo
@@ -392,7 +402,7 @@ docchanges:
 	@echo "Makefile: $@ done."
 
 .PHONY: doclinkcheck
-doclinkcheck:
+doclinkcheck: $(bdist_file)
 	@echo "Running Sphinx to check the doc links"
 	$(doc_cmd) -b linkcheck $(doc_opts) $(doc_build_dir)/linkcheck
 	@echo
@@ -400,7 +410,7 @@ doclinkcheck:
 	@echo "Makefile: $@ done."
 
 .PHONY: doccoverage
-doccoverage:
+doccoverage: $(bdist_file)
 	@echo "Running Sphinx to doc coverage results"
 	$(doc_cmd) -b coverage $(doc_opts) $(doc_build_dir)/coverage
 	@echo "Done: Created the doc coverage results in: $(doc_build_dir)/coverage/python.txt"
@@ -419,14 +429,14 @@ pylint: $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
 .PHONY: safety
-safety: $(done_dir)/safety_all_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done
+safety: $(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
 .PHONY: install
 install: $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/pip_upgrade_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints.txt minimum-constraints-install.txt
+$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -e .
@@ -479,8 +489,7 @@ else
 	@false
 endif
 
-# Note: distutils depends on the right files specified in MANIFEST.in, even when
-# they are already specified e.g. in 'package_data' in setup.py.
+# Note: The build depends on the right files specified in MANIFEST.in.
 # We generate the MANIFEST.in file automatically, to have a single point of
 # control (this Makefile) for what gets into the distribution archive.
 MANIFEST.in: Makefile $(dist_included_files)
@@ -494,14 +503,15 @@ endif
 	@echo "Makefile: Done creating the manifest input file: $@"
 
 # Distribution archives.
-# Note: Deleting MANIFEST causes distutils (setup.py) to read MANIFEST.in and to
-# regenerate MANIFEST. Otherwise, changes in MANIFEST.in will not be used.
-# Note: Deleting build is a safeguard against picking up partial build products
-# which can lead to incorrect hashbangs in scripts in wheel archives.
-$(bdist_file) $(sdist_file): Makefile MANIFEST.in $(dist_included_files)
-	-$(call RM_FUNC,MANIFEST)
-	-$(call RMDIR_FUNC,build $(package_name).egg-info-INFO .eggs)
-	$(PYTHON_CMD) -m build --outdir $(dist_dir)
+$(sdist_file): pyproject.toml MANIFEST.in $(dist_included_files)
+	@echo "Makefile: Building the source distribution archive: $(sdist_file)"
+	$(PYTHON_CMD) -m build --sdist --outdir $(dist_dir) .
+	@echo "Makefile: Done building the source distribution archive: $(sdist_file)"
+
+$(bdist_file): pyproject.toml MANIFEST.in $(dist_included_files)
+	@echo "Makefile: Building the wheel distribution archive: $(bdist_file)"
+	$(PYTHON_CMD) -m build --wheel --outdir $(dist_dir) -C--universal .
+	@echo "Makefile: Done building the wheel distribution archive: $(bdist_file)"
 
 $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(pylint_rc_file) $(check_py_files)
 	@echo "Makefile: Running Pylint"
@@ -510,12 +520,12 @@ $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(
 	echo "done" >$@
 	@echo "Makefile: Done running Pylint"
 
-$(done_dir)/safety_all_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_all_policy_file) minimum-constraints.txt minimum-constraints-install.txt
-	@echo "Makefile: Running Safety for all packages"
+$(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_develop_policy_file) minimum-constraints-develop.txt minimum-constraints-install.txt
+	@echo "Makefile: Running Safety for development packages"
 	-$(call RM_FUNC,$@)
-	bash -c "safety check --policy-file $(safety_all_policy_file) -r minimum-constraints.txt --full-report || test '$(RUN_TYPE)' != 'release' || exit 1"
+	bash -c "safety check --policy-file $(safety_develop_policy_file) -r minimum-constraints-develop.txt --full-report || test '$(RUN_TYPE)' != 'release' || exit 1"
 	echo "done" >$@
-	@echo "Makefile: Done running Safety for all packages"
+	@echo "Makefile: Done running Safety for development packages"
 
 $(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_install_policy_file) minimum-constraints-install.txt
 	@echo "Makefile: Running Safety for install packages"
@@ -538,10 +548,7 @@ $(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PA
 	@echo "Makefile: Done running Ruff"
 
 .PHONY: check_reqs
-check_reqs: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
-ifeq ($(python_m_version),2)
-	@echo "Makefile: Warning: Skipping the checking of missing dependencies on Python $(python_version)" >&2
-else
+check_reqs: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-develop.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
 	@echo "Makefile: Checking missing dependencies of this package"
 	bash -c "cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt; pip-missing-reqs $(package_name) --requirements-file=tmp_requirements.txt"
 	-$(call RM_FUNC,tmp_requirements.txt)
@@ -552,9 +559,10 @@ ifeq ($(PLATFORM),Windows_native)
 	@echo "Makefile: Warning: Skipping the checking of missing dependencies of site-packages directory on native Windows" >&2
 else
 	@echo "Makefile: Checking missing dependencies of some development packages in our minimum versions"
-	@rc=0; for pkg in $(check_reqs_packages); do dir=$$($(PYTHON_CMD) -c "import $${pkg} as m,os; dm=os.path.dirname(m.__file__); d=dm if not dm.endswith('site-packages') else m.__file__; print(d)"); cmd="pip-missing-reqs $${dir} --requirements-file=minimum-constraints.txt"; echo $${cmd}; $${cmd}; rc=$$(expr $${rc} + $${?}); done; exit $${rc}
+	cat minimum-constraints-develop.txt minimum-constraints-install.txt >tmp_minimum-constraints.txt
+	@rc=0; for pkg in $(check_reqs_packages); do dir=$$($(PYTHON_CMD) -c "import $${pkg} as m,os; dm=os.path.dirname(m.__file__); d=dm if not dm.endswith('site-packages') else m.__file__; print(d)"); cmd="pip-missing-reqs $${dir} --requirements-file=tmp_minimum-constraints.txt"; echo $${cmd}; $${cmd}; rc=$$(expr $${rc} + $${?}); done; exit $${rc}
+	rm -f tmp_minimum-constraints.txt
 	@echo "Makefile: Done checking missing dependencies of some development packages in our minimum versions"
-endif
 endif
 	@echo "Makefile: $@ done."
 
@@ -566,13 +574,13 @@ test: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_fi
 
 .PHONY: installtest
 installtest: $(bdist_file) $(sdist_file) $(test_dir)/installtest/test_install.sh
-	@echo "Makefile: Running install tests"
 ifeq ($(PLATFORM),Windows_native)
 	@echo "Makefile: Warning: Skipping install test on native Windows" >&2
 else
+	@echo "Makefile: Running install tests"
 	$(test_dir)/installtest/test_install.sh $(bdist_file) $(sdist_file) $(PYTHON_CMD)
-endif
 	@echo "Makefile: Done running install tests"
+endif
 
 .PHONY:	end2end
 end2end: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)

@@ -1,15 +1,8 @@
-# Pip constraints file for install and development dependencies.
+# Pip constraints file for packages needed for development.
 #
 # This file specifies constraints that match the minimum versions specified in
-# the requirement files for install and development. They are used for example
-# when setting up test environments with the minimum versions of any dependent
-# packages.
-
-
-# Note: The included file is processed by Pip but ignored by the Safety tool.
-# Thus, safety with the 'all' profile actually only checks development packages,
-# but that's ok since the 'install' profile checks the install packages.
--c minimum-constraints-install.txt
+# dev-requirements.txt. They are used for example when setting up test
+# environments with the minimum versions of any dependent packages.
 
 
 # Direct dependencies for development and indirect dependencies for development
