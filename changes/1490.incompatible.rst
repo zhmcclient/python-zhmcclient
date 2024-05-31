@@ -1,0 +1,4 @@
+The 'zhmcclient.User' object will no longer be able to store the 'password'
+property. The 'password' property is filtered out when creating the User object
+in 'UserManager.create()' and when updating the User object in
+'User.update_properties()'.
