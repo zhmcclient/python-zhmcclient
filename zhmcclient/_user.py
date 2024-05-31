@@ -178,6 +178,7 @@ class UserManager(BaseManager):
         # returned props should overwrite the input props:
         props = copy.deepcopy(properties)
         props.update(result)
+        props.pop('password', None)
         name = props.get(self._name_prop, None)
         uri = props[self._uri_prop]
         user = User(self, uri, name, props)
@@ -275,7 +276,9 @@ class User(BaseResource):
         # HTTPError to be raised in the POST above, so we assert that here,
         # because we omit the extra code for handling name updates:
         assert self.manager._name_prop not in properties
-        self.update_properties_local(copy.deepcopy(properties))
+        props = copy.deepcopy(properties)
+        props.pop('password', None)
+        self.update_properties_local(props)
 
     @logged_api_call
     def add_user_role(self, user_role):
