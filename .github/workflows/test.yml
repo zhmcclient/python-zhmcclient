@@ -275,7 +275,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Make sure this change adds or changes at least one change fragment file
+    - name: Make sure this change adds or changes at least one change fragment file (unless start PR)
+      if: ${{ ! startsWith(github.head_ref, 'start_') }}
       run: |
         bash -c "! git diff --exit-code origin/${{ github.base_ref }} changes/*.rst >/dev/null || (echo 'Please add or modify a change fragment file in the changes directory - for details read the Making a change section in the docs'; exit 1)"
     - name: Set up Python ${{ matrix.python-version }} (if py==3.5)
