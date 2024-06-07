@@ -1268,6 +1268,89 @@ class Console(BaseResource):
 
         return result
 
+    @logged_api_call
+    def delete_uninstalled_firmware(
+            self, ec_levels=None,
+            wait_for_completion=True, operation_timeout=None):
+        """
+        Deletes retrieved but uninstalled firmware on this HMC.
+
+        This is done by performing the "Console Delete Retrieved Internal Code"
+        operation.
+
+        Authorization requirements:
+
+        * Task permission to the "Change Console Internal Code" task.
+
+        Parameters:
+
+          ec_levels (list of tuple(ec,mcl)): The specific EC levels back to
+            which the firmware should be deleted.
+            If `None`, all uninstalled MCLs are deleted.
+
+            The EC levels are specified as a list of tuples (ec, mcl) where:
+
+              - ec (string): EC number of the EC stream (e.g. "P30719")
+              - mcl (string): MCL number within the EC stream (e.g. "001")
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation including any HMC
+            restarts, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation including any HMC
+              restarts.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation including any HMC restarts. The
+            special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used. If the
+            timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          string or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns a string with the
+            message text describing the detailed error that occurred when the
+            operation was not successful.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC. The Job object will be valid across
+            any HMC restarts that occur during the upgrade operation.
+            This job does not support cancellation.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+
+        body = {}
+
+        if ec_levels is not None:
+            body['ec-levels'] = \
+                [{"number": ec[0], "mcl": ec[1]} for ec in ec_levels]
+
+        result = self.manager.session.post(
+            self.uri + '/operations/delete-retrieved-internal-code',
+            resource=self,
+            body=body, wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+
+        return result
+
     def dump(self):
         """
         Dump this Console resource with its properties and child resources
