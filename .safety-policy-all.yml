@@ -84,6 +84,12 @@ security:
             reason: Fixed tornado version 6.3.3 requires Python>=3.8 and is used there
         64227:
             reason: Fixed Jinja2 version 3.1.3 requires Python>=3.7 and is used there
+        68477:
+            reason: Fixed virtualenv version 20.21.0 requires Python>=3.7 and is used there
+        70612:
+            reason: Disputed issue in jinja2 version 3.1.3 - No known fix
+        70790:
+            reason: Fixed tqdm version 4.66.3 requires Python>=3.7 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
