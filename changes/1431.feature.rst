@@ -1,0 +1,2 @@
+Added support for "Console Delete Retrieved Internal Code" HMC operation
+via a new 'zhmcclient.Console.delete_uninstalled_firmware()' method.
