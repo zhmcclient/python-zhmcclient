@@ -1,5 +1,0 @@
-Dev: Migrated from a manually maintained change log file to using change
-fragment files with the 'towncrier' package. This simplifies the procedures
-for starting and releasing a version, and avoids merge conflicts when there
-are multiple Pull Requests at the same time. For details, read the new
-'Making a change' section in the documentation.

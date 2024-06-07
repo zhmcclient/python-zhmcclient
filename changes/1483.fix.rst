@@ -1,2 +1,0 @@
-Test: Upgraded Github actions plugin actions/github-script to v7 to no longer
-use the deprecated Node.js 16.

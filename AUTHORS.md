@@ -21,6 +21,7 @@ Marc Hartmayer <mhartmay@linux.ibm.com>
 Markus Zoeller <mzoeller@de.ibm.com>
 Sebastian Mitterle <smitterl@redhat.com>
 Shreejit <shreejitnair18@gmail.com>
+Simon Spinner <sspinner@de.ibm.com>
 Viktor Mihajlovski <mihajlov@linux.vnet.ibm.com>
 dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
 leopoldjuergen <leopoldj@de.ibm.com>

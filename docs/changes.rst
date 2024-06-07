@@ -20,6 +20,74 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.15.0
+^^^^^^^^^^^^^^
+
+Released: 2024-06-07
+
+**Incompatible changes:**
+
+* The 'zhmcclient.User' object will no longer be able to store the 'password'
+  property. The 'password' property is filtered out when creating the User object
+  in 'UserManager.create()' and when updating the User object in
+  'User.update_properties()'. (`#1490 <https://github.com/zhmcclient/python-zhmcclient/issues/1490>`_)
+
+**Bug fixes:**
+
+* Fixed safety issues up to 2024-05-17
+
+* Dev: In the Github Actions test workflow for Python 3.5, 3.6 and 3.7, changed
+  macos-latest back to macos-12 because macos-latest got upgraded from macOS 12
+  to macOS 14 which no longer supports these Python versions.
+
+* Dev: Workaround for cert issue with pip in Python 3.5 in Github Actions.
+
+* Dev: Addressed new issues raised by Pylint 3.1.
+
+* Dev: Fixed new issue 'possibly-used-before-assignment' in Pylint 3.2.0.
+
+* Docs: Fixed broken links to HMC books since IBM changed the links. As part
+  of that, removed Bibliography entries for the HMC API book versions 2.11/2.12,
+  and for all versions of the HMC Operations Guide (which changed to become the
+  HMC Help System PDFs). (`#1459 <https://github.com/zhmcclient/python-zhmcclient/issues/1459>`_)
+
+* Docs: Fixed formatting of badges on README page by converting it to
+  Markdown. (`#1473 <https://github.com/zhmcclient/python-zhmcclient/issues/1473>`_)
+
+* Test: Upgraded Github actions plugin actions/github-script to v7 to no longer
+  use the deprecated Node.js 16. (`#1483 <https://github.com/zhmcclient/python-zhmcclient/issues/1483>`_)
+
+**Enhancements:**
+
+* Test: Added the option 'ignore-unpinned-requirements: False' to both
+  safety policy files because for safety 3.0, the default is to ignore
+  unpinned requirements (in requirements.txt).
+
+  Increased safety minimum version to 3.0 because the new option is not
+  tolerated by safety 2.x. Safety now runs only on Python >=3.7 because
+  that is what safety 3.0 requires.
+
+* Changed safety run for install dependencies to use the exact minimum versions
+  of the dependent packages, by moving them into a separate
+  minimum-constraints-install.txt file that is included by the existing
+  minimum-constraints.txt file.
+
+* The safety run for all dependencies now must succeed when the test workflow
+  is run for a release (i.e. branch name 'release\_...').
+
+* Added support for "Console Delete Retrieved Internal Code" HMC operation
+  via a new 'zhmcclient.Console.delete_uninstalled_firmware()' method. (`#1431 <https://github.com/zhmcclient/python-zhmcclient/issues/1431>`_)
+
+* Added new method Nic.backing_port() to return the backing adapter port
+  of the NIC. (`#1451 <https://github.com/zhmcclient/python-zhmcclient/issues/1451>`_)
+
+* Dev: Migrated from a manually maintained change log file to using change
+  fragment files with the 'towncrier' package. This simplifies the procedures
+  for starting and releasing a version, and avoids merge conflicts when there
+  are multiple Pull Requests at the same time. For details, read the new
+  'Making a change' section in the documentation. (`#1485 <https://github.com/zhmcclient/python-zhmcclient/issues/1485>`_)
+
+
 Version 1.14.0
 ^^^^^^^^^^^^^^
 
