@@ -20,14 +20,10 @@ Change log
 ----------
 
 
-Version 1.14.1.dev1
-^^^^^^^^^^^^^^^^^^^
+Version 1.14.1
+^^^^^^^^^^^^^^
 
-Released: not yet
-
-**Incompatible changes:**
-
-**Deprecations:**
+Released: 2024-06-07
 
 **Bug fixes:**
 
@@ -46,17 +42,9 @@ Released: not yet
   and for all versions of the HMC Operations Guide (which changed to become the
   HMC Help System PDFs). (issue #1459)
 
-**Enhancements:**
-
 **Cleanup:**
 
 * Addressed new issues raised by Pylint 3.1.
-
-**Known issues:**
-
-* See `list of open issues`_.
-
-.. _`list of open issues`: https://github.com/zhmcclient/python-zhmcclient/issues
 
 
 Version 1.14.0
