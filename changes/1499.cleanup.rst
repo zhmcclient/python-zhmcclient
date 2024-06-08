@@ -1,0 +1,3 @@
+Removed the pinning of stomp.py to <7.0.0 and increased its minimum version
+to 8.1.1 (for Python>=3.7) to pick up fixes, and adjusted to the changed
+interface of the stomp event listener methods and the 'stomp.Connection()' call.

@@ -18,16 +18,18 @@ Support for the :ref:`auto-updating` of Python zhmcclient resource and manager
 objects based on HMC notifications.
 """
 
+import sys
 import logging
 import json
 try:
     from json import JSONDecodeError as _JSONDecodeError
 except ImportError:
     _JSONDecodeError = ValueError
+import ssl
 
 from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME
 from ._utils import RC_CPC, RC_CHILDREN_CLIENT, RC_CHILDREN_CPC, \
-    RC_CHILDREN_CONSOLE
+    RC_CHILDREN_CONSOLE, stomp_uses_frames
 from ._client import Client
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -86,7 +88,7 @@ class AutoUpdater(object):
 
         self._session = session
 
-        # Stomp_Connection
+        # STOMP connection
         self._conn = None
 
         # Registered resource and manager objects, as:
@@ -98,6 +100,12 @@ class AutoUpdater(object):
         # this value ourselves.
         self._sub_id = 'zhmcclient.{}'.format(id(self))
 
+        # Lazy importing of the stomp module, because the import is slow in some
+        # versions.
+        # pylint: disable=import-outside-toplevel
+        import stomp
+        self._stomp = stomp
+
     def open(self):
         """
         Open the JMS session with the HMC.
@@ -108,17 +116,18 @@ class AutoUpdater(object):
         If the session does not yet have an object notification topic set,
         the session is logged on.
         """
-        # Lazy importing for stomp, because it is so slow (ca. 5 sec)
-        if 'Stomp_Connection' not in globals():
-            # pylint: disable=import-outside-toplevel
-            from stomp import Connection as Stomp_Connection
-
         if not self._session.object_topic:
             self._session.logon()  # This sets actual_host
 
-        # pylint: disable=possibly-used-before-assignment
-        self._conn = Stomp_Connection(
-            [(self._session.actual_host, DEFAULT_STOMP_PORT)], use_ssl="SSL")
+        self._conn = self._stomp.Connection(
+            [(self._session.actual_host, DEFAULT_STOMP_PORT)])
+        set_kwargs = dict()
+        if sys.version_info >= (3, 6):
+            set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
+        self._conn.set_ssl(
+            for_hosts=[(self._session.actual_host, DEFAULT_STOMP_PORT)],
+            **set_kwargs)
+
         listener = _UpdateListener(self, self._session)
         self._conn.set_listener('', listener)
         # pylint: disable=protected-access
@@ -227,6 +236,53 @@ class _UpdateListener(object):
         self._session = session
         self._client = None
 
+        # Lazy importing of the stomp module, because the import is slow in some
+        # versions.
+        # pylint: disable=import-outside-toplevel
+        import stomp
+        self._stomp = stomp
+
+        # Indicator for the use of Frame objects in stomp.py
+        self._stomp_uses_frames = stomp_uses_frames(self._stomp.__version__)
+
+    def get_headers_message(self, frame_args):
+        """
+        Transform event method parameters to headers, message.
+
+        Parameters:
+
+          frame_args: The STOMP frame, represented depending on the stomp.py
+            package version as follows:
+
+              * on stomp.py < 7.0.0:
+
+                headers (dict): STOMP message headers.
+                  The headers are described in the `headers` tuple item
+                  returned by the
+                  :meth:`~zhmcclient.NotificationReceiver.notifications`
+                  method.
+
+                message (string): STOMP message body as a string, which
+                  contains a serialized JSON object.
+                  The JSON object is described in the `message` tuple item
+                  returned by the
+                  :meth:`~zhmcclient.NotificationReceiver.notifications`
+                  method.
+
+              * on stomp.py >= 7.0.0:
+
+                frame (stomp.Frame): Object with STOMP message headers and
+                  message body.
+        """
+        # pylint: disable=no-member
+        if self._stomp_uses_frames:
+            headers, message = frame_args
+        else:
+            frame = frame_args[0]
+            headers = frame.headers
+            message = frame.body
+        return headers, message
+
     def init_cpcs(self):
         """
         Initialize the CPC manager, for later use when receiving inventory
@@ -334,18 +390,16 @@ class _UpdateListener(object):
                 return None
         return uri
 
-    def on_message(self, headers, message):
+    def on_message(self, *frame_args):
         """
         Event method that gets called when this listener has received a JMS
         message (representing an HMC notification).
 
         Parameters:
 
-          headers (dict): JMS message headers, see HMC API book.
-
-          message (string): JMS message body as a string, which contains a
-            serialized JSON object, see HMC API book.
+          frame_args: The STOMP frame. For details, see get_headers_message().
         """
+        headers, message = self.get_headers_message(frame_args)
 
         noti_type = headers['notification-type']
         if noti_type == 'property-change':
@@ -446,8 +500,7 @@ class _UpdateListener(object):
                 "is ignored",
                 noti_type, self._session.object_topic)
 
-    def on_error(self, headers, message):
-        # pylint: disable=unused-argument
+    def on_error(self, *frame_args):
         """
         Event method that gets called when this listener has received a JMS
         error. This happens for example when the client registers for a
@@ -455,11 +508,9 @@ class _UpdateListener(object):
 
         Parameters:
 
-          headers (dict): JMS message headers.
-
-          message (string): JMS message body as a string, which contains a
-            serialized JSON object.
+          frame_args: The STOMP frame. For details, see get_headers_message().
         """
+        _, message = self.get_headers_message(frame_args)
         JMS_LOGGER.error(
             "JMS error message received for object notification topic '%s' "
             "(ignored): %s",

@@ -25,10 +25,17 @@ six>=1.14.0; python_version <= '3.9'
 six>=1.16.0; python_version >= '3.10'
 
 # stomp.py 5.0.0 (now deleted) and 6.0.0 removed support for Python 2.7, 3.4 and 3.5
-# stomp.py 6.1.0 on Pypi contained older code than v6.1.0 in the repo -> will be yanked on Pypi
-# stomp.py 6.1.1 broke compatibility -> will be yanked on Pypi and re-released as 7.0.0
+# stomp.py<6.0.0 did not declare supported Python versions
+# stomp.py 6.1.0 on Pypi contained older code than v6.1.0 in the repo -> was yanked
+# stomp.py 6.1.1 broke compatibility -> was yanked (and re-released as 7.0.0)
+# stpmp.py 7.0.0 changed the interface of the listener methods incompatibly, and requires Python >=3.6
+# stomp.py 8.0.0 removed the use_ssl parameter of stomp.Connection. set_ssl() can be used instead.
+# stomp.py 8.0.0 cannot be imported due to an issue
+# stomp.py 8.1.1 changed __version__ from tuple to string
+# stomp.py versions 7.0.0 - 8.1.0 cause test failures.
 stomp.py>=4.1.23,<5.0.0; python_version <= '3.5'
-stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version >= '3.6'
+stomp.py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version == '3.6'
+stomp.py>=8.1.1; python_version >= '3.7'
 
 python-dateutil>=2.8.2
 immutable-views>=0.6.0

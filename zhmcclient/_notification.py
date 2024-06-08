@@ -68,14 +68,17 @@ messages issued by the operating system. The following commands use the
     $ zhmc partition start {cpc-name} {partition-name}
 """
 
+import sys
 import os
 import threading
 import json
+import ssl
 
 from ._logging import logged_api_call
 from ._constants import DEFAULT_STOMP_PORT
 from ._exceptions import NotificationJMSError, NotificationParseError, \
     SubscriptionNotFound
+from ._utils import stomp_uses_frames
 
 __all__ = ['NotificationReceiver']
 
@@ -165,14 +168,18 @@ class NotificationReceiver(object):
         self._handover_dict = {}
         self._handover_cond = threading.Condition()
 
-        # Lazy importing for stomp, because it is so slow (ca. 5 sec)
-        if 'Stomp_Connection' not in globals():
-            # pylint: disable=import-outside-toplevel
-            from stomp import Connection as Stomp_Connection
+        # Lazy importing of the stomp module, because the import is slow in some
+        # versions.
+        # pylint: disable=import-outside-toplevel
+        import stomp
+        self._stomp = stomp
 
-        # pylint: disable=possibly-used-before-assignment
-        self._conn = Stomp_Connection(
-            [(self._host, self._port)], use_ssl="SSL")
+        self._conn = self._stomp.Connection([(self._host, self._port)])
+        set_kwargs = dict()
+        if sys.version_info >= (3, 6):
+            set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
+        self._conn.set_ssl(for_hosts=[(self._host, self._port)], **set_kwargs)
+
         listener = _NotificationListener(self._handover_dict,
                                          self._handover_cond)
         self._conn.set_listener('', listener)
@@ -434,6 +441,52 @@ class _NotificationListener(object):
         # Wait timeout to honor keyboard interrupts after this time:
         self._wait_timeout = 10.0  # seconds
 
+        # Lazy importing of the stomp module, because the import is slow in some
+        # versions.
+        # pylint: disable=import-outside-toplevel
+        import stomp
+        self._stomp = stomp
+
+        # Indicator for the use of Frame objects in stomp.py
+        self._stomp_uses_frames = stomp_uses_frames(self._stomp.__version__)
+
+    def get_headers_message(self, frame_args):
+        """
+        Transform event method parameters to headers, message.
+
+        Parameters:
+
+          frame_args: The STOMP frame, represented depending on the stomp.py
+            package version as follows:
+
+              * on stomp.py < 7.0.0:
+
+                headers (dict): STOMP message headers.
+                  The headers are described in the `headers` tuple item
+                  returned by the
+                  :meth:`~zhmcclient.NotificationReceiver.notifications`
+                  method.
+
+                message (string): STOMP message body as a string, which
+                  contains a serialized JSON object.
+                  The JSON object is described in the `message` tuple item
+                  returned by the
+                  :meth:`~zhmcclient.NotificationReceiver.notifications`
+                  method.
+
+              * on stomp.py >= 7.0.0:
+
+                frame (stomp.Frame): Object with STOMP message headers and
+                  message body.
+        """
+        if self._stomp_uses_frames:
+            headers, message = frame_args
+        else:
+            frame = frame_args[0]
+            headers = frame.headers
+            message = frame.body
+        return headers, message
+
     def on_disconnected(self):
         """
         Event method that gets called when the JMS session has been
@@ -455,7 +508,7 @@ class _NotificationListener(object):
             self._handover_dict['msgtype'] = 'disconnected'
             self._handover_cond.notify_all()
 
-    def on_error(self, headers, message):
+    def on_error(self, *frame_args):
         """
         Event method that gets called when this listener has received a JMS
         error. This happens for example when the client registers for a
@@ -463,15 +516,9 @@ class _NotificationListener(object):
 
         Parameters:
 
-          headers (dict): JMS message headers, as described for `headers` tuple
-            item returned by the
-            :meth:`~zhmcclient.NotificationReceiver.notifications` method.
-
-          message (string): JMS message body as a string, which contains a
-            serialized JSON object. The JSON object is described in the
-            `message` tuple item returned by the
-            :meth:`~zhmcclient.NotificationReceiver.notifications` method).
+          frame_args: The STOMP frame. For details, see get_headers_message().
         """
+        headers, message = self.get_headers_message(frame_args)
 
         with self._handover_cond:  # serialize body via lock
 
@@ -485,22 +532,16 @@ class _NotificationListener(object):
             self._handover_dict['msgtype'] = 'error'
             self._handover_cond.notify_all()
 
-    def on_message(self, headers, message):
+    def on_message(self, *frame_args):
         """
         Event method that gets called when this listener has received a JMS
         message (representing an HMC notification).
 
         Parameters:
 
-          headers (dict): JMS message headers, as described for `headers` tuple
-            item returned by the
-            :meth:`~zhmcclient.NotificationReceiver.notifications` method.
-
-          message (string): JMS message body as a string, which contains a
-            serialized JSON object. The JSON object is described in the
-            `message` tuple item returned by the
-            :meth:`~zhmcclient.NotificationReceiver.notifications` method).
+          frame_args: The STOMP frame. For details, see get_headers_message().
         """
+        headers, message = self.get_headers_message(frame_args)
 
         with self._handover_cond:  # serialize body via lock
 
