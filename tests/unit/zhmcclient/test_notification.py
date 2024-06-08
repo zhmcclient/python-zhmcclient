@@ -23,12 +23,29 @@ from __future__ import absolute_import, print_function
 
 import json
 import threading
+from collections import namedtuple
 from mock import patch
 import six
 import pytest
+import stomp
 
 from zhmcclient._notification import NotificationReceiver
 from zhmcclient._exceptions import SubscriptionNotFound
+from zhmcclient._utils import stomp_uses_frames
+
+
+def create_event_args(headers, message):
+    """
+    Transform headers, message to event method parameters.
+    This is the inverse of _NotificationListener.get_headers_message().
+    """
+    if stomp_uses_frames(stomp.__version__):
+        frame_args = headers, message
+    else:
+        Frame = namedtuple('frame', ['headers', 'body'])
+        frame = Frame(headers, message)
+        frame_args = (frame,)
+    return frame_args
 
 
 class MockedStompConnection(object):
@@ -51,6 +68,15 @@ class MockedStompConnection(object):
         self._subscriptions = []  # items: tuple(dest, id, ack)
         self._queued_messages = []  # items: tuple(headers, message_str)
         self._sender_thread = None
+        self._ssl_args = None
+        self._ssl_kwargs = None
+
+    def set_ssl(self, *args, **kwargs):
+        # pylint: disable=unused-argument
+        """Mocks the same-named method of stomp.Connection."""
+        assert not self._state_connected
+        self._ssl_args = args
+        self._ssl_kwargs = kwargs
 
     def set_listener(self, name, listener):
         # pylint: disable=unused-argument
@@ -112,7 +138,8 @@ class MockedStompConnection(object):
         for msg_item in self._queued_messages:
             # The following method blocks until it can deliver a message
             headers, message_str = msg_item
-            self._listener.on_message(headers, message_str)
+            frame_args = create_event_args(headers, message_str)
+            self._listener.on_message(*frame_args)
         self._listener.on_disconnected()
 
     def mock_get_subscription(self, topic):

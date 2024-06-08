@@ -646,3 +646,18 @@ def warn_deprecated_parameter(cls, method, name, value, default):
         # * +1 to get out of this function
         # * +1 to get out of method
         # * +2 to get over the @logged_api_call decorator of method
+
+
+def stomp_uses_frames(stomp_version):
+    """
+    Returns whether stomp.py uses Frame objects for the event listener methods.
+
+    Parameters:
+      stomp_version: The __version__ attribute of the stomp module.
+    """
+    # stomp.py introduced the use of Frame objects in version 7.0.0, but since
+    # it changed its __version__ attribute from tuple to string in version
+    # 8.1.1, it would be fairly complex to check for the use of Frame objects
+    # based upon its version. Instead, we utilize the fact that we have either
+    # versions <5.0 or >8.1.1 and thus can test for the __version__ type.
+    return isinstance(stomp_version, str)
