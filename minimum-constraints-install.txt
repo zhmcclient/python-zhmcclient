@@ -31,7 +31,7 @@ PyYAML==5.3.1
 yamlloader==0.5.5
 
 # jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils and jupyter
-jsonschema==3.1.0
+jsonschema==4.0.1
 
 
 # Direct dependencies for install of extra 'testutils' (must be consistent with extra-testutils-requirements)
