@@ -29,7 +29,7 @@ import ssl
 
 from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME
 from ._utils import RC_CPC, RC_CHILDREN_CLIENT, RC_CHILDREN_CPC, \
-    RC_CHILDREN_CONSOLE, stomp_uses_frames
+    RC_CHILDREN_CONSOLE, stomp_uses_frames, get_stomp_rt_kwargs
 from ._client import Client
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -76,7 +76,7 @@ class AutoUpdater(object):
     auto-updating remain unchanged.
     """
 
-    def __init__(self, session):
+    def __init__(self, session, stomp_rt_config=None):
         """
         Parameters:
 
@@ -84,9 +84,16 @@ class AutoUpdater(object):
             auto updater should do its work. This defines the HMC host
             and credentials that are used to establish the JMS session with
             the HMC. The session may or may not be logged on.
+
+          stomp_rt_config (:class:`~zhmcclient.StompRetryTimeoutConfig`):
+            STOMP retry and timeout configuration to be used.
+            `None` means that the default values from the 'stomp.py'
+            package will be used (see http://jasonrbriggs.github.io/stomp.py\
+            /stomp.html#stomp.transport.Transport).
         """
 
         self._session = session
+        self._rt_config = stomp_rt_config
 
         # STOMP connection
         self._conn = None
@@ -119,8 +126,9 @@ class AutoUpdater(object):
         if not self._session.object_topic:
             self._session.logon()  # This sets actual_host
 
+        rt_kwargs = get_stomp_rt_kwargs(self._rt_config)
         self._conn = self._stomp.Connection(
-            [(self._session.actual_host, DEFAULT_STOMP_PORT)])
+            [(self._session.actual_host, DEFAULT_STOMP_PORT)], **rt_kwargs)
         set_kwargs = dict()
         if sys.version_info >= (3, 6):
             set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT

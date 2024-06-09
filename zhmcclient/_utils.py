@@ -661,3 +661,50 @@ def stomp_uses_frames(stomp_version):
     # based upon its version. Instead, we utilize the fact that we have either
     # versions <5.0 or >8.1.1 and thus can test for the __version__ type.
     return isinstance(stomp_version, str)
+
+
+def _add_if_set(kwargs, key, value):
+    if value is not None:
+        kwargs[key] = value
+
+
+def get_stomp_rt_kwargs(rt_config):
+    """
+    Get the additional kwargs for StompConnection() from the
+    stomp retry/timeout config.
+
+    Parameters:
+        rt_config (StompRetryTimeoutConfig): stomp retry/timeout config
+
+    Returns:
+        dict: Additional kwargs for StompConnection from the config.
+    """
+    rt_kwargs = dict()
+    if rt_config:
+        if rt_config.connect_timeout == 0:
+            rt_kwargs['timeout'] = None  # No timeout
+        elif rt_config.connect_timeout is not None:
+            rt_kwargs['timeout'] = rt_config.connect_timeout
+        _add_if_set(rt_kwargs, 'reconnect_attempts_max',
+                    rt_config.connect_retries)
+        _add_if_set(rt_kwargs, 'reconnect_sleep_initial',
+                    rt_config.reconnect_sleep_initial)
+        _add_if_set(rt_kwargs, 'reconnect_sleep_increase',
+                    rt_config.reconnect_sleep_increase)
+        _add_if_set(rt_kwargs, 'reconnect_sleep_max',
+                    rt_config.reconnect_sleep_max)
+        _add_if_set(rt_kwargs, 'reconnect_sleep_jitter',
+                    rt_config.reconnect_sleep_jitter)
+        if rt_config.keepalive is False:
+            rt_kwargs['keepalive'] = None  # Disabled
+        elif rt_config.keepalive is not None:
+            rt_kwargs['keepalive'] = rt_config.keepalive
+        if rt_config.heartbeat_send_cycle is not None or \
+                rt_config.heartbeat_receive_cycle is not None:
+            send_cycle = int(rt_config.heartbeat_send_cycle * 1000) or 0
+            rcv_cycle = int(rt_config.heartbeat_receive_cycle * 1000) or 0
+            rt_kwargs['heartbeats'] = (send_cycle, rcv_cycle)
+        if rt_config.heartbeat_receive_check is not None:
+            rcv_scale = 1.0 + rt_config.heartbeat_receive_check
+            rt_kwargs['heart_beat_receive_scale'] = rcv_scale
+    return rt_kwargs

@@ -1,0 +1,5 @@
+Added a class 'StompRetryTimeoutConfig' for defining retry, timeout and
+keepalive/heartbeat parameters for the STOMP connection for HMC
+notifications. Added new 'stomp_rt_config' init parameters to the
+'NotificationReceiver' and 'AutoUpdater' classes, to specify these config
+parameters.
