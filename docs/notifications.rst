@@ -23,3 +23,7 @@ Notifications
 .. autoclass:: zhmcclient.NotificationReceiver
    :members:
    :special-members: __str__
+
+.. autoclass:: zhmcclient.StompRetryTimeoutConfig
+   :members:
+   :special-members: __str__
