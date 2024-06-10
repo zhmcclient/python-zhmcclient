@@ -217,7 +217,8 @@ class RetryTimeoutConfig(object):
         """
         Return a new configuration object that represents the configuration
         from this configuration object acting as a default, and the specified
-        configuration object overriding that default.
+        configuration object overriding that default for any of its
+        attributes that are not `None`.
 
         Parameters:
 

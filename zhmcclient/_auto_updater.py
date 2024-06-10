@@ -27,12 +27,19 @@ except ImportError:
     _JSONDecodeError = ValueError
 import ssl
 
-from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME
+from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME, \
+    DEFAULT_STOMP_CONNECT_TIMEOUT, \
+    DEFAULT_STOMP_CONNECT_RETRIES, DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL, \
+    DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE, DEFAULT_STOMP_RECONNECT_SLEEP_MAX, \
+    DEFAULT_STOMP_RECONNECT_SLEEP_JITTER, DEFAULT_STOMP_KEEPALIVE, \
+    DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE, DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE, \
+    DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK
 from ._utils import RC_CPC, RC_CHILDREN_CLIENT, RC_CHILDREN_CPC, \
     RC_CHILDREN_CONSOLE, get_stomp_rt_kwargs, get_headers_message
 from ._client import Client
 from ._manager import BaseManager
 from ._resource import BaseResource
+from ._notification import StompRetryTimeoutConfig
 
 __all__ = ['AutoUpdater']
 
@@ -76,6 +83,19 @@ class AutoUpdater(object):
     auto-updating remain unchanged.
     """
 
+    default_stomp_rt_config = StompRetryTimeoutConfig(
+        connect_timeout=DEFAULT_STOMP_CONNECT_TIMEOUT,
+        connect_retries=DEFAULT_STOMP_CONNECT_RETRIES,
+        reconnect_sleep_initial=DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL,
+        reconnect_sleep_increase=DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE,
+        reconnect_sleep_max=DEFAULT_STOMP_RECONNECT_SLEEP_MAX,
+        reconnect_sleep_jitter=DEFAULT_STOMP_RECONNECT_SLEEP_JITTER,
+        keepalive=DEFAULT_STOMP_KEEPALIVE,
+        heartbeat_send_cycle=DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE,
+        heartbeat_receive_cycle=DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE,
+        heartbeat_receive_check=DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK,
+    )
+
     def __init__(self, session, stomp_rt_config=None):
         """
         Parameters:
@@ -86,10 +106,17 @@ class AutoUpdater(object):
             the HMC. The session may or may not be logged on.
 
           stomp_rt_config (:class:`~zhmcclient.StompRetryTimeoutConfig`):
-            STOMP retry and timeout configuration to be used.
-            `None` means that the default values from the 'stomp.py'
-            package will be used (see http://jasonrbriggs.github.io/stomp.py\
-            /stomp.html#stomp.transport.Transport).
+            The STOMP retry/timeout configuration for this session, overriding
+            any defaults.
+
+            `None` for an attribute in that configuration object means that the
+            default value will be used for that attribute.
+
+            `None` for the entire `stomp_rt_config` parameter means that a
+            default configuration will be used with the default values for all
+            of its attributes.
+
+            See :ref:`Constants` for the default values.
         """
 
         self._session = session

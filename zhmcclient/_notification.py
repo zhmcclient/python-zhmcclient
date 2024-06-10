@@ -75,7 +75,12 @@ import json
 import ssl
 
 from ._logging import logged_api_call
-from ._constants import DEFAULT_STOMP_PORT
+from ._constants import DEFAULT_STOMP_PORT, DEFAULT_STOMP_CONNECT_TIMEOUT, \
+    DEFAULT_STOMP_CONNECT_RETRIES, DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL, \
+    DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE, DEFAULT_STOMP_RECONNECT_SLEEP_MAX, \
+    DEFAULT_STOMP_RECONNECT_SLEEP_JITTER, DEFAULT_STOMP_KEEPALIVE, \
+    DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE, DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE, \
+    DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK
 from ._exceptions import NotificationJMSError, NotificationParseError, \
     SubscriptionNotFound
 from ._utils import get_stomp_rt_kwargs, get_headers_message
@@ -98,50 +103,43 @@ class StompRetryTimeoutConfig(object):
         # pylint: disable=line-too-long
         """
         For all parameters, `None` means that this object does not specify a
-        value for the parameter, and that the default values from the 'stomp.py'
-        package will be used (see http://jasonrbriggs.github.io/stomp.py/stomp.html#stomp.transport.Transport).
+        value for the parameter, and that a default value will be used
+        (see :ref:`Constants`).
 
         All parameters are available as instance attributes.
 
         Parameters:
 
-          connect_timeout (:term:`number`): Connect timeout in seconds.
+          connect_timeout (:term:`number`): STOMP connect timeout in seconds.
             This timeout applies to making a connection at the socket level.
             The special value 0 means that no timeout is set.
-            `None` will use the stomp.py default of setting no timeout.
 
           connect_retries (:term:`integer`): Number of retries (after the
-            initial attempt) for connection-related issues. These retries are
-            performed for failed DNS lookups, failed socket connections, and
+            initial attempt) for STOMP connection-related issues. These retries
+            are performed for failed DNS lookups, failed socket connections, and
             socket connection timeouts.
             The special value -1 means that there are infinite retries.
-            `None` will use the stomp.py default of 3.
 
-          reconnect_sleep_initial (:term:`number`): Initial reconnect sleep
-            delay in seconds. The reconnect sleep delay is the time to wait
-            before reconnecting.
-            `None` will use the stomp.py default of 0.1 sec.
+          reconnect_sleep_initial (:term:`number`): Initial STOMP reconnect
+            sleep delay in seconds. The reconnect sleep delay is the time to
+            wait before reconnecting.
 
           reconnect_sleep_increase (:term:`number`): Factor by which the
             reconnect sleep delay is increased after each connection attempt.
             For example, 0.5 means to wait 50% longer than before the previous
             attempt, 1.0 means wait twice as long, and 0.0 means keep the delay
             constant.
-            `None` will use the stomp.py default of 0.5.
 
           reconnect_sleep_max (:term:`number`): Maximum reconnect sleep delay
             in seconds, regardless of the `reconnect_sleep_increase` value.
-            `None` will use the stomp.py default of 60 sec.
 
           reconnect_sleep_jitter (:term:`number`): Random additional time to
             wait before a reconnect to avoid stampeding, as a percentage of the
             current reconnect sleep delay. For example, a value of 0.1 means to
             wait an extra 0%-10% of the delay calculated using the previous
             three parameters.
-            `None` will use the stomp.py default of 0.1.
 
           keepalive (bool): Enable keepalive at the socket level.
-            `None` will use the stomp.py default of disabling keepalive.
 
           heartbeat_send_cycle (:term:`number`): Cycle time in which the client
             will send heartbeats to the HMC, in seconds.
@@ -151,7 +149,6 @@ class StompRetryTimeoutConfig(object):
             The cycle time should not be less than 0.2 sec; a few seconds is
             a reasonable value.
             The special value 0 disables the sending of heartbeats to the HMC.
-            `None` will use the stomp.py default of 0.
 
           heartbeat_receive_cycle (:term:`number`): Cycle time in which the
             HMC will send heartbeats to the client, in seconds.
@@ -162,7 +159,6 @@ class StompRetryTimeoutConfig(object):
             a reasonable value.
             The special value 0 disables heartbeat sending by the HMC and
             checking on the client side.
-            `None` will use the stomp.py default of 0.
 
           heartbeat_receive_check (:term:`number`): Additional time for
             checking the heartbeats received from the HMC on the client,
@@ -171,7 +167,6 @@ class StompRetryTimeoutConfig(object):
             'heartbeat_receive_cycle' time.
             This value should not be less than 0.5, and a value of 1 or 2 is
             a reasonable value.
-            `None` will use the stomp.py default of 0.5.
         """  # noqa: E501
         self.connect_timeout = connect_timeout
         self.connect_retries = connect_retries
@@ -183,6 +178,38 @@ class StompRetryTimeoutConfig(object):
         self.heartbeat_send_cycle = heartbeat_send_cycle
         self.heartbeat_receive_cycle = heartbeat_receive_cycle
         self.heartbeat_receive_check = heartbeat_receive_check
+
+    _attrs = ('connect_timeout', 'connect_retries', 'reconnect_sleep_initial',
+              'reconnect_sleep_increase', 'reconnect_sleep_max',
+              'reconnect_sleep_jitter', 'keepalive', 'heartbeat_send_cycle',
+              'heartbeat_receive_cycle', 'heartbeat_receive_check')
+
+    def override_with(self, override_config):
+        """
+        Return a new configuration object that represents the configuration
+        from this configuration object acting as a default, and the specified
+        configuration object overriding that default for any of its
+        attributes that are not `None`.
+
+        Parameters:
+
+          override_config (:class:`~zhmcclient.StompRetryTimeoutConfig`):
+            The configuration object overriding the defaults defined in this
+            configuration object.
+
+        Returns:
+
+          :class:`~zhmcclient.StompRetryTimeoutConfig`:
+            A new configuration object representing this configuration object,
+            overridden by the specified configuration object.
+        """
+        ret = StompRetryTimeoutConfig()
+        for attr in StompRetryTimeoutConfig._attrs:
+            value = getattr(self, attr)
+            if override_config and getattr(override_config, attr) is not None:
+                value = getattr(override_config, attr)
+            setattr(ret, attr, value)
+        return ret
 
 
 class NotificationReceiver(object):
@@ -204,6 +231,19 @@ class NotificationReceiver(object):
     was used for the client session in which the notification topic was
     originally created.
     """
+
+    default_stomp_rt_config = StompRetryTimeoutConfig(
+        connect_timeout=DEFAULT_STOMP_CONNECT_TIMEOUT,
+        connect_retries=DEFAULT_STOMP_CONNECT_RETRIES,
+        reconnect_sleep_initial=DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL,
+        reconnect_sleep_increase=DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE,
+        reconnect_sleep_max=DEFAULT_STOMP_RECONNECT_SLEEP_MAX,
+        reconnect_sleep_jitter=DEFAULT_STOMP_RECONNECT_SLEEP_JITTER,
+        keepalive=DEFAULT_STOMP_KEEPALIVE,
+        heartbeat_send_cycle=DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE,
+        heartbeat_receive_cycle=DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE,
+        heartbeat_receive_check=DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK,
+    )
 
     def __init__(self, topic_names, host, userid, password,
                  port=DEFAULT_STOMP_PORT, stomp_rt_config=None):
@@ -241,10 +281,17 @@ class NotificationReceiver(object):
             :attr:`~zhmcclient._constants.DEFAULT_STOMP_PORT`.
 
           stomp_rt_config (:class:`~zhmcclient.StompRetryTimeoutConfig`):
-            STOMP retry and timeout configuration to be used.
-            `None` means that the default values from the 'stomp.py'
-            package will be used (see http://jasonrbriggs.github.io/stomp.py\
-            /stomp.html#stomp.transport.Transport).
+            The STOMP retry/timeout configuration for this session, overriding
+            any defaults.
+
+            `None` for an attribute in that configuration object means that the
+            default value will be used for that attribute.
+
+            `None` for the entire `stomp_rt_config` parameter means that a
+            default configuration will be used with the default values for all
+            of its attributes.
+
+            See :ref:`Constants` for the default values.
         """
         if not isinstance(topic_names, (list, tuple)):
             topic_names = [topic_names]
@@ -254,6 +301,8 @@ class NotificationReceiver(object):
         self._password = password
         self._port = port
         self._rt_config = stomp_rt_config
+        self._rt_config = self.default_stomp_rt_config.override_with(
+            stomp_rt_config)
 
         # Subscription ID numbers that are in use.
         # Each subscription for a topic gets its own unique ID.

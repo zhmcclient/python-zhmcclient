@@ -33,6 +33,16 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_OPERATION_TIMEOUT',
            'DEFAULT_STATUS_TIMEOUT',
            'DEFAULT_NAME_URI_CACHE_TIMETOLIVE',
+           'DEFAULT_STOMP_CONNECT_TIMEOUT',
+           'DEFAULT_STOMP_CONNECT_RETRIES',
+           'DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL',
+           'DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE',
+           'DEFAULT_STOMP_RECONNECT_SLEEP_MAX',
+           'DEFAULT_STOMP_RECONNECT_SLEEP_JITTER',
+           'DEFAULT_STOMP_KEEPALIVE',
+           'DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE',
+           'DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE',
+           'DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK',
            'HMC_LOGGER_NAME',
            'JMS_LOGGER_NAME',
            'API_LOGGER_NAME',
@@ -108,6 +118,46 @@ DEFAULT_STATUS_TIMEOUT = 60
 #: The special value 0 means that no Name-URI cache is maintained (i.e. the
 #: caching is disabled).
 DEFAULT_NAME_URI_CACHE_TIMETOLIVE = 300
+
+#: Default value for the `connect_timeout` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_CONNECT_TIMEOUT = 30
+
+#: Default value for the `connect_retries` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_CONNECT_RETRIES = 3
+
+#: Default value for the `reconnect_sleep_initial` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL = 0.1
+
+#: Default value for the `reconnect_sleep_increase` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE = 0.5
+
+#: Default value for the `reconnect_sleep_max` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_RECONNECT_SLEEP_MAX = 60
+
+#: Default value for the `reconnect_sleep_jitter` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_RECONNECT_SLEEP_JITTER = 0.1
+
+#: Default value for the `keepalive` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_KEEPALIVE = True
+
+#: Default value for the `heartbeat_send_cycle` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE = 5.0
+
+#: Default value for the `heartbeat_receive_cycle` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE = 5.0
+
+#: Default value for the `heartbeat_receive_check` property of the
+#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK = 1.0
 
 #: Name of the Python logger that logs HMC operations.
 HMC_LOGGER_NAME = 'zhmcclient.hmc'
