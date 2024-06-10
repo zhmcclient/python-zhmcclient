@@ -78,7 +78,7 @@ from ._logging import logged_api_call
 from ._constants import DEFAULT_STOMP_PORT
 from ._exceptions import NotificationJMSError, NotificationParseError, \
     SubscriptionNotFound
-from ._utils import stomp_uses_frames, get_stomp_rt_kwargs
+from ._utils import get_stomp_rt_kwargs, get_headers_message
 
 __all__ = ['NotificationReceiver', 'StompRetryTimeoutConfig']
 
@@ -558,46 +558,6 @@ class _NotificationListener(object):
         import stomp
         self._stomp = stomp
 
-        # Indicator for the use of Frame objects in stomp.py
-        self._stomp_uses_frames = stomp_uses_frames(self._stomp.__version__)
-
-    def get_headers_message(self, frame_args):
-        """
-        Transform event method parameters to headers, message.
-
-        Parameters:
-
-          frame_args: The STOMP frame, represented depending on the stomp.py
-            package version as follows:
-
-              * on stomp.py < 7.0.0:
-
-                headers (dict): STOMP message headers.
-                  The headers are described in the `headers` tuple item
-                  returned by the
-                  :meth:`~zhmcclient.NotificationReceiver.notifications`
-                  method.
-
-                message (string): STOMP message body as a string, which
-                  contains a serialized JSON object.
-                  The JSON object is described in the `message` tuple item
-                  returned by the
-                  :meth:`~zhmcclient.NotificationReceiver.notifications`
-                  method.
-
-              * on stomp.py >= 7.0.0:
-
-                frame (stomp.Frame): Object with STOMP message headers and
-                  message body.
-        """
-        if self._stomp_uses_frames:
-            headers, message = frame_args
-        else:
-            frame = frame_args[0]
-            headers = frame.headers
-            message = frame.body
-        return headers, message
-
     def on_disconnected(self):
         """
         Event method that gets called when the JMS session has been
@@ -629,7 +589,7 @@ class _NotificationListener(object):
 
           frame_args: The STOMP frame. For details, see get_headers_message().
         """
-        headers, message = self.get_headers_message(frame_args)
+        headers, message = get_headers_message(frame_args)
 
         with self._handover_cond:  # serialize body via lock
 
@@ -652,7 +612,7 @@ class _NotificationListener(object):
 
           frame_args: The STOMP frame. For details, see get_headers_message().
         """
-        headers, message = self.get_headers_message(frame_args)
+        headers, message = get_headers_message(frame_args)
 
         with self._handover_cond:  # serialize body via lock
 

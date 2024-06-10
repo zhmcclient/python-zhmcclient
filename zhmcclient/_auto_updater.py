@@ -29,7 +29,7 @@ import ssl
 
 from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME
 from ._utils import RC_CPC, RC_CHILDREN_CLIENT, RC_CHILDREN_CPC, \
-    RC_CHILDREN_CONSOLE, stomp_uses_frames, get_stomp_rt_kwargs
+    RC_CHILDREN_CONSOLE, get_stomp_rt_kwargs, get_headers_message
 from ._client import Client
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -250,47 +250,6 @@ class _UpdateListener(object):
         import stomp
         self._stomp = stomp
 
-        # Indicator for the use of Frame objects in stomp.py
-        self._stomp_uses_frames = stomp_uses_frames(self._stomp.__version__)
-
-    def get_headers_message(self, frame_args):
-        """
-        Transform event method parameters to headers, message.
-
-        Parameters:
-
-          frame_args: The STOMP frame, represented depending on the stomp.py
-            package version as follows:
-
-              * on stomp.py < 7.0.0:
-
-                headers (dict): STOMP message headers.
-                  The headers are described in the `headers` tuple item
-                  returned by the
-                  :meth:`~zhmcclient.NotificationReceiver.notifications`
-                  method.
-
-                message (string): STOMP message body as a string, which
-                  contains a serialized JSON object.
-                  The JSON object is described in the `message` tuple item
-                  returned by the
-                  :meth:`~zhmcclient.NotificationReceiver.notifications`
-                  method.
-
-              * on stomp.py >= 7.0.0:
-
-                frame (stomp.Frame): Object with STOMP message headers and
-                  message body.
-        """
-        # pylint: disable=no-member
-        if self._stomp_uses_frames:
-            headers, message = frame_args
-        else:
-            frame = frame_args[0]
-            headers = frame.headers
-            message = frame.body
-        return headers, message
-
     def init_cpcs(self):
         """
         Initialize the CPC manager, for later use when receiving inventory
@@ -407,7 +366,7 @@ class _UpdateListener(object):
 
           frame_args: The STOMP frame. For details, see get_headers_message().
         """
-        headers, message = self.get_headers_message(frame_args)
+        headers, message = get_headers_message(frame_args)
 
         noti_type = headers['notification-type']
         if noti_type == 'property-change':
@@ -518,7 +477,7 @@ class _UpdateListener(object):
 
           frame_args: The STOMP frame. For details, see get_headers_message().
         """
-        _, message = self.get_headers_message(frame_args)
+        _, message = get_headers_message(frame_args)
         JMS_LOGGER.error(
             "JMS error message received for object notification topic '%s' "
             "(ignored): %s",
