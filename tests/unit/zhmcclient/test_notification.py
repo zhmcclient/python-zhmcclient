@@ -37,14 +37,14 @@ from zhmcclient._utils import stomp_uses_frames
 def create_event_args(headers, message):
     """
     Transform headers, message to event method parameters.
-    This is the inverse of _NotificationListener.get_headers_message().
+    This is the inverse of get_headers_message().
     """
     if stomp_uses_frames(stomp.__version__):
-        frame_args = headers, message
-    else:
         Frame = namedtuple('frame', ['headers', 'body'])
         frame = Frame(headers, message)
         frame_args = (frame,)
+    else:
+        frame_args = headers, message
     return frame_args
 
 

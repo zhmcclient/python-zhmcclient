@@ -708,3 +708,42 @@ def get_stomp_rt_kwargs(rt_config):
             rcv_scale = 1.0 + rt_config.heartbeat_receive_check
             rt_kwargs['heart_beat_receive_scale'] = rcv_scale
     return rt_kwargs
+
+
+def get_headers_message(frame_args):
+    """
+    Transform STOMP event method parameters to a tuple(headers, message),
+    dependent on the stomp.py version that is used.
+
+    Parameters:
+
+      frame_args: The STOMP frame, represented depending on the stomp.py
+        package version as follows:
+
+          * if stomp.py uses Frames, a single stomp.Frame object:
+
+            frame (stomp.Frame): Object with STOMP message headers and
+              message body.
+
+          * else, a tuple(headers, message):
+
+            headers (dict): STOMP message headers.
+              The headers are described in the `headers` tuple item
+              returned by the
+              :meth:`~zhmcclient.NotificationReceiver.notifications`
+              method.
+
+            message (string): STOMP message body as a string, which
+              contains a serialized JSON object.
+              The JSON object is described in the `message` tuple item
+              returned by the
+              :meth:`~zhmcclient.NotificationReceiver.notifications`
+              method.
+    """
+    if len(frame_args) == 1:
+        frame = frame_args[0]
+        headers = frame.headers
+        message = frame.body
+    else:
+        headers, message = frame_args
+    return headers, message
