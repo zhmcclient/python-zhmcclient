@@ -141,7 +141,7 @@ TESTCASES_AUTO_UPDATER_ALL = [
     #     properties after the changes.
     #   - exp_log_entries: List of tuple(logger_name, level, message_pattern)
     #     for expected log entries. Only these are verified, any additional
-    #     log entris are tolerated.
+    #     log entries are tolerated.
 
     (
         "no auto-updated resources, no changes, no notifications",
@@ -969,29 +969,32 @@ def test_auto_updater_all(desc, testcase, caplog):
     # Wait for notifications to be received and processed.
     time.sleep(0.5)
 
-    # Verify the log entries
+    # Verify the log entries.
+    # The expected log entries must appear in the specified order, but
+    # additional log entries are tolerated.
     caplog_records = list(caplog.records)
-    assert len(exp_log_entries) == len(caplog_records), (
-        "Unexpected number of log records:\n"
-        "Expected were {} records:\n"
-        "{}\n"
-        "Actually got {} records:\n"
-        "{}\n".format(len(exp_log_entries), exp_log_entries,
-                      len(caplog_records), caplog_records))
-    for i, exp_log_entry in enumerate(exp_log_entries):
-        act_record = caplog_records[i]
+    next_aix = 0
+    for eix, exp_log_entry in enumerate(exp_log_entries):
         exp_logger_name, exp_level, exp_message_pattern = exp_log_entry
-        assert act_record.name == exp_logger_name, \
-            "Unexpected logger name on expected log entry #{}: {}". \
-            format(i, act_record.name)
-        assert act_record.levelno == exp_level, \
-            "Unexpected log level on expected log entry #{}: {}". \
-            format(i, act_record.levelname)
-        act_message = act_record.message
-        message_match = re.match(exp_message_pattern, act_message)
-        assert message_match, \
-            "Unexpected message on expected log entry #{}: {}". \
-            format(i, act_message)
+        for aix, act_record in enumerate(caplog_records[next_aix:]):
+            if act_record.name == exp_logger_name \
+                    and act_record.levelno == exp_level \
+                    and re.match(exp_message_pattern, act_record.message):
+                # Found the next matching expected log entry
+                next_aix += 1 + aix
+                break
+        else:
+            exp_messages = [item[2] for item in exp_log_entries]
+            caplog_messages = [item.message for item in caplog_records]
+            raise AssertionError(
+                "Did not find expected log message pattern at index {} "
+                "in captured log records starting at index {}.\n"
+                "\nExpected log record message patterns:\n"
+                "{}\n"
+                "\nCaptured log record messages:\n"
+                "{}".
+                format(eix, next_aix, '\n'.join(exp_messages),
+                       '\n'.join(caplog_messages)))
 
     # Verify the list() results and the local resources in the manager object
     for mgr_uri, exp_res_uris, exp_local_res_uris in exp_lists:
