@@ -20,6 +20,102 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.16.0
+^^^^^^^^^^^^^^
+
+Released: 2024-06-12
+
+**Incompatible changes:**
+
+* Incompatible changes in the notification support:
+
+  - The 'NotificationReceiver.notifications()' method now continues running when
+    there are no notifications, and only ever returns when
+    'NotificationReceiver.close()' is called (in some other thread).
+    Before this change, the method returned when there were no notifications, so
+    it had to be invoked by the user in a loop. Such user code should be adjusted
+    to remove the loop and deal with the return indicating a close of the
+    receiver.
+
+  - In addition, the 'NotificationReceiver.notifications()' method can now raise
+    the new exceptions 'zhmcclient.NotificationConnectionError' and
+    'zhmcclient.NotificationSubscriptionError'.
+
+  - The 'NotificationReceiver.subscribe/unsubscribe()' methods can now raise the
+    new exception 'zhmcclient.NotificationSubscriptionError'.
+
+  - Note that the 'NotificationReceiver.close()' method can raise
+    'stomp.exception.StompException'. This could already be raised before this
+    change, but had not been documented before.
+
+  Issue: (`#1502 <https://github.com/zhmcclient/python-zhmcclient/issues/1502>`_)
+
+**Enhancements:**
+
+* Test: Relaxed the verification of log messages in test_auto_updater.py
+  to tolerate additional log messages.
+
+* Added a class 'StompRetryTimeoutConfig' for defining retry, timeout and
+  keepalive/heartbeat parameters for the STOMP connection for HMC
+  notifications. Added new 'stomp_rt_config' init parameters to the
+  'NotificationReceiver' and 'AutoUpdater' classes, to specify these config
+  parameters. Added default values for the configuration in zhmcclient constants. (`#1498 <https://github.com/zhmcclient/python-zhmcclient/issues/1498>`_)
+
+* Improved the notification support in several ways:
+
+  - Replaced the event-based handover of a single item from the notification
+    listener thread to the caller's thread with a Python Queue, for better
+    reliability. It turned out that messages could have been lost in some cases
+    with the previous design.
+
+  - The 'NotificationReceiver.notifications()' method now continues running
+    when there are no notifications, and only ever returns when
+    'NotificationReceiver.close()' is called (by some other thread).
+
+  - Added methods 'connect()' and 'is_connected()' to the 'NotificationReceiver'
+    class. The init method of 'NotificationReceiver' no longer connects,
+    but the 'notifications()' method now calls 'connect()', so overall this is
+    compatible with the prior behavior.
+
+  - Added new exceptions 'NotificationConnectionError' and
+    'NotificationSubscriptionError' that may be raised by some
+    'NotificationReceiver' methods.
+
+  - Documented the stomp-py exceptions that can be raised from
+    'NotificationReceiver' methods.
+
+  - Added proper detection of STOMP connection loss if STOMP heartbeating is
+    enabled. The connection loss is surfaced by raising
+    'NotificationConnectionError' in 'NotificationReceiver.notifications()'.
+    This allows users to retry 'NotificationReceiver.notifications()' upon
+    connection loss.
+
+  - Added a new public constant 'STOMP_MIN_CONNECTION_CHECK_TIME' that defines
+    the minimum time between checks for STOMP connection loss. The actual check
+    time is determined by the heartbeat receive time and is bound by this minimum
+    time.
+
+  - Added the missing event methods to the internal '_NotificationListener' class
+    in case they are ever invoked (needed due to lazy importing of stomp-py).
+
+  - Added more log messages around STOMP connect / disconnect.
+
+  Issue: (`#1502 <https://github.com/zhmcclient/python-zhmcclient/issues/1502>`_)
+
+* Added support for getting new z16 environmental metrics about CPC and LPAR
+  or partitions by adding 'get_sustainability_data()' methods to Cpc, Lpar,
+  and Partition. (`#1511 <https://github.com/zhmcclient/python-zhmcclient/issues/1511>`_)
+
+**Cleanup:**
+
+* Removed the pinning of stomp.py to <7.0.0 and increased its minimum version
+  to 8.1.1 (for Python>=3.7) to pick up fixes, and adjusted to the changed
+  interface of the stomp event listener methods and the 'stomp.Connection()' call. (`#1499 <https://github.com/zhmcclient/python-zhmcclient/issues/1499>`_)
+
+* Test: Upgraded Github Actions plugin actions/setup-python to v5 to no longer
+  use the deprecated node version 16. (`#1503 <https://github.com/zhmcclient/python-zhmcclient/issues/1503>`_)
+
+
 Version 1.15.0
 ^^^^^^^^^^^^^^
 
