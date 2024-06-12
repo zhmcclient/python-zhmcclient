@@ -1,2 +1,0 @@
-Test: Upgraded Github Actions plugin actions/setup-python to v5 to no longer
-use the deprecated node version 16.
