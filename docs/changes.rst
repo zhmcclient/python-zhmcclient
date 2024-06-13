@@ -20,6 +20,22 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.16.1
+^^^^^^^^^^^^^^
+
+Released: 2024-06-13
+
+**Bug fixes:**
+
+* Install: Increased the minimum version of the 'jsonschema' package to 3.1.0
+  to get a fix for a 'pkg_resources.DistributionNotFound' exception that occurs
+  in certain cases.
+
+* Install: Changed the name of the dependent package 'stomp.py' to use its
+  canonical name 'stomp-py' since that prevented installation of packages using
+  zhmcclient under certain circumstances (e.g. with minimum package levels). (`#1516 <https://github.com/zhmcclient/python-zhmcclient/issues/1516>`_)
+
+
 Version 1.16.0
 ^^^^^^^^^^^^^^
 
