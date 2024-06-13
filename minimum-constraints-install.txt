@@ -38,8 +38,8 @@ requests==2.26.0; python_version == '3.6'
 requests==2.31.0; python_version >= '3.7'
 six==1.14.0; python_version <= '3.9'
 six==1.16.0; python_version >= '3.10'
-stomp.py==4.1.23; python_version <= '3.6'
-stomp.py==8.1.1; python_version >= '3.7'
+stomp-py==4.1.23; python_version <= '3.6'
+stomp-py==8.1.1; python_version >= '3.7'
 python-dateutil==2.8.2
 immutable-views==0.6.0
 nocasedict==1.0.2
@@ -90,5 +90,5 @@ packaging==21.0; python_version >= '3.6'
 pluggy==0.7.1; python_version >= '2.7' and python_version <= '3.6'
 pluggy==0.13.0; python_version >= '3.7'
 
-# websocket-client is used by stomp.py 8.0 and notebook(?) 6.4
+# websocket-client is used by stomp-py 8.0 and notebook(?) 6.4
 websocket-client==1.5.3; python_version >= '3.7'

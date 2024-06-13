@@ -650,12 +650,12 @@ def warn_deprecated_parameter(cls, method, name, value, default):
 
 def stomp_uses_frames(stomp_version):
     """
-    Returns whether stomp.py uses Frame objects for the event listener methods.
+    Returns whether stomp-py uses Frame objects for the event listener methods.
 
     Parameters:
       stomp_version: The __version__ attribute of the stomp module.
     """
-    # stomp.py introduced the use of Frame objects in version 7.0.0, but since
+    # stomp-py introduced the use of Frame objects in version 7.0.0, but since
     # it changed its __version__ attribute from tuple to string in version
     # 8.1.1, it would be fairly complex to check for the use of Frame objects
     # based upon its version. Instead, we utilize the fact that we have either
@@ -713,14 +713,14 @@ def get_stomp_rt_kwargs(rt_config):
 def get_headers_message(frame_args):
     """
     Transform STOMP event method parameters to a tuple(headers, message),
-    dependent on the stomp.py version that is used.
+    dependent on the stomp-py version that is used.
 
     Parameters:
 
-      frame_args: The STOMP frame, represented depending on the stomp.py
+      frame_args: The STOMP frame, represented depending on the stomp-py
         package version as follows:
 
-          * if stomp.py uses Frames, a single stomp.Frame object:
+          * if stomp-py uses Frames, a single stomp.Frame object:
 
             frame (stomp.Frame): Object with STOMP message headers and
               message body.

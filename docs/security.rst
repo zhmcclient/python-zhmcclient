@@ -189,5 +189,5 @@ See also the :term:`HMC Security` book for details.
 
 The 'zhmcclient' package supports the STOMP protocol for HMC notifications and
 uses the
-`Python 'stomp.py' package <https://pypi.org/project/stomp.py/>`_
+`Python 'stomp-py' package <https://pypi.org/project/stomp-py/>`_
 for this purpose.
