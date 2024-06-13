@@ -1,3 +1,0 @@
-Install: Changed the name of the dependent package 'stomp.py' to use its
-canonical name 'stomp-py' since that prevented installation of packages using
-zhmcclient under certain circumstances (e.g. with minimum package levels).
