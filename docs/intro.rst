@@ -212,9 +212,9 @@ target system from the downloaded packages:
       Collecting zhmcclient
         Using cached https://files.pythonhosted.org/packages/c3/29/7f0acab22b27ff29453ac87c92a2cbec2b16014b0d32c36fcce1ca285be7/zhmcclient-0.19.0-py2.py3-none-any.whl
         Saved ./zhmcclient-0.19.0-py2.py3-none-any.whl
-      Collecting stomp.py>=4.1.15 (from zhmcclient)
+      Collecting stomp-py>=4.1.15 (from zhmcclient)
       . . .
-      Successfully downloaded zhmcclient decorator pytz stomp.py six requests docopt urllib3 certifi chardet idna
+      Successfully downloaded zhmcclient decorator pytz stomp-py six requests docopt urllib3 certifi chardet idna
 
       [download-system]$ ls -1
       certifi-2019.11.28-py2.py3-none-any.whl
@@ -225,7 +225,7 @@ target system from the downloaded packages:
       pytz-2019.3-py2.py3-none-any.whl
       requests-2.22.0-py2.py3-none-any.whl
       six-1.13.0-py2.py3-none-any.whl
-      stomp.py-4.1.22.tar.gz
+      stomp-py-4.1.22.tar.gz
       urllib3-1.25.7-py2.py3-none-any.whl
       zhmcclient-0.25.1-py2.py3-none-any.whl
 
@@ -252,18 +252,18 @@ target system from the downloaded packages:
       pytz-2019.3-py2.py3-none-any.whl
       requests-2.22.0-py2.py3-none-any.whl
       six-1.13.0-py2.py3-none-any.whl
-      stomp.py-4.1.22.tar.gz
+      stomp-py-4.1.22.tar.gz
       urllib3-1.25.7-py2.py3-none-any.whl
       zhmcclient-0.25.1-py2.py3-none-any.whl
 
       [target-system]$ pip install -f . --no-index --upgrade zhmcclient-*.whl
       Looking in links: .
       . . .
-      Installing collected packages: decorator, pytz, docopt, stomp.py, six,
+      Installing collected packages: decorator, pytz, docopt, stomp-py, six,
         urllib3, certifi, chardet, idna, requests, zhmcclient
       Successfully installed certifi-2019.11.28 chardet-3.0.4 decorator-4.4.1
         docopt-0.6.2 idna-2.8 pytz-2019.3 requests-2.22.0 six-1.13.0
-        stomp.py-4.1.22 urllib3-1.25.7 zhmcclient-0.25.1
+        stomp-py-4.1.22 urllib3-1.25.7 zhmcclient-0.25.1
 
 Alternative installation methods and sources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
