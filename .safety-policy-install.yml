@@ -51,9 +51,9 @@ security:
         67599:
             reason: There is no fixed pip version
         67884:
-            reason: Fixed stomp.py version 8.1.1 requires Python>=3.7 and is used there
+            reason: Fixed stomp-py version 8.1.1 requires Python>=3.7 and is used there
         67894:
-            reason: Fixed stomp.py version 8.1.1 requires Python>=3.7 and is used there
+            reason: Fixed stomp-py version 8.1.1 requires Python>=3.7 and is used there
         67895:
             reason: Fixed idna version 3.7 requires requests>=2.26.0 which requires Python>=3.6 and is used there
 
