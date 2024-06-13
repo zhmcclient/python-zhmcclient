@@ -62,7 +62,8 @@ yamlloader>=0.5.5
 # jsonschema 4.0 removed support for py27,35,36
 # jsonschema 4.0.0 was yanked (and does not install), but older pip versions don't recognize that
 # jsonschema is also used by jupyter and requires >=3.0.1
-jsonschema>=3.0.1,!=4.0.0
+# jsonschema 3.0.1 and 3.0.2 may cause pkg_resources.DistributionNotFound; fixed in 3.1.0.
+jsonschema>=3.1.0,!=4.0.0
 
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
