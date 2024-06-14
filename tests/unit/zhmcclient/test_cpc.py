@@ -16,7 +16,6 @@
 Unit tests for _cpc module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -370,7 +369,7 @@ def updated(dict1, dict2):
     return dictres
 
 
-class TestCpc(object):
+class TestCpc:
     """All tests for the Cpc and CpcManager classes."""
 
     def setup_method(self):
@@ -449,7 +448,7 @@ class TestCpc(object):
                 'available-features-list': [],
             })
         else:
-            raise ValueError("Invalid value for cpc_name: {}".format(cpc_name))
+            raise ValueError(f"Invalid value for cpc_name: {cpc_name}")
         return faked_cpc
 
     @staticmethod
@@ -2062,7 +2061,7 @@ def test_cpc_install_and_activate(
                 assert result.op_uri == op_uri
             else:
                 raise AssertionError(
-                    "Unexpected HTTP status: {}".format(response_status))
+                    f"Unexpected HTTP status: {response_status}")
 
 
 TESTCASES_CPC_DELETE_RETRIEVED_INTERNAL_CODE = [
@@ -2163,4 +2162,4 @@ def test_delete_retrieved_internal_code(
                 assert result.op_uri == op_uri
             else:
                 raise AssertionError(
-                    "Unexpected HTTP status: {}".format(response_status))
+                    f"Unexpected HTTP status: {response_status}")

@@ -16,7 +16,6 @@
 Unit tests for _logging module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import logging
@@ -74,7 +73,7 @@ def get_decorated_inner2_function():
     return global2_function()
 
 
-class Decorator1Class(object):
+class Decorator1Class:
     # pylint: disable=too-few-public-methods
     """A class that has a decorated method."""
 
@@ -84,7 +83,7 @@ class Decorator1Class(object):
         pass
 
 
-class Decorator2Class(object):
+class Decorator2Class:
     """A class that has a decorated method inside a method."""
 
     @staticmethod
@@ -108,7 +107,7 @@ class Decorator2Class(object):
 # Supporting definitions
 #
 
-class CallerClass(object):
+class CallerClass:
     # pylint: disable=too-few-public-methods
     """
     A supporting class.
@@ -301,7 +300,7 @@ def test_decorated_class():
     with pytest.raises(TypeError):
 
         @logged_api_call
-        class DecoratedClass(object):
+        class DecoratedClass:
             # pylint: disable=too-few-public-methods
             """A decorated class"""
             pass
@@ -313,7 +312,7 @@ def test_decorated_property():
 
     with pytest.raises(TypeError):
 
-        class Class(object):
+        class Class:
             # pylint: disable=too-few-public-methods
             """A class with a decorated property"""
 

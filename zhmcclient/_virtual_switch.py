@@ -24,7 +24,6 @@ Virtual Switch resources are contained in :term:`CPC` resources.
 Virtual Switches only exist in CPCs that are in DPM mode.
 """
 
-from __future__ import absolute_import
 
 import re
 import copy
@@ -67,7 +66,7 @@ class VirtualSwitchManager(BaseManager):
             'type',
         ]
 
-        super(VirtualSwitchManager, self).__init__(
+        super().__init__(
             resource_class=VirtualSwitch,
             class_name=RC_VIRTUAL_SWITCH,
             session=cpc.manager.session,
@@ -152,7 +151,7 @@ class VirtualSwitchManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'virtual-switches'
-        list_uri = '{}/virtual-switches'.format(self.cpc.uri)
+        list_uri = f'{self.cpc.uri}/virtual-switches'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args,
             additional_properties)
@@ -187,7 +186,7 @@ class VirtualSwitch(BaseResource):
         assert isinstance(manager, VirtualSwitchManager), \
             "VirtualSwitch init: Expected manager type {}, got {}" \
             .format(VirtualSwitchManager, type(manager))
-        super(VirtualSwitch, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def get_connected_nics(self):

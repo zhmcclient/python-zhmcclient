@@ -36,7 +36,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -57,9 +57,9 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    print("Finding all crypto adapters of CPC {} ...".format(cpc.name))
+    print(f"Finding all crypto adapters of CPC {cpc.name} ...")
     crypto_adapters = cpc.adapters.findall(type='crypto')
     crypto_adapter_names = [ca.name for ca in crypto_adapters]
     print("Found crypto adapters:")
@@ -82,19 +82,19 @@ try:
             pass
         else:
             if range_start == last_d:
-                ranges.append("{}".format(last_d))
+                ranges.append(f"{last_d}")
             else:
-                ranges.append("{}-{}".format(range_start, last_d))
+                ranges.append(f"{range_start}-{last_d}")
             range_start = d
         last_d = d
         continue
     if range_start != -1:  # Process the last range, if any
         if range_start == last_d:
-            ranges.append("{}".format(last_d))
+            ranges.append(f"{last_d}")
         else:
-            ranges.append("{}-{}".format(range_start, last_d))
+            ranges.append(f"{range_start}-{last_d}")
     free_domains_str = ', '.join(ranges)
-    print("Free domains (as ranges): {}".format(free_domains_str))
+    print(f"Free domains (as ranges): {free_domains_str}")
 
 finally:
     print("Logging off ...")

@@ -16,7 +16,6 @@
 HMC definitions for zhmcclient end2end tests.
 """
 
-from __future__ import absolute_import
 
 import os
 
@@ -69,9 +68,9 @@ def print_hmc_definitions():
     hmcdefs = HMCDefinitions()
     print("\nHMC definitions for end2end tests:")
 
-    print("\nHMC inventory file: {}".format(hmcdefs.inventory_file))
-    print("HMC vault file: {}".format(hmcdefs.vault_file))
-    print("Default test group/nickname: {}".format(hmcdefs.testhmc))
+    print(f"\nHMC inventory file: {hmcdefs.inventory_file}")
+    print(f"HMC vault file: {hmcdefs.vault_file}")
+    print(f"Default test group/nickname: {hmcdefs.testhmc}")
 
     print("\nHMCs in inventory file:")
     print("{:20s} {:24s} {:}".
@@ -80,14 +79,14 @@ def print_hmc_definitions():
         host = hd.mock_file or hd.host
         if isinstance(host, list):
             host = ','.join(host)
-        print("{:20s} {:24s} {}".format(hd.nickname, str(host), hd.description))
+        print(f"{hd.nickname:20s} {str(host):24s} {hd.description}")
 
     print("\nGroups in inventory file:")
     print("{:20s} {}".format("Group name", "HMCs in the group"))
     for group_name in hmcdefs.list_all_group_names():
         hmc_names = ', '.join(
             [hd.nickname for hd in hmcdefs.list_hmcs(group_name)])
-        print("{:20s} {}".format(group_name, hmc_names))
+        print(f"{group_name:20s} {hmc_names}")
 
 
 def _default(vars_tuple, key, default):
@@ -114,7 +113,7 @@ class HMCNotFound(Exception):
     pass
 
 
-class HMCDefinitions(object):
+class HMCDefinitions:
     """
     The HMC definitions in the :ref:`HMC inventory file` and their credentials
     in the :ref:`HMC vault file`.

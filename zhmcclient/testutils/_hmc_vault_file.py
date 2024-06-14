@@ -19,7 +19,6 @@ HMC vault files conform to the format of Ansible vault files in YAML
 format and define specific variables for HMC authentication.
 """
 
-from __future__ import absolute_import
 
 try:
     from collections import OrderedDict
@@ -135,7 +134,7 @@ class HMCVaultFileError(Exception):
     pass
 
 
-class HMCVaultFile(object):
+class HMCVaultFile:
     """
     Encapsulation of an :ref:`HMC vault file` in YAML format.
     """
@@ -162,7 +161,7 @@ class HMCVaultFile(object):
                         format(self._filepath, exc.__class__.__name__, exc))
                     new_exc.__cause__ = None
                     raise new_exc  # HMCVaultFileError
-        except IOError as exc:
+        except OSError as exc:
             if exc.errno == errno.ENOENT:
                 new_exc = HMCVaultFileError(
                     "The HMC vault file {0!r} was not found".

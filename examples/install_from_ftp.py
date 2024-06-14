@@ -42,10 +42,10 @@ def receive_until_KeyboardInterrupt(receiver):
                     msg_txt = os_msg['message-text'].strip('\n')
                     print(msg_txt)
         except zhmcclient.NotificationError as exc:
-            print("Notification Error: {} - reconnecting".format(exc))
+            print(f"Notification Error: {exc} - reconnecting")
             continue
         except stomp.exception.StompException as exc:
-            print("STOMP Error: {} - reconnecting".format(exc))
+            print(f"STOMP Error: {exc} - reconnecting")
             continue
         except KeyboardInterrupt:
             print("Keyboard interrupt - leaving receiver loop")
@@ -55,7 +55,7 @@ def receive_until_KeyboardInterrupt(receiver):
             raise AssertionError("Receiver was closed - should not happen")
 
 def get_password(host, userid):
-    return input("password for user %s on host %s:" % (userid, host))
+    return input("password for user {} on host {}:".format(userid, host))
 
 def load_config(config_filepath):
     """

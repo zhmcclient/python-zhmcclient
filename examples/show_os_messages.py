@@ -39,7 +39,7 @@ PRINT_METADATA = False
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -60,9 +60,9 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    print("Finding an active partition on CPC {} ...".format(cpc.name))
+    print(f"Finding an active partition on CPC {cpc.name} ...")
     parts = cpc.partitions.list(filter_args={'status': 'active'})
     if not parts:
         print("Error: CPC {} does not have any active partitions".
@@ -81,7 +81,7 @@ try:
         print("Error: Cannot open OS message channel for partition {}: {}: {}".
               format(part.name, exc.__class__.__name__, exc))
         sys.exit(1)
-    print("OS message channel notification topic: {}".format(msg_topic))
+    print(f"OS message channel notification topic: {msg_topic}")
 
     print("Creating a notification receiver for topic {} ...".
           format(msg_topic))
@@ -89,10 +89,10 @@ try:
         receiver = zhmcclient.NotificationReceiver(
             msg_topic, host, userid, password)
     except Exception as exc:
-        print("Error: Cannot create notification receiver: {}".format(exc))
+        print(f"Error: Cannot create notification receiver: {exc}")
         sys.exit(1)
 
-    print("Debug: STOMP retry/timeout config: {}".format(receiver._rt_config))
+    print(f"Debug: STOMP retry/timeout config: {receiver._rt_config}")
 
     print("Showing OS messages ...")
     print("-----------------------")
@@ -112,10 +112,10 @@ try:
                     msg_txt = os_msg['message-text'].strip('\n')
                     print(msg_txt)
         except zhmcclient.NotificationError as exc:
-            print("Notification Error: {} - reconnecting".format(exc))
+            print(f"Notification Error: {exc} - reconnecting")
             continue
         except stomp.exception.StompException as exc:
-            print("STOMP Error: {} - reconnecting".format(exc))
+            print(f"STOMP Error: {exc} - reconnecting")
             continue
         except KeyboardInterrupt:
             print("Keyboard interrupt - leaving receiver loop")

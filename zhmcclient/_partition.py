@@ -29,7 +29,6 @@ Partition resources only exist in CPCs that are in DPM mode. CPCs in classic
 mode (or ensemble mode) have :term:`LPAR` resources, instead.
 """
 
-from __future__ import absolute_import
 
 import time
 import copy
@@ -78,7 +77,7 @@ class PartitionManager(BaseManager):
             'status',
         ]
 
-        super(PartitionManager, self).__init__(
+        super().__init__(
             resource_class=Partition,
             class_name=RC_PARTITION,
             session=cpc.manager.session,
@@ -164,7 +163,7 @@ class PartitionManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'partitions'
-        list_uri = '{}/partitions'.format(self.cpc.uri)
+        list_uri = f'{self.cpc.uri}/partitions'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args,
             additional_properties)
@@ -238,7 +237,7 @@ class Partition(BaseResource):
         assert isinstance(manager, PartitionManager), \
             "Partition init: Expected manager type {}, got {}" \
             .format(PartitionManager, type(manager))
-        super(Partition, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._nics = None
         self._hbas = None
@@ -996,12 +995,12 @@ class Partition(BaseResource):
         """
         query_parms = []
         if begin is not None:
-            query_parms.append('begin-sequence-number={}'.format(begin))
+            query_parms.append(f'begin-sequence-number={begin}')
         if end is not None:
-            query_parms.append('end-sequence-number={}'.format(end))
+            query_parms.append(f'end-sequence-number={end}')
         query_str = make_query_str(query_parms)
         result = self.manager.session.get(
-            '{}/operations/list-os-messages{}'.format(self.uri, query_str),
+            f'{self.uri}/operations/list-os-messages{query_str}',
             resource=self)
         return result
 
@@ -1477,7 +1476,7 @@ class Partition(BaseResource):
         """
 
         # Dump the resource properties
-        resource_dict = super(Partition, self).dump()
+        resource_dict = super().dump()
 
         # Dump the child resources
         nics = self.nics.dump()

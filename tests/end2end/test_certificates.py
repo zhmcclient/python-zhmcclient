@@ -16,7 +16,6 @@
 End2end tests for Certificates.
 """
 
-from __future__ import absolute_import, print_function
 
 import pytest
 from requests.packages import urllib3
@@ -90,7 +89,7 @@ def test_cert_crud(all_cpcs):  # noqa: F811
     for cpc in all_cpcs:
         skipif_no_secure_boot_feature(cpc)
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.console
         assert console == console.certificates.console
@@ -108,14 +107,14 @@ def test_cert_crud(all_cpcs):  # noqa: F811
 
         for pn, exp_value in cert_input_props.items():
             assert cert.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         cert.pull_full_properties()
         for pn, exp_value in cert_input_props.items():
             assert cert.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         for pn, exp_value in cert_auto_props.items():
             assert cert.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
 
         # Test get_encoded()
         assert cert.get_encoded()['certificate'] == encoded
@@ -149,7 +148,7 @@ def test_cert_crud(all_cpcs):  # noqa: F811
 
         # The code to be tested
         if cpc.dpm_enabled:
-            print("Testing for DPM on CPC {c}".format(c=cpc.name))
+            print(f"Testing for DPM on CPC {cpc.name}")
 
             part_name = cert_name_new + " partition"
             part = cpc.partitions.create(

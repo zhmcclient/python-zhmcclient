@@ -19,7 +19,6 @@ Resource objects represent the real manageable resources in the systems managed
 by the HMC.
 """
 
-from __future__ import absolute_import
 import time
 import threading
 try:
@@ -36,7 +35,7 @@ from ._exceptions import CeasedExistence, HTTPError
 __all__ = ['BaseResource']
 
 
-class BaseResource(object):
+class BaseResource:
     """
     Abstract base class for resource classes (e.g. :class:`~zhmcclient.Cpc`)
     representing manageable resources.
@@ -635,9 +634,9 @@ class BaseResource(object):
                            'type', 'class']
             sorted_keys = sorted([k for k in properties_keys
                                   if k in search_keys])
-            info = ", ".join("{}={!r}".format(k, self._properties[k])
+            info = ", ".join(f"{k}={self._properties[k]!r}"
                              for k in sorted_keys)
-            return "{}({})".format(self.__class__.__name__, info)
+            return f"{self.__class__.__name__}({info})"
 
     def __repr__(self):
         """

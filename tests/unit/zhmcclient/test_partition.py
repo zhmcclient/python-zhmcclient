@@ -16,7 +16,6 @@
 Unit tests for _partition module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -45,7 +44,7 @@ LIST_PERMITTED_PARTITIONS_PROPS = [
 ]
 
 
-class TestPartition(object):
+class TestPartition:
     """All tests for the Partition and PartitionManager classes."""
 
     def setup_method(self):

@@ -18,7 +18,6 @@ information about an LDAP server that may be used for HMC user authentication
 purposes.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -61,7 +60,7 @@ class LdapServerDefinitionManager(BaseManager):
             'name',
         ]
 
-        super(LdapServerDefinitionManager, self).__init__(
+        super().__init__(
             resource_class=LdapServerDefinition,
             class_name=RC_LDAP_SERVER_DEFINITION,
             session=console.manager.session,
@@ -140,7 +139,7 @@ class LdapServerDefinitionManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'ldap-server-definitions'
-        list_uri = '{}/ldap-server-definitions'.format(self.console.uri)
+        list_uri = f'{self.console.uri}/ldap-server-definitions'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -213,7 +212,7 @@ class LdapServerDefinition(BaseResource):
         assert isinstance(manager, LdapServerDefinitionManager), \
             "Console init: Expected manager type {}, got {}" \
             .format(LdapServerDefinitionManager, type(manager))
-        super(LdapServerDefinition, self).__init__(
+        super().__init__(
             manager, uri, name, properties)
 
     @logged_api_call

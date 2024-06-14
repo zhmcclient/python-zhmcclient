@@ -19,7 +19,6 @@ authentication (i.e. not LDAP) is assigned a password rule. There are certain
 system-defined password rules available for use.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -62,7 +61,7 @@ class PasswordRuleManager(BaseManager):
             'type',
         ]
 
-        super(PasswordRuleManager, self).__init__(
+        super().__init__(
             resource_class=PasswordRule,
             class_name=RC_PASSWORD_RULE,
             session=console.manager.session,
@@ -141,7 +140,7 @@ class PasswordRuleManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'password-rules'
-        list_uri = '{}/password-rules'.format(self.console.uri)
+        list_uri = f'{self.console.uri}/password-rules'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -213,7 +212,7 @@ class PasswordRule(BaseResource):
         assert isinstance(manager, PasswordRuleManager), \
             "Console init: Expected manager type {}, got {}" \
             .format(PasswordRuleManager, type(manager))
-        super(PasswordRule, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

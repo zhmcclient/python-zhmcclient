@@ -23,7 +23,6 @@ the system-defined User Roles are pre-defined, standard User Roles supplied
 with the HMC.
 """
 
-from __future__ import absolute_import
 
 import copy
 import six
@@ -67,7 +66,7 @@ class UserRoleManager(BaseManager):
             'type',
         ]
 
-        super(UserRoleManager, self).__init__(
+        super().__init__(
             resource_class=UserRole,
             class_name=RC_USER_ROLE,
             session=console.manager.session,
@@ -145,7 +144,7 @@ class UserRoleManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'user-roles'
-        list_uri = '{}/user-roles'.format(self.console.uri)
+        list_uri = f'{self.console.uri}/user-roles'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -217,7 +216,7 @@ class UserRole(BaseResource):
         assert isinstance(manager, UserRoleManager), \
             "Console init: Expected manager type {}, got {}" \
             .format(UserRoleManager, type(manager))
-        super(UserRole, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):
@@ -344,7 +343,7 @@ class UserRole(BaseResource):
         if isinstance(permitted_object, BaseResource):
             perm_obj = permitted_object.uri
             perm_type = 'object'
-        elif isinstance(permitted_object, six.string_types):
+        elif isinstance(permitted_object, str):
             perm_obj = permitted_object
             perm_type = 'object-class'
         else:
@@ -425,7 +424,7 @@ class UserRole(BaseResource):
         if isinstance(permitted_object, BaseResource):
             perm_obj = permitted_object.uri
             perm_type = 'object'
-        elif isinstance(permitted_object, six.string_types):
+        elif isinstance(permitted_object, str):
             perm_obj = permitted_object
             perm_type = 'object-class'
         else:

@@ -42,9 +42,9 @@ def make_client(zhmc, userid=None, password=None):
     global USERID, PASSWORD  # pylint: disable=global-statement
 
     USERID = userid or USERID or \
-        six.input('Enter userid for HMC {}: '.format(zhmc))
+        six.input(f'Enter userid for HMC {zhmc}: ')
     PASSWORD = password or PASSWORD or \
-        getpass.getpass('Enter password for {}: '.format(USERID))
+        getpass.getpass(f'Enter password for {USERID}: ')
 
     session = zhmcclient.Session(zhmc, USERID, PASSWORD)
     session.logon()

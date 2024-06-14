@@ -37,7 +37,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -58,7 +58,7 @@ try:
         cpcs = client.cpcs.list(full_properties)
         end_dt = datetime.now()
         duration = end_dt - start_dt
-        print("Duration: {}".format(duration))
+        print(f"Duration: {duration}")
         for cpc in cpcs:
             print("Number of properties returned for CPC {}: {}".
                   format(cpc.name, len(cpc.properties)))

@@ -25,7 +25,6 @@ resource object scope of each LPAR manager object is the set of LPARs in that
 CPC.
 """
 
-from __future__ import absolute_import
 
 import re
 from datetime import datetime, timedelta
@@ -46,7 +45,7 @@ __all__ = ['BaseManager']
 REGEXP_SPECIAL_CHAR = re.compile(r'[\^\$\.\+\*\?\(\)\[\]\{\}\|\\]')
 
 
-class _NameUriCache(object):
+class _NameUriCache:
     """
     A Name-URI cache, that caches the mapping between resource names and
     resource URIs. It supports looking up resource URIs by resource names.
@@ -186,7 +185,7 @@ class _NameUriCache(object):
                 pass
 
 
-class _ResourceList(object):
+class _ResourceList:
     """
     A list of resources, for use by resource manager objects for auto-updating.
 
@@ -363,7 +362,7 @@ class _ResourceList(object):
                 pass
 
 
-class BaseManager(object):
+class BaseManager:
     """
     Abstract base class for manager classes (e.g.
     :class:`~zhmcclient.CpcManager`).
@@ -574,7 +573,7 @@ class BaseManager(object):
         if self._name_prop in filter_args:
 
             name_match = filter_args[self._name_prop]
-            if not isinstance(name_match, six.string_types) or \
+            if not isinstance(name_match, str) or \
                     REGEXP_SPECIAL_CHAR.search(name_match):
                 return None
 
@@ -588,7 +587,7 @@ class BaseManager(object):
         if self._oid_prop in filter_args:
 
             oid_match = filter_args[self._oid_prop]
-            if not isinstance(oid_match, six.string_types) or \
+            if not isinstance(oid_match, str) or \
                     REGEXP_SPECIAL_CHAR.search(oid_match):
                 return None
 
@@ -679,7 +678,7 @@ class BaseManager(object):
                 parent_uri = self._parent.uri
             else:
                 parent_uri = '/'  # top-level resource
-            self._uri = '{}#{}'.format(parent_uri, self._class_name)
+            self._uri = f'{parent_uri}#{self._class_name}'
         return self._uri
 
     @property
@@ -775,7 +774,7 @@ class BaseManager(object):
                     ','.join(additional_properties))
                 query_parms.append(ap_parm)
             query_parms_str = make_query_str(query_parms)
-            uri = '{}{}'.format(list_uri, query_parms_str)
+            uri = f'{list_uri}{query_parms_str}'
 
             try:
                 result = self.session.get(uri)
@@ -1114,7 +1113,7 @@ class BaseManager(object):
         else:
             assert '/' not in uri_or_oid
             oid = uri_or_oid
-            uri = '{}/{}'.format(self._base_uri, oid)
+            uri = f'{self._base_uri}/{oid}'
         res_props = {
             'parent': self.parent.uri if self.parent is not None else None,
             'class': self.class_name,

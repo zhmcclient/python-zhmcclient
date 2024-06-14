@@ -16,7 +16,6 @@
 Unit tests for _capacity_group module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -30,7 +29,7 @@ from tests.common.utils import assert_resources
 
 # Object IDs and names of our faked capacity groups:
 CPC_OID = 'fake-cpc1-oid'
-CPC_URI = '/api/cpcs/{}'.format(CPC_OID)
+CPC_URI = f'/api/cpcs/{CPC_OID}'
 CG1_OID = 'cg1-oid'
 CG1_NAME = 'cg 1'
 CG1_SHORT_NAME = 'CG1'
@@ -39,7 +38,7 @@ CG2_NAME = 'cg 2'
 CG2_SHORT_NAME = 'CG2'
 
 
-class TestCapacityGroup(object):
+class TestCapacityGroup:
     """All tests for the CapacityGroup and CapacityGroupManager classes."""
 
     def setup_method(self):

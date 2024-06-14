@@ -16,13 +16,12 @@
 Unit tests for _auto_updater module.
 """
 
-from __future__ import absolute_import, print_function
 
 import time
 import re
 import logging
 import pytest
-from mock import patch
+from unittest.mock import patch
 
 from zhmcclient import Client
 from zhmcclient_mock import FakedSession

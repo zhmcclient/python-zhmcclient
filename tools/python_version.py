@@ -4,7 +4,7 @@ import sys
 
 if len(sys.argv) != 2:
     print("Error: Incorrect number of command line arguments")
-    print("Usage: {0}  version_level".format(sys.argv[0]))
+    print(f"Usage: {sys.argv[0]}  version_level")
     print("Where version_level is the number of components in the "
           "version string from 1 to 3, e.g. 3 means Python 2.7.11")
 

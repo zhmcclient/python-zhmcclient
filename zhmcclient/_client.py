@@ -16,7 +16,6 @@
 Client class: A client to an HMC.
 """
 
-from __future__ import absolute_import
 
 import time
 try:
@@ -35,7 +34,7 @@ from ._exceptions import Error, OperationTimeout
 __all__ = ['Client']
 
 
-class Client(object):
+class Client:
     """
     A client to an HMC.
 

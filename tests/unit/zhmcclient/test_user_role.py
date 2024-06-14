@@ -16,7 +16,6 @@
 Unit tests for _user_role module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -28,7 +27,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestUserRole(object):
+class TestUserRole:
     """All tests for the UserRole and UserRoleManager classes."""
 
     def setup_method(self):
@@ -58,12 +57,12 @@ class TestUserRole(object):
         Add a faked user role object to the faked Console and return it.
         """
         faked_user_role = self.faked_console.user_roles.add({
-            'object-id': 'oid-{}'.format(name),
+            'object-id': f'oid-{name}',
             # object-uri will be automatically set
             'parent': '/api/console',
             'class': 'user-role',
             'name': name,
-            'description': 'User Role {}'.format(name),
+            'description': f'User Role {name}',
             'type': type_,
         })
         return faked_user_role
@@ -323,7 +322,7 @@ class TestUserRole(object):
             assert prop_name in user_role.properties
             prop_value = user_role.properties[prop_name]
             assert prop_value == exp_prop_value, \
-                "Unexpected value for property {!r}".format(prop_name)
+                f"Unexpected value for property {prop_name!r}"
 
         # Refresh the resource object and verify that the resource object
         # still reflects the property updates.
@@ -364,7 +363,7 @@ class TestUserRole(object):
             perm_obj = permitted_object.uri
             perm_type = 'object'
         else:
-            assert isinstance(permitted_object, six.string_types)
+            assert isinstance(permitted_object, str)
             perm_obj = permitted_object
             perm_type = 'object-class'
         permission_parms = {
@@ -431,7 +430,7 @@ class TestUserRole(object):
             perm_obj = permitted_object.uri
             perm_type = 'object'
         else:
-            assert isinstance(permitted_object, six.string_types)
+            assert isinstance(permitted_object, str)
             perm_obj = permitted_object
             perm_type = 'object-class'
         permission_parms = {

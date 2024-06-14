@@ -108,7 +108,7 @@ DEBUG_HEARTBEATS = False
 JMS_LOGGER = logging.getLogger(JMS_LOGGER_NAME)
 
 
-class StompRetryTimeoutConfig(object):
+class StompRetryTimeoutConfig:
     # pylint: disable=too-few-public-methods
     """
     A configuration setting that specifies various retry and timeout related
@@ -232,7 +232,7 @@ class StompRetryTimeoutConfig(object):
         return ret
 
 
-class NotificationReceiver(object):
+class NotificationReceiver:
     """
     A class for receiving HMC notifications that are published to particular
     HMC notification topics.
@@ -385,8 +385,7 @@ class NotificationReceiver(object):
         self._conn = self._stomp.Connection(
             [(self._host, self._port)], **rt_kwargs)
         set_kwargs = dict()
-        if sys.version_info >= (3, 6):
-            set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
+        set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
         self._conn.set_ssl(for_hosts=[(self._host, self._port)], **set_kwargs)
         listener = _NotificationListener(self._handover_queue)
         self._conn.set_listener('', listener)
@@ -651,7 +650,7 @@ class NotificationReceiver(object):
                 else:
                     details = ""
                 raise NotificationJMSError(
-                    "Received JMS error from HMC{}".format(details),
+                    f"Received JMS error from HMC{details}",
                     item.headers, item.message)
             elif item.msgtype in ('disconnected', 'heartbeat_timeout'):
                 # Get all contiguous such entries to handle them just once
@@ -685,7 +684,7 @@ class NotificationReceiver(object):
                     "{} disconnect messages".format(num_hbto, num_disc))
             else:
                 raise RuntimeError(
-                    "Invalid handover item: {}".format(item.msgtype))
+                    f"Invalid handover item: {item.msgtype}")
 
             yield item.headers, msg_obj
 
@@ -717,7 +716,7 @@ _NotificationItem = namedtuple(
 )
 
 
-class _NotificationListener(object):
+class _NotificationListener:
     """
     A notification listener class for use by the Python `stomp-py` package.
 
@@ -779,12 +778,12 @@ class _NotificationListener(object):
         if can_send == 0:
             can_send_str = "cannot send heartbeats"
         else:
-            can_send_str = "can send heartbeats every {} msec".format(can_send)
+            can_send_str = f"can send heartbeats every {can_send} msec"
         if want_receive == 0:
             want_receive_str = "does not want to receive heartbeats"
         else:
             want_receive_str = \
-                "wants to receive heartbeats every {} msec".format(want_receive)
+                f"wants to receive heartbeats every {want_receive} msec"
         JMS_LOGGER.info(
             "Connected. The HMC %s and %s", can_send_str, want_receive_str)
 

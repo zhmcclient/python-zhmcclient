@@ -16,7 +16,6 @@
 Unit tests for _port module.
 """
 
-from __future__ import absolute_import, print_function
 
 # FIXME: Migrate requests_mock to zhmcclient_mock.
 import requests_mock
@@ -24,7 +23,7 @@ import requests_mock
 from zhmcclient import Session, Client
 
 
-class TestPort(object):
+class TestPort:
     """All tests for Port and PortManager classes."""
 
     def setup_method(self):

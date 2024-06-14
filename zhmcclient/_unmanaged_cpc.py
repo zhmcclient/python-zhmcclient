@@ -25,7 +25,6 @@ This section describes the interface for *unmanaged* CPCs using resource class
 :class:`~zhmcclient.UnmanagedCpcManager`.
 """
 
-from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -63,7 +62,7 @@ class UnmanagedCpcManager(BaseManager):
             'name',
         ]
 
-        super(UnmanagedCpcManager, self).__init__(
+        super().__init__(
             resource_class=UnmanagedCpc,
             class_name=RC_CPC,
             session=console.manager.session,
@@ -143,7 +142,7 @@ class UnmanagedCpcManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'cpcs'
-        list_uri = '{}/operations/list-unmanaged-cpcs'.format(self.parent.uri)
+        list_uri = f'{self.parent.uri}/operations/list-unmanaged-cpcs'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -174,4 +173,4 @@ class UnmanagedCpc(BaseResource):
         assert isinstance(manager, UnmanagedCpcManager), \
             "UnmanagedCpc init: Expected manager type {}, got {}" \
             .format(UnmanagedCpcManager, type(manager))
-        super(UnmanagedCpc, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)

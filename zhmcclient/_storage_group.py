@@ -78,7 +78,6 @@ Storage groups can only be associated with CPCs that have the
 "dpm-storage-management" feature enabled.
 """
 
-from __future__ import absolute_import
 
 import copy
 import re
@@ -125,7 +124,7 @@ class StorageGroupManager(BaseManager):
             'fulfillment-state',
         ]
 
-        super(StorageGroupManager, self).__init__(
+        super().__init__(
             resource_class=StorageGroup,
             class_name=RC_STORAGE_GROUP,
             session=console.manager.session,
@@ -317,7 +316,7 @@ class StorageGroup(BaseResource):
         assert isinstance(manager, StorageGroupManager), \
             "StorageGroup init: Expected manager type {}, got {}"  \
             .format(StorageGroupManager, type(manager))
-        super(StorageGroup, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._storage_volumes = None
         self._virtual_storage_resources = None
@@ -406,7 +405,7 @@ class StorageGroup(BaseResource):
             append_query_parms(query_parms, 'status', status)
         query_parms_str = '&'.join(query_parms)
         if query_parms_str:
-            query_parms_str = '?{}'.format(query_parms_str)
+            query_parms_str = f'?{query_parms_str}'
 
         uri = '{}/operations/get-partitions{}'.format(
             self.uri, query_parms_str)
@@ -528,7 +527,7 @@ class StorageGroup(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        uri = '{}/operations/modify'.format(self.uri)
+        uri = f'{self.uri}/operations/modify'
         self.manager.session.post(uri, resource=self, body=properties)
         is_rename = self.manager._name_prop in properties
         if is_rename:
@@ -837,7 +836,7 @@ class StorageGroup(BaseResource):
         """
 
         # Dump the resource properties
-        resource_dict = super(StorageGroup, self).dump()
+        resource_dict = super().dump()
 
         # Dump the child resources
         storage_volumes = self.storage_volumes.dump()

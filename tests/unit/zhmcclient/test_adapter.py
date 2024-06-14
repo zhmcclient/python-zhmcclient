@@ -16,7 +16,6 @@
 Unit tests for _adapter module.
 """
 
-from __future__ import absolute_import, print_function
 
 import copy
 import re
@@ -34,7 +33,7 @@ HS2_OID = 'hs2-oid'
 HS2_NAME = 'hs 2'
 
 
-class TestAdapter(object):
+class TestAdapter:
     """All tests for the Adapter and AdapterManager classes."""
 
     def setup_method(self):

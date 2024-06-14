@@ -43,7 +43,7 @@ JOB_TOPIC_TYPE = 'job-notification'
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -64,7 +64,7 @@ try:
         if topic['topic-type'] == JOB_TOPIC_TYPE:
             job_topic_name = topic['topic-name']
             break
-    print("Using job completion notification topic: {}".format(job_topic_name))
+    print(f"Using job completion notification topic: {job_topic_name}")
 
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
@@ -73,10 +73,10 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    part_name = "zhmc_test_{}".format(uuid.uuid4())
-    print("Creating partition {} ...".format(part_name))
+    part_name = f"zhmc_test_{uuid.uuid4()}"
+    print(f"Creating partition {part_name} ...")
     try:
         part = cpc.partitions.create(
             properties={
@@ -92,7 +92,7 @@ try:
         sys.exit(1)
 
     try:
-        print("Starting partition {} asynchronously ...".format(part.name))
+        print(f"Starting partition {part.name} asynchronously ...")
         job = part.start(wait_for_completion=False)
 
         print("Creating a notification receiver for topic {} ...".
@@ -101,7 +101,7 @@ try:
             receiver = zhmcclient.NotificationReceiver(
                 job_topic_name, host, userid, password)
         except Exception as exc:
-            print("Error: Cannot create notification receiver: {}".format(exc))
+            print(f"Error: Cannot create notification receiver: {exc}")
             sys.exit(1)
 
         print("Waiting for job completion notifications ...")
@@ -116,10 +116,10 @@ try:
                         print("Received completion notification for another job: "
                               "{} - continue to wait".format(headers['job-uri']))
             except zhmcclient.NotificationError as exc:
-                print("Notification Error: {} - reconnecting".format(exc))
+                print(f"Notification Error: {exc} - reconnecting")
                 continue
             except stomp.exception.StompException as exc:
-                print("STOMP Error: {} - reconnecting".format(exc))
+                print(f"STOMP Error: {exc} - reconnecting")
                 continue
             except KeyboardInterrupt:
                 print("Keyboard interrupt - leaving receiver loop")
@@ -140,7 +140,7 @@ try:
 
     finally:
         if part.get_property('status') != 'stopped':
-            print("Stopping partition {} ...".format(part.name))
+            print(f"Stopping partition {part.name} ...")
             try:
                 part.stop(wait_for_completion=True)
             except zhmcclient.Error as exc:
@@ -148,7 +148,7 @@ try:
                       format(exc.__class__.__name__, exc))
                 sys.exit(1)
 
-        print("Deleting partition {} ...".format(part.name))
+        print(f"Deleting partition {part.name} ...")
         try:
             part.delete()
         except zhmcclient.Error as exc:

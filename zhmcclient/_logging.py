@@ -157,7 +157,7 @@ def logged_api_call(func):
 
     if apifunc_owner == '<module>':
         # The decorated API function is defined globally (at module level)
-        apifunc_str = '{func}()'.format(func=func.__name__)
+        apifunc_str = f'{func.__name__}()'
     else:
         # The decorated API function is defined in a class or in a function
         apifunc_str = '{owner}.{func}()'.format(owner=apifunc_owner,

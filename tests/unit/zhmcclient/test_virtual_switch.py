@@ -16,7 +16,6 @@
 Unit tests for _virtual_switch module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 # FIXME: Migrate requests_mock to zhmcclient_mock.
@@ -25,7 +24,7 @@ import requests_mock
 from zhmcclient import Session, Client, Nic
 
 
-class TestVirtualSwitch(object):
+class TestVirtualSwitch:
     """All tests for VirtualSwitch and VirtualSwitchManager classes."""
 
     def setup_method(self):

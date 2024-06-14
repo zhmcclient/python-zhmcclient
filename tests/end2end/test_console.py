@@ -18,7 +18,6 @@ End2end tests for the single console object.
 These tests do not change the console object.
 """
 
-from __future__ import absolute_import, print_function
 
 from requests.packages import urllib3
 

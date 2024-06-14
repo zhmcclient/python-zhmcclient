@@ -18,7 +18,6 @@
 Unit tests for _manager module.
 """
 
-from __future__ import absolute_import, print_function
 
 from datetime import datetime
 import time
@@ -43,7 +42,7 @@ class MyResource(BaseResource):
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
     def __init__(self, manager, uri, name=None, properties=None):
-        super(MyResource, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
 
 class MyManager(BaseManager):
@@ -54,7 +53,7 @@ class MyManager(BaseManager):
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
     def __init__(self, session, case_insensitive_names=False):
-        super(MyManager, self).__init__(
+        super().__init__(
             resource_class=MyResource,
             class_name='myresource',
             session=session,
@@ -80,7 +79,7 @@ class MyManager(BaseManager):
         return result_list
 
 
-class TestManager0(object):
+class TestManager0:
     """
     Tests for the BaseManager class with no initial resources.
     """
@@ -156,7 +155,7 @@ class TestManager0(object):
         assert res.properties['prop1'] == add_props['prop1']
 
 
-class TestManager1(object):
+class TestManager1:
     """
     Tests for the BaseManager class with one resource.
     """
@@ -237,7 +236,7 @@ class TestManager1(object):
         assert len(wngs) == 1
         wng = wngs[0]
         assert issubclass(wng.category, DeprecationWarning), \
-            "Unexpected warnings class: {}".format(wng.category)
+            f"Unexpected warnings class: {wng.category}"
 
         # Check that on the third find by name, list() is called again, because
         # the cache had been invalidated.
@@ -261,7 +260,7 @@ class TestManager1(object):
             manager.list()
 
 
-class TestManager2(object):
+class TestManager2:
     """
     Tests for the BaseManager class with two resources.
     """
@@ -353,8 +352,8 @@ class TestManager2(object):
         resources = self.manager.findall(same="fake-same")
 
         assert len(resources) == 2
-        assert set([res.uri for res in resources]) == \
-            set([self.resource1.uri, self.resource2.uri])
+        assert {res.uri for res in resources} == \
+            {self.resource1.uri, self.resource2.uri}
 
     def test_findall_str_two_or(self):
         """Test BaseManager.findall() with two resources matching by a
@@ -365,8 +364,8 @@ class TestManager2(object):
                                                 "fake-other-2"])
 
         assert len(resources) == 2
-        assert set([res.uri for res in resources]) == \
-            set([self.resource1.uri, self.resource2.uri])
+        assert {res.uri for res in resources} == \
+            {self.resource1.uri, self.resource2.uri}
 
     def test_findall_int_none(self):
         """Test BaseManager.findall() with no resource matching by a
@@ -393,8 +392,8 @@ class TestManager2(object):
         resources = self.manager.findall(int_same=42)
 
         assert len(resources) == 2
-        assert set([res.uri for res in resources]) == \
-            set([self.resource1.uri, self.resource2.uri])
+        assert {res.uri for res in resources} == \
+            {self.resource1.uri, self.resource2.uri}
 
     def test_find_name_none(self):
         """Test BaseManager.find() with no resource matching by the name
@@ -477,7 +476,7 @@ class TestManager2(object):
         assert resource.name == self.resource2.name
 
 
-class TestNameUriCache(object):
+class TestNameUriCache:
     """All tests for the _NameUriCache class."""
 
     @staticmethod

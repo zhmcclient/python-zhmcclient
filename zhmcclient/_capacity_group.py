@@ -23,7 +23,6 @@ Capacity Group resources are contained in CPC resources.
 Capacity Groups only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -56,12 +55,12 @@ class CapacityGroupManager(BaseManager):
         #   cpc (:class:`~zhmcclient.Cpc`):
         #     CPC defining the scope for this manager.
 
-        super(CapacityGroupManager, self).__init__(
+        super().__init__(
             resource_class=CapacityGroup,
             class_name=RC_CAPACITY_GROUP,
             session=cpc.manager.session,
             parent=cpc,
-            base_uri='{}/capacity-groups'.format(cpc.uri),
+            base_uri=f'{cpc.uri}/capacity-groups',
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -132,7 +131,7 @@ class CapacityGroupManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'capacity-groups'
-        list_uri = '{}/capacity-groups'.format(self.cpc.uri)
+        list_uri = f'{self.cpc.uri}/capacity-groups'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -211,7 +210,7 @@ class CapacityGroup(BaseResource):
         assert isinstance(manager, CapacityGroupManager), \
             "CapacityGroup init: Expected manager type {}, got {}" \
             .format(CapacityGroupManager, type(manager))
-        super(CapacityGroup, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

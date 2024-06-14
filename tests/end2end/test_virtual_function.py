@@ -19,7 +19,6 @@ These tests do not change any existing partitions or virtual functions, but
 create, modify and delete test partitions with virtual functions.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -135,7 +134,7 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         part_name = TEST_PREFIX + ' test_vfunc_crud part1'
         vfunc_name = 'vfunc1'
@@ -184,14 +183,14 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
 
             for pn, exp_value in vfunc_input_props.items():
                 assert vfunc.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
             vfunc.pull_full_properties()
             for pn, exp_value in vfunc_input_props.items():
                 assert vfunc.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
             for pn, exp_value in vfunc_auto_props.items():
                 assert vfunc.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
 
             # Test updating a property of the virtual function
 

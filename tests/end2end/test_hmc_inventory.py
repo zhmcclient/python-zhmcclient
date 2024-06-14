@@ -17,7 +17,6 @@ End2end tests for testing whether the HMCs in the HMC inventory file match
 reality.
 """
 
-from __future__ import absolute_import, print_function
 
 from requests.packages import urllib3
 import pytest
@@ -47,7 +46,7 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
     for cpc_name in hd.cpcs:
         def_cpc_props = dict(hd.cpcs[cpc_name])
 
-        print("Checking CPC {c}".format(c=cpc_name))
+        print(f"Checking CPC {cpc_name}")
 
         assert cpc_name in cpc_names, \
             "CPC {c} defined in inventory file for HMC {n!r} at {h} is not " \
@@ -107,7 +106,7 @@ def test_hmcdef_check_all_hmcs():
     for hd in hd_list:
 
         if hd.mock_file:
-            print("Skipping mocked HMC {n!r}".format(n=hd.nickname))
+            print(f"Skipping mocked HMC {hd.nickname!r}")
             continue
 
         for cpc_name in hd.cpcs:

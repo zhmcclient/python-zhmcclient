@@ -32,7 +32,7 @@ def get_version(version_file):
     a fresh Python environment).
     """
     # pylint: disable=unspecified-encoding
-    with open(version_file, 'r') as fp:
+    with open(version_file) as fp:
         version_source = fp.read()
     _globals = {}
     exec(version_source, _globals)  # pylint: disable=exec-used
@@ -46,7 +46,7 @@ def get_requirements(requirements_file):
     characters.
     """
     # pylint: disable=unspecified-encoding
-    with open(requirements_file, 'r') as fp:
+    with open(requirements_file) as fp:
         lines = fp.readlines()
     reqs = []
     for line in lines:
@@ -61,7 +61,7 @@ def read_file(a_file):
     Read the specified file and return its content as one string.
     """
     # pylint: disable=unspecified-encoding
-    with open(a_file, 'r') as fp:
+    with open(a_file) as fp:
         content = fp.read()
     return content
 

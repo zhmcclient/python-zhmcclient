@@ -25,7 +25,6 @@ LPAR resources only exist in CPCs that are in classic mode (or ensemble mode).
 CPCs in DPM mode have :term:`Partition` resources, instead.
 """
 
-from __future__ import absolute_import
 
 import time
 import copy
@@ -72,7 +71,7 @@ class LparManager(BaseManager):
             'name',
         ]
 
-        super(LparManager, self).__init__(
+        super().__init__(
             resource_class=Lpar,
             class_name=RC_LOGICAL_PARTITION,
             session=cpc.manager.session,
@@ -149,7 +148,7 @@ class LparManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'logical-partitions'
-        list_uri = '{}/logical-partitions'.format(self.cpc.uri)
+        list_uri = f'{self.cpc.uri}/logical-partitions'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -180,7 +179,7 @@ class Lpar(BaseResource):
         assert isinstance(manager, LparManager), \
             "Lpar init: Expected manager type {}, got {}" \
             .format(LparManager, type(manager))
-        super(Lpar, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def update_properties(self, properties):
@@ -1926,19 +1925,19 @@ class Lpar(BaseResource):
         """
         query_parms = []
         if begin is not None:
-            query_parms.append('begin-sequence-number={}'.format(begin))
+            query_parms.append(f'begin-sequence-number={begin}')
         if end is not None:
-            query_parms.append('end-sequence-number={}'.format(end))
+            query_parms.append(f'end-sequence-number={end}')
         if is_held is not None:
-            query_parms.append('is-held={}'.format(str(is_held).lower()))
+            query_parms.append(f'is-held={str(is_held).lower()}')
         if is_priority is not None:
             query_parms.append(
-                'is-priority={}'.format(str(is_priority).lower()))
+                f'is-priority={str(is_priority).lower()}')
         if max_messages > 0:
-            query_parms.append('max-messages={}'.format(max_messages))
+            query_parms.append(f'max-messages={max_messages}')
         query_str = make_query_str(query_parms)
         result = self.manager.session.get(
-            '{}/operations/list-os-messages{}'.format(self.uri, query_str),
+            f'{self.uri}/operations/list-os-messages{query_str}',
             resource=self)
         return result
 

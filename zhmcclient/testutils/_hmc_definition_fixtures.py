@@ -16,7 +16,6 @@
 Pytest fixtures for mocked HMCs.
 """
 
-from __future__ import absolute_import
 
 import os
 import logging
@@ -55,11 +54,11 @@ def fixtureid_hmc_definition(fixture_value):
     if not show_hmc:
         hmc_str = ""
     elif hd.mock_file:
-        hmc_str = "(mock_file={f})".format(f=hd.mock_file)
+        hmc_str = f"(mock_file={hd.mock_file})"
     else:
         hmc_str = "(host={h}, userid={u})".format(
             h=hd.host, u=hd.userid)
-    ret_str = "hmc_definition={n}{v}".format(n=hd.nickname, v=hmc_str)
+    ret_str = f"hmc_definition={hd.nickname}{hmc_str}"
     return ret_str
 
 
@@ -124,7 +123,7 @@ def setup_hmc_session(hd):
     # We use the cached skip reason from previous attempts
     skip_msg = getattr(hd, 'skip_msg', None)
     if skip_msg:
-        pytest.skip("Skip reason from earlier attempt: {0}".format(skip_msg))
+        pytest.skip(f"Skip reason from earlier attempt: {skip_msg}")
 
     if hd.mock_file:
         # A mocked HMC

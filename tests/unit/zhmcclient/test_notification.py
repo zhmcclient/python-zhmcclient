@@ -19,14 +19,13 @@ The test strategy is to mock the STOMP messages of the HMC using the
 requests_mock package.
 """
 
-from __future__ import absolute_import, print_function
 
 import json
 import threading
 from collections import namedtuple
 import logging
 import time
-from mock import patch
+from unittest.mock import patch
 import six
 import pytest
 import stomp
@@ -61,7 +60,7 @@ def create_event_args(headers, message):
     return frame_args
 
 
-class MockedStompConnection(object):
+class MockedStompConnection:
     """
     A class that replaces stomp.Connection for the usage scope in the
     zhmcclient._notification module, and that adds the ability to
@@ -158,7 +157,7 @@ class MockedStompConnection(object):
         Adds a STOMP message to the queue.
         """
         assert self._sender_thread is None
-        if not isinstance(message, six.string_types):
+        if not isinstance(message, str):
             message = json.dumps(message)
         self._queued_messages.append((headers, message))
 
@@ -264,7 +263,7 @@ def receive_notifications(receiver):
     return msg_items
 
 
-class TestNotificationOneTopic(object):
+class TestNotificationOneTopic:
     """
     Test class for one notification topic.
     """
@@ -328,7 +327,7 @@ class TestNotificationOneTopic(object):
         assert msg0[1] == message_obj
 
 
-class TestNotificationTwoTopics(object):
+class TestNotificationTwoTopics:
     """
     Test class for two notification topics.
     """
@@ -392,7 +391,7 @@ class TestNotificationTwoTopics(object):
         assert msg0[1] == message_obj
 
 
-class TestNotificationSubscriptionMgmt(object):
+class TestNotificationSubscriptionMgmt:
     """
     Test class for subscription management.
     """

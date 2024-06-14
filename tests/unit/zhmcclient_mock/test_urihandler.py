@@ -18,14 +18,13 @@
 Unit tests for _urihandler module of the zhmcclient_mock package.
 """
 
-from __future__ import absolute_import, print_function
 
 from datetime import datetime
 from dateutil import tz
 import pytz
 from requests.packages import urllib3
 # TODO: Migrate mock to zhmcclient_mock
-from mock import MagicMock
+from unittest.mock import MagicMock
 import pytest
 
 from zhmcclient_mock._session import FakedSession
@@ -141,7 +140,7 @@ def test_connectionerror_attrs():
     assert exc.message == msg
 
 
-class DummyHandler1(object):
+class DummyHandler1:
     # pylint: disable=too-few-public-methods
     """
     Dummy URI handler class.
@@ -149,7 +148,7 @@ class DummyHandler1(object):
     pass
 
 
-class DummyHandler2(object):
+class DummyHandler2:
     # pylint: disable=too-few-public-methods
     """
     Dummy URI handler class.
@@ -157,7 +156,7 @@ class DummyHandler2(object):
     pass
 
 
-class DummyHandler3(object):
+class DummyHandler3:
     # pylint: disable=too-few-public-methods
     """
     Dummy URI handler class.
@@ -578,7 +577,7 @@ def test_urihandler_handle_cpcs(
             urihandler.handler(uri, method)
 
 
-class TestUriHandlerMethod(object):
+class TestUriHandlerMethod:
     """
     All tests for get(), post(), delete() methods of class UriHandler.
     """
@@ -1039,7 +1038,7 @@ def standard_test_hmc():
     return hmc, hmc_resources
 
 
-class TestGenericGetPropertiesHandler(object):
+class TestGenericGetPropertiesHandler:
     """
     All tests for class GenericGetPropertiesHandler.
     """
@@ -1098,7 +1097,7 @@ class _GenericGetUpdatePropertiesHandler(GenericGetPropertiesHandler,
     pass
 
 
-class TestGenericUpdatePropertiesHandler(object):
+class TestGenericUpdatePropertiesHandler:
     """
     All tests for class GenericUpdatePropertiesHandler.
     """
@@ -1150,7 +1149,7 @@ class TestGenericUpdatePropertiesHandler(object):
                                  True)
 
 
-class TestGenericDeleteHandler(object):
+class TestGenericDeleteHandler:
     """
     All tests for class GenericDeleteHandler.
     """
@@ -1200,7 +1199,7 @@ class TestGenericDeleteHandler(object):
             self.urihandler.delete(self.hmc, uri, True)
 
 
-class TestVersionHandler(object):
+class TestVersionHandler:
     """
     All tests for class VersionHandler.
     """
@@ -1235,7 +1234,7 @@ class TestVersionHandler(object):
         assert resp == exp_resp
 
 
-class TestConsoleHandler(object):
+class TestConsoleHandler:
     """
     All tests for class ConsoleHandler.
     """
@@ -1272,7 +1271,7 @@ class TestConsoleHandler(object):
         assert console == exp_console
 
 
-class TestConsoleRestartHandler(object):
+class TestConsoleRestartHandler:
     """
     All tests for class ConsoleRestartHandler.
     """
@@ -1328,7 +1327,7 @@ class TestConsoleRestartHandler(object):
         assert exc.reason == 1
 
 
-class TestConsoleShutdownHandler(object):
+class TestConsoleShutdownHandler:
     """
     All tests for class ConsoleShutdownHandler.
     """
@@ -1384,7 +1383,7 @@ class TestConsoleShutdownHandler(object):
         assert exc.reason == 1
 
 
-class TestConsoleMakePrimaryHandler(object):
+class TestConsoleMakePrimaryHandler:
     """
     All tests for class ConsoleMakePrimaryHandler.
     """
@@ -1439,7 +1438,7 @@ class TestConsoleMakePrimaryHandler(object):
         assert exc.reason == 1
 
 
-class TestConsoleReorderUserPatternsHandler(object):
+class TestConsoleReorderUserPatternsHandler:
     """
     All tests for class ConsoleReorderUserPatternsHandler.
     """
@@ -1550,7 +1549,7 @@ class TestConsoleReorderUserPatternsHandler(object):
         assert exc.reason == 1
 
 
-class TestConsoleGetAuditLogHandler(object):
+class TestConsoleGetAuditLogHandler:
     """
     All tests for class ConsoleGetAuditLogHandler.
     """
@@ -1602,7 +1601,7 @@ class TestConsoleGetAuditLogHandler(object):
         assert exc.reason == 1
 
 
-class TestConsoleGetSecurityLogHandler(object):
+class TestConsoleGetSecurityLogHandler:
     """
     All tests for class ConsoleGetSecurityLogHandler.
     """
@@ -1654,7 +1653,7 @@ class TestConsoleGetSecurityLogHandler(object):
         assert exc.reason == 1
 
 
-class TestConsoleListUnmanagedCpcsHandler(object):
+class TestConsoleListUnmanagedCpcsHandler:
     """
     All tests for class ConsoleListUnmanagedCpcsHandler.
     """
@@ -1707,7 +1706,7 @@ class TestConsoleListUnmanagedCpcsHandler(object):
         assert exc.reason == 1
 
 
-class TestUserHandlers(object):
+class TestUserHandlers:
     """
     All tests for classes UsersHandler and UserHandler.
     """
@@ -1916,7 +1915,7 @@ class TestUserHandlers(object):
         """
 
         user_oid = user_props['object-id']
-        user_uri = '/api/users/{}'.format(user_oid)
+        user_uri = f'/api/users/{user_oid}'
 
         # Create the user
         self.urihandler.post(self.hmc, '/api/console/users', user_props, True,
@@ -1949,7 +1948,7 @@ class TestUserHandlers(object):
                 self.urihandler.get(self.hmc, user_uri, True)
 
 
-class TestUserAddUserRoleHandler(object):
+class TestUserAddUserRoleHandler:
     """
     All tests for class UserAddUserRoleHandler.
     """
@@ -2089,7 +2088,7 @@ class TestUserAddUserRoleHandler(object):
         assert exc.reason == 2
 
 
-class TestUserRemoveUserRoleHandler(object):
+class TestUserRemoveUserRoleHandler:
     """
     All tests for class UserRemoveUserRoleHandler.
     """
@@ -2281,7 +2280,7 @@ class TestUserRemoveUserRoleHandler(object):
         assert exc.reason == 316
 
 
-class TestUserRoleHandlers(object):
+class TestUserRoleHandlers:
     """
     All tests for classes UserRolesHandler and UserRoleHandler.
     """
@@ -2474,7 +2473,7 @@ class TestUserRoleHandlers(object):
             self.urihandler.get(self.hmc, new_user_role2_uri, True)
 
 
-class TestUserRoleAddPermissionHandler(object):
+class TestUserRoleAddPermissionHandler:
     """
     All tests for class UserRoleAddPermissionHandler.
     """
@@ -2609,7 +2608,7 @@ class TestUserRoleAddPermissionHandler(object):
         assert exc.reason == 314
 
 
-class TestUserRoleRemovePermissionHandler(object):
+class TestUserRoleRemovePermissionHandler:
     """
     All tests for class UserRoleRemovePermissionHandler.
     """
@@ -2751,7 +2750,7 @@ class TestUserRoleRemovePermissionHandler(object):
         assert exc.reason == 314
 
 
-class TestTaskHandlers(object):
+class TestTaskHandlers:
     """
     All tests for classes TasksHandler and TaskHandler.
     """
@@ -2828,7 +2827,7 @@ class TestTaskHandlers(object):
         assert task1 == exp_task1
 
 
-class TestUserPatternHandlers(object):
+class TestUserPatternHandlers:
     """
     All tests for classes UserPatternsHandler and UserPatternHandler.
     """
@@ -3016,7 +3015,7 @@ class TestUserPatternHandlers(object):
             self.urihandler.get(self.hmc, new_user_pattern_uri, True)
 
 
-class TestPasswordRuleHandlers(object):
+class TestPasswordRuleHandlers:
     """
     All tests for classes PasswordRulesHandler and PasswordRuleHandler.
     """
@@ -3195,7 +3194,7 @@ class TestPasswordRuleHandlers(object):
             self.urihandler.get(self.hmc, new_password_rule_uri, True)
 
 
-class TestLdapServerDefinitionHandlers(object):
+class TestLdapServerDefinitionHandlers:
     """
     All tests for classes LdapServerDefinitionsHandler and
     LdapServerDefinitionHandler.
@@ -3393,7 +3392,7 @@ class TestLdapServerDefinitionHandlers(object):
             self.urihandler.get(self.hmc, new_ldap_srv_def_uri, True)
 
 
-class TestCpcHandlers(object):
+class TestCpcHandlers:
     """
     All tests for classes CpcsHandler and CpcHandler.
     """
@@ -3474,7 +3473,7 @@ class TestCpcHandlers(object):
         assert cpc1['description'] == 'updated cpc #1'
 
 
-class TestCpcSetPowerSaveHandler(object):
+class TestCpcSetPowerSaveHandler:
     """
     All tests for class CpcSetPowerSaveHandler.
     """
@@ -3541,7 +3540,7 @@ class TestCpcSetPowerSaveHandler(object):
             assert cpc1['zcpc-power-saving'] == power_saving
 
 
-class TestCpcSetPowerCappingHandler(object):
+class TestCpcSetPowerCappingHandler:
     """
     All tests for class CpcSetPowerCappingHandler.
     """
@@ -3612,7 +3611,7 @@ class TestCpcSetPowerCappingHandler(object):
             assert cpc1['zcpc-power-cap-current'] == power_cap_current
 
 
-class TestCpcGetEnergyManagementDataHandler(object):
+class TestCpcGetEnergyManagementDataHandler:
     """
     All tests for class CpcGetEnergyManagementDataHandler.
     """
@@ -3687,7 +3686,7 @@ class TestCpcGetEnergyManagementDataHandler(object):
             assert act_energy_props[p] == exp_value
 
 
-class TestCpcStartStopHandler(object):
+class TestCpcStartStopHandler:
     """
     All tests for classes CpcStartHandler and CpcStopHandler.
     """
@@ -3765,7 +3764,7 @@ class TestCpcStartStopHandler(object):
         assert cpc2['status'] == 'active'
 
 
-class TestCpcActivateDeactivateHandler(object):
+class TestCpcActivateDeactivateHandler:
     """
     All tests for classes CpcActivateHandler and CpcDeactivateHandler.
     """
@@ -3847,7 +3846,7 @@ class TestCpcActivateDeactivateHandler(object):
         assert cpc1['status'] == 'operating'
 
 
-class TestCpcExportPortNamesListHandler(object):
+class TestCpcExportPortNamesListHandler:
     """
     All tests for class CpcExportPortNamesListHandler.
     """
@@ -3904,7 +3903,7 @@ class TestCpcExportPortNamesListHandler(object):
         assert wwpn_list == exp_wwpn_list
 
 
-class TestCpcImportProfilesHandler(object):
+class TestCpcImportProfilesHandler:
     """
     All tests for class CpcImportProfilesHandler.
     """
@@ -3953,7 +3952,7 @@ class TestCpcImportProfilesHandler(object):
         assert resp is None
 
 
-class TestCpcExportProfilesHandler(object):
+class TestCpcExportProfilesHandler:
     """
     All tests for class CpcExportProfilesHandler.
     """
@@ -4002,7 +4001,7 @@ class TestCpcExportProfilesHandler(object):
         assert resp is None
 
 
-class TestCpcSetAutoStartListHandler(object):
+class TestCpcSetAutoStartListHandler:
     """
     All tests for class CpcSetAutoStartListHandler.
     """
@@ -4046,7 +4045,7 @@ class TestCpcSetAutoStartListHandler(object):
         assert resp is None
 
 
-class TestMetricsContextHandlers(object):
+class TestMetricsContextHandlers:
     """
     All tests for classes MetricsContextsHandler and MetricsContextHandler.
     """
@@ -4183,7 +4182,7 @@ class TestMetricsContextHandlers(object):
         self.urihandler.delete(self.hmc, uri, True)
 
 
-class TestAdapterHandlers(object):
+class TestAdapterHandlers:
     """
     All tests for classes AdaptersHandler and AdapterHandler.
     """
@@ -4290,7 +4289,7 @@ class TestAdapterHandlers(object):
         assert adapter1['description'] == 'updated adapter #1'
 
 
-class TestAdapterChangeCryptoTypeHandler(object):
+class TestAdapterChangeCryptoTypeHandler:
     """
     All tests for class AdapterChangeCryptoTypeHandler.
     """
@@ -4358,7 +4357,7 @@ class TestAdapterChangeCryptoTypeHandler(object):
         assert resp is None
 
 
-class TestAdapterChangeAdapterTypeHandler(object):
+class TestAdapterChangeAdapterTypeHandler:
     """
     All tests for class AdapterChangeAdapterTypeHandler.
     """
@@ -4426,7 +4425,7 @@ class TestAdapterChangeAdapterTypeHandler(object):
         assert resp is None
 
 
-class TestNetworkPortHandlers(object):
+class TestNetworkPortHandlers:
     """
     All tests for class NetworkPortHandler.
     """
@@ -4482,7 +4481,7 @@ class TestNetworkPortHandlers(object):
         assert port1['description'] == 'updated port #1'
 
 
-class TestStoragePortHandlers(object):
+class TestStoragePortHandlers:
     """
     All tests for class StoragePortHandler.
     """
@@ -4538,7 +4537,7 @@ class TestStoragePortHandlers(object):
         assert port1['description'] == 'updated port #1'
 
 
-class TestPartitionHandlers(object):
+class TestPartitionHandlers:
     """
     All tests for classes PartitionsHandler and PartitionHandler.
     """
@@ -4645,7 +4644,7 @@ class TestPartitionHandlers(object):
             assert pname in partition2
             act_value = partition2[pname]
             assert act_value == exp_value, \
-                "property {!r}".format(pname)
+                f"property {pname!r}"
 
     def test_part_update_verify(self):
         """
@@ -4677,7 +4676,7 @@ class TestPartitionHandlers(object):
             self.urihandler.get(self.hmc, '/api/partitions/1', True)
 
 
-class TestPartitionStartStopHandler(object):
+class TestPartitionStartStopHandler:
     """
     All tests for classes PartitionStartHandler and PartitionStopHandler.
     """
@@ -4733,7 +4732,7 @@ class TestPartitionStartStopHandler(object):
                                  None, True, True)
 
 
-class TestPartitionScsiDumpHandler(object):
+class TestPartitionScsiDumpHandler:
     """
     All tests for class PartitionScsiDumpHandler.
     """
@@ -4864,7 +4863,7 @@ class TestPartitionScsiDumpHandler(object):
         assert resp == {}
 
 
-class TestPartitionStartDumpProgramHandler(object):
+class TestPartitionStartDumpProgramHandler:
     """
     All tests for class PartitionStartDumpProgramHandler.
     """
@@ -4959,7 +4958,7 @@ class TestPartitionStartDumpProgramHandler(object):
         assert resp == {}
 
 
-class TestPartitionPswRestartHandler(object):
+class TestPartitionPswRestartHandler:
     """
     All tests for class PartitionPswRestartHandler.
     """
@@ -5012,7 +5011,7 @@ class TestPartitionPswRestartHandler(object):
         assert resp == {}
 
 
-class TestPartitionMountIsoImageHandler(object):
+class TestPartitionMountIsoImageHandler:
     """
     All tests for class PartitionMountIsoImageHandler.
     """
@@ -5098,7 +5097,7 @@ class TestPartitionMountIsoImageHandler(object):
         assert boot_iso_ins_file == 'fake-ins'
 
 
-class TestPartitionUnmountIsoImageHandler(object):
+class TestPartitionUnmountIsoImageHandler:
     """
     All tests for class PartitionUnmountIsoImageHandler.
     """
@@ -5156,7 +5155,7 @@ class TestPartitionUnmountIsoImageHandler(object):
         assert boot_iso_ins_file is None
 
 
-class TestPartitionIncreaseCryptoConfigHandler(object):
+class TestPartitionIncreaseCryptoConfigHandler:
     """
     All tests for class PartitionIncreaseCryptoConfigHandler.
     """
@@ -5277,7 +5276,7 @@ class TestPartitionIncreaseCryptoConfigHandler(object):
             assert domain_configs == exp_domain_configs
 
 
-class TestPartitionDecreaseCryptoConfigHandler(object):
+class TestPartitionDecreaseCryptoConfigHandler:
     """
     All tests for class PartitionDecreaseCryptoConfigHandler.
     """
@@ -5398,7 +5397,7 @@ class TestPartitionDecreaseCryptoConfigHandler(object):
             assert isinstance(domain_configs, list)
 
 
-class TestPartitionChangeCryptoConfigHandler(object):
+class TestPartitionChangeCryptoConfigHandler:
     """
     All tests for class PartitionChangeCryptoConfigHandler.
     """
@@ -5546,7 +5545,7 @@ class TestPartitionChangeCryptoConfigHandler(object):
             assert isinstance(domain_configs, list)
 
 
-class TestHbaHandler(object):
+class TestHbaHandler:
     """
     All tests for classes HbasHandler and HbaHandler.
     """
@@ -5671,7 +5670,7 @@ class TestHbaHandler(object):
             self.urihandler.get(self.hmc, '/api/partitions/1/hbas/1', True)
 
 
-class TestHbaReassignPortHandler(object):
+class TestHbaReassignPortHandler:
     """
     All tests for class HbaReassignPortHandler.
     """
@@ -5748,7 +5747,7 @@ class TestHbaReassignPortHandler(object):
         assert adapter_port_uri == new_adapter_port_uri
 
 
-class TestNicHandler(object):
+class TestNicHandler:
     """
     All tests for classes NicsHandler and NicHandler.
     """
@@ -5875,7 +5874,7 @@ class TestNicHandler(object):
             self.urihandler.get(self.hmc, '/api/partitions/1/nics/1', True)
 
 
-class TestVirtualFunctionHandler(object):
+class TestVirtualFunctionHandler:
     """
     All tests for classes VirtualFunctionsHandler and VirtualFunctionHandler.
     """
@@ -6006,7 +6005,7 @@ class TestVirtualFunctionHandler(object):
                                 '/api/partitions/1/virtual-functions/1', True)
 
 
-class TestVirtualSwitchHandlers(object):
+class TestVirtualSwitchHandlers:
     """
     All tests for classes VirtualSwitchesHandler and VirtualSwitchHandler.
     """
@@ -6067,7 +6066,7 @@ class TestVirtualSwitchHandlers(object):
         assert vswitch1 == exp_vswitch1
 
 
-class TestVirtualSwitchGetVnicsHandler(object):
+class TestVirtualSwitchGetVnicsHandler:
     """
     All tests for class VirtualSwitchGetVnicsHandler.
     """
@@ -6111,7 +6110,7 @@ class TestVirtualSwitchGetVnicsHandler(object):
         assert resp == exp_resp
 
 
-class TestStorageGroupHandlers(object):
+class TestStorageGroupHandlers:
     """
     All tests for classes StorageGroupsHandler and StorageGroupHandler.
     """
@@ -6187,7 +6186,7 @@ class TestStorageGroupHandlers(object):
 # TODO: Test StorageGroupRemoveCandidatePortsHandler
 
 
-class TestStorageVolumeHandlers(object):
+class TestStorageVolumeHandlers:
     """
     All tests for classes StorageVolumesHandler and StorageVolumeHandler.
     """
@@ -6257,7 +6256,7 @@ class TestStorageVolumeHandlers(object):
         assert stovol1 == exp_stovol1
 
 
-class TestCapacityGroupHandlers(object):
+class TestCapacityGroupHandlers:
     """
     All tests for classes CapacityGroupsHandler and CapacityGroupHandler.
     """
@@ -6320,7 +6319,7 @@ class TestCapacityGroupHandlers(object):
         assert cg1 == exp_cg1
 
 
-class TestCapacityGroupAddPartitionHandler(object):
+class TestCapacityGroupAddPartitionHandler:
     """
     All tests for class CapacityGroupAddPartitionHandler.
     """
@@ -6359,7 +6358,7 @@ class TestCapacityGroupAddPartitionHandler(object):
             True, True)
 
 
-class TestCapacityGroupRemovePartitionHandler(object):
+class TestCapacityGroupRemovePartitionHandler:
     """
     All tests for class CapacityGroupRemovePartitionHandler.
     """
@@ -6403,7 +6402,7 @@ class TestCapacityGroupRemovePartitionHandler(object):
         assert exc.reason == 140
 
 
-class TestLparHandlers(object):
+class TestLparHandlers:
     """
     All tests for classes LparsHandler and LparHandler.
     """
@@ -6463,7 +6462,7 @@ class TestLparHandlers(object):
         assert lpar1 == exp_lpar1
 
 
-class TestLparActLoadDeactHandler(object):
+class TestLparActLoadDeactHandler:
     """
     All tests for classes LparActivateHandler, LparLoadHandler, and
     LparDeactivateHandler.
@@ -6530,7 +6529,7 @@ class TestLparActLoadDeactHandler(object):
         assert lpar1['status'] == 'not-activated'
 
 
-class TestLparScsiLoadHandler(object):
+class TestLparScsiLoadHandler:
     """
     All tests for class LparScsiLoadHandler and other needed classes.
     """
@@ -6598,7 +6597,7 @@ class TestLparScsiLoadHandler(object):
         assert lpar1['status'] == 'not-activated'
 
 
-class TestLparScsiDumpHandler(object):
+class TestLparScsiDumpHandler:
     """
     All tests for class LparScsiDumpHandler and other needed classes.
     """
@@ -6666,7 +6665,7 @@ class TestLparScsiDumpHandler(object):
         assert lpar1['status'] == 'not-activated'
 
 
-class TestLparNvmeLoadHandler(object):
+class TestLparNvmeLoadHandler:
     """
     All tests for class LparNvmeLoadHandler and other needed classes.
     """
@@ -6732,7 +6731,7 @@ class TestLparNvmeLoadHandler(object):
         assert lpar1['status'] == 'not-activated'
 
 
-class TestLparNvmeDumpHandler(object):
+class TestLparNvmeDumpHandler:
     """
     All tests for class LparNvmeDumpHandler and other needed classes.
     """
@@ -6805,7 +6804,7 @@ class TestLparNvmeDumpHandler(object):
 # TODO: Add test for handler for reset-normal
 
 
-class TestResetActProfileHandlers(object):
+class TestResetActProfileHandlers:
     """
     All tests for classes ResetActProfilesHandler and ResetActProfileHandler.
     """
@@ -6867,7 +6866,7 @@ class TestResetActProfileHandlers(object):
         assert rap1 == exp_rap1
 
 
-class TestImageActProfileHandlers(object):
+class TestImageActProfileHandlers:
     """
     All tests for classes ImageActProfilesHandler and ImageActProfileHandler.
     """
@@ -6929,7 +6928,7 @@ class TestImageActProfileHandlers(object):
         assert iap1 == exp_iap1
 
 
-class TestLoadActProfileHandlers(object):
+class TestLoadActProfileHandlers:
     """
     All tests for classes LoadActProfilesHandler and LoadActProfileHandler.
     """
@@ -6991,7 +6990,7 @@ class TestLoadActProfileHandlers(object):
         assert lap1 == exp_lap1
 
 
-class TestSubmitRequestsHandler(object):
+class TestSubmitRequestsHandler:
     """
     All tests for class SubmitRequestsHandler.
     """

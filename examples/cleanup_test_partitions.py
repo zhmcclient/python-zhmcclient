@@ -36,7 +36,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -60,10 +60,10 @@ try:
                     print("Stopping test partition: {} ...".
                           format(part.name))
                     part.stop()
-                print("Deleting test partition: {} ...".format(part.name))
+                print(f"Deleting test partition: {part.name} ...")
                 part.delete()
     except zhmcclient.Error as exc:
-        print("Error: {}: {}".format(exc.__class__.__name__, exc))
+        print(f"Error: {exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
 finally:

@@ -22,7 +22,6 @@ Virtual Function resources are contained in Partition resources.
 Virtual Functions only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -55,12 +54,12 @@ class VirtualFunctionManager(BaseManager):
         # Parameters:
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
-        super(VirtualFunctionManager, self).__init__(
+        super().__init__(
             resource_class=VirtualFunction,
             class_name=RC_VIRTUAL_FUNCTION,
             session=partition.manager.session,
             parent=partition,
-            base_uri='{}/virtual-functions'.format(partition.uri),
+            base_uri=f'{partition.uri}/virtual-functions',
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -207,7 +206,7 @@ class VirtualFunction(BaseResource):
         assert isinstance(manager, VirtualFunctionManager), \
             "VirtualFunction init: Expected manager type {}, got {}" \
             .format(VirtualFunctionManager, type(manager))
-        super(VirtualFunction, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

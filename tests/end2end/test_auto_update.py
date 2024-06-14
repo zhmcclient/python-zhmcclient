@@ -19,7 +19,6 @@ These tests use partitions to test the auto-updating of resources. They do not
 change any existing partitions, but create, modify and delete test partitions.
 """
 
-from __future__ import absolute_import, print_function
 
 import uuid
 from time import sleep
@@ -53,9 +52,9 @@ def test_autoupdate_prop(dpm_mode_cpcs):  # noqa: F811
             pytest.skip("Auto-update test requires notifications which are "
                         "not supported by zhmcclient_mock")
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
-        part_name = "{}_{}".format(TEST_PREFIX, uuid.uuid4().hex)
+        part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
 
         # Create the partition
         part_input_props = standard_partition_props(cpc, part_name)
@@ -226,19 +225,19 @@ def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        new_part_name = "{}_{}".format(TEST_PREFIX, uuid.uuid4().hex)
+        new_part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
 
         # Get the initial set of partitions, for later comparison
         initial_part_list = cpc.partitions.list()
         if not initial_part_list:
             skip_warn("No partitions on CPC {c} managed by HMC {h}".
                       format(c=cpc.name, h=hd.host))
-        initial_part_names = set([p.name for p in initial_part_list])
+        initial_part_names = {p.name for p in initial_part_list}
 
         # Enable auto-updating on partition manager and check partition list
         cpc.partitions.enable_auto_update()
         part_list = cpc.partitions.list()
-        part_names = set([p.name for p in part_list])
+        part_names = {p.name for p in part_list}
         assert part_names == initial_part_names
 
         try:
@@ -247,34 +246,34 @@ def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
             new_part_input_props = standard_partition_props(cpc, new_part_name)
             new_part = cpc.partitions.create(new_part_input_props)
             part_list = cpc.partitions.list()
-            part_names = set([p.name for p in part_list])
-            exp_part_names = initial_part_names | set([new_part.name])
+            part_names = {p.name for p in part_list}
+            exp_part_names = initial_part_names | {new_part.name}
             assert part_names == exp_part_names
 
             # Delete the partition and check partition list
             new_part.delete()
             part_list = cpc.partitions.list()
-            part_names = set([p.name for p in part_list])
+            part_names = {p.name for p in part_list}
             assert part_names == initial_part_names
 
             # Disable auto-updating on partition manager and check part. list
             cpc.partitions.disable_auto_update()
             part_list = cpc.partitions.list()
-            part_names = set([p.name for p in part_list])
+            part_names = {p.name for p in part_list}
             assert part_names == initial_part_names
 
             # Create a partition and check partition list
             new_part_input_props = standard_partition_props(cpc, new_part_name)
             new_part = cpc.partitions.create(new_part_input_props)
             part_list = cpc.partitions.list()
-            part_names = set([p.name for p in part_list])
-            exp_part_names = initial_part_names | set([new_part.name])
+            part_names = {p.name for p in part_list}
+            exp_part_names = initial_part_names | {new_part.name}
             assert part_names == exp_part_names
 
             # Delete the partition and check partition list
             new_part.delete()
             part_list = cpc.partitions.list()
-            part_names = set([p.name for p in part_list])
+            part_names = {p.name for p in part_list}
             assert part_names == initial_part_names
 
         finally:

@@ -18,7 +18,6 @@ End2end tests for tasks (on CPCs in DPM mode).
 These tests do not change any existing tasks.
 """
 
-from __future__ import absolute_import, print_function
 
 from requests.packages import urllib3
 
@@ -64,7 +63,7 @@ def test_task_find_list(hmc_session):  # noqa: F811
     task_list = pick_test_resources(task_list)
 
     for task in task_list:
-        print("Testing with task {t!r}".format(t=task.name))
+        print(f"Testing with task {task.name!r}")
         runtest_find_list(
             hmc_session, console.tasks, task.name, 'name', 'element-uri',
             TASK_VOLATILE_PROPS, TASK_MINIMAL_PROPS, TASK_LIST_PROPS)
@@ -92,7 +91,7 @@ def test_task_property(hmc_session):  # noqa: F811
     task_list = pick_test_resources(task_list)
 
     for task in task_list:
-        print("Testing with task {t!r}".format(t=task.name))
+        print(f"Testing with task {task.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'

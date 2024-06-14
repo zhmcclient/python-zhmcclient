@@ -19,7 +19,6 @@ These tests do not change any existing ports, but create and delete Hipersocket
 adapters and modify their ports.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -128,7 +127,7 @@ def test_port_update(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         adapter_name = TEST_PREFIX + ' test_adapter_crud adapter1'
 

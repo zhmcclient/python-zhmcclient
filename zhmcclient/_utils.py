@@ -16,7 +16,6 @@
 Utility functions.
 """
 
-from __future__ import absolute_import
 
 import re
 from collections import OrderedDict
@@ -24,7 +23,7 @@ try:
     from collections.abc import Mapping, MutableSequence, Iterable
 except ImportError:
     # pylint: disable=deprecated-class
-    from collections import Mapping, MutableSequence, Iterable
+    from collections.abc import Mapping, MutableSequence, Iterable
 from datetime import datetime
 import warnings
 
@@ -191,7 +190,7 @@ def repr_list(lst, indent):
                         .format(type(lst)))
     ret = bm + '\n'
     for value in lst:
-        ret += _indent('{!r},\n'.format(value), 2)
+        ret += _indent(f'{value!r},\n', 2)
     ret += em
     ret = repr_text(ret, indent=indent)
     return ret.lstrip(' ')
@@ -209,15 +208,15 @@ def repr_dict(dct, indent):
     if isinstance(dct, OrderedDict):
         kind = 'ordered'
         ret = '%s {\n' % kind  # non standard syntax for the kind indicator
-        for key in six.iterkeys(dct):
+        for key in dct.keys():
             value = dct[key]
-            ret += _indent('{!r}: {!r},\n'.format(key, value), 2)
+            ret += _indent(f'{key!r}: {value!r},\n', 2)
     else:  # dict
         kind = 'sorted'
         ret = '%s {\n' % kind  # non standard syntax for the kind indicator
-        for key in sorted(six.iterkeys(dct)):
+        for key in sorted(dct.keys()):
             value = dct[key]
-            ret += _indent('{!r}: {!r},\n'.format(key, value), 2)
+            ret += _indent(f'{key!r}: {value!r},\n', 2)
     ret += '}'
     ret = repr_text(ret, indent=indent)
     return ret.lstrip(' ')
@@ -374,7 +373,7 @@ def append_query_parms(query_parms, prop_name, prop_match):
         # Just in case, we also escape the property name
         parm_name = quote(prop_name, safe='')
         parm_value = quote(str(prop_match), safe='')
-        qp = '{}={}'.format(parm_name, parm_value)
+        qp = f'{parm_name}={parm_value}'
         query_parms.append(qp)
 
 
@@ -442,7 +441,7 @@ def make_query_str(query_parms):
     """
     query_parms_str = '&'.join(query_parms)
     if query_parms_str:
-        query_parms_str = '?{}'.format(query_parms_str)
+        query_parms_str = f'?{query_parms_str}'
     return query_parms_str
 
 
@@ -534,7 +533,7 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
             prop_value = obj.get_property(prop_name)
         except KeyError:
             return False
-        if isinstance(prop_value, six.string_types):
+        if isinstance(prop_value, str):
             # HMC resource property is Enum String or (non-enum) String,
             # and is both matched by regexp matching. Ideally, regexp
             # matching should only be done for non-enum strings, but
@@ -609,9 +608,9 @@ def get_features(session, base_uri, name):
     404/Not Found is caught and turned into an empty list result.
     """
     try:
-        uri = '{}/operations/list-features'.format(base_uri)
+        uri = f'{base_uri}/operations/list-features'
         if name is not None:
-            uri = '{}?name={}'.format(uri, name)
+            uri = f'{uri}?name={name}'
         return session.get(uri)
     except HTTPError as e:
         # API features are introduced with WS API version 4.10.

@@ -39,7 +39,7 @@ resolution = "fifteen-minutes"
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -58,20 +58,20 @@ try:
     cpcs = client.cpcs.list()
     cpc = cpcs[0]
     print('')
-    print('Getting sustainability metrics on CPC: {}'.format(cpc.name))
-    print('Range: {}'.format(range))
-    print('Resolution: {}'.format(resolution))
+    print(f'Getting sustainability metrics on CPC: {cpc.name}')
+    print(f'Range: {range}')
+    print(f'Resolution: {resolution}')
     try:
         data = cpc.get_sustainability_data(
             range=range, resolution=resolution)
     except zhmcclient.Error as exc:
-        print("Error: {}".format(exc))
+        print(f"Error: {exc}")
         rc = 1
     else:
         print('')
         print('CPC sustainability metrics:')
         for metric_name, metric_array in data.items():
-            print("{}:".format(metric_name))
+            print(f"{metric_name}:")
             for dp in metric_array:
                 print("  {}: {}".format(dp['timestamp'], dp['data']))
 
@@ -85,19 +85,19 @@ try:
     print('')
     print('Getting sustainability metrics on {}: {}'.
           format(part_str, part.name))
-    print('Range: {}'.format(range))
-    print('Resolution: {}'.format(resolution))
+    print(f'Range: {range}')
+    print(f'Resolution: {resolution}')
     try:
         data = part.get_sustainability_data(
             range=range, resolution=resolution)
     except zhmcclient.Error as exc:
-        print("Error: {}".format(exc))
+        print(f"Error: {exc}")
         rc = 1
     else:
         print('')
-        print('{} sustainability metrics:'.format(part_str))
+        print(f'{part_str} sustainability metrics:')
         for metric_name, metric_array in data.items():
-            print("{}:".format(metric_name))
+            print(f"{metric_name}:")
             for dp in metric_array:
                 print("  {}: {}".format(dp['timestamp'], dp['data']))
 

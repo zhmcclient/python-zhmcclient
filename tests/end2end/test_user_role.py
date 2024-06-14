@@ -19,7 +19,6 @@ These tests do not change any existing user roles, but create,
 modify and delete test user roles.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -64,11 +63,11 @@ def test_urole_find_list(hmc_session):  # noqa: F811
     # Pick the user roles to test with
     urole_list = console.user_roles.list()
     if not urole_list:
-        skip_warn("No user roles defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No user roles defined on HMC {hd.host}")
     urole_list = pick_test_resources(urole_list)
 
     for urole in urole_list:
-        print("Testing with user role {r!r}".format(r=urole.name))
+        print(f"Testing with user role {urole.name!r}")
         runtest_find_list(
             hmc_session, console.user_roles, urole.name, 'name',
             'object-uri', UROLE_VOLATILE_PROPS, UROLE_MINIMAL_PROPS,
@@ -94,11 +93,11 @@ def test_urole_property(hmc_session):  # noqa: F811
     # Pick the user roles to test with
     urole_list = console.user_roles.list()
     if not urole_list:
-        skip_warn("No user roles defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No user roles defined on HMC {hd.host}")
     urole_list = pick_test_resources(urole_list)
 
     for urole in urole_list:
-        print("Testing with user role {r!r}".format(r=urole.name))
+        print(f"Testing with user role {urole.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -161,14 +160,14 @@ def test_urole_crud(hmc_session):  # noqa: F811
 
     for pn, exp_value in urole_input_props.items():
         assert urole.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     urole.pull_full_properties()
     for pn, exp_value in urole_input_props.items():
         assert urole.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     for pn, exp_value in urole_auto_props.items():
         assert urole.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
 
     # Test updating a property of the user role
 

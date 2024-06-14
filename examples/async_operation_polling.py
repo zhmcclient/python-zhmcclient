@@ -38,7 +38,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -59,10 +59,10 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    part_name = "zhmc_test_{}".format(uuid.uuid4())
-    print("Creating partition {} ...".format(part_name))
+    part_name = f"zhmc_test_{uuid.uuid4()}"
+    print(f"Creating partition {part_name} ...")
     try:
         part = cpc.partitions.create(
             properties={
@@ -78,7 +78,7 @@ try:
         sys.exit(1)
 
     try:
-        print("Starting partition {} asynchronously ...".format(part.name))
+        print(f"Starting partition {part.name} asynchronously ...")
         job = part.start(wait_for_completion=False)
 
         sleep_time = 1
@@ -91,7 +91,7 @@ try:
                 print("Error: Job completed; Start operation failed with "
                       "{}: {}".format(exc.__class__.__name__, exc))
                 break
-            print("Job status: {}".format(job_status))
+            print(f"Job status: {job_status}")
             if job_status == 'complete':
                 break
             time.sleep(sleep_time)
@@ -99,7 +99,7 @@ try:
 
     finally:
         if part.get_property('status') != 'stopped':
-            print("Stopping partition {} ...".format(part.name))
+            print(f"Stopping partition {part.name} ...")
             try:
                 part.stop(wait_for_completion=True)
             except zhmcclient.Error as exc:
@@ -107,7 +107,7 @@ try:
                       format(exc.__class__.__name__, exc))
                 sys.exit(1)
 
-        print("Deleting partition {} ...".format(part.name))
+        print(f"Deleting partition {part.name} ...")
         try:
             part.delete()
         except zhmcclient.Error as exc:

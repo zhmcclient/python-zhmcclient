@@ -19,7 +19,6 @@ These tests do not change any existing adapters, but create, modify
 and delete Hipersocket adapters.
 """
 
-from __future__ import absolute_import, print_function
 
 import uuid
 import warnings
@@ -126,7 +125,7 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         adapter_name = TEST_PREFIX + ' test_adapter_crud adapter1'
         adapter_name_new = adapter_name + ' new'
@@ -167,14 +166,14 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
 
         for pn, exp_value in adapter_input_props.items():
             assert adapter.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         adapter.pull_full_properties()
         for pn, exp_value in adapter_input_props.items():
             assert adapter.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         for pn, exp_value in adapter_auto_props.items():
             assert adapter.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
 
         # Test updating a property of the adapter
 
@@ -255,7 +254,7 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
         try:
 
             # Create a temporary partition for test purposes
-            part_name = "{}_{}".format(TEST_PREFIX, uuid.uuid4().hex)
+            part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
             part_props = standard_partition_props(cpc, part_name)
             tmp_part = cpc.partitions.create(part_props)
 
@@ -285,7 +284,7 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         vswitch = vswitches[0]
 
                         # Create a NIC in the temporary partition
-                        nic_name = "{}_{}".format(family, uuid.uuid4().hex)
+                        nic_name = f"{family}_{uuid.uuid4().hex}"
                         nic_props = {
                             'name': nic_name,
                             'virtual-switch-uri': vswitch.uri,
@@ -319,7 +318,7 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         test_port = test_adapter.ports.list()[0]
 
                         # Create a NIC in the temporary partition
-                        nic_name = "{}_{}".format(family, uuid.uuid4().hex)
+                        nic_name = f"{family}_{uuid.uuid4().hex}"
                         nic_props = {
                             'name': nic_name,
                             'network-adapter-port-uri': test_port.uri,
@@ -398,7 +397,7 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         before_parts = test_adapter.list_assigned_partitions()
 
                         # Create a VF in the temporary partition
-                        vf_name = "{}_{}".format(family, uuid.uuid4().hex)
+                        vf_name = f"{family}_{uuid.uuid4().hex}"
                         vf_props = {
                             'name': vf_name,
                             'adapter-uri': test_adapter.uri,
@@ -459,16 +458,16 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                             format(c=cpc.name), UserWarning)
 
                 elif family == 'nvme':
-                    print("TODO: Implement test for family {}".format(family))
+                    print(f"TODO: Implement test for family {family}")
 
                 elif family == 'coupling':
-                    print("TODO: Implement test for family {}".format(family))
+                    print(f"TODO: Implement test for family {family}")
 
                 elif family == 'ism':
-                    print("TODO: Implement test for family {}".format(family))
+                    print(f"TODO: Implement test for family {family}")
 
                 elif family == 'zhyperlink':
-                    print("TODO: Implement test for family {}".format(family))
+                    print(f"TODO: Implement test for family {family}")
 
         finally:
             # Cleanup
@@ -510,7 +509,7 @@ def base_adapter_id(adapter_id, family):
         # Calculate the base PCHID for the slot.
         base_pchid = pchid // 4 * 4
 
-    return '{:03x}'.format(base_pchid)
+    return f'{base_pchid:03x}'
 
 
 def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
@@ -555,15 +554,15 @@ def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
 
             assert isinstance(sibling_adapters, list)
 
-            sibling_ids = set([a.get_property('adapter-id')
-                               for a in sibling_adapters])
+            sibling_ids = {a.get_property('adapter-id')
+                               for a in sibling_adapters}
             sibling_names = [a.name for a in sibling_adapters]
             if base_id not in adapters_by_base:
                 exp_ids = set()
                 exp_names = []
             else:
-                exp_ids = set([a.get_property('adapter-id')
-                               for a in adapters_by_base[base_id]])
+                exp_ids = {a.get_property('adapter-id')
+                               for a in adapters_by_base[base_id]}
                 exp_ids.remove(adapter_id)
                 exp_names = [a.name for a in adapters_by_base[base_id]]
                 exp_names.remove(adapter.name)
@@ -705,4 +704,4 @@ def test_adapter_list_permitted(
                             format(cn=cpc.name, cv=cpc.prop('se-version')))
                     else:
                         assert pname in actual_pnames, \
-                            "Actual adapter: {a!r}".format(a=adapter)
+                            f"Actual adapter: {adapter!r}"

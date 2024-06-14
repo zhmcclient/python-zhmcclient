@@ -16,7 +16,6 @@
 Unit tests for _timestats module.
 """
 
-from __future__ import absolute_import, print_function
 
 import time
 import pytest
@@ -311,10 +310,10 @@ def test_timestatskeeper_str_one():
 
     s = str(keeper)
     assert s.startswith(PRINT_HEADER), \
-        "Unexpected str(keeper): {!r}".format(s)
+        f"Unexpected str(keeper): {s!r}"
     num_lines = len(s.split('\n'))
     assert num_lines == 3, \
-        "Unexpected str(keeper): {!r}".format(s)
+        f"Unexpected str(keeper): {s!r}"
 
 
 def test_timestats_str():
@@ -325,7 +324,7 @@ def test_timestats_str():
 
     s = str(timestats)
     assert s.startswith("TimeStats:"), \
-        "Unexpected str(timestats): {!r}".format(s)
+        f"Unexpected str(timestats): {s!r}"
     num_lines = len(s.split('\n'))
     assert num_lines == 1, \
-        "Unexpected str(timestats): {!r}".format(s)
+        f"Unexpected str(timestats): {s!r}"

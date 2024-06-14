@@ -38,7 +38,6 @@ Example::
     print(session.time_stats_keeper)
 """
 
-from __future__ import absolute_import
 
 import time
 import copy
@@ -48,7 +47,7 @@ from ._logging import logged_api_call
 __all__ = ['TimeStatsKeeper', 'TimeStats']
 
 
-class TimeStats(object):
+class TimeStats:
     """
     Elapsed time statistics for all invocations of a particular named
     operation.
@@ -207,7 +206,7 @@ class TimeStats(object):
                    self.name)
 
 
-class TimeStatsKeeper(object):
+class TimeStatsKeeper:
     """
     Statistics keeper for elapsed times.
 

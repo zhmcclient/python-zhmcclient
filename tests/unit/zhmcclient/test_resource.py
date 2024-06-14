@@ -18,7 +18,6 @@
 Unit tests for _resource module.
 """
 
-from __future__ import absolute_import, print_function
 
 import time
 import re
@@ -43,7 +42,7 @@ class MyResource(BaseResource):
     # need to be updated if the API changes.
     def __init__(self, manager, uri, name, properties):
         # pylint: disable=useless-super-delegation
-        super(MyResource, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
 
 class MyManager(BaseManager):
@@ -57,7 +56,7 @@ class MyManager(BaseManager):
     # This init method is not part of the external API, so this testcase may
     # need to be updated if the API changes.
     def __init__(self, session):
-        super(MyManager, self).__init__(
+        super().__init__(
             resource_class=MyResource,
             class_name='myresource',
             session=session,
@@ -75,7 +74,7 @@ class MyManager(BaseManager):
         raise NotImplementedError
 
 
-class ResourceTestCase(object):
+class ResourceTestCase:
     """
     Base class for all tests in this file.
     """
@@ -466,7 +465,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ['qp1={}'.format(escape_str)]
+        assert parm_str == [f'qp1={escape_str}']
         assert cf_args == {}
 
     def test_one_str_reserved_val_cf(self):
@@ -504,7 +503,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ['{}=bar'.format(escape_str)]
+        assert parm_str == [f'{escape_str}=bar']
         assert cf_args == {}
 
     def test_two_qp(self):
@@ -560,7 +559,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
 
-        assert parm_str == ['qp1=bar', 'qp2=42', 'qp2={}'.format(escape_str)]
+        assert parm_str == ['qp1=bar', 'qp2=42', f'qp2={escape_str}']
         assert cf_args == {}
 
 
@@ -654,10 +653,10 @@ class TestThreadingSerialization(ResourceTestCase):
             exp_value = exp_values[i]
 
             assert value == exp_value, \
-                "Unexpected property value for '{}'".format(name)
+                f"Unexpected property value for '{name}'"
 
 
-class TestPropertyMethodsMocked(object):
+class TestPropertyMethodsMocked:
     """
     All tests of property methods that need mocked resources.
     """

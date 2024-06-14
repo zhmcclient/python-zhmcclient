@@ -25,7 +25,6 @@ Storage group template objects can only be defined in CPCs that are in
 DPM mode and that have the "dpm-storage-management" feature enabled.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -69,7 +68,7 @@ class StorageGroupTemplateManager(BaseManager):
             'type',
         ]
 
-        super(StorageGroupTemplateManager, self).__init__(
+        super().__init__(
             resource_class=StorageGroupTemplate,
             class_name=RC_STORAGE_TEMPLATE,
             session=console.manager.session,
@@ -230,7 +229,7 @@ class StorageGroupTemplate(BaseResource):
         assert isinstance(manager, StorageGroupTemplateManager), \
             "StorageGroupTemplate init: Expected manager type {}, got {}" \
             .format(StorageGroupTemplateManager, type(manager))
-        super(StorageGroupTemplate, self).__init__(
+        super().__init__(
             manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._storage_volume_templates = None
@@ -329,7 +328,7 @@ class StorageGroupTemplate(BaseResource):
           :exc:`~zhmcclient.ConnectionError`
         """
         # pylint: disable=protected-access
-        uri = '{}/operations/modify'.format(self.uri)
+        uri = f'{self.uri}/operations/modify'
         self.manager.session.post(uri, resource=self, body=properties)
         is_rename = self.manager._name_prop in properties
         if is_rename:

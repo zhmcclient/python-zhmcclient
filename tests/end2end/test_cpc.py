@@ -18,7 +18,6 @@ End2end tests for CPCs.
 These tests do not change any CPC properties.
 """
 
-from __future__ import absolute_import, print_function
 
 from datetime import timedelta, datetime, timezone
 import pytest
@@ -96,7 +95,7 @@ def test_cpc_find_list(hmc_session):  # noqa: F811
     hd = hmc_session.hmc_definition
 
     for cpc_name in hd.cpcs:
-        print("Testing with CPC {c}".format(c=cpc_name))
+        print(f"Testing with CPC {cpc_name}")
 
         cpc_list_props = CPC_LIST_PROPS
         se_version = hd.cpcs[cpc_name].get('se_version', None)
@@ -119,7 +118,7 @@ def test_cpc_property(all_cpcs):  # noqa: F811
         pytest.skip("HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
-        print("Testing with CPC {c}".format(c=cpc.name))
+        print(f"Testing with CPC {cpc.name}")
 
         client = cpc.manager.client
 
@@ -143,7 +142,7 @@ def test_cpc_features(all_cpcs):  # noqa: F811
         pytest.skip("HMC definition does not include any CPCs")
 
     for cpc in all_cpcs:
-        print("Testing with CPC {c}".format(c=cpc.name))
+        print(f"Testing with CPC {cpc.name}")
 
         cpc.pull_full_properties()
         cpc_mach_type = cpc.properties.get('machine-type', None)
@@ -246,7 +245,7 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        print("Testing with CPC {c}".format(c=cpc.name))
+        print(f"Testing with CPC {cpc.name}")
 
         try:
 
@@ -281,7 +280,7 @@ def test_cpc_export_dpm_config(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         cert, cert_props = (None, None)
         if has_api_feature('secure-boot-with-certificates', cpc):
@@ -369,7 +368,7 @@ def test_cpc_get_sustainability_data(
         session = cpc.manager.session
         hd = session.hmc_definition
 
-        print("Testing with CPC {c}".format(c=cpc.name))
+        print(f"Testing with CPC {cpc.name}")
 
         try:
 
@@ -410,7 +409,7 @@ def test_cpc_get_sustainability_data(
                 dp_timestamp_dt = dp_item['timestamp']
 
                 assert isinstance(dp_data, metric_type), \
-                    "Invalid data type for metric {!r}".format(metric_name)
+                    f"Invalid data type for metric {metric_name!r}"
 
                 if first_item:
                     first_item = False

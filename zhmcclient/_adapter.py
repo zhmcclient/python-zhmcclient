@@ -60,7 +60,6 @@ There are four types of Adapters:
    on the CPC.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -116,7 +115,7 @@ class AdapterManager(BaseManager):
             'status',
         ]
 
-        super(AdapterManager, self).__init__(
+        super().__init__(
             resource_class=Adapter,
             class_name=RC_ADAPTER,
             session=cpc.manager.session,
@@ -200,7 +199,7 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'adapters'
-        list_uri = '{}/adapters'.format(self.cpc.uri)
+        list_uri = f'{self.cpc.uri}/adapters'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args,
             additional_properties)
@@ -306,7 +305,7 @@ class Adapter(BaseResource):
         assert isinstance(manager, AdapterManager), \
             "Adapter init: Expected manager type {}, got {}" \
             .format(AdapterManager, type(manager))
-        super(Adapter, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._ports = None
         self._port_uris_prop = None
@@ -614,7 +613,7 @@ class Adapter(BaseResource):
         """
 
         # Dump the resource properties
-        resource_dict = super(Adapter, self).dump()
+        resource_dict = super().dump()
 
         # Dump the child resources
         ports = self.ports.dump()
@@ -737,7 +736,7 @@ class Adapter(BaseResource):
         pchid_base = self_pchid // 4 * 4
         sibling_pchids = list(range(pchid_base, pchid_base + 4))
         sibling_pchids.remove(self_pchid)
-        sibling_adapter_ids = ['{:03x}'.format(p) for p in sibling_pchids]
+        sibling_adapter_ids = [f'{p:03x}' for p in sibling_pchids]
         filter_args = {'adapter-id': sibling_adapter_ids}
         sibling_adapters = self.manager.cpc.adapters.list(
             full_properties, filter_args)

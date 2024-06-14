@@ -24,7 +24,6 @@ NIC resources are contained in Partition resources.
 NICs only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -58,12 +57,12 @@ class NicManager(BaseManager):
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
 
-        super(NicManager, self).__init__(
+        super().__init__(
             resource_class=Nic,
             class_name=RC_NIC,
             session=partition.manager.session,
             parent=partition,
-            base_uri='{}/nics'.format(partition.uri),
+            base_uri=f'{partition.uri}/nics',
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -269,7 +268,7 @@ class Nic(BaseResource):
         assert isinstance(manager, NicManager), \
             "Nic init: Expected manager type {}, got {}" \
             .format(NicManager, type(manager))
-        super(Nic, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

@@ -16,7 +16,6 @@
 zhmcclient.testutils - Utilities for testing against real or mocked HMCs.
 """
 
-from __future__ import absolute_import
 
 from ._hmc_inventory_file import *         # noqa: F401
 from ._hmc_vault_file import *             # noqa: F401

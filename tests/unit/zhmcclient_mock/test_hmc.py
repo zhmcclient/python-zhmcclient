@@ -18,7 +18,6 @@
 Unit tests for _hmc module of the zhmcclient_mock package.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 from datetime import datetime
@@ -46,7 +45,7 @@ from zhmcclient_mock._hmc import \
 from tests.common.utils import timestamp_aware
 
 
-class TestFakedHmc(object):
+class TestFakedHmc:
     """All tests for the zhmcclient_mock.FakedHmc class."""
 
     def setup_method(self):
@@ -268,7 +267,7 @@ class TestFakedHmc(object):
             hmc.remove_session_id(session_id)
 
 
-class TestFakedBase(object):
+class TestFakedBase:
     """All tests for the FakedBaseManager and FakedBaseResource classes."""
 
     def setup_method(self):
@@ -281,7 +280,7 @@ class TestFakedBase(object):
         self.hmc = session.hmc
 
         self.cpc1_oid = '42-abc-543'
-        self.cpc1_uri = '/api/cpcs/{}'.format(self.cpc1_oid)
+        self.cpc1_uri = f'/api/cpcs/{self.cpc1_oid}'
 
         self.cpc1_in_props = {
             # All properties that are otherwise defaulted (but with non-default
@@ -358,7 +357,7 @@ class TestFakedBase(object):
         assert self.cpc_resource.uri == self.cpc1_out_props['object-uri']
 
 
-class TestFakedActivationProfile(object):
+class TestFakedActivationProfile:
     """All tests for the FakedActivationProfileManager and
     FakedActivationProfile classes."""
 
@@ -538,7 +537,7 @@ class TestFakedActivationProfile(object):
         # same class, we don't need to test them.
 
 
-class TestFakedAdapter(object):
+class TestFakedAdapter:
     """All tests for the FakedAdapterManager and FakedAdapter classes."""
 
     def setup_method(self):
@@ -670,7 +669,7 @@ class TestFakedAdapter(object):
         assert len(adapters) == 0
 
 
-class TestFakedCpc(object):
+class TestFakedCpc:
     """All tests for the FakedCpcManager and FakedCpc classes."""
 
     def setup_method(self):
@@ -794,7 +793,7 @@ class TestFakedCpc(object):
         assert len(cpcs) == 0
 
 
-class TestFakedHba(object):
+class TestFakedHba:
     """All tests for the FakedHbaManager and FakedHba classes."""
 
     def setup_method(self):
@@ -808,7 +807,7 @@ class TestFakedHba(object):
         self.hmc = session.hmc
 
         self.adapter1_oid = '747-abc-12345'
-        self.adapter1_uri = '/api/adapters/{}'.format(self.adapter1_oid)
+        self.adapter1_uri = f'/api/adapters/{self.adapter1_oid}'
         self.port1_oid = '23'
         self.port1_uri = '/api/adapters/{}/storage-ports/{}' \
             .format(self.adapter1_oid, self.port1_oid)
@@ -962,7 +961,7 @@ class TestFakedHba(object):
 # TODO: Add unit tests for FakedCapacityGroup/Manager.
 
 
-class TestFakedLpar(object):
+class TestFakedLpar:
     """All tests for the FakedLparManager and FakedLpar classes."""
 
     def setup_method(self):
@@ -1071,7 +1070,7 @@ class TestFakedLpar(object):
         assert len(lpars) == 0
 
 
-class TestFakedNic(object):
+class TestFakedNic:
     """All tests for the FakedNicManager and FakedNic classes."""
 
     def setup_method(self):
@@ -1085,7 +1084,7 @@ class TestFakedNic(object):
         self.hmc = session.hmc
 
         self.adapter1_oid = '380-xyz-12345'
-        self.adapter1_uri = '/api/adapters/{}'.format(self.adapter1_oid)
+        self.adapter1_uri = f'/api/adapters/{self.adapter1_oid}'
         self.port1_oid = '32'
         self.port1_uri = '/api/adapters/{}/network-ports/{}' \
             .format(self.adapter1_oid, self.port1_oid)
@@ -1238,7 +1237,7 @@ class TestFakedNic(object):
     # TODO: Add testcases for updating 'nic-uris' parent property
 
 
-class TestFakedPartition(object):
+class TestFakedPartition:
     """All tests for the FakedPartitionManager and FakedPartition classes."""
 
     def setup_method(self):
@@ -1377,7 +1376,7 @@ class TestFakedPartition(object):
         assert len(partitions) == 0
 
 
-class TestFakedPort(object):
+class TestFakedPort:
     """All tests for the FakedPortManager and FakedPort classes."""
 
     def setup_method(self):
@@ -1502,7 +1501,7 @@ class TestFakedPort(object):
     #       'storage-port-uris' parent properties
 
 
-class TestFakedVirtualFunction(object):
+class TestFakedVirtualFunction:
     """All tests for the FakedVirtualFunctionManager and FakedVirtualFunction
     classes."""
 
@@ -1633,7 +1632,7 @@ class TestFakedVirtualFunction(object):
     # TODO: Add testcases for updating 'virtual-function-uris' parent property
 
 
-class TestFakedVirtualSwitch(object):
+class TestFakedVirtualSwitch:
     """All tests for the FakedVirtualSwitchManager and FakedVirtualSwitch
     classes."""
 
@@ -1745,7 +1744,7 @@ class TestFakedVirtualSwitch(object):
         assert len(virtual_switches) == 0
 
 
-class TestFakedCapacityGroup(object):
+class TestFakedCapacityGroup:
     """All tests for the FakedCapacityGroupManager and FakedCapacityGroup
     classes."""
 
@@ -1859,7 +1858,7 @@ class TestFakedCapacityGroup(object):
         assert len(capacity_groups) == 0
 
 
-class TestFakedMetricsContext(object):
+class TestFakedMetricsContext:
     """All tests for the FakedMetricsContextManager and FakedMetricsContext
     classes."""
 

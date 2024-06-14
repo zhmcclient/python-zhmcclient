@@ -19,7 +19,6 @@ These tests do not change any existing partitions or HBAs, but create, modify
 and delete test partitions with HBAs.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -131,7 +130,7 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
         assert cpc.dpm_enabled
         skipif_storage_mgmt_feature(cpc)
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         part_name = TEST_PREFIX + ' test_hba_crud part1'
         hba_name = 'hba1'
@@ -181,14 +180,14 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
 
             for pn, exp_value in hba_input_props.items():
                 assert hba.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
             hba.pull_full_properties()
             for pn, exp_value in hba_input_props.items():
                 assert hba.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
             for pn, exp_value in hba_auto_props.items():
                 assert hba.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
 
             # Test updating a property of the HBA
 

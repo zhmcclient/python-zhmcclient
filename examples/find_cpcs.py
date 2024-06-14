@@ -35,7 +35,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -59,13 +59,13 @@ try:
     print("Found CPCs: {}".format(', '.join(cpc_names)))
 
     cpc_name = cpc_names[0]
-    print("Finding CPC by name={} ...".format(cpc_name))
+    print(f"Finding CPC by name={cpc_name} ...")
     try:
         cpc = client.cpcs.find(name=cpc_name)
     except zhmcclient.NotFound:
-        print("Error: Could not find CPC {}".format(cpc_name))
+        print(f"Error: Could not find CPC {cpc_name}")
         sys.exit(1)
-    print("Found CPC: {}".format(cpc.name))
+    print(f"Found CPC: {cpc.name}")
 
 finally:
     print("Logging off ...")

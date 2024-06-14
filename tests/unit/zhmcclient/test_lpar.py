@@ -16,11 +16,10 @@
 Unit tests for _lpar module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
-import mock
+from unittest import mock
 import pytest
 import requests_mock
 
@@ -59,7 +58,7 @@ LIST_PERMITTED_LPARS_PROPS = [
 ]
 
 
-class TestLpar(object):
+class TestLpar:
     """All tests for Lpar and LparManager classes."""
 
     def setup_method(self):

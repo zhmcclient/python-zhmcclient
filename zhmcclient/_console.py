@@ -19,7 +19,6 @@ In a paired setup with primary and alternate HMC, each HMC is represented as
 a separate :term:`Console` resource.
 """
 
-from __future__ import absolute_import
 
 import time
 import six
@@ -69,7 +68,7 @@ class ConsoleManager(BaseManager):
         #   client (:class:`~zhmcclient.Client`):
         #      Client object for the HMC to be used.
 
-        super(ConsoleManager, self).__init__(
+        super().__init__(
             resource_class=Console,
             class_name=RC_CONSOLE,
             session=client.session,
@@ -196,7 +195,7 @@ class Console(BaseResource):
         assert isinstance(manager, ConsoleManager), \
             "Console init: Expected manager type {}, got {}" \
             .format(ConsoleManager, type(manager))
-        super(Console, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):
         self._storage_groups = None
@@ -455,11 +454,11 @@ class Console(BaseResource):
         query_parms = []
         if begin_time is not None:
             begin_ts = timestamp_from_datetime(begin_time)
-            qp = 'begin-time={}'.format(begin_ts)
+            qp = f'begin-time={begin_ts}'
             query_parms.append(qp)
         if end_time is not None:
             end_ts = timestamp_from_datetime(end_time)
-            qp = 'end-time={}'.format(end_ts)
+            qp = f'end-time={end_ts}'
             query_parms.append(qp)
         query_parms_str = '&'.join(query_parms)
         if query_parms_str:
@@ -1243,7 +1242,7 @@ class Console(BaseResource):
         # 'ftp_host' after that, so we detect the passing of
         # 'wait_for_completion' as a positional argument.
         assert ftp_host is None or \
-            isinstance(ftp_host, six.string_types)
+            isinstance(ftp_host, str)
 
         body = {
             'backup-location-type': backup_location_type,
@@ -1378,7 +1377,7 @@ class Console(BaseResource):
         """
 
         # Dump the resource properties
-        resource_dict = super(Console, self).dump()
+        resource_dict = super().dump()
 
         # Dump the child resources
         users = self.users.dump()

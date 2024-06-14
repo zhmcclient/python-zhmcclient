@@ -18,7 +18,6 @@ End2end tests for virtual switches (on CPCs in DPM mode).
 These tests do not change any existing virtual switches.
 """
 
-from __future__ import absolute_import, print_function
 
 import pytest
 from requests.packages import urllib3

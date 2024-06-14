@@ -41,7 +41,7 @@ FILTERS_LIST = [
 print(__doc__)
 
 if len(sys.argv) <= 1:
-    print("Usage: {} CPC [PARTITION]".format(sys.argv[0]))
+    print(f"Usage: {sys.argv[0]} CPC [PARTITION]")
     print("Where:")
     print("  CPC        Name of the CPC")
     print("  PARTITION  Optional: Filter string for matching the partition name")
@@ -53,7 +53,7 @@ try:
 except IndexError:
     partition_name_filter = None
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -68,7 +68,7 @@ try:
     client = zhmcclient.Client(session)
 
     cpc = client.cpcs.find(name=cpc_name)
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
     if partition_name_filter:
         filter_args = {'name': partition_name_filter}
@@ -80,7 +80,7 @@ try:
     partitions = cpc.partitions.list(filter_args=filter_args)
     print("Resulting partitions (sorted):")
     for part in sorted(partitions, key=lambda p: p.name):
-        print("  name={}".format(part.name))
+        print(f"  name={part.name}")
 
 finally:
     print("Logging off ...")

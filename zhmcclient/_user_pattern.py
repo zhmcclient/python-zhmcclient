@@ -30,7 +30,6 @@ order can be customized through the
 :meth:`~zhmcclient.UserPatternManager.reorder` method.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -73,7 +72,7 @@ class UserPatternManager(BaseManager):
             'type',
         ]
 
-        super(UserPatternManager, self).__init__(
+        super().__init__(
             resource_class=UserPattern,
             class_name=RC_USER_PATTERN,
             session=console.manager.session,
@@ -151,7 +150,7 @@ class UserPatternManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'user-patterns'
-        list_uri = '{}/user-patterns'.format(self.console.uri)
+        list_uri = f'{self.console.uri}/user-patterns'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -256,7 +255,7 @@ class UserPattern(BaseResource):
         assert isinstance(manager, UserPatternManager), \
             "Console init: Expected manager type {}, got {}" \
             .format(UserPatternManager, type(manager))
-        super(UserPattern, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

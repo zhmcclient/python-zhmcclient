@@ -16,7 +16,6 @@
 Unit tests for _idpool module of the zhmcclient_mock package.
 """
 
-from __future__ import absolute_import, print_function
 
 from requests.packages import urllib3
 import pytest

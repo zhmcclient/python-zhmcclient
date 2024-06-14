@@ -16,7 +16,6 @@
 Unit tests for _task module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import pytest
@@ -26,7 +25,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestTask(object):
+class TestTask:
     """All tests for the Task and TaskManager classes."""
 
     def setup_method(self):
@@ -56,12 +55,12 @@ class TestTask(object):
         Add a faked task object to the faked Console and return it.
         """
         faked_task = self.faked_console.tasks.add({
-            'element-id': 'oid-{}'.format(name),
+            'element-id': f'oid-{name}',
             # element-uri will be automatically set
             'parent': '/api/console',
             'class': 'task',
             'name': name,
-            'description': 'Task {}'.format(name),
+            'description': f'Task {name}',
             'view-only-mode-supported': view_only,
         })
         return faked_task

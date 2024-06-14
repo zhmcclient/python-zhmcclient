@@ -16,7 +16,6 @@
 Unit tests for _activation_profile module.
 """
 
-from __future__ import absolute_import, print_function
 
 import copy
 import re
@@ -27,7 +26,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestActivationProfile(object):
+class TestActivationProfile:
     """
     All tests for the ActivationProfile and ActivationProfileManager classes.
     """

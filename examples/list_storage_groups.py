@@ -35,7 +35,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -56,9 +56,9 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    print("Listing storage groups of CPC {} ...".format(cpc.name))
+    print(f"Listing storage groups of CPC {cpc.name} ...")
     try:
         storage_groups = cpc.list_associated_storage_groups()
     except zhmcclient.Error as exc:
@@ -80,9 +80,9 @@ try:
                   "{}: {}".format(sg.name, exc.__class__.__name__, exc))
             sys.exit(1)
 
-        print("    Storage Volumes: {}".format(len(volumes)))
+        print(f"    Storage Volumes: {len(volumes)}")
         for sv in volumes:
-            print("    Storage Volume: {}".format(sv.name))
+            print(f"    Storage Volume: {sv.name}")
 
         if sg.get_property('type') == 'fcp':
 
