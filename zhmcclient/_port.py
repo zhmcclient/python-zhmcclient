@@ -22,10 +22,7 @@ Ports only exist in :term:`CPCs <CPC>` that are in DPM mode.
 
 
 import copy
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from ._manager import BaseManager
 from ._resource import BaseResource

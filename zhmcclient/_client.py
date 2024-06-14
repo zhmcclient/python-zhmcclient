@@ -18,10 +18,7 @@ Client class: A client to an HMC.
 
 
 import time
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 import yaml
 import yamlloader
 

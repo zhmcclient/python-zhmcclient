@@ -20,10 +20,7 @@ format and define specific variables for HMC authentication.
 """
 
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 import errno
 import yaml
 import yamlloader

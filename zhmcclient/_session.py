@@ -17,20 +17,12 @@ Session class: A session to the HMC, optionally in context of an HMC user.
 """
 
 
-import sys
 import json
 import time
 import re
 from copy import copy
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-try:
-    from collections.abc import Iterable
-except ImportError:
-    # pylint: disable=deprecated-class
-    from collections.abc import Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 import requests
 import urllib3
 
@@ -2113,10 +2105,6 @@ def json2dict(json_str):
     Raises:
       ValueError: Cannot parse JSON string
     """
-    # In Python 3 up to 3.5, json.loads() requires unicode strings.
-    if sys.version_info[0] == 3 and sys.version_info[1] in (4, 5) and \
-            isinstance(json_str, bytes):
-        json_str = json_str.decode('utf-8')
     json_dict = json.loads(json_str)  # May raise ValueError
     return json_dict
 

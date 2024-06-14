@@ -19,10 +19,7 @@ local Python object and maintains its resource state across operations.
 """
 
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 import re
 import copy
 from dateutil import tz
