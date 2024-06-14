@@ -12,49 +12,36 @@
 build>=0.5.0
 
 # Change log
-towncrier>=22.8.0; python_version >= '3.7'
+towncrier>=22.8.0
 
 # Unit test (imports into testcases):
-funcsigs>=1.0.2; python_version < '3.3'
-# pytest 5.0.0 has removed support for Python < 3.5
 # pytest 4.3.1 solves an issue on Python 3 with minimum package levels
-pytest>=4.3.1,<5.0.0; python_version == '2.7'
-pytest>=4.3.1; python_version >= '3.5' and python_version <= '3.6'
-pytest>=4.4.0; python_version >= '3.7' and python_version <= '3.9'
+pytest>=4.4.0; python_version <= '3.9'
 pytest>=6.2.5; python_version >= '3.10'
 testfixtures>=6.9.0
 # flake8 up to 6.0.0 has not yet adjusted to the removed interfaces of importlib-metadata 5.0
-importlib-metadata>=2.1.3,<5; python_version <= '3.6'
-importlib-metadata>=4.8.3,<5; python_version >= '3.7'
+importlib-metadata>=4.8.3,<5
 mock>=2.0.0
 # requests: covered in direct deps for installation
 requests-mock>=1.6.0
 requests-toolbelt>=0.8.0
-# more-itertools 8.11.0 does not support py35 but incorrectly installs on it
-more-itertools>=4.0.0,!=8.11.0; python_version <= '3.5'
-more-itertools>=4.0.0; python_version >= '3.6'
+more-itertools>=4.0.0
 # pytz: covered in requirements.txt
 
 # packaging is used by pytest, pip-check-reqs, sphinx
 # packaging>=20.5 is needed by pip-check-reqs 2.4.3 but it requires only packaging>=16.0
-# packaging 21.0 removed support for py27,35
-# packaging 22.0 removed support for py36
-packaging>=20.5; python_version <= '3.5'
-packaging>=21.0; python_version >= '3.6'
+packaging>=21.0
 
 # Virtualenv
 # build requires virtualenv.cli_run which was added in 20.1
 # virtualenv 20.0 requires six<2,>=1.12.0
-# virtualenv 20.16.0 removed support for Python<3.6
 virtualenv>=20.15.0; python_version <= '3.11'
 virtualenv>=20.23.0; python_version >= '3.12'
 
 # Unit test (indirect dependencies):
 # Pluggy 0.12.0 has a bug causing pytest plugins to fail loading on py38
-pluggy>=0.7.1; python_version >= '2.7' and python_version <= '3.6'
-pluggy>=0.13.0; python_version >= '3.7'
+pluggy>=0.13.0
 # decorator: covered in requirements.txt
-backports.statistics>=0.1.0; python_version == '2.7'
 
 # Coverage reporting (no imports, invoked via coveralls script):
 # coveralls pins coverage to <7.0, causing pip backtracking to happen. Pinning
@@ -62,75 +49,58 @@ backports.statistics>=0.1.0; python_version == '2.7'
 # occasionally check for new versions of coveralls without pinning.
 coverage>=5.0,<7.0
 pytest-cov>=2.7.0
-# coveralls 2.0 has removed support for Python 2.7
-git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
-coveralls>=3.3.0; python_version >= '3.5'
+coveralls>=3.3.0
 # PyYAML: covered in direct deps for development
 
 # Safety CI by pyup.io
-# Safety is run only on Python >=3.7
 # Safety 3.0.0 requires exact versions of authlib==1.2.0 and jwt==1.3.1.
-safety>=3.0.1; python_version >= '3.7'
+safety>=3.0.1
 
 # Tox
 tox>=3.1.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
-# Sphinx 6.0.0 started requiring Python>=3.8
 # Sphinx 7.2.0 started requiring Python>=3.9
-# Sphinx is used only on Python>=3.8
 Sphinx>=7.1.0; python_version == '3.8'
 Sphinx>=7.2.0; python_version >= '3.9'
 # Sphinx 7.1.0 pins docutils to <0.21
 docutils>=0.18.1,<0.21; python_version == '3.8'
-sphinx-git>=10.1.1; python_version >= '3.8'
-GitPython>=3.1.41; python_version >= '3.8'
-Pygments>=2.15.0; python_version >= '3.8'
-sphinx-rtd-theme>=2.0.0; python_version >= '3.8'
-sphinxcontrib-applehelp>=1.0.4; python_version >= '3.8'
-sphinxcontrib-devhelp>=1.0.2; python_version >= '3.8'
-sphinxcontrib-htmlhelp>=2.0.1; python_version >= '3.8'
-sphinxcontrib-jquery>=4.1; python_version >= '3.8'
-sphinxcontrib-jsmath>=1.0.1; python_version >= '3.8'
-sphinxcontrib-qthelp>=1.0.3; python_version >= '3.8'
+sphinx-git>=10.1.1
+GitPython>=3.1.41
+Pygments>=2.15.0
+sphinx-rtd-theme>=2.0.0
+sphinxcontrib-applehelp>=1.0.4
+sphinxcontrib-devhelp>=1.0.2
+sphinxcontrib-htmlhelp>=2.0.1
+sphinxcontrib-jquery>=4.1
+sphinxcontrib-jsmath>=1.0.1
+sphinxcontrib-qthelp>=1.0.3
 sphinxcontrib-serializinghtml>=1.1.5; python_version == '3.8'
 sphinxcontrib-serializinghtml>=1.1.9; python_version >= '3.9'
-sphinxcontrib-websupport>=1.2.4; python_version >= '3.8'
-autodocsumm>=0.2.12; python_version >= '3.8'
-Babel>=2.9.1; python_version >= '3.8'
+sphinxcontrib-websupport>=1.2.4
+autodocsumm>=0.2.12
+Babel>=2.9.1
 
 # PyLint (no imports, invoked via pylint script)
-# Pylint is not run on py27 anymore
 # Pylint requires astroid
-# Pylint 1.x / astroid 1.x supports py27 and py34/35/36
-# Pylint 2.0 / astroid 2.0 removed py27, added py37
-# Pylint 2.4 / astroid 2.3 removed py34
-# Issue #2673: Pinning Pylint to <2.7.0 is a circumvention for Pylint issue
-#   https://github.com/PyCQA/pylint/issues/4120 that appears in Pylint 2.7.0.
-#   Pylint 2.10 has fixed the issue.
-pylint>=2.6.2,<2.7.0; python_version == '3.5'
-pylint>=2.13.0,<2.14.0; python_version == '3.6'
-pylint>=2.13.0; python_version >= '3.7' and python_version <= '3.10'
+pylint>=2.13.0; python_version <= '3.10'
 pylint>=2.15.0; python_version >= '3.11'
-astroid>=2.4.2,<2.6.0; python_version == '3.5'
-astroid>=2.11.0; python_version >= '3.6' and python_version <= '3.10'
+astroid>=2.11.0; python_version <= '3.10'
 astroid>=2.12.4; python_version >= '3.11'
-typed-ast>=1.4.0,<1.5.0; python_version >= '3.6' and python_version < '3.8' and implementation_name=='cpython'
 # lazy-object-proxy is used by astroid
-lazy-object-proxy>=1.4.3; python_version >= '3.5'
-wrapt>=1.11.2; python_version >= '3.5' and python_version <= '3.10'
+lazy-object-proxy>=1.4.3
+wrapt>=1.11.2; python_version <= '3.10'
 wrapt>=1.14; python_version >= '3.11'
 # platformdirs is used by pylint starting with its 2.10
-platformdirs>=2.2.0; python_version >= '3.6' and python_version <= '3.11'
+platformdirs>=2.2.0; python_version <= '3.11'
 platformdirs>=3.2.0; python_version >= '3.12'
-# isort 5.0.0 removed support for py27,py35
 # isort 4.2.8 fixes a pylint issue with false positive on import order of ssl on Windows
 # isort 4.3.8 fixes an issue with py310 and works on py310 (Note that isort 5.10.0 has official support for py310)
 isort>=4.3.8
-# Pylint 2.14 uses tomlkit>=0.10.1 and requires py>=3.7
-tomlkit>=0.10.1; python_version >= '3.7'
+# Pylint 2.14 uses tomlkit>=0.10.1
+tomlkit>=0.10.1
 # dill is used by pylint >=2.13
-dill>=0.2; python_version >= '3.6' and python_version <= '3.10'
+dill>=0.2; python_version <= '3.10'
 dill>=0.3.6; python_version >= '3.11'
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
@@ -139,19 +109,14 @@ flake8>=3.8.0; python_version <= '3.9'
 flake8>=5.0.0; python_version >= '3.10'
 mccabe>=0.6.0; python_version <= '3.9'
 mccabe>=0.7.0; python_version >= '3.10'
-pycodestyle>=2.6.0,<2.8.0; python_version == '2.7'
-pycodestyle>=2.6.0; python_version >= '3.5' and python_version <= '3.9'
+pycodestyle>=2.6.0; python_version <= '3.9'
 pycodestyle>=2.9.0; python_version >= '3.10'
-pyflakes>=2.2.0,<2.4.0; python_version == '2.7'
-pyflakes>=2.2.0; python_version >= '3.5' and python_version <= '3.9'
+pyflakes>=2.2.0; python_version <= '3.9'
 pyflakes>=2.5.0; python_version >= '3.10'
 entrypoints>=0.3.0
-functools32>=3.2.3.post2; python_version == '2.7'  # technically: python_version < '3.2'
 
 # Twine (no imports, invoked via twine script):
-# twine 2.0.0 removed support for Python < 3.6
-twine>=1.8.1,<2.0.0; python_version <= '3.5'
-twine>=3.0.0; python_version >= '3.6'
+twine>=3.0.0
 # readme-renderer 23.0 has made cmarkgfm part of extras (it fails on Cygwin)
 readme-renderer>=23.0
 # twine uses keyring, and keyring requires pywin32-ctypes!=0.1.0,0.1.1 but 0.2.0 is required on py38+
@@ -165,75 +130,38 @@ pywin32-ctypes>=0.2.0; sys_platform=="win32"
 #       which conflicts with flake8 (which still uses the deprecated interfaces importlib-metadata
 #       removed). Therefore, we cannot currently use the latest versions of Jupyter Notebook
 #       packages.
-# Note: notebook 6.1 started using f-strings but requires py>=3.5 (f-strings were introduced in py36),
-#       so we need to pin notebook to <6.1 on Python<=3.5.
 # Note: notebook 6.5.1 starts using nbclassic which seems to introduce some challenges for pip
 #       dependency resolution, so for now we pin notebook to <6.5.
-# notebook 6.4.11 removed support for Python 3.6
-notebook>=4.3.1,<6.1; python_version <= '3.5'
-notebook>=6.4.10,<6.5; python_version == '3.6'
-notebook>=6.4.12,<6.5; python_version >= '3.7'
+notebook>=6.4.12,<6.5
 jupyter>=1.0.0
-jupyter-console>=5.2.0,<6.0.0; python_version == '2.7'
-jupyter-console>=5.2.0,<6.0.0; python_version >= '3.5'
-ipywidgets>=5.2.2,<6.0.0; python_version <= '3.6'
-ipywidgets>=5.2.2,<6.0.0; python_version >= '3.7'
-nbconvert>=5.0.0,<6.0.0; python_version <= '3.6'
-nbconvert>=6.0.0,<7.0.0; python_version >= '3.7'
+jupyter-console>=5.2.0,<6.0.0
+ipywidgets>=5.2.2,<6.0.0
+nbconvert>=6.0.0,<7.0.0
 # nbconvert 6.x requires nbclient>=0.5.0,<0.6.0
-nbclient>=0.5.9,<0.6.0; python_version == '3.6'
-nbclient>=0.5.9,<0.6.0; python_version >= '3.7'
+nbclient>=0.5.9,<0.6.0
 # nbclient 0.5.x requires nbformat>=5.0
-nbformat>=4.2.0,<5.0.0; python_version <= '3.5'
-nbformat>=5.0.2,<6.0.0; python_version >= '3.6'
-qtconsole>=4.7.0; python_version <= '3.5'
-qtconsole>=5.0.1; python_version == '3.6'
-qtconsole>=5.4.0; python_version >= '3.7'
-ipykernel>=4.5.2,<5.0.0; python_version <= '3.6'
-ipykernel>=4.5.2,<5.0.0; python_version >= '3.7'
-jupyter-client>=5.3.4,<6.0.0; python_version <= '3.5'
-jupyter-client>=6.1.5,<7.0.0; python_version >= '3.6'
-jupyterlab-widgets>=0.6.15,<1.0.0; python_version <= '3.5'
-jupyterlab-widgets>=1.0.2,<2.0.0; python_version == '3.6'
-jupyterlab-widgets>=1.0.2,<2.0.0; python_version >= '3.7'
-jupyterlab-pygments>=0.1.0; python_version <= '3.6'
-jupyterlab-pygments>=0.2.0; python_version >= '3.7'
-jupyter-core>=4.6.1,<5.0.0; python_version <= '3.5'
-jupyter-core>=4.6.1,<5.0.0; python_version == '3.6'
-jupyter-core>=4.11.2,<5.0.0; python_version >= '3.7'
+nbformat>=5.0.2,<6.0.0
+qtconsole>=5.4.0
+ipykernel>=4.5.2,<5.0.0
+jupyter-client>=6.1.5,<7.0.0
+jupyterlab-widgets>=1.0.2,<2.0.0
+jupyterlab-pygments>=0.2.0
+jupyter-core>=4.11.2,<5.0.0
 ipython-genutils>=0.2.0
-ipython>=5.1.0,<6.0; python_version <= '3.6'
-ipython>=5.1.0,<6.0; python_version >= '3.7'
+ipython>=5.1.0,<6.0
 
 # Pywin32 is used (at least?) by jupyter.
 # Pywin32 version 226 needs to be excluded, see issues #1946 and #1975.
-# pywin32 version 300 removed support for Python 2.7
-# pywin32 version 302 removed support for Python 3.5 and added support for Python 3.10
+# pywin32 version 302 added support for Python 3.10
 # pywin32 version 303 added support for Python 3.11
-pywin32>=222,!=226,<300; sys_platform == 'win32' and python_version == '2.7'
-pywin32>=301,<302; sys_platform == 'win32' and python_version == '3.5'
-pywin32>=303; sys_platform == 'win32' and python_version >= '3.6' and python_version <= '3.11'
+pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
 pywin32>=306; sys_platform == 'win32' and python_version >= '3.12'
 
 # The tornado package is used by ipykernel which is used by jupyter.
-# Tornado 5.0.0 and 5.0.1 rejects installation if the Python ssl module
-# does not have certain symbols required by Tornado. This issue exists for
-# example with Python 2.7.6 on Ubuntu 14.04, but not with Python 2.7.5 on
-# RHEL 7.4. This can be checked with:
-#   python -c "import ssl; ssl.SSLContext; ssl.create_default_context; ssl.match_hostname"
-# Other projects have the same issue:
-#   https://github.com/floydhub/dl-docker/issues/84
-# The following is a circumvention of this issue that nails the tornado
-# version to below 5.0 on Python 2.
-# TODO: Follow up on resolution of this issue.
-tornado>=4.2.1,<5.0; python_version == '2.7'
-tornado>=6.1; python_version >= '3.5' and python_version <= '3.7'
-tornado>=6.4.1; python_version >= '3.8'
+tornado>=6.4.1
 
 # pyzmq 17.0.0,17.1.0 fail installation when wheel is used
-pyzmq>=17.1.3; python_version <= '3.5'
-pyzmq>=23.0.0; python_version >= '3.6' and python_version <= '3.7'
-pyzmq>=24.0.0; python_version >= '3.8' and python_version <= '3.11'
+pyzmq>=24.0.0; python_version <= '3.11'
 pyzmq>=25.1.1; python_version >= '3.12'
 
 # Aditional dependencies of examples
@@ -242,17 +170,13 @@ progressbar2>=3.12.0
 
 # Package dependency management tools (not used by any make rules)
 pipdeptree>=2.2.0
-# pip-check-reqs is not used on Python 2.7
 # pip-check-reqs 2.3.2 is needed to have proper support for pip<21.3.
-# pip-check-reqs 2.4.0 requires Python>=3.8.
 # pip-check-reqs 2.4.3 fixes a speed issue on Python 3.11 and requires pip>=21.2.4
 # pip-check-reqs 2.5.0 has issue https://github.com/r1chardj0n3s/pip-check-reqs/issues/143
-pip-check-reqs>=2.3.2; python_version >= '3.5' and python_version <= '3.7'
-pip-check-reqs>=2.4.3,!=2.5.0; python_version >= '3.8' and python_version <= '3.11'
+pip-check-reqs>=2.4.3,!=2.5.0; python_version <= '3.11'
 pip-check-reqs>=2.5.1; python_version >= '3.12'
 
 # pywinpty is used by terminado <- notebook <- jupyter
 # pywinpty <1.1.1 does not have metadata for required Python or dependent packages.
-# pywinpty 1.0 has removed support for py27.
-# pywinpty 1.0 requires maturin which requires py>=3.6 and on py>=3.7 it fails installation
+# pywinpty 1.0 requires maturin which fails installation on py>=3.7
 pywinpty>=0.5,<1.0; os_name == "nt"

@@ -20,14 +20,14 @@ jobs:
 
     - os: linux
       language: python
-      python: "3.6"
+      python: "3.8"
       env:
         - PACKAGE_LEVEL=minimum
       cache: pip
 
     - os: linux
       language: python
-      python: "3.6"
+      python: "3.8"
       env:
         - PACKAGE_LEVEL=latest
       cache: pip

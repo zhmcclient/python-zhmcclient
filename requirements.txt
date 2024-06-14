@@ -6,9 +6,7 @@
 
 # Direct dependencies for install (must be consistent with minimum-constraints-install.txt)
 
-# decorator 5.0.0 removes support for Python 2.7 and 3.4
-decorator>=4.0.11,<5.0; python_version == '2.7'
-decorator>=4.0.11; python_version >= '3.5'
+decorator>=4.0.11
 
 # pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
 pytz>=2016.10; python_version <= '3.9'
@@ -16,26 +14,13 @@ pytz>=2019.1; python_version >= '3.10'
 
 # requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
 #   remove ImportWarning in six
-requests>=2.25.0; python_version <= '3.5'
-requests>=2.26.0; python_version == '3.6'
-requests>=2.31.0; python_version >= '3.7'
+requests>=2.31.0
 
 # six 1.16.0 removes the ImportWarning raised by Python 3.10
 six>=1.14.0; python_version <= '3.9'
 six>=1.16.0; python_version >= '3.10'
 
-# stomp-py 5.0.0 (now deleted) and 6.0.0 removed support for Python 2.7, 3.4 and 3.5
-# stomp-py<6.0.0 did not declare supported Python versions
-# stomp-py 6.1.0 on Pypi contained older code than v6.1.0 in the repo -> was yanked
-# stomp-py 6.1.1 broke compatibility -> was yanked (and re-released as 7.0.0)
-# stomp-py 7.0.0 changed the interface of the listener methods incompatibly, and requires Python >=3.6
-# stomp-py 8.0.0 removed the use_ssl parameter of stomp.Connection. set_ssl() can be used instead.
-# stomp-py 8.0.0 cannot be imported due to an issue
-# stomp-py 8.1.1 changed __version__ from tuple to string
-# stomp-py versions 7.0.0 - 8.1.0 cause test failures.
-stomp-py>=4.1.23,<5.0.0; python_version <= '3.5'
-stomp-py>=4.1.23,<7.0.0,!=6.1.0,!=6.1.1; python_version == '3.6'
-stomp-py>=8.1.1; python_version >= '3.7'
+stomp-py>=8.1.1
 
 python-dateutil>=2.8.2
 immutable-views>=0.6.0
@@ -43,23 +28,18 @@ nocasedict>=1.0.2
 
 # PyYAML pulled in by zhmcclient_mock (and zhmcclient examples, and python-coveralls)
 # PyYAML 5.3 fixes narrow build error
-# PyYAML 5.4 removed support for py35
-# PyYAML 6.0 removed support for py27
 # PyYAML 5.3 has wheel archives for Python 2.7, 3.5 - 3.9
 # PyYAML 5.4 has wheel archives for Python 2.7, 3.6 - 3.9
 # PyYAML 6.0 has wheel archives for Python 3.6 - 3.11
 # PyYAML 5.4 and 6.0.0 fails install since Cython 3 was released, see issue
 #   https://github.com/yaml/pyyaml/issues/724.
-PyYAML>=5.3.1; python_version <= '3.5'
-PyYAML>=5.3.1,!=5.4.0,!=5.4.1; python_version >= '3.6' and python_version <= '3.11'
+PyYAML>=5.3.1,!=5.4.0,!=5.4.1; python_version <= '3.11'
 PyYAML>=5.3.1,!=5.4.0,!=5.4.1,!=6.0.0; python_version >= '3.12'
 
 # yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
-# yamlloader 1.0 removed support for py27,35
 yamlloader>=0.5.5
 
 # jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils
-# jsonschema 4.0 removed support for py27,35,36
 # jsonschema 4.0.0 was yanked (and does not install), but older pip versions don't recognize that
 # jsonschema is also used by jupyter and requires >=3.0.1
 # jsonschema 3.0.1 and 3.0.2 may cause pkg_resources.DistributionNotFound; fixed in 3.1.0.
@@ -71,10 +51,7 @@ jsonschema>=3.1.0,!=4.0.0
 # Since we changed to use the allowed_methods attribute introduced in urllib3
 # 1.26.0, and our minimum version of requests (2.25.0) only requires
 # urllib3>=1.21.0, we need to require a minimum version of urllib3.
-# urllib3 1.26.10 removed support for py35
-urllib3>=1.26.18; python_version == '2.7'
-urllib3>=1.26.9; python_version == '3.5'
-urllib3>=1.26.18; python_version >= '3.6'
+urllib3>=1.26.18
 
 # pyrsistent is used by jsonschema>=3.0
 # pyrsistent 0.15.0 started using the FileNotFoundError built-in exception that

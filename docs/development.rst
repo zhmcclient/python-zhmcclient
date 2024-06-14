@@ -152,10 +152,10 @@ For example:
 .. code-block:: text
 
     $ tox                              # Run all tests on all supported Python versions
-    $ tox -e py27                      # Run all tests on Python 2.7
-    $ tox -e py27 test_resource.py     # Run only this test source file on Python 2.7
-    $ tox -e py27 TestInit             # Run only this test class on Python 2.7
-    $ tox -e py27 TestInit or TestSet  # pytest -k expressions are possible
+    $ tox -e py38                      # Run all tests on Python 3.8
+    $ tox -e py38 test_resource.py     # Run only this test source file on Python 3.8
+    $ tox -e py38 TestInit             # Run only this test class on Python 3.8
+    $ tox -e py38 TestInit or TestSet  # pytest -k expressions are possible
 
 
 .. _`Running end2end tests`:

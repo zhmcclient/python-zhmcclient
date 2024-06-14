@@ -35,124 +35,8 @@ jobs:
         if [[ "${{ github.event_name }}" == "schedule" || "${{ github.head_ref }}" =~ ^release_ ]]; then \
           echo "matrix={ \
             \"os\": [ \"ubuntu-latest\", \"macos-latest\", \"windows-latest\" ], \
-            \"python-version\": [ \"3.5\", \"3.6\", \"3.7\", \"3.8\", \"3.9\", \"3.10\", \"3.11\", \"3.12\" ], \
-            \"package_level\": [ \"minimum\", \"latest\" ], \
-            \"exclude\": [ \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.7\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.7\", \
-                \"package_level\": \"latest\" \
-              } \
-            ], \
-            \"include\": [ \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"2.7\", \
-                \"package_level\": \"minimum\", \
-                \"container\": {\"image\": \"python:2.7.18-buster\"} \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"2.7\", \
-                \"package_level\": \"latest\", \
-                \"container\": {\"image\": \"python:2.7.18-buster\"} \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-12\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-12\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-12\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-12\", \
-                \"python-version\": \"3.6\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-12\", \
-                \"python-version\": \"3.7\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-12\", \
-                \"python-version\": \"3.7\", \
-                \"package_level\": \"latest\" \
-              } \
-            ] \
+            \"python-version\": [ \"3.8\", \"3.9\", \"3.10\", \"3.11\", \"3.12\" ], \
+            \"package_level\": [ \"minimum\", \"latest\" ] \
           }" >> $GITHUB_OUTPUT; \
         else \
           echo "matrix={ \
@@ -161,51 +45,14 @@ jobs:
             \"package_level\": [ \"minimum\", \"latest\" ], \
             \"include\": [ \
               { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"2.7\", \
-                \"package_level\": \"minimum\", \
-                \"container\": {\"image\": \"python:2.7.18-buster\"} \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"2.7\", \
-                \"package_level\": \"latest\", \
-                \"container\": {\"image\": \"python:2.7.18-buster\"} \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-20.04\", \
-                \"python-version\": \"3.6\", \
+                \"os\": \"ubuntu-latest\", \
+                \"python-version\": \"3.8\", \
                 \"package_level\": \"minimum\" \
               }, \
               { \
                 \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.7\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.8\", \
+                \"python-version\": \"3.9\", \
                 \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-12\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.8\", \
-                \"package_level\": \"minimum\" \
               }, \
               { \
                 \"os\": \"macos-latest\", \
@@ -216,20 +63,10 @@ jobs:
                 \"os\": \"macos-latest\", \
                 \"python-version\": \"3.12\", \
                 \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.12\", \
-                \"package_level\": \"latest\" \
               }, \
               { \
                 \"os\": \"windows-latest\", \
-                \"python-version\": \"3.5\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.12\", \
+                \"python-version\": \"3.8\", \
                 \"package_level\": \"minimum\" \
               }, \
               { \
@@ -279,16 +116,7 @@ jobs:
       if: ${{ ! startsWith(github.head_ref, 'start_') }}
       run: |
         bash -c "! git diff --exit-code origin/${{ github.base_ref }} changes/*.rst >/dev/null || (echo 'Please add or modify a change fragment file in the changes directory - for details read the Making a change section in the docs'; exit 1)"
-    - name: Set up Python ${{ matrix.python-version }} (if py==3.5)
-      if: ${{ matrix.python-version == '3.5' }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-      env:
-        # Workaround for cert issue on Python 3.5, see https://github.com/actions/setup-python/issues/866
-        PIP_TRUSTED_HOST: "pypi.python.org pypi.org files.pythonhosted.org"
-    - name: Set up Python ${{ matrix.python-version }} (if py>=3.6)
-      if: ${{ matrix.python-version != '2.7' && matrix.python-version != '3.5' }}
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}

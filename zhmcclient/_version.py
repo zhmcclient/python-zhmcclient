@@ -33,9 +33,5 @@ __version__ = '1.17.0.dev1'
 # Keep these Python versions in sync with:
 # - python_requires and classifiers in setup.py
 # - Section "Supported environments" in docs/intro.rst
-_PYTHON_M = sys.version_info[0]
-_PYTHON_N = sys.version_info[1]
-if _PYTHON_M == 2 and _PYTHON_N < 7:
-    raise RuntimeError('On Python 2, zhcmclient requires Python 2.7')
-if _PYTHON_M == 3 and _PYTHON_N < 5:
-    raise RuntimeError('On Python 3, zhmcclient requires Python 3.5 or higher')
+if sys.version_info[0:2] < (3, 8):
+    raise RuntimeError('zhmcclient requires Python 3.8 or higher')

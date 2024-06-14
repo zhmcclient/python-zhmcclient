@@ -214,18 +214,7 @@ check_py_files := \
     $(wildcard docs/notebooks/*.py) \
 
 # Packages whose dependencies are checked using pip-missing-reqs
-check_reqs_base_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook
-ifeq ($(python_m_version),2)
-  check_reqs_packages := $(check_reqs_base_packages)
-else ifeq ($(python_mn_version),3.5)
-  check_reqs_packages := $(check_reqs_base_packages)
-else ifeq ($(python_mn_version),3.6)
-  check_reqs_packages := $(check_reqs_base_packages)
-else ifeq ($(python_mn_version),3.7)
-  check_reqs_packages := $(check_reqs_base_packages) safety towncrier
-else
-  check_reqs_packages := $(check_reqs_base_packages) safety towncrier sphinx
-endif
+check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook safety towncrier sphinx
 
 ifdef TESTCASES
   pytest_opts := $(TESTOPTS) -k "$(TESTCASES)"
@@ -534,53 +523,25 @@ $(bdist_file) $(sdist_file): Makefile MANIFEST.in $(dist_included_files)
 	$(PYTHON_CMD) -m build --outdir $(dist_dir)
 
 $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(pylint_rc_file) $(check_py_files)
-ifeq ($(python_m_version),2)
-	@echo "Makefile: Warning: Skipping Pylint on Python $(python_version)" >&2
-else
 	@echo "Makefile: Running Pylint"
 	-$(call RM_FUNC,$@)
 	pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
 	echo "done" >$@
 	@echo "Makefile: Done running Pylint"
-endif
 
 $(done_dir)/safety_all_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_all_policy_file) minimum-constraints.txt minimum-constraints-install.txt
-ifeq ($(python_m_version),2)
-	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
-else
-ifeq ($(python_mn_version),3.5)
-	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
-else
-ifeq ($(python_mn_version),3.6)
-	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
-else
 	@echo "Makefile: Running Safety for all packages"
 	-$(call RM_FUNC,$@)
 	bash -c "safety check --policy-file $(safety_all_policy_file) -r minimum-constraints.txt --full-report || test '$(RUN_TYPE)' != 'release' || exit 1"
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for all packages"
-endif
-endif
-endif
 
 $(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_install_policy_file) minimum-constraints-install.txt
-ifeq ($(python_m_version),2)
-	@echo "Makefile: Warning: Skipping Safety for install packages on Python $(python_version)" >&2
-else
-ifeq ($(python_mn_version),3.5)
-	@echo "Makefile: Warning: Skipping Safety for install packages on Python $(python_version)" >&2
-else
-ifeq ($(python_mn_version),3.6)
-	@echo "Makefile: Warning: Skipping Safety for all packages on Python $(python_version)" >&2
-else
 	@echo "Makefile: Running Safety for install packages"
 	-$(call RM_FUNC,$@)
 	safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for install packages"
-endif
-endif
-endif
 
 $(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(flake8_rc_file) $(check_py_files)
 	-$(call RM_FUNC,$@)
