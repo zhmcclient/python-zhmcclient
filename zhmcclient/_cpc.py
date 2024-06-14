@@ -50,10 +50,7 @@ indicated in the description of the functionality.
 import warnings
 import copy
 import json
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from ._manager import BaseManager
 from ._resource import BaseResource

@@ -79,10 +79,7 @@ messages issued by the operating system. The following commands use the
 import os
 import json
 import ssl
-try:
-    import queue
-except ImportError:
-    import Queue as queue  # Python 2.7
+import queue
 from collections import namedtuple
 import logging
 import uuid

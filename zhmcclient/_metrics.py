@@ -64,14 +64,7 @@ The basic usage of the metrics API is shown in this example:
 """
 
 
-try:
-    from collections.abc import namedtuple
-except ImportError:
-    from collections import namedtuple
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict, namedtuple
 import re
 from datetime import datetime
 import pytz

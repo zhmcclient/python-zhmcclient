@@ -21,10 +21,7 @@ by the HMC.
 
 import time
 import threading
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 # import contextlib
 from immutable_views import DictView
 

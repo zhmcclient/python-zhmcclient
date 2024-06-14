@@ -21,10 +21,7 @@ objects based on HMC notifications.
 
 import logging
 import json
-try:
-    from json import JSONDecodeError as _JSONDecodeError
-except ImportError:
-    _JSONDecodeError = ValueError
+from json import JSONDecodeError
 import ssl
 
 from ._constants import DEFAULT_STOMP_PORT, JMS_LOGGER_NAME, \
@@ -397,7 +394,7 @@ class _UpdateListener:
         if noti_type == 'property-change':
             try:
                 msg_obj = json.loads(message)
-            except _JSONDecodeError:
+            except JSONDecodeError:
                 JMS_LOGGER.error(
                     "JMS message for object notification topic '%s' "
                     "has a non-JSON message body (ignored): %r",
@@ -422,7 +419,7 @@ class _UpdateListener:
         elif noti_type == 'status-change':
             try:
                 msg_obj = json.loads(message)
-            except _JSONDecodeError:
+            except JSONDecodeError:
                 JMS_LOGGER.error(
                     "JMS message for object notification topic '%s' "
                     "has a non-JSON message body (ignored): %r",

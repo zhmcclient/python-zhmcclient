@@ -17,10 +17,7 @@ A faked Session class for the zhmcclient package.
 """
 
 
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 import yaml
 import yamlloader
 import jsonschema
