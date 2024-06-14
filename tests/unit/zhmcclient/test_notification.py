@@ -26,7 +26,6 @@ from collections import namedtuple
 import logging
 import time
 from unittest.mock import patch
-import six
 import pytest
 import stomp
 

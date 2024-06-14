@@ -20,11 +20,11 @@ Unit tests for _urihandler module of the zhmcclient_mock package.
 
 
 from datetime import datetime
+# TODO: Migrate mock to zhmcclient_mock
+from unittest.mock import MagicMock
 from dateutil import tz
 import pytz
 from requests.packages import urllib3
-# TODO: Migrate mock to zhmcclient_mock
-from unittest.mock import MagicMock
 import pytest
 
 from zhmcclient_mock._session import FakedSession

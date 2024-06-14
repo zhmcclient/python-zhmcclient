@@ -20,8 +20,8 @@ Unit tests for _auto_updater module.
 import time
 import re
 import logging
-import pytest
 from unittest.mock import patch
+import pytest
 
 from zhmcclient import Client
 from zhmcclient_mock import FakedSession

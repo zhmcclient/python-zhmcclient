@@ -75,7 +75,7 @@ messages issued by the operating system. The following commands use the
     $ zhmc partition start {cpc-name} {partition-name}
 """
 
-import sys
+
 import os
 import json
 import ssl

@@ -54,7 +54,6 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
-import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource

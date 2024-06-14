@@ -75,7 +75,6 @@ except ImportError:
 import re
 from datetime import datetime
 import pytz
-import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource

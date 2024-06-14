@@ -21,7 +21,6 @@ a separate :term:`Console` resource.
 
 
 import time
-import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource

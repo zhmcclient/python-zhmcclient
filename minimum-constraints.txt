@@ -16,9 +16,10 @@
 # that are needed for some reason (must be consistent with dev-requirements.txt)
 
 # PEP517 package builder, used in Makefile
-build==0.5.0
-# build up to version 0.9 requires pep517>=0.9.1
-pep517==0.9.1
+build==1.0.0
+# build requires virtualenv.cli_run which was added in virtualenv 20.1
+virtualenv==20.23.0
+pyproject-hooks==1.1.0
 
 # Change log
 towncrier==22.8.0
@@ -30,16 +31,11 @@ click-default-group==1.2.4
 testfixtures==6.9.0
 colorama==0.4.5
 importlib-metadata==4.8.3
-mock==2.0.0
 more-itertools==4.0.0
 # pytz: covered in direct deps for installation
 # requests: covered in direct deps for installation
 requests-mock==1.6.0
 requests-toolbelt==0.8.0
-
-# Virtualenv
-virtualenv==20.15.0; python_version <= '3.11'
-virtualenv==20.23.0; python_version >= '3.12'
 
 # Unit test (indirect dependencies):
 # decorator: covered in direct deps for installation
@@ -86,30 +82,21 @@ sphinxcontrib-websupport==1.2.4
 autodocsumm==0.2.12
 Babel==2.9.1
 
-# PyLint (no imports, invoked via pylint script):
-pylint==2.13.0; python_version <= '3.10'
-pylint==2.15.0; python_version >= '3.11'
-astroid==2.11.0; python_version <= '3.10'
-astroid==2.12.4; python_version >= '3.11'
+# PyLint (no imports, invoked via pylint script)
+pylint==2.15.0
+astroid==2.12.4
 lazy-object-proxy==1.4.3
-wrapt==1.12; python_version <= '3.10'
-wrapt==1.14; python_version >= '3.11'
-platformdirs==2.2.0; python_version <= '3.11'
-platformdirs==3.2.0; python_version >= '3.12'
+wrapt==1.14
+platformdirs==3.2.0
 isort==4.3.8
 tomlkit==0.10.1
-dill==0.2; python_version <= '3.10'
-dill==0.3.6; python_version >= '3.11'
+dill==0.3.6
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
-flake8==3.8.0; python_version <= '3.9'
-flake8==5.0.0; python_version >= '3.10'
-mccabe==0.6.0; python_version <= '3.9'
-mccabe==0.7.0; python_version >= '3.10'
-pycodestyle==2.6.0; python_version <= '3.9'
-pycodestyle==2.9.0; python_version >= '3.10'
-pyflakes==2.2.0; python_version <= '3.9'
-pyflakes==2.5.0; python_version >= '3.10'
+flake8==6.1.0
+mccabe==0.7.0
+pycodestyle==2.11.0
+pyflakes==3.1.0
 entrypoints==0.3.0
 
 # Twine (no imports, invoked via twine script):
@@ -174,8 +161,7 @@ configparser==4.0.2
 dataclasses==0.8
 defusedxml==0.7.1
 distlib==0.3.6
-filelock==3.2.0; python_version <= "3.11"
-filelock==3.11.0; python_version >= "3.12"
+filelock==3.11.0
 gitdb==4.0.8
 gitdb2==2.0.0
 html5lib==1.1
@@ -198,8 +184,6 @@ pickleshare==0.7.4
 pkginfo==1.4.2
 # tox 4.0.0 started using pyproject-api and requires pyproject-api>=1.2.1
 pyproject-api==1.2.1
-# build is using pyproject-hooks
-pyproject-hooks==1.0.0
 prometheus-client==0.13.1
 ptyprocess==0.5.1
 py==1.11.0

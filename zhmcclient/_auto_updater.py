@@ -18,7 +18,7 @@ Support for the :ref:`auto-updating` of Python zhmcclient resource and manager
 objects based on HMC notifications.
 """
 
-import sys
+
 import logging
 import json
 try:

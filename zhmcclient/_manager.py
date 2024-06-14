@@ -31,7 +31,6 @@ from datetime import datetime, timedelta
 import time
 import warnings
 import threading
-import six
 from nocasedict import NocaseDict
 
 from ._logging import logged_api_call

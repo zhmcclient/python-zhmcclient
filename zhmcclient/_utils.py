@@ -28,7 +28,6 @@ from datetime import datetime
 import warnings
 
 from dateutil import parser
-import six
 import pytz
 from requests.utils import quote
 

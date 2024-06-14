@@ -555,14 +555,14 @@ def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
             assert isinstance(sibling_adapters, list)
 
             sibling_ids = {a.get_property('adapter-id')
-                               for a in sibling_adapters}
+                           for a in sibling_adapters}
             sibling_names = [a.name for a in sibling_adapters]
             if base_id not in adapters_by_base:
                 exp_ids = set()
                 exp_names = []
             else:
                 exp_ids = {a.get_property('adapter-id')
-                               for a in adapters_by_base[base_id]}
+                           for a in adapters_by_base[base_id]}
                 exp_ids.remove(adapter_id)
                 exp_names = [a.name for a in adapters_by_base[base_id]]
                 exp_names.remove(adapter.name)
