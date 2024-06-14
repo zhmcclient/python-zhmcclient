@@ -15,10 +15,13 @@
 # Direct dependencies for development and indirect dependencies for development
 # that are needed for some reason (must be consistent with dev-requirements.txt)
 
+# six (only needed by packages that still support Python 2)
+six==1.16.0
+
 # PEP517 package builder, used in Makefile
 build==1.0.0
 # build requires virtualenv.cli_run which was added in virtualenv 20.1
-virtualenv==20.23.0
+virtualenv==20.25.0
 pyproject-hooks==1.1.0
 
 # Change log
@@ -29,7 +32,7 @@ click-default-group==1.2.4
 # Unit test (imports into testcases):
 # Note: pytest is covered in minimum-constraints-install.txt
 testfixtures==6.9.0
-colorama==0.4.5
+colorama==0.4.6
 importlib-metadata==4.8.3
 more-itertools==4.0.0
 # pytz: covered in direct deps for installation
@@ -47,7 +50,7 @@ coveralls==3.3.0
 
 # Safety CI by pyup.io
 safety==3.0.1
-safety-schemas==0.0.1
+safety-schemas==0.0.2
 # TODO: Change to dparse 0.6.4 once released
 dparse==0.6.4b0
 ruamel.yaml==0.17.21
@@ -60,7 +63,7 @@ typer-cli==0.12.0
 typer-slim==0.12.0
 
 # Tox
-tox==3.1.0
+tox==4.15.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
 Sphinx==7.1.0; python_version == '3.8'
@@ -87,7 +90,7 @@ pylint==2.15.0
 astroid==2.12.4
 lazy-object-proxy==1.4.3
 wrapt==1.14
-platformdirs==3.2.0
+platformdirs==4.1.0
 isort==4.3.8
 tomlkit==0.10.1
 dill==0.3.6
@@ -134,8 +137,8 @@ progressbar2==3.12.0
 
 # Package dependency management tools (not used by any make rules)
 pipdeptree==2.2.0
-pip-check-reqs==2.4.3; python_version <= '3.11'
-pip-check-reqs==2.5.1; python_version >= '3.12'
+pip-check-reqs==2.4.3; python_version <= '3.8'
+pip-check-reqs==2.5.1; python_version >= '3.9'
 
 # pywinpty is used by terminado <- notebook <- jupyter
 pywinpty==0.5; os_name == "nt"
@@ -154,14 +157,14 @@ backports-abc==0.5
 backports.shutil-get-terminal-size==1.0.0
 backports.ssl-match-hostname==3.5.0.1
 bleach==3.3.0
-cachetools==5.2.0
+cachetools==5.3.2
 Click==8.0.2
 clint==0.5.1
 configparser==4.0.2
 dataclasses==0.8
 defusedxml==0.7.1
-distlib==0.3.6
-filelock==3.11.0
+distlib==0.3.7
+filelock==3.13.1
 gitdb==4.0.8
 gitdb2==2.0.0
 html5lib==1.1
@@ -182,8 +185,7 @@ pathlib2==2.3.3
 pexpect==4.3.1
 pickleshare==0.7.4
 pkginfo==1.4.2
-# tox 4.0.0 started using pyproject-api and requires pyproject-api>=1.2.1
-pyproject-api==1.2.1
+pyproject-api==1.6.1  # used by tox since its 4.0.0
 prometheus-client==0.13.1
 ptyprocess==0.5.1
 py==1.11.0

@@ -7,26 +7,16 @@
 
 # Base dependencies
 
-# pip 10.0.0 introduced the --exclude-editable option.
-# pip 18.0 is needed on pypy3 (py36) to support constraints like cffi!=1.11.3,>=1.8.
-# Pip 20.2 introduced a new resolver whose backtracking had issues that were resolved only in 21.2.2.
-# pip>=21.0 is needed for the cryptography package on Windows on GitHub Actions.
 pip==23.3
-
-setuptools==65.5.1; python_version <= '3.11'
-setuptools==66.1.0; python_version >= '3.12'
-
+setuptools==66.1.0
 wheel==0.38.1
 
 
 # Direct dependencies for install (must be consistent with requirements.txt)
 
 decorator==4.0.11
-pytz==2016.10; python_version <= '3.9'
-pytz==2019.1; python_version >= '3.10'
+pytz==2019.1
 requests==2.31.0
-six==1.14.0; python_version <= '3.9'
-six==1.16.0; python_version >= '3.10'
 stomp-py==8.1.1
 python-dateutil==2.8.2
 immutable-views==0.6.0
@@ -46,8 +36,7 @@ jsonschema==3.1.0
 
 # Used by zhmcclient.testutils
 # pytest 6.2.5 is needed on Python 3.10 to address issues.
-pytest==4.4.0; python_version <= '3.9'
-pytest==6.2.5; python_version >= '3.10'
+pytest==6.2.5
 
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with requirements.txt)
@@ -61,15 +50,15 @@ pyrsistent==0.15.1
 
 attrs==19.2.0
 certifi==2023.07.22
-chardet==3.0.3
+chardet==5.2.0
 docopt==0.6.2
 # idna>3 requires using requests >=2.26.0
 idna==3.7
 
 
 # Used by zhmcclient.testutils
-packaging==21.0
-pluggy==0.13.0
+packaging==23.2
+pluggy==1.3.0
 
 # websocket-client is used by stomp-py 8.0 and notebook(?) 6.4
 websocket-client==1.5.3

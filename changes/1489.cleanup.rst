@@ -1,2 +1,8 @@
 Dropped support for Python below 3.8. Cleaned up the dependencies, Makefile,
 source code, and test code.
+
+Increased minimum version of the following Python packages the installation
+depends upon:
+- pytz to 2019.1 (only on Python 3.8/3.9 - was already there on Python >= 3.10)
+- pytest (extra: test) to 6.2.5 (only on Python 3.8/3.9 - was already there
+  on Python >= 3.10)
