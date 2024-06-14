@@ -1,0 +1,2 @@
+Dropped support for Python below 3.8. Cleaned up the dependencies, Makefile,
+source code, and test code.

@@ -21,18 +21,15 @@ build==0.5.0
 pep517==0.9.1
 
 # Change log
-towncrier==22.8.0; python_version >= '3.7'
-incremental==22.10.0; python_version >= '3.7'
-click-default-group==1.2.4; python_version >= '3.7'
+towncrier==22.8.0
+incremental==22.10.0
+click-default-group==1.2.4
 
 # Unit test (imports into testcases):
 # Note: pytest is covered in minimum-constraints-install.txt
-funcsigs==1.0.2; python_version == '2.7'
 testfixtures==6.9.0
-colorama==0.3.9; python_version == '2.7'
-colorama==0.4.5; python_version >= '3.5'
-importlib-metadata==2.1.3; python_version <= '3.6'
-importlib-metadata==4.8.3; python_version >= '3.7'
+colorama==0.4.5
+importlib-metadata==4.8.3
 mock==2.0.0
 more-itertools==4.0.0
 # pytz: covered in direct deps for installation
@@ -50,24 +47,21 @@ virtualenv==20.23.0; python_version >= '3.12'
 # Coverage reporting (no imports, invoked via coveralls script):
 coverage==5.0
 pytest-cov==2.7.0
-# handled by dev-requirements.txt: git+https://github.com/andy-maier/coveralls-python.git@andy/add-py27#egg=coveralls; python_version == '2.7'
-coveralls==3.3.0; python_version >= '3.5'
+coveralls==3.3.0
 
 # Safety CI by pyup.io
-# Safety is run only on Python >=3.7
-safety==3.0.1; python_version >= '3.7'
-
-safety-schemas==0.0.1; python_version >= '3.7'
+safety==3.0.1
+safety-schemas==0.0.1
 # TODO: Change to dparse 0.6.4 once released
-dparse==0.6.4b0; python_version >= '3.7'
-ruamel.yaml==0.17.21; python_version >= '3.7'
-click==8.0.2; python_version >= '3.7'
-Authlib==1.2.0; python_version >= '3.7'
-marshmallow==3.15.0; python_version >= '3.7'
-pydantic==1.10.13; python_version >= '3.7'
-typer==0.12.0; python_version >= '3.7'
-typer-cli==0.12.0; python_version >= '3.7'
-typer-slim==0.12.0; python_version >= '3.7'
+dparse==0.6.4b0
+ruamel.yaml==0.17.21
+click==8.0.2
+Authlib==1.2.0
+marshmallow==3.15.0
+pydantic==1.10.13
+typer==0.12.0
+typer-cli==0.12.0
+typer-slim==0.12.0
 
 # Tox
 tox==3.1.0
@@ -75,39 +69,36 @@ tox==3.1.0
 # Sphinx (no imports, invoked via sphinx-build script):
 Sphinx==7.1.0; python_version == '3.8'
 Sphinx==7.2.0; python_version >= '3.9'
-docutils==0.18.1; python_version >= '3.8'
-sphinx-git==10.1.1; python_version >= '3.8'
-GitPython==3.1.41; python_version >= '3.8'
-Pygments==2.15.0; python_version >= '3.8'
-sphinx-rtd-theme==2.0.0; python_version >= '3.8'
-sphinxcontrib-applehelp==1.0.4; python_version >= '3.8'
-sphinxcontrib-devhelp==1.0.2; python_version >= '3.8'
-sphinxcontrib-htmlhelp==2.0.1; python_version >= '3.8'
-sphinxcontrib-jquery==4.1; python_version >= '3.8'
-sphinxcontrib-jsmath==1.0.1; python_version >= '3.8'
-sphinxcontrib-qthelp==1.0.3; python_version >= '3.8'
+docutils==0.18.1
+sphinx-git==10.1.1
+GitPython==3.1.41
+Pygments==2.15.0
+sphinx-rtd-theme==2.0.0
+sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-jquery==4.1
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5; python_version == '3.8'
 sphinxcontrib-serializinghtml==1.1.9; python_version >= '3.9'
-sphinxcontrib-websupport==1.2.4; python_version >= '3.8'
-autodocsumm==0.2.12; python_version >= '3.8'
-Babel==2.9.1; python_version >= '3.8'
+sphinxcontrib-websupport==1.2.4
+autodocsumm==0.2.12
+Babel==2.9.1
 
 # PyLint (no imports, invoked via pylint script):
-pylint==2.6.2; python_version == '3.5'
-pylint==2.13.0; python_version >= '3.6' and python_version <= '3.10'
+pylint==2.13.0; python_version <= '3.10'
 pylint==2.15.0; python_version >= '3.11'
-astroid==2.4.2; python_version == '3.5'
-astroid==2.11.0; python_version >= '3.6' and python_version <= '3.10'
+astroid==2.11.0; python_version <= '3.10'
 astroid==2.12.4; python_version >= '3.11'
-typed-ast==1.4.0; python_version >= '3.6' and python_version < '3.8' and implementation_name=='cpython'
-lazy-object-proxy==1.4.3; python_version >= '3.5'
-wrapt==1.12; python_version >= '3.5' and python_version <= '3.10'
+lazy-object-proxy==1.4.3
+wrapt==1.12; python_version <= '3.10'
 wrapt==1.14; python_version >= '3.11'
-platformdirs==2.2.0; python_version >= '3.6' and python_version <= '3.11'
+platformdirs==2.2.0; python_version <= '3.11'
 platformdirs==3.2.0; python_version >= '3.12'
 isort==4.3.8
-tomlkit==0.10.1; python_version >= '3.7'
-dill==0.2; python_version >= '3.6' and python_version <= '3.10'
+tomlkit==0.10.1
+dill==0.2; python_version <= '3.10'
 dill==0.3.6; python_version >= '3.11'
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
@@ -120,57 +111,34 @@ pycodestyle==2.9.0; python_version >= '3.10'
 pyflakes==2.2.0; python_version <= '3.9'
 pyflakes==2.5.0; python_version >= '3.10'
 entrypoints==0.3.0
-functools32==3.2.3.post2; python_version == '2.7'  # technically: python_version < '3.2'
 
 # Twine (no imports, invoked via twine script):
-twine==1.8.1; python_version <= '3.5'
-twine==3.0.0; python_version >= '3.6'
+twine==3.0.0
 readme-renderer==23.0
 pywin32-ctypes==0.2.0; sys_platform=="win32"
 
 # Jupyter Notebook (no imports, invoked via jupyter script):
-notebook==4.3.1; python_version <= '3.5'
-notebook==6.4.10; python_version == '3.6'
-notebook==6.4.12; python_version >= '3.7'
+notebook==6.4.12
 jupyter==1.0.0
-jupyter-console==5.2.0; python_version == '2.7'
-jupyter-console==5.2.0; python_version >= '3.5'
-ipywidgets==5.2.2; python_version <= '3.6'
-ipywidgets==5.2.2; python_version >= '3.7'
-nbconvert==5.0.0; python_version <= '3.6'
-nbconvert==6.0.0; python_version >= '3.7'
-nbclient==0.5.9; python_version == '3.6'
-nbclient==0.5.9; python_version >= '3.7'
-nbformat==4.2.0; python_version <= '3.5'
-nbformat==5.0.2; python_version >= '3.6'
-qtconsole==4.7.0; python_version <= '3.5'
-qtconsole==5.0.1; python_version == '3.6'
-qtconsole==5.4.0; python_version >= '3.7'
-ipykernel==4.5.2; python_version <= '3.6'
-ipykernel==4.5.2; python_version >= '3.7'
-jupyter-client==5.3.4; python_version <= '3.5'
-jupyter-client==6.1.5; python_version >= '3.6'
-jupyterlab-widgets==0.6.15; python_version <= '3.5'
-jupyterlab-widgets==1.0.2; python_version == '3.6'
-jupyterlab-widgets==1.0.2; python_version >= '3.7'
-jupyterlab-pygments==0.1.0; python_version <= '3.6'
-jupyterlab-pygments==0.2.0; python_version >= '3.7'
-jupyter-core==4.6.1; python_version <= '3.5'
-jupyter-core==4.6.1; python_version == '3.6'
-jupyter-core==4.11.2; python_version >= '3.7'
+jupyter-console==5.2.0
+ipywidgets==5.2.2
+nbconvert==6.0.0
+nbclient==0.5.9
+nbformat==5.0.2
+qtconsole==5.4.0
+ipykernel==4.5.2
+jupyter-client==6.1.5
+jupyterlab-widgets==1.0.2
+jupyterlab-pygments==0.2.0
+jupyter-core==4.11.2
 ipython-genutils==0.2.0
-ipython==5.1.0; python_version <= '3.6'
-ipython==5.1.0; python_version >= '3.7'
+ipython==5.1.0
 
 # Pywin32 is used (at least?) by jupyter.
-pywin32==222; sys_platform == 'win32' and python_version == '2.7'
-pywin32==301; sys_platform == 'win32' and python_version == '3.5'
-pywin32==303; sys_platform == 'win32' and python_version >= '3.6' and python_version <= '3.11'
+pywin32==303; sys_platform == 'win32' and python_version <= '3.11'
 pywin32==306; sys_platform == 'win32' and python_version >= '3.12'
 
-pyzmq==17.1.3; python_version <= '3.5'
-pyzmq==23.0.0; python_version >= '3.6' and python_version <= '3.7'
-pyzmq==24.0.0; python_version >= '3.8' and python_version <= '3.11'
+pyzmq==24.0.0; python_version <= '3.11'
 pyzmq==25.1.1; python_version >= '3.12'
 
 # Aditional dependencies of examples
@@ -179,8 +147,7 @@ progressbar2==3.12.0
 
 # Package dependency management tools (not used by any make rules)
 pipdeptree==2.2.0
-pip-check-reqs==2.3.2; python_version >= '3.5' and python_version <= '3.7'
-pip-check-reqs==2.4.3; python_version >= '3.8' and python_version <= '3.11'
+pip-check-reqs==2.4.3; python_version <= '3.11'
 pip-check-reqs==2.5.1; python_version >= '3.12'
 
 # pywinpty is used by terminado <- notebook <- jupyter
@@ -193,44 +160,35 @@ alabaster==0.7.9
 anyio==3.1.0
 appdirs==1.4.3
 appnope==0.1.0
-argon2-cffi==21.2.0; python_version >= '3.6'
+argon2-cffi==21.2.0
 args==0.1.0
 atomicwrites==1.4.0
 backports-abc==0.5
-backports.functools-lru-cache==1.5; python_version < "3.3"
 backports.shutil-get-terminal-size==1.0.0
 backports.ssl-match-hostname==3.5.0.1
 bleach==3.3.0
-# tox 4.0.0 started using cachetools and requires cachetools>=5.2
-cachetools==5.2.0; python_version >= '3.7'
-# Click is used only by safety (which is run only on Python >=3.6)
-Click==8.0.2; python_version >= '3.6'
+cachetools==5.2.0
+Click==8.0.2
 clint==0.5.1
 configparser==4.0.2
-# dataclasses is used by safety>=2.3.1 and argon-cffi
-dataclasses==0.8; python_version >= '3.6'
-# defusedxml is used by sphinx.testing and nbconvert
+dataclasses==0.8
 defusedxml==0.7.1
 distlib==0.3.6
-enum34==1.1.6; python_version < "3.4"
 filelock==3.2.0; python_version <= "3.11"
 filelock==3.11.0; python_version >= "3.12"
-gitdb==4.0.8; python_version >= '3.7'
+gitdb==4.0.8
 gitdb2==2.0.0
 html5lib==1.1
 imagesize==1.3.0
 importlib-resources==1.4.0
-jedi==0.17.2; python_version >= '3.5'
-Jinja2==2.11.3; python_version <= '3.5'
-Jinja2==3.0.3; python_version == '3.6'
-Jinja2==3.1.3; python_version >= '3.7'
+jedi==0.17.2
+Jinja2==3.1.3
 keyring==18.0.0
 lxml==4.9.2
-MarkupSafe==1.1.1; python_version <= '3.5'
-MarkupSafe==2.0.0; python_version >= '3.6'
+MarkupSafe==2.0.0
 # nbconvert 6.x depends on mistune<2 and >=0.8.1 (mistune 0.8.4 is the highest version that satisfies that)
 mistune==0.8.4
-nest-asyncio==1.5.4; python_version >= '3.5'
+nest-asyncio==1.5.4
 # nose is used by older versions of notebook, e.g. 4.3.1
 nose==1.3.7
 pandocfilters==1.4.1
@@ -239,40 +197,29 @@ pexpect==4.3.1
 pickleshare==0.7.4
 pkginfo==1.4.2
 # tox 4.0.0 started using pyproject-api and requires pyproject-api>=1.2.1
-pyproject-api==1.2.1; python_version >= '3.7'
+pyproject-api==1.2.1
 # build is using pyproject-hooks
-pyproject-hooks==1.0.0; python_version >= '3.7'
-prometheus-client==0.12; python_version <= '3.5'
-prometheus-client==0.13.1; python_version >= '3.6'
+pyproject-hooks==1.0.0
+prometheus-client==0.13.1
 ptyprocess==0.5.1
 py==1.11.0
-pyparsing==2.4.7; python_version <= '3.5'
-pyparsing==3.0.7; python_version >= '3.6'
+pyparsing==3.0.7
 rfc3986==1.4.0
-rich==12.0.0; python_version >= '3.6'
+rich==12.0.0
 scandir==1.9.0
 Send2Trash==1.8.0
 simplegeneric==0.8.1
-singledispatch==3.4.0.3; python_version < "3.4"
 smmap2==2.0.1
 sniffio==1.3.0
 snowballstemmer==2.0.0
 terminado==0.8.3
 testpath==0.3
 toml==0.10.0
-# tomli 2.0.0 removed support for py36
-tomli==1.1.0; python_version == '3.6'
-tomli==2.0.1; python_version >= '3.7'
-tornado==4.2.1; python_version == '2.7'
-tornado==6.1; python_version >= '3.5' and python_version <= '3.7'
-tornado==6.4.1; python_version >= '3.8'
-tqdm==4.11.2; python_version <= '3.5'
-tqdm==4.14; python_version >= '3.6'
-traitlets==4.3.1; python_version <= '3.6'
-traitlets==5.4; python_version >= '3.7'
+tomli==2.0.1
+tornado==6.4.1
+tqdm==4.66.3
+traitlets==5.4
 typing==3.6.1
-typing-extensions==3.10.0; python_version <= '3.6'
-typing-extensions==4.7.1; python_version >= '3.7'
+typing-extensions==4.7.1
 webencodings==0.5.1
-widgetsnbextension==1.2.6; python_version <= '3.6'
-widgetsnbextension==4.0.0; python_version >= '3.7'
+widgetsnbextension==4.0.0

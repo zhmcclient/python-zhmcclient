@@ -76,7 +76,7 @@ dependency_links = [req for req in requirements
 package_version = get_version(os.path.join('zhmcclient', '_version.py'))
 
 # Docs on setup():
-# * https://docs.python.org/2.7/distutils/apiref.html?
+# * https://docs.python.org/3.8/distutils/apiref.html?
 #   highlight=setup#distutils.core.setup
 # * https://setuptools.readthedocs.io/en/latest/setuptools.html#
 #   new-and-changed-setup-keywords
@@ -125,7 +125,7 @@ setuptools.setup(
     # Keep these Python versions in sync with:
     # - Section "Supported environments" in docs/intro.rst
     # - Version checking in zhmcclient/_version.py
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+    python_requires='>=3.8',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
@@ -133,12 +133,7 @@ setuptools.setup(
         'Intended Audience :: Information Technology',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',

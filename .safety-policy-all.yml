@@ -30,66 +30,22 @@ security:
     #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
     #     expires: {date}   # optional: Date when this ignore will expire
     ignore-vulnerabilities:
-        37504:
-            reason: Fixed Twine version requires Python>=3.6 and is used there
-        39621:
-            reason: Fixed Pylint version requires Python>=3.6 and is used there
-        40380:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
-        40381:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
-        40383:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
-        40384:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
-        40385:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
-        40386:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
-        42253:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
-        42254:
-            reason: Fixed Notebook version requires Python>=3.6 and is used there
         44634:
-            reason: Fixed Ipython version requires Python>=3.3 and is used there
-        45185:
-            reason: Fixed Pylint version requires Python>=3.6.2 and is used there
+            reason: Fixed ipython version 6.0.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
         50463:
-            reason: Fixed Ipywidgets version requires Python>=3.7 and is used there
+            reason: Fixed ipywidgets version 8.0.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
         50664:
-            reason: Fixed Ipywidgets version requires Python>=3.7 and is used there
+            reason: Fixed ipywidgets version 8.0.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
         50792:
-            reason: Fixed Nbconvert version requires Python>=3.7 and is used there
+            reason: Fixed nbconvert version 6.5.1 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
         51457:
             reason: Py package is no longer being fixed (latest version 1.11.0)
         53269:
-            reason: Fixed Ipython version 8.1.0 cannot be used without major work on dependencies; Risk is minimal since this is used only in development
-        54678:
-            reason: Fixed notebook version 5.7.8 only works on Python>=3.6 and is used there
-        54682:
-            reason: Fixed notebook version 5.5.0 only works on Python>=3.6 and is used there
-        54684:
-            reason: Fixed notebook version 6.4.12 requires Python>=3.7 and is used there
-        54687:
-            reason: Fixed pywin32 version 301 requires Python>=3.5 and is used there
-        54689:
-            reason: Fixed notebook version 5.7.11 only works on Python>=3.6 and is used there
-        54713:
-            reason: Fixed notebook version 6.4.10 requires Python>=3.6 and is used there
-        54717:
-            reason: Fixed jupyter-core version 4.11.2 requires Python>=3.7 and is used there
-        59071:
-            reason: Fixed tornado version 6.3.2 requires Python>=3.8 and is used there
-        61949:
-            reason: Fixed tornado version 6.3.3 requires Python>=3.8 and is used there
-        64227:
-            reason: Fixed Jinja2 version 3.1.3 requires Python>=3.7 and is used there
+            reason: Fixed ipython version 8.1.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
         68477:
-            reason: Fixed virtualenv version 20.21.0 requires Python>=3.7 and is used there
+            reason: Fixed virtualenv version 20.21.0 requires Python>=3.7 but is used only on Python>=3.12 due to other constraints
         70612:
             reason: Disputed issue in jinja2 version 3.1.3 - No known fix
-        70790:
-            reason: Fixed tqdm version 4.66.3 requires Python>=3.7 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False

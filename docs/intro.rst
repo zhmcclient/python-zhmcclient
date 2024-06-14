@@ -78,7 +78,7 @@ The zhmcclient package is supported in these environments:
 .. # - python_requires and classifiers in setup.py
 .. # - Version checking in zhmcclient/_version.py
 
-* Python versions: 2.7, 3.5, and higher 3.x
+* Python versions: 3.8 and higher
 
 * HMC versions: 2.11.1 and higher
 
@@ -548,7 +548,7 @@ Deprecated functionality is marked accordingly in this documentation and in the
 type :exc:`~py:exceptions.DeprecationWarning` (see :mod:`py:warnings` for
 details).
 
-Since Python 2.7, :exc:`~py:exceptions.DeprecationWarning` warnings are
+In Python, :exc:`~py:exceptions.DeprecationWarning` warnings are
 suppressed by default. They can be shown for example in any of these ways:
 
 * by specifying the Python command line option:
