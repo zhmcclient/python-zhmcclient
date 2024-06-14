@@ -17,8 +17,6 @@ HMC definition for zhmcclient end2end tests.
 """
 
 
-import six
-
 __all__ = ['HMCDefinition']
 
 

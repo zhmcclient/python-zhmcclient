@@ -20,9 +20,9 @@ Unit tests for _session module.
 import time
 import json
 import re
+from unittest import mock
 import requests
 import requests_mock
-from unittest import mock
 import pytest
 
 from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout, \

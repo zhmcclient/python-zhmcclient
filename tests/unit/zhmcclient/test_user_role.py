@@ -19,7 +19,6 @@ Unit tests for _user_role module.
 
 import re
 import copy
-import six
 import pytest
 
 from zhmcclient import Client, HTTPError, NotFound, BaseResource, UserRole

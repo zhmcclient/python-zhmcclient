@@ -31,7 +31,6 @@ try:
 except ImportError:
     # pylint: disable=deprecated-class
     from collections.abc import Iterable
-import six
 import requests
 import urllib3
 

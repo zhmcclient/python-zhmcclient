@@ -18,7 +18,6 @@ Unit tests for _exceptions module.
 
 
 import re
-import six
 import pytest
 
 from zhmcclient import Error, ConnectTimeout, ReadTimeout, \

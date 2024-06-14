@@ -26,7 +26,6 @@ except ImportError:
 import re
 import copy
 from dateutil import tz
-import six
 from immutable_views import DictView
 
 from zhmcclient._utils import repr_dict, repr_manager, repr_list, \

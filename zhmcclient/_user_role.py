@@ -25,7 +25,6 @@ with the HMC.
 
 
 import copy
-import six
 
 from ._manager import BaseManager
 from ._resource import BaseResource
