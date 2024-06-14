@@ -16,7 +16,6 @@
 Example unit test for a user of the zhmcclient package.
 """
 
-from __future__ import absolute_import, print_function
 
 from requests.packages import urllib3
 

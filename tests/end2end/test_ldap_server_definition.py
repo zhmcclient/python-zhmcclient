@@ -19,7 +19,6 @@ These tests do not change any existing LDAP server definitions, but create,
 modify and delete test LDAP server definitions.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -171,14 +170,14 @@ def test_ldapsrvdef_crud(hmc_session):  # noqa: F811
 
     for pn, exp_value in ldapsrvdef_input_props.items():
         assert ldapsrvdef.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     ldapsrvdef.pull_full_properties()
     for pn, exp_value in ldapsrvdef_input_props.items():
         assert ldapsrvdef.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     for pn, exp_value in ldapsrvdef_auto_props.items():
         assert ldapsrvdef.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
 
     # Test updating a property of the LDAP server definition
 

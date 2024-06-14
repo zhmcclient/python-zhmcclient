@@ -18,7 +18,6 @@ relevant for the `zhmcclient` package. The faked HMC is implemented as a
 local Python object and maintains its resource state across operations.
 """
 
-from __future__ import absolute_import
 
 try:
     from collections import OrderedDict
@@ -310,10 +309,10 @@ class InputError(Exception):
 
     def __init__(self, message):
         # pylint: disable=useless-super-delegation
-        super(InputError, self).__init__(message)
+        super().__init__(message)
 
 
-class FakedBaseResource(object):
+class FakedBaseResource:
     """
     A base class for faked resource classes in the faked HMC.
     """
@@ -562,7 +561,7 @@ class FakedBaseResource(object):
                                          grandchild_list)
 
 
-class FakedBaseManager(object):
+class FakedBaseManager:
     """
     A base class for manager classes for faked resources in the faked HMC.
     """
@@ -700,7 +699,7 @@ class FakedBaseManager(object):
             if prop_name not in obj.properties:
                 return False
             prop_value = obj.properties[prop_name]
-            if isinstance(prop_value, six.string_types):
+            if isinstance(prop_value, str):
                 # HMC resource property is Enum String or (non-enum) String,
                 # and is both matched by regexp matching. Ideally, regexp
                 # matching should only be done for non-enum strings, but
@@ -884,7 +883,7 @@ class FakedHmc(FakedBaseResource):
     """
 
     def __init__(self, session, hmc_name, hmc_version, api_version):
-        super(FakedHmc, self).__init__(manager=None, properties=None)
+        super().__init__(manager=None, properties=None)
         self._session = session
         self.hmc_name = hmc_name
         self.hmc_version = hmc_version
@@ -1032,7 +1031,7 @@ class FakedHmc(FakedBaseResource):
         """
         if session_id in self._valid_session_ids:
             raise ValueError(
-                "Session ID {} already exists".format(session_id))
+                f"Session ID {session_id} already exists")
 
         self._valid_session_ids.add(session_id)
 
@@ -1053,7 +1052,7 @@ class FakedHmc(FakedBaseResource):
         try:
             self._valid_session_ids.remove(session_id)
         except KeyError:
-            raise ValueError("Session ID {} does not exist".format(session_id))
+            raise ValueError(f"Session ID {session_id} does not exist")
 
     def lookup_by_uri(self, uri):
         """
@@ -1104,7 +1103,7 @@ class FakedConsoleManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, client):
-        super(FakedConsoleManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=client,
             resource_class=FakedConsole,
@@ -1145,7 +1144,7 @@ class FakedConsoleManager(FakedBaseManager):
         Returns:
           :class:`~zhmcclient_mock.FakedConsole`: The faked Console resource.
         """
-        return super(FakedConsoleManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedConsole(FakedBaseResource):
@@ -1158,7 +1157,7 @@ class FakedConsole(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedConsole, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         self._storage_groups = FakedStorageGroupManager(
@@ -1300,7 +1299,7 @@ class FakedUserManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedUserManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedUser,
@@ -1335,7 +1334,7 @@ class FakedUserManager(FakedBaseManager):
         Returns:
           :class:`~zhmcclient_mock.FakedUser`: The faked User resource.
         """
-        new_user = super(FakedUserManager, self).add(properties)
+        new_user = super().add(properties)
 
         # Resource type specific default values
         if 'disabled' not in new_user.properties:
@@ -1354,7 +1353,7 @@ class FakedUser(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedUser, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -1369,7 +1368,7 @@ class FakedUserRoleManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedUserRoleManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedUserRole,
@@ -1407,7 +1406,7 @@ class FakedUserRoleManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedUserRole`: The faked User Role
           resource.
         """
-        new_user_role = super(FakedUserRoleManager, self).add(properties)
+        new_user_role = super().add(properties)
 
         # Resource type specific default values
         if 'type' not in new_user_role.properties:
@@ -1428,7 +1427,7 @@ class FakedUserRole(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedUserRole, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -1443,7 +1442,7 @@ class FakedUserPatternManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedUserPatternManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedUserPattern,
@@ -1477,7 +1476,7 @@ class FakedUserPatternManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedUserPattern`: The faked User Pattern
           resource.
         """
-        return super(FakedUserPatternManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedUserPattern(FakedBaseResource):
@@ -1490,7 +1489,7 @@ class FakedUserPattern(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedUserPattern, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -1505,7 +1504,7 @@ class FakedPasswordRuleManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedPasswordRuleManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedPasswordRule,
@@ -1543,7 +1542,7 @@ class FakedPasswordRuleManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedPasswordRule`: The faked Password Rule
           resource.
         """
-        new_pwrule = super(FakedPasswordRuleManager, self).add(properties)
+        new_pwrule = super().add(properties)
 
         # Resource type specific default values
         if 'min-length' not in new_pwrule.properties:
@@ -1564,7 +1563,7 @@ class FakedPasswordRule(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedPasswordRule, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -1579,7 +1578,7 @@ class FakedTaskManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedTaskManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedTask,
@@ -1611,7 +1610,7 @@ class FakedTaskManager(FakedBaseManager):
         Returns:
           :class:`~zhmcclient_mock.FakedTask`: The faked Task resource.
         """
-        return super(FakedTaskManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedTask(FakedBaseResource):
@@ -1624,7 +1623,7 @@ class FakedTask(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedTask, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -1639,7 +1638,7 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedLdapServerDefinitionManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedLdapServerDefinition,
@@ -1675,7 +1674,7 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedLdapServerDefinition`: The faked
           LdapServerDefinition resource.
         """
-        new_lsd = super(FakedLdapServerDefinitionManager, self).add(properties)
+        new_lsd = super().add(properties)
 
         # Resource type specific default values
         new_lsd.properties.setdefault('description', '')
@@ -1704,7 +1703,7 @@ class FakedLdapServerDefinition(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedLdapServerDefinition, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -1721,7 +1720,7 @@ class FakedActivationProfileManager(FakedBaseManager):
     def __init__(self, hmc, cpc, profile_type):
         ap_uri_segment = profile_type + '-activation-profiles'
         ap_class_value = profile_type + '-activation-profile'
-        super(FakedActivationProfileManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=cpc,
             resource_class=FakedActivationProfile,
@@ -1756,7 +1755,7 @@ class FakedActivationProfileManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedActivationProfile`: The faked
             Activation Profile resource.
         """
-        return super(FakedActivationProfileManager, self).add(properties)
+        return super().add(properties)
 
     @property
     def profile_type(self):
@@ -1776,7 +1775,7 @@ class FakedActivationProfile(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedActivationProfile, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -1791,7 +1790,7 @@ class FakedAdapterManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, cpc):
-        super(FakedAdapterManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=cpc,
             resource_class=FakedAdapter,
@@ -1835,7 +1834,7 @@ class FakedAdapterManager(FakedBaseManager):
           :exc:`zhmcclient_mock.InputError`: Some issue with the input
             properties.
         """
-        return super(FakedAdapterManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedAdapter(FakedBaseResource):
@@ -1848,7 +1847,7 @@ class FakedAdapter(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedAdapter, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         # Initial values to be prepared for raising InputError
@@ -1964,7 +1963,7 @@ class FakedCpcManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, client):
-        super(FakedCpcManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=client,
             resource_class=FakedCpc,
@@ -2001,7 +2000,7 @@ class FakedCpcManager(FakedBaseManager):
         Returns:
           :class:`~zhmcclient_mock.FakedCpc`: The faked CPC resource.
         """
-        return super(FakedCpcManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedCpc(FakedBaseResource):
@@ -2014,7 +2013,7 @@ class FakedCpc(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedCpc, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         self._lpars = FakedLparManager(hmc=manager.hmc, cpc=self)
@@ -2168,7 +2167,7 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedUnmanagedCpcManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedUnmanagedCpc,
@@ -2199,7 +2198,7 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedUnmanagedCpc`: The faked unmanaged CPC
           resource.
         """
-        return super(FakedUnmanagedCpcManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedUnmanagedCpc(FakedBaseResource):
@@ -2212,7 +2211,7 @@ class FakedUnmanagedCpc(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedUnmanagedCpc, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -2249,7 +2248,7 @@ class FakedGroupManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedGroupManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedGroup,
@@ -2281,7 +2280,7 @@ class FakedGroupManager(FakedBaseManager):
         Returns:
           :class:`~zhmcclient_mock.FakedGroup`: The faked Group resource.
         """
-        new_group = super(FakedGroupManager, self).add(properties)
+        new_group = super().add(properties)
 
         # Set optional properties to their defaults
         new_group.properties.setdefault('description', '')
@@ -2300,7 +2299,7 @@ class FakedGroup(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedGroup, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -2337,7 +2336,7 @@ class FakedHbaManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, partition):
-        super(FakedHbaManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=partition,
             resource_class=FakedHba,
@@ -2381,7 +2380,7 @@ class FakedHbaManager(FakedBaseManager):
           :exc:`zhmcclient_mock.InputError`: Some issue with the input
             properties.
         """
-        new_hba = super(FakedHbaManager, self).add(properties)
+        new_hba = super().add(properties)
 
         partition = self.parent
 
@@ -2424,7 +2423,7 @@ class FakedHbaManager(FakedBaseManager):
         assert 'hba-uris' in partition.properties
         hba_uris = partition.properties['hba-uris']
         hba_uris.remove(hba.uri)
-        super(FakedHbaManager, self).remove(oid)  # deletes the resource
+        super().remove(oid)  # deletes the resource
 
 
 class FakedHba(FakedBaseResource):
@@ -2437,7 +2436,7 @@ class FakedHba(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedHba, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -2452,7 +2451,7 @@ class FakedLparManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, cpc):
-        super(FakedLparManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=cpc,
             resource_class=FakedLpar,
@@ -2485,7 +2484,7 @@ class FakedLparManager(FakedBaseManager):
         Returns:
           :class:`~zhmcclient_mock.FakedLpar`: The faked LPAR resource.
         """
-        return super(FakedLparManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedLpar(FakedBaseResource):
@@ -2498,7 +2497,7 @@ class FakedLpar(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedLpar, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         if 'status' not in self._properties:
@@ -2515,7 +2514,7 @@ class FakedNicManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, partition):
-        super(FakedNicManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=partition,
             resource_class=FakedNic,
@@ -2567,7 +2566,7 @@ class FakedNicManager(FakedBaseManager):
           :exc:`zhmcclient_mock.InputError`: Some issue with the input
             properties.
         """
-        new_nic = super(FakedNicManager, self).add(properties)
+        new_nic = super().add(properties)
 
         partition = self.parent
 
@@ -2627,7 +2626,7 @@ class FakedNicManager(FakedBaseManager):
         assert 'nic-uris' in partition.properties
         nic_uris = partition.properties['nic-uris']
         nic_uris.remove(nic.uri)
-        super(FakedNicManager, self).remove(oid)  # deletes the resource
+        super().remove(oid)  # deletes the resource
 
 
 class FakedNic(FakedBaseResource):
@@ -2640,7 +2639,7 @@ class FakedNic(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedNic, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -2655,7 +2654,7 @@ class FakedPartitionManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, cpc):
-        super(FakedPartitionManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=cpc,
             resource_class=FakedPartition,
@@ -2701,7 +2700,7 @@ class FakedPartitionManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedPartition`: The faked Partition
             resource.
         """
-        return super(FakedPartitionManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedPartition(FakedBaseResource):
@@ -2719,7 +2718,7 @@ class FakedPartition(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedPartition, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         if 'hba-uris' not in self._properties:
@@ -2808,7 +2807,7 @@ class FakedPartition(FakedBaseResource):
           ValueError: No more device numbers available in that range.
         """
         devno_int = self._devno_pool.alloc()
-        devno = "{:04X}".format(devno_int)
+        devno = f"{devno_int:04X}"
         return devno
 
     def devno_free(self, devno):
@@ -2852,7 +2851,7 @@ class FakedPartition(FakedBaseResource):
           ValueError: No more WWPNs available in that range.
         """
         wwpn_int = self._wwpn_pool.alloc()
-        wwpn = "AFFEAFFE0000" + "{:04X}".format(wwpn_int)
+        wwpn = "AFFEAFFE0000" + f"{wwpn_int:04X}"
         return wwpn
 
     def wwpn_free(self, wwpn):
@@ -2906,7 +2905,7 @@ class FakedPortManager(FakedBaseManager):
             raise AssertionError("FakedAdapter with object-id={} must be a "
                                  "storage or network adapter to have ports."
                                  .format(adapter.oid))
-        super(FakedPortManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=adapter,
             resource_class=FakedPort,
@@ -2941,7 +2940,7 @@ class FakedPortManager(FakedBaseManager):
         Returns:
           :class:`zhmcclient_mock.FakedPort`: The faked Port resource.
         """
-        new_port = super(FakedPortManager, self).add(properties)
+        new_port = super().add(properties)
         adapter = self.parent
         if 'network-port-uris' in adapter.properties:
             adapter.properties['network-port-uris'].append(new_port.uri)
@@ -2970,7 +2969,7 @@ class FakedPortManager(FakedBaseManager):
         if 'storage-port-uris' in adapter.properties:
             port_uris = adapter.properties['storage-port-uris']
             port_uris.remove(port.uri)
-        super(FakedPortManager, self).remove(oid)  # deletes the resource
+        super().remove(oid)  # deletes the resource
 
 
 class FakedPort(FakedBaseResource):
@@ -2983,7 +2982,7 @@ class FakedPort(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedPort, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -2998,7 +2997,7 @@ class FakedVirtualFunctionManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, partition):
-        super(FakedVirtualFunctionManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=partition,
             resource_class=FakedVirtualFunction,
@@ -3037,7 +3036,7 @@ class FakedVirtualFunctionManager(FakedBaseManager):
           :class:`zhmcclient_mock.FakedVirtualFunction`: The faked Virtual
             Function resource.
         """
-        new_vf = super(FakedVirtualFunctionManager, self).add(properties)
+        new_vf = super().add(properties)
         partition = self.parent
         assert 'virtual-function-uris' in partition.properties
         partition.properties['virtual-function-uris'].append(new_vf.uri)
@@ -3067,7 +3066,7 @@ class FakedVirtualFunctionManager(FakedBaseManager):
         assert 'virtual-function-uris' in partition.properties
         vf_uris = partition.properties['virtual-function-uris']
         vf_uris.remove(virtual_function.uri)
-        super(FakedVirtualFunctionManager, self).remove(oid)  # deletes res.
+        super().remove(oid)  # deletes res.
 
 
 class FakedVirtualFunction(FakedBaseResource):
@@ -3080,7 +3079,7 @@ class FakedVirtualFunction(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedVirtualFunction, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -3095,7 +3094,7 @@ class FakedVirtualSwitchManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, cpc):
-        super(FakedVirtualSwitchManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=cpc,
             resource_class=FakedVirtualSwitch,
@@ -3130,7 +3129,7 @@ class FakedVirtualSwitchManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedVirtualSwitch`: The faked Virtual
             Switch resource.
         """
-        return super(FakedVirtualSwitchManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedVirtualSwitch(FakedBaseResource):
@@ -3143,7 +3142,7 @@ class FakedVirtualSwitch(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedVirtualSwitch, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         if 'connected-vnic-uris' not in self._properties:
@@ -3160,7 +3159,7 @@ class FakedStorageGroupManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, console):
-        super(FakedStorageGroupManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=console,
             resource_class=FakedStorageGroup,
@@ -3196,7 +3195,7 @@ class FakedStorageGroupManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedStorageGroup`: The faked StorageGroup
             resource.
         """
-        return super(FakedStorageGroupManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedStorageGroup(FakedBaseResource):
@@ -3209,7 +3208,7 @@ class FakedStorageGroup(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedStorageGroup, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         if 'storage-volume-uris' not in self._properties:
@@ -3262,7 +3261,7 @@ class FakedStorageVolumeManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, storage_group):
-        super(FakedStorageVolumeManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=storage_group,
             resource_class=FakedStorageVolume,
@@ -3297,7 +3296,7 @@ class FakedStorageVolumeManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedStorageVolume`: The faked StorageVolume
             resource.
         """
-        stovol = super(FakedStorageVolumeManager, self).add(properties)
+        stovol = super().add(properties)
         stogrp = stovol.manager.parent
         if stovol.uri not in stogrp.properties['storage-volume-uris']:
             stogrp.properties['storage-volume-uris'].append(stovol.uri)
@@ -3314,7 +3313,7 @@ class FakedStorageVolume(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedStorageVolume, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
 
@@ -3351,7 +3350,7 @@ class FakedCapacityGroupManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, cpc):
-        super(FakedCapacityGroupManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=cpc,
             resource_class=FakedCapacityGroup,
@@ -3386,7 +3385,7 @@ class FakedCapacityGroupManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedCapacityGroup`: The faked CapacityGroup
             resource.
         """
-        return super(FakedCapacityGroupManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedCapacityGroup(FakedBaseResource):
@@ -3399,7 +3398,7 @@ class FakedCapacityGroup(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedCapacityGroup, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         if 'capping-enabled' not in self._properties:
@@ -3490,7 +3489,7 @@ class FakedMetricsContextManager(FakedBaseManager):
     """
 
     def __init__(self, hmc, client):
-        super(FakedMetricsContextManager, self).__init__(
+        super().__init__(
             hmc=hmc,
             parent=client,
             resource_class=FakedMetricsContext,
@@ -3522,7 +3521,7 @@ class FakedMetricsContextManager(FakedBaseManager):
           :class:`~zhmcclient_mock.FakedMetricsContext`: The faked Metrics
           Context resource.
         """
-        return super(FakedMetricsContextManager, self).add(properties)
+        return super().add(properties)
 
 
 class FakedMetricsContext(FakedBaseResource):
@@ -3568,7 +3567,7 @@ class FakedMetricsContext(FakedBaseResource):
     """
 
     def __init__(self, manager, properties):
-        super(FakedMetricsContext, self).__init__(
+        super().__init__(
             manager=manager,
             properties=properties)
         assert 'anticipated-frequency-seconds' in properties
@@ -3670,16 +3669,16 @@ class FakedMetricsContext(FakedBaseResource):
         resp_lines = []
         for mv in mv_list:
             group_name = mv[0]
-            resp_lines.append('"{}"'.format(group_name))
+            resp_lines.append(f'"{group_name}"')
             mo_vals = mv[1]
             for mo_val in mo_vals:
-                resp_lines.append('"{}"'.format(mo_val.resource_uri))
+                resp_lines.append(f'"{mo_val.resource_uri}"')
                 resp_lines.append(
                     str(timestamp_from_datetime(mo_val.timestamp)))
                 v_list = []
                 for _, v in mo_val.values:
-                    if isinstance(v, six.string_types):
-                        v_str = '"{}"'.format(v)
+                    if isinstance(v, str):
+                        v_str = f'"{v}"'
                     else:
                         v_str = str(v)
                     v_list.append(v_str)
@@ -3691,7 +3690,7 @@ class FakedMetricsContext(FakedBaseResource):
         return '\n'.join(resp_lines) + '\n'
 
 
-class FakedMetricGroupDefinition(object):
+class FakedMetricGroupDefinition:
     # pylint: disable=too-few-public-methods
     """
     A faked metric group definition (of one metric group).
@@ -3746,7 +3745,7 @@ class FakedMetricGroupDefinition(object):
         return ret
 
 
-class FakedMetricObjectValues(object):
+class FakedMetricObjectValues:
     # pylint: disable=too-few-public-methods
     """
     Faked metric values for one resource and one metric group.

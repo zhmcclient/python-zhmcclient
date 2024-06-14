@@ -23,7 +23,6 @@ methods that can be mocked in order to provoke non-standard behavior in
 the handling of the HTTP methods.
 """
 
-from __future__ import absolute_import
 
 import re
 import time
@@ -64,7 +63,7 @@ class HTTPError(Exception):
     """
 
     def __init__(self, method, uri, http_status, reason, message):
-        super(HTTPError, self).__init__()
+        super().__init__()
         self.method = method
         self.uri = uri
         self.http_status = http_status
@@ -92,7 +91,7 @@ class ConnectionError(Exception):
     """
 
     def __init__(self, message):
-        super(ConnectionError, self).__init__()
+        super().__init__()
         self.message = message
 
 
@@ -104,12 +103,12 @@ class InvalidResourceError(HTTPError):
     def __init__(self, method, uri, handler_class=None, reason=1,
                  resource_uri=None):
         if handler_class is not None:
-            handler_txt = " (handler class {})".format(handler_class.__name__)
+            handler_txt = f" (handler class {handler_class.__name__})"
         else:
             handler_txt = ""
         if not resource_uri:
             resource_uri = uri
-        super(InvalidResourceError, self).__init__(
+        super().__init__(
             method, uri,
             http_status=404,
             reason=reason,
@@ -124,10 +123,10 @@ class InvalidMethodError(HTTPError):
 
     def __init__(self, method, uri, handler_class=None):
         if handler_class is not None:
-            handler_txt = "handler class {}".format(handler_class.__name__)
+            handler_txt = f"handler class {handler_class.__name__}"
         else:
             handler_txt = "no handler class"
-        super(InvalidMethodError, self).__init__(
+        super().__init__(
             method, uri,
             http_status=404,
             reason=1,
@@ -141,7 +140,7 @@ class BadRequestError(HTTPError):
     """
 
     def __init__(self, method, uri, reason, message):
-        super(BadRequestError, self).__init__(
+        super().__init__(
             method, uri,
             http_status=400,
             reason=reason,
@@ -154,7 +153,7 @@ class ConflictError(HTTPError):
     """
 
     def __init__(self, method, uri, reason, message):
-        super(ConflictError, self).__init__(
+        super().__init__(
             method, uri,
             http_status=409,
             reason=reason,
@@ -177,9 +176,9 @@ class CpcNotInDpmError(ConflictError):
     """
 
     def __init__(self, method, uri, cpc):
-        super(CpcNotInDpmError, self).__init__(
+        super().__init__(
             method, uri, reason=5,
-            message="CPC is not in DPM mode: {}".format(cpc.uri))
+            message=f"CPC is not in DPM mode: {cpc.uri}")
 
 
 class CpcInDpmError(ConflictError):
@@ -197,9 +196,9 @@ class CpcInDpmError(ConflictError):
     """
 
     def __init__(self, method, uri, cpc):
-        super(CpcInDpmError, self).__init__(
+        super().__init__(
             method, uri, reason=4,
-            message="CPC is in DPM mode: {}".format(cpc.uri))
+            message=f"CPC is in DPM mode: {cpc.uri}")
 
 
 class ServerError(HTTPError):
@@ -208,7 +207,7 @@ class ServerError(HTTPError):
     """
 
     def __init__(self, method, uri, reason, message):
-        super(ServerError, self).__init__(
+        super().__init__(
             method, uri,
             http_status=500,
             reason=reason,
@@ -221,7 +220,7 @@ class MockedResourceError(Exception):
     """
 
     def __init__(self, message):
-        super(MockedResourceError, self).__init__()
+        super().__init__()
         self.message = message
 
 
@@ -405,7 +404,7 @@ def check_writable(method, uri, body, writeable):
         if prop not in writeable:
             raise BadRequestError(
                 method, uri, reason=6,
-                message="Property is not writable: {!r}".format(prop))
+                message=f"Property is not writable: {prop!r}")
 
 
 def check_set_noninput(method, uri, properties, prop_name, prop_value):
@@ -444,7 +443,7 @@ def check_invalid_query_parms(method, uri, query_parms, valid_query_parms):
         raise new_exc  # zhmcclient_mock.BadRequestError
 
 
-class UriHandler(object):
+class UriHandler:
     """
     Handle HTTP methods against a set of known URIs and invoke respective
     handlers.
@@ -505,7 +504,7 @@ class UriHandler(object):
         handler_class.delete('DELETE', hmc, uri, uri_parms, logon_required)
 
 
-class GenericGetPropertiesHandler(object):
+class GenericGetPropertiesHandler:
     """
     Handler class for generic get of resource properties.
     """
@@ -552,7 +551,7 @@ class GenericGetPropertiesHandler(object):
         return dict(resource.properties)
 
 
-class GenericUpdatePropertiesHandler(object):
+class GenericUpdatePropertiesHandler:
     """
     Handler class for generic update of resource properties.
     """
@@ -572,7 +571,7 @@ class GenericUpdatePropertiesHandler(object):
         resource.update(body)
 
 
-class GenericDeleteHandler(object):
+class GenericDeleteHandler:
     """
     Handler class for generic delete of a resource.
     """
@@ -590,7 +589,7 @@ class GenericDeleteHandler(object):
         resource.manager.remove(resource.oid)
 
 
-class VersionHandler(object):
+class VersionHandler:
     """
     Handler class for operation: Get version.
     """
@@ -608,7 +607,7 @@ class VersionHandler(object):
         }
 
 
-class SessionsHandler(object):
+class SessionsHandler:
     """
     Handler class for session operations.
     """
@@ -636,7 +635,7 @@ class SessionsHandler(object):
         return result
 
 
-class ThisSessionHandler(object):
+class ThisSessionHandler:
     """
     Handler class for session operations.
     """
@@ -659,7 +658,7 @@ class ConsoleHandler(GenericGetPropertiesHandler):
     valid_query_parms_get = ['properties']
 
 
-class ConsoleRestartHandler(object):
+class ConsoleRestartHandler:
     """
     Handler class for Console operation: Restart Console.
     """
@@ -684,7 +683,7 @@ class ConsoleRestartHandler(object):
         # not visible for the caller of FakedSession (or Session).
 
 
-class ConsoleShutdownHandler(object):
+class ConsoleShutdownHandler:
     """
     Handler class for Console operation: Shutdown Console.
     """
@@ -707,7 +706,7 @@ class ConsoleShutdownHandler(object):
         # not visible for the caller of FakedSession (or Session).
 
 
-class ConsoleMakePrimaryHandler(object):
+class ConsoleMakePrimaryHandler:
     """
     Handler class for Console operation: Make Console Primary.
     """
@@ -729,7 +728,7 @@ class ConsoleMakePrimaryHandler(object):
         # it is primary or alternate.
 
 
-class ConsoleReorderUserPatternsHandler(object):
+class ConsoleReorderUserPatternsHandler:
     """
     Handler class for Console operation: Reorder User Patterns.
     """
@@ -760,7 +759,7 @@ class ConsoleReorderUserPatternsHandler(object):
             console.user_patterns.add(obj.properties)  # append to end
 
 
-class ConsoleGetAuditLogHandler(object):
+class ConsoleGetAuditLogHandler:
     """
     Handler class for Console operation: Get Console Audit Log.
     """
@@ -781,7 +780,7 @@ class ConsoleGetAuditLogHandler(object):
         return resp
 
 
-class ConsoleGetSecurityLogHandler(object):
+class ConsoleGetSecurityLogHandler:
     """
     Handler class for Console operation: Get Console Security Log.
     """
@@ -802,7 +801,7 @@ class ConsoleGetSecurityLogHandler(object):
         return resp
 
 
-class ConsoleListUnmanagedCpcsHandler(object):
+class ConsoleListUnmanagedCpcsHandler:
     """
     Handler class for Console operation: List Unmanaged CPCs.
     """
@@ -834,7 +833,7 @@ class ConsoleListUnmanagedCpcsHandler(object):
         return {'cpcs': result_ucpcs}
 
 
-class ConsoleListPermittedPartitionsHandler(object):
+class ConsoleListPermittedPartitionsHandler:
     """
     Handler class for Console operation: List Permitted Partitions (DPM).
     """
@@ -883,7 +882,7 @@ class ConsoleListPermittedPartitionsHandler(object):
         return {'partitions': result_partitions}
 
 
-class ConsoleListPermittedLparsHandler(object):
+class ConsoleListPermittedLparsHandler:
     """
     Handler class for Console operation: List Permitted LPARs (classic).
     """
@@ -941,7 +940,7 @@ class ConsoleListPermittedLparsHandler(object):
         return {'logical-partitions': result_lpars}
 
 
-class UsersHandler(object):
+class UsersHandler:
     """
     Handler class for HTTP methods on set of User resources.
     """
@@ -1025,7 +1024,7 @@ class UsersHandler(object):
         else:
             raise BadRequestError(
                 method, uri, reason=4,
-                message="Invalid authentication-type: {!r}".format(auth_type))
+                message=f"Invalid authentication-type: {auth_type!r}")
 
         user_type = properties['type']
         if user_type == 'standard':
@@ -1042,7 +1041,7 @@ class UsersHandler(object):
         else:
             raise BadRequestError(
                 method, uri, reason=4,
-                message="Invalid user type: {!r}".format(user_type))
+                message=f"Invalid user type: {user_type!r}")
 
         new_user = console.users.add(properties)
         return {'object-uri': new_user.uri}
@@ -1124,7 +1123,7 @@ class UserHandler(GenericGetPropertiesHandler):
         user.manager.remove(user.oid)
 
 
-class UserAddUserRoleHandler(object):
+class UserAddUserRoleHandler:
     """
     Handler class for operation: Add User Role to User.
     """
@@ -1162,7 +1161,7 @@ class UserAddUserRoleHandler(object):
         user.properties['user-roles'].append(user_role_uri)
 
 
-class UserRemoveUserRoleHandler(object):
+class UserRemoveUserRoleHandler:
     """
     Handler class for operation: Remove User Role from User.
     """
@@ -1204,7 +1203,7 @@ class UserRemoveUserRoleHandler(object):
         user.properties['user-roles'].remove(user_role_uri)
 
 
-class UserRolesHandler(object):
+class UserRolesHandler:
     """
     Handler class for HTTP methods on set of UserRole resources.
     """
@@ -1309,7 +1308,7 @@ class UserRoleHandler(GenericGetPropertiesHandler,
     # TODO: Add delete() for Delete UserRole that rejects system-defined type
 
 
-class UserRoleAddPermissionHandler(object):
+class UserRoleAddPermissionHandler:
     """
     Handler class for operation: Add Permission to User Role.
     """
@@ -1347,7 +1346,7 @@ class UserRoleAddPermissionHandler(object):
         user_role.properties['permissions'].append(permission)
 
 
-class UserRoleRemovePermissionHandler(object):
+class UserRoleRemovePermissionHandler:
     """
     Handler class for operation: Remove Permission from User Role.
     """
@@ -1384,7 +1383,7 @@ class UserRoleRemovePermissionHandler(object):
             user_role.properties['permissions'].remove(permission)
 
 
-class TasksHandler(object):
+class TasksHandler:
     """
     Handler class for HTTP methods on set of Task resources.
     """
@@ -1423,7 +1422,7 @@ class TaskHandler(GenericGetPropertiesHandler):
     pass
 
 
-class UserPatternsHandler(object):
+class UserPatternsHandler:
     """
     Handler class for HTTP methods on set of UserPattern resources.
     """
@@ -1482,7 +1481,7 @@ class UserPatternHandler(GenericGetPropertiesHandler,
     pass
 
 
-class PasswordRulesHandler(object):
+class PasswordRulesHandler:
     """
     Handler class for HTTP methods on set of PasswordRule resources.
     """
@@ -1580,7 +1579,7 @@ class PasswordRuleHandler(GenericGetPropertiesHandler,
         pw_rule.update(body)
 
 
-class LdapServerDefinitionsHandler(object):
+class LdapServerDefinitionsHandler:
     """
     Handler class for HTTP methods on set of LdapServerDefinition resources.
     """
@@ -1668,7 +1667,7 @@ class LdapServerDefinitionHandler(GenericGetPropertiesHandler,
         lsd.update(body)
 
 
-class CpcsHandler(object):
+class CpcsHandler:
     """
     Handler class for HTTP methods on set of Cpc resources.
     """
@@ -1703,7 +1702,7 @@ class CpcHandler(GenericGetPropertiesHandler,
     valid_query_parms_get = ['properties', 'cached-acceptable', 'group-uri']
 
 
-class CpcSetPowerSaveHandler(object):
+class CpcSetPowerSaveHandler:
     """
     Handler class for operation: Set CPC Power Save.
     """
@@ -1735,7 +1734,7 @@ class CpcSetPowerSaveHandler(object):
         cpc.properties['zcpc-power-saving-state'] = power_saving
 
 
-class CpcSetPowerCappingHandler(object):
+class CpcSetPowerCappingHandler:
     """
     Handler class for operation: Set CPC Power Capping.
     """
@@ -1774,7 +1773,7 @@ class CpcSetPowerCappingHandler(object):
         cpc.properties['zcpc-power-cap-current'] = power_cap_current
 
 
-class CpcGetEnergyManagementDataHandler(object):
+class CpcGetEnergyManagementDataHandler:
     """
     Handler class for operation: Get CPC Energy Management Data.
     """
@@ -1863,7 +1862,7 @@ class CpcGetEnergyManagementDataHandler(object):
         return result
 
 
-class CpcStartHandler(object):
+class CpcStartHandler:
     """
     Handler class for operation: Start CPC (DPM mode).
     """
@@ -1886,7 +1885,7 @@ class CpcStartHandler(object):
         cpc.properties['status'] = 'active'
 
 
-class CpcStopHandler(object):
+class CpcStopHandler:
     """
     Handler class for operation: Stop CPC (DPM mode).
     """
@@ -1909,7 +1908,7 @@ class CpcStopHandler(object):
         cpc.properties['status'] = 'not-operating'
 
 
-class CpcActivateHandler(object):
+class CpcActivateHandler:
     """
     Handler class for operation: Activate CPC (classic mode)
     """
@@ -1950,7 +1949,7 @@ class CpcActivateHandler(object):
         # TODO: Set last-used-iocds from profile
 
 
-class CpcDeactivateHandler(object):
+class CpcDeactivateHandler:
     """
     Handler class for operation: Deactivate CPC (classic mode).
     """
@@ -1987,7 +1986,7 @@ class CpcDeactivateHandler(object):
         cpc.properties['status'] = 'no-power'
 
 
-class CpcImportProfilesHandler(object):
+class CpcImportProfilesHandler:
     """
     Handler class for operation: Import Profiles.
     """
@@ -2011,7 +2010,7 @@ class CpcImportProfilesHandler(object):
         # TODO: Import the CPC profiles from a simulated profile area
 
 
-class CpcExportProfilesHandler(object):
+class CpcExportProfilesHandler:
     """
     Handler class for operation: Export Profiles.
     """
@@ -2035,7 +2034,7 @@ class CpcExportProfilesHandler(object):
         # TODO: Export the CPC profiles to a simulated profile area
 
 
-class CpcExportPortNamesListHandler(object):
+class CpcExportPortNamesListHandler:
     """
     Handler class for operation: Export WWPN List.
     """
@@ -2099,7 +2098,7 @@ CPC_PROPNAME_FROM_PROCTYPE = {
 }
 
 
-class CpcAddTempCapacityHandler(object):
+class CpcAddTempCapacityHandler:
     """
     Handler class for operation: Add Temporary Capacity.
     """
@@ -2163,7 +2162,7 @@ class CpcAddTempCapacityHandler(object):
                     cpc.properties[pname] += psteps
 
 
-class CpcRemoveTempCapacityHandler(object):
+class CpcRemoveTempCapacityHandler:
     """
     Handler class for operation: Remove Temporary Capacity.
     """
@@ -2230,7 +2229,7 @@ class CpcRemoveTempCapacityHandler(object):
                     cpc.properties[pname] -= psteps
 
 
-class CpcSetAutoStartListHandler(object):
+class CpcSetAutoStartListHandler:
     """
     Handler class for operation: Set Auto-start List.
     """
@@ -2254,7 +2253,7 @@ class CpcSetAutoStartListHandler(object):
         cpc.properties['auto-start-list'] = auto_start_list
 
 
-class GroupsHandler(object):
+class GroupsHandler:
     """
     Handler class for HTTP methods on set of Group resources.
     """
@@ -2334,7 +2333,7 @@ class GroupHandler(GenericGetPropertiesHandler):
         group.manager.remove(group.oid)
 
 
-class GroupAddMemberHandler(object):
+class GroupAddMemberHandler:
     """
     Handler class for operation: Add Member to Custom Group.
     """
@@ -2366,7 +2365,7 @@ class GroupAddMemberHandler(object):
         group.properties['members'].append(object_uri)
 
 
-class GroupRemoveMemberHandler(object):
+class GroupRemoveMemberHandler:
     """
     Handler class for operation: Remove Member from Custom Group.
     """
@@ -2398,7 +2397,7 @@ class GroupRemoveMemberHandler(object):
         group.properties['members'].remove(object_uri)
 
 
-class GroupMembersHandler(object):
+class GroupMembersHandler:
     """
     Handler class for operation: List Custom Group Members.
     """
@@ -2437,7 +2436,7 @@ class GroupMembersHandler(object):
         return result
 
 
-class MetricsContextsHandler(object):
+class MetricsContextsHandler:
     """
     Handler class for HTTP methods on set of MetricsContext resources.
     """
@@ -2458,7 +2457,7 @@ class MetricsContextsHandler(object):
         return result
 
 
-class MetricsContextHandler(object):
+class MetricsContextHandler:
     """
     Handler class for HTTP methods on single MetricsContext resource.
     """
@@ -2489,7 +2488,7 @@ class MetricsContextHandler(object):
         return result
 
 
-class AdaptersHandler(object):
+class AdaptersHandler:
     """
     Handler class for HTTP methods on set of Adapter resources.
     """
@@ -2620,7 +2619,7 @@ class AdapterHandler(GenericGetPropertiesHandler,
         adapter.manager.remove(adapter.oid)
 
 
-class AdapterChangeCryptoTypeHandler(object):
+class AdapterChangeCryptoTypeHandler:
     """
     Handler class for operation: Change Crypto Type.
     """
@@ -2656,7 +2655,7 @@ class AdapterChangeCryptoTypeHandler(object):
         adapter.properties['crypto-type'] = crypto_type
 
 
-class AdapterChangeAdapterTypeHandler(object):
+class AdapterChangeAdapterTypeHandler:
     """
     Handler class for operation: Change Adapter Type.
     """
@@ -2769,7 +2768,7 @@ class StoragePortHandler(GenericGetPropertiesHandler):
         storage_port.update(body)
 
 
-class PartitionsHandler(object):
+class PartitionsHandler:
     """
     Handler class for HTTP methods on set of Partition resources.
     """
@@ -2831,7 +2830,7 @@ class PartitionsHandler(object):
             Note: Does not guarantee to be reproducable.
             Note: Has a chance to not be unique.
             """
-            return "{:02X}".format(randrange(80))
+            return f"{randrange(80):02X}"
 
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]
@@ -3054,7 +3053,7 @@ class PartitionHandler(GenericGetPropertiesHandler,
         partition.manager.remove(partition.oid)
 
 
-class PartitionStartHandler(object):
+class PartitionStartHandler:
     """
     Handler class for operation: Start Partition.
     """
@@ -3085,7 +3084,7 @@ class PartitionStartHandler(object):
         return {}
 
 
-class PartitionStopHandler(object):
+class PartitionStopHandler:
     """
     Handler class for operation: Stop Partition.
     """
@@ -3120,7 +3119,7 @@ class PartitionStopHandler(object):
         return {}
 
 
-class PartitionScsiDumpHandler(object):
+class PartitionScsiDumpHandler:
     """
     Handler class for operation: Dump Partition.
     """
@@ -3155,7 +3154,7 @@ class PartitionScsiDumpHandler(object):
         return {}
 
 
-class PartitionStartDumpProgramHandler(object):
+class PartitionStartDumpProgramHandler:
     """
     Handler class for operation: Start Dump Program.
     """
@@ -3189,7 +3188,7 @@ class PartitionStartDumpProgramHandler(object):
         return {}
 
 
-class PartitionPswRestartHandler(object):
+class PartitionPswRestartHandler:
     """
     Handler class for operation: Perform PSW Restart.
     """
@@ -3220,7 +3219,7 @@ class PartitionPswRestartHandler(object):
         return {}
 
 
-class PartitionMountIsoImageHandler(object):
+class PartitionMountIsoImageHandler:
     """
     Handler class for operation: Mount ISO Image.
     """
@@ -3276,7 +3275,7 @@ class PartitionMountIsoImageHandler(object):
         return {}
 
 
-class PartitionUnmountIsoImageHandler(object):
+class PartitionUnmountIsoImageHandler:
     """
     Handler class for operation: Unmount ISO Image.
     """
@@ -3332,7 +3331,7 @@ def ensure_crypto_config(partition):
     return adapter_uris, domain_configs
 
 
-class PartitionIncreaseCryptoConfigHandler(object):
+class PartitionIncreaseCryptoConfigHandler:
     """
     Handler class for operation: Increase Crypto Configuration.
     """
@@ -3376,7 +3375,7 @@ class PartitionIncreaseCryptoConfigHandler(object):
                 domain_configs.append(dc)
 
 
-class PartitionDecreaseCryptoConfigHandler(object):
+class PartitionDecreaseCryptoConfigHandler:
     """
     Handler class for operation: Decrease Crypto Configuration.
     """
@@ -3421,7 +3420,7 @@ class PartitionDecreaseCryptoConfigHandler(object):
                     del domain_configs[i]
 
 
-class PartitionChangeCryptoConfigHandler(object):
+class PartitionChangeCryptoConfigHandler:
     """
     Handler class for operation: Change Crypto Configuration.
     """
@@ -3463,7 +3462,7 @@ class PartitionChangeCryptoConfigHandler(object):
                 dc['access-mode'] = change_access_mode
 
 
-class HbasHandler(object):
+class HbasHandler:
     """
     Handler class for HTTP methods on set of Hba resources.
     """
@@ -3547,7 +3546,7 @@ class HbaHandler(GenericGetPropertiesHandler,
         partition.hbas.remove(hba.oid)
 
 
-class HbaReassignPortHandler(object):
+class HbaReassignPortHandler:
     """
     Handler class for operation: Reassign Storage Adapter Port.
     """
@@ -3582,7 +3581,7 @@ class HbaReassignPortHandler(object):
         hba.properties['adapter-port-uri'] = new_port_uri
 
 
-class NicsHandler(object):
+class NicsHandler:
     """
     Handler class for HTTP methods on set of Nic resources.
     """
@@ -3721,7 +3720,7 @@ class NicHandler(GenericGetPropertiesHandler):
         partition.nics.remove(nic.oid)
 
 
-class VirtualFunctionsHandler(object):
+class VirtualFunctionsHandler:
     """
     Handler class for HTTP methods on set of VirtualFunction resources.
     """
@@ -3781,7 +3780,7 @@ class VirtualFunctionHandler(GenericGetPropertiesHandler,
         partition.virtual_functions.remove(vf.oid)
 
 
-class VirtualSwitchesHandler(object):
+class VirtualSwitchesHandler:
     """
     Handler class for HTTP methods on set of VirtualSwitch resources.
     """
@@ -3827,7 +3826,7 @@ class VirtualSwitchHandler(GenericGetPropertiesHandler,
     pass
 
 
-class VirtualSwitchGetVnicsHandler(object):
+class VirtualSwitchGetVnicsHandler:
     """
     Handler class for operation: Get Connected VNICs of a Virtual Switch.
     """
@@ -3855,7 +3854,7 @@ class VirtualSwitchGetVnicsHandler(object):
         return {'connected-vnic-uris': connected_vnic_uris}
 
 
-class StorageGroupsHandler(object):
+class StorageGroupsHandler:
     """
     Handler class for HTTP methods on set of StorageGroup resources.
     """
@@ -3939,7 +3938,7 @@ class StorageGroupHandler(GenericGetPropertiesHandler):
     pass
 
 
-class StorageGroupModifyHandler(object):
+class StorageGroupModifyHandler:
     """
     Handler class for operation: Modify Storage Group Properties.
     """
@@ -4002,7 +4001,7 @@ class StorageGroupModifyHandler(object):
         }
 
 
-class StorageGroupDeleteHandler(object):
+class StorageGroupDeleteHandler:
     """
     Handler class for operation: Delete Storage Group.
     """
@@ -4029,7 +4028,7 @@ class StorageGroupDeleteHandler(object):
         storage_group.manager.remove(storage_group.oid)
 
 
-class StorageGroupRequestFulfillmentHandler(object):
+class StorageGroupRequestFulfillmentHandler:
     """
     Handler class for operation: Request Storage Group Fulfillment.
     """
@@ -4054,7 +4053,7 @@ class StorageGroupRequestFulfillmentHandler(object):
         pass
 
 
-class StorageGroupAddCandidatePortsHandler(object):
+class StorageGroupAddCandidatePortsHandler:
     """
     Handler class for operation: Add Candidate Adapter Ports to an FCP Storage
     Group.
@@ -4092,7 +4091,7 @@ class StorageGroupAddCandidatePortsHandler(object):
             candidate_adapter_port_uris.append(ap_uri)
 
 
-class StorageGroupRemoveCandidatePortsHandler(object):
+class StorageGroupRemoveCandidatePortsHandler:
     """
     Handler class for operation: Remove Candidate Adapter Ports from an FCP
     Storage Group.
@@ -4131,7 +4130,7 @@ class StorageGroupRemoveCandidatePortsHandler(object):
             candidate_adapter_port_uris.remove(ap_uri)
 
 
-class StorageVolumesHandler(object):
+class StorageVolumesHandler:
     """
     Handler class for HTTP methods on set of StorageVolume resources.
     """
@@ -4173,7 +4172,7 @@ class StorageVolumeHandler(GenericGetPropertiesHandler):
     pass
 
 
-class CapacityGroupsHandler(object):
+class CapacityGroupsHandler:
     """
     Handler class for HTTP methods on set of CapacityGroup resources.
     """
@@ -4264,7 +4263,7 @@ class CapacityGroupHandler(GenericGetPropertiesHandler,
         capacity_group.manager.remove(capacity_group.oid)
 
 
-class CapacityGroupAddPartitionHandler(object):
+class CapacityGroupAddPartitionHandler:
     """
     Handler class for operation: Add Partition to Capacity Group.
     """
@@ -4333,7 +4332,7 @@ class CapacityGroupAddPartitionHandler(object):
         capacity_group.properties['partition-uris'].append(partition.uri)
 
 
-class CapacityGroupRemovePartitionHandler(object):
+class CapacityGroupRemovePartitionHandler:
     """
     Handler class for operation: Remove Partition from Capacity Group.
     """
@@ -4387,7 +4386,7 @@ class CapacityGroupRemovePartitionHandler(object):
         capacity_group.properties['partition-uris'].remove(partition.uri)
 
 
-class LparsHandler(object):
+class LparsHandler:
     """
     Handler class for HTTP methods on set of Lpar resources.
     """
@@ -4450,14 +4449,14 @@ class LparHandler(GenericGetPropertiesHandler):
             # LPAR permits property updates only when a active
             new_exc = ConflictError(
                 method, uri, 1,
-                "Cannot update LPAR properties in status {}".format(status))
+                f"Cannot update LPAR properties in status {status}")
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.ConflictError
         # TODO: Add check whether requested properties are modifiable
         lpar.update(body)
 
 
-class LparActivateHandler(object):
+class LparActivateHandler:
     """
     A handler class for the "Activate Logical Partition" operation.
     """
@@ -4522,7 +4521,7 @@ class LparActivateHandler(object):
         lpar.properties['last-used-activation-profile'] = act_profile_name
 
 
-class LparDeactivateHandler(object):
+class LparDeactivateHandler:
     """
     A handler class for the "Deactivate Logical Partition" operation.
     """
@@ -4578,7 +4577,7 @@ class LparDeactivateHandler(object):
         lpar.properties['status'] = LparDeactivateHandler.get_status()
 
 
-class LparLoadHandler(object):
+class LparLoadHandler:
     """
     A handler class for the "Load Logical Partition" operation.
     """
@@ -4665,7 +4664,7 @@ class LparLoadHandler(object):
         lpar.properties['last-used-load-parameter'] = load_parameter
 
 
-class LparScsiLoadHandler(object):
+class LparScsiLoadHandler:
     """
     A handler class for the "SCSI Load" operation.
     """
@@ -4759,7 +4758,7 @@ class LparScsiLoadHandler(object):
             lpar.properties['last-used-clear-indicator'] = clear_indicator
 
 
-class LparScsiDumpHandler(object):
+class LparScsiDumpHandler:
     """
     A handler class for the "SCSI Dump" operation.
     """
@@ -4852,7 +4851,7 @@ class LparScsiDumpHandler(object):
         # does not have a corresponding parameter.
 
 
-class LparNvmeLoadHandler(object):
+class LparNvmeLoadHandler:
     """
     A handler class for the "NVME Load" operation.
     """
@@ -4940,7 +4939,7 @@ class LparNvmeLoadHandler(object):
             lpar.properties['last-used-clear-indicator'] = clear_indicator
 
 
-class LparNvmeDumpHandler(object):
+class LparNvmeDumpHandler:
     """
     A handler class for the "NVME Dump" operation.
     """
@@ -5027,7 +5026,7 @@ class LparNvmeDumpHandler(object):
         # does not have a corresponding parameter.
 
 
-class ResetActProfilesHandler(object):
+class ResetActProfilesHandler:
     """
     Handler class for HTTP methods on set of Reset ActivationProfile resources.
     """
@@ -5073,7 +5072,7 @@ class ResetActProfileHandler(GenericGetPropertiesHandler,
     valid_query_parms_get = ['properties', 'cached-acceptable']
 
 
-class ImageActProfilesHandler(object):
+class ImageActProfilesHandler:
     """
     Handler class for HTTP methods on set of Image ActivationProfile resources.
     """
@@ -5122,7 +5121,7 @@ class ImageActProfileHandler(GenericGetPropertiesHandler,
     valid_query_parms_get = ['properties', 'cached-acceptable']
 
 
-class LoadActProfilesHandler(object):
+class LoadActProfilesHandler:
     """
     Handler class for HTTP methods on set of Load ActivationProfile resources.
     """
@@ -5168,7 +5167,7 @@ class LoadActProfileHandler(GenericGetPropertiesHandler,
     valid_query_parms_get = ['properties', 'cached-acceptable']
 
 
-class SubmitRequestsHandler(object):
+class SubmitRequestsHandler:
     """
     Handler class for "Submit Requests" operation (= aggregation service).
     """

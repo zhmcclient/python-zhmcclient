@@ -36,7 +36,6 @@ Storage groups and storage volumes only can be defined in CPCs that are in
 DPM mode and that have the "dpm-storage-management" feature enabled.
 """
 
-from __future__ import absolute_import
 
 import re
 import copy
@@ -83,12 +82,12 @@ class StorageVolumeManager(BaseManager):
             'usage',
         ]
 
-        super(StorageVolumeManager, self).__init__(
+        super().__init__(
             resource_class=StorageVolume,
             class_name=RC_STORAGE_VOLUME,
             session=storage_group.manager.session,
             parent=storage_group,
-            base_uri='{}/storage-volumes'.format(storage_group.uri),
+            base_uri=f'{storage_group.uri}/storage-volumes',
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -159,7 +158,7 @@ class StorageVolumeManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'storage-volumes'
-        list_uri = '{}/storage-volumes'.format(self.storage_group.uri)
+        list_uri = f'{self.storage_group.uri}/storage-volumes'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -306,7 +305,7 @@ class StorageVolume(BaseResource):
         assert isinstance(manager, StorageVolumeManager), \
             "StorageVolume init: Expected manager type {}, got {}" \
             .format(StorageVolumeManager, type(manager))
-        super(StorageVolume, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @property
     def oid(self):

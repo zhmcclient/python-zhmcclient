@@ -19,7 +19,6 @@ These tests do not change any existing partitions or NICs, but create, modify
 and delete test partitions with NICs.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import random
@@ -134,7 +133,7 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         hs_adapter_name = TEST_PREFIX + ' test_nic_crud adapter1'
         part_name = TEST_PREFIX + ' test_nic_crud part1'
@@ -202,14 +201,14 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
 
             for pn, exp_value in nic_input_props.items():
                 assert nic.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
             nic.pull_full_properties()
             for pn, exp_value in nic_input_props.items():
                 assert nic.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
             for pn, exp_value in nic_auto_props.items():
                 assert nic.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
 
             # Test updating a property of the NIC
 

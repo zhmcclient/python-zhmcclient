@@ -37,7 +37,7 @@ hmc_yaml_file = 'hmc_definition.yaml'
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -54,7 +54,7 @@ try:
     print("Dumping HMC resources as an HMC definition ...")
     hmc_yaml_str = client.to_hmc_yaml()
 
-    print("Writing HMC definition to file: {}".format(hmc_yaml_file))
+    print(f"Writing HMC definition to file: {hmc_yaml_file}")
     with open(hmc_yaml_file, 'w') as fp:
         fp.write(hmc_yaml_str)
 

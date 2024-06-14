@@ -16,7 +16,6 @@
 Unit tests for _ldap_srv_def module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -27,7 +26,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestLdapServerDefinition(object):
+class TestLdapServerDefinition:
     """All tests for the LdapServerDefinition and LdapServerDefinitionManager
     classes."""
 
@@ -60,13 +59,13 @@ class TestLdapServerDefinition(object):
         """
 
         faked_ldap_srv_def = self.faked_console.ldap_server_definitions.add({
-            'element-id': 'oid-{}'.format(name),
+            'element-id': f'oid-{name}',
             # element-uri will be automatically set
             'parent': '/api/console',
             'class': 'ldap-server-definition',
             'name': name,
-            'description': 'LDAP Server Definition {}'.format(name),
-            'primary-hostname-ipaddr': 'host-{}'.format(name),
+            'description': f'LDAP Server Definition {name}',
+            'primary-hostname-ipaddr': f'host-{name}',
         })
         return faked_ldap_srv_def
 
@@ -317,7 +316,7 @@ class TestLdapServerDefinition(object):
             assert prop_name in ldap_srv_def.properties
             prop_value = ldap_srv_def.properties[prop_name]
             assert prop_value == exp_prop_value, \
-                "Unexpected value for property {!r}".format(prop_name)
+                f"Unexpected value for property {prop_name!r}"
 
         # Refresh the resource object and verify that the resource object
         # still reflects the property updates.

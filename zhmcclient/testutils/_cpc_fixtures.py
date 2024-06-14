@@ -16,7 +16,6 @@
 Pytest fixtures for CPCs.
 """
 
-from __future__ import absolute_import
 
 import warnings
 import pytest
@@ -41,7 +40,7 @@ def fixtureid_cpcs(fixture_value):
         return None  # Use pytest auto-generated ID
     cpc_list = fixture_value
     cpcs_str = ','.join([cpc.name for cpc in cpc_list])
-    return "CPCs={}".format(cpcs_str)
+    return f"CPCs={cpcs_str}"
 
 
 @pytest.fixture(

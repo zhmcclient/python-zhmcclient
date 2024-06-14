@@ -28,7 +28,6 @@ Groups can be one of two kinds:
   :meth:`Group.add_member` and :meth:`Group.remove_member` methods.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -61,7 +60,7 @@ class GroupManager(BaseManager):
             'name',
         ]
 
-        super(GroupManager, self).__init__(
+        super().__init__(
             resource_class=Group,
             class_name=RC_GROUP,
             session=console.manager.session,
@@ -190,7 +189,7 @@ class Group(BaseResource):
         assert isinstance(manager, GroupManager), \
             "Group init: Expected manager type {}, got {}" \
             .format(GroupManager, type(manager))
-        super(Group, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     def dump(self):
         """
@@ -208,7 +207,7 @@ class Group(BaseResource):
         """
 
         # Dump the resource properties
-        resource_dict = super(Group, self).dump()
+        resource_dict = super().dump()
 
         return resource_dict
 

@@ -27,7 +27,6 @@ enabled, :term:`virtual HBAs <HBA>` are represented as
 :term:`Virtual Storage Resource` resources.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -63,12 +62,12 @@ class HbaManager(BaseManager):
         #   partition (:class:`~zhmcclient.Partition`):
         #     Partition defining the scope for this manager.
 
-        super(HbaManager, self).__init__(
+        super().__init__(
             resource_class=Hba,
             class_name=RC_HBA,
             session=partition.manager.session,
             parent=partition,
-            base_uri='{}/hbas'.format(partition.uri),
+            base_uri=f'{partition.uri}/hbas',
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -238,7 +237,7 @@ class Hba(BaseResource):
         assert isinstance(manager, HbaManager), \
             "Hba init: Expected manager type {}, got {}" \
             .format(HbaManager, type(manager))
-        super(Hba, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

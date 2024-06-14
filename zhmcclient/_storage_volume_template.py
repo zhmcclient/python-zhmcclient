@@ -32,7 +32,6 @@ CPCs that are in DPM mode and that have the "dpm-storage-management" feature
 enabled.
 """
 
-from __future__ import absolute_import
 
 import copy
 # from requests.utils import quote
@@ -78,7 +77,7 @@ class StorageVolumeTemplateManager(BaseManager):
             'usage',
         ]
 
-        super(StorageVolumeTemplateManager, self).__init__(
+        super().__init__(
             resource_class=StorageVolumeTemplate,
             class_name=RC_STORAGE_TEMPLATE_VOLUME,
             session=storage_group_template.manager.session,
@@ -259,7 +258,7 @@ class StorageVolumeTemplate(BaseResource):
         assert isinstance(manager, StorageVolumeTemplateManager), \
             "StorageVolumeTemplate init: Expected manager type {}, got {}" \
             .format(StorageVolumeTemplateManager, type(manager))
-        super(StorageVolumeTemplate, self).__init__(
+        super().__init__(
             manager, uri, name, properties)
 
     @logged_api_call

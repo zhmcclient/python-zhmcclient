@@ -16,14 +16,13 @@
 HMC definition for zhmcclient end2end tests.
 """
 
-from __future__ import absolute_import
 
 import six
 
 __all__ = ['HMCDefinition']
 
 
-class HMCDefinition(object):
+class HMCDefinition:
     """
     A single HMC definition.
 
@@ -95,7 +94,7 @@ class HMCDefinition(object):
         self._mock_file = mock_file
         if host is None:
             self._hosts = None
-        elif isinstance(host, six.string_types):
+        elif isinstance(host, str):
             self._hosts = [host]
         else:
             self._hosts = list(host)
@@ -190,7 +189,7 @@ class HMCDefinition(object):
         # pylint: disable=attribute-defined-outside-init
         if host is None:
             self._hosts = None
-        elif isinstance(host, six.string_types):
+        elif isinstance(host, str):
             self._hosts = [host]
         else:
             self._hosts = list(host)

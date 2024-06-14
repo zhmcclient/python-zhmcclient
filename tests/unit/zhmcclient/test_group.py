@@ -16,7 +16,6 @@
 Unit tests for _group module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import pytest
@@ -26,7 +25,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestGroup(object):
+class TestGroup:
     """All tests for the Group and GroupManager classes."""
 
     def setup_method(self):
@@ -56,12 +55,12 @@ class TestGroup(object):
         Add a faked group object to the faked Console and return it.
         """
         faked_group = self.faked_console.groups.add({
-            'object-id': 'oid-{}'.format(name),
+            'object-id': f'oid-{name}',
             # object-uri will be automatically set
             'parent': None,
             'class': 'group',
             'name': name,
-            'description': 'Group {}'.format(name),
+            'description': f'Group {name}',
         })
         return faked_group
 

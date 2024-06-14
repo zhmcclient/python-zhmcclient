@@ -36,7 +36,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -57,16 +57,16 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    print("Listing adapters on CPC {} ...".format(cpc.name))
+    print(f"Listing adapters on CPC {cpc.name} ...")
     adapters = cpc.adapters.list()
     for adapter in adapters:
         print("{} ({})".format(
             adapter.name, adapter.get_property('detected-card-type')))
         ports = adapter.ports.list(full_properties=False)
         for port in ports:
-            print("\t{}".format(port.name))
+            print(f"\t{port.name}")
 
     print("Listing virtual switches and backing adapters on CPC {} ...".
           format(cpc.name))

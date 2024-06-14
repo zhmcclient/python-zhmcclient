@@ -19,7 +19,6 @@ These tests do not change any existing groups, but create, modify and delete
 groups for testing purposes.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -59,11 +58,11 @@ def test_group_find_list(hmc_session):  # noqa: F811
     # Pick the groups to test with
     group_list = console.groups.list()
     if not group_list:
-        skip_warn("No groups defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No groups defined on HMC {hd.host}")
     group_list = pick_test_resources(group_list)
 
     for group in group_list:
-        print("Testing with group {g!r}".format(g=group.name))
+        print(f"Testing with group {group.name!r}")
         runtest_find_list(
             hmc_session, console.groups, group.name, 'name',
             'object-uri', GROUP_VOLATILE_PROPS, GROUP_MINIMAL_PROPS,
@@ -83,7 +82,7 @@ def test_group_crud(hmc_session):  # noqa: F811
 
     # TODO: Get group issue on T224 HMC resolved.
     if hd.host == '9.114.87.7':
-        skip_warn("Issues with group support on HMC {h}".format(h=hd.host))
+        skip_warn(f"Issues with group support on HMC {hd.host}")
 
     group_name = TEST_PREFIX + ' test_group_crud group'
 
@@ -122,14 +121,14 @@ def test_group_crud(hmc_session):  # noqa: F811
 
         for pn, exp_value in group_input_props.items():
             assert group.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         group.pull_full_properties()
         for pn, exp_value in group_input_props.items():
             assert group.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         for pn, exp_value in group_auto_props.items():
             assert group.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
 
         # Add a member
         cpc = client.cpcs.list()[0]

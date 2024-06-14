@@ -44,7 +44,7 @@ image_insfile = 'my_insfile'
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -65,10 +65,10 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    part_name = "zhmc_test_{}".format(uuid.uuid4())
-    print("Creating partition {} ...".format(part_name))
+    part_name = f"zhmc_test_{uuid.uuid4()}"
+    print(f"Creating partition {part_name} ...")
     try:
         part = cpc.partitions.create(
             properties={
@@ -92,15 +92,15 @@ try:
                       format(part.name))
                 print("  Image file: {} (size: {:.1f} MB)".
                       format(image_file, image_size_mb))
-                print("  Image name: {}".format(image_name))
-                print("  Image INS file: {}".format(image_insfile))
+                print(f"  Image name: {image_name}")
+                print(f"  Image INS file: {image_insfile}")
                 try:
                     part.mount_iso_image(image_fp, image_name, image_insfile)
                 except zhmcclient.Error as exc:
                     print("Error: Cannot mount ISO file {}: {}: {}".
                           format(image_file, exc.__class__.__name__, exc))
                     sys.exit(1)
-        except (IOError, OSError) as exc:
+        except OSError as exc:
             print("Error: Cannot open image file {}: {}: {}".
                   format(image_file, exc.__class__.__name__, exc))
             sys.exit(1)
@@ -117,7 +117,7 @@ try:
                   format(part.name, exc.__class__.__name__, exc))
             sys.exit(1)
 
-        print("Starting partition {} ...".format(part.name))
+        print(f"Starting partition {part.name} ...")
         try:
             part.start()
         except zhmcclient.Error as exc:
@@ -127,11 +127,11 @@ try:
 
         part.pull_full_properties()
         status = part.get_property('status')
-        print("Partition status: {}".format(status))
+        print(f"Partition status: {status}")
 
     finally:
         if part.get_property('status') != 'stopped':
-            print("Stopping partition {} ...".format(part.name))
+            print(f"Stopping partition {part.name} ...")
             try:
                 part.stop(wait_for_completion=True)
             except zhmcclient.Error as exc:
@@ -139,7 +139,7 @@ try:
                       format(exc.__class__.__name__, exc))
                 sys.exit(1)
 
-        print("Deleting partition {} ...".format(part.name))
+        print(f"Deleting partition {part.name} ...")
         try:
             part.delete()
         except zhmcclient.Error as exc:

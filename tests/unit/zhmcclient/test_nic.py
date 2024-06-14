@@ -16,7 +16,6 @@
 Unit tests for _nic module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -35,13 +34,13 @@ NIC2_NAME = 'nic 2'
 
 # URIs and Object IDs of elements referenced in NIC properties:
 VSWITCH11_OID = 'fake-vswitch11-oid'
-VSWITCH11_URI = '/api/virtual-switches/{}'.format(VSWITCH11_OID)
+VSWITCH11_URI = f'/api/virtual-switches/{VSWITCH11_OID}'
 ROCE2_OID = 'fake-roce2-oid'
 PORT21_OID = 'fake-port21-oid'
-PORT21_URI = '/api/adapters/{}/network-ports/{}'.format(ROCE2_OID, PORT21_OID)
+PORT21_URI = f'/api/adapters/{ROCE2_OID}/network-ports/{PORT21_OID}'
 
 
-class TestNic(object):
+class TestNic:
     """All tests for Nic and NicManager classes."""
 
     def setup_method(self):

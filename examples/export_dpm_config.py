@@ -43,10 +43,10 @@ def check(config_items, inventory_data, classname, uri_prop, prop, value):
         value = [value]
     inventory_items = [x for x in inventory_data if x['class'] == classname
                        and (True if prop is None else x[prop] in value)]
-    extra_uris = set([x[uri_prop] for x in config_items]) - \
-        set([x[uri_prop] for x in inventory_items])
-    missing_uris = set([x[uri_prop] for x in inventory_items]) - \
-        set([x[uri_prop] for x in config_items])
+    extra_uris = {x[uri_prop] for x in config_items} - \
+        {x[uri_prop] for x in inventory_items}
+    missing_uris = {x[uri_prop] for x in inventory_items} - \
+        {x[uri_prop] for x in config_items}
     status = 'Error' if extra_uris or missing_uris else 'Ok'
     print("Checking resource class {!r}: Inventory: {}; DPM config: {} "
           "(extra: {}, missing: {}); Check status: {}".
@@ -56,7 +56,7 @@ def check(config_items, inventory_data, classname, uri_prop, prop, value):
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -77,13 +77,13 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    print("Exporting DPM configuration of CPC {} ...".format(cpc.name))
+    print(f"Exporting DPM configuration of CPC {cpc.name} ...")
     try:
         dpm_config = cpc.export_dpm_configuration()
     except zhmcclient.ConsistencyError as exc:
-        print("Error: Cannot export DPM configuration: {}".format(exc))
+        print(f"Error: Cannot export DPM configuration: {exc}")
         sys.exit(1)
 
     print("Fields in exported DPM configuration: {}".

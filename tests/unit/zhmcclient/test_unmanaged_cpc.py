@@ -16,7 +16,6 @@
 Unit tests for _unmanaged_cpc module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import pytest
@@ -26,7 +25,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestUnmanagedCpc(object):
+class TestUnmanagedCpc:
     """All tests for the UnmanagedCpc and UnmanagedCpcManager classes."""
 
     def setup_method(self):
@@ -56,12 +55,12 @@ class TestUnmanagedCpc(object):
         Add a faked unmanaged CPC object to the faked Console and return it.
         """
         faked_unmanaged_cpc = self.faked_console.unmanaged_cpcs.add({
-            'object-id': 'oid-{}'.format(name),
+            'object-id': f'oid-{name}',
             # object-uri will be automatically set
             'parent': '/api/console',
             'class': 'cpc',
             'name': name,
-            'description': 'Unmanaged CPC {}'.format(name),
+            'description': f'Unmanaged CPC {name}',
         })
         return faked_unmanaged_cpc
 

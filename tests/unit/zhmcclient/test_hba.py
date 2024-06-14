@@ -16,7 +16,6 @@
 Unit tests for _hba module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -36,10 +35,10 @@ HBA2_NAME = 'hba 2'
 # URIs and Object IDs of elements referenced in HBA properties:
 FCP1_OID = 'fake-fcp1-oid'
 PORT11_OID = 'fake-port11-oid'
-PORT11_URI = '/api/adapters/{}/storage-ports/{}'.format(FCP1_OID, PORT11_OID)
+PORT11_URI = f'/api/adapters/{FCP1_OID}/storage-ports/{PORT11_OID}'
 
 
-class TestHba(object):
+class TestHba:
     """All tests for Hba and HbaManager classes."""
 
     def setup_method(self):

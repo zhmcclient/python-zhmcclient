@@ -37,7 +37,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -57,11 +57,11 @@ try:
         cpc_name = None
     if cpc_name:
         cpc = client.cpcs.find(name=cpc_name)
-        print("Using specified CPC {}".format(cpc.name))
+        print(f"Using specified CPC {cpc.name}")
     else:
         cpcs = client.cpcs.list()
         cpc = cpcs[0]
-        print("Using first CPC {}".format(cpc.name))
+        print(f"Using first CPC {cpc.name}")
 
     for full_properties in (False, True):
         print("\nListing partitions with full_properties={} ...".
@@ -75,8 +75,8 @@ try:
         num_props = 0
         for partition in partitions:
             num_props += len(partition.properties)
-        print("Duration: {:.2f} s".format(duration.total_seconds()))
-        print("Number of partitions: {}".format(len(partitions)))
+        print(f"Duration: {duration.total_seconds():.2f} s")
+        print(f"Number of partitions: {len(partitions)}")
         print("Number of non-stopped partitions: {}".
               format(len(non_stopped_partitions)))
         print("Average number of properties per partition: {:.1f}".

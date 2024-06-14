@@ -19,7 +19,6 @@ These tests do not change any existing partitions, but create, modify and delete
 test partitions.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import random
@@ -128,7 +127,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         part_name = TEST_PREFIX + ' test_part_crud part1'
         part_name_new = part_name + ' new'
@@ -171,14 +170,14 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
 
         for pn, exp_value in part_input_props.items():
             assert part.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         part.pull_full_properties()
         for pn, exp_value in part_input_props.items():
             assert part.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         for pn, exp_value in part_auto_props.items():
             assert part.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
 
         # Test updating a property of the partition
 
@@ -388,7 +387,7 @@ def test_console_list_permitted_partitions(desc, input_kwargs, exp_props,
                 # The property is supposed to be in the result
                 actual_pnames = list(partition.properties.keys())
                 assert pname in actual_pnames, \
-                    "Actual partition: {p!r}".format(p=partition)
+                    f"Actual partition: {partition!r}"
 
         # Test list permitted partitions with filtering
         permitted_partitions_filter_agrs = (console.list_permitted_partitions(
@@ -483,7 +482,7 @@ def test_part_get_sustainability_data(
         session = part.manager.session
         hd = session.hmc_definition
 
-        print("Testing with partition {n}".format(n=part.name))
+        print(f"Testing with partition {part.name}")
 
         try:
 
@@ -525,7 +524,7 @@ def test_part_get_sustainability_data(
                 dp_timestamp_dt = dp_item['timestamp']
 
                 assert isinstance(dp_data, metric_type), \
-                    "Invalid data type for metric {!r}".format(metric_name)
+                    f"Invalid data type for metric {metric_name!r}"
 
                 if first_item:
                     first_item = False

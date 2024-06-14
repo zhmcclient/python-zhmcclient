@@ -16,7 +16,6 @@
 Unit tests for _metrics module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import pytest
@@ -38,7 +37,7 @@ MG2_NAME = 'dpm-system-usage-overview'
 MC_BASE_URI = '/api/services/metrics/context/'
 
 
-class TestMetricsContext(object):
+class TestMetricsContext:
     """All tests for the MetricsContext and MetricsContextManager classes."""
 
     def setup_method(self):

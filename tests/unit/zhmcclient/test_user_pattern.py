@@ -16,7 +16,6 @@
 Unit tests for _user_pattern module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -27,7 +26,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestUserPattern(object):
+class TestUserPattern:
     """All tests for the UserPattern and UserPatternManager classes."""
 
     def setup_method(self):
@@ -57,12 +56,12 @@ class TestUserPattern(object):
         Add a faked user pattern object to the faked Console and return it.
         """
         faked_user_pattern = self.faked_console.user_patterns.add({
-            'element-id': 'oid-{}'.format(name),
+            'element-id': f'oid-{name}',
             # element-uri will be automatically set
             'parent': '/api/console',
             'class': 'user-pattern',
             'name': name,
-            'description': 'User Pattern {}'.format(name),
+            'description': f'User Pattern {name}',
             'pattern': pattern,
             'type': type_,
             'retention-time': 0,
@@ -75,12 +74,12 @@ class TestUserPattern(object):
         Add a faked user object to the faked Console and return it.
         """
         faked_user = self.faked_console.users.add({
-            'object-id': 'oid-{}'.format(name),
+            'object-id': f'oid-{name}',
             # object-uri will be automatically set
             'parent': '/api/console',
             'class': 'user',
             'name': name,
-            'description': 'User {}'.format(name),
+            'description': f'User {name}',
             'type': type_,
             'authentication-type': 'local',
         })
@@ -387,7 +386,7 @@ class TestUserPattern(object):
             assert prop_name in user_pattern.properties
             prop_value = user_pattern.properties[prop_name]
             assert prop_value == exp_prop_value, \
-                "Unexpected value for property {!r}".format(prop_name)
+                f"Unexpected value for property {prop_name!r}"
 
         # Refresh the resource object and verify that the resource object
         # still reflects the property updates.

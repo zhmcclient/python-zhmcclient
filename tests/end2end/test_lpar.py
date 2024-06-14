@@ -19,7 +19,6 @@ These tests do not change any existing LPARs, but create, modify and delete
 test LPARs.
 """
 
-from __future__ import absolute_import, print_function
 
 import random
 from datetime import timedelta, datetime, timezone
@@ -831,7 +830,7 @@ def test_lpar_get_sustainability_data(
         session = lpar.manager.session
         hd = session.hmc_definition
 
-        print("Testing with LPAR {n}".format(n=lpar.name))
+        print(f"Testing with LPAR {lpar.name}")
 
         try:
 
@@ -873,7 +872,7 @@ def test_lpar_get_sustainability_data(
                 dp_timestamp_dt = dp_item['timestamp']
 
                 assert isinstance(dp_data, metric_type), \
-                    "Invalid data type for metric {!r}".format(metric_name)
+                    f"Invalid data type for metric {metric_name!r}"
 
                 if first_item:
                     first_item = False

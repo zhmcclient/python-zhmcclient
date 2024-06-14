@@ -37,7 +37,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -89,14 +89,14 @@ try:
           format(sg.name, sg.get_property('type'), sg.get_property('shared'),
                  sg.get_property('fulfillment-state')))
 
-    print("Listing partitions attached to storage group {} ...".format(sg.name))
+    print(f"Listing partitions attached to storage group {sg.name} ...")
     parts = sg.list_attached_partitions()
     part_names = [p.name for p in parts]
     part_names_str = ', '.join(part_names) if part_names else "<none>"
     print("Partitions attached to storage group {}: {}".
           format(sg.name, part_names_str))
 
-    print("Getting connection report for storage group {} ...".format(sg.name))
+    print(f"Getting connection report for storage group {sg.name} ...")
     report = sg.get_connection_report()
 
     print("fcp-storage-subsystems section of connection report, before "
@@ -106,7 +106,7 @@ try:
     print("Discovering LUNs of storage group (waiting for completion) ...")
     sg.discover_fcp()
 
-    print("Getting connection report for storage group {} ...".format(sg.name))
+    print(f"Getting connection report for storage group {sg.name} ...")
     report = sg.get_connection_report()
 
     print("fcp-storage-subsystems section of connection report, after "

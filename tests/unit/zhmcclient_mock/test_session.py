@@ -18,7 +18,6 @@
 Unit tests for _session module of the zhmcclient_mock package.
 """
 
-from __future__ import absolute_import, print_function
 
 from datetime import datetime
 

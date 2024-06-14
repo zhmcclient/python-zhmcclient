@@ -16,7 +16,6 @@
 A :term:`User` resource represents a user configured in the HMC.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -59,7 +58,7 @@ class UserManager(BaseManager):
             'type',
         ]
 
-        super(UserManager, self).__init__(
+        super().__init__(
             resource_class=User,
             class_name=RC_USER,
             session=console.manager.session,
@@ -138,7 +137,7 @@ class UserManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'users'
-        list_uri = '{}/users'.format(self.console.uri)
+        list_uri = f'{self.console.uri}/users'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -212,7 +211,7 @@ class User(BaseResource):
         assert isinstance(manager, UserManager), \
             "Console init: Expected manager type {}, got {}" \
             .format(UserManager, type(manager))
-        super(User, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

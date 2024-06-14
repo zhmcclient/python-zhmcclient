@@ -27,7 +27,6 @@ corresponding entities when doing a "secure boot" load for an LPAR, respectively
 a Partition start.
 """
 
-from __future__ import absolute_import
 
 import copy
 
@@ -68,7 +67,7 @@ class CertificateManager(BaseManager):
             'name', 'parent-name', 'type'
         ]
 
-        super(CertificateManager, self).__init__(
+        super().__init__(
             resource_class=Certificate,
             class_name=RC_CERTIFICATE,
             session=console.manager.session,
@@ -207,7 +206,7 @@ class Certificate(BaseResource):
         assert isinstance(manager, CertificateManager), \
             "Certificate init: Expected manager type {}, got {}" \
             .format(CertificateManager, type(manager))
-        super(Certificate, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
         self._cpc = None
 
     @property
@@ -313,7 +312,7 @@ class Certificate(BaseResource):
         """
         # pylint: disable=protected-access
         return self.manager.session.get(
-            '{}/operations/get-encoded'.format(self.uri), resource=self)
+            f'{self.uri}/operations/get-encoded', resource=self)
 
     def dump(self):
         """
@@ -332,6 +331,6 @@ class Certificate(BaseResource):
         """
 
         # Dump the resource properties
-        resource_dict = super(Certificate, self).dump()
+        resource_dict = super().dump()
 
         return resource_dict

@@ -18,12 +18,11 @@ from a defined value range. This is used for example to manage automatically
 allocated device numbers.
 """
 
-from __future__ import absolute_import
 
 __all__ = ['IdPool']
 
 
-class IdPool(object):
+class IdPool:
     """
     A pool of integer ID values from a defined value range.
 

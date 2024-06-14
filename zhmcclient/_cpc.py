@@ -46,7 +46,6 @@ particular functionality is available only in a specific mode, that is
 indicated in the description of the functionality.
 """
 
-from __future__ import absolute_import
 
 import warnings
 import copy
@@ -80,7 +79,7 @@ from ._utils import get_features, \
 __all__ = ['STPNode', 'CpcManager', 'Cpc']
 
 
-class STPNode(object):
+class STPNode:
     # pylint: disable=too-few-public-methods
     """
     Data structure defining a CPC that is referenced by an STP configuration.
@@ -163,7 +162,7 @@ class CpcManager(BaseManager):
             'name',
         ]
 
-        super(CpcManager, self).__init__(
+        super().__init__(
             resource_class=Cpc,
             class_name=RC_CPC,
             session=client.session,
@@ -291,7 +290,7 @@ class Cpc(BaseResource):
         assert isinstance(manager, CpcManager), \
             "Cpc init: Expected manager type {}, got {}" \
             .format(CpcManager, type(manager))
-        super(Cpc, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):
         self._lpars = None
@@ -553,7 +552,7 @@ class Cpc(BaseResource):
         """
 
         # Dump the resource properties
-        resource_dict = super(Cpc, self).dump()
+        resource_dict = super().dump()
 
         # Dump the child resources
         capacity_groups = self.capacity_groups.dump()
@@ -2177,7 +2176,7 @@ class Cpc(BaseResource):
         # 'ftp_host' after that, so we detect the passing of
         # 'wait_for_completion' as a positional argument.
         assert ftp_host is None or \
-            isinstance(ftp_host, six.string_types)
+            isinstance(ftp_host, str)
 
         body = {
             'accept-firmware': accept_firmware,

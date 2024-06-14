@@ -19,7 +19,6 @@ These tests do not change any existing capacity groups, but create, modify and
 delete test capacity groups.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -120,7 +119,7 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         capgrp_name = TEST_PREFIX + ' test_capgrp_crud capgrp1'
         capgrp_name_new = capgrp_name + ' new'
@@ -163,14 +162,14 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
 
         for pn, exp_value in capgrp_input_props.items():
             assert capgrp.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         capgrp.pull_full_properties()
         for pn, exp_value in capgrp_input_props.items():
             assert capgrp.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
         for pn, exp_value in capgrp_auto_props.items():
             assert capgrp.properties[pn] == exp_value, \
-                "Unexpected value for property {!r}".format(pn)
+                f"Unexpected value for property {pn!r}"
 
         # Test updating a property of the capacity group
 

@@ -82,7 +82,7 @@ class ConnectionError(Error):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(ConnectionError, self).__init__(msg)
+        super().__init__(msg)
         self._details = details
 
     @property
@@ -150,7 +150,7 @@ class ConnectTimeout(ConnectionError):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(ConnectTimeout, self).__init__(msg, details)
+        super().__init__(msg, details)
         self._connect_timeout = connect_timeout
         self._connect_retries = connect_retries
 
@@ -224,7 +224,7 @@ class ReadTimeout(ConnectionError):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(ReadTimeout, self).__init__(msg, details)
+        super().__init__(msg, details)
         self._read_timeout = read_timeout
         self._read_retries = read_retries
 
@@ -296,7 +296,7 @@ class RetriesExceeded(ConnectionError):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(RetriesExceeded, self).__init__(msg, details)
+        super().__init__(msg, details)
         self._connect_retries = connect_retries
 
     @property
@@ -359,7 +359,7 @@ class ClientAuthError(AuthError):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(ClientAuthError, self).__init__(msg)
+        super().__init__(msg)
 
     def __repr__(self):
         """
@@ -402,7 +402,7 @@ class ServerAuthError(AuthError):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(ServerAuthError, self).__init__(msg)
+        super().__init__(msg)
         assert isinstance(details, HTTPError)
         self._details = details
 
@@ -474,7 +474,7 @@ class ParseError(Error):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(ParseError, self).__init__(msg)
+        super().__init__(msg)
         self._line = None
         self._column = None
         if msg:
@@ -550,7 +550,7 @@ class VersionError(Error):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(VersionError, self).__init__(msg)
+        super().__init__(msg)
         self._min_api_version = min_api_version
         self._api_version = api_version
 
@@ -613,7 +613,7 @@ class HTTPError(Error):
         if not present.
         """
         msg = body.get('message', None)
-        super(HTTPError, self).__init__(msg)
+        super().__init__(msg)
         self._body = body
 
     @property
@@ -767,7 +767,7 @@ class HTTPError(Error):
         """
         Return a human readable string representation of this exception object.
         """
-        stack_txt = ' stack={!r}'.format(self.stack) if self.stack else ''
+        stack_txt = f' stack={self.stack!r}' if self.stack else ''
         return "{},{}: {} [{} {}]{}".\
                format(self.http_status, self.reason, self.message,
                       self.request_method, self.request_uri, stack_txt)
@@ -821,7 +821,7 @@ class OperationTimeout(Error):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(OperationTimeout, self).__init__(msg)
+        super().__init__(msg)
         self._operation_timeout = operation_timeout
 
     @property
@@ -895,7 +895,7 @@ class StatusTimeout(Error):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(StatusTimeout, self).__init__(msg)
+        super().__init__(msg)
         self._actual_status = actual_status
         self._desired_statuses = desired_statuses
         self._status_timeout = status_timeout
@@ -992,7 +992,7 @@ class NoUniqueMatch(Error):
             "URIs: {!r}". \
             format(manager.resource_class.__name__, filter_args, in_str,
                    resource_uris)
-        super(NoUniqueMatch, self).__init__(msg)
+        super().__init__(msg)
         self._filter_args = filter_args
         self._manager = manager
         self._resources = list(resources)
@@ -1125,7 +1125,7 @@ class NotFound(Error):
             else:
                 msg = "Could not find {} using filter arguments {!r}{}.".\
                     format(manager.resource_class.__name__, filter_args, in_str)
-        super(NotFound, self).__init__(msg)
+        super().__init__(msg)
         self._filter_args = filter_args
         self._manager = manager
 
@@ -1213,7 +1213,7 @@ class MetricsResourceNotFound(Error):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(MetricsResourceNotFound, self).__init__(msg)
+        super().__init__(msg)
         self._resource_class = resource_class
         self._managers = managers
 
@@ -1304,7 +1304,7 @@ class NotificationJMSError(NotificationError):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(NotificationJMSError, self).__init__(msg)
+        super().__init__(msg)
         self._jms_headers = jms_headers
         self._jms_message = jms_message
 
@@ -1364,7 +1364,7 @@ class NotificationParseError(NotificationError):
 
         ``args[0]`` will be set to the ``msg`` parameter.
         """
-        super(NotificationParseError, self).__init__(msg)
+        super().__init__(msg)
         self._jms_message = jms_message
 
     @property
@@ -1412,7 +1412,7 @@ class NotificationConnectionError(NotificationError):
         ``args[0]`` will be set to the ``msg`` parameter.
         """
         # pylint: disable=useless-super-delegation
-        super(NotificationConnectionError, self).__init__(msg)
+        super().__init__(msg)
 
     def str_def(self):
         """
@@ -1445,7 +1445,7 @@ class NotificationSubscriptionError(NotificationError):
         ``args[0]`` will be set to the ``msg`` parameter.
         """
         # pylint: disable=useless-super-delegation
-        super(NotificationSubscriptionError, self).__init__(msg)
+        super().__init__(msg)
 
     def str_def(self):
         """
@@ -1477,7 +1477,7 @@ class SubscriptionNotFound(NotificationError):
         ``args[0]`` will be set to the ``msg`` parameter.
         """
         # pylint: disable=useless-super-delegation
-        super(SubscriptionNotFound, self).__init__(msg)
+        super().__init__(msg)
 
     def str_def(self):
         """
@@ -1526,8 +1526,8 @@ class CeasedExistence(Error):
 
         ``args[0]`` will be set to a default message.
         """
-        msg = "Resource no longer exists: {}".format(resource_uri)
-        super(CeasedExistence, self).__init__(msg)
+        msg = f"Resource no longer exists: {resource_uri}"
+        super().__init__(msg)
         self._resource_uri = resource_uri
 
     @property

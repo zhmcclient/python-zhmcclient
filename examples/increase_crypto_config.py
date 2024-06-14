@@ -44,13 +44,13 @@ access_mode = 'control'
 
 
 def get_password(host, userid):
-    prompt = "Enter password for userid {} on HMC at {}: ".format(userid, host)
+    prompt = f"Enter password for userid {userid} on HMC at {host}: "
     return getpass.getpass(prompt)
 
 
 print(__doc__)
 
-print("Using HMC at {} with userid {} ...".format(host, userid))
+print(f"Using HMC at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -65,15 +65,15 @@ try:
     client = zhmcclient.Client(session)
 
     try:
-        print("Finding CPC {} ...".format(cpc_name))
+        print(f"Finding CPC {cpc_name} ...")
         cpc = client.cpcs.find(name=cpc_name)
 
-        print("Finding partition {} ...".format(partition_name))
+        print(f"Finding partition {partition_name} ...")
         partition = cpc.partitions.find(name=partition_name)
 
         crypto_adapters = []
         for aname in crypto_adapter_names:
-            print("Finding crypto adapter {} ...".format(aname))
+            print(f"Finding crypto adapter {aname} ...")
             adapter = cpc.adapters.find(name=aname)
             crypto_adapters.append(adapter)
 
@@ -88,7 +88,7 @@ try:
         partition.increase_crypto_config(crypto_adapters, crypto_domain_config)
 
     except zhmcclient.Error as exc:
-        print("Error: {}".format(exc))
+        print(f"Error: {exc}")
         sys.exit(1)
 
 finally:

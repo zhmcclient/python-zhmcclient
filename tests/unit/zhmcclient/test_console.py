@@ -16,7 +16,6 @@
 Unit tests for _console module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import pytest
@@ -28,7 +27,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestConsole(object):
+class TestConsole:
     """All tests for the Console and ConsoleManager classes."""
 
     def setup_method(self):

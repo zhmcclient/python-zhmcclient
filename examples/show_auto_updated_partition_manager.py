@@ -56,7 +56,7 @@ def delta_ms(start_dt, end_dt):
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -78,7 +78,7 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
     part_mgr = cpc.partitions
 
@@ -105,8 +105,8 @@ try:
     print("Result of list(): returned {} partitions in {} ms".
           format(len(part_list), delta_ms(start_dt, end_dt)))
 
-    part_name = "zhmc_test_{}".format(uuid.uuid4())
-    print("Creating partition {} ...".format(part_name))
+    part_name = f"zhmc_test_{uuid.uuid4()}"
+    print(f"Creating partition {part_name} ...")
     part_props = {
         'name': part_name,
         'description': 'Original partition description.',
@@ -122,7 +122,7 @@ try:
         print("Error: Cannot create partition {} on CPC {}: {}: {}".
               format(part_name, cpc.name, exc.__class__.__name__, exc))
         sys.exit(1)
-    print("Partition uri: {}".format(part.uri))
+    print(f"Partition uri: {part.uri}")
 
     print("Listing partitions using list() "
           "(auto-enabled - added partition causes pull from HMC) ...")
@@ -140,7 +140,7 @@ try:
     print("Result of list(): returned {} partitions in {} ms".
           format(len(part_list), delta_ms(start_dt, end_dt)))
 
-    print("Deleting partition {} (uri: {}) ...".format(part.name, part.uri))
+    print(f"Deleting partition {part.name} (uri: {part.uri}) ...")
     try:
         part.delete()
         cleanup_partition = None
@@ -170,7 +170,7 @@ try:
 
 finally:
     if cleanup_partition:
-        print("Cleanup: Deleting partition {} ...".format(cleanup_partition.name))
+        print(f"Cleanup: Deleting partition {cleanup_partition.name} ...")
         try:
             cleanup_partition.delete()
         except zhmcclient.Error as exc:

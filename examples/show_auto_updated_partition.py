@@ -38,7 +38,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -59,10 +59,10 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    part_name = "zhmc_test_{}".format(uuid.uuid4())
-    print("Creating partition {} ...".format(part_name))
+    part_name = f"zhmc_test_{uuid.uuid4()}"
+    print(f"Creating partition {part_name} ...")
     part_props = {
         'name': part_name,
         'description': 'Original partition description.',
@@ -81,7 +81,7 @@ try:
 
     try:
         obj_topic = session.object_topic
-        print("Object notification topic: {}".format(obj_topic))
+        print(f"Object notification topic: {obj_topic}")
 
         # Two different zhmcclient.Partition objects representing the same
         # partition on the HMC
@@ -123,7 +123,7 @@ try:
             partition1.disable_auto_update()
 
     finally:
-        print("Deleting partition {} ...".format(part.name))
+        print(f"Deleting partition {part.name} ...")
         try:
             part.delete()
         except zhmcclient.Error as exc:

@@ -19,7 +19,6 @@ These tests do not change any existing user patterns, but create,
 modify and delete test user patterns.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -64,11 +63,11 @@ def test_upatt_find_list(hmc_session):  # noqa: F811
     # Pick the user patterns to test with
     upatt_list = console.user_patterns.list()
     if not upatt_list:
-        skip_warn("No user patterns defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No user patterns defined on HMC {hd.host}")
     upatt_list = pick_test_resources(upatt_list)
 
     for upatt in upatt_list:
-        print("Testing with user pattern {p!r}".format(p=upatt.name))
+        print(f"Testing with user pattern {upatt.name!r}")
         runtest_find_list(
             hmc_session, console.user_patterns, upatt.name, 'name',
             'element-uri', UPATT_VOLATILE_PROPS, UPATT_MINIMAL_PROPS,
@@ -94,11 +93,11 @@ def test_upatt_property(hmc_session):  # noqa: F811
     # Pick the user patterns to test with
     upatt_list = console.user_patterns.list()
     if not upatt_list:
-        skip_warn("No user patterns defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No user patterns defined on HMC {hd.host}")
     upatt_list = pick_test_resources(upatt_list)
 
     for upatt in upatt_list:
-        print("Testing with user pattern {p!r}".format(p=upatt.name))
+        print(f"Testing with user pattern {upatt.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -139,7 +138,7 @@ def test_upatt_crud(hmc_session):  # noqa: F811
     # Pick a template user to be the template user for the user pattern
     template_users = console.users.findall(type='template')
     if not template_users:
-        skip_warn("No template users on HMC {h}".format(h=hd.host))
+        skip_warn(f"No template users on HMC {hd.host}")
     template_user = template_users[0]
 
     # Test creating the user pattern
@@ -167,14 +166,14 @@ def test_upatt_crud(hmc_session):  # noqa: F811
 
     for pn, exp_value in upatt_input_props.items():
         assert upatt.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     upatt.pull_full_properties()
     for pn, exp_value in upatt_input_props.items():
         assert upatt.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     for pn, exp_value in upatt_auto_props.items():
         assert upatt.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
 
     # Test updating a property of the user pattern
 

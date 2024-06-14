@@ -20,7 +20,6 @@ user interface, the Web Services APIs or both.
 Tasks are predefined by the HMC and cannot be created, modified or deleted.
 """
 
-from __future__ import absolute_import
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -58,7 +57,7 @@ class TaskManager(BaseManager):
             'name',
         ]
 
-        super(TaskManager, self).__init__(
+        super().__init__(
             resource_class=Task,
             class_name=RC_TASK,
             session=console.manager.session,
@@ -134,7 +133,7 @@ class TaskManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'tasks'
-        list_uri = '{}/tasks'.format(self.console.uri)
+        list_uri = f'{self.console.uri}/tasks'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -165,4 +164,4 @@ class Task(BaseResource):
         assert isinstance(manager, TaskManager), \
             "Console init: Expected manager type {}, got {}" \
             .format(TaskManager, type(manager))
-        super(Task, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)

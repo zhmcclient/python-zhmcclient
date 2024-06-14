@@ -63,7 +63,6 @@ The basic usage of the metrics API is shown in this example:
     mc.delete()
 """
 
-from __future__ import absolute_import
 
 try:
     from collections.abc import namedtuple
@@ -112,7 +111,7 @@ class MetricsContextManager(BaseManager):
         # Parameters:
         #   client (:class:`~zhmcclient.Client`):
         #      Client object for the HMC to be used.
-        super(MetricsContextManager, self).__init__(
+        super().__init__(
             resource_class=MetricsContext,
             class_name='',
             session=client.session,
@@ -278,7 +277,7 @@ class MetricsContext(BaseResource):
             raise AssertionError(
                 "MetricsContext init: Expected manager type {}, got {}"
                 .format(MetricsContextManager, type(manager)))
-        super(MetricsContext, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
         self._metric_group_definitions = self._setup_metric_group_definitions()
 
@@ -394,7 +393,7 @@ class MetricGroupDefinition(_MetricGroupDefinitionTuple):
 
         All these parameters are also available as same-named attributes.
         """
-        self = super(MetricGroupDefinition, cls).__new__(
+        self = super().__new__(
             cls, name, resource_class, metric_definitions)
         return self
 
@@ -458,7 +457,7 @@ class MetricDefinition(_MetricDefinitionTuple):
 
         All these parameters are also available as same-named attributes.
         """
-        self = super(MetricDefinition, cls).__new__(
+        self = super().__new__(
             cls, index, name, type, unit)
         return self
 
@@ -492,7 +491,7 @@ _METRIC_TYPES_BY_NAME = {
     'integer-metric': int,
     'long-metric': int,
     'double-metric': float,
-    'string-metric': six.text_type,
+    'string-metric': str,
 }
 
 
@@ -509,7 +508,7 @@ def _metric_value(value_str, metric_type):
                 format(metric_type.__class__.__name__, value_str))
             new_exc.__cause__ = None
             raise new_exc  # ValueError
-    elif metric_type is six.text_type:
+    elif metric_type is str:
         # In Python 3, decode('unicode_escape) requires bytes, so we need
         # to encode to bytes. This also works in Python 2.
         return value_str.strip('"').encode('utf-8').decode('unicode_escape')
@@ -520,7 +519,7 @@ def _metric_value(value_str, metric_type):
             return True
         if lower_str == 'false':
             return False
-        raise ValueError("Invalid boolean metric value: {!r}".format(value_str))
+        raise ValueError(f"Invalid boolean metric value: {value_str!r}")
 
 
 def _metric_unit_from_name(metric_name):
@@ -539,36 +538,36 @@ def _metric_unit_from_name(metric_name):
 
 _USE_UNICODE = True
 if _USE_UNICODE:
-    MICROSECONDS = u"\u00b5s"  # U+00B5 = Micro Sign
-    CELSIUS = u"\u00B0C"  # U+00B0 = Degree Sign
+    MICROSECONDS = "\u00b5s"  # U+00B5 = Micro Sign
+    CELSIUS = "\u00B0C"  # U+00B0 = Degree Sign
     # Note: Use of U+2103 (Degree Celsius) is discouraged by Unicode standard
 else:
-    MICROSECONDS = u"us"
-    CELSIUS = u"degree Celsius"  # Official SI unit when not using degree sign
+    MICROSECONDS = "us"
+    CELSIUS = "degree Celsius"  # Official SI unit when not using degree sign
 
 
 _PATTERN_UNIT_LIST = {
     # End patterns:
-    (re.compile(r".+-usage$"), u"%"),
+    (re.compile(r".+-usage$"), "%"),
     (re.compile(r".+-time$"), MICROSECONDS),
     (re.compile(r".+-time-used$"), MICROSECONDS),
     (re.compile(r".+-celsius$"), CELSIUS),
-    (re.compile(r".+-watts$"), u"W"),
-    (re.compile(r".+-paging-rate$"), u"pages/s"),
-    (re.compile(r".+-sampling-rate$"), u"samples/s"),
+    (re.compile(r".+-watts$"), "W"),
+    (re.compile(r".+-paging-rate$"), "pages/s"),
+    (re.compile(r".+-sampling-rate$"), "samples/s"),
     # Begin patterns:
-    (re.compile(r"^bytes-.+"), u"B"),
-    (re.compile(r"^heat-load.+"), u"BTU/h"),  # Note: No trailing hyphen
-    (re.compile(r"^interval-bytes-.+"), u"B"),
-    (re.compile(r"^bytes-per-second-.+"), u"B/s"),
+    (re.compile(r"^bytes-.+"), "B"),
+    (re.compile(r"^heat-load.+"), "BTU/h"),  # Note: No trailing hyphen
+    (re.compile(r"^interval-bytes-.+"), "B"),
+    (re.compile(r"^bytes-per-second-.+"), "B/s"),
     # Special cases:
-    (re.compile(r"^storage-rate$"), u"kB/s"),
-    (re.compile(r"^humidity$"), u"%"),
-    (re.compile(r"^memory-used$"), u"MiB"),
-    (re.compile(r"^policy-activation-time$"), u""),  # timestamp
+    (re.compile(r"^storage-rate$"), "kB/s"),
+    (re.compile(r"^humidity$"), "%"),
+    (re.compile(r"^memory-used$"), "MiB"),
+    (re.compile(r"^policy-activation-time$"), ""),  # timestamp
     (re.compile(r"^velocity-numerator$"), MICROSECONDS),
     (re.compile(r"^velocity-denominator$"), MICROSECONDS),
-    (re.compile(r"^utilization$"), u"%"),
+    (re.compile(r"^utilization$"), "%"),
 }
 
 
@@ -604,7 +603,7 @@ CLASS_FROM_GROUP = {
 }
 
 
-class MetricsResponse(object):
+class MetricsResponse:
     """
     Represents the metric values returned by one call to the
     :meth:`~zhmcclient.MetricsContext.get_metrics` method, and provides
@@ -744,7 +743,7 @@ class MetricsResponse(object):
         return self._metric_group_values
 
 
-class MetricGroupValues(object):
+class MetricGroupValues:
     """
     Represents the metric values for a metric group in a MetricsResponse
     string.
@@ -782,7 +781,7 @@ class MetricGroupValues(object):
         return self._object_values
 
 
-class MetricObjectValues(object):
+class MetricObjectValues:
     """
     Represents the metric values for a single resource at a single point in
     time.
@@ -953,7 +952,7 @@ class MetricObjectValues(object):
                     Nic, nic_managers)
         else:
             raise ValueError(
-                "Invalid resource class: {!r}".format(resource_class))
+                f"Invalid resource class: {resource_class!r}")
 
         self._resource = resource
         return self._resource

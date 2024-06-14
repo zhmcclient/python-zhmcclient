@@ -16,7 +16,6 @@
 Unit tests for _storage_group module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import copy
@@ -31,14 +30,14 @@ from tests.common.utils import assert_resources
 
 # Object IDs and names of our faked storage groups:
 CPC_OID = 'fake-cpc1-oid'
-CPC_URI = '/api/cpcs/{}'.format(CPC_OID)
+CPC_URI = f'/api/cpcs/{CPC_OID}'
 SG1_OID = 'sg1-oid'
 SG1_NAME = 'sg 1'
 SG2_OID = 'sg2-oid'
 SG2_NAME = 'sg 2'
 
 
-class TestStorageGroup(object):
+class TestStorageGroup:
     """All tests for the StorageGroup and StorageGroupManager classes."""
 
     def setup_method(self):

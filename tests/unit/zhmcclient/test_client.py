@@ -16,7 +16,6 @@
 Unit tests for _client module.
 """
 
-from __future__ import absolute_import, print_function
 
 import pytest
 

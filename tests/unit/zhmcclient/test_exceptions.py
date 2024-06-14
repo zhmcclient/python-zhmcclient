@@ -16,7 +16,6 @@
 Unit tests for _exceptions module.
 """
 
-from __future__ import absolute_import, print_function
 
 import re
 import six
@@ -165,7 +164,7 @@ def test_connectionerror_repr(msg, details):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -206,8 +205,8 @@ def test_connectionerror_str_def(msg, details):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -264,7 +263,7 @@ def test_connecttimeout_repr(
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -307,8 +306,8 @@ def test_connecttimeout_str_def(
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
     assert str_def.find(' connect_timeout={!r};'.
                         format(connect_timeout)) >= 0
     assert str_def.find(' connect_retries={!r};'.
@@ -368,7 +367,7 @@ def test_readtimeout_repr(msg, details, read_timeout, read_retries):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -409,10 +408,10 @@ def test_readtimeout_str_def(msg, details, read_timeout, read_retries):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
-    assert str_def.find(' read_timeout={!r};'.format(read_timeout)) >= 0
-    assert str_def.find(' read_retries={!r};'.format(read_retries)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
+    assert str_def.find(f' read_timeout={read_timeout!r};') >= 0
+    assert str_def.find(f' read_retries={read_retries!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -467,7 +466,7 @@ def test_retriesexceeded_repr(msg, details, connect_retries):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -508,8 +507,8 @@ def test_retriesexceeded_str_def(msg, details, connect_retries):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
     assert str_def.find(' connect_retries={!r};'.
                         format(connect_retries)) >= 0
 
@@ -563,7 +562,7 @@ def test_clientautherror_repr(msg):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -604,8 +603,8 @@ def test_clientautherror_str_def(msg):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -660,7 +659,7 @@ def test_serverautherror_repr(msg, details):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -705,13 +704,13 @@ def test_serverautherror_str_def(msg, details):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
     assert str_def.find(' request_method={!r};'.
                         format(request_method)) >= 0
-    assert str_def.find(' request_uri={!r};'.format(request_uri)) >= 0
-    assert str_def.find(' http_status={!r};'.format(http_status)) >= 0
-    assert str_def.find(' reason={!r};'.format(reason)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' request_uri={request_uri!r};') >= 0
+    assert str_def.find(f' http_status={http_status!r};') >= 0
+    assert str_def.find(f' reason={reason!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -770,7 +769,7 @@ def test_parseerror_repr(msg):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -813,10 +812,10 @@ def test_parseerror_str_def(msg):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' line={!r};'.format(exc.line)) >= 0
-    assert str_def.find(' column={!r};'.format(exc.column)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' line={exc.line!r};') >= 0
+    assert str_def.find(f' column={exc.column!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -871,7 +870,7 @@ def test_versionerror_repr(msg, min_api_version, api_version):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -912,8 +911,8 @@ def test_versionerror_str_def(msg, min_api_version, api_version):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
     assert str_def.find(' min_api_version={!r};'.
                         format(min_api_version)) >= 0
     assert str_def.find(' api_version={!r};'.
@@ -985,7 +984,7 @@ def test_httperror_repr(body):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -1028,13 +1027,13 @@ def test_httperror_str_def(body):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
     assert str_def.find(' request_method={!r};'.
                         format(request_method)) >= 0
-    assert str_def.find(' request_uri={!r};'.format(request_uri)) >= 0
-    assert str_def.find(' http_status={!r};'.format(http_status)) >= 0
-    assert str_def.find(' reason={!r};'.format(reason)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' request_uri={request_uri!r};') >= 0
+    assert str_def.find(f' http_status={http_status!r};') >= 0
+    assert str_def.find(f' reason={reason!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -1088,7 +1087,7 @@ def test_operationtimeout_repr(msg, operation_timeout):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -1129,8 +1128,8 @@ def test_operationtimeout_str_def(msg, operation_timeout):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
     assert str_def.find(' operation_timeout={!r};'.
                         format(operation_timeout)) >= 0
 
@@ -1190,7 +1189,7 @@ def test_statustimeout_repr(
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -1235,8 +1234,8 @@ def test_statustimeout_str_def(
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
     assert str_def.find(' actual_status={!r};'.
                         format(actual_status)) >= 0
     assert str_def.find(' desired_statuses={!r};'.
@@ -1245,7 +1244,7 @@ def test_statustimeout_str_def(
                         format(status_timeout)) >= 0
 
 
-class TestNoUniqueMatch(object):
+class TestNoUniqueMatch:
     """All tests for exception class NoUniqueMatch."""
 
     def setup_method(self):
@@ -1324,7 +1323,7 @@ class TestNoUniqueMatch(object):
 
         assert isinstance(exc, Error)
         assert len(exc.args) == 1
-        assert isinstance(exc.args[0], six.string_types)
+        assert isinstance(exc.args[0], str)
         # auto-generated message, we don't expect a particular value
         assert exc.filter_args == filter_args
         assert exc.manager == manager
@@ -1352,7 +1351,7 @@ class TestNoUniqueMatch(object):
 
         # We check the one-lined string just roughly
         repr_str = repr_str.replace('\n', '\\n')
-        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+        assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
     @pytest.mark.parametrize(
         "filter_args", [
@@ -1395,10 +1394,10 @@ class TestNoUniqueMatch(object):
         str_def = exc.str_def()
 
         str_def = ' ' + str_def
-        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(f' classname={classname!r};') >= 0
         assert str_def.find(' resource_classname={!r};'.
                             format(manager.resource_class.__name__)) >= 0
-        assert str_def.find(' filter_args={!r};'.format(filter_args)) >= 0
+        assert str_def.find(f' filter_args={filter_args!r};') >= 0
         assert str_def.find(' parent_classname={!r};'.
                             format(manager.parent.__class__.__name__)) >= 0
         assert str_def.find(' parent_name={!r};'.
@@ -1406,7 +1405,7 @@ class TestNoUniqueMatch(object):
         assert str_def.find(' message=') >= 0
 
 
-class NotFoundManagerIndicator(object):
+class NotFoundManagerIndicator:
     # pylint: disable=too-few-public-methods
     """
     Indicator class for the 'manager' argument of NotFound().
@@ -1534,7 +1533,7 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
 ]
 
 
-class TestNotFound(object):
+class TestNotFound:
     """All tests for exception class NotFound."""
 
     def setup_method(self):
@@ -1598,7 +1597,7 @@ class TestNotFound(object):
         # Validate exception message
         assert len(exc.args) == 1
         message = exc.args[0]
-        assert isinstance(message, six.string_types)
+        assert isinstance(message, str)
         if exp_message_pattern:
             assert re.match(exp_message_pattern, message)
 
@@ -1630,7 +1629,7 @@ class TestNotFound(object):
 
         # We check the one-lined string just roughly
         repr_str = repr_str.replace('\n', '\\n')
-        assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+        assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
     @pytest.mark.parametrize(
         "filter_args", [
@@ -1671,10 +1670,10 @@ class TestNotFound(object):
         str_def = exc.str_def()
 
         str_def = ' ' + str_def
-        assert str_def.find(' classname={!r};'.format(classname)) >= 0
+        assert str_def.find(f' classname={classname!r};') >= 0
         assert str_def.find(' resource_classname={!r};'.
                             format(manager.resource_class.__name__)) >= 0
-        assert str_def.find(' filter_args={!r};'.format(filter_args)) >= 0
+        assert str_def.find(f' filter_args={filter_args!r};') >= 0
         assert str_def.find(' parent_classname={!r};'.
                             format(manager.parent.__class__.__name__)) >= 0
         assert str_def.find(' parent_name={!r};'.
@@ -1730,7 +1729,7 @@ def test_notijmserror_repr(msg, jms_headers, jms_message):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -1767,8 +1766,8 @@ def test_notijmserror_str_def(msg, jms_headers, jms_message):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -1818,7 +1817,7 @@ def test_notiparseerror_repr(msg, jms_message):
 
     # We check the one-lined string just roughly
     repr_str = repr_str.replace('\n', '\\n')
-    assert re.match(r'^{}\s*\(.*\)$'.format(classname), repr_str)
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
 
 
 @pytest.mark.parametrize(
@@ -1855,8 +1854,8 @@ def test_notiparseerror_str_def(msg, jms_message):
     str_def = exc.str_def()
 
     str_def = ' ' + str_def
-    assert str_def.find(' classname={!r};'.format(classname)) >= 0
-    assert str_def.find(' message={!r};'.format(msg)) >= 0
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(f' message={msg!r};') >= 0
 
 
 @pytest.mark.parametrize(

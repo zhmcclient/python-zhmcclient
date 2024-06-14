@@ -43,7 +43,7 @@ lpar_load_devno = '0100'
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -64,9 +64,9 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
-    print("Finding LPAR by name={} ...".format(lpar_name))
+    print(f"Finding LPAR by name={lpar_name} ...")
     # We use list() instead of find() because find(name=..) is optimized by
     # using the name-to-uri cache and therefore returns an Lpar object with
     # only a minimal set of properties, and particularly no 'status' property.
@@ -83,17 +83,17 @@ try:
         sys.exit(1)
     lpar = lpars[0]
     status = lpar.get_property('status')
-    print("Found LPAR {} with status {}".format(lpar.name, status))
+    print(f"Found LPAR {lpar.name} with status {status}")
 
     retries = 10
 
     if status != "not-activated":
-        print("Deactivating LPAR {} ...".format(lpar.name))
+        print(f"Deactivating LPAR {lpar.name} ...")
         lpar.deactivate()
         for i in range(0, retries):
             lpar = cpc.lpars.list(filter_args={'name': lpar_name})[0]
             status = lpar.get_property('status')
-            print("LPAR status: {}".format(status))
+            print(f"LPAR status: {status}")
             if status == 'not-activated':
                 break
             time.sleep(1)
@@ -101,12 +101,12 @@ try:
             print("Warning: After {} retries, status of LPAR {} after "
                   "Deactivate is still: {}".format(retries, lpar.name, status))
 
-    print("Activating LPAR {} ...".format(lpar.name))
+    print(f"Activating LPAR {lpar.name} ...")
     lpar.activate()
     for i in range(0, retries):
         lpar = cpc.lpars.list(filter_args={'name': lpar_name})[0]
         status = lpar.get_property('status')
-        print("LPAR status: {}".format(status))
+        print(f"LPAR status: {status}")
         if status == 'not-operating':
             break
         time.sleep(1)
@@ -120,7 +120,7 @@ try:
     for i in range(0, retries):
         lpar = cpc.lpars.list(filter_args={'name': lpar_name})[0]
         status = lpar.get_property('status')
-        print("LPAR status: {}".format(status))
+        print(f"LPAR status: {status}")
         if status == 'operating':
             break
         time.sleep(1)
@@ -128,12 +128,12 @@ try:
         print("Warning: After {} retries, status of LPAR {} after "
               "Load is still: {}".format(retries, lpar.name, status))
 
-    print("Deactivating LPAR {} ...".format(lpar.name))
+    print(f"Deactivating LPAR {lpar.name} ...")
     lpar.deactivate()
     for i in range(0, retries):
         lpar = cpc.lpars.list(filter_args={'name': lpar_name})[0]
         status = lpar.get_property('status')
-        print("LPAR status: {}".format(status))
+        print(f"LPAR status: {status}")
         if status == 'not-activated':
             break
         time.sleep(1)

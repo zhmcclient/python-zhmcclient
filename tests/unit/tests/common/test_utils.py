@@ -18,7 +18,6 @@
 Unit test cases for the tests/common/utils.py module.
 """
 
-from __future__ import absolute_import, print_function
 
 import pytest
 
@@ -28,7 +27,7 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
-class TestUtilsAssertResources(object):
+class TestUtilsAssertResources:
     """All tests for utils.assert_resources()."""
 
     def setup_method(self):

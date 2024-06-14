@@ -16,14 +16,13 @@
 Unit tests for _session module.
 """
 
-from __future__ import absolute_import, print_function
 
 import time
 import json
 import re
 import requests
 import requests_mock
-import mock
+from unittest import mock
 import pytest
 
 from zhmcclient import Session, ParseError, Job, HTTPError, OperationTimeout, \
@@ -81,7 +80,7 @@ def test_session_init(
 
     if use_get_password:
         def get_password(host, userid):
-            pw = 'fake-pw-{}-{}'.format(host, userid)
+            pw = f'fake-pw-{host}-{userid}'
             return pw
     else:
         get_password = None
@@ -112,7 +111,7 @@ def test_session_init(
         assert session.headers['X-API-Session'] == session_id
         assert len(session.headers) == 4
         assert session.actual_host == host
-        base_url = 'https://{}:{!s}'.format(session.actual_host, session.port)
+        base_url = f'https://{session.actual_host}:{session.port!s}'
         assert session.base_url == base_url
 
 
@@ -151,7 +150,7 @@ def test_session_logon(
         if use_get_password:
             get_password = mock.MagicMock()
             get_password.return_value = \
-                'fake-pw-{}-{}'.format(host, userid)
+                f'fake-pw-{host}-{userid}'
         else:
             get_password = None
 
@@ -367,7 +366,7 @@ def test_session_get_error_html_1():
         get_resp_headers = {
             'content-type': get_resp_content_type,
         }
-        get_resp_content = u"""\
+        get_resp_content = """\
 <!doctype html public "-//IETF//DTD HTML 2.0//EN">\
  <html>\
 <head>\

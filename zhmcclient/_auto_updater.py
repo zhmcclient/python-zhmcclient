@@ -46,7 +46,7 @@ __all__ = ['AutoUpdater']
 JMS_LOGGER = logging.getLogger(JMS_LOGGER_NAME)
 
 
-class AutoUpdater(object):
+class AutoUpdater:
     """
     A class that automatically updates
 
@@ -132,7 +132,7 @@ class AutoUpdater(object):
         # Subscription ID. We use some value that allows to identify on the
         # HMC that this is the zhmcclient, but otherwise we are not using
         # this value ourselves.
-        self._sub_id = 'zhmcclient.{}'.format(id(self))
+        self._sub_id = f'zhmcclient.{id(self)}'
 
         # Lazy importing of the stomp module, because the import is slow in some
         # versions.
@@ -157,8 +157,7 @@ class AutoUpdater(object):
         self._conn = self._stomp.Connection(
             [(self._session.actual_host, DEFAULT_STOMP_PORT)], **rt_kwargs)
         set_kwargs = dict()
-        if sys.version_info >= (3, 6):
-            set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
+        set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
         self._conn.set_ssl(
             for_hosts=[(self._session.actual_host, DEFAULT_STOMP_PORT)],
             **set_kwargs)
@@ -239,8 +238,7 @@ class AutoUpdater(object):
         if uri in self._registered_objects:
             id_dict = self._registered_objects[uri]
             # pylint: disable=use-yield-from
-            for res_obj in id_dict.values():
-                yield res_obj
+            yield from id_dict.values()
 
     def has_objects(self):
         """
@@ -250,7 +248,7 @@ class AutoUpdater(object):
         return bool(self._registered_objects)
 
 
-class _UpdateListener(object):
+class _UpdateListener:
     # pylint: disable=too-few-public-methods
     """
     A notification listener class for use by the Python `stomp` package.
@@ -352,7 +350,7 @@ class _UpdateListener(object):
                     self._session.object_topic, headers)
                 return None
 
-        mgr_uris = ['{}#{}'.format(_uri, res_class) for _uri in parent_uris]
+        mgr_uris = [f'{_uri}#{res_class}' for _uri in parent_uris]
         return mgr_uris
 
     def _get_uri(self, headers):

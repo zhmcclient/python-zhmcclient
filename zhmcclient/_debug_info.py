@@ -27,7 +27,6 @@ Command line usage:
     python -c "import zhmcclient; print(zhmcclient.debuginfo())"
 """
 
-from __future__ import print_function, absolute_import
 
 import sys
 import platform
@@ -46,9 +45,9 @@ def _version_string(version_info):
         "1.2.3.alpha.42"  # if version_info[3] != 'final'
     """
     major, minor, micro, releaselevel, serial = version_info
-    version_str = '{}.{}.{}'.format(major, minor, micro)
+    version_str = f'{major}.{minor}.{micro}'
     if releaselevel != 'final':
-        version_str = '{}.{}.{}'.format(version_str, releaselevel, serial)
+        version_str = f'{version_str}.{releaselevel}.{serial}'
     return version_str
 
 
@@ -59,7 +58,7 @@ def debuginfo():
     di_dict = debuginfo_dict()
     ret = ""
     for k, v in di_dict.items():
-        ret += "{}: {}\n".format(k, v)
+        ret += f"{k}: {v}\n"
     return ret
 
 

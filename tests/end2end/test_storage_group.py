@@ -19,7 +19,6 @@ These tests do not change any existing storage groups, but create, modify and
 delete test storage groups.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -125,7 +124,7 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
         assert cpc.dpm_enabled
         skipif_no_storage_mgmt_feature(cpc)
 
-        print("Testing on CPC {c}".format(c=cpc.name))
+        print(f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.client.consoles.console
         stogrp_name = TEST_PREFIX + ' test_stogrp_crud stogrp1'

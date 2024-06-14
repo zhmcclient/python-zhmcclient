@@ -63,10 +63,10 @@ def assert_resources(resources, exp_resources, prop_names):
     """
 
     # Assert the resource URIs
-    uris = set([res.uri for res in resources])
-    exp_uris = set([res.uri for res in exp_resources])
+    uris = {res.uri for res in resources}
+    exp_uris = {res.uri for res in exp_resources}
     assert uris == exp_uris, \
-        "Unexpected URIs: got: {}, expected: {}".format(uris, exp_uris)
+        f"Unexpected URIs: got: {uris}, expected: {exp_uris}"
 
     for res in resources:
 
@@ -147,17 +147,17 @@ def print_logger(logger):
     """
     Debug function that prints the relevant settings of a Python logger.
     """
-    print("Debug: Logger {!r}:".format(logger.name))
+    print(f"Debug: Logger {logger.name!r}:")
     print("Debug:   logger level: {} ({})"
           .format(logger.level, logging.getLevelName(logger.level)))
     if not logger.handlers:
         print("Debug:   No handlers")
     for handler in logger.handlers:
-        print("Debug:   Handler {}:".format(type(handler)))
+        print(f"Debug:   Handler {type(handler)}:")
         print("Debug:     handler level: {} ({})"
               .format(handler.level, logging.getLevelName(handler.level)))
         _fmt = getattr(handler.formatter, '_fmt', None)
-        print("Debug:     handler format: {!r}".format(_fmt))
+        print(f"Debug:     handler format: {_fmt!r}")
 
 
 def setup_logging():

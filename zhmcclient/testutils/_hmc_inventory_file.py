@@ -19,7 +19,6 @@ HMC inventory files conform to the format of HMC inventory files in YAML
 format and define specific additional variables for HMCs.
 """
 
-from __future__ import absolute_import
 
 try:
     from collections import OrderedDict
@@ -232,7 +231,7 @@ class HMCInventoryFileError(Exception):
     pass
 
 
-class HMCInventoryFile(object):
+class HMCInventoryFile:
     """
     Encapsulation of an :ref:`HMC inventory file` in YAML format.
     """
@@ -259,7 +258,7 @@ class HMCInventoryFile(object):
                         format(self._filepath, exc.__class__.__name__, exc))
                     new_exc.__cause__ = None
                     raise new_exc  # HMCInventoryFileError
-        except IOError as exc:
+        except OSError as exc:
             if exc.errno == errno.ENOENT:
                 new_exc = HMCInventoryFileError(
                     "The HMC inventory file {0!r} was not found".

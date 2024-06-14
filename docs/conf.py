@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Configuration file for Sphinx builds for the zhmcclient project.
 #
@@ -33,7 +32,7 @@ def get_version(version_file):
     a fresh Python environment).
     """
     # pylint: disable=unspecified-encoding
-    with open(version_file, 'r') as fp:
+    with open(version_file) as fp:
         version_source = fp.read()
     _globals = {}
     exec(version_source, _globals)  # pylint: disable=exec-used
@@ -90,13 +89,13 @@ else:
     master_doc = 'docs/index'
 
 # General information about the project.
-project = u'zhmcclient'
-copyright = u'IBM'  # pylint: disable=redefined-builtin
-author = u'zhmcclient team'
+project = 'zhmcclient'
+copyright = 'IBM'  # pylint: disable=redefined-builtin
+author = 'zhmcclient team'
 
 # The short description of the package.
-_short_description = u'Client library for IBM Z Hardware Management Console ' \
-    u'Web Services API'
+_short_description = 'Client library for IBM Z Hardware Management Console ' \
+    'Web Services API'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -117,8 +116,8 @@ version = get_version(os.path.join('..', 'zhmcclient', '_version.py'))
 release = version
 
 # Some prints, for extra information
-print("conf.py: pwd: {}".format(os.getcwd()))
-print("conf.py: zhmcclient version: {}".format(version))
+print(f"conf.py: pwd: {os.getcwd()}")
+print(f"conf.py: zhmcclient version: {version}")
 print("conf.py: Last 5 commits:")
 sys.stdout.flush()
 os.system('git log --decorate --oneline |head -5')

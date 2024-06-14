@@ -19,7 +19,6 @@ These tests do not change any existing users, but create,
 modify and delete test users.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -64,11 +63,11 @@ def test_user_find_list(hmc_session):  # noqa: F811
     # Pick the users to test with
     user_list = console.users.list()
     if not user_list:
-        skip_warn("No users defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No users defined on HMC {hd.host}")
     user_list = pick_test_resources(user_list)
 
     for user in user_list:
-        print("Testing with user {u!r}".format(u=user.name))
+        print(f"Testing with user {user.name!r}")
         runtest_find_list(
             hmc_session, console.users, user.name, 'name',
             'object-uri', USER_VOLATILE_PROPS, USER_MINIMAL_PROPS,
@@ -94,11 +93,11 @@ def test_user_property(hmc_session):  # noqa: F811
     # Pick the users to test with
     user_list = console.users.list()
     if not user_list:
-        skip_warn("No users defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No users defined on HMC {hd.host}")
     user_list = pick_test_resources(user_list)
 
     for user in user_list:
-        print("Testing with user {u!r}".format(u=user.name))
+        print(f"Testing with user {user.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -184,16 +183,16 @@ def test_user_crud(hmc_session):  # noqa: F811
         if pn == 'password':
             continue
         assert user.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     user.pull_full_properties()
     for pn, exp_value in user_input_props.items():
         if pn == 'password':
             continue
         assert user.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     for pn, exp_value in user_auto_props.items():
         assert user.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
 
     # Test updating a property of the user
 

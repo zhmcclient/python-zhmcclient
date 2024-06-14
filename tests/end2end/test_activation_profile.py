@@ -18,7 +18,6 @@ End2end tests for activation profiles (with CPCs in classic mode).
 These tests do not change any activation profiles.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 
@@ -62,7 +61,7 @@ def standard_activation_profile_props(cpc, profile_name, profile_type):
     actprof_input_props = {
         'profile-name': profile_name,
         'description': (
-            '{} profile for zhmcclient end2end tests'.format(profile_type)),
+            f'{profile_type} profile for zhmcclient end2end tests'),
     }
     if profile_type == 'image':
         # We provide the minimum set of properties needed to create a profile.
@@ -106,11 +105,11 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
 
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
 
-        msg = "Testing on CPC {c}".format(c=cpc.name)
+        msg = f"Testing on CPC {cpc.name}"
         print(msg)
         logger.info(msg)
 
-        actprof_name = 'ZHMC{}1'.format(profile_type[0].upper())
+        actprof_name = f'ZHMC{profile_type[0].upper()}1'
 
         # Preparation: Ensure clean starting point for this test
         try:
@@ -138,13 +137,13 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
         try:
             for pn, exp_value in actprof_input_props.items():
                 assert actprof.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
             actprof.pull_full_properties()
             for pn, exp_value in actprof_input_props.items():
                 if pn == 'profile-name':
                     pn = 'name'
                 assert actprof.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r}".format(pn)
+                    f"Unexpected value for property {pn!r}"
 
             # Test updating a property of the activation profile
 

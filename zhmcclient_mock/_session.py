@@ -16,7 +16,6 @@
 A faked Session class for the zhmcclient package.
 """
 
-from __future__ import absolute_import
 
 try:
     from collections import OrderedDict
@@ -649,7 +648,7 @@ class HmcDefinitionYamlError(Exception):
 
     def __init__(self, message):
         # pylint: disable=useless-super-delegation
-        super(HmcDefinitionYamlError, self).__init__(message)
+        super().__init__(message)
 
 
 class HmcDefinitionSchemaError(Exception):
@@ -662,7 +661,7 @@ class HmcDefinitionSchemaError(Exception):
 
     def __init__(self, message):
         # pylint: disable=useless-super-delegation
-        super(HmcDefinitionSchemaError, self).__init__(message)
+        super().__init__(message)
 
 
 class FakedSession(zhmcclient.Session):
@@ -713,7 +712,7 @@ class FakedSession(zhmcclient.Session):
           password (:term:`string`):
             HMC password for logging in to the mocked HMC.
         """
-        super(FakedSession, self).__init__(
+        super().__init__(
             host, userid=userid, password=password)
         self._hmc = FakedHmc(self, hmc_name, hmc_version, api_version)
         self._urihandler = UriHandler(URIS)
@@ -839,7 +838,7 @@ class FakedSession(zhmcclient.Session):
             hmc_dict = yaml.load(hmc_yaml, Loader=yamlloader.ordereddict.Loader)
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
             if filepath:
-                file_str = " in file {f}".format(f=filepath)
+                file_str = f" in file {filepath}"
             else:
                 file_str = ""
             new_exc = HmcDefinitionYamlError(
@@ -890,7 +889,7 @@ class FakedSession(zhmcclient.Session):
             jsonschema.validate(hmc_dict, FAKED_HMC_DEFINITION_SCHEMA)
         except jsonschema.exceptions.ValidationError as exc:
             if filepath:
-                file_str = " in file {f}".format(f=filepath)
+                file_str = f" in file {filepath}"
             else:
                 file_str = ""
             new_exc = HmcDefinitionSchemaError(

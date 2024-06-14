@@ -20,7 +20,6 @@ Port resources are contained in Adapter resources.
 Ports only exist in :term:`CPCs <CPC>` that are in DPM mode.
 """
 
-from __future__ import absolute_import
 
 import copy
 try:
@@ -70,9 +69,9 @@ class PortManager(BaseManager):
         try:
             port_class = PORT_CLASSES[port_type]
         except KeyError:
-            raise ValueError("Unknown port type: {}".format(port_type))
+            raise ValueError(f"Unknown port type: {port_type}")
 
-        super(PortManager, self).__init__(
+        super().__init__(
             resource_class=Port,
             session=adapter.manager.session,
             class_name=port_class,
@@ -203,7 +202,7 @@ class Port(BaseResource):
         assert isinstance(manager, PortManager), \
             "Port init: Expected manager type {}, got {}" \
             .format(PortManager, type(manager))
-        super(Port, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def update_properties(self, properties):

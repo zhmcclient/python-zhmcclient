@@ -46,7 +46,6 @@ Storage groups and storage volumes only can be defined in CPCs that are in
 DPM mode and that have the "dpm-storage-management" feature enabled.
 """
 
-from __future__ import absolute_import
 
 import re
 import copy
@@ -92,12 +91,12 @@ class VirtualStorageResourceManager(BaseManager):
             'partition-uri',
         ]
 
-        super(VirtualStorageResourceManager, self).__init__(
+        super().__init__(
             resource_class=VirtualStorageResource,
             class_name=RC_VIRTUAL_STORAGE_RESOURCE,
             session=storage_group.manager.session,
             parent=storage_group,
-            base_uri='{}/virtual-storage-resources'.format(storage_group.uri),
+            base_uri=f'{storage_group.uri}/virtual-storage-resources',
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -168,7 +167,7 @@ class VirtualStorageResourceManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'virtual-storage-resources'
-        list_uri = '{}/virtual-storage-resources'.format(self.storage_group.uri)
+        list_uri = f'{self.storage_group.uri}/virtual-storage-resources'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -199,7 +198,7 @@ class VirtualStorageResource(BaseResource):
         assert isinstance(manager, VirtualStorageResourceManager), \
             "VirtualStorageResource init: Expected manager type {}, got {}" \
             .format(VirtualStorageResourceManager, type(manager))
-        super(VirtualStorageResource, self).__init__(
+        super().__init__(
             manager, uri, name, properties)
         self._attached_partition = None
         self._adapter_port = None

@@ -19,7 +19,6 @@ These tests do not change any existing password rules, but create,
 modify and delete test password rules.
 """
 
-from __future__ import absolute_import, print_function
 
 import warnings
 import pytest
@@ -64,11 +63,11 @@ def test_pwrule_find_list(hmc_session):  # noqa: F811
     # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
     if not pwrule_list:
-        skip_warn("No password rules defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No password rules defined on HMC {hd.host}")
     pwrule_list = pick_test_resources(pwrule_list)
 
     for pwrule in pwrule_list:
-        print("Testing with password rule {r!r}".format(r=pwrule.name))
+        print(f"Testing with password rule {pwrule.name!r}")
         runtest_find_list(
             hmc_session, console.password_rules, pwrule.name, 'name',
             'element-uri', PWRULE_VOLATILE_PROPS, PWRULE_MINIMAL_PROPS,
@@ -94,11 +93,11 @@ def test_pwrule_property(hmc_session):  # noqa: F811
     # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
     if not pwrule_list:
-        skip_warn("No password rules defined on HMC {h}".format(h=hd.host))
+        skip_warn(f"No password rules defined on HMC {hd.host}")
     pwrule_list = pick_test_resources(pwrule_list)
 
     for pwrule in pwrule_list:
-        print("Testing with password rule {r!r}".format(r=pwrule.name))
+        print(f"Testing with password rule {pwrule.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -162,14 +161,14 @@ def test_pwrule_crud(hmc_session):  # noqa: F811
 
     for pn, exp_value in pwrule_input_props.items():
         assert pwrule.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     pwrule.pull_full_properties()
     for pn, exp_value in pwrule_input_props.items():
         assert pwrule.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
     for pn, exp_value in pwrule_auto_props.items():
         assert pwrule.properties[pn] == exp_value, \
-            "Unexpected value for property {!r}".format(pn)
+            f"Unexpected value for property {pn!r}"
 
     # Test updating a property of the password rule
 

@@ -44,7 +44,6 @@ There are three types of Activation Profiles:
    the operating system for that LPAR will be loaded (booted) from.
 """
 
-from __future__ import absolute_import
 
 import copy
 import warnings
@@ -114,12 +113,12 @@ class ActivationProfileManager(BaseManager):
             raise ValueError("Unknown activation profile type: {}".
                              format(profile_type))
 
-        super(ActivationProfileManager, self).__init__(
+        super().__init__(
             resource_class=ActivationProfile,
             class_name=activation_profile_class,
             session=cpc.manager.session,
             parent=cpc,
-            base_uri='{}/{}-activation-profiles'.format(cpc.uri, profile_type),
+            base_uri=f'{cpc.uri}/{profile_type}-activation-profiles',
             oid_prop='name',  # This is an exception!
             uri_prop='element-uri',
             name_prop='name',
@@ -213,7 +212,7 @@ class ActivationProfileManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = self._profile_type + '-activation-profiles'
-        list_uri = '{}/{}'.format(self.cpc.uri, result_prop)
+        list_uri = f'{self.cpc.uri}/{result_prop}'
         if self._profile_type != 'image' and additional_properties is not None:
             raise TypeError(
                 "list() for {} profiles does not support "
@@ -262,7 +261,7 @@ class ActivationProfileManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         ap_selector = self._profile_type + '-activation-profiles'
-        uri = '{}/{}'.format(self.cpc.uri, ap_selector)
+        uri = f'{self.cpc.uri}/{ap_selector}'
 
         result = self.session.post(uri, body=properties)
 
@@ -275,7 +274,7 @@ class ActivationProfileManager(BaseManager):
                 "response data with properties: {pl!r}".
                 format(pt=self._profile_type, pl=result.keys()), UserWarning)
         name = properties['profile-name']
-        uri = '{}/{}'.format(uri, name)
+        uri = f'{uri}/{name}'
 
         props = copy.deepcopy(properties)
         props[self._uri_prop] = uri
@@ -310,7 +309,7 @@ class ActivationProfile(BaseResource):
         assert isinstance(manager, ActivationProfileManager), \
             "ActivationProfile init: Expected manager type {}, got {}" \
             .format(ActivationProfileManager, type(manager))
-        super(ActivationProfile, self).__init__(manager, uri, name, properties)
+        super().__init__(manager, uri, name, properties)
 
     @logged_api_call
     def delete(self):

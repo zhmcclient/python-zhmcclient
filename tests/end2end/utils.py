@@ -16,7 +16,6 @@
 Utility functions for end2end tests.
 """
 
-from __future__ import absolute_import, print_function
 
 import os
 import re
@@ -439,7 +438,7 @@ def runtest_get_properties(
     resource = random.choice(resources)
 
     local_pnames = set(resource.properties.keys())
-    local_pnames_plus = local_pnames | set([non_list_prop])
+    local_pnames_plus = local_pnames | {non_list_prop}
 
     # Validate that the non_list_prop property is not listed.
     # This is really just checking that the testcase was invoked correctly.
@@ -454,7 +453,7 @@ def runtest_get_properties(
     for pname in local_pnames:
         _ = resource.get_property(pname)
         assert resource.full_properties is False, \
-            "resource={!r}".format(resource)
+            f"resource={resource!r}"
         current_pnames = set(resource.properties.keys())
         assert current_pnames == local_pnames, \
             "current_pnames={!r}, local_pnames={!r}". \
@@ -464,7 +463,7 @@ def runtest_get_properties(
     for pname in local_pnames:
         _ = resource.prop(pname)
         assert resource.full_properties is False, \
-            "resource={!r}".format(resource)
+            f"resource={resource!r}"
         current_pnames = set(resource.properties.keys())
         assert current_pnames == local_pnames, \
             "current_pnames={!r}, local_pnames={!r}". \
@@ -473,7 +472,7 @@ def runtest_get_properties(
     # Validate that get_property() on non_list_prop pulls full properties
     _ = resource.get_property(non_list_prop)
     assert resource.full_properties is True, \
-        "resource={!r}".format(resource)
+        f"resource={resource!r}"
     current_pnames = set(resource.properties.keys())
     assert current_pnames > local_pnames_plus, \
         "current_pnames={!r}, local_pnames_plus={!r}". \
@@ -487,7 +486,7 @@ def runtest_get_properties(
     resource = random.choice(resources)
 
     local_pnames = set(resource.properties.keys())
-    local_pnames_plus = local_pnames | set([non_list_prop])
+    local_pnames_plus = local_pnames | {non_list_prop}
 
     # Validate initial state of the resource w.r.t. properties
     assert resource.full_properties is False
@@ -510,11 +509,11 @@ def runtest_get_properties(
             "current_pnames={!r}, local_pnames_plus={!r}". \
             format(current_pnames, local_pnames_plus)
         assert resource.full_properties is False, \
-            "resource={!r}".format(resource)
+            f"resource={resource!r}"
     else:
         # We get the full set of properties
         assert resource.full_properties is True, \
-            "resource={!r}".format(resource)
+            f"resource={resource!r}"
 
     # Part 3: Third chunk of methods to be tested
 
@@ -572,9 +571,9 @@ def validate_list_features(api_version, all_features, regex_reduced_features):
         expected_features = ['cpc-install-and-activate']
         for feature in expected_features:
             assert feature in all_features, \
-                '{} missing from {}'.format(feature, all_features)
+                f'{feature} missing from {all_features}'
             assert feature in regex_reduced_features, \
-                '{} missing from {}'.format(feature, regex_reduced_features)
+                f'{feature} missing from {regex_reduced_features}'
 
         # Ensure pattern matching using 'cpc.*' worked
         assert len(regex_reduced_features) < len(all_features)
@@ -680,7 +679,7 @@ def standard_partition_props(cpc, part_name):
         part_input_props['cp-processors'] = 1
         pc_names = filter(lambda p: p.startswith('processor-count-'),
                           cpc.properties.keys())
-        pc_list = ["{n}={v}".format(n=n, v=cpc.properties[n]) for n in pc_names]
+        pc_list = [f"{n}={cpc.properties[n]}" for n in pc_names]
         warnings.warn(
             "CPC {c} shows neither IFL nor CP processors, specifying 1 CP "
             "for partition creation. "

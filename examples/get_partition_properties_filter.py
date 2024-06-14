@@ -37,7 +37,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC at {} with userid {} ...".format(host, userid))
+print(f"Using HMC at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -58,11 +58,11 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
     partitions = cpc.partitions.list()
     partition = random.choice(partitions)
-    print("Using partition {} ...".format(partition.name))
+    print(f"Using partition {partition.name} ...")
 
     print("\nLocal partition properties after list: {}".
           format(list(partition.properties.keys())))

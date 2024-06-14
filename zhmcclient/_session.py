@@ -16,7 +16,6 @@
 Session class: A session to the HMC, optionally in context of an HMC user.
 """
 
-from __future__ import absolute_import
 
 import sys
 import json
@@ -31,7 +30,7 @@ try:
     from collections.abc import Iterable
 except ImportError:
     # pylint: disable=deprecated-class
-    from collections import Iterable
+    from collections.abc import Iterable
 import six
 import requests
 import urllib3
@@ -58,7 +57,7 @@ HMC_LOGGER = get_logger(HMC_LOGGER_NAME)
 
 _HMC_SCHEME = "https"
 _STD_HEADERS = {
-    'User-Agent': 'python-zhmcclient/{}'.format(__version__),
+    'User-Agent': f'python-zhmcclient/{__version__}',
     'Content-type': 'application/json',
     'Accept': '*/*'
 }
@@ -119,7 +118,7 @@ def _request_exc_message(exc):
         if isinstance(arg, Exception):
             org_exc = arg
             if isinstance(org_exc, urllib3.exceptions.MaxRetryError):
-                message = "{}, reason: {}".format(org_exc, org_exc.reason)
+                message = f"{org_exc}, reason: {org_exc.reason}"
             else:
                 message = str(org_exc)
         else:
@@ -135,7 +134,7 @@ def _request_exc_message(exc):
     return ", ".join(messages)
 
 
-class RetryTimeoutConfig(object):
+class RetryTimeoutConfig:
     # pylint: disable=too-few-public-methods
     """
     A configuration setting that specifies verious retry counts and timeout
@@ -270,7 +269,7 @@ def _headers_for_logging(headers):
     return headers
 
 
-class Session(object):
+class Session:
     """
     A session to the HMC, optionally in context of an HMC user.
 
@@ -412,7 +411,7 @@ class Session(object):
         """  # noqa: E501
         # pylint: enable=line-too-long
 
-        if isinstance(host, six.string_types):
+        if isinstance(host, str):
             self._hosts = [host]
         else:
             self._hosts = list(host)
@@ -952,9 +951,9 @@ class Session(object):
 
         content_msg = None
         if content is not None:
-            if isinstance(content, six.binary_type):
+            if isinstance(content, bytes):
                 content = content.decode('utf-8', errors='ignore')
-            assert isinstance(content, six.text_type)
+            assert isinstance(content, str)
             if content_len is None:
                 content_len = len(content)  # may change after JSON conversion
             try:
@@ -973,7 +972,7 @@ class Session(object):
                     format(trunc, content_len)
                 content_msg = content[0:trunc] + '...(truncated)'
             else:
-                content_label = 'content({} B)'.format(content_len)
+                content_label = f'content({content_len} B)'
                 content_msg = content
         else:
             content_label = 'content'
@@ -1019,9 +1018,9 @@ class Session(object):
         """
 
         if content is not None:
-            if isinstance(content, six.binary_type):
+            if isinstance(content, bytes):
                 content = content.decode('utf-8')
-            assert isinstance(content, six.text_type)
+            assert isinstance(content, str)
             content_len = len(content)  # may change after JSON conversion
             try:
                 content_dict = json2dict(content)
@@ -1050,7 +1049,7 @@ class Session(object):
                         format(trunc, content_len)
                     content_msg = content[0:trunc] + '...(truncated)'
                 else:
-                    content_label = 'content({} B)'.format(len(content))
+                    content_label = f'content({len(content)} B)'
                     content_msg = content
         else:
             content_label = 'content'
@@ -1135,7 +1134,7 @@ class Session(object):
                              timeout=req_timeout)
         # Note: The requests method may raise OSError/IOError in case of
         # HMC certificate validation issues (e.g. incorrect cert path)
-        except (requests.exceptions.RequestException, IOError, OSError) as exc:
+        except (requests.exceptions.RequestException, OSError) as exc:
             _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
@@ -1320,16 +1319,16 @@ class Session(object):
             # Produces unicode string on py3, and unicode or byte string on py2.
             # Content-type is already set to 'application/json' in standard
             # headers.
-            if isinstance(data, six.text_type):
+            if isinstance(data, str):
                 log_data = data
                 data = data.encode('utf-8')
             else:
                 log_data = data
-        elif isinstance(body, six.text_type):
+        elif isinstance(body, str):
             data = body.encode('utf-8')
             log_data = body
             headers['Content-type'] = 'application/octet-stream'
-        elif isinstance(body, six.binary_type):
+        elif isinstance(body, bytes):
             data = body
             log_data = body
             headers['Content-type'] = 'application/octet-stream'
@@ -1341,11 +1340,11 @@ class Session(object):
                 mode = body.mode
             except AttributeError:
                 mode = 'unknown'
-            log_data = u"<file-like object with mode {}>".format(mode)
+            log_data = f"<file-like object with mode {mode}>"
             log_len = -1
             headers['Content-type'] = 'application/octet-stream'
         else:
-            raise TypeError("Body has invalid type: {}".format(type(body)))
+            raise TypeError(f"Body has invalid type: {type(body)}")
 
         self._log_http_request('POST', url, resource=resource, headers=headers,
                                content=log_data, content_len=log_len)
@@ -1370,7 +1369,7 @@ class Session(object):
                                       timeout=req_timeout)
             # Note: The requests method may raise OSError/IOError in case of
             # HMC certificate validation issues (e.g. incorrect cert path)
-            except (requests.exceptions.RequestException, IOError, OSError) \
+            except (requests.exceptions.RequestException, OSError) \
                     as exc:
                 _handle_request_exc(exc, self.retry_timeout_config)
             finally:
@@ -1497,7 +1496,7 @@ class Session(object):
                                 verify=self.verify_cert, timeout=req_timeout)
         # Note: The requests method may raise OSError/IOError in case of
         # HMC certificate validation issues (e.g. incorrect cert path)
-        except (requests.exceptions.RequestException, IOError, OSError) as exc:
+        except (requests.exceptions.RequestException, OSError) as exc:
             _handle_request_exc(exc, self.retry_timeout_config)
         finally:
             stats.end()
@@ -1612,7 +1611,7 @@ class Session(object):
             self._auto_updater.close()
 
 
-class Job(object):
+class Job:
     """
     A job on the HMC that performs an asynchronous HMC operation.
 
@@ -1981,7 +1980,7 @@ class Job(object):
           :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        uri = '{}/operations/cancel'.format(self.uri)
+        uri = f'{self.uri}/operations/cancel'
         try:
             self.session.post(uri)
         except Error as exc:
@@ -2071,9 +2070,9 @@ def _result_object(result):
                     replace('<br>', '\\n').replace('\\n\\n', '\\n').strip()
             else:
                 html_title = "Console Internal Error"
-                html_details = "Response body: {!r}".format(html_uni)
+                html_details = f"Response body: {html_uni!r}"
             html_reason = HTML_REASON_OTHER
-        message = "{}: {}".format(html_title, html_details)
+        message = f"{html_title}: {html_details}"
 
         # We create a minimal JSON error object (to the extent we use it
         # when processing it):
@@ -2088,7 +2087,7 @@ def _result_object(result):
 
     if content_type.startswith('application/vnd.ibm-z-zmanager-metrics'):
         content_bytes = result.content
-        assert isinstance(content_bytes, six.binary_type)
+        assert isinstance(content_bytes, bytes)
         return content_bytes.decode('utf-8')  # as a unicode object
 
     raise ParseError(
@@ -2117,7 +2116,7 @@ def json2dict(json_str):
     """
     # In Python 3 up to 3.5, json.loads() requires unicode strings.
     if sys.version_info[0] == 3 and sys.version_info[1] in (4, 5) and \
-            isinstance(json_str, six.binary_type):
+            isinstance(json_str, bytes):
         json_str = json_str.decode('utf-8')
     json_dict = json.loads(json_str)  # May raise ValueError
     return json_dict

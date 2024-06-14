@@ -36,7 +36,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -57,10 +57,10 @@ try:
               format(host))
         sys.exit(1)
     cpc = cpcs[0]
-    print("Using CPC {}".format(cpc.name))
+    print(f"Using CPC {cpc.name}")
 
     # Reset activation profiles
-    print("Listing reset activation profiles for CPC {} ...".format(cpc.name))
+    print(f"Listing reset activation profiles for CPC {cpc.name} ...")
     try:
         profiles = cpc.reset_activation_profiles.list()
     except zhmcclient.Error as exc:
@@ -71,7 +71,7 @@ try:
         print(profile.name, profile.get_property('element-uri'))
 
     # Image activation profiles
-    print("Listing image activation profiles for CPC {} ...".format(cpc.name))
+    print(f"Listing image activation profiles for CPC {cpc.name} ...")
     try:
         profiles = cpc.image_activation_profiles.list()
     except zhmcclient.Error as exc:
@@ -82,7 +82,7 @@ try:
         print(profile.name, profile.get_property('element-uri'))
 
     # Load activation profiles
-    print("Listing load activation profiles for CPC {} ...".format(cpc.name))
+    print(f"Listing load activation profiles for CPC {cpc.name} ...")
     try:
         profiles = cpc.load_activation_profiles.list()
     except zhmcclient.Error as exc:

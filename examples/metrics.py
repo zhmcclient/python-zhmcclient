@@ -37,7 +37,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} with userid {} ...".format(nickname, host, userid))
+print(f"Using HMC {nickname} at {host} with userid {userid} ...")
 
 print("Creating a session with the HMC ...")
 try:
@@ -81,7 +81,7 @@ try:
 
         sleep_time = 15  # seconds
 
-        print("Sleeping for {} seconds ...".format(sleep_time))
+        print(f"Sleeping for {sleep_time} seconds ...")
         time.sleep(sleep_time)
 
         print("Retrieving the current metric values ...")
@@ -92,16 +92,16 @@ try:
         for mg in mr.metric_group_values:
             mg_name = mg.name
             mg_def = mc.metric_group_definitions[mg_name]
-            print("  Metric group: {}".format(mg_name))
+            print(f"  Metric group: {mg_name}")
             for ov in mg.object_values:
-                print("    Resource: {}".format(ov.resource_uri))
-                print("    Timestamp: {}".format(ov.timestamp))
+                print(f"    Resource: {ov.resource_uri}")
+                print(f"    Timestamp: {ov.timestamp}")
                 print("    Metric values:")
                 for m_name in ov.metrics:
                     m_value = ov.metrics[m_name]
                     m_def = mg_def.metric_definitions[m_name]
                     m_unit = m_def.unit or ''
-                    print("      {:30}  {} {}".format(m_name, m_value, m_unit))
+                    print(f"      {m_name:30}  {m_value} {m_unit}")
             if not mg.object_values:
                 print("    No resources")
 
@@ -109,7 +109,7 @@ try:
         mc.delete()
 
     except zhmcclient.Error as exc:
-        print("{}: {}".format(exc.__class__.__name__, exc))
+        print(f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
 finally:

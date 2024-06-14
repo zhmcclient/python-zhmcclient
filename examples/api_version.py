@@ -33,7 +33,7 @@ verify_cert = hmc_def.verify_cert
 
 print(__doc__)
 
-print("Using HMC {} at {} ...".format(nickname, host))
+print(f"Using HMC {nickname} at {host} ...")
 
 print("Creating an unauthenticated session with the HMC ...")
 try:
@@ -46,4 +46,4 @@ except zhmcclient.Error as exc:
 client = zhmcclient.Client(session)
 
 vi = client.version_info()
-print("HMC API version: {}.{}".format(vi[0], vi[1]))
+print(f"HMC API version: {vi[0]}.{vi[1]}")
