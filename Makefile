@@ -354,80 +354,52 @@ builddoc: html
 html: $(doc_build_dir)/html/docs/index.html
 	@echo "Makefile: $@ done."
 
-# Boolean variable indicating that Sphinx should be run
-# We run Sphinx only on Python>=3.8 because lower Python versions require too old Sphinx versions
-run_sphinx := $(shell $(PYTHON_CMD) -c "import sys; py=sys.version_info[0:2]; sys.stdout.write('true' if py>=(3,8) else 'false')")
-
 $(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
-ifeq ($(run_sphinx),true)
 	@echo "Running Sphinx to create HTML pages"
 	-$(call RM_FUNC,$@)
 	$(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
 	@echo
 	@echo "Done: Created the HTML pages with top level file: $@"
-else
-	@echo "Skipping Sphinx to create HTML pages on Python version $(python_version)"
-endif
 
 .PHONY: pdf
 pdf: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
-ifeq ($(run_sphinx),true)
 	@echo "Running Sphinx to create PDF files"
 	$(doc_cmd) -b latex $(doc_opts) $(doc_build_dir)/pdf
 	@echo "Running LaTeX files through pdflatex..."
 	$(MAKE) -C $(doc_build_dir)/pdf all-pdf
 	@echo
 	@echo "Done: Created the PDF files in: $(doc_build_dir)/pdf/"
-else
-	@echo "Skipping Sphinx to create PDF files on Python version $(python_version)"
-endif
 	@echo "Makefile: $@ done."
 
 .PHONY: man
 man: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
-ifeq ($(run_sphinx),true)
 	@echo "Running Sphinx to create manual pages"
 	$(doc_cmd) -b man $(doc_opts) $(doc_build_dir)/man
 	@echo
 	@echo "Done: Created the manual pages in: $(doc_build_dir)/man/"
-else
-	@echo "Skipping Sphinx to create manual pages on Python version $(python_version)"
-endif
 	@echo "Makefile: $@ done."
 
 .PHONY: docchanges
 docchanges:
-ifeq ($(run_sphinx),true)
 	@echo "Running Sphinx to create the doc changes overview file"
 	$(doc_cmd) -b changes $(doc_opts) $(doc_build_dir)/changes
 	@echo
 	@echo "Done: Created the doc changes overview file in: $(doc_build_dir)/changes/"
-else
-	@echo "Skipping Sphinx to create the doc changes overview file on Python version $(python_version)"
-endif
 	@echo "Makefile: $@ done."
 
 .PHONY: doclinkcheck
 doclinkcheck:
-ifeq ($(run_sphinx),true)
 	@echo "Running Sphinx to check the doc links"
 	$(doc_cmd) -b linkcheck $(doc_opts) $(doc_build_dir)/linkcheck
 	@echo
 	@echo "Done: Look for any errors in the above output or in: $(doc_build_dir)/linkcheck/output.txt"
-else
-	@echo "Skipping Sphinx to check the doc links on Python version $(python_version)"
-endif
 	@echo "Makefile: $@ done."
 
 .PHONY: doccoverage
 doccoverage:
-ifeq ($(run_sphinx),true)
 	@echo "Running Sphinx to doc coverage results"
 	$(doc_cmd) -b coverage $(doc_opts) $(doc_build_dir)/coverage
 	@echo "Done: Created the doc coverage results in: $(doc_build_dir)/coverage/python.txt"
-else
-	@echo "Skipping Sphinx to doc coverage results on Python version $(python_version)"
-endif
 	@echo "Makefile: $@ done."
 
 .PHONY: check
