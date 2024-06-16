@@ -1,0 +1,1 @@
+Added support for running thr 'ruff' checker.
