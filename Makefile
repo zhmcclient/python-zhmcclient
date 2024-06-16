@@ -193,6 +193,9 @@ pytest_no_log_opt := $(shell py.test --help 2>/dev/null |grep '\--no-print-logs'
 # Flake8 config file
 flake8_rc_file := .flake8
 
+# Ruff config file
+ruff_rc_file := .ruff.toml
+
 # PyLint config file
 pylint_rc_file := .pylintrc
 
@@ -214,7 +217,7 @@ check_py_files := \
     $(wildcard docs/notebooks/*.py) \
 
 # Packages whose dependencies are checked using pip-missing-reqs
-check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 pylint twine jupyter notebook safety towncrier sphinx
+check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 ruff pylint twine jupyter notebook safety towncrier sphinx
 
 ifdef TESTCASES
   pytest_opts := $(TESTOPTS) -k "$(TESTCASES)"
@@ -252,6 +255,7 @@ help:
 	@echo "  develop    - Prepare the development environment by installing prerequisites"
 	@echo "  check_reqs - Perform missing dependency checks"
 	@echo "  check      - Run Flake8 on sources"
+	@echo "  ruff       - Run Ruff (an alternate lint tool) on sources"
 	@echo "  pylint     - Run PyLint on sources"
 	@echo "  safety     - Run safety for install and all"
 	@echo "  test       - Run unit tests (adds to coverage results)"
@@ -406,6 +410,10 @@ doccoverage:
 check: $(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
+.PHONY: ruff
+ruff: $(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done
+	@echo "Makefile: $@ done."
+
 .PHONY: pylint
 pylint: $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
@@ -448,12 +456,13 @@ clean:
 	-$(call RM_R_FUNC,.DS_Store)
 	-$(call RMDIR_R_FUNC,__pycache__)
 	-$(call RMDIR_R_FUNC,.pytest_cache)
+	-$(call RMDIR_R_FUNC,.ruff_cache)
 	-$(call RM_FUNC,MANIFEST MANIFEST.in AUTHORS ChangeLog .coverage)
 	-$(call RMDIR_FUNC,build .cache $(package_name).egg-info .eggs)
 	@echo "Makefile: $@ done."
 
 .PHONY: all
-all: install develop check_reqs check pylint test end2end_mocked installtest build builddoc
+all: install develop check_reqs check ruff pylint test end2end_mocked installtest build builddoc
 	@echo "Makefile: $@ done."
 
 .PHONY: upload
@@ -519,6 +528,14 @@ $(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(
 	-$(call RM_FUNC,$@)
 	flake8 $(check_py_files)
 	echo "done" >$@
+
+$(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(ruff_rc_file) $(check_py_files)
+	@echo "Makefile: Running Ruff"
+	-$(call RM_FUNC,$@)
+	ruff --version
+	ruff check --unsafe-fixes --config $(ruff_rc_file) $(check_py_files)
+	echo "done" >$@
+	@echo "Makefile: Done running Ruff"
 
 .PHONY: check_reqs
 check_reqs: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt

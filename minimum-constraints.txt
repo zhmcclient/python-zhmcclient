@@ -102,6 +102,9 @@ pycodestyle==2.11.0
 pyflakes==3.1.0
 entrypoints==0.3.0
 
+# Ruff checker (no imports, invoked via ruff script):
+ruff==0.3.5
+
 # Twine (no imports, invoked via twine script):
 twine==3.0.0
 readme-renderer==23.0

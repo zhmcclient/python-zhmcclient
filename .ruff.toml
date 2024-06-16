@@ -1,0 +1,29 @@
+# Ruff configuration file
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    "build",
+    "dist",
+]
+
+# Keep in sync with flake8
+line-length = 80
+
+indent-width = 4
+
+# Assume a particular minimum Python version
+target-version = "py38"
+
+[lint]
+
+# Keep in sync with flake8
+ignore = [
+    'F403',  # unable to detect undefined names (when using wildcard import)
+]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+# fixable = ["ALL"]
+# unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+# dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
