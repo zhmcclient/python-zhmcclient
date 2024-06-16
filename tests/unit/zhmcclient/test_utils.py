@@ -66,8 +66,8 @@ DATETIME_TIMESTAMP_TESTCASES = [
     ((3001, 1, 1, 8, 0, 0, 0), TS_3001_LIMIT + 1000),
     ((MAXYEAR - 1, 12, 31, 0, 0, 0, 0), TS_MAX + 1 - DAY_MS - 365 * DAY_MS),
     ((MAXYEAR, 12, 30, 0, 0, 0, 0), TS_MAX + 1 - 2 * DAY_MS),
-    ((MAXYEAR, 12, 30, 23, 59, 59, 0), TS_MAX + 1 - 2 * DAY_MS + \
-     23 * HOUR_MS + 59 * MIN_MS + 59 * SEC_MS),
+    ((MAXYEAR, 12, 30, 23, 59, 59, 0),
+     TS_MAX + 1 - 2 * DAY_MS + 23 * HOUR_MS + 59 * MIN_MS + 59 * SEC_MS),
 
     # The following testcases would be in range but are too close to the max
     # for pytz due to an implementation limitation: pytz.localize() checks the
