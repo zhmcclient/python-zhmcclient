@@ -832,7 +832,8 @@ class FakedSession(zhmcclient.Session):
         """
 
         try:
-            hmc_dict = yaml.load(hmc_yaml, Loader=yamlloader.ordereddict.Loader)
+            hmc_dict = yaml.load(
+                hmc_yaml, Loader=yamlloader.ordereddict.SafeLoader)
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
             if filepath:
                 file_str = f" in file {filepath}"

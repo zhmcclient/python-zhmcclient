@@ -2820,8 +2820,8 @@ class PartitionsHandler:
             Note: Does not guarantee to be reproducable.
             Note: Has a small chance to not be unique.
             """
-            return "{:_<4.4s}{:04X}".format(
-                partition_name.upper(), randrange(16 ^ 4))
+            random_str = randrange(16 ^ 4)  # nosec B311
+            return "{:_<4.4s}{:04X}".format(partition_name.upper(), random_str)
 
         def _partition_id():
             """"
@@ -2830,7 +2830,8 @@ class PartitionsHandler:
             Note: Does not guarantee to be reproducable.
             Note: Has a chance to not be unique.
             """
-            return f"{randrange(80):02X}"
+            random_str = randrange(80)  # nosec B311
+            return f"{random_str:02X}"
 
         assert wait_for_completion is True  # async not supported yet
         cpc_oid = uri_parms[0]

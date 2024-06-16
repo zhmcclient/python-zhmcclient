@@ -1,0 +1,8 @@
+# Bandit config file in TOML format
+
+[tool.bandit]
+
+# Checks to be ignored:
+skips = [
+  'B101',  # assert_used
+]

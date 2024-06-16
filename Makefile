@@ -218,6 +218,9 @@ pylint_opts := --disable=fixme
 safety_install_policy_file := .safety-policy-install.yml
 safety_develop_policy_file := .safety-policy-develop.yml
 
+# Bandit config file
+bandit_rc_file := .bandit.toml
+
 # Source files for check (with PyLint and Flake8)
 check_py_files := \
     $(package_py_files) \
@@ -228,7 +231,7 @@ check_py_files := \
     $(wildcard docs/notebooks/*.py) \
 
 # Packages whose dependencies are checked using pip-missing-reqs
-check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 ruff pylint twine jupyter notebook safety towncrier sphinx
+check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 ruff pylint twine jupyter notebook safety bandit towncrier sphinx
 
 ifdef TESTCASES
   pytest_opts := $(TESTOPTS) -k "$(TESTCASES)"
@@ -269,6 +272,7 @@ help:
 	@echo "  ruff       - Run Ruff (an alternate lint tool) on sources"
 	@echo "  pylint     - Run PyLint on sources"
 	@echo "  safety     - Run safety for install and all"
+	@echo "  bandit     - Run bandit checker"
 	@echo "  test       - Run unit tests (adds to coverage results)"
 	@echo "  end2end_mocked - Run end2end tests against example mock environments (adds to coverage results)"
 	@echo "  installtest - Run install tests"
@@ -432,6 +436,10 @@ pylint: $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done
 safety: $(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
+.PHONY: bandit
+bandit: $(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done
+	@echo "Makefile: $@ done."
+
 .PHONY: install
 install: $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
@@ -472,7 +480,7 @@ clean:
 	@echo "Makefile: $@ done."
 
 .PHONY: all
-all: install develop check_reqs check ruff pylint test end2end_mocked installtest build builddoc
+all: install develop check_reqs check ruff pylint test end2end_mocked safety bandit installtest build builddoc
 	@echo "Makefile: $@ done."
 
 .PHONY: upload
@@ -533,6 +541,13 @@ $(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(
 	safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for install packages"
+
+$(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(bandit_rc_file) $(check_py_files)
+	@echo "Makefile: Running Bandit"
+	-$(call RM_FUNC,$@)
+	bandit -c $(bandit_rc_file) -l -r $(package_name) $(mock_package_name)
+	echo "done" >$@
+	@echo "Makefile: Done running Bandit"
 
 $(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(flake8_rc_file) $(check_py_files)
 	-$(call RM_FUNC,$@)
