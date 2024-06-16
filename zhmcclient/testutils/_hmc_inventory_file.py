@@ -246,7 +246,8 @@ class HMCInventoryFile:
             # pylint: disable=unspecified-encoding
             with open(self._filepath) as fp:
                 try:
-                    data = yaml.load(fp, Loader=yamlloader.ordereddict.Loader)
+                    data = yaml.load(
+                        fp, Loader=yamlloader.ordereddict.SafeLoader)
                 except (yaml.parser.ParserError,
                         yaml.scanner.ScannerError) as exc:
                     new_exc = HMCInventoryFileError(

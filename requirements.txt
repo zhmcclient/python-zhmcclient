@@ -21,13 +21,13 @@ python-dateutil>=2.8.2
 immutable-views>=0.6.0
 nocasedict>=1.0.2
 
-# PyYAML pulled in by zhmcclient_mock (and zhmcclient examples, and python-coveralls)
-# PyYAML 5.3 fixes narrow build error
+# PyYAML is used by zhmcclient_mock, zhmcclient.testutils and bandit
 # PyYAML 5.3 has wheel archives for Python 2.7, 3.5 - 3.9
 # PyYAML 5.4 has wheel archives for Python 2.7, 3.6 - 3.9
-# PyYAML 6.0 has wheel archives for Python 3.6 - 3.11
-# PyYAML 5.4 and 6.0.0 fails install since Cython 3 was released, see issue
-#   https://github.com/yaml/pyyaml/issues/724.
+# PyYAML 6.0.0 has wheel archives for Python 3.6 - 3.11
+# PyYAML 6.0.1 has wheel archives for Python 3.6 - 3.12
+# PyYAML 5.4.x and 6.0.0 fail to install when no wheel archives are available since Cython 3
+#   was released, see issue https://github.com/yaml/pyyaml/issues/724. Fixed in 6.0.1.
 PyYAML>=5.3.1,!=5.4.0,!=5.4.1; python_version <= '3.11'
 PyYAML>=5.3.1,!=5.4.0,!=5.4.1,!=6.0.0; python_version >= '3.12'
 

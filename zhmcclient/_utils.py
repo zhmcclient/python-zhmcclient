@@ -73,7 +73,7 @@ RC_LOGICAL_PARTITION = 'logical-partition'
 # For CPCs in any  mode and resources independent of CPCs:
 RC_CONSOLE = 'console'
 RC_CPC = 'cpc'
-RC_PASSWORD_RULE = 'password-rule'
+RC_PASSWORD_RULE = 'password-rule'  # nosec B105
 RC_TASK = 'task'
 RC_USER_PATTERN = 'user-pattern'
 RC_USER_ROLE = 'user-role'

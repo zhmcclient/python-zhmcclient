@@ -24,7 +24,7 @@ python-dateutil==2.8.2
 immutable-views==0.6.0
 nocasedict==1.0.2
 
-# PyYAML pulled in by zhmcclient_mock (and zhmcclient examples, and python-coveralls)
+# PyYAML is used by zhmcclient_mock, zhmcclient.testutils and bandit
 PyYAML==5.3.1
 
 # yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
