@@ -5389,7 +5389,7 @@ URIS = (
 
     (r'/api/partitions/([^/]+)/hbas(?:\?(.*))?', HbasHandler),
     (r'/api/partitions/([^/]+)/hbas/([^?/]+)(?:\?(.*))?', HbaHandler),
-    (r'/api/partitions/([^/]+)/hbas/([^/]+)/operations/'\
+    (r'/api/partitions/([^/]+)/hbas/([^/]+)/operations/'
      'reassign-storage-adapter-port', HbaReassignPortHandler),
 
     (r'/api/partitions/([^/]+)/nics(?:\?(.*))?', NicsHandler),
