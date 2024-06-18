@@ -199,8 +199,8 @@ test_common_py_files := \
 # Directory for .done files
 done_dir := done
 
-# Determine whether py.test has the --no-print-logs option.
-pytest_no_log_opt := $(shell py.test --help 2>/dev/null |grep '\--no-print-logs' >/dev/null; if [ $$? -eq 0 ]; then echo '--no-print-logs'; else echo ''; fi)
+# Determine whether pytest has the --no-print-logs option.
+pytest_no_log_opt := $(shell pytest --help 2>/dev/null |grep '\--no-print-logs' >/dev/null; if [ $$? -eq 0 ]; then echo '--no-print-logs'; else echo ''; fi)
 
 # Flake8 config file
 flake8_rc_file := .flake8
@@ -622,7 +622,7 @@ endif
 .PHONY: test
 test: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
 	-$(call RMDIR_R_FUNC,htmlcov)
-	py.test --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
+	pytest --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."
 
 .PHONY: installtest
@@ -638,14 +638,14 @@ endif
 .PHONY:	end2end
 end2end: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	bash -c "TESTEND2END_LOAD=true py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	bash -c "TESTEND2END_LOAD=true pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 # TODO: Enable rc checking again once the remaining issues are resolved
 .PHONY:	end2end_mocked
 end2end_mocked: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files) examples/example_hmc_inventory.yaml examples/example_hmc_vault.yaml examples/example_mocked_z16_classic.yaml examples/example_mocked_z16_dpm.yaml
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	-bash -c "TESTEND2END_LOAD=true TESTINVENTORY=examples/example_hmc_inventory.yaml TESTVAULT=examples/example_hmc_vault.yaml py.test --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	-bash -c "TESTEND2END_LOAD=true TESTINVENTORY=examples/example_hmc_inventory.yaml TESTVAULT=examples/example_hmc_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 .PHONY: authors
