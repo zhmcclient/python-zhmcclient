@@ -96,45 +96,107 @@ def test_query_api_version(hmc_name, hmc_version, api_version):
     assert api_version_info == exp_api_version_info
 
 
-@pytest.mark.parametrize(
-    "resources, exp_exc, exp_inventory", [
-        (None,
-         Exception,
-         None
-         ),
-        ([],
-         None,
-         {}  # TODO: Add expected inventory
-         ),
-        (['partition'],
-         None,
-         {}  # TODO: Add expected inventory
-         ),
-    ]
-)
-def xtest_get_inventory(resources, exp_exc, exp_inventory):
-    """All tests for Client.get_inventory()."""
+TESTCASES_GET_INVENTORY = [
+    # Testcases for test_get_inventory()
+    # Each item in the list is a testcase with these properties:
+    # - input_resources: Input parameter 'resources'.
+    # - exp_exc_type: Expected exception type, or None.
+    # - exp_inventory: Expected result inventory, as a dict with:
+    #   key: Resource class
+    #   value: List of resource names
+    (
+        None,
+        Exception,
+        None
+    ),
+    (
+        [],
+        None,
+        {}
+    ),
+    (
+        ['cpc'],
+        None,
+        {
+            'cpc': ['CPC1'],
+        }
+    ),
+    (
+        ['core-resources'],
+        None,
+        {
+            'cpc': ['CPC1'],
+        }
+    ),
+    (
+        ['partition'],
+        None,
+        {}
+    ),
+]
 
-    # TODO: Enable once mock support for Client.get_inventory() is there
+
+@pytest.mark.parametrize(
+    "input_resources, exp_exc_type, exp_inventory",
+    TESTCASES_GET_INVENTORY
+)
+def test_get_inventory(input_resources, exp_exc_type, exp_inventory):
+    """All tests for Client.get_inventory()."""
 
     session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
 
     # Client object under test
     client = Client(session)
 
-    # TODO: Set up inventory from expected inventory
+    # We set up a fixed faked HMC environment
+    session.hmc.cpcs.add({
+        'object-id': 'fake-cpc1-oid',
+        # object-uri is set up automatically
+        'parent': None,
+        'class': 'cpc',
+        'name': 'CPC1',
+        'description': 'CPC #1 (classic mode)',
+        'status': 'active',
+        'dpm-enabled': False,
+        'is-ensemble-member': False,
+        'iml-mode': 'lpar',
+    })
 
-    if exp_exc:
+    if exp_exc_type:
         try:
 
             # Execute the code to be tested
-            client.get_inventory(resources)
+            client.get_inventory(input_resources)
 
-        except exp_exc:
+        except exp_exc_type:
             pass
     else:
 
         # Execute the code to be tested
-        inventory = client.get_inventory(resources)
+        inventory = client.get_inventory(input_resources)
 
-        assert inventory == exp_inventory
+        # Go through actual result and check against expected result
+        seen_names_by_class = {}  # Resource classes and names already seen
+        for resource_props in inventory:
+
+            assert 'class' in resource_props
+            res_class = resource_props['class']
+
+            assert 'name' in resource_props
+            res_name = resource_props['name']
+
+            assert res_class in exp_inventory
+            exp_names = exp_inventory[res_class]
+
+            assert res_name in exp_names
+
+            if res_class not in seen_names_by_class:
+                seen_names_by_class[res_class] = []
+            seen_names_by_class[res_class].append(res_name)
+
+        # Check if there are any expected names that have not been in the result
+        for exp_class, exp_names in exp_inventory.items():
+            assert exp_class in seen_names_by_class
+            seen_names = seen_names_by_class[exp_class]
+            for exp_name in exp_names:
+                assert exp_name in seen_names

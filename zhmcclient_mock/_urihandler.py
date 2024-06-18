@@ -2506,6 +2506,318 @@ class GroupMembersHandler:
         return result
 
 
+# Functions for the "Get Inventory" operation, for each resource class:
+
+def get_inventory_for_adapter(hmc):
+    """Get inventory data for resource class 'adapter'"""
+    result = []
+    cpcs = hmc.cpcs.list()
+    for cpc in cpcs:
+        adapters = cpc.adapters.list()
+        for adapter in adapters:
+            result.append(dict(adapter.properties))
+            ports = adapter.ports.list()
+            for port in ports:
+                result.append(dict(port.properties))
+    return result
+
+
+def get_inventory_for_partition(hmc):
+    """Get inventory data for resource class 'partition'"""
+    result = []
+    cpcs = hmc.cpcs.list()
+    for cpc in cpcs:
+        partitions = cpc.partitions.list()
+        for partition in partitions:
+            result.append(dict(partition.properties))
+            nics = partition.nics.list()
+            for nic in nics:
+                result.append(dict(nic.properties))
+            hbas = partition.hbas.list()
+            for hba in hbas:
+                result.append(dict(hba.properties))
+            vfs = partition.virtual_functions.list()
+            for vf in vfs:
+                result.append(dict(vf.properties))
+    return result
+
+
+def get_inventory_for_partition_link(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'partition-link'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # partlinks = hmc.consoles.console.partition_links.list()
+    # for partlink in partlinks:
+    #     result.append(dict(partlink.properties))
+    return result
+
+
+def get_inventory_for_virtual_switch(hmc):
+    """Get inventory data for resource class 'virtual-switch'"""
+    result = []
+    cpcs = hmc.cpcs.list()
+    for cpc in cpcs:
+        vswitches = cpc.virtual_switches.list()
+        for vswitch in vswitches:
+            result.append(dict(vswitch.properties))
+    return result
+
+
+def get_inventory_for_storage_site(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'storage-site'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # stosites = hmc.consoles.console.storage_sites.list()
+    # for stosite in stosites:
+    #     result.append(dict(stosite.properties))
+    return result
+
+
+def get_inventory_for_storage_fabric(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'storage-fabric'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # stofabrics = hmc.consoles.console.storage_fabrics.list()
+    # for stofabric in stofabrics:
+    #     result.append(dict(stofabric.properties))
+    return result
+
+
+def get_inventory_for_storage_switch(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'storage-switch'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # stosites = hmc.consoles.console.storage_sites.list()
+    # for stosite in stosites:
+    #     stoswitches = stosite.storage_switches.list()
+    #     for stoswitch in stoswitches:
+    #         result.append(dict(stoswitch.properties))
+    return result
+
+
+def get_inventory_for_storage_subsystem(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'storage-subsystem'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # stosites = hmc.consoles.console.storage_sites.list()
+    # for stosite in stosites:
+    #     stosubsystems = stosite.storage_subsystems.list()
+    #     for stosubsystem in stosubsystems:
+    #         result.append(dict(stosubsystem.properties))
+    return result
+
+
+def get_inventory_for_storage_control_unit(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'storage-control-unit'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # stosites = hmc.consoles.console.storage_sites.list()
+    # for stosite in stosites:
+    #     stosubsystems = stosite.storage_subsystems.list()
+    #     for stosubsystem in stosubsystems:
+    #         stocus = stosubsystem.storage_control_units.list()
+    #         for stocu in stocus:
+    #             result.append(dict(stocu.properties))
+    return result
+
+
+def get_inventory_for_storage_group(hmc):
+    """Get inventory data for resource class 'storage-group'"""
+    result = []
+    stogroups = hmc.consoles.console.storage_groups.list()
+    for stogroup in stogroups:
+        result.append(dict(stogroup.properties))
+    return result
+
+
+def get_inventory_for_storage_template(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'storage-template'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # stotemplates = hmc.consoles.console.storage_templates.list()
+    # for stotemplate in stotemplates:
+    #     result.append(dict(stotemplate.properties))
+    return result
+
+
+def get_inventory_for_tape_link(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'tape-link'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # tapelinks = hmc.consoles.console.tape_links.list()
+    # for tapelink in tapelinks:
+    #     result.append(dict(tapelink.properties))
+    return result
+
+
+def get_inventory_for_tape_library(hmc):
+    # pylint: disable=unused-argument
+    """Get inventory data for resource class 'tape-library'"""
+    result = []
+    # TODO: Implement mock support for this resource class; then enable:
+    # tapelibs = hmc.consoles.console.tape_libraries.list()
+    # result = []
+    # for tapelib in tapelibs:
+    #     result.append(dict(tapelib.properties))
+    return result
+
+
+def get_inventory_for_cpc(hmc):
+    """Get inventory data for resource class 'cpc'"""
+    result = []
+    cpcs = hmc.cpcs.list()
+    for cpc in cpcs:
+        result.append(dict(cpc.properties))
+    return result
+
+
+def get_inventory_for_logical_partition(hmc):
+    """Get inventory data for resource class 'logical-partition'"""
+    result = []
+    cpcs = hmc.cpcs.list()
+    for cpc in cpcs:
+        lpars = cpc.lpars.list()
+        for lpar in lpars:
+            result.append(dict(lpar.properties))
+    return result
+
+
+def get_inventory_for_console(hmc):
+    """Get inventory data for resource class 'console'"""
+    console = hmc.console
+    result = []
+    result.append(dict(console.properties))
+    return result
+
+
+def get_inventory_for_custom_group(hmc):
+    """Get inventory data for resource class 'custom-group'"""
+    groups = hmc.consoles.console.groups.list()
+    result = []
+    for group in groups:
+        result.append(dict(group.properties))
+    return result
+
+
+def get_inventory_for_user(hmc):
+    """Get inventory data for resource class 'user'"""
+    users = hmc.consoles.console.users.list()
+    result = []
+    for user in users:
+        result.append(dict(user.properties))
+    return result
+
+
+def get_inventory_for_user_role(hmc):
+    """Get inventory data for resource class 'user-role'"""
+    userroles = hmc.consoles.console.user_roles.list()
+    result = []
+    for userrole in userroles:
+        result.append(dict(userrole.properties))
+    return result
+
+
+def get_inventory_for_certificate(hmc):
+    """Get inventory data for resource class 'certificate'"""
+    certificates = hmc.consoles.console.certificates.list()
+    result = []
+    for certificate in certificates:
+        result.append(dict(certificate.properties))
+    return result
+
+
+class InventoryHandler:
+    """
+    Handler class for operation: Get Inventory.
+    """
+
+    # Resources classes for each category
+    classes_from_category = {
+        "dpm-resources": [
+            "adapter",
+            "partition",
+            "partition-link",
+            "virtual-switch",
+            "storage-site",
+            "storage-fabric",
+            "storage-switch",
+            "storage-subsystem",
+            "storage-control-unit",
+            "storage-group",
+            "storage-template",
+            "tape-link",
+            "tape-library",
+        ],
+        "core-resources": [
+            "cpc",
+            "logical-partition",
+        ],
+        "console-resources": [
+            "console",
+            "custom-group",
+            "user",
+            "user-role",
+        ],
+        "certificate-resources": [
+            "secure-boot-certificate",  # Resource class is 'certificate'
+        ],
+    }
+
+    # Get inventory functions for each resource class
+    get_inventory_for_rc = {
+        "adapter": get_inventory_for_adapter,
+        "partition": get_inventory_for_partition,
+        "partition-link": get_inventory_for_partition_link,
+        "virtual-switch": get_inventory_for_virtual_switch,
+        "storage-site": get_inventory_for_storage_site,
+        "storage-fabric": get_inventory_for_storage_fabric,
+        "storage-switch": get_inventory_for_storage_switch,
+        "storage-subsystem": get_inventory_for_storage_subsystem,
+        "storage-control-unit": get_inventory_for_storage_control_unit,
+        "storage-group": get_inventory_for_storage_group,
+        "storage-template": get_inventory_for_storage_template,
+        "tape-link": get_inventory_for_tape_link,
+        "tape-library": get_inventory_for_tape_library,
+        "cpc": get_inventory_for_cpc,
+        "logical-partition": get_inventory_for_logical_partition,
+        "console": get_inventory_for_console,
+        "custom-group": get_inventory_for_custom_group,
+        "user": get_inventory_for_user,
+        "user-role": get_inventory_for_user_role,
+        "secure-boot-certificate": get_inventory_for_certificate,
+    }
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Get Inventory."""
+
+        all_categories = list(InventoryHandler.classes_from_category.keys())
+        resources = body.get('resources', all_categories)
+        resource_classes = []
+        for res in resources:
+            try:
+                rcs = InventoryHandler.classes_from_category[res]
+            except KeyError:
+                rcs = [res]
+            resource_classes.extend(rcs)
+
+        result = []
+        for rc in resource_classes:
+            get_func = InventoryHandler.get_inventory_for_rc[rc]
+            result.extend(get_func(hmc))
+        return result
+
+
 class MetricsContextsHandler:
     """
     Handler class for HTTP methods on set of MetricsContext resources.
@@ -5421,6 +5733,8 @@ URIS = (
     (r'/api/groups/([^/]+)/operations/add-member', GroupAddMemberHandler),
     (r'/api/groups/([^/]+)/operations/remove-member', GroupRemoveMemberHandler),
     (r'/api/groups/([^/]+)/members', GroupMembersHandler),
+
+    (r'/api/services/inventory', InventoryHandler),
 
     (r'/api/services/metrics/context', MetricsContextsHandler),
     (r'/api/services/metrics/context/([^/]+)', MetricsContextHandler),

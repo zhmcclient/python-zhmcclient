@@ -1,0 +1,2 @@
+Mock: Added zhmcclient mock support for the "Get Inventory" operation, and
+enabled and improved its unit test.
