@@ -812,94 +812,20 @@ local clone of the python-zhmcclient Git repo.
     milestones to a future version, and proceed with the release process. You
     may need to create the milestone for the future version.
 
-2.  Set shell variables for the version that is being released and the branch
-    it is based on:
-
-    * ``MNU`` - Full version M.N.U that is being released
-    * ``MN`` - Major and minor version M.N of that full version
-    * ``BRANCH`` - Name of the branch the version that is being released is
-      based on
-
-    When releasing a new major version (e.g. ``1.0.0``) based on the master
-    branch:
+2.  Create and push the release branch:
 
     .. code-block:: sh
 
-        MNU=1.0.0
-        MN=1.0
-        BRANCH=master
+        VERSION=M.N.U make release
 
-    When releasing a new minor version (e.g. ``0.9.0``) based on the master
-    branch:
+    This includes the following steps:
 
-    .. code-block:: sh
+    * finalize the change log
+    * make sure the AUTHORS.md file is up to date
+    * run the safety tool in release mode
+    * push the release branch (``release_M.N.U``)
 
-        MNU=0.9.0
-        MN=0.9
-        BRANCH=master
-
-    When releasing a new update version (e.g. ``0.8.1``) based on the stable
-    branch of its minor version:
-
-    .. code-block:: sh
-
-        MNU=0.8.1
-        MN=0.8
-        BRANCH=stable_${MN}
-
-3.  Create a topic branch for the version that is being released:
-
-    .. code-block:: sh
-
-        git checkout ${BRANCH}
-        git pull
-        git checkout -b release_${MNU}
-
-4.  Update the change log:
-
-    First make a dry-run to print the change log as it would be:
-
-    .. code-block:: sh
-
-        towncrier build --draft
-
-    If you are satisfied with the change log, update the change log:
-
-    .. code-block:: sh
-
-        towncrier build --yes
-
-    This will update the change log file ``docs/changes.rst`` with the
-    information from the change fragment files in the ``changes`` directory, and
-    will delete these change fragment files.
-
-5.  Update the authors:
-
-    .. code-block:: sh
-
-        make authors
-
-6.  Run the Safety tool:
-
-    .. code-block:: sh
-
-        RUN_TYPE=release make safety
-
-    When releasing a version, the safety run for all dependencies will fail
-    if there are any safety issues reported. In normal and scheduled runs,
-    safety issues reported for all dependencies will be ignored.
-
-    If the safety run fails, you need to fix the safety issues that are
-    reported.
-
-7.  Commit your changes and push the topic branch to the remote repo:
-
-    .. code-block:: sh
-
-        git commit -asm "Release ${MNU}"
-        git push --set-upstream origin release_${MNU}
-
-8.  On GitHub, create a Pull Request for branch ``release_M.N.U``.
+3.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
@@ -914,19 +840,19 @@ local clone of the python-zhmcclient Git repo.
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-9.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+4.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-10. On GitHub, close milestone ``M.N.U``.
+5.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix. If the milestone does not have open items
     anymore, close the milestone.
 
-12. Publish the package
+6.  Publish the package
 
     .. code-block:: sh
 
@@ -942,7 +868,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-13. Verify the publishing
+7.  Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -988,75 +914,23 @@ has the remote name ``origin`` in your local clone.
 Any commands in the following steps are executed in the main directory of your
 local clone of the python-zhmcclient Git repo.
 
-1.  Set shell variables for the version that is being started and the branch it
-    is based on:
-
-    * ``MNU`` - Full version M.N.U that is being started
-    * ``MN`` - Major and minor version M.N of that full version
-    * ``BRANCH`` -  Name of the branch the version that is being started is
-      based on
-
-    When starting a new major version (e.g. ``1.0.0``) based on the master
-    branch:
+1.  Create and push the start branch:
 
     .. code-block:: sh
 
-        MNU=1.0.0
-        MN=1.0
-        BRANCH=master
+        VERSION=M.N.U make start
 
-    When starting a new minor version (e.g. ``0.9.0``) based on the master
-    branch:
+    This includes the following steps:
 
-    .. code-block:: sh
+    * push the start tag (``M.N.Ua0``)
+    * push the start branch (``start_M.N.U``)
 
-        MNU=0.9.0
-        MN=0.9
-        BRANCH=master
-
-    When starting a new minor version (e.g. ``0.8.1``) based on the stable
-    branch of its minor version:
-
-    .. code-block:: sh
-
-        MNU=0.8.1
-        MN=0.8
-        BRANCH=stable_${MN}
-
-2.  Create a topic branch for the version that is being started:
-
-    .. code-block:: sh
-
-        git fetch origin
-        git checkout ${BRANCH}
-        git pull
-        git checkout -b start_${MNU}
-
-3.  Add an initial Git tag for the new version
-
-    Note: An initial tag is necessary because the automatic version calculation
-    done by setuptools-scm uses the most recent tag in the commit history and
-    increases the least significant part of the version by one, without
-    providing any controls to change that behavior.
-
-    .. code-block:: sh
-
-        git tag ${MNU}a0
-        git push --tags
-
-4.  Commit your changes and push them to the remote repo:
-
-    .. code-block:: sh
-
-        git commit -asm "Start ${MNU}"
-        git push --set-upstream origin start_${MNU}
-
-5.  On GitHub, create a milestone for the new version ``M.N.U``.
+2.  On GitHub, create a milestone for the new version ``M.N.U``.
 
     You can create a milestone in GitHub via Issues -> Milestones -> New
     Milestone.
 
-6.  On GitHub, create a Pull Request for branch ``start_M.N.U``.
+3.  On GitHub, create a Pull Request for the start branch ``start_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When starting a version based on a stable branch, you
@@ -1066,7 +940,7 @@ local clone of the python-zhmcclient Git repo.
 
     Set the milestone of that PR to the new version ``M.N.U``.
 
-7.  On GitHub, go through all open issues and pull requests that still have
+4.  On GitHub, go through all open issues and pull requests that still have
     milestones for previous releases set, and either set them to the new
     milestone, or to have no milestone.
 
@@ -1074,11 +948,11 @@ local clone of the python-zhmcclient Git repo.
     should not be any such issues or pull requests anymore. So this step here
     is just an additional safeguard.
 
-8.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
+5.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
     have succeeded, merge the Pull Request (no review is needed). This
     automatically deletes the branch on GitHub.
 
-9.  Update and clean up the local repo:
+6.  Update and clean up the local repo:
 
     .. code-block:: sh
 

@@ -1,0 +1,2 @@
+Dev: Encapsulated the starting of a new version into a new 'make start' target.
+This performs the steps up to creating a PR.

@@ -101,11 +101,6 @@ entrypoints==0.3.0
 # Ruff checker (no imports, invoked via ruff script):
 ruff==0.3.5
 
-# Twine (no imports, invoked via twine script):
-twine==3.0.0
-readme-renderer==23.0
-pywin32-ctypes==0.2.0; sys_platform=="win32"
-
 # Jupyter Notebook (no imports, invoked via jupyter script):
 notebook==6.4.12
 jupyter==1.0.0
@@ -189,6 +184,7 @@ prometheus-client==0.13.1
 ptyprocess==0.5.1
 py==1.11.0
 pyparsing==3.0.7
+pywin32-ctypes==0.2.0; sys_platform=="win32"  # used by keyring
 rfc3986==1.4.0
 rich==12.0.0
 scandir==1.9.0
