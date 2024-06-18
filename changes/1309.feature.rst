@@ -1,0 +1,3 @@
+Added zhmcclient mock support for 'Console.list_permitted_adapters()'.
+This is used by the end2end_mocked testcases of the ibm.ibm_zhmc Ansible
+collection.

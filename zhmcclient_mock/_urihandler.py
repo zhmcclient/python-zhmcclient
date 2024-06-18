@@ -940,6 +940,76 @@ class ConsoleListPermittedLparsHandler:
         return {'logical-partitions': result_lpars}
 
 
+class ConsoleListPermittedAdaptersHandler:
+    """
+    Handler class for Console operation: List Permitted Adapters (classic+DPM).
+    """
+
+    valid_query_parms_get = ['name', 'adapter-id', 'adapter-family', 'type',
+                             'status', 'firmware-update-pending', 'cpc-name',
+                             'dpm-enabled', 'additional-properties']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """
+        Operation: List Permitted Adapters (classic+DPM).
+
+        Note that the support in the HMC for classic mode CPCs is only for z16
+        and newer CPCs. For z15 and earlier CPCs in classic mode, the operation
+        will not have any adapters in the result.
+        """
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        add_props = query_parms.pop('additional-properties', '').split(',')
+        filter_args = query_parms
+
+        result_adapters = []
+        for cpc in hmc.cpcs.list():
+            se_version_info = list(map(
+                int, cpc.properties.get('se-version').split('.')))
+
+            if cpc.dpm_enabled or se_version_info >= [2, 16]:
+
+                # Apply the CPC name filter, if specified
+                if filter_args and 'cpc-name' in filter_args:
+                    if not re.match(filter_args['cpc-name'], cpc.name):
+                        continue
+                    del filter_args['cpc-name']
+
+                for adapter in cpc.adapters.list(filter_args):
+                    result_adapter = {}
+                    result_adapter['object-uri'] = \
+                        adapter.properties.get('object-uri', None)
+                    result_adapter['name'] = \
+                        adapter.properties.get('name', None)
+                    result_adapter['adapter-id'] = \
+                        adapter.properties.get('adapter-id', None)
+                    result_adapter['adapter-family'] = \
+                        adapter.properties.get('adapter-family', None)
+                    result_adapter['type'] = \
+                        adapter.properties.get('type', None)
+                    result_adapter['status'] = \
+                        adapter.properties.get('status', None)
+                    result_adapter['firmware-update-pending'] = \
+                        adapter.properties.get('firmware-update-pending', None)
+                    result_adapter['cpc-name'] = cpc.name
+                    result_adapter['cpc-object-uri'] = cpc.uri
+                    result_adapter['se-version'] = \
+                        cpc.properties.get('se-version', None)
+                    result_adapter['dpm-enabled'] = \
+                        cpc.properties.get('dpm-enabled', None)
+                    for prop in add_props:
+                        try:
+                            result_adapter[prop] = adapter.properties[prop]
+                        except KeyError:
+                            pass
+                    result_adapters.append(result_adapter)
+
+        return {'adapters': result_adapters}
+
+
 class UsersHandler:
     """
     Handler class for HTTP methods on set of User resources.
@@ -5298,6 +5368,8 @@ URIS = (
      ConsoleListPermittedPartitionsHandler),
     (r'/api/console/operations/list-permitted-logical-partitions(?:\?(.*))?',
      ConsoleListPermittedLparsHandler),
+    (r'/api/console/operations/list-permitted-adapters(?:\?(.*))?',
+     ConsoleListPermittedAdaptersHandler),
 
     (r'/api/console/users(?:\?(.*))?', UsersHandler),
     (r'/api/users/([^?/]+)(?:\?(.*))?', UserHandler),
