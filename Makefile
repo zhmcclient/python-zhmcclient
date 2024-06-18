@@ -501,9 +501,10 @@ release:
 	bash -c 'git checkout $$(cat branch.tmp)'
 	git pull
 	git checkout -b release_$(VERSION)
-	towncrier build --version $(VERSION) --yes
 	make authors
-	bash -c 'RUN_TYPE=release make safety'
+	safety check --policy-file $(safety_develop_policy_file) -r minimum-constraints-develop.txt --full-report
+	safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report
+	towncrier build --version $(VERSION) --yes
 	git commit -asm "Release $(VERSION)"
 	git push --set-upstream origin release_$(VERSION)
 	rm -f branch.tmp
