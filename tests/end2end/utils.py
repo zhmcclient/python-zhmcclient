@@ -881,7 +881,7 @@ def skip_missing_api_feature(
     if api_version_info < (4, 10):
         pytest.skip("HMC API version {} is below minimum version 4.10 "
                     "required for API features".
-                    format('.'.join(api_version_info)))
+                    format('.'.join(map(str, api_version_info))))
 
     if console_feature:
         if not console.list_api_features(console_feature):
