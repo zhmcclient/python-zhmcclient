@@ -509,7 +509,7 @@ class GenericGetPropertiesHandler:
     Handler class for generic get of resource properties.
     """
 
-    # List of supported query parameters for the Get Properties operation
+    # List of supported query parameters for the 'Get Properties' operation
     # of the resource type using this class.
     # Must be overridden in the derived resource handler class, if it supports
     # query parameters.
@@ -3974,23 +3974,28 @@ class StorageGroupModifyHandler:
                 if operation == 'create':
                     sv_props = sv_req.copy()
                     del sv_props['operation']
+                    # Add other properties with default values
+                    sv_props.setdefault('fulfillment-state', 'pending')
+                    sv_props.setdefault('usage', 'data')
                     if 'element-uri' in sv_props:
                         raise BadRequestError(
                             method, uri, 7,
                             "The 'element-uri' field in storage-volumes is "
                             "invalid for the create operation")
-                    sv_uri = storage_group.storage_volumes.add(sv_props)
-                    sv_uris.append(sv_uri)
+                    sv_obj = storage_group.storage_volumes.add(sv_props)
+                    sv_uris.append(sv_obj.uri)
                 elif operation == 'modify':
                     check_required_fields(method, uri, sv_req, ['element-uri'])
                     sv_uri = sv_req['element-uri']
+                    sv_props = sv_req.copy()
+                    del sv_props['operation']
                     storage_volume = hmc.lookup_by_uri(sv_uri)
-                    storage_volume.update_properties(sv_props)
+                    storage_volume.update(sv_props)
                 elif operation == 'delete':
                     check_required_fields(method, uri, sv_req, ['element-uri'])
                     sv_uri = sv_req['element-uri']
                     storage_volume = hmc.lookup_by_uri(sv_uri)
-                    storage_volume.delete()
+                    storage_group.storage_volumes.remove(storage_volume.oid)
                 else:
                     raise BadRequestError(
                         method, uri, 5,

@@ -203,6 +203,9 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
             stovol = stogrp.storage_volumes.create(stovol_input_props)
 
             for pn, exp_value in stovol_input_props.items():
+                assert pn in stovol.properties, (
+                    f"Input property {pn!r} is not in created storage volume:\n"
+                    f"{stovol!r}")
                 assert stovol.properties[pn] == exp_value, \
                     "Unexpected value for property {!r} of storage volume:\n" \
                     "{!r}".format(pn, sorted(stovol.properties))
@@ -212,6 +215,9 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
                     "Unexpected value for property {!r} of storage volume:\n" \
                     "{!r}".format(pn, sorted(stovol.properties))
             for pn, exp_value in stovol_auto_props.items():
+                assert pn in stovol.properties, (
+                    f"Automatically returned property {pn!r} is not in "
+                    f"created storage volume:\n{stovol!r}")
                 assert stovol.properties[pn] == exp_value, \
                     "Unexpected value for property {!r} of storage volume:\n" \
                     "{!r}".format(pn, sorted(stovol.properties))
