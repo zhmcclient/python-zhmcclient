@@ -15,7 +15,7 @@
 #     make (GNU make)
 #     python (via PYTHON_CMD, in the active Python environment)
 #     pip (via PIP_CMD, in the active Python environment)
-#     twine (in the active Python environment)
+#     git
 #   These additional commands are used on Linux, OS-X and on Windows with
 #   UNIX-like environments:
 #     uname
@@ -231,7 +231,7 @@ check_py_files := \
     $(wildcard docs/notebooks/*.py) \
 
 # Packages whose dependencies are checked using pip-missing-reqs
-check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 ruff pylint twine jupyter notebook safety bandit towncrier sphinx
+check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 ruff pylint jupyter notebook safety bandit towncrier sphinx
 
 ifdef TESTCASES
   pytest_opts := $(TESTOPTS) -k "$(TESTCASES)"
@@ -283,7 +283,8 @@ help:
 	@echo "  end2end_show - Show HMCs defined for end2end tests"
 	@echo "  authors - Generate AUTHORS.md file from git log"
 	@echo "  uninstall  - Uninstall package from active Python environment"
-	@echo "  upload     - Upload the distribution files to PyPI"
+	@echo "  release    - Begin the release a version to PyPI (requires VERSION to be set)"
+	@echo "  start      - Begin the start of a new version to PyPI (requires VERSION to be set)"
 	@echo "  clean      - Remove any temporary files"
 	@echo "  clobber    - Remove any build products"
 	@echo "  platform   - Display the information about the platform as seen by make"
@@ -308,6 +309,7 @@ help:
 	@echo "      Optional, defaults to 'latest'."
 	@echo "  PYTHON_CMD=... - Name of python command. Default: python"
 	@echo "  PIP_CMD=... - Name of pip command. Default: pip"
+	@echo "  VERSION=... - M.N.U version to be released or started"
 
 .PHONY: platform
 platform:
@@ -483,19 +485,54 @@ clean:
 all: install develop check_reqs check ruff pylint test end2end_mocked safety bandit installtest build builddoc
 	@echo "Makefile: $@ done."
 
-.PHONY: upload
-upload: _check_version uninstall $(dist_files)
-ifeq (,$(findstring .dev,$(package_version)))
-	@echo "==> This will upload $(package_name) version $(package_version) to PyPI!"
+.PHONY: release
+release:
+	@bash -c 'if [ -z "$(VERSION)" ]; then echo ""; echo "Error: VERSION env var is not set"; echo ""; false; fi'
+	@bash -c 'if [ -n "$$(git status -s)" ]; then echo ""; echo "Error: Local git repo has uncommitted files:"; echo ""; git status; false; fi'
+	git fetch origin
+	@bash -c 'if [ -z "$$(git tag -l $(VERSION)a0)" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 does not exist (the version has not been started)"; echo ""; false; fi'
+	@bash -c 'if [[ "$${VERSION#*.*.}" == "0" ]]; then echo master >branch.tmp; else echo stable_$${VERSION%.*} >branch.tmp; fi'
+	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Version tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
+	@bash -c 'if [ -z "$$(git branch --contains $(VERSION)a0 $$(cat branch.tmp))" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 is not in target branch $$(cat branch.tmp), but in:"; echo ""; git branch --contains $(VERSION)a0;. false; fi'
+	@bash -c 'if [ -n "$$(git branch -l release_$(VERSION))" ]; then echo ""; echo "Error: Release branch release_$(VERSION) already exists (the release of the version is already underway)"; echo ""; false; fi'
+	@echo "==> This will release $(package_name) version $(VERSION) to PyPI using target branch $$(cat branch.tmp)"
 	@echo -n '==> Continue? [yN] '
 	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
-	twine upload $(dist_files)
-	@echo "Done: Uploaded $(package_name) version to PyPI: $(package_version)"
+	bash -c 'git checkout $$(cat branch.tmp)'
+	git pull
+	git checkout -b release_$(VERSION)
+	towncrier build --version $(VERSION) --yes
+	make authors
+	bash -c 'RUN_TYPE=release make safety'
+	git commit -asm "Release $(VERSION)"
+	git push --set-upstream origin release_$(VERSION)
+	rm -f branch.tmp
+	@echo "Done: Pushed the release branch to GitHub - now go there and create a PR."
 	@echo "Makefile: $@ done."
-else
-	@echo "Error: A development version $(package_version) of $(package_name) cannot be uploaded to PyPI!"
-	@false
-endif
+
+.PHONY: start
+start:
+	@bash -c 'if [ -z "$(VERSION)" ]; then echo ""; echo "Error: VERSION env var is not set"; echo ""; false; fi'
+	@bash -c 'if [ -n "$$(git status -s)" ]; then echo ""; echo "Error: Local git repo has uncommitted files:"; echo ""; git status; false; fi'
+	git fetch origin
+	@bash -c 'if [[ "$${VERSION#*.*.}" == "0" ]]; then echo master >branch.tmp; else echo stable_$${VERSION%.*} >branch.tmp; fi'
+	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Version tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
+	@bash -c 'if [ -n "$$(git tag -l $(VERSION)a0)" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 already exists (the new version has alreay been started)"; echo ""; false; fi'
+	@bash -c 'if [ -n "$$(git branch -l release_$(VERSION))" ]; then echo ""; echo "Error: Start branch start_$(VERSION) already exists (the start of the new version is already underway)"; echo ""; false; fi'
+	@echo "==> This will start new version $(VERSION) using target branch $$(cat branch.tmp)"
+	@echo -n '==> Continue? [yN] '
+	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
+	bash -c 'git checkout $$(cat branch.tmp)'
+	git pull
+	git checkout -b start_$(VERSION)
+	echo "Dummy change for starting new version $(VERSION)" >changes/noissue.$(VERSION).notshown.rst
+	git add changes/noissue.$(VERSION).notshown.rst
+	git commit -asm "Start $(VERSION)"
+	git push --set-upstream origin start_$(VERSION)
+	git tag $(VERSION)a0
+	git push --tags
+	@echo "Done: Pushed the start branch to GitHub - now go there and create a PR."
+	@echo "Makefile: $@ done."
 
 # Note: The build depends on the right files specified in MANIFEST.in.
 # We generate the MANIFEST.in file automatically, to have a single point of

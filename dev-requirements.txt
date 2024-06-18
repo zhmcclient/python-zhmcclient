@@ -107,13 +107,6 @@ entrypoints>=0.3.0
 # Ruff checker (no imports, invoked via ruff script):
 ruff>=0.3.5
 
-# Twine (no imports, invoked via twine script):
-twine>=3.0.0
-# readme-renderer 23.0 has made cmarkgfm part of extras (it fails on Cygwin)
-readme-renderer>=23.0
-# twine uses keyring, and keyring requires pywin32-ctypes!=0.1.0,0.1.1 but 0.2.0 is required on py38+
-pywin32-ctypes>=0.2.0; sys_platform=="win32"
-
 # Jupyter Notebook (no imports, invoked via jupyter script):
 # Note: The packages for Jupyter Notebook are prone to causing endless pip backtracking when
 #       installed with minimum versions. This was addressed by pinning the package versions

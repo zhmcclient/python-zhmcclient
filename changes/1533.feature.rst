@@ -1,0 +1,3 @@
+Dev: Encapsulated the releasing of a version into a new 'make release' target.
+This performs the steps up to creating a PR.
+The release to PyPI happens when the PR is merged.
