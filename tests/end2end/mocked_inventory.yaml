@@ -37,10 +37,10 @@ all:
       description: "Mocked HMC with z16 in classic mode and z16 in DPM mode"
       mock_file: "mocked_hmc_z16.yaml"
       cpcs:
-        CPC_DPM:
+        CPC_CLA:
           machine_type: "3932"
           dpm_enabled: false
-        CPC_CLA:
+        CPC_DPM:
           machine_type: "3932"
           dpm_enabled: true
   children:
