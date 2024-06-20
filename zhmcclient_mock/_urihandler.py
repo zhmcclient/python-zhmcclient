@@ -3973,6 +3973,9 @@ class StorageGroupsHandler:
 
         body2 = body.copy()
         sv_requests = body2.pop('storage-volumes', None)
+        body2.setdefault('shared', True)
+        body2.setdefault('description', '')
+        body2['fulfillment-state'] = 'pending'
         new_storage_group = hmc.consoles.console.storage_groups.add(body2)
 
         sv_uris = []

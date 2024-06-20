@@ -1,0 +1,4 @@
+Mock+Test: Added missing defaults for properties 'shared', 'description' and
+'fulfillment-state' to the mocked 'Create Storage Group' operation.
+Added missing properties and fixed property name typos in the end2end
+mock test files mocked_hmc_z14.yaml and mocked_hmc_z16.yaml.
