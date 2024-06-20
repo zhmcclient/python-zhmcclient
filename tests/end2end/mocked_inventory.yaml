@@ -33,6 +33,16 @@
 
 all:
   hosts:
+    mocked_hmc_z14:
+      description: "Mocked HMC with z14 in classic mode and z14 in DPM mode"
+      mock_file: "mocked_hmc_z14.yaml"
+      cpcs:
+        CPC_CLA:
+          machine_type: "3906"
+          dpm_enabled: false
+        CPC_DPM:
+          machine_type: "3906"
+          dpm_enabled: true
     mocked_hmc_z16:
       description: "Mocked HMC with z16 in classic mode and z16 in DPM mode"
       mock_file: "mocked_hmc_z16.yaml"
@@ -46,4 +56,5 @@ all:
   children:
     default:
       hosts:
+        mocked_hmc_z14:
         mocked_hmc_z16:
