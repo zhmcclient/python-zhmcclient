@@ -120,12 +120,10 @@ def test_cpc_property(all_cpcs):  # noqa: F811
     for cpc in all_cpcs:
         print(f"Testing with CPC {cpc.name}")
 
-        client = cpc.manager.client
-
         # Select a property that is not returned by list()
         non_list_prop = 'description'
 
-        runtest_get_properties(client, cpc.manager, non_list_prop, (2, 14))
+        runtest_get_properties(cpc.manager, non_list_prop)
 
 
 def test_cpc_features(all_cpcs):  # noqa: F811

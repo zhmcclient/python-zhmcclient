@@ -67,7 +67,7 @@ def test_console_property(hmc_session):  # noqa: F811
     # Select a property that is not returned by list()
     non_list_prop = 'description'
 
-    runtest_get_properties(client, client.consoles, non_list_prop, (2, 15))
+    runtest_get_properties(client.consoles, non_list_prop)
 
 
 def test_console_list_features(hmc_session):  # noqa: F811

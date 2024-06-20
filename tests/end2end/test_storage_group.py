@@ -90,7 +90,6 @@ def test_stogrp_property(dpm_mode_cpcs):  # noqa: F811
         assert cpc.dpm_enabled
         skipif_no_storage_mgmt_feature(cpc)
 
-        client = cpc.manager.client
         session = cpc.manager.session
         hd = session.hmc_definition
 
@@ -108,8 +107,7 @@ def test_stogrp_property(dpm_mode_cpcs):  # noqa: F811
             # Select a property that is not returned by list()
             non_list_prop = 'description'
 
-            runtest_get_properties(
-                client, stogrp.manager, non_list_prop, None)
+            runtest_get_properties(stogrp.manager, non_list_prop)
 
 
 def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811

@@ -90,7 +90,6 @@ def test_port_property(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        client = cpc.manager.client
         session = cpc.manager.session
         hd = session.hmc_definition
 
@@ -113,7 +112,7 @@ def test_port_property(dpm_mode_cpcs):  # noqa: F811
             # Select a property that is not returned by list()
             non_list_prop = 'description'
 
-            runtest_get_properties(client, port.manager, non_list_prop, None)
+            runtest_get_properties(port.manager, non_list_prop)
 
 
 def test_port_update(dpm_mode_cpcs):  # noqa: F811

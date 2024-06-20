@@ -102,7 +102,7 @@ def test_pwrule_property(hmc_session):  # noqa: F811
         # Select a property that is not returned by list()
         non_list_prop = 'description'
 
-        runtest_get_properties(client, pwrule.manager, non_list_prop, None)
+        runtest_get_properties(pwrule.manager, non_list_prop)
 
 
 def test_pwrule_crud(hmc_session):  # noqa: F811
