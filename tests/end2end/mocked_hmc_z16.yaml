@@ -3,8 +3,8 @@
 # zhmcclient_mock/_session.py of the python-zhmcclient project.
 #
 # This mocked HMC manages two CPCs:
-* - CPC_CLA: A z16 in DPM mode
-* - CPC_DPM: A z16 in classic mode
+# - CPC_CLA: A z16 in classic mode
+# - CPC_DPM: A z16 in DPM mode
 
 hmc_definition:
   host: hmc_z16
