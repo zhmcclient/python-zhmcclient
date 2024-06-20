@@ -277,17 +277,18 @@ hmc_definition:
         - properties:
             object-id: sg1
             name: Storage group 1
-            description: Storage group 1
+            description: Storage group 1 attached to CPC_DPM
             shared: false
             type: fcp
             fulfillment-state: complete
+            cpc-uri: /api/cpcs/cpc_dpm
           storage_volumes:
             - properties:
                 element-id: sv1
                 name: Storage volume 1
                 description: Storage volume 1
                 fulfillment-state: complete
-                site: 10.0
+                size: 10.0
                 usage: boot
   cpcs:
     - properties:
@@ -494,6 +495,7 @@ hmc_definition:
             next-activation-profile-name: "LPAR1"
             last-used-activation-profile: "LPAR1"
             has-unacceptable-status: false
+            has-operating-system-messages: true
         - properties:
             object-id: lpar2
             name: "LPAR2"
@@ -505,6 +507,7 @@ hmc_definition:
             next-activation-profile-name: "LPAR2"
             last-used-activation-profile: "LPAR2"
             has-unacceptable-status: true
+            has-operating-system-messages: false
       reset_activation_profiles:
         - properties:
             name: "CPC_CLA"
