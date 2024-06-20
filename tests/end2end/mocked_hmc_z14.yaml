@@ -212,6 +212,7 @@ hmc_definition:
         - properties:
             element-id: userpattern1
             name: User pattern 1
+            description: "User pattern 1"
 
       password_rules:
         - properties:
@@ -257,6 +258,7 @@ hmc_definition:
         - properties:
             element-id: lsd1
             name: LDAP server definition 1
+            description: LDAP server definition 1
             primary-hostname-ipaddr: 10.11.12.13
             search-distinguished-name: "test{0}"
             replication-overwrite-possible: false
@@ -275,6 +277,7 @@ hmc_definition:
         - properties:
             object-id: sg1
             name: Storage group 1
+            description: Storage group 1
             shared: false
             type: fcp
             fulfillment-state: complete
@@ -282,6 +285,7 @@ hmc_definition:
             - properties:
                 element-id: sv1
                 name: Storage volume 1
+                description: Storage volume 1
                 fulfillment-state: complete
                 site: 10.0
                 usage: boot
@@ -482,7 +486,7 @@ hmc_definition:
         - properties:
             object-id: lpar1
             name: "LPAR1"
-            decription: "Lpar LPAR1"
+            description: "Lpar LPAR1"
             partition-number: 0x41
             partition-identifier: 0x41
             status: "operating"
@@ -493,7 +497,7 @@ hmc_definition:
         - properties:
             object-id: lpar2
             name: "LPAR2"
-            decription: "Lpar LPAR1"
+            description: "Lpar LPAR1"
             partition-number: 0x42
             partition-identifier: 0x42
             status: "not-activated"
@@ -504,17 +508,17 @@ hmc_definition:
       reset_activation_profiles:
         - properties:
             name: "CPC_CLA"
-            decription: "Reset activation profile CPC_CLA"
+            description: "Reset activation profile CPC_CLA"
             iocds-name: "ABC"
       load_activation_profiles:
         - properties:
             name: "STANDARDLOAD"
-            decription: "Load activation profile STANDARDLOAD"
+            description: "Load activation profile STANDARDLOAD"
             ipl-type: "ipltype-standard"
             ipl-address: "189AB"
         - properties:
             name: "SCSILOAD"
-            decription: "Load activation profile SCSILOAD"
+            description: "Load activation profile SCSILOAD"
             ipl-type: "ipltype-scsi"
             worldwide-port-name: "1234"
             logical-unit-number: "1234"
@@ -523,11 +527,11 @@ hmc_definition:
       image_activation_profiles:
         - properties:
             name: "LPAR1"
-            decription: "Image activation profile LPAR1"
+            description: "Image activation profile LPAR1"
             # TODO: Add more properties
         - properties:
             name: "LPAR2"
-            decription: "Image activation profile LPAR2"
+            description: "Image activation profile LPAR2"
             # TODO: Add more properties
     - properties:
         # class: created automatically
