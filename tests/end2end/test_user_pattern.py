@@ -102,7 +102,7 @@ def test_upatt_property(hmc_session):  # noqa: F811
         # Select a property that is not returned by list()
         non_list_prop = 'description'
 
-        runtest_get_properties(client, upatt.manager, non_list_prop, None)
+        runtest_get_properties(upatt.manager, non_list_prop)
 
 
 def test_upatt_crud(hmc_session):  # noqa: F811

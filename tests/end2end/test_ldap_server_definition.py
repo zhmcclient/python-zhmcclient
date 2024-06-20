@@ -108,7 +108,7 @@ def test_ldapsrvdef_property(hmc_session):  # noqa: F811
         # Select a property that is not returned by list()
         non_list_prop = 'description'
 
-        runtest_get_properties(client, ldapsrvdef.manager, non_list_prop, None)
+        runtest_get_properties(ldapsrvdef.manager, non_list_prop)
 
 
 def test_ldapsrvdef_crud(hmc_session):  # noqa: F811

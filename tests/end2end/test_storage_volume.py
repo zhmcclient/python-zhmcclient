@@ -140,8 +140,7 @@ def test_stovol_property(dpm_mode_cpcs):  # noqa: F811
             # Select a property that is not returned by list()
             non_list_prop = 'description'
 
-            runtest_get_properties(
-                client, stovol.manager, non_list_prop, None)
+            runtest_get_properties(stovol.manager, non_list_prop)
 
 
 def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811

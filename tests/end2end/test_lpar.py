@@ -103,7 +103,6 @@ def test_lpar_property(classic_mode_cpcs):  # noqa: F811
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
 
-        client = cpc.manager.client
         session = cpc.manager.session
         hd = session.hmc_definition
 
@@ -121,7 +120,7 @@ def test_lpar_property(classic_mode_cpcs):  # noqa: F811
             # Select a property that is not returned by list()
             non_list_prop = 'description'
 
-            runtest_get_properties(client, lpar.manager, non_list_prop, (2, 14))
+            runtest_get_properties(lpar.manager, non_list_prop)
 
 
 TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [

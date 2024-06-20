@@ -398,8 +398,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
                          prop_names=list_props + add_props)
 
 
-def runtest_get_properties(
-        client, manager, non_list_prop, properties_hmc_version):  # noqa: F811
+def runtest_get_properties(manager, non_list_prop):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Run tests for pull_full_properties/pull_properties/get_property/prop
@@ -407,28 +406,20 @@ def runtest_get_properties(
 
     Parameters:
 
-      client (zhmcclient.Client): Client of the manager.
-
       manager (zhmcclient.BaseManager): Manager for listing the resources.
 
       non_list_prop (string): Name of a resource property that is not returned
         with the List HMC operation.
-
-      properties_hmc_version (tuple(int,int)): HMC version that
-        introduced the 'properties' query parameter for this resource type.
     """
 
     assert isinstance(manager, zhmcclient.BaseManager)
 
-    # Get HMC version as a tuple (major, minor)
-    av = client.query_api_version()
-    hmc_version = tuple(int(v) for v in av['hmc-version'].split('.'))
-
     # Indicates whether pull_properties() is expected to pull just the
-    # specified properties.
-    supports_properties = properties_hmc_version is not None \
-        and hmc_version >= properties_hmc_version \
-        and manager.supports_properties
+    # specified properties. We make this dependent only on whether the
+    # mock support for the resource implements it, and not on the HMC
+    # version, because the zhmcclient mock support only implements the
+    # latest CPC and HMC generation, for simplicity.
+    supports_properties = manager.supports_properties
 
     # Part 1: First chunk of methods to be tested
 

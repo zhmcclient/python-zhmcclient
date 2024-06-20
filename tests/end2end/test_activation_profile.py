@@ -222,7 +222,6 @@ def test_actprof_property(classic_mode_cpcs, profile_type):  # noqa: F811
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
 
-        client = cpc.manager.client
         session = cpc.manager.session
         hd = session.hmc_definition
         actprof_mgr = getattr(cpc, profile_type + '_activation_profiles')
@@ -242,5 +241,4 @@ def test_actprof_property(classic_mode_cpcs, profile_type):  # noqa: F811
             # Select a property that is not returned by list()
             non_list_prop = 'description'
 
-            runtest_get_properties(
-                client, actprof.manager, non_list_prop, (2, 15))
+            runtest_get_properties(actprof.manager, non_list_prop)

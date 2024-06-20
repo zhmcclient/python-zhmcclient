@@ -102,7 +102,7 @@ def test_urole_property(hmc_session):  # noqa: F811
         # Select a property that is not returned by list()
         non_list_prop = 'description'
 
-        runtest_get_properties(client, urole.manager, non_list_prop, None)
+        runtest_get_properties(urole.manager, non_list_prop)
 
 
 def test_urole_crud(hmc_session):  # noqa: F811

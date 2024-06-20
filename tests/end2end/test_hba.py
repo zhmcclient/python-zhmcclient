@@ -92,7 +92,6 @@ def test_hba_property(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        client = cpc.manager.client
         session = cpc.manager.session
         hd = session.hmc_definition
 
@@ -115,7 +114,7 @@ def test_hba_property(dpm_mode_cpcs):  # noqa: F811
             # Select a property that is not returned by list()
             non_list_prop = 'description'
 
-            runtest_get_properties(client, hba.manager, non_list_prop, None)
+            runtest_get_properties(hba.manager, non_list_prop)
 
 
 def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
