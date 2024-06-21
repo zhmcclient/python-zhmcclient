@@ -52,6 +52,7 @@ __all__ = ['InputError',
            'FakedVirtualFunctionManager', 'FakedVirtualFunction',
            'FakedVirtualSwitchManager', 'FakedVirtualSwitch',
            'FakedStorageGroupManager', 'FakedStorageGroup',
+           'FakedStorageGroupTemplateManager', 'FakedStorageGroupTemplate',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
            'FakedCapacityGroupManager', 'FakedCapacityGroup',
@@ -1168,6 +1169,8 @@ class FakedConsole(FakedBaseResource):
             properties=properties)
         self._storage_groups = FakedStorageGroupManager(
             hmc=manager.hmc, console=self)
+        self._storage_group_templates = FakedStorageGroupTemplateManager(
+            hmc=manager.hmc, console=self)
         self._users = FakedUserManager(hmc=manager.hmc, console=self)
         self._user_roles = FakedUserRoleManager(hmc=manager.hmc, console=self)
         self._user_patterns = FakedUserPatternManager(
@@ -1229,6 +1232,14 @@ class FakedConsole(FakedBaseResource):
         Storage Group resources of this Console.
         """
         return self._storage_groups
+
+    @property
+    def storage_group_templates(self):
+        """
+        :class:`~zhmcclient_mock.FakedStorageGroupTemplateManager`: Access to
+        the faked Storage Group Template resources of this Console.
+        """
+        return self._storage_group_templates
 
     @property
     def users(self):
