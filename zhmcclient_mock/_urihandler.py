@@ -238,7 +238,9 @@ def parse_query_parms(method, uri):
     is raised.
 
     Returns:
+
         tuple(uri, query_parms) with:
+
         - uri(str): Input URI without query parms
         - query_parms(dict): Query parms as dict (name, value). Empty if no
           query parms were specified.
@@ -279,6 +281,7 @@ def check_required_fields(method, uri, body, field_names):
     Check required fields in the request body.
 
     Raises:
+
       BadRequestError with reason 3: Missing request body
       BadRequestError with reason 5: Missing required field in request body
     """
@@ -301,6 +304,7 @@ def check_required_subfields(method, uri, element, element_str, field_names):
     Check required fields in an element within the request body.
 
     Raises:
+
       BadRequestError with reason 5: Missing required field in request body
     """
 
@@ -321,6 +325,7 @@ def check_valid_cpc_status(method, uri, cpc):
     nothing (in order to make the mock support easy to use).
 
     Raises:
+
       ConflictError with reason 1: The CPC itself has been targeted by the
         operation.
       ConflictError with reason 6: The CPC is hosting the resource targeted by
@@ -363,6 +368,7 @@ def check_partition_status(method, uri, partition, valid_statuses=None,
     function does nothing (in order to make the mock support easy to use).
 
     Raises:
+
       ConflictError with reason 1 (reason 6 is not used for partitions).
     """
     status = partition.properties.get('status', None)
@@ -398,6 +404,7 @@ def check_writable(method, uri, body, writeable):
     Check that the body specifies only writeable properties.
 
     Raises:
+
       BadRequestError with reason 6.
     """
     for prop in body:
@@ -413,6 +420,7 @@ def check_set_noninput(method, uri, properties, prop_name, prop_value):
     and set it to the specified value.
 
     Raises:
+
       BadRequestError with reason 6.
     """
     if prop_name in properties:
@@ -428,6 +436,7 @@ def check_invalid_query_parms(method, uri, query_parms, valid_query_parms):
     Check that the query parameters are valid.
 
     Raises:
+
       BadRequestError with reason 1.
     """
     invalid_parms = []

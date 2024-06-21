@@ -98,9 +98,11 @@ def _request_exc_message(exc):
     `urllib3.exceptions.NewConnectionError`.
 
     Parameters:
+
       exc (:exc:`~request.exceptions.RequestException`): Exception
 
     Returns:
+
       string: A reasonable exception message from the specified exception.
     """
     messages = []
@@ -237,10 +239,12 @@ def get_password_interface(host, userid):
     :class:`~zhmcclient.Session` if no password is provided.
 
     Parameters:
+
       host (string): Hostname or IP address of the HMC
       userid (string): Userid on the HMC
 
     Returns:
+
       string: Password of the userid on the HMC
     """
     raise NotImplementedError
@@ -1695,6 +1699,7 @@ class Job:
         with status code 404 and reason code 1.
 
         Returns:
+
           tuple(job_status, op_status, op_reason, op_result): With the following
           items:
 
@@ -1999,9 +2004,11 @@ def _result_object(result):
     Return the JSON payload in the HTTP response as a Python dict.
 
     Parameters:
+
         result (requests.Response): HTTP response object.
 
     Raises:
+
         :exc:`~zhmcclient.ParseError`: Error parsing the returned JSON.
     """
     content_type = result.headers.get('content-type', None)
@@ -2097,12 +2104,15 @@ def json2dict(json_str):
     Convert a JSON string into a dict.
 
     Parameters:
+
       json_str (string): Unicode or binary string in JSON format.
 
     Returns:
+
       dict: JSON string converted to a dict.
 
     Raises:
+
       ValueError: Cannot parse JSON string
     """
     json_dict = json.loads(json_str)  # May raise ValueError
@@ -2114,9 +2124,11 @@ def dict2json(json_dict):
     Convert a dict into a JSON string.
 
     Parameters:
+
       json_dict (dict): The dict.
 
     Returns:
+
       unicode string (py3) or byte string (py2): Dict converted to a JSON
       string.
     """

@@ -203,6 +203,7 @@ class Group(BaseResource):
             }
 
         Returns:
+
           dict: Resource definition of this resource.
         """
 
@@ -309,6 +310,7 @@ class Group(BaseResource):
 
           list: List of members.
           Each list item is a dictionary with items:
+
           - "object-uri" (term:`string`): URI of the member resource.
           - "name" (term:`string`): Name of the member resource.
 

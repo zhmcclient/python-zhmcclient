@@ -327,6 +327,7 @@ class Certificate(BaseResource):
             }
 
         Returns:
+
           dict: Resource definition of this resource.
         """
 

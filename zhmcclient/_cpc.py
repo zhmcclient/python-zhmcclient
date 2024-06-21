@@ -92,18 +92,25 @@ class STPNode:
         # pylint: disable=redefined-builtin
         """
         Parameters:
+
           object_uri (string): The object-uri of the CPC, if the CPC is managed
             by the HMC. Otherwise, `None`.
+
           type (string): Machine type of the CPC (6 chars left padded with
             zeros), or an empty string.
+
           model (string): Machine model of the CPC (3 chars), or an empty
             string.
+
           manuf (string): Manufacturer of the CPC (3 chars), or an empty
             string.
+
           po_manuf (string): Plant code of the manufacturer of the CPC
             (2 chars), or an empty string.
+
           seq_num (string): Sequence number of the CPC (12 chars), or an empty
             string.
+
           node_name (string): Name of the CPC (1-8 chars).
         """
         self.object_uri = object_uri
@@ -544,6 +551,7 @@ class Cpc(BaseResource):
             }
 
         Returns:
+
           dict: Resource definition of this resource.
         """
 
@@ -1931,6 +1939,7 @@ class Cpc(BaseResource):
             or newly allocated via the "preserve-wwpns" field.
 
         Returns:
+
           list or None:
             If the complete input DPM configuration has been applied
             to the CPC, `None` is returned.
@@ -1991,6 +2000,7 @@ class Cpc(BaseResource):
             are part of the return data.
 
         Returns:
+
           dict:
             A DPM configuration, represented as a dictionary with the
             fields described for the "Import DPM Configuration" operation
@@ -2016,6 +2026,7 @@ class Cpc(BaseResource):
             "preserve-wwpns", or "adapter-mapping" fields.
 
         Raises:
+
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
@@ -2840,12 +2851,17 @@ class Cpc(BaseResource):
         covering the requested time range with the requested resolution.
         This method performs the "Get CPC Historical Sustainability Data" HMC
         operation.
+
         Authorization requirements:
+
         * Object-access permission to this CPC
         * Task permission to the "Environmental Dashboard" task
+
         Parameters:
+
           range (:term:`string`):
             Time range for the requested data points, as follows:
+
             * "last-day" - Last 24 hours.
             * "last-week" - Last 7 days (default).
             * "last-month" - Last 30 days.
@@ -2853,29 +2869,38 @@ class Cpc(BaseResource):
             * "last-six-months" - Last 180 days.
             * "last-year" - Last 365 days.
             * "custom" - From `custom_range_start` to `custom_range_end`.
+
           resolution (:term:`string`):
             Resolution for the requested data points. This is the time interval
             in between the data points. For systems where the
             "environmental-metrics" feature is not available, the minimum
             resolution is "one-hour".
+
             The possible values are as follows:
+
             * "fifteen-minutes" - 15 minutes.
             * "one-hour" - 60 minutes (default).
             * "one-day" - 24 hours.
             * "one-week" - 7 days.
             * "one-month" - 30 days.
+
           custom_range_start (:class:`~py:datetime.datetime`):
             Start of custom time range. Timezone-naive values are interpreted
             using the local system time. Required if `range` is "custom".
+
           custom_range_end (:class:`~py:datetime.datetime`):
             End of custom time range. Timezone-naive values are interpreted
             using the local system time. Required if `range` is "custom".
+
         Returns:
+
           dict: A dictionary with items as described for the response body
           of the "Get CPC Historical Sustainability Data" HMC operation.
           Timestamp fields are represented as timezone-aware
           :class:`~py:datetime.datetime` objects.
+
         Raises:
+
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`

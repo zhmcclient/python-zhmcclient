@@ -972,6 +972,7 @@ class MetricObjectValues:
             the timestamp is always timezone-aware, this part is always created.
 
         Returns:
+
           dict: Resource definition of this object.
         """
         obj_dict = OrderedDict()

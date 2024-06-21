@@ -559,10 +559,12 @@ class BaseManager:
         criteria, or if they do but no resource was found.
 
         Parameters:
+
           filter_args (dict):
             Filter arguments. For details, see :ref:`Filtering`.
 
         Returns:
+
           resource object, or `None` if the the filter arguments did not meet
             the optimization criteria, or if they did but no resource was found.
         """
@@ -1482,6 +1484,7 @@ class BaseManager:
             ]
 
         Returns:
+
           list: Resource definitions of the resources of this resource manager.
         """
         res_list = []

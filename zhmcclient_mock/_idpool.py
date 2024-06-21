@@ -87,6 +87,7 @@ class IdPool:
         Allocate an ID value and return it.
 
         Raises:
+
             ValueError: Out of capacity in ID pool.
         """
         if not self._free:
@@ -103,6 +104,7 @@ class IdPool:
         The ID value must be allocated.
 
         Raises:
+
             ValueError: ID value to be freed is not currently allocated.
         """
         self._free_impl(id, fail_if_not_allocated=True)

@@ -177,6 +177,7 @@ class TimeStats:
         raised.
 
         Raises:
+
           RuntimeError
         """
         if self.keeper.enabled:

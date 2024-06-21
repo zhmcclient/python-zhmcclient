@@ -745,6 +745,7 @@ class BaseResource:
             }
 
         Returns:
+
           dict: Resource definition of this resource.
 
         Raises:

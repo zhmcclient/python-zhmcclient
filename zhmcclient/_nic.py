@@ -358,6 +358,7 @@ class Nic(BaseResource):
         the port and the adapter.
 
         Returns:
+
             Port: A resource object for the backing adapter port.
 
         Raises:
