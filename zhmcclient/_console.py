@@ -1372,6 +1372,7 @@ class Console(BaseResource):
             }
 
         Returns:
+
           dict: Resource definition of this resource.
         """
 

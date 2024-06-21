@@ -44,7 +44,8 @@ def fixtureid_hmc_definition(fixture_value):
     Return a fixture ID to be used by pytest, for fixture `hmc_definition()`.
 
     Parameters:
-      * fixture_value (HMCDefinition): The HMC definition of the HMC the test
+
+      fixture_value (HMCDefinition): The HMC definition of the HMC the test
         runs against.
     """
     if not isinstance(fixture_value, HMCDefinition):

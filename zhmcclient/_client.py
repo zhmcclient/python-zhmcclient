@@ -270,6 +270,7 @@ class Client:
                 ...
 
         Returns:
+
           string: HMC definition YAML string.
         """
         hmc_dict = self.to_hmc_dict()
@@ -314,6 +315,7 @@ class Client:
             }
 
         Returns:
+
           dict: HMC definition dictionary.
         """
         resource_dict = self.dump()
@@ -342,6 +344,7 @@ class Client:
             }
 
         Returns:
+
           dict: Resource definition of this Client.
         """
 

@@ -365,6 +365,7 @@ class NotificationReceiver:
         listener as well.
 
         Raises:
+
             NotificationConnectionError: STOMP connection failed.
             NotificationSubscriptionError: STOMP subscription failed.
         """
@@ -435,9 +436,11 @@ class NotificationReceiver:
             Must not be `None`.
 
         Returns:
+
             string: Subscription ID
 
         Raises:
+
             NotificationSubscriptionError: STOMP subscription failed.
         """
         dest = "/topic/" + topic_name
@@ -471,6 +474,7 @@ class NotificationReceiver:
             Must not be `None`.
 
         Raises:
+
             SubscriptionNotFound: Topic is not currently subscribed for.
             NotificationSubscriptionError: STOMP unsubscription failed.
         """
@@ -585,9 +589,11 @@ class NotificationReceiver:
             :term:`HMC API` book.
 
         Returns:
+
             None
 
         Raises:
+
             :exc:`~zhmcclient.NotificationJMSError`: Received JMS error from
               the HMC.
             :exc:`~zhmcclient.NotificationParseError`: Cannot parse JMS message
@@ -696,6 +702,7 @@ class NotificationReceiver:
         for any topics.
 
         Raises:
+
             stomp.exception.StompException: From stomp.Connection.disconnect()
         """
         self._closed = True
@@ -753,6 +760,7 @@ class _NotificationListener:
         STOMP protocol level.
 
         Parameters:
+
             host_and_port (tuple(str, int)): Host name and port number to which
               the TCP/IP connection has been established.
         """

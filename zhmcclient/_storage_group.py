@@ -832,6 +832,7 @@ class StorageGroup(BaseResource):
             }
 
         Returns:
+
           dict: Resource definition of this resource.
         """
 

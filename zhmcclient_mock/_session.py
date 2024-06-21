@@ -780,10 +780,12 @@ class FakedSession(zhmcclient.Session):
             Password of the HMC user if `userid` was specified, or `None`.
 
         Returns:
+
           FakedSession: New faked session with faked HMC set up from HMC
           definition.
 
         Raises:
+
             IOError: Error opening the YAML file for reading.
             YamlFormatError: Invalid YAML syntax in HMC definition.
             HmcDefinitionSchemaError: Invalid data format in HMC definition.
@@ -822,10 +824,12 @@ class FakedSession(zhmcclient.Session):
             Password of the HMC user if `userid` was specified, or `None`.
 
         Returns:
+
           FakedSession: New faked session with faked HMC set up from HMC
           definition.
 
         Raises:
+
             YamlFormatError: Invalid YAML syntax in HMC definition YAML string
               or stream.
             HmcDefinitionSchemaError: Invalid data format in HMC definition.
@@ -876,10 +880,12 @@ class FakedSession(zhmcclient.Session):
             Password of the HMC user if `userid` was specified, or `None`.
 
         Returns:
+
           FakedSession: New faked session with faked HMC set up from the HMC
           definition.
 
         Raises:
+
             HmcDefinitionSchemaError: Invalid data format in HMC definition.
         """
 

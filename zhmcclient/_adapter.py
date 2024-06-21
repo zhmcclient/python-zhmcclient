@@ -609,6 +609,7 @@ class Adapter(BaseResource):
             }
 
         Returns:
+
           dict: Resource definition of this resource.
         """
 

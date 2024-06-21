@@ -796,6 +796,7 @@ class FakedBaseManager:
             will be auto-generated.
 
         Returns:
+
           FakedBaseResource: The faked resource object.
         """
         resource = self.resource_class(self, properties)
@@ -828,6 +829,7 @@ class FakedBaseManager:
             :meth:`~zhmcclient.BaseManager.list()` for details.
 
         Returns:
+
           list of FakedBaseResource: The faked resource objects of this
             manager.
         """
@@ -850,9 +852,11 @@ class FakedBaseManager:
             property).
 
         Returns:
+
           FakedBaseResource: The faked resource object.
 
         Raises:
+
           KeyError: No resource found for this object ID.
         """
         return self._resources[oid]
@@ -1007,6 +1011,7 @@ class FakedHmc(FakedBaseResource):
             The session ID to be validated.
 
         Returns:
+
           bool: Whether the session ID is valid.
         """
         return session_id in self._valid_session_ids
@@ -1023,6 +1028,7 @@ class FakedHmc(FakedBaseResource):
             The session ID to be added.
 
         Raises:
+
             ValueError: Session ID already exists.
         """
         if session_id in self._valid_session_ids:
@@ -1043,6 +1049,7 @@ class FakedHmc(FakedBaseResource):
             The session ID to be removed.
 
         Raises:
+
             ValueError: Session ID does not exist.
         """
         try:
@@ -1061,9 +1068,11 @@ class FakedHmc(FakedBaseResource):
             'object-uri' property).
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedBaseResource`: The faked resource.
 
         Raises:
+
           KeyError: No resource found for this object ID.
         """
         return self.all_resources[uri]
@@ -1138,6 +1147,7 @@ class FakedConsoleManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedConsole`: The faked Console resource.
         """
         return super().add(properties)
@@ -1328,6 +1338,7 @@ class FakedUserManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedUser`: The faked User resource.
         """
         new_user = super().add(properties)
@@ -1399,6 +1410,7 @@ class FakedUserRoleManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedUserRole`: The faked User Role
           resource.
         """
@@ -1469,6 +1481,7 @@ class FakedUserPatternManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedUserPattern`: The faked User Pattern
           resource.
         """
@@ -1535,6 +1548,7 @@ class FakedPasswordRuleManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedPasswordRule`: The faked Password Rule
           resource.
         """
@@ -1604,6 +1618,7 @@ class FakedTaskManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedTask`: The faked Task resource.
         """
         return super().add(properties)
@@ -1667,6 +1682,7 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
               to a default value consistent with the HMC data model.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedLdapServerDefinition`: The faked
           LdapServerDefinition resource.
         """
@@ -1748,6 +1764,7 @@ class FakedActivationProfileManager(FakedBaseManager):
               '{profile_type}'-activation-profile', if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedActivationProfile`: The faked
             Activation Profile resource.
         """
@@ -1824,9 +1841,11 @@ class FakedAdapterManager(FakedBaseManager):
               list, if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedAdapter`: The faked Adapter resource.
 
         Raises:
+
           :exc:`zhmcclient_mock.InputError`: Some issue with the input
             properties.
         """
@@ -1942,6 +1961,7 @@ class FakedAdapter(FakedBaseResource):
         network adapters.
 
         Possible values are:
+
         * 'network' - A network adapter (OSA, ROCE, Hipersockets)
         * 'storage' - A storage adapter (FICON, FCP)
         * 'other' - Another adapter (zEDC, Crypto)
@@ -1994,6 +2014,7 @@ class FakedCpcManager(FakedBaseManager):
               otherwise it is set to 'operating'.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedCpc`: The faked CPC resource.
         """
         return super().add(properties)
@@ -2191,6 +2212,7 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedUnmanagedCpc`: The faked unmanaged CPC
           resource.
         """
@@ -2274,6 +2296,7 @@ class FakedGroupManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedGroup`: The faked Group resource.
         """
         new_group = super().add(properties)
@@ -2370,9 +2393,11 @@ class FakedHbaManager(FakedBaseManager):
             resource.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedHba`: The faked HBA resource.
 
         Raises:
+
           :exc:`zhmcclient_mock.InputError`: Some issue with the input
             properties.
         """
@@ -2478,6 +2503,7 @@ class FakedLparManager(FakedBaseManager):
             * 'status' is auto-set to 'not-activated', if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedLpar`: The faked LPAR resource.
         """
         return super().add(properties)
@@ -2556,9 +2582,11 @@ class FakedNicManager(FakedBaseManager):
             and sets it to the URI of the faked NIC resource.
 
         Returns:
+
           :class:`zhmcclient_mock.FakedNic`: The faked NIC resource.
 
         Raises:
+
           :exc:`zhmcclient_mock.InputError`: Some issue with the input
             properties.
         """
@@ -2693,6 +2721,7 @@ class FakedPartitionManager(FakedBaseManager):
             * 'status' is auto-set to 'stopped', if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedPartition`: The faked Partition
             resource.
         """
@@ -2797,9 +2826,11 @@ class FakedPartition(FakedBaseResource):
         0x8000 to 0xFFFF.
 
         Returns:
+
           string: The device number as four hexadecimal digits in upper case.
 
         Raises:
+
           ValueError: No more device numbers available in that range.
         """
         devno_int = self._devno_pool.alloc()
@@ -2813,9 +2844,11 @@ class FakedPartition(FakedBaseResource):
         The device number must be allocated.
 
         Parameters:
+
           devno (string): The device number as four hexadecimal digits.
 
         Raises:
+
           ValueError: Device number not in pool range or not currently
             allocated.
         """
@@ -2830,6 +2863,7 @@ class FakedPartition(FakedBaseResource):
         range, nothing happens.
 
         Parameters:
+
           devno (string): The device number as four hexadecimal digits.
         """
         devno_int = int(devno, 16)
@@ -2841,9 +2875,11 @@ class FakedPartition(FakedBaseResource):
         0xAFFEAFFE00008000 to 0xAFFEAFFE0000FFFF.
 
         Returns:
+
           string: The WWPN as 16 hexadecimal digits in upper case.
 
         Raises:
+
           ValueError: No more WWPNs available in that range.
         """
         wwpn_int = self._wwpn_pool.alloc()
@@ -2857,9 +2893,11 @@ class FakedPartition(FakedBaseResource):
         The WWPN must be allocated.
 
         Parameters:
+
           WWPN (string): The WWPN as 16 hexadecimal digits.
 
         Raises:
+
           ValueError: WWPN not in pool range or not currently
             allocated.
         """
@@ -2875,6 +2913,7 @@ class FakedPartition(FakedBaseResource):
         range, nothing happens.
 
         Parameters:
+
           WWPN (string): The WWPN as 16 hexadecimal digits.
         """
         wwpn_int = int(wwpn[-4:], 16)
@@ -2934,6 +2973,7 @@ class FakedPortManager(FakedBaseManager):
             adding the URI for the faked Port resource.
 
         Returns:
+
           :class:`zhmcclient_mock.FakedPort`: The faked Port resource.
         """
         new_port = super().add(properties)
@@ -3029,6 +3069,7 @@ class FakedVirtualFunctionManager(FakedBaseManager):
             Virtual Function resource.
 
         Returns:
+
           :class:`zhmcclient_mock.FakedVirtualFunction`: The faked Virtual
             Function resource.
         """
@@ -3122,6 +3163,7 @@ class FakedVirtualSwitchManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedVirtualSwitch`: The faked Virtual
             Switch resource.
         """
@@ -3188,6 +3230,7 @@ class FakedStorageGroupManager(FakedBaseManager):
             * 'shared' is auto-set to False, if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedStorageGroup`: The faked StorageGroup
             resource.
         """
@@ -3289,6 +3332,7 @@ class FakedStorageVolumeManager(FakedBaseManager):
               updated to add the URI of the new faked StorageVolume resource.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedStorageVolume`: The faked StorageVolume
             resource.
         """
@@ -3317,6 +3361,201 @@ class FakedStorageVolume(FakedBaseResource):
         """
         Return a string with the state of this faked StorageVolume resource,
         for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self._properties, indent=2),
+            ))
+        return ret
+
+
+class FakedStorageGroupTemplateManager(FakedBaseManager):
+    """
+    A manager for faked StorageGroupTemplate resources within a faked Console
+    (see :class:`zhmcclient_mock.FakedConsole`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super().__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedStorageGroupTemplate,
+            base_uri=self.api_root + '/storage-templates',
+            oid_prop='object-id',
+            uri_prop='object-uri',
+            class_value='storage-template',
+            name_prop='name')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked StorageGroupTemplate resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'storage-group',
+              if not specified.
+            * 'storage-volume-template-uris' will be auto-generated as an empty
+              array, if not specified.
+            * 'shared' is auto-set to False, if not specified.
+
+        Returns:
+
+          :class:`~zhmcclient_mock.FakedStorageGroupTemplate`: The faked
+          StorageGroupTemplate resource.
+        """
+        return super().add(properties)
+
+
+class FakedStorageGroupTemplate(FakedBaseResource):
+    """
+    A faked StorageGroupTemplate resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+        if 'storage-template-volume-uris' not in self._properties:
+            self._properties['storage-template-volume-uris'] = []
+        if 'shared' not in self._properties:
+            self._properties['shared'] = False
+        self._storage_volume_templates = FakedStorageVolumeTemplateManager(
+            hmc=manager.hmc, storage_group_template=self)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked StorageGroupTemplate
+        resource, for debug purposes.
+        """
+        ret = (
+            "{classname} at 0x{id:08x} (\n"
+            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
+            "  _manager._parent._uri = {parent_uri!r}\n"
+            "  _uri = {_uri!r}\n"
+            "  _properties = {_properties}\n"
+            "  _storage_volume_templates = {_storage_volume_templates}\n"
+            ")".format(
+                classname=self.__class__.__name__,
+                id=id(self),
+                manager_classname=self._manager.__class__.__name__,
+                manager_id=id(self._manager),
+                parent_uri=self._manager.parent.uri,
+                _uri=self._uri,
+                _properties=repr_dict(self._properties, indent=2),
+                _storage_volume_templates=repr_manager(
+                    self.storage_volume_templates, indent=2),
+            ))
+        return ret
+
+    @property
+    def storage_volume_templates(self):
+        """
+        :class:`~zhmcclient_mock.FakedStorageVolumeTemplateManager`: Access to
+        the faked StorageVolumeTemplate resources of this StorageGroupTemplate.
+        """
+        return self._storage_volume_templates
+
+
+class FakedStorageVolumeTemplateManager(FakedBaseManager):
+    """
+    A manager for faked StorageVolumeTemplate resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, storage_group_template):
+        super().__init__(
+            hmc=hmc,
+            parent=storage_group_template,
+            resource_class=FakedStorageVolumeTemplate,
+            base_uri=storage_group_template.uri + '/storage-template-volumes',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='storage-template-volume',
+            name_prop='name')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked StorageVolumeTemplate resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'object-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'object-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'storage-template-volume',
+              if not specified.
+            * 'storage-template-volume-uris' array in parent storage group will
+              be updated to add the URI of the new faked StorageVolumeTemplate
+              resource.
+
+        Returns:
+
+          :class:`~zhmcclient_mock.FakedStorageVolumeTemplate`: The faked
+          StorageVolumeTemplate resource.
+        """
+        stovol = super().add(properties)
+        stotpl = stovol.manager.parent
+        if stovol.uri not in stotpl.properties['storage-template-volume-uris']:
+            stotpl.properties['storage-template-volume-uris'].append(stovol.uri)
+        return stovol
+
+
+class FakedStorageVolumeTemplate(FakedBaseResource):
+    """
+    A faked StorageVolumeTemplate resource within a faked StorageGroupTemplate
+    (see :class:`zhmcclient_mock.FakedStorageGroupTemplate`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked StorageVolumeTemplate
+        resource, for debug purposes.
         """
         ret = (
             "{classname} at 0x{id:08x} (\n"
@@ -3378,6 +3617,7 @@ class FakedCapacityGroupManager(FakedBaseManager):
               if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedCapacityGroup`: The faked CapacityGroup
             resource.
         """
@@ -3514,6 +3754,7 @@ class FakedMetricsContextManager(FakedBaseManager):
               property, if not specified.
 
         Returns:
+
           :class:`~zhmcclient_mock.FakedMetricsContext`: The faked Metrics
           Context resource.
         """

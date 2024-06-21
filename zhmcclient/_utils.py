@@ -288,6 +288,7 @@ def datetime_from_timestamp(ts, tzinfo=pytz.utc):
         specified timezone.
 
     Raises:
+
         ValueError
     """
     # Note that in Python 2, "None < 0" is allowed and will return True,
@@ -345,6 +346,7 @@ def timestamp_from_datetime(dt):
         Point in time as an HMC timestamp number.
 
     Raises:
+
         ValueError
     """
     if dt is None:
@@ -623,10 +625,15 @@ def warn_deprecated_parameter(cls, method, name, value, default):
     The method must use the @logged_api_call decorator.
 
     Parameters:
+
       cls (class): The class object that defines the method.
+
       method (method): The method object that has the parameter.
+
       name (str): The name of the parameter.
+
       value (object): The value of the parameter.
+
       default (object): The default value of the parameter.
     """
     if value != default:
@@ -647,6 +654,7 @@ def stomp_uses_frames(stomp_version):
     Returns whether stomp-py uses Frame objects for the event listener methods.
 
     Parameters:
+
       stomp_version: The __version__ attribute of the stomp module.
     """
     # stomp-py introduced the use of Frame objects in version 7.0.0, but since
@@ -668,9 +676,11 @@ def get_stomp_rt_kwargs(rt_config):
     stomp retry/timeout config.
 
     Parameters:
+
         rt_config (StompRetryTimeoutConfig): stomp retry/timeout config
 
     Returns:
+
         dict: Additional kwargs for StompConnection from the config.
     """
     rt_kwargs = dict()

@@ -54,6 +54,7 @@ def hmc_definitions(load=True):
         If `None`, the 'TESTEND2END_LOAD' environment variable is used.
 
     Returns:
+
       list of :class:`zhmcclient.testutils.HMCDefinition`
     """
     hmcdefs = HMCDefinitions(load=load)
@@ -145,6 +146,7 @@ class HMCDefinitions:
             If `None`, the 'TESTEND2END_LOAD' environment variable is used.
 
         Raises:
+
           zhmcclient.testutils.HMCInventoryFileError:
           zhmcclient.testutils.HMCVaultFileError:
           zhmcclient.testutils.HMCNoVaultError:
@@ -350,6 +352,7 @@ class HMCDefinitions:
           inv_file (string): Path name of HMV inventory file (for messages).
 
         Raises:
+
           HMCNoVaultError: No cprresponding entry in HMC vault file.
         """
         auth = hmc_vault.data['hmc_auth'] or {}
@@ -420,15 +423,18 @@ class HMCDefinitions:
         the HMC inventory file.
 
         Parameters:
+
           name (string): Name of an HMC group or nickname of a single HMC in the
             HMC inventory file. If `None`, the default group or nickname
             defined in :attr:`HMCDefinitions.testhmc` is used.
 
         Returns:
+
           list of :class:`HMCDefinition`: The specified HMCs in the HMC
             inventory file.
 
         Raises:
+
           zhmcclient.testutils.HMCNotFound: HMC group or nickname not found.
         """
         if not self._hd_dict:
@@ -500,6 +506,7 @@ class HMCDefinitions:
         List all HMCs in the HMC inventory file.
 
         Returns:
+
           list of :class:`HMCDefinition`: All HMCs in the HMC inventory file.
         """
         return self.list_hmcs('all')
@@ -509,6 +516,7 @@ class HMCDefinitions:
         List all group names in the HMC inventory file.
 
         Returns:
+
           list of string: All group names in the HMC inventory file.
         """
         return list(self._hd_dict.keys())

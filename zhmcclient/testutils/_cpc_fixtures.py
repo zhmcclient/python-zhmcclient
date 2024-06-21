@@ -136,6 +136,7 @@ def defined_cpcs(session, mode):
       mode (string): The desired mode of the CPC ('dpm', 'classic', 'any').
 
     Returns:
+
       list of :class:`zhmcclient.Cpc`: The CPCs in the desired mode.
     """
     client = zhmcclient.Client(session)

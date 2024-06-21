@@ -50,6 +50,7 @@ def setup_logging(enable_logging, testfunc_name, log_file=None):
     logger is also returned in this case.
 
     Returns:
+
         logging.Logger: Logger for testfunc_name
     """
     # log level and format for both loggers
@@ -175,11 +176,13 @@ def pick_test_resources(res_list):
     * '<pattern>': The resources with names matching the regexp pattern.
 
     Parameters:
+
       res_list (list of zhmcclient.BaseResource or tuple thereof):
         List of resources to pick from. Tuple items are a resource and its
         parent resources.
 
     Returns:
+
       list of zhmcclient.BaseResource: Picked list of resources.
     """
 
@@ -697,7 +700,7 @@ def cleanup_and_import_example_certificate(cpc):
     The certificate is valid until 2033-04-15, but should probably be regularly
     renewed.
 
-    Returns: the imported Certificate objects and the dict used for import
+    Returns the imported Certificate objects and the dict used for import
     """
     console = cpc.manager.console
 
@@ -756,6 +759,7 @@ def ensure_lpar_inactive(lpar):
       lpar (zhmcclient.Lpar): The LPAR (must exist).
 
     Raises:
+
       StatusError: The inactive status cannot be reached.
       zhmcclient.CeasedExistence: The LPAR no longer exists.
       zhmcclient.Error: Any zhmcclient exception can happen, except
@@ -806,9 +810,11 @@ def set_resource_property(resource, name, value):
       value (object): New value for the property.
 
     Returns:
+
       object: Old value of the property.
 
     Raises:
+
       zhmcclient.CeasedExistence: The resource no longer exists.
       zhmcclient.Error: Any zhmcclient exception can happen, except
         OperationTimeout and StatusTimeout.
@@ -837,6 +843,7 @@ def pull_lpar_status(lpar):
     never appear at the WS-API.
 
     Raises:
+
       zhmcclient.CeasedExistence: The LPAR no longer exists.
       zhmcclient.Error: Any zhmcclient exception can happen.
     """

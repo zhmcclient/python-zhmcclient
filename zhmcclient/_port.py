@@ -251,6 +251,7 @@ class Port(BaseResource):
             }
 
         Returns:
+
           dict: Resource definition of this Port resource.
         """
         resource_dict = OrderedDict()
