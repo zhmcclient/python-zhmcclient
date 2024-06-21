@@ -72,6 +72,8 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     VirtualSwitchGetVnicsHandler, \
     StorageGroupsHandler, StorageGroupHandler, \
     StorageVolumesHandler, StorageVolumeHandler, \
+    StorageTemplatesHandler, StorageTemplateHandler, \
+    StorageTemplateVolumesHandler, StorageTemplateVolumeHandler, \
     CapacityGroupsHandler, CapacityGroupHandler, \
     CapacityGroupAddPartitionHandler, CapacityGroupRemovePartitionHandler, \
     LparsHandler, LparHandler, LparActivateHandler, LparDeactivateHandler, \
@@ -811,6 +813,30 @@ def standard_test_hmc():
                                     'name': 'fake_stovol_name_1',
                                     'description': 'Storage Volume #1',
                                     'fulfillment-state': 'complete',
+                                    'size': 10.0,
+                                    'usage': 'boot',
+                                },
+                            },
+                        ],
+                    },
+                ],
+                'storage_group_templates': [
+                    {
+                        'properties': {
+                            'object-id': 'fake-stotpl-oid-1',
+                            'name': 'fake_stotpl_name_1',
+                            'description': 'Storage Group Template #1',
+                            'cpc-uri': '/api/cpcs/1',
+                            'type': 'fcp',
+                            'shared': False,
+                            # 'storage-template-volume-uris' managed automatic.
+                        },
+                        'storage_volume_templates': [
+                            {
+                                'properties': {
+                                    'element-id': 'fake-stotvl-oid-1',
+                                    'name': 'fake_stotvl_name_1',
+                                    'description': 'Storage Volume Template #1',
                                     'size': 10.0,
                                     'usage': 'boot',
                                 },
@@ -6254,6 +6280,148 @@ class TestStorageVolumeHandlers:
             'usage': 'boot',
         }
         assert stovol1 == exp_stovol1
+
+
+class TestStorageTemplateHandlers:
+    """
+    All tests for classes StorageTemplatesHandler and StorageTemplateHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        StorageTemplatesHandler and StorageTemplateHandler.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/storage-templates(?:\?(.*))?', StorageTemplatesHandler),
+            (r'/api/storage-templates/([^/]+)', StorageTemplateHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_stotpl_list(self):
+        """
+        Test GET Storage Templates (list).
+        """
+
+        # the function to be tested:
+        stotpls = self.urihandler.get(self.hmc, '/api/storage-templates', True)
+
+        exp_stotpls = {  # properties reduced to those returned by List
+            'storage-templates': [
+                {
+                    'object-uri': '/api/storage-templates/fake-stotpl-oid-1',
+                    'cpc-uri': '/api/cpcs/1',
+                    'name': 'fake_stotpl_name_1',
+                    'type': 'fcp',
+                },
+            ]
+        }
+        assert stotpls == exp_stotpls
+
+    def test_stotpl_get(self):
+        """
+        Test GET Storage Group Template.
+        """
+
+        # the function to be tested:
+        stotpl1 = self.urihandler.get(
+            self.hmc, '/api/storage-templates/fake-stotpl-oid-1', True)
+
+        exp_stotpl1 = {
+            'object-id': 'fake-stotpl-oid-1',
+            'object-uri': '/api/storage-templates/fake-stotpl-oid-1',
+            'class': 'storage-template',
+            'parent': '/api/console',
+            'cpc-uri': '/api/cpcs/1',
+            'name': 'fake_stotpl_name_1',
+            'description': 'Storage Group Template #1',
+            'type': 'fcp',
+            'shared': False,
+            'storage-template-volume-uris': [
+                '/api/storage-templates/fake-stotpl-oid-1/'
+                'storage-template-volumes/fake-stotvl-oid-1',
+            ],
+        }
+        assert stotpl1 == exp_stotpl1
+
+
+# TODO: Test StorageTemplateModifyHandler
+
+
+class TestStorageTemplateVolumeHandlers:
+    """
+    All tests for classes StorageTemplateVolumesHandler and
+    StorageTemplateVolumeHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        StorageTemplateVolumesHandler and StorageTemplateVolumeHandler.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/storage-templates/([^/]+)/'
+             r'storage-template-volumes(?:\?(.*))?',
+             StorageTemplateVolumesHandler),
+            (r'/api/storage-templates/([^/]+)/'
+             r'storage-template-volumes/([^/]+)',
+             StorageTemplateVolumeHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_stotvl_list(self):
+        """
+        Test GET Storage Volumes of Storage Template (list).
+        """
+
+        # the function to be tested:
+        stotvls = self.urihandler.get(
+            self.hmc,
+            '/api/storage-templates/fake-stotpl-oid-1/'
+            'storage-template-volumes',
+            True)
+
+        exp_stotvls = {  # properties reduced to those returned by List
+            'storage-template-volumes': [
+                {
+                    'element-uri': '/api/storage-templates/fake-stotpl-oid-1/'
+                                   'storage-template-volumes/fake-stotvl-oid-1',
+                    'name': 'fake_stotvl_name_1',
+                    'size': 10.0,
+                    'usage': 'boot',
+                },
+            ]
+        }
+        assert stotvls == exp_stotvls
+
+    def test_stotvl_get(self):
+        """
+        Test GET Storage Template Volume.
+        """
+
+        # the function to be tested:
+        stotvl1 = self.urihandler.get(
+            self.hmc, '/api/storage-templates/fake-stotpl-oid-1/'
+            'storage-template-volumes/fake-stotvl-oid-1', True)
+
+        exp_stotvl1 = {
+            'element-id': 'fake-stotvl-oid-1',
+            'element-uri': '/api/storage-templates/fake-stotpl-oid-1/'
+                           'storage-template-volumes/fake-stotvl-oid-1',
+            'class': 'storage-template-volume',
+            'parent': '/api/storage-templates/fake-stotpl-oid-1',
+            'name': 'fake_stotvl_name_1',
+            'description': 'Storage Volume Template #1',
+            'size': 10.0,
+            'usage': 'boot',
+        }
+        assert stotvl1 == exp_stotvl1
 
 
 class TestCapacityGroupHandlers:

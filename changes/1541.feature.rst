@@ -1,0 +1,2 @@
+Mock: Added zhmcclient mock support for Storage Group Templates and their
+Volumes.

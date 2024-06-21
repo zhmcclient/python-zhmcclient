@@ -4572,6 +4572,205 @@ class StorageVolumeHandler(GenericGetPropertiesHandler):
     pass
 
 
+class StorageTemplatesHandler:
+    """
+    Handler class for HTTP methods on set of StorageGroupTemplate resources.
+    """
+
+    valid_query_parms_get = ['cpc-uri', 'name', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """
+        Operation: List Storage Templates (always global but with filters).
+        """
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        result_storage_group_templates = []
+        for sgt in hmc.consoles.console.storage_group_templates.list(
+                filter_args):
+            result_sgt = {}
+            for prop in sgt.properties:
+                if prop in ('object-uri', 'cpc-uri', 'name', 'type'):
+                    result_sgt[prop] = sgt.properties[prop]
+            result_storage_group_templates.append(result_sgt)
+        return {'storage-templates': result_storage_group_templates}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create Storage Template."""
+        assert wait_for_completion is True  # async not supported yet
+        check_required_fields(method, uri, body, ['name', 'cpc-uri', 'type'])
+        cpc_uri = body['cpc-uri']
+        try:
+            cpc = hmc.lookup_by_uri(cpc_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+        check_valid_cpc_status(method, uri, cpc)
+
+        # Reflect the result of creating the storage group
+
+        body2 = body.copy()
+        sv_requests = body2.pop('storage-template-volumes', None)
+        body2.setdefault('shared', True)
+        body2.setdefault('description', '')
+        body2['fulfillment-state'] = 'pending'
+        new_sgt = hmc.consoles.console.storage_group_templates.add(body2)
+
+        sv_uris = []
+        if sv_requests:
+            for sv_req in sv_requests:
+                check_required_fields(method, uri, sv_req, ['operation'])
+                operation = sv_req['operation']
+                if operation == 'create':
+                    sv_props = sv_req.copy()
+                    del sv_props['operation']
+                    if 'element-uri' in sv_props:
+                        raise BadRequestError(
+                            method, uri, 7,
+                            "The 'element-uri' field in "
+                            "storage-template-volumes is "
+                            "invalid for the create operation")
+                    sv_uri = new_sgt.storage_volume_templates.add(sv_props)
+                    sv_uris.append(sv_uri)
+                else:
+                    raise BadRequestError(
+                        method, uri, 5,
+                        "Invalid value for storage-template-volumes "
+                        "'operation' field: {}".format(operation))
+
+        return {
+            'object-uri': new_sgt.uri,
+            'element-uris': sv_uris,
+        }
+
+
+class StorageTemplateHandler(GenericGetPropertiesHandler,
+                             GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single StorageGroupTemplate resource.
+    """
+    pass
+
+
+class StorageTemplateModifyHandler:
+    """
+    Handler class for operation: Modify Storage Template Properties.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Modify Storage Template Properties."""
+        assert wait_for_completion is True  # async not supported yet
+        # The URI is a POST operation, so we need to construct the SG URI
+        sgt_oid = uri_parms[0]
+        sgt_uri = '/api/storage-templates/' + sgt_oid
+        try:
+            sgt = hmc.lookup_by_uri(sgt_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        # Reflect the result of modifying the storage group template
+
+        body2 = body.copy()
+        sv_requests = body2.pop('storage-template-volumes', None)
+        sgt.update(body2)
+
+        sv_uris = []
+        if sv_requests:
+            for sv_req in sv_requests:
+                check_required_fields(method, uri, sv_req, ['operation'])
+                operation = sv_req['operation']
+                if operation == 'create':
+                    sv_props = sv_req.copy()
+                    del sv_props['operation']
+                    # Add other properties with default values
+                    sv_props.setdefault('usage', 'data')
+                    if 'element-uri' in sv_props:
+                        raise BadRequestError(
+                            method, uri, 7,
+                            "The 'element-uri' field in "
+                            "storage-template-volumes is "
+                            "invalid for the create operation")
+                    sv_obj = sgt.storage_volume_templates.add(sv_props)
+                    sv_uris.append(sv_obj.uri)
+                elif operation == 'modify':
+                    check_required_fields(method, uri, sv_req, ['element-uri'])
+                    sv_uri = sv_req['element-uri']
+                    sv_props = sv_req.copy()
+                    del sv_props['operation']
+                    storage_volume = hmc.lookup_by_uri(sv_uri)
+                    storage_volume.update(sv_props)
+                elif operation == 'delete':
+                    check_required_fields(method, uri, sv_req, ['element-uri'])
+                    sv_uri = sv_req['element-uri']
+                    storage_volume = hmc.lookup_by_uri(sv_uri)
+                    sgt.storage_volume_templates.remove(storage_volume.oid)
+                else:
+                    raise BadRequestError(
+                        method, uri, 5,
+                        "Invalid value for storage-volumes 'operation' "
+                        "field: {}".format(operation))
+
+        return {
+            'element-uris': sv_uris,  # SVs created, maintaining the order
+        }
+
+
+class StorageTemplateVolumesHandler:
+    """
+    Handler class for HTTP methods on set of StorageGroupTemplate resources.
+    """
+
+    valid_query_parms_get = ['name', 'maximum-size', 'minimum-size', 'usage']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Volumes of a Storage (Group) Template."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        sgt_uri = re.sub('/storage-template-volumes$', '', uri)
+        try:
+            sgt = hmc.lookup_by_uri(sgt_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        result_storage_volume_templates = []
+        for sv in sgt.storage_volume_templates.list(filter_args):
+            result_sv = {}
+            for prop in sv.properties:
+                if prop in ('element-uri', 'name', 'size', 'usage'):
+                    result_sv[prop] = sv.properties[prop]
+            result_storage_volume_templates.append(result_sv)
+        return {'storage-template-volumes': result_storage_volume_templates}
+
+
+class StorageTemplateVolumeHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on single StorageGroupTemplate resource.
+    """
+    pass
+
+
 class CapacityGroupsHandler:
     """
     Handler class for HTTP methods on set of CapacityGroup resources.
@@ -5826,6 +6025,16 @@ URIS = (
      StorageVolumesHandler),
     (r'/api/storage-groups/([^/]+)/storage-volumes/([^?/]+)(?:\?(.*))?',
      StorageVolumeHandler),
+
+    (r'/api/storage-templates(?:\?(.*))?', StorageTemplatesHandler),
+    (r'/api/storage-templates/([^?/]+)(?:\?(.*))?', StorageTemplateHandler),
+    (r'/api/storage-templates/([^/]+)/operations/modify',
+     StorageTemplateModifyHandler),
+
+    (r'/api/storage-templates/([^/]+)/storage-template-volumes(?:\?(.*))?',
+     StorageTemplateVolumesHandler),
+    (r'/api/storage-templates/([^/]+)/storage-template-volumes/'
+     r'([^?/]+)(?:\?(.*))?', StorageTemplateVolumeHandler),
 
     (r'/api/cpcs/([^/]+)/capacity-groups(?:\?(.*))?', CapacityGroupsHandler),
     (r'/api/cpcs/([^/]+)/capacity-groups/([^?/]+)(?:\?(.*))?',
