@@ -103,8 +103,7 @@ class ConnectionError(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r})". \
-               format(self.__class__.__name__, self.args[0])
+        return f"{self.__class__.__name__}(message={self.args[0]!r})"
 
     def str_def(self):
         """
@@ -115,8 +114,8 @@ class ConnectionError(Error):
 
             classname={}; message={};
         """
-        return "classname={!r}; message={!r};". \
-            format(self.__class__.__name__, self.args[0])
+        return \
+            f"classname={self.__class__.__name__!r}; message={self.args[0]!r};"
 
 
 class ConnectTimeout(ConnectionError):
@@ -173,10 +172,10 @@ class ConnectTimeout(ConnectionError):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, connect_timeout={!r}, " \
-               "connect_retries={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.connect_timeout, self.connect_retries)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"connect_timeout={self.connect_timeout!r}, "
+            f"connect_retries={self.connect_retries!r})")
 
     def str_def(self):
         """
@@ -187,10 +186,11 @@ class ConnectTimeout(ConnectionError):
 
             classname={}; connect_timeout={}; connect_retries={}; message={};
         """  # noqa: E501
-        return "classname={!r}; connect_timeout={!r}; connect_retries={!r}; " \
-            "message={!r};". \
-            format(self.__class__.__name__, self.connect_timeout,
-                   self.connect_retries, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"connect_timeout={self.connect_timeout!r}; "
+            f"connect_retries={self.connect_retries!r}; "
+            f"message={self.args[0]!r};")
 
 
 class ReadTimeout(ConnectionError):
@@ -247,9 +247,10 @@ class ReadTimeout(ConnectionError):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, read_timeout={!r}, read_retries={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.read_timeout, self.read_retries)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"read_timeout={self.read_timeout!r}, "
+            f"read_retries={self.read_retries!r})")
 
     def str_def(self):
         """
@@ -260,10 +261,11 @@ class ReadTimeout(ConnectionError):
 
             classname={}; read_timeout={}; read_retries={}; message={};
         """
-        return "classname={!r}; read_timeout={!r}; read_retries={!r}; " \
-            "message={!r};". \
-            format(self.__class__.__name__, self.read_timeout,
-                   self.read_retries, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"read_timeout={self.read_timeout!r}; "
+            f"read_retries={self.read_retries!r}; "
+            f"message={self.args[0]!r};")
 
 
 class RetriesExceeded(ConnectionError):
@@ -311,9 +313,9 @@ class RetriesExceeded(ConnectionError):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, connect_retries={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.connect_retries)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"connect_retries={self.connect_retries!r})")
 
     def str_def(self):
         """
@@ -324,8 +326,10 @@ class RetriesExceeded(ConnectionError):
 
             classname={}; connect_retries={}; message={};
         """
-        return "classname={!r}; connect_retries={!r}; message={!r};". \
-            format(self.__class__.__name__, self.connect_retries, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"connect_retries={self.connect_retries!r}; "
+            f"message={self.args[0]!r};")
 
 
 class AuthError(Error):
@@ -366,8 +370,7 @@ class ClientAuthError(AuthError):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r})". \
-               format(self.__class__.__name__, self.args[0])
+        return f"{self.__class__.__name__}(message={self.args[0]!r})"
 
     def str_def(self):
         """
@@ -378,8 +381,9 @@ class ClientAuthError(AuthError):
 
             classname={}; message={};
         """
-        return "classname={!r}; message={!r};". \
-            format(self.__class__.__name__, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
 
 
 class ServerAuthError(AuthError):
@@ -422,12 +426,12 @@ class ServerAuthError(AuthError):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, details.request_method={!r}, " \
-            "details.request_uri={!r}, details.http_status={!r}, " \
-            "details.reason={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.details.request_method, self.details.request_uri,
-                      self.details.http_status, self.details.reason)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"details.request_method={self.details.request_method!r}, "
+            f"details.request_uri={self.details.request_uri!r}, "
+            f"details.http_status={self.details.http_status!r}, "
+            f"details.reason={self.details.reason!r})")
 
     def str_def(self):
         # pylint: disable=line-too-long
@@ -440,11 +444,12 @@ class ServerAuthError(AuthError):
             classname={}; request_method={}; request_uri={}; http_status={}; reason={}; message={};
         """  # noqa: E501
         # pylint: enable=line-too-long
-        return "classname={!r}; request_method={!r}; request_uri={!r}; " \
-            "http_status={!r}; reason={!r}; message={!r};". \
-            format(self.__class__.__name__, self.details.request_method,
-                   self.details.request_uri, self.details.http_status,
-                   self.details.reason, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"request_method={self.details.request_method!r}; "
+            f"request_uri={self.details.request_uri!r}; "
+            f"http_status={self.details.http_status!r}; "
+            f"reason={self.details.reason!r}; message={self.args[0]!r};")
 
 
 class ParseError(Error):
@@ -508,9 +513,9 @@ class ParseError(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, line={!r}, column={!r})". \
-               format(self.__class__.__name__, self.args[0], self.line,
-                      self.column)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"line={self.line!r}, column={self.column!r})")
 
     def str_def(self):
         """
@@ -521,9 +526,9 @@ class ParseError(Error):
 
             classname={}; line={}; column={}; message={};
         """
-        return "classname={!r}; line={!r}; column={!r}; message={!r};". \
-            format(self.__class__.__name__, self.line, self.column,
-                   self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; line={self.line!r}; "
+            f"column={self.column!r}; message={self.args[0]!r};")
 
 
 class VersionError(Error):
@@ -575,9 +580,10 @@ class VersionError(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, min_api_version={!r}, api_version={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.min_api_version, self.api_version)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"min_api_version={self.min_api_version!r}, "
+            f"api_version={self.api_version!r})")
 
     def str_def(self):
         """
@@ -588,10 +594,11 @@ class VersionError(Error):
 
             classname={}; min_api_version={}; api_version={}; message={};
         """
-        return "classname={!r}; min_api_version={!r}; api_version={!r}; " \
-            "message={!r};". \
-            format(self.__class__.__name__, self.min_api_version,
-                   self.api_version, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"min_api_version={self.min_api_version!r}; "
+            f"api_version={self.api_version!r}; "
+            f"message={self.args[0]!r};")
 
 
 class HTTPError(Error):
@@ -768,20 +775,20 @@ class HTTPError(Error):
         Return a human readable string representation of this exception object.
         """
         stack_txt = f' stack={self.stack!r}' if self.stack else ''
-        return "{},{}: {} [{} {}]{}".\
-               format(self.http_status, self.reason, self.message,
-                      self.request_method, self.request_uri, stack_txt)
+        return (
+            f"{self.http_status},{self.reason}: {self.message} "
+            f"[{self.request_method} {self.request_uri}]{stack_txt}")
 
     def __repr__(self):
         """
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(http_status={!r}, reason={!r}, message={!r}, " \
-               "request_method={!r}, request_uri={!r}, stack={!r}, ...)". \
-               format(self.__class__.__name__, self.http_status, self.reason,
-                      self.message, self.request_method, self.request_uri,
-                      self.stack)
+        return (
+            f"{self.__class__.__name__}(http_status={self.http_status!r}, "
+            f"reason={self.reason!r}, message={self.message!r}, "
+            f"request_method={self.request_method!r}, "
+            f"request_uri={self.request_uri!r}, stack={self.stack!r}, ...)")
 
     def str_def(self):
         # pylint: disable=line-too-long
@@ -794,11 +801,12 @@ class HTTPError(Error):
             classname={}; request_method={}; request_uri={}; http_status={}; reason={}; message={};
         """  # noqa: E501
         # pylint: enable=line-too-long
-        return "classname={!r}; request_method={!r}; request_uri={!r}; " \
-            "http_status={!r}; reason={!r}; message={!r};". \
-            format(self.__class__.__name__, self.request_method,
-                   self.request_uri, self.http_status, self.reason,
-                   self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"request_method={self.request_method!r}; "
+            f"request_uri={self.request_uri!r}; "
+            f"http_status={self.http_status!r}; "
+            f"reason={self.reason!r}; message={self.args[0]!r};")
 
 
 class OperationTimeout(Error):
@@ -836,9 +844,9 @@ class OperationTimeout(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, operation_timeout={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.operation_timeout)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"operation_timeout={self.operation_timeout!r})")
 
     def str_def(self):
         """
@@ -849,9 +857,10 @@ class OperationTimeout(Error):
 
             classname={}; operation_timeout={}; message={};
         """
-        return "classname={!r}; operation_timeout={!r}; message={!r};". \
-            format(self.__class__.__name__, self.operation_timeout,
-                   self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"operation_timeout={self.operation_timeout!r}; "
+            f"message={self.args[0]!r};")
 
 
 class StatusTimeout(Error):
@@ -928,10 +937,11 @@ class StatusTimeout(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, actual_status={!r}, desired_statuses={!r}, " \
-            "status_timeout={!r})". \
-            format(self.__class__.__name__, self.args[0], self.actual_status,
-                   self.desired_statuses, self.status_timeout)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"actual_status={self.actual_status!r}, "
+            f"desired_statuses={self.desired_statuses!r}, "
+            f"status_timeout={self.status_timeout!r})")
 
     def str_def(self):
         # pylint: disable=line-too-long
@@ -944,10 +954,12 @@ class StatusTimeout(Error):
             classname={}; actual_status={}; desired_statuses={}; status_timeout={}; message={};
         """  # noqa: E501
         # pylint: enable=line-too-long
-        return "classname={!r}; actual_status={!r}; desired_statuses={!r}; " \
-            "status_timeout={!r}; message={!r};". \
-            format(self.__class__.__name__, self.actual_status,
-                   self.desired_statuses, self.status_timeout, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"actual_status={self.actual_status!r}; "
+            f"desired_statuses={self.desired_statuses!r}; "
+            f"status_timeout={self.status_timeout!r}; "
+            f"message={self.args[0]!r};")
 
 
 class NoUniqueMatch(Error):
@@ -983,15 +995,14 @@ class NoUniqueMatch(Error):
         """
         parent = manager.parent
         if parent:
-            in_str = " in {} {!r}". \
-                format(parent.__class__.__name__, parent.name)
+            in_str = f" in {parent.__class__.__name__} {parent.name!r}"
         else:
             in_str = ""
         resource_uris = [r.uri for r in resources]
-        msg = "Found more than one {} using filter arguments {!r}{}, with " \
-            "URIs: {!r}". \
-            format(manager.resource_class.__name__, filter_args, in_str,
-                   resource_uris)
+        msg = (
+            f"Found more than one {manager.resource_class.__name__} using "
+            f"filter arguments {filter_args!r}{in_str}, with "
+            f"URIs: {resource_uris!r}")
         super().__init__(msg)
         self._filter_args = filter_args
         self._manager = manager
@@ -1036,15 +1047,15 @@ class NoUniqueMatch(Error):
         purposes.
         """
         parent = self.manager.parent
-        return "{}(message={!r}, resource_classname={!r}, filter_args={!r}, " \
-               "parent_classname={!r}, parent_name={!r}, " \
-               "resource_uris={!r})". \
-               format(self.__class__.__name__, self.args[0],
-                      self.manager.resource_class.__name__,
-                      self.filter_args,
-                      parent.__class__.__name__ if parent else None,
-                      parent.name if parent else None,
-                      self.resource_uris)
+        parent_classname = parent.__class__.__name__ if parent else None
+        parent_name = parent.name if parent else None
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"resource_classname={self.manager.resource_class.__name__!r}, "
+            f"filter_args={self.filter_args!r}, "
+            f"parent_classname={parent_classname!r}, "
+            f"parent_name={parent_name!r}, "
+            f"resource_uris={self.resource_uris!r})")
 
     def str_def(self):
         # pylint: disable=line-too-long
@@ -1058,16 +1069,15 @@ class NoUniqueMatch(Error):
         """  # noqa: E501
         # pylint: enable=line-too-long
         parent = self.manager.parent
-        return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
-               "parent_classname={!r}; parent_name={!r}; message={!r}; " \
-               "resource_uris={!r}". \
-               format(self.__class__.__name__,
-                      self.manager.resource_class.__name__,
-                      self.filter_args,
-                      parent.__class__.__name__ if parent else None,
-                      parent.name if parent else None,
-                      self.args[0],
-                      self.resource_uris)
+        parent_classname = parent.__class__.__name__ if parent else None
+        parent_name = parent.name if parent else None
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"resource_classname={self.manager.resource_class.__name__!r}; "
+            f"filter_args={self.filter_args!r}; "
+            f"parent_classname={parent_classname!r}; "
+            f"parent_name={parent_name!r}; message={self.args[0]!r}; "
+            f"resource_uris={self.resource_uris!r}")
 
 
 class NotFound(Error):
@@ -1113,18 +1123,18 @@ class NotFound(Error):
             assert manager is not None
             parent = manager.parent
             if parent:
-                in_str = " in {} {!r}". \
-                    format(parent.__class__.__name__, parent.name)
+                in_str = f" in {parent.__class__.__name__} {parent.name!r}"
             else:
                 in_str = ""
             if filter_args and len(filter_args) == 1 and \
                     manager._name_prop in filter_args:
-                msg = "Could not find {} {!r}{}.". \
-                    format(manager.resource_class.__name__,
-                           filter_args[manager._name_prop], in_str)
+                msg = (
+                    f"Could not find {manager.resource_class.__name__} "
+                    f"{filter_args[manager._name_prop]!r}{in_str}.")
             else:
-                msg = "Could not find {} using filter arguments {!r}{}.".\
-                    format(manager.resource_class.__name__, filter_args, in_str)
+                msg = (
+                    f"Could not find {manager.resource_class.__name__} "
+                    f"using filter arguments {filter_args!r}{in_str}.")
         super().__init__(msg)
         self._filter_args = filter_args
         self._manager = manager
@@ -1160,10 +1170,12 @@ class NotFound(Error):
         parent = self.manager.parent if self.manager else None
         parent_classname = parent.__class__.__name__ if parent else None
         parent_name = parent.name if parent else None
-        return "{}(message={!r}, resource_classname={!r}, filter_args={!r}, " \
-               "parent_classname={!r}, parent_name={!r})". \
-               format(self.__class__.__name__, self.args[0], resource_classname,
-                      self.filter_args, parent_classname, parent_name)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"resource_classname={resource_classname!r}, "
+            f"filter_args={self.filter_args!r}, "
+            f"parent_classname={parent_classname!r}, "
+            f"parent_name={parent_name!r})")
 
     def str_def(self):
         # pylint: disable=line-too-long
@@ -1181,11 +1193,12 @@ class NotFound(Error):
         parent = self.manager.parent if self.manager else None
         parent_classname = parent.__class__.__name__ if parent else None
         parent_name = parent.name if parent else None
-        return "classname={!r}; resource_classname={!r}; filter_args={!r}; " \
-               "parent_classname={!r}; parent_name={!r}; message={!r};". \
-               format(self.__class__.__name__, resource_classname,
-                      self.filter_args, parent_classname, parent_name,
-                      self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"resource_classname={resource_classname!r}; "
+            f"filter_args={self.filter_args!r}; "
+            f"parent_classname={parent_classname!r}; "
+            f"parent_name={parent_name!r}; message={self.args[0]!r};")
 
 
 class MetricsResourceNotFound(Error):
@@ -1237,8 +1250,7 @@ class MetricsResourceNotFound(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}". \
-               format(self.__class__.__name__, self.args[0])
+        return f"{self.__class__.__name__}(message={self.args[0]!r}"
 
     def str_def(self):
         """
@@ -1249,8 +1261,9 @@ class MetricsResourceNotFound(Error):
 
             classname={}; message={}
         """
-        return "classname={!r}; message={!r}". \
-            format(self.__class__.__name__, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r}")
 
 
 class NotificationError(Error):
@@ -1327,9 +1340,10 @@ class NotificationJMSError(NotificationError):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, jms_headers={!r}, jms_message={!r})". \
-            format(self.__class__.__name__, self.args[0], self.jms_headers,
-                   self.jms_message)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"jms_headers={self.jms_headers!r}, "
+            f"jms_message={self.jms_message!r})")
 
     def str_def(self):
         """
@@ -1340,8 +1354,9 @@ class NotificationJMSError(NotificationError):
 
             classname={}; message={}
         """
-        return "classname={!r}; message={!r};". \
-            format(self.__class__.__name__, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
 
 
 class NotificationParseError(NotificationError):
@@ -1379,8 +1394,9 @@ class NotificationParseError(NotificationError):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, jms_message={!r})". \
-            format(self.__class__.__name__, self.args[0], self.jms_message)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"jms_message={self.jms_message!r})")
 
     def str_def(self):
         """
@@ -1391,8 +1407,9 @@ class NotificationParseError(NotificationError):
 
             classname={}; message={}
         """
-        return "classname={!r}; message={!r};". \
-            format(self.__class__.__name__, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
 
 
 class NotificationConnectionError(NotificationError):
@@ -1423,8 +1440,9 @@ class NotificationConnectionError(NotificationError):
 
             classname={}; message={}
         """
-        return "classname={!r}; message={!r};". \
-            format(self.__class__.__name__, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
 
 
 class NotificationSubscriptionError(NotificationError):
@@ -1456,8 +1474,9 @@ class NotificationSubscriptionError(NotificationError):
 
             classname={}; message={}
         """
-        return "classname={!r}; message={!r};". \
-            format(self.__class__.__name__, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
 
 
 class SubscriptionNotFound(NotificationError):
@@ -1488,8 +1507,9 @@ class SubscriptionNotFound(NotificationError):
 
             classname={}; message={}
         """
-        return "classname={!r}; message={!r};". \
-            format(self.__class__.__name__, self.args[0])
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
 
 
 class ConsistencyError(Error):
@@ -1542,8 +1562,9 @@ class CeasedExistence(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return "{}(message={!r}, resource_uri={!r})". \
-            format(self.__class__.__name__, self.args[0], self.resource_uri)
+        return (
+            f"{self.__class__.__name__}(message={self.args[0]!r}, "
+            f"resource_uri={self.resource_uri!r})")
 
     def str_def(self):
         """
@@ -1554,5 +1575,7 @@ class CeasedExistence(Error):
 
             classname={}; message={}; resource_uri={}
         """
-        return "classname={!r}; message={!r}; resource_uri={!r}". \
-            format(self.__class__.__name__, self.args[0], self.resource_uri)
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r}; "
+            f"resource_uri={self.resource_uri!r}")

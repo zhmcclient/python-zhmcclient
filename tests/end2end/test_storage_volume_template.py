@@ -70,15 +70,15 @@ def test_stovoltpl_find_list(dpm_mode_cpcs):  # noqa: F811
             for stovoltpl in stovoltpl_list:
                 grp_vol_tuples.append((stogrptpl, stovoltpl))
         if not grp_vol_tuples:
-            skip_warn("No storage group templates with volumes associated to "
-                      "CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                "No storage group templates with volumes associated to "
+                f"CPC {cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:
-            print("Testing on CPC {c} with storage volume template {v!r} of "
-                  "storage group template {g!r}".
-                  format(c=cpc.name, v=stovoltpl.name, g=stogrptpl.name))
+            print(f"Testing on CPC {cpc.name} with storage volume template "
+                  f"{stovoltpl.name!r} of storage group template "
+                  f"{stogrptpl.name!r}")
             runtest_find_list(
                 session, stogrptpl.storage_volume_templates, stovoltpl.name,
                 'name', 'size', STOVOLTPL_VOLATILE_PROPS,
@@ -110,15 +110,15 @@ def test_stovoltpl_property(dpm_mode_cpcs):  # noqa: F811
             for stovoltpl in stovoltpl_list:
                 grp_vol_tuples.append((stogrptpl, stovoltpl))
         if not grp_vol_tuples:
-            skip_warn("No storage group templates with volumes associated to "
-                      "CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                "No storage group templates with volumes associated to "
+                f"CPC {cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         for stogrptpl, stovoltpl in grp_vol_tuples:
-            print("Testing on CPC {c} with storage volume template {v!r} of "
-                  "storage group template {g!r}".
-                  format(c=cpc.name, v=stovoltpl.name, g=stogrptpl.name))
+            print(f"Testing on CPC {cpc.name} with storage volume template "
+                  f"{stovoltpl.name!r} of storage group template "
+                  f"{stogrptpl.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -155,9 +155,8 @@ def test_stovoltpl_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group template from previous run: {g!r} "
-                "on CPC {c}".
-                format(g=stogrptpl_name, c=cpc.name), UserWarning)
+                "Deleting test storage group template from previous run: "
+                f"{stogrptpl_name!r} on CPC {cpc.name}", UserWarning)
             stogrptpl.delete()
 
         stogrptpl = None
@@ -190,17 +189,20 @@ def test_stovoltpl_crud(dpm_mode_cpcs):  # noqa: F811
 
             for pn, exp_value in stovoltpl_input_props.items():
                 assert stovoltpl.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage volume " \
-                    "template:\n{!r}".format(pn, sorted(stovoltpl.properties))
+                    f"Unexpected value for property {pn!r} of storage volume " \
+                    f"template:\n{stovoltpl.properties!r}"
             stovoltpl.pull_full_properties()
             for pn, exp_value in stovoltpl_input_props.items():
                 assert stovoltpl.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage volume " \
-                    "template:\n{!r}".format(pn, sorted(stovoltpl.properties))
+                    f"Unexpected value for property {pn!r} of storage volume " \
+                    f"template:\n{stovoltpl.properties!r}"
             for pn, exp_value in stovoltpl_auto_props.items():
+                assert pn in stovoltpl.properties, (
+                    f"Automatically returned property {pn!r} is not in "
+                    f"created storage volume template:\n{stovoltpl!r}")
                 assert stovoltpl.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage volume " \
-                    "template:\n{!r}".format(pn, sorted(stovoltpl.properties))
+                    f"Unexpected value for property {pn!r} of storage volume " \
+                    f"template:\n{stovoltpl.properties!r}"
 
             # Test updating a property of the storage volume template
 

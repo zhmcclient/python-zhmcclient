@@ -101,10 +101,10 @@ def find_max_value(test_func, initial_value):
     max_value = value - 1
 
     # Verify that we found exactly the maximum:
-    assert fails[max_value] == 0 and fails[max_value + 1] == 1, \
-        "max_value={}, fails[+-2]: {}, {}, {}, {}, {}".\
-        format(max_value, fails[max_value - 2], fails[max_value - 1],
-               fails[max_value], fails[max_value + 1], fails[max_value + 2])
+    assert fails[max_value] == 0 and fails[max_value + 1] == 1, (
+        f"max_value={max_value}, fails[+-2]: {fails[max_value - 2]}, "
+        f"{fails[max_value - 1]}, {fails[max_value]}, "
+        f"{fails[max_value + 1]}, {fails[max_value + 2]}")
 
     return max_value
 
@@ -172,8 +172,8 @@ def x_test_print_gmtime_max():
     """Print the maximum for time.gmtime()."""
     max_ts = find_max_value(time.gmtime, 1)
     max_st = time.gmtime(max_ts)
-    print("\nMax Unix timestamp value for Python time.gmtime(): {} ({!r})".
-          format(max_ts, max_st))
+    print("\nMax Unix timestamp value for Python time.gmtime(): "
+          f"{max_ts} ({max_st!r})")
     sys.stdout.flush()
 
 
@@ -186,15 +186,13 @@ def x_test_print_fromtimestamp_max():
     max_ts = find_max_value(datetime_fromtimestamp_utc, 1)
     max_dt = datetime_fromtimestamp_utc(max_ts)
     print("\nMax Unix timestamp value for Python "
-          "datetime.fromtimestamp(utc): {} ({!r})".
-          format(max_ts, max_dt))
+          f"datetime.fromtimestamp(utc): {max_ts} ({max_dt!r})")
     sys.stdout.flush()
 
 
 def x_test_print_datetime_max():
     """Print datetime.max."""
-    print("\nMax value for Python datetime (datetime.max): {!r}".
-          format(datetime.max))
+    print(f"\nMax value for Python datetime (datetime.max): {datetime.max!r}")
     sys.stdout.flush()
 
 
@@ -261,7 +259,7 @@ def x_test_print_max_datetime_from_timestamp():
     max_ts = find_max_value(datetime_from_timestamp, 1)
     max_dt = datetime_from_timestamp(max_ts)
     print("\nMax HMC timestamp value for zhmcclient."
-          "datetime_from_timestamp(): {} ({!r})".format(max_ts, max_dt))
+          f"datetime_from_timestamp(): {max_ts} ({max_dt!r})")
     sys.stdout.flush()
 
 

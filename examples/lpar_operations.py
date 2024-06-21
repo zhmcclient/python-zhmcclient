@@ -50,8 +50,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -60,8 +60,7 @@ try:
     print("Finding a CPC in classic mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': False})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in classic mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in classic mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -74,12 +73,11 @@ try:
     # when the status property is accessed.
     lpars = cpc.lpars.list(filter_args={'name': lpar_name})
     if len(lpars) != 1:
-        print("Error: Could not find LPAR {} on CPC {} - customize the LPAR "
-              "name in the example script".
-              format(lpar_name, cpc.name))
+        print(f"Error: Could not find LPAR {lpar_name} on CPC {cpc.name} - "
+              "customize the LPAR name in the example script")
         lpar_names = [lpar.name for lpar in cpc.lpars.list()]
-        print("Note: The following LPARs exist on CPC {}: {}".
-              format(cpc.name, ', '.join(lpar_names)))
+        lpar_str = ', '.join(lpar_names)
+        print(f"Note: The following LPARs exist on CPC {cpc.name}: {lpar_str}")
         sys.exit(1)
     lpar = lpars[0]
     status = lpar.get_property('status')
@@ -98,8 +96,8 @@ try:
                 break
             time.sleep(1)
         else:
-            print("Warning: After {} retries, status of LPAR {} after "
-                  "Deactivate is still: {}".format(retries, lpar.name, status))
+            print(f"Warning: After {retries} retries, status of LPAR "
+                  f"{lpar.name} after Deactivate is still: {status}")
 
     print(f"Activating LPAR {lpar.name} ...")
     lpar.activate()
@@ -111,11 +109,10 @@ try:
             break
         time.sleep(1)
     else:
-        print("Warning: After {} retries, status of LPAR {} after "
-              "Activate is still: {}".format(retries, lpar.name, status))
+        print(f"Warning: After {retries} retries, status of LPAR {lpar.name} "
+              f"after Activate is still: {status}")
 
-    print("Loading LPAR {} from device {} ...".
-          format(lpar.name, lpar_load_devno))
+    print(f"Loading LPAR {lpar.name} from device {lpar_load_devno} ...")
     lpar.load(lpar_load_devno)
     for i in range(0, retries):
         lpar = cpc.lpars.list(filter_args={'name': lpar_name})[0]
@@ -125,8 +122,8 @@ try:
             break
         time.sleep(1)
     else:
-        print("Warning: After {} retries, status of LPAR {} after "
-              "Load is still: {}".format(retries, lpar.name, status))
+        print(f"Warning: After {retries} retries, status of LPAR {lpar.name} "
+              f"after Load is still: {status}")
 
     print(f"Deactivating LPAR {lpar.name} ...")
     lpar.deactivate()
@@ -138,8 +135,8 @@ try:
             break
         time.sleep(1)
     else:
-        print("Warning: After {} retries, status of LPAR {} after "
-              "Deactivate is still: {}".format(retries, lpar.name, status))
+        print(f"Warning: After {retries} retries, status of LPAR {lpar.name} "
+              f"after Deactivate is still: {status}")
 
 finally:
     print("Logging off ...")

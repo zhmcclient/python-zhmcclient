@@ -49,6 +49,6 @@ def make_client(zhmc, userid=None, password=None):
     session = zhmcclient.Session(zhmc, USERID, PASSWORD)
     session.logon()
     client = zhmcclient.Client(session)
-    print('Established logged-on session with HMC {} using userid {}'.
-          format(zhmc, USERID))
+    print(f'Established logged-on session with HMC {zhmc} using '
+          f'userid {USERID}')
     return client

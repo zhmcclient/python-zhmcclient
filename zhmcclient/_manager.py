@@ -36,7 +36,7 @@ from nocasedict import NocaseDict
 from ._logging import logged_api_call
 from ._exceptions import NotFound, NoUniqueMatch, HTTPError
 from ._utils import repr_list, matches_filters, divide_filter_args, \
-    make_query_str, RC_LOGICAL_PARTITION
+    make_query_str, RC_LOGICAL_PARTITION, repr_obj_id
 
 __all__ = ['BaseManager']
 
@@ -216,15 +216,10 @@ class _ResourceList:
         Return a string with the state of this object, for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _enabled={_enabled!r},\n"
-            "  _resources(keys)={_resource_keys!r}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                _enabled=self._enabled,
-                _resource_keys=list(self._resources.keys()),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _enabled={self._enabled!r},\n"
+            f"  _resources(keys)={list(self._resources.keys())!r}\n"
+            ")")
         return ret
 
     def enabled(self):
@@ -472,43 +467,23 @@ class BaseManager:
         purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _resource_class={_resource_class!r},\n"
-            "  _class_name={_class_name!r},\n"
-            "  _uri={_uri!r},\n"
-            "  _session={_session_classname} at 0x{_session_id:08x},\n"
-            "  _parent={_parent_classname} at 0x{_parent_id:08x},\n"
-            "  _base_uri={_base_uri!r},\n"
-            "  _oid_prop={_oid_prop!r},\n"
-            "  _uri_prop={_uri_prop!r},\n"
-            "  _name_prop={_name_prop!r},\n"
-            "  _query_props={_query_props},\n"
-            "  _list_has_name={_list_has_name!r},\n"
-            "  _case_insensitive_names={_case_insensitive_names!r},\n"
-            "  _supports_properties={_supports_properties!r},\n"
-            "  _resource_list={_resource_list!r},\n"
-            "  _name_uri_cache={_name_uri_cache!r}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                _resource_class=self._resource_class,
-                _class_name=self._class_name,
-                _uri=self._uri,
-                _session_classname=self._session.__class__.__name__,
-                _session_id=id(self._session),
-                _parent_classname=self._parent.__class__.__name__,
-                _parent_id=id(self._parent),
-                _base_uri=self._base_uri,
-                _oid_prop=self._oid_prop,
-                _uri_prop=self._uri_prop,
-                _name_prop=self._name_prop,
-                _query_props=repr_list(self._query_props, indent=2),
-                _list_has_name=self._list_has_name,
-                _case_insensitive_names=self._case_insensitive_names,
-                _supports_properties=self._supports_properties,
-                _resource_list=self._resource_list,
-                _name_uri_cache=self._name_uri_cache,
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _resource_class={self._resource_class!r},\n"
+            f"  _class_name={self._class_name!r},\n"
+            f"  _uri={self._uri!r},\n"
+            f"  _session={repr_obj_id(self._session)},\n"
+            f"  _parent={repr_obj_id(self._parent)},\n"
+            f"  _base_uri={self._base_uri!r},\n"
+            f"  _oid_prop={self._oid_prop!r},\n"
+            f"  _uri_prop={self._uri_prop!r},\n"
+            f"  _name_prop={self._name_prop!r},\n"
+            f"  _query_props={repr_list(self._query_props, indent=2)},\n"
+            f"  _list_has_name={self._list_has_name!r},\n"
+            f"  _case_insensitive_names={self._case_insensitive_names!r},\n"
+            f"  _supports_properties={self._supports_properties!r},\n"
+            f"  _resource_list={self._resource_list!r},\n"
+            f"  _name_uri_cache={self._name_uri_cache!r}\n"
+            ")")
         return ret
 
     def invalidate_cache(self):
@@ -643,9 +618,9 @@ class BaseManager:
         :class:`~zhmcclient.Session`:
           Session with the HMC.
         """
-        assert self._session is not None, \
-            "{}.session: No session set (in top-level resource manager " \
-            "class?)" .format(self.__class__.__name__)
+        assert self._session is not None, (
+            f"{self.__class__.__name__}.session: No session set (in top-level "
+            "resource manager class?)")
         return self._session
 
     @property
@@ -771,8 +746,8 @@ class BaseManager:
             query_parms, client_filters = divide_filter_args(
                 self._query_props, filter_args)
             if additional_properties:
-                ap_parm = 'additional-properties={}'.format(
-                    ','.join(additional_properties))
+                ap_parm = \
+                    f"additional-properties={','.join(additional_properties)}"
                 query_parms.append(ap_parm)
             query_parms_str = make_query_str(query_parms)
             uri = f'{list_uri}{query_parms_str}'

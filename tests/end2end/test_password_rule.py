@@ -57,8 +57,9 @@ def test_pwrule_find_list(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support password rules".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "password rules")
 
     # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
@@ -87,8 +88,9 @@ def test_pwrule_property(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support password rules".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "password rules")
 
     # Pick the password rules to test with
     pwrule_list = console.password_rules.list()
@@ -118,8 +120,9 @@ def test_pwrule_crud(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support password rules".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "password rules")
 
     pwrule_name = TEST_PREFIX + ' test_pwrule_crud pwrule1'
     pwrule_name_new = pwrule_name + ' new'
@@ -131,8 +134,8 @@ def test_pwrule_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test password rule from previous run: {r!r}".
-            format(r=pwrule_name), UserWarning)
+            f"Deleting test password rule from previous run: {pwrule_name!r}",
+            UserWarning)
         pwrule.delete()
 
     # Test creating the password rule
@@ -153,9 +156,9 @@ def test_pwrule_crud(hmc_session):  # noqa: F811
             pwrule_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_warn("HMC userid {u!r} is not authorized for task "
-                      "'Manage Password Rules' on HMC {h}".
-                      format(u=hd.userid, h=hd.host))
+            skip_warn(
+                f"HMC userid {hd.userid!r} is not authorized for task "
+                f"'Manage Password Rules' on HMC {hd.host}")
         else:
             raise
 

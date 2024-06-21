@@ -307,10 +307,8 @@ def test_connecttimeout_str_def(
     str_def = ' ' + str_def
     assert str_def.find(f' classname={classname!r};') >= 0
     assert str_def.find(f' message={msg!r};') >= 0
-    assert str_def.find(' connect_timeout={!r};'.
-                        format(connect_timeout)) >= 0
-    assert str_def.find(' connect_retries={!r};'.
-                        format(connect_retries)) >= 0
+    assert str_def.find(f' connect_timeout={connect_timeout!r};') >= 0
+    assert str_def.find(f' connect_retries={connect_retries!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -508,8 +506,7 @@ def test_retriesexceeded_str_def(msg, details, connect_retries):
     str_def = ' ' + str_def
     assert str_def.find(f' classname={classname!r};') >= 0
     assert str_def.find(f' message={msg!r};') >= 0
-    assert str_def.find(' connect_retries={!r};'.
-                        format(connect_retries)) >= 0
+    assert str_def.find(f' connect_retries={connect_retries!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -704,8 +701,7 @@ def test_serverautherror_str_def(msg, details):
 
     str_def = ' ' + str_def
     assert str_def.find(f' classname={classname!r};') >= 0
-    assert str_def.find(' request_method={!r};'.
-                        format(request_method)) >= 0
+    assert str_def.find(f' request_method={request_method!r};') >= 0
     assert str_def.find(f' request_uri={request_uri!r};') >= 0
     assert str_def.find(f' http_status={http_status!r};') >= 0
     assert str_def.find(f' reason={reason!r};') >= 0
@@ -912,10 +908,8 @@ def test_versionerror_str_def(msg, min_api_version, api_version):
     str_def = ' ' + str_def
     assert str_def.find(f' classname={classname!r};') >= 0
     assert str_def.find(f' message={msg!r};') >= 0
-    assert str_def.find(' min_api_version={!r};'.
-                        format(min_api_version)) >= 0
-    assert str_def.find(' api_version={!r};'.
-                        format(api_version)) >= 0
+    assert str_def.find(f' min_api_version={min_api_version!r};') >= 0
+    assert str_def.find(f' api_version={api_version!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -1027,8 +1021,7 @@ def test_httperror_str_def(body):
 
     str_def = ' ' + str_def
     assert str_def.find(f' classname={classname!r};') >= 0
-    assert str_def.find(' request_method={!r};'.
-                        format(request_method)) >= 0
+    assert str_def.find(f' request_method={request_method!r};') >= 0
     assert str_def.find(f' request_uri={request_uri!r};') >= 0
     assert str_def.find(f' http_status={http_status!r};') >= 0
     assert str_def.find(f' reason={reason!r};') >= 0
@@ -1129,8 +1122,7 @@ def test_operationtimeout_str_def(msg, operation_timeout):
     str_def = ' ' + str_def
     assert str_def.find(f' classname={classname!r};') >= 0
     assert str_def.find(f' message={msg!r};') >= 0
-    assert str_def.find(' operation_timeout={!r};'.
-                        format(operation_timeout)) >= 0
+    assert str_def.find(f' operation_timeout={operation_timeout!r};') >= 0
 
 
 @pytest.mark.parametrize(
@@ -1235,12 +1227,9 @@ def test_statustimeout_str_def(
     str_def = ' ' + str_def
     assert str_def.find(f' classname={classname!r};') >= 0
     assert str_def.find(f' message={msg!r};') >= 0
-    assert str_def.find(' actual_status={!r};'.
-                        format(actual_status)) >= 0
-    assert str_def.find(' desired_statuses={!r};'.
-                        format(desired_statuses)) >= 0
-    assert str_def.find(' status_timeout={!r};'.
-                        format(status_timeout)) >= 0
+    assert str_def.find(f' actual_status={actual_status!r};') >= 0
+    assert str_def.find(f' desired_statuses={desired_statuses!r};') >= 0
+    assert str_def.find(f' status_timeout={status_timeout!r};') >= 0
 
 
 class TestNoUniqueMatch:
@@ -1394,13 +1383,12 @@ class TestNoUniqueMatch:
 
         str_def = ' ' + str_def
         assert str_def.find(f' classname={classname!r};') >= 0
-        assert str_def.find(' resource_classname={!r};'.
-                            format(manager.resource_class.__name__)) >= 0
+        assert str_def.find(
+            f' resource_classname={manager.resource_class.__name__!r};') >= 0
         assert str_def.find(f' filter_args={filter_args!r};') >= 0
-        assert str_def.find(' parent_classname={!r};'.
-                            format(manager.parent.__class__.__name__)) >= 0
-        assert str_def.find(' parent_name={!r};'.
-                            format(manager.parent.name)) >= 0
+        assert str_def.find(
+            f' parent_classname={manager.parent.__class__.__name__!r};') >= 0
+        assert str_def.find(f' parent_name={manager.parent.name!r};') >= 0
         assert str_def.find(' message=') >= 0
 
 
@@ -1670,13 +1658,12 @@ class TestNotFound:
 
         str_def = ' ' + str_def
         assert str_def.find(f' classname={classname!r};') >= 0
-        assert str_def.find(' resource_classname={!r};'.
-                            format(manager.resource_class.__name__)) >= 0
+        assert str_def.find(
+            f' resource_classname={manager.resource_class.__name__!r};') >= 0
         assert str_def.find(f' filter_args={filter_args!r};') >= 0
-        assert str_def.find(' parent_classname={!r};'.
-                            format(manager.parent.__class__.__name__)) >= 0
-        assert str_def.find(' parent_name={!r};'.
-                            format(manager.parent.name)) >= 0
+        assert str_def.find(
+            f' parent_classname={manager.parent.__class__.__name__!r};') >= 0
+        assert str_def.find(f' parent_name={manager.parent.name!r};') >= 0
         assert str_def.find(' message=') >= 0
 
 

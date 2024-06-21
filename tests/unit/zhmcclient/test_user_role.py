@@ -76,10 +76,10 @@ class TestUserRole:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=user_role_mgr.__class__.__name__,
-                               id=id(user_role_mgr)),
-                        repr_str)
+        assert re.match(
+            rf'^{user_role_mgr.__class__.__name__}\s+at\s+'
+            rf'0x{id(user_role_mgr):08x}\s+\(\\n.*',
+            repr_str)
 
     def test_user_role_manager_initial_attrs(self):
         """Test initial attributes of UserRoleManager."""
@@ -211,10 +211,10 @@ class TestUserRole:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=user_role1.__class__.__name__,
-                               id=id(user_role1)),
-                        repr_str)
+        assert re.match(
+            rf'^{user_role1.__class__.__name__}\s+at\s+'
+            rf'0x{id(user_role1):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "input_name, input_type, exp_exc", [

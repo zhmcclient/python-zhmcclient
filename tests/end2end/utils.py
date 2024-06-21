@@ -126,9 +126,9 @@ def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
         if prop_names is not None and prop_name not in prop_names:
             continue  # Only check properties in prop_names
 
-        assert prop_name in res_props, \
-            "Property {p!r} not found in {k} object {o!r}". \
-            format(p=prop_name, k=res.prop('class'), o=res.name)
+        assert prop_name in res_props, (
+            f"Property {prop_name!r} not found in {res.prop('class')} "
+            f"object {res.name!r}")
 
         if ignore_values is not None and prop_name not in ignore_values:
             act_value = res_props[prop_name]
@@ -140,21 +140,19 @@ def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
     # extra_prop_names = set(res_props.keys()) - checked_prop_names
 
     # TODO: Decide whether we want to check the exact set, or the minimum set.
-    # assert not extra_prop_names, \
-    #     "The following properties were unexpectedly present in {k} object " \
-    #     "{o!r} : {e}". \
-    #     format(k=res.prop('class'), o=res.name, e=', '.join(extra_prop_names))
+    # assert not extra_prop_names, (
+    #     "The following properties were unexpectedly present in "
+    #     f"{res.prop('class')} object{res.name!r} : "
+    #     f"{', '.join(extra_prop_names)}")
 
 
 def assert_res_prop(act_value, exp_value, prop_name, res):
     """
     Check a property of a resource object.
     """
-    assert act_value == exp_value, \
-        "Property {p!r} has unexpected value in {k} object {o!r}: " \
-        "Expected: {ev!r}, actual: {av!r}". \
-        format(p=prop_name, k=res.prop('class'), o=res.name, ev=exp_value,
-               av=act_value)
+    assert act_value == exp_value, (
+        f"Property {prop_name!r} has unexpected value in {res.prop('class')} "
+        f"object {res.name!r}: Expected: {exp_value!r}, actual: {act_value!r}")
 
 
 def _res_name(item):
@@ -312,9 +310,8 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             found_res = found_res_list[0]
             if len(found_res_list) > 1:
                 raise AssertionError(
-                    "{k} findall(client_filter) result with non-unique name "
-                    "{n!r}: {o}".
-                    format(k=found_res.prop('class'), n=name, o=found_res_list))
+                    f"{found_res.prop('class')} findall(client_filter) result "
+                    f"with non-unique name {name!r}: {found_res_list}")
             assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                              prop_names=list_props)
 
@@ -358,12 +355,12 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
     if len(found_res_list) > 1:
         found_uri_list = [r.uri for r in found_res_list]
         parent = manager.parent
+        uri_str = '\n'.join(found_uri_list)
         raise AssertionError(
-            "{k} findall() result for {pk} {pn!r} has non-unique name {n!r} "
-            "for the following {no} objects:\n{o}".
-            format(k=found_res.prop('class'), pk=parent.prop('class'),
-                   pn=parent.name, n=name, no=len(found_res_list),
-                   o='\n'.join(found_uri_list)))
+            f"{found_res.prop('class')} findall() result for "
+            f"{parent.prop('class')} {parent.name!r} has non-unique name "
+            f"{name!r} for the following {len(found_res_list)} objects:\n"
+            f"{uri_str}")
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
 
@@ -378,8 +375,8 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
     found_res = found_res_list[0]
     if len(found_res_list) > 1:
         raise AssertionError(
-            "{k} list() result with non-unique name {n!r}: {o}".
-            format(k=found_res.prop('class'), n=name, o=found_res_list))
+            f"{found_res.prop('class')} list() result with non-unique name "
+            f"{name!r}: {found_res_list}")
     assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                      prop_names=list_props)
 
@@ -395,8 +392,8 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
         found_res = found_res_list[0]
         if len(found_res_list) > 1:
             raise AssertionError(
-                "{k} list() result with non-unique name {n!r}: {o}".
-                format(k=found_res.prop('class'), n=name, o=found_res_list))
+                f"{found_res.prop('class')} list() result with non-unique "
+                f"name {name!r}: {found_res_list}")
         assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                          prop_names=list_props + add_props)
 
@@ -436,9 +433,8 @@ def runtest_get_properties(manager, non_list_prop):  # noqa: F811
 
     # Validate that the non_list_prop property is not listed.
     # This is really just checking that the testcase was invoked correctly.
-    assert non_list_prop not in local_pnames, \
-        "non_list_prop={!r}, local_pnames={!r}". \
-        format(non_list_prop, local_pnames)
+    assert non_list_prop not in local_pnames, (
+        f"non_list_prop={non_list_prop!r}, local_pnames={local_pnames!r}")
 
     # Validate initial state of the resource w.r.t. properties
     assert resource.full_properties is False
@@ -449,9 +445,8 @@ def runtest_get_properties(manager, non_list_prop):  # noqa: F811
         assert resource.full_properties is False, \
             f"resource={resource!r}"
         current_pnames = set(resource.properties.keys())
-        assert current_pnames == local_pnames, \
-            "current_pnames={!r}, local_pnames={!r}". \
-            format(current_pnames, local_pnames)
+        assert current_pnames == local_pnames, (
+            f"current_pnames={current_pnames!r}, local_pnames={local_pnames!r}")
 
     # Validate that prop() does not pull additional properties
     for pname in local_pnames:
@@ -459,18 +454,17 @@ def runtest_get_properties(manager, non_list_prop):  # noqa: F811
         assert resource.full_properties is False, \
             f"resource={resource!r}"
         current_pnames = set(resource.properties.keys())
-        assert current_pnames == local_pnames, \
-            "current_pnames={!r}, local_pnames={!r}". \
-            format(current_pnames, local_pnames)
+        assert current_pnames == local_pnames, (
+            f"current_pnames={current_pnames!r}, local_pnames={local_pnames!r}")
 
     # Validate that get_property() on non_list_prop pulls full properties
     _ = resource.get_property(non_list_prop)
     assert resource.full_properties is True, \
         f"resource={resource!r}"
     current_pnames = set(resource.properties.keys())
-    assert current_pnames > local_pnames_plus, \
-        "current_pnames={!r}, local_pnames_plus={!r}". \
-        format(current_pnames, local_pnames_plus)
+    assert current_pnames > local_pnames_plus, (
+        f"current_pnames={current_pnames!r}, "
+        f"local_pnames_plus={local_pnames_plus!r}")
 
     # Part 2: Second chunk of methods to be tested
 
@@ -490,18 +484,18 @@ def runtest_get_properties(manager, non_list_prop):  # noqa: F811
         prior_pnames = set(resource.properties.keys())
         resource.pull_properties([])
         current_pnames = set(resource.properties.keys())
-        assert current_pnames == prior_pnames, \
-            "current_pnames={!r}, prior_pnames={!r}". \
-            format(current_pnames, prior_pnames)
+        assert current_pnames == prior_pnames, (
+            f"current_pnames={current_pnames!r}, "
+            f"prior_pnames={prior_pnames!r}")
 
     # Validate pull_properties() with a non-list-result property
     resource.pull_properties([non_list_prop])
     current_pnames = set(resource.properties.keys())
     if supports_properties:
         # We get just the specified property in addition
-        assert current_pnames == local_pnames_plus, \
-            "current_pnames={!r}, local_pnames_plus={!r}". \
-            format(current_pnames, local_pnames_plus)
+        assert current_pnames == local_pnames_plus, (
+            f"current_pnames={current_pnames!r}, "
+            f"local_pnames_plus={local_pnames_plus!r}")
         assert resource.full_properties is False, \
             f"resource={resource!r}"
     else:
@@ -523,9 +517,9 @@ def runtest_get_properties(manager, non_list_prop):  # noqa: F811
     resource.pull_full_properties()
     assert resource.full_properties is True
     current_pnames = set(resource.properties.keys())
-    assert current_pnames > local_pnames_plus, \
-        "current_pnames={!r}, local_pnames_plus={!r}". \
-        format(current_pnames, local_pnames_plus)
+    assert current_pnames > local_pnames_plus, (
+        f"current_pnames={current_pnames!r}, "
+        f"local_pnames_plus={local_pnames_plus!r}")
 
     # Validate that pull_properties() with non_list_prop still has full props
     resource.pull_properties([non_list_prop])
@@ -586,7 +580,7 @@ def skipif_no_storage_mgmt_feature(cpc):
         smf = False
     if not smf:
         skip_warn("DPM Storage Mgmt feature not enabled or not supported "
-                  "on CPC {c}".format(c=cpc.name))
+                  f"on CPC {cpc.name}")
 
 
 def skipif_storage_mgmt_feature(cpc):
@@ -599,8 +593,7 @@ def skipif_storage_mgmt_feature(cpc):
     except ValueError:
         smf = False
     if smf:
-        skip_warn("DPM Storage Mgmt feature enabled on CPC {c}".
-                  format(c=cpc.name))
+        skip_warn(f"DPM Storage Mgmt feature enabled on CPC {cpc.name}")
 
 
 def skipif_no_group_support(client):
@@ -611,8 +604,8 @@ def skipif_no_group_support(client):
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC has version {v} and does not yet support groups".
-                  format(v=hmc_version))
+        skip_warn(
+            f"HMC has version {hmc_version} and does not yet support groups")
 
 
 def skipif_no_secure_boot_feature(cpc):
@@ -631,14 +624,12 @@ def _skipif_api_feature_not_on_cpc_and_hmc(feature, cpc):
     cpc_features = cpc.list_api_features()
 
     if feature not in cpc_features:
-        skip_warn('API feature {f} not available '
-                  "on CPC {c}".format(f=feature, c=cpc.name))
+        skip_warn(f"API feature {feature} not available on CPC {cpc.name}")
 
     console = cpc.manager.client.consoles.console
     console_features = console.list_api_features()
     if feature not in console_features:
-        skip_warn('API feature {f} not available '
-                  "on HMC {c}".format(f=feature, c=console.name))
+        skip_warn(f"API feature {feature} not available on HMC {console.name}")
 
 
 def has_api_feature(feature, cpc):
@@ -675,10 +666,10 @@ def standard_partition_props(cpc, part_name):
                           cpc.properties.keys())
         pc_list = [f"{n}={cpc.properties[n]}" for n in pc_names]
         warnings.warn(
-            "CPC {c} shows neither IFL nor CP processors, specifying 1 CP "
-            "for partition creation. "
-            "CPC processor-count properties are: {p}".
-            format(c=cpc.name, p=', '.join(pc_list)), End2endTestWarning)
+            f"CPC {cpc.name} shows neither IFL nor CP processors, "
+            "specifying 1 CP for partition creation. "
+            f"CPC processor-count properties are: {', '.join(pc_list)}",
+            End2endTestWarning)
 
     return part_input_props
 
@@ -704,8 +695,7 @@ def cleanup_and_import_example_certificate(cpc):
     """
     console = cpc.manager.console
 
-    cert_name = "{} timestamp {}".format(TEST_PREFIX,
-                                         time.strftime('%H.%M.%S'))
+    cert_name = f"{TEST_PREFIX} timestamp {time.strftime('%H.%M.%S')}"
     cert_name_new = cert_name + ' updated'
 
     try:
@@ -714,8 +704,8 @@ def cleanup_and_import_example_certificate(cpc):
         pass
     else:
         warnings.warn(
-            "Deleting test cert from previous run: {ce!r} on CPC {c}".
-            format(ce=cert_name, c=cpc.name), UserWarning)
+            f"Deleting test cert from previous run: {cert_name!r} on CPC "
+            f"{cpc.name}", UserWarning)
         cert.delete()
     try:
         cert = console.certificates.find(name=cert_name_new)
@@ -723,8 +713,8 @@ def cleanup_and_import_example_certificate(cpc):
         pass
     else:
         warnings.warn(
-            "Deleting test cert from previous run: {ce!r} on CPC {c}".
-            format(ce=cert_name_new, c=cpc.name), UserWarning)
+            f"Deleting test cert from previous run: {cert_name_new!r} on "
+            f"CPC {cpc.name}", UserWarning)
         cert.delete()
     props = {
         # pylint: disable=line-too-long
@@ -775,27 +765,24 @@ def ensure_lpar_inactive(lpar):
         status = pull_lpar_status(lpar)
         timeout = lpar.manager.session.retry_timeout_config.operation_timeout
         raise StatusError(
-            "Could not get LPAR {lp!r} from status {os!r} into "
-            "status 'not-activated' within operation timeout {to}; "
-            "current status is: {s!r}".
-            format(lp=lpar.name, os=org_status, s=status, to=timeout))
+            f"Could not get LPAR {lpar.name!r} from status {org_status!r} into "
+            f"status 'not-activated' within operation timeout {timeout}; "
+            f"current status is: {status!r}")
     except zhmcclient.StatusTimeout:
         status = pull_lpar_status(lpar)
         timeout = lpar.manager.session.retry_timeout_config.status_timeout
         raise StatusError(
-            "Could not get LPAR {lp!r} from status {os!r} into "
-            "status 'not-activated' within status timeout {to}; "
-            "current status is: {s!r}".
-            format(lp=lpar.name, os=org_status, s=status, to=timeout))
+            f"Could not get LPAR {lpar.name!r} from status {org_status!r} into "
+            f"status 'not-activated' within status timeout {timeout}; "
+            f"current status is: {status!r}")
 
     # This is just an additional check which should not fail.
     status = pull_lpar_status(lpar)
     if status != 'not-activated':
         raise StatusError(
-            "Could not get LPAR {lp!r} from status {os!r} into "
+            f"Could not get LPAR {lpar.name!r} from status {org_status!r} into "
             "status 'not-activated' for unknown reasons; "
-            "current status is: {s!r}".
-            format(lp=lpar.name, os=org_status, s=status))
+            f"current status is: {status!r}")
 
 
 def set_resource_property(resource, name, value):
@@ -877,16 +864,17 @@ def skip_missing_api_feature(
 
     api_version_info = client.version_info()
     if api_version_info < (4, 10):
-        pytest.skip("HMC API version {} is below minimum version 4.10 "
-                    "required for API features".
-                    format('.'.join(map(str, api_version_info))))
+        pytest.skip(
+            f"HMC API version {'.'.join(map(str, api_version_info))} is below "
+            "minimum version 4.10 required for API features")
 
     if console_feature:
         if not console.list_api_features(console_feature):
-            pytest.skip("Console API feature {!r} is not available".
-                        format(console_feature))
+            pytest.skip(
+                f"Console API feature {console_feature!r} is not available")
 
     if cpc_feature:
         if not cpc.list_api_features(cpc_feature):
-            pytest.skip("CPC API feature {!r} is not available for CPC {!r}".
-                        format(cpc_feature, cpc.name))
+            pytest.skip(
+                f"CPC API feature {cpc_feature!r} is not available for "
+                f"CPC {cpc.name!r}")

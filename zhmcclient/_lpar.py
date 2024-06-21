@@ -176,9 +176,9 @@ class Lpar(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, LparManager), \
-            "Lpar init: Expected manager type {}, got {}" \
-            .format(LparManager, type(manager))
+        assert isinstance(manager, LparManager), (
+            f"Lpar init: Expected manager type {LparManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call
@@ -2092,9 +2092,9 @@ class Lpar(BaseResource):
             # pylint: disable=possibly-used-before-assignment
             if status_timeout > 0 and time.time() > end_time:
                 raise StatusTimeout(
-                    "Waiting for LPAR {} to reach status(es) '{}' timed out "
-                    "after {} s - current status is '{}'".
-                    format(self.name, statuses, status_timeout, actual_status),
+                    f"Waiting for LPAR {self.name} to reach status(es) "
+                    f"'{statuses}' timed out after {status_timeout} s - "
+                    f"current status is '{actual_status}'",
                     actual_status, statuses, status_timeout)
 
             time.sleep(1)  # Avoid hot spin loop

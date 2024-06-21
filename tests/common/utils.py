@@ -92,19 +92,15 @@ def assert_resources(resources, exp_resources, prop_names):
             if prop_name in exp_res.properties:
 
                 assert prop_name in res.properties, (
-                    "Expected property {pn!r} missing in resource {rn!r}: "
-                    "Resource: {ro!r}".
-                    format(pn=prop_name, rn=res.name, ro=res)
-                )
+                    f"Expected property {prop_name!r} missing in resource "
+                    f"{res.name!r}: Resource: {res!r}")
 
                 prop_value = res.properties[prop_name]
                 exp_prop_value = exp_res.properties[prop_name]
                 assert prop_value == exp_prop_value, (
-                    "Unexpected value for property {pn!r} in resource {rn!r}: "
-                    "got: {av!r}, expected: {ev!r}, resource: {ro!r}".
-                    format(pn=prop_name, rn=res.name, av=prop_value,
-                           ev=exp_prop_value, ro=res)
-                )
+                    f"Unexpected value for property {prop_name!r} in resource "
+                    f"{res.name!r}: got: {prop_value!r}, expected: "
+                    f"{exp_prop_value!r}, resource: {res!r}")
 
 
 def info(capsys, format_str, format_args=None):
@@ -148,14 +144,14 @@ def print_logger(logger):
     Debug function that prints the relevant settings of a Python logger.
     """
     print(f"Debug: Logger {logger.name!r}:")
-    print("Debug:   logger level: {} ({})"
-          .format(logger.level, logging.getLevelName(logger.level)))
+    print(f"Debug:   logger level: {logger.level} "
+          f"({logging.getLevelName(logger.level)})")
     if not logger.handlers:
         print("Debug:   No handlers")
     for handler in logger.handlers:
         print(f"Debug:   Handler {type(handler)}:")
-        print("Debug:     handler level: {} ({})"
-              .format(handler.level, logging.getLevelName(handler.level)))
+        print(f"Debug:     handler level: {handler.level} "
+              f"({logging.getLevelName(handler.level)})")
         _fmt = getattr(handler.formatter, '_fmt', None)
         print(f"Debug:     handler format: {_fmt!r}")
 
@@ -202,16 +198,16 @@ def setup_logging():
             log_comp, log_level = log_spec.split('=', 1)
         except ValueError:
             raise ValueError("Missing '=' in COMP=LEVEL specification "
-                             "in ZHMC_LOG variable: {}".format(log_spec))
+                             f"in ZHMC_LOG variable: {log_spec}")
 
         level = getattr(logging, log_level.upper(), None)
         if level is None:
             raise ValueError("Invalid level in COMP=LEVEL specification "
-                             "in ZHMC_LOG variable: {}".format(log_spec))
+                             f"in ZHMC_LOG variable: {log_spec}")
 
         if log_comp not in log_components:
             raise ValueError("Invalid component in COMP=LEVEL specification "
-                             "in ZHMC_LOG variable: {}".format(log_spec))
+                             f"in ZHMC_LOG variable: {log_spec}")
 
         setup_logger(log_comp, handler, level)
 
@@ -460,18 +456,16 @@ def assert_equal_resource(res1, res2):
     if names1 != names2:
         raise AssertionError(
             "Resources do not have the same set of properties:\n"
-            "- res1 names: {}\n"
-            "- res2 names: {}\n".
-            format(names1, names2))
+            f"- res1 names: {names1}\n"
+            f"- res2 names: {names2}\n")
     for name in res1.properties:
         value1 = res1.properties[name]
         value2 = res2.properties[name]
         if value1 != value2:
             raise AssertionError(
-                "Resources do not have the same value for property {}:\n"
-                "- res1 value: {}\n"
-                "- res2 value: {}\n".
-                format(name, value1, value2))
+                f"Resources do not have the same value for property {name}:\n"
+                f"- res1 value: {value1}\n"
+                f"- res2 value: {value2}\n")
 
 
 def assert_equal_metric_group_def(mgd1, mgd2):

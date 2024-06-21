@@ -205,18 +205,15 @@ def test_cpc_features(all_cpcs):  # noqa: F811
             # Note: It is possible that the feature list exists but is empty
             #       (e.g when a z14 HMC manages a z13)
             for i, feature in enumerate(features):
-                assert 'name' in feature, \
-                    "Feature #{i} does not have the {p!r} attribute in Cpc " \
-                    "object for CPC {c}". \
-                    format(i=i, p='name', c=cpc.name)
-                assert 'description' in feature, \
-                    "Feature #{i} does not have the {p!r} attribute in Cpc " \
-                    "object for CPC {c}". \
-                    format(i=i, p='description', c=cpc.name)
-                assert 'state' in feature, \
-                    "Feature #{i} does not have the {p!r} attribute in Cpc " \
-                    "object for CPC {c}". \
-                    format(i=i, p='state', c=cpc.name)
+                assert 'name' in feature, (
+                    f"Feature #{i} does not have the 'name' attribute "
+                    f"in Cpc object for CPC {cpc.name}")
+                assert 'description' in feature, (
+                    f"Feature #{i} does not have the 'description' attribute "
+                    f"in Cpc object for CPC {cpc.name}")
+                assert 'state' in feature, (
+                    f"Feature #{i} does not have the 'state' attribute "
+                    f"in Cpc object for CPC {cpc.name}")
 
         # Test: list_api_features()
         client = zhmcclient.Client(cpc.manager.session)
@@ -252,9 +249,9 @@ def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn("HMC userid {u!r} is not authorized for task "
-                          "'Export/Import Profile Data (API only)' on HMC {h}".
-                          format(u=hd.userid, h=hd.host))
+                skip_warn(
+                    f"HMC userid {hd.userid!r} is not authorized for task "
+                    f"'Export/Import Profile Data (API only)' on HMC {hd.host}")
             else:
                 raise
 
@@ -375,12 +372,13 @@ def test_cpc_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn("HMC userid {u!r} is not authorized for task "
-                          "'Environmental Dashboard' on HMC {h}".
-                          format(u=hd.userid, h=hd.host))
+                skip_warn(
+                    f"HMC userid {hd.userid!r} is not authorized for task "
+                    f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_warn("CPC {c} on HMC {h} does not support feature: {e}".
-                          format(c=cpc.name, h=hd.host, e=exc))
+                skip_warn(
+                    f"CPC {cpc.name} on HMC {hd.host} does not support "
+                    f"feature: {exc}")
             else:
                 raise
 
@@ -418,11 +416,11 @@ def test_cpc_get_sustainability_data(
                     # issue only a warning (as opposed to failing).
                     delta_sec = abs((dp_timestamp_dt - exp_oldest_dt).seconds)
                     if delta_sec > 15 * 60:
-                        print("Warning: Oldest data point of metric {!r} is "
-                              "not within 15 minutes of range start: Oldest "
-                              "data point: {}, Range start: {}, Delta: {} sec".
-                              format(metric_name, dp_timestamp_dt,
-                                     exp_oldest_dt, delta_sec))
+                        print("Warning: Oldest data point of metric "
+                              f"{metric_name!r} is not within 15 minutes of "
+                              "range start: Oldest data point: "
+                              f"{dp_timestamp_dt}, Range start: "
+                              f"{exp_oldest_dt}, Delta: {delta_sec} sec")
                 else:
 
                     # For second oldest timestamp on, verify that the delta
@@ -434,11 +432,10 @@ def test_cpc_get_sustainability_data(
                     if abs(delta_td.seconds - exp_delta.seconds) > \
                             tolerance_pct / 100 * exp_delta.seconds:
                         print("Warning: Timestamp of a data point of metric "
-                              "{!r} is not within expected delta of its "
-                              "previous data point. Actual delta: {}, "
-                              "Expected delta: {} (+/-{}%)".
-                              format(metric_name, delta_td, exp_delta,
-                                     tolerance_pct))
+                              f"{metric_name!r} is not within expected delta "
+                              "of its previous data point. Actual delta: "
+                              f"{delta_td}, Expected delta: {exp_delta} "
+                              f"(+/-{tolerance_pct}%)")
 
                 previous_dt = dp_timestamp_dt
 

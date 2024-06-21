@@ -102,15 +102,16 @@ class ResourceTestCase:
         assert isinstance(resource.properties, DictView)
 
         # Verify that the resource properties are as expected
-        assert len(resource.properties) == len(exp_props), \
-            "Set of properties does not match. Expected {!r}, got {!r}". \
-            format(resource.properties.keys(), exp_props.keys())
+        assert len(resource.properties) == len(exp_props), (
+            "Set of properties does not match. "
+            f"Expected {resource.properties.keys()!r}, "
+            f"got {exp_props.keys()!r}")
 
         for name, exp_value in exp_props.items():
             act_value = resource.properties[name]
-            assert act_value == exp_value, \
-                "Property {!r} does not match. Expected {!r}, got {!r}". \
-                format(name, exp_value, act_value)
+            assert act_value == exp_value, (
+                f"Property {name!r} does not match. "
+                f"Expected {exp_value!r}, got {act_value!r}")
 
 
 class TestInit(ResourceTestCase):
@@ -200,7 +201,7 @@ class TestInit(ResourceTestCase):
         else:
             raise AssertionError(
                 "TypeError was not raised when initializing resource "
-                "with invalid properties: {!r}".format(init_props))
+                f"with invalid properties: {init_props!r}")
 
     def test_str(self):
         """Test BaseResource.__str__()."""
@@ -214,8 +215,7 @@ class TestInit(ResourceTestCase):
 
         str_str = str_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s*\(.*'.
-                        format(classname=resource.__class__.__name__),
+        assert re.match(rf'^{resource.__class__.__name__}\s*\(.*',
                         str_str)
 
     def test_repr(self):
@@ -230,10 +230,10 @@ class TestInit(ResourceTestCase):
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=resource.__class__.__name__,
-                               id=id(resource)),
-                        repr_str)
+        assert re.match(
+            rf'^{resource.__class__.__name__}\s+at\s+'
+            rf'0x{id(resource):08x}\s+\(\\n.*',
+            repr_str)
 
 
 class TestPropertySet(ResourceTestCase):

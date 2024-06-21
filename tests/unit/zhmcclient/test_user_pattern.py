@@ -95,10 +95,10 @@ class TestUserPattern:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=user_pattern_mgr.__class__.__name__,
-                               id=id(user_pattern_mgr)),
-                        repr_str)
+        assert re.match(
+            rf'^{user_pattern_mgr.__class__.__name__}\s+at\s+'
+            rf'0x{id(user_pattern_mgr):08x}\s+\(\\n.*',
+            repr_str)
 
     def test_upm_initial_attrs(self):
         """Test initial attributes of UserPatternManager."""
@@ -257,10 +257,10 @@ class TestUserPattern:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=user_pattern1.__class__.__name__,
-                               id=id(user_pattern1)),
-                        repr_str)
+        assert re.match(
+            rf'^{user_pattern1.__class__.__name__}\s+at\s+'
+            rf'0x{id(user_pattern1):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "input_props, exp_exc", [

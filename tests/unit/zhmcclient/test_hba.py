@@ -354,10 +354,10 @@ class TestHba:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=hba.__class__.__name__,
-                               id=id(hba)),
-                        repr_str)
+        assert re.match(
+            rf'^{hba.__class__.__name__}\s+at\s+'
+            rf'0x{id(hba):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "initial_partition_status, exp_exc", [

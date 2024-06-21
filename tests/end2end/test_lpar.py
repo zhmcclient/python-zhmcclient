@@ -80,13 +80,11 @@ def test_lpar_find_list(classic_mode_cpcs):  # noqa: F811
         # Pick the LPARs to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn("No LPARs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
         lpar_list = pick_test_resources(lpar_list)
 
         for lpar in lpar_list:
-            print("Testing on CPC {c} with LPAR {p!r}".
-                  format(c=cpc.name, p=lpar.name))
+            print(f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
             runtest_find_list(
                 session, cpc.lpars, lpar.name, 'name', 'status',
                 LPAR_VOLATILE_PROPS, LPAR_MINIMAL_PROPS, LPAR_LIST_PROPS)
@@ -109,13 +107,11 @@ def test_lpar_property(classic_mode_cpcs):  # noqa: F811
         # Pick the LPARs to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn("No LPARs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
         lpar_list = pick_test_resources(lpar_list)
 
         for lpar in lpar_list:
-            print("Testing on CPC {c} with LPAR {p!r}".
-                  format(c=cpc.name, p=lpar.name))
+            print(f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -220,8 +216,8 @@ def test_console_list_permitted_lpars(
             lpar_props = dict(lpar.properties)
             for pname in exp_prop_names:
                 assert pname in lpar_props, (
-                    "Property {!r} missing from returned LPAR properties, "
-                    "got: {!r}".format(pname, lpar_props))
+                    f"Property {pname!r} missing from returned LPAR "
+                    f"properties, got: {lpar_props!r}")
 
     logger.debug("Leaving test function")
 
@@ -247,8 +243,7 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
         # Pick the LPAR to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn("No LPARs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
 
         test_lpar = None
         for lpar in lpar_list:
@@ -256,16 +251,16 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
             # Test: List all messages (without begin or end)
             try:
                 if DEBUG:
-                    print("Debug: Test: Listing OS messages of LPAR {} "
-                          "with no begin/end".format(lpar.name))
+                    print("Debug: Test: Listing OS messages of LPAR "
+                          f"{lpar.name} with no begin/end")
                 result = lpar.list_os_messages()
             except zhmcclient.HTTPError as exc:
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the LPAR is not
                     # available
                     if DEBUG:
-                        print("Debug: LPAR {} cannot list OS messages".
-                              format(lpar.name))
+                        print(f"Debug: LPAR {lpar.name} cannot list OS "
+                              "messages")
                     continue
                 raise
 
@@ -275,19 +270,19 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
                 break
 
             if DEBUG:
-                print("Debug: LPAR {} has only {} OS messages".
-                      format(lpar.name, len(all_messages)))
+                print(f"Debug: LPAR {lpar.name} has only {len(all_messages)} "
+                      "OS messages")
 
         if test_lpar is None:
-            skip_warn("No LPAR on CPC {c} has the minimum number of 3 OS "
-                      "messages for the test".format(c=cpc.name))
+            skip_warn(f"No LPAR on CPC {cpc.name} has the minimum number of "
+                      "3 OS messages for the test")
 
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
         if DEBUG:
-            print("Debug: Test: Listing OS messages of LPAR {} with "
-                  "begin={}, end={}".format(test_lpar.name, all_begin, all_end))
+            print(f"Debug: Test: Listing OS messages of LPAR {test_lpar.name} "
+                  f"with begin={all_begin}, end={all_end}")
         result = test_lpar.list_os_messages(begin=all_begin, end=all_end)
         messages = result['os-messages']
         assert len(messages) == all_end - all_begin + 1
@@ -305,8 +300,8 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
         if DEBUG:
-            print("Debug: Test: Listing OS messages of LPAR {} with "
-                  "begin={}, end={}".format(test_lpar.name, begin, end))
+            print(f"Debug: Test: Listing OS messages of LPAR {test_lpar.name} "
+                  f"with begin={begin}, end={end}")
         result = test_lpar.list_os_messages(begin=begin, end=end)
         messages = result['os-messages']
         assert len(messages) == end - begin + 1
@@ -316,9 +311,8 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
         # Test with begin/end and maximum messages
         max_messages = random.randint(0, end - begin + 1)
         if DEBUG:
-            print("Debug: Test: Listing OS messages of LPAR {} with "
-                  "begin={}, end={}, max_messages={}".
-                  format(test_lpar.name, begin, end, max_messages))
+            print(f"Debug: Test: Listing OS messages of LPAR {test_lpar.name} "
+                  f"with begin={begin}, end={end}, max_messages={max_messages}")
         result = test_lpar.list_os_messages(
             begin=begin, end=end, max_messages=max_messages)
         messages = result['os-messages']
@@ -329,8 +323,8 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
         # Test with is_held
         for is_held in (False, True):
             if DEBUG:
-                print("Debug: Test: Listing OS messages of LPAR {} with "
-                      "is_held={}".format(test_lpar.name, is_held))
+                print("Debug: Test: Listing OS messages of LPAR "
+                      f"{test_lpar.name} with is_held={is_held}")
             result = test_lpar.list_os_messages(is_held=is_held)
             messages = result['os-messages']
             for message in messages:
@@ -339,8 +333,8 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
         # Test with is_priority
         for is_priority in (False, True):
             if DEBUG:
-                print("Debug: Test: Listing OS messages of LPAR {} with "
-                      "is_priority={}".format(test_lpar.name, is_priority))
+                print("Debug: Test: Listing OS messages of LPAR "
+                      f"{test_lpar.name} with is_priority={is_priority}")
             result = test_lpar.list_os_messages(is_priority=is_priority)
             messages = result['os-messages']
             for message in messages:
@@ -592,25 +586,25 @@ def test_lpar_activate(
         try:
             loadable_lpars = hd_cpc['loadable_lpars']
         except KeyError:
-            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
-                        "have a 'loadable_lpars' property in its entry for "
-                        "CPC {c!r}".
-                        format(h=hd.nickname, c=cpc.name))
+            pytest.skip(
+                f"Inventory file entry for HMC nickname {hd.nickname!r} does "
+                "not have a 'loadable_lpars' property in its entry for CPC "
+                f"{cpc.name!r}")
         try:
             load_profiles = hd_cpc['load_profiles']
         except KeyError:
-            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
-                        "have a 'load_profiles' property in its entry for "
-                        "CPC {c!r}".
-                        format(h=hd.nickname, c=cpc.name))
+            pytest.skip(
+                f"Inventory file entry for HMC nickname {hd.nickname!r} does "
+                "not have a 'load_profiles' property in its entry for "
+                f"CPC {cpc.name!r}")
 
         try:
             lpar_name = loadable_lpars[lpar_mode]
         except (KeyError, TypeError):
-            pytest.skip("Inventory file entry for HMC nickname {h!r} does not "
-                        "have an entry for operating mode {om!r} in its "
-                        "'loadable_lpars' property for CPC {c!r}".
-                        format(h=hd.nickname, c=cpc.name, om=lpar_mode))
+            pytest.skip(
+                f"Inventory file entry for HMC nickname {hd.nickname!r} does "
+                f"not have an entry for operating mode {lpar_mode!r} in its "
+                f"'loadable_lpars' property for CPC {cpc.name!r}")
 
         # Find the image profile corresponding to the LPAR, and the other
         # (wrong) image profile names for specific tests with that.
@@ -620,8 +614,8 @@ def test_lpar_activate(
         if len(lpar_iaps) >= 1:
             iap = lpar_iaps[0]
         else:
-            pytest.skip("Image activation profile {p!r} does not exist on "
-                        "CPC {c}.".format(c=cpc.name, p=iap_name))
+            pytest.skip(f"Image activation profile {iap_name!r} does not exist "
+                        f"on CPC {cpc.name}.")
         wrong_iap_names = [_iap.name for _iap in all_iaps
                            if _iap.name != lpar_name]
 
@@ -633,10 +627,10 @@ def test_lpar_activate(
             try:
                 ap_name = load_profiles[lpar_mode]
             except (KeyError, TypeError):
-                pytest.skip("Inventory file entry for HMC nickname {h!r} does "
-                            "not have an entry for operating mode {om!r} in "
-                            "its 'load_profiles' property for CPC {c!r}".
-                            format(h=hd.nickname, c=cpc.name, om=lpar_mode))
+                pytest.skip(
+                    f"Inventory file entry for HMC nickname {hd.nickname!r} "
+                    f"does not have an entry for operating mode {lpar_mode!r} "
+                    f"in its 'load_profiles' property for CPC {cpc.name!r}")
         else:
             ap_name = None
 
@@ -646,37 +640,34 @@ def test_lpar_activate(
             try:
                 nap_name = load_profiles[lpar_mode]
             except (KeyError, TypeError):
-                pytest.skip("Inventory file entry for HMC nickname {h!r} does "
-                            "not have an entry for operating mode {om!r} in "
-                            "its 'load_profiles' property for CPC {c!r}".
-                            format(h=hd.nickname, c=cpc.name, om=lpar_mode))
+                pytest.skip(
+                    f"Inventory file entry for HMC nickname {hd.nickname!r} "
+                    f"does not have an entry for operating mode {lpar_mode!r} "
+                    f"in its 'load_profiles' property for CPC {cpc.name!r}")
         else:
             nap_name = None
 
         try:
             lpar = cpc.lpars.find(name=lpar_name)
         except zhmcclient.NotFound:
-            pytest.skip("LPAR {p!r} does not exist on CPC {c}.".
-                        format(c=cpc.name, p=lpar_name))
+            pytest.skip(f"LPAR {lpar_name!r} does not exist on CPC {cpc.name}.")
 
         if ap_type == 'load' or nap_type == 'load':
             lap_name = load_profiles[lpar_mode]
             try:
                 cpc.load_activation_profiles.find(name=lap_name)
             except zhmcclient.NotFound:
-                pytest.skip("Load activation profile {p!r} does not exist on "
-                            "CPC {c}.".format(c=cpc.name, p=lap_name))
+                pytest.skip(f"Load activation profile {lap_name!r} does not "
+                            f"exist on CPC {cpc.name}.")
 
         # pylint: disable=possibly-used-before-assignment
         op_mode = iap.get_property('operating-mode')
         assert op_mode == lpar_mode, (
-            "Incorrect testcase definition: Operating mode {om!r} in image "
-            "activation profile {p!r} on CPC {c} does not match the "
-            "lpar_mode {lm!r} of the testcase".
-            format(c=cpc.name, p=iap_name, om=op_mode, lm=lpar_mode))
+            f"Incorrect testcase definition: Operating mode {op_mode!r} in "
+            f"image activation profile {iap_name!r} on CPC {cpc.name} does not "
+            f"match the lpar_mode {lpar_mode!r} of the testcase")
 
-        msg = ("Testing on CPC {c} with LPAR {p!r}".
-               format(c=cpc.name, p=lpar.name))
+        msg = f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}"
         print(msg)
         logger.info(msg)
 
@@ -727,14 +718,12 @@ def test_lpar_activate(
                             lpar.name, lpar_props['status'])
                 for pname, exp_value in exp_props.items():
                     assert pname in lpar_props, (
-                        "Expected property {p!r} does not exist in "
-                        "actual properties of LPAR {ln!r}".
-                        format(p=pname, ln=lpar.name))
+                        f"Expected property {pname!r} does not exist in "
+                        f"actual properties of LPAR {lpar.name!r}")
                     act_value = lpar_props[pname]
                     assert act_value == exp_value, (
-                        "Property {p!r} has unexpected value {av!r}; "
-                        "expected value: {ev!r}".
-                        format(p=pname, av=act_value, ev=exp_value))
+                        f"Property {pname!r} has unexpected value "
+                        f"{act_value!r}; expected value: {exp_value!r}")
         finally:
             logger.info("Cleanup: Ensuring that LPAR %r is inactive",
                         lpar.name)
@@ -820,8 +809,7 @@ def test_lpar_get_sustainability_data(
         # Pick the LPAR to test with
         lpar_list = cpc.lpars.list()
         if not lpar_list:
-            skip_warn("No LPARs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No LPARs on CPC {cpc.name} managed by HMC {hd.host}")
 
         # Pick a random LPAR to test with
         lpar = random.choice(lpar_list)
@@ -838,13 +826,13 @@ def test_lpar_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn("HMC userid {u!r} is not authorized for task "
-                          "'Environmental Dashboard' on HMC {h}".
-                          format(u=hd.userid, h=hd.host))
+                skip_warn(
+                    f"HMC userid {hd.userid!r} is not authorized for task "
+                    f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_warn("LPAR {c} on HMC {h} does not support "
-                          "feature: {e}".
-                          format(c=lpar.name, h=hd.host, e=exc))
+                skip_warn(
+                    f"LPAR {lpar.name} on HMC {hd.host} does not support "
+                    f"feature: {exc}")
             else:
                 raise
 
@@ -882,11 +870,11 @@ def test_lpar_get_sustainability_data(
                     # issue only a warning (as opposed to failing).
                     delta_sec = abs((dp_timestamp_dt - exp_oldest_dt).seconds)
                     if delta_sec > 15 * 60:
-                        print("Warning: Oldest data point of metric {!r} is "
-                              "not within 15 minutes of range start: Oldest "
-                              "data point: {}, Range start: {}, Delta: {} sec".
-                              format(metric_name, dp_timestamp_dt,
-                                     exp_oldest_dt, delta_sec))
+                        print(f"Warning: Oldest data point of metric "
+                              f"{metric_name!r} is not within 15 minutes of "
+                              "range start: Oldest data point: "
+                              f"{dp_timestamp_dt}, Range start: "
+                              f"{exp_oldest_dt}, Delta: {delta_sec} sec")
                 else:
 
                     # For second oldest timestamp on, verify that the delta
@@ -898,10 +886,9 @@ def test_lpar_get_sustainability_data(
                     if abs(delta_td.seconds - exp_delta.seconds) > \
                             tolerance_pct / 100 * exp_delta.seconds:
                         print("Warning: Timestamp of a data point of metric "
-                              "{!r} is not within expected delta of its "
-                              "previous data point. Actual delta: {}, "
-                              "Expected delta: {} (+/-{}%)".
-                              format(metric_name, delta_td, exp_delta,
-                                     tolerance_pct))
+                              f"{metric_name!r} is not within expected delta "
+                              "of its previous data point. Actual delta: "
+                              f"{delta_td}, Expected delta: {exp_delta} "
+                              f"(+/-{tolerance_pct}%)")
 
                 previous_dt = dp_timestamp_dt

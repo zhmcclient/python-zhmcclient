@@ -1852,8 +1852,8 @@ class TestUserHandlers:
             assert name in user2
             value = user2[name]
             assert value == exp_value, \
-                "Unexpected value for property {!r}: actual: {!r}, " \
-                "expected: {!r}".format(name, value, exp_value)
+                f"Unexpected value for property {name!r}: actual: {value!r}, " \
+                f"expected: {exp_value!r}"
 
     def test_user_create_err_no_console(self):
         """
@@ -4180,29 +4180,28 @@ class TestMetricsContextHandlers:
         # the get function to be tested:
         mv_resp = self.urihandler.get(self.hmc, uri, True)
 
-        exp_mv_resp = '''"partition-usage"
+        exp_mv_resp = f'''"partition-usage"
 "/api/partitions/fake-oid"
-{ts1}
+{ts1_exp}
 10,5
 
 "/api/partitions/fake-oid"
-{ts2}
+{ts2_exp}
 12,3
 
 
 "dpm-system-usage-overview"
 "/api/cpcs/fake-oid"
-{ts3}
+{ts3_exp}
 50,20
 
 
 
-'''.format(ts1=ts1_exp, ts2=ts2_exp, ts3=ts3_exp)
+'''
 
-        assert mv_resp == exp_mv_resp, \
-            "Actual response string:\n{!r}\n" \
-            "Expected response string:\n{!r}\n". \
-            format(mv_resp, exp_mv_resp)
+        assert mv_resp == exp_mv_resp, (
+            f"Actual response string:\n{mv_resp!r}\n"
+            f"Expected response string:\n{exp_mv_resp!r}\n")
 
         # the delete function to be tested:
         self.urihandler.delete(self.hmc, uri, True)

@@ -42,8 +42,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -52,8 +52,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -62,22 +61,21 @@ try:
     try:
         storage_groups = cpc.list_associated_storage_groups()
     except zhmcclient.Error as exc:
-        print("Error: Cannot list storage groups of CPC {}: {}: {}".
-              format(cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot list storage groups of CPC {cpc.name}: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     for sg in storage_groups:
 
-        print("Storage group: {} (type: {}, shared: {}, fulfillment: {})".
-              format(sg.name, sg.get_property('type'),
-                     sg.get_property('shared'),
-                     sg.get_property('fulfillment-state')))
+        print(f"Storage group: {sg.name} (type: {sg.get_property('type')}, "
+              f"shared: {sg.get_property('shared')}, "
+              f"fulfillment: {sg.get_property('fulfillment-state')})")
 
         try:
             volumes = sg.storage_volumes.list()
         except zhmcclient.HTTPError as exc:
-            print("Error: Cannot list storage volumes of storage group {}: "
-                  "{}: {}".format(sg.name, exc.__class__.__name__, exc))
+            print("Error: Cannot list storage volumes of storage group "
+                  f"{sg.name}: {exc.__class__.__name__}: {exc}")
             sys.exit(1)
 
         print(f"    Storage Volumes: {len(volumes)}")
@@ -89,19 +87,17 @@ try:
             try:
                 vsrs = sg.virtual_storage_resources.list()
             except zhmcclient.HTTPError as exc:
-                print("Error: Cannot list virtual storage resources of "
-                      "storage group {}: {}: {}".
-                      format(sg.name, exc.__class__.__name__, exc))
+                print("Error: Cannot list virtual storage resources of storage "
+                      f"group {sg.name}: {exc.__class__.__name__}: {exc}")
                 sys.exit(1)
 
             for vsr in vsrs:
                 port = vsr.adapter_port
                 adapter = port.manager.parent
-                print("    Virtual Storage Resource: {} (devno: {}, "
-                      "adapter.port: {}.{}, attached to partition: {})".
-                      format(vsr.name, vsr.get_property('device-number'),
-                             adapter.name, port.name,
-                             vsr.attached_partition.name))
+                print(f"    Virtual Storage Resource: {vsr.name} "
+                      f"(devno: {vsr.get_property('device-number')}, "
+                      f"adapter.port: {adapter.name}.{port.name}, "
+                      f"attached to partition: {vsr.attached_partition.name})")
             else:
                 print("    No Virtual Storage Resources")
 

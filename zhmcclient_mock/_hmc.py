@@ -26,7 +26,7 @@ from dateutil import tz
 from immutable_views import DictView
 
 from zhmcclient._utils import repr_dict, repr_manager, repr_list, \
-    timestamp_from_datetime
+    timestamp_from_datetime, repr_obj_id
 
 from ._idpool import IdPool
 
@@ -360,20 +360,12 @@ class FakedBaseResource:
         resources they have.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {_manager_classname} at 0x{_manager_id:08x}\n"
-            "  _oid = {_oid!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                _manager_classname=self._manager.__class__.__name__,
-                _manager_id=id(self._manager),
-                _oid=self._oid,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _oid = {self._oid!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            ")")
         return ret
 
     @property
@@ -547,8 +539,9 @@ class FakedBaseResource:
             # child_dict is a dict of 'properties' and grand child resources
             properties = child_dict.get('properties', None)
             if properties is None:
-                raise InputError("A resource for resource type {} has no"
-                                 "properties specified.".format(child_attr))
+                raise InputError(
+                    f"A resource for resource type {child_attr} has no "
+                    "properties specified.")
             child_resource = child_manager.add(properties)
             for grandchild_attr in child_dict:
                 if grandchild_attr == 'properties':
@@ -588,33 +581,18 @@ class FakedBaseManager:
         purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _hmc = {_hmc_classname} at 0x{_hmc_id:08x}\n"
-            "  _parent = {_parent_classname} at 0x{_parent_id:08x}\n"
-            "  _resource_class = {_resource_class!r}\n"
-            "  _base_uri = {_base_uri!r}\n"
-            "  _oid_prop = {_oid_prop!r}\n"
-            "  _uri_prop = {_uri_prop!r}\n"
-            "  _class_value = {_class_value!r}\n"
-            "  _name_prop = {_name_prop!r}\n"
-            "  _case_insensitive_names = {_case_insensitive_names}\n"
-            "  _resources = {_resources}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                _hmc_classname=self._hmc.__class__.__name__,
-                _hmc_id=id(self._hmc),
-                _parent_classname=self._parent.__class__.__name__,
-                _parent_id=id(self._parent),
-                _resource_class=self._resource_class,
-                _base_uri=self._base_uri,
-                _oid_prop=self._oid_prop,
-                _uri_prop=self._uri_prop,
-                _class_value=self._class_value,
-                _name_prop=self._name_prop,
-                _case_insensitive_names=self._case_insensitive_names,
-                _resources=repr_dict(self._resources, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _hmc = {repr_obj_id(self._hmc)}\n"
+            f"  _parent = {repr_obj_id(self._parent)}\n"
+            f"  _resource_class = {self._resource_class!r}\n"
+            f"  _base_uri = {self._base_uri!r}\n"
+            f"  _oid_prop = {self._oid_prop!r}\n"
+            f"  _uri_prop = {self._uri_prop!r}\n"
+            f"  _class_value = {self._class_value!r}\n"
+            f"  _name_prop = {self._name_prop!r}\n"
+            f"  _case_insensitive_names = {self._case_insensitive_names}\n"
+            f"  _resources = {repr_dict(self._resources, indent=2)}\n"
+            ")")
         return ret
 
     def _matches_filters(self, obj, filter_args):
@@ -915,36 +893,24 @@ class FakedHmc(FakedBaseResource):
         Return a string with the state of this faked HMC, for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  session = {session_class}(...)\n"
-            "  hmc_name = {hmc_name!r}\n"
-            "  hmc_version = {hmc_version!r}\n"
-            "  api_version = {api_version!r}\n"
-            "  metric_groups(group names) = {mg_names}\n"
-            "  metric_values(group names) = {mv_names}\n"
-            "  enabled = {enabled!r}\n"
-            "  cpcs = {cpcs}\n"
-            "  metrics_contexts = {metrics_contexts}\n"
-            "  consoles = {consoles}\n"
-            "  all_resources (keys only) = {all_resource_keys}\n"
-            "  valid_session_ids = {valid_session_ids}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                session_class=self._session.__class__.__name__,
-                hmc_name=self.hmc_name,
-                hmc_version=self.hmc_version,
-                api_version=self.api_version,
-                mg_names=list(self.metric_groups.keys()),
-                mv_names=list(self.metric_values.keys()),
-                enabled=self.enabled,
-                cpcs=repr_manager(self.cpcs, indent=2),
-                metrics_contexts=repr_manager(self.metrics_contexts, indent=2),
-                consoles=repr_manager(self.consoles, indent=2),
-                all_resource_keys=repr_list(self.all_resources.keys(),
-                                            indent=2),
-                valid_session_ids=self._valid_session_ids,
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  session = {self._session.__class__.__name__}(...)\n"
+            f"  hmc_name = {self.hmc_name!r}\n"
+            f"  hmc_version = {self.hmc_version!r}\n"
+            f"  api_version = {self.api_version!r}\n"
+            "  metric_groups(group names) = "
+            f"{list(self.metric_groups.keys())}\n"
+            "  metric_values(group names) = "
+            f"{list(self.metric_values.keys())}\n"
+            f"  enabled = {self.enabled!r}\n"
+            f"  cpcs = {repr_manager(self.cpcs, indent=2)}\n"
+            "  metrics_contexts = "
+            f"{repr_manager(self.metrics_contexts, indent=2)}\n"
+            f"  consoles = {repr_manager(self.consoles, indent=2)}\n"
+            "  all_resources (keys only) = "
+            f"{repr_list(self.all_resources.keys(), indent=2)}\n"
+            f"  valid_session_ids = {self._valid_session_ids}\n"
+            ")")
         return ret
 
     @property
@@ -1190,39 +1156,26 @@ class FakedConsole(FakedBaseResource):
         debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            "  _storage_groups = {_storage_groups}\n"
-            "  _users = {_users}\n"
-            "  _user_roles = {_user_roles}\n"
-            "  _user_patterns = {_user_patterns}\n"
-            "  _password_rules = {_password_rules}\n"
-            "  _tasks = {_tasks}\n"
-            "  _ldap_server_definitions = {_ldap_server_definitions}\n"
-            "  _unmanaged_cpcs = {_unmanaged_cpcs}\n"
-            "  _groups = {_groups}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-                _storage_groups=repr_manager(self.storage_groups, indent=2),
-                _users=repr_manager(self.users, indent=2),
-                _user_roles=repr_manager(self.user_roles, indent=2),
-                _user_patterns=repr_manager(self.user_patterns, indent=2),
-                _password_rules=repr_manager(self.password_rules, indent=2),
-                _tasks=repr_manager(self.tasks, indent=2),
-                _ldap_server_definitions=repr_manager(
-                    self.ldap_server_definitions, indent=2),
-                _unmanaged_cpcs=repr_manager(self.unmanaged_cpcs, indent=2),
-                _groups=repr_manager(self.groups, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            "  _storage_groups = "
+            f"{repr_manager(self.storage_groups, indent=2)}\n"
+            f"  _users = {repr_manager(self.users, indent=2)}\n"
+            f"  _user_roles = {repr_manager(self.user_roles, indent=2)}\n"
+            "  _user_patterns = "
+            f"{repr_manager(self.user_patterns, indent=2)}\n"
+            "  _password_rules = "
+            f"{repr_manager(self.password_rules, indent=2)}\n"
+            f"  _tasks = {repr_manager(self.tasks, indent=2)}\n"
+            "  _ldap_server_definitions = "
+            f"{repr_manager(self.ldap_server_definitions, indent=2)}\n"
+            "  _unmanaged_cpcs = "
+            f"{repr_manager(self.unmanaged_cpcs, indent=2)}\n"
+            f"  _groups = {repr_manager(self.groups, indent=2)}\n"
+            ")")
         return ret
 
     @property
@@ -1910,13 +1863,13 @@ class FakedAdapter(FakedBaseResource):
                 self._properties['adapter-family'] = 'accelerator'
                 self._adapter_kind = 'other'
             else:
-                raise InputError("FakedAdapter with object-id={} has an "
-                                 "unknown value in its 'type' property: {}."
-                                 .format(self.oid, type_))
+                raise InputError(
+                    f"FakedAdapter with object-id={self.oid} has an unknown "
+                    f"value in its 'type' property: {type_}.")
         else:
-            raise InputError("FakedAdapter with object-id={} must have "
-                             "'adapter-family' or 'type' property specified."
-                             .format(self.oid))
+            raise InputError(
+                f"FakedAdapter with object-id={self.oid} must have "
+                "'adapter-family' or 'type' property specified.")
         if self.adapter_kind == 'network':
             if 'network-port-uris' not in self._properties:
                 self._properties['network-port-uris'] = []
@@ -1936,22 +1889,13 @@ class FakedAdapter(FakedBaseResource):
         debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            "  _ports = {_ports}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-                _ports=repr_manager(self.ports, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = repr_obj_id(self._manager)\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            f"  _ports = {repr_manager(self.ports, indent=2)}\n"
+            ")")
         return ret
 
     @property
@@ -2074,41 +2018,25 @@ class FakedCpc(FakedBaseResource):
         purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            "  _lpars = {_lpars}\n"
-            "  _partitions = {_partitions}\n"
-            "  _adapters = {_adapters}\n"
-            "  _virtual_switches = {_virtual_switches}\n"
-            "  _capacity_groups = {_capacity_groups}\n"
-            "  _reset_activation_profiles = {_reset_activation_profiles}\n"
-            "  _image_activation_profiles = {_image_activation_profiles}\n"
-            "  _load_activation_profiles = {_load_activation_profiles}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-                _lpars=repr_manager(self.lpars, indent=2),
-                _partitions=repr_manager(self.partitions, indent=2),
-                _adapters=repr_manager(self.adapters, indent=2),
-                _virtual_switches=repr_manager(
-                    self.virtual_switches, indent=2),
-                _capacity_groups=repr_manager(
-                    self.capacity_groups, indent=2),
-                _reset_activation_profiles=repr_manager(
-                    self.reset_activation_profiles, indent=2),
-                _image_activation_profiles=repr_manager(
-                    self.image_activation_profiles, indent=2),
-                _load_activation_profiles=repr_manager(
-                    self.load_activation_profiles, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            f"  _lpars = {repr_manager(self.lpars, indent=2)}\n"
+            f"  _partitions = {repr_manager(self.partitions, indent=2)}\n"
+            f"  _adapters = {repr_manager(self.adapters, indent=2)}\n"
+            "  _virtual_switches = "
+            f"{repr_manager(self.virtual_switches, indent=2)}\n"
+            "  _capacity_groups = "
+            f"{repr_manager(self.capacity_groups, indent=2)}\n"
+            "  _reset_activation_profiles = "
+            f"{repr_manager(self.reset_activation_profiles, indent=2)}\n"
+            "  _image_activation_profiles = "
+            f"{repr_manager(self.image_activation_profiles, indent=2)}\n"
+            "  _load_activation_profiles = "
+            f"{repr_manager(self.load_activation_profiles, indent=2)}\n"
+            ")")
         return ret
 
     @property
@@ -2250,20 +2178,12 @@ class FakedUnmanagedCpc(FakedBaseResource):
         for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            ")")
         return ret
 
 
@@ -2339,20 +2259,12 @@ class FakedGroup(FakedBaseResource):
         purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            ")")
         return ret
 
 
@@ -2615,9 +2527,9 @@ class FakedNicManager(FakedBaseManager):
             try:
                 vswitch = self.hmc.lookup_by_uri(vswitch_uri)
             except KeyError:
-                new_exc = InputError("The virtual switch specified in the "
-                                     "'virtual-switch-uri' property does not "
-                                     "exist: {!r}".format(vswitch_uri))
+                new_exc = InputError(
+                    "The virtual switch specified in the 'virtual-switch-uri' "
+                    f"property does not exist: {vswitch_uri!r}")
                 new_exc.__cause__ = None
                 raise new_exc  # InputError
             connected_uris = vswitch.properties['connected-vnic-uris']
@@ -2784,27 +2696,16 @@ class FakedPartition(FakedBaseResource):
         debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            "  _nics = {_nics}\n"
-            "  _hbas = {_hbas}\n"
-            "  _virtual_functions = {_virtual_functions}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-                _nics=repr_manager(self.nics, indent=2),
-                _hbas=repr_manager(self.hbas, indent=2),
-                _virtual_functions=repr_manager(
-                    self.virtual_functions, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            f"  _nics = {repr_manager(self.nics, indent=2)}\n"
+            f"  _hbas = {repr_manager(self.hbas, indent=2)}\n"
+            "  _virtual_functions = "
+            f"{repr_manager(self.virtual_functions, indent=2)}\n"
+            ")")
         return ret
 
     @property
@@ -2948,9 +2849,9 @@ class FakedPortManager(FakedBaseManager):
             port_uri_segment = 'storage-ports'
             port_class_value = 'storage-port'
         else:
-            raise AssertionError("FakedAdapter with object-id={} must be a "
-                                 "storage or network adapter to have ports."
-                                 .format(adapter.oid))
+            raise AssertionError(
+                f"FakedAdapter with object-id={adapter.oid} must be a "
+                "storage or network adapter to have ports.")
         super().__init__(
             hmc=hmc,
             parent=adapter,
@@ -3274,22 +3175,14 @@ class FakedStorageGroup(FakedBaseResource):
         debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            "  _storage_volumes = {_storage_volumes}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-                _storage_volumes=repr_manager(self.storage_volumes, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            "  _storage_volumes = "
+            f"{repr_manager(self.storage_volumes, indent=2)}\n"
+            ")")
         return ret
 
     @property
@@ -3374,20 +3267,12 @@ class FakedStorageVolume(FakedBaseResource):
         for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            ")")
         return ret
 
 
@@ -3467,23 +3352,14 @@ class FakedStorageGroupTemplate(FakedBaseResource):
         resource, for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            "  _storage_volume_templates = {_storage_volume_templates}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-                _storage_volume_templates=repr_manager(
-                    self.storage_volume_templates, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            "  _storage_volume_templates = "
+            f"{repr_manager(self.storage_volume_templates, indent=2)}\n"
+            ")")
         return ret
 
     @property
@@ -3569,20 +3445,12 @@ class FakedStorageVolumeTemplate(FakedBaseResource):
         resource, for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            ")")
         return ret
 
 
@@ -3659,20 +3527,12 @@ class FakedCapacityGroup(FakedBaseResource):
         debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager = {manager_classname} at 0x{manager_id:08x}\n"
-            "  _manager._parent._uri = {parent_uri!r}\n"
-            "  _uri = {_uri!r}\n"
-            "  _properties = {_properties}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                manager_classname=self._manager.__class__.__name__,
-                manager_id=id(self._manager),
-                parent_uri=self._manager.parent.uri,
-                _uri=self._uri,
-                _properties=repr_dict(self._properties, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            ")")
         return ret
 
 
@@ -3986,10 +3846,10 @@ class FakedMetricGroupDefinition:
         Return a string with the state of this object, for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  name = {s.name!r}\n"
-            "  types = {s.types!r}\n"
-            ")".format(classname=self.__class__.__name__, id=id(self), s=self))
+            f"{repr_obj_id(self)} (\n"
+            f"  name = {self.name!r}\n"
+            f"  types = {self.types!r}\n"
+            ")")
         return ret
 
 
@@ -4037,10 +3897,10 @@ class FakedMetricObjectValues:
         Return a string with the state of this object, for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  group_name = {s.group_name!r}\n"
-            "  resource_uri = {s.resource_uri!r}\n"
-            "  timestamp = {s.timestamp!r}\n"
-            "  values = {s.values!r}\n"
-            ")".format(classname=self.__class__.__name__, id=id(self), s=self))
+            f"{repr_obj_id(self)} (\n"
+            f"  group_name = {self.group_name!r}\n"
+            f"  resource_uri = {self.resource_uri!r}\n"
+            f"  timestamp = {self.timestamp!r}\n"
+            f"  values = {self.values!r}\n"
+            ")")
         return ret

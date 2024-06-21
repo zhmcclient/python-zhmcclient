@@ -195,9 +195,9 @@ class VirtualStorageResource(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, VirtualStorageResourceManager), \
-            "VirtualStorageResource init: Expected manager type {}, got {}" \
-            .format(VirtualStorageResourceManager, type(manager))
+        assert isinstance(manager, VirtualStorageResourceManager), (
+            "VirtualStorageResource init: Expected manager type "
+            f"{VirtualStorageResourceManager}, got {type(manager)}")
         super().__init__(
             manager, uri, name, properties)
         self._attached_partition = None

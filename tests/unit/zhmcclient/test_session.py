@@ -124,10 +124,10 @@ def test_session_repr():
 
     repr_str = repr_str.replace('\n', '\\n')
     # We check just the begin of the string:
-    assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                    format(classname=session.__class__.__name__,
-                           id=id(session)),
-                    repr_str)
+    assert re.match(
+        rf'^{session.__class__.__name__}\s+at\s+'
+        rf'0x{id(session):08x}\s+\(\\n.*',
+        repr_str)
 
 
 @pytest.mark.parametrize(
@@ -244,10 +244,9 @@ def _do_parse_error_logon(m, json_content, exp_msg_pattern, exp_line, exp_col):
     session = Session('fake-host', 'fake-user', 'fake-pw')
 
     exp_pe_pattern = \
-        r"^JSON parse error in HTTP response: {}\. " \
+        rf"^JSON parse error in HTTP response: {exp_msg_pattern}\. " \
         r"HTTP request: [^ ]+ [^ ]+\. " \
-        r"Response status .*" \
-        .format(exp_msg_pattern)
+        r"Response status .*"
 
     with pytest.raises(ParseError) as exc_info:
         session.logon()
@@ -708,8 +707,8 @@ def test_job_wait_complete3_timeout():
             job.wait_for_completion(operation_timeout=operation_timeout)
             duration = time.time() - start_time
             raise AssertionError(
-                "No OperationTimeout raised. Actual duration: {} s, "
-                "timeout: {} s".format(duration, operation_timeout))
+                f"No OperationTimeout raised. Actual duration: {duration} s, "
+                f"timeout: {operation_timeout} s")
         except OperationTimeout as exc:
             msg = exc.args[0]
             assert msg.startswith("Waiting for completion of job")

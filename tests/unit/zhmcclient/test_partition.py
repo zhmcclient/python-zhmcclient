@@ -402,10 +402,10 @@ class TestPartition:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=partition.__class__.__name__,
-                               id=id(partition)),
-                        repr_str)
+        assert re.match(
+            rf'^{partition.__class__.__name__}\s+at\s+'
+            rf'0x{id(partition):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "initial_status, exp_exc", [
@@ -1007,13 +1007,13 @@ class TestPartition:
             partition_props = dict(partition.properties)
             for pname in LIST_PERMITTED_PARTITIONS_PROPS:
                 assert pname in partition_props, (
-                    "Property {!r} missing from returned partition properties, "
-                    "got: {!r}".format(pname, partition_props))
+                    f"Property {pname!r} missing from returned partition "
+                    f"properties, got: {partition_props!r}")
             if additional_props:
                 for pname in additional_props:
                     assert pname in partition_props, (
-                        "Property {!r} missing from returned partition "
-                        "properties, got: {!r}".format(pname, partition_props))
+                        f"Property {pname!r} missing from returned partition "
+                        f"properties, got: {partition_props!r}")
 
     # TODO: Test for Partition.send_os_command()
 

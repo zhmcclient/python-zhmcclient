@@ -46,16 +46,16 @@ The basic usage of the metrics API is shown in this example:
     for mg in mr.metric_group_values:
         mg_name = mg.name
         mg_def = mc.metric_group_definitions[mg_name]
-        print("  Metric group: {}".format(mg_name))
+        print(f"  Metric group: {mg_name}")
         for ov in mg.object_values:
-            print("    Resource: {}".format(ov.resource_uri))
-            print("    Timestamp: {}".format(ov.timestamp))
+            print(f"    Resource: {ov.resource_uri}")
+            print(f"    Timestamp: {ov.timestamp}")
             print("    Metric values:")
             for m_name in ov.metrics:
                 m_value = ov.metrics[m_name]
                 m_def = mg_def.metric_definitions[m_name]
                 m_unit = m_def.unit or ''
-                print("      {:30}  {} {}".format(m_name, m_value, m_unit))
+                print(f"      {m_name:30}  {m_value} {m_unit}")
         if not mg.object_values:
             print("    No resources")
 
@@ -78,7 +78,8 @@ from ._adapter import Adapter
 from ._nic import Nic
 from ._logging import logged_api_call
 from ._exceptions import NotFound, MetricsResourceNotFound
-from ._utils import datetime_from_timestamp, repr_list, datetime_to_isoformat
+from ._utils import datetime_from_timestamp, repr_list, datetime_to_isoformat, \
+    repr_obj_id
 
 __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
            'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
@@ -123,40 +124,22 @@ class MetricsContextManager(BaseManager):
         purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _resource_class={_resource_class!r},\n"
-            "  _class_name={_class_name!r},\n"
-            "  _session={_session_classname} at 0x{_session_id:08x},\n"
-            "  _parent={_parent_classname} at 0x{_parent_id:08x},\n"
-            "  _base_uri={_base_uri!r},\n"
-            "  _oid_prop={_oid_prop!r},\n"
-            "  _uri_prop={_uri_prop!r},\n"
-            "  _name_prop={_name_prop!r},\n"
-            "  _query_props={_query_props},\n"
-            "  _list_has_name={_list_has_name!r},\n"
-            "  _name_uri_cache={_name_uri_cache!r},\n"
-            "  _client={_client_classname} at 0x{_client_id:08x},\n"
-            "  _metrics_contexts={_metrics_contexts},\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                _resource_class=self._resource_class,
-                _class_name=self._class_name,
-                _session_classname=self._session.__class__.__name__,
-                _session_id=id(self._session),
-                _parent_classname=self._parent.__class__.__name__,
-                _parent_id=id(self._parent),
-                _base_uri=self._base_uri,
-                _oid_prop=self._oid_prop,
-                _uri_prop=self._uri_prop,
-                _name_prop=self._name_prop,
-                _query_props=repr_list(self._query_props, indent=2),
-                _list_has_name=self._list_has_name,
-                _name_uri_cache=self._name_uri_cache,
-                _client_classname=self._client.__class__.__name__,
-                _client_id=id(self._client),
-                _metrics_contexts=repr_list(self._metrics_contexts, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _resource_class={self._resource_class!r},\n"
+            f"  _class_name={self._class_name!r},\n"
+            f"  _session={repr_obj_id(self._session)},\n"
+            f"  _parent={repr_obj_id(self._parent)},\n"
+            f"  _base_uri={self._base_uri!r},\n"
+            f"  _oid_prop={self._oid_prop!r},\n"
+            f"  _uri_prop={self._uri_prop!r},\n"
+            f"  _name_prop={self._name_prop!r},\n"
+            f"  _query_props={repr_list(self._query_props, indent=2)},\n"
+            f"  _list_has_name={self._list_has_name!r},\n"
+            f"  _name_uri_cache={self._name_uri_cache!r},\n"
+            f"  _client={repr_obj_id(self._client)},\n"
+            "  _metrics_contexts="
+            f"{repr_list(self._metrics_contexts, indent=2)},\n"
+            ")")
         return ret
 
     @property
@@ -267,8 +250,8 @@ class MetricsContext(BaseResource):
         #     empty.
         if not isinstance(manager, MetricsContextManager):
             raise AssertionError(
-                "MetricsContext init: Expected manager type {}, got {}"
-                .format(MetricsContextManager, type(manager)))
+                "MetricsContext init: Expected manager type "
+                f"{MetricsContextManager}, got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
         self._metric_group_definitions = self._setup_metric_group_definitions()
@@ -392,11 +375,11 @@ class MetricGroupDefinition(_MetricGroupDefinitionTuple):
     __slots__ = ()
 
     def __repr__(self):
-        repr_str = "MetricGroupDefinition(" \
-            "name={s.name!r}, " \
-            "resource_class={s.resource_class!r}, " \
-            "metric_definitions={s.metric_definitions!r})". \
-            format(s=self)
+        repr_str = (
+            "MetricGroupDefinition("
+            f"name={self.name!r}, "
+            f"resource_class={self.resource_class!r}, "
+            f"metric_definitions={self.metric_definitions!r})")
         return repr_str
 
 
@@ -456,12 +439,12 @@ class MetricDefinition(_MetricDefinitionTuple):
     __slots__ = ()
 
     def __repr__(self):
-        repr_str = "MetricDefinition(" \
-            "index={s.index!r}, " \
-            "name={s.name!r}, " \
-            "type={s.type!r}, " \
-            "unit={s.unit!r})". \
-            format(s=self)
+        repr_str = (
+            "MetricDefinition("
+            f"index={self.index!r}, "
+            f"name={self.name!r}, "
+            f"type={self.type!r}, "
+            f"unit={self.unit!r})")
         return repr_str
 
 
@@ -496,8 +479,8 @@ def _metric_value(value_str, metric_type):
             return metric_type(value_str)
         except ValueError:
             new_exc = ValueError(
-                "Invalid {} metric value: {!r}".
-                format(metric_type.__class__.__name__, value_str))
+                f"Invalid {metric_type.__class__.__name__} metric value: "
+                f"{value_str!r}")
             new_exc.__cause__ = None
             raise new_exc  # ValueError
     elif metric_type is str:
@@ -875,9 +858,8 @@ class MetricObjectValues:
                 resource = self.client.cpcs.find(**filter_args)
             except NotFound:
                 raise MetricsResourceNotFound(
-                    "{} with URI {} not found on HMC {}".
-                    format(resource_class, resource_uri,
-                           self.client.session.host),
+                    f"{resource_class} with URI {resource_uri} not found on "
+                    f"HMC {self.client.session.host}",
                     Cpc, cpc_managers)
         elif resource_class == 'logical-partition':
             lpar_managers = []
@@ -892,17 +874,15 @@ class MetricObjectValues:
                     pass  # Try next CPC
             else:
                 raise MetricsResourceNotFound(
-                    "{} with URI {} not found in CPCs {}".
-                    format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])),
+                    f"{resource_class} with URI {resource_uri} not found in "
+                    f"CPCs {', '.join([cpc.name for cpc in cpc_list])}",
                     Lpar, lpar_managers)
         elif resource_class == 'partition':
             partitions = self.client.consoles.console.list_permitted_partitions(
                 filter_args={'object-uri': resource_uri})
             if len(partitions) < 1:
                 raise MetricsResourceNotFound(
-                    "Partition with URI {} not found".
-                    format(resource_uri),
+                    f"Partition with URI {resource_uri} not found",
                     Partition, [])
             resource = partitions[0]
         elif resource_class == 'adapter':
@@ -918,9 +898,8 @@ class MetricObjectValues:
                     pass  # Try next CPC
             else:
                 raise MetricsResourceNotFound(
-                    "{} with URI {} not found in CPCs {}".
-                    format(resource_class, resource_uri,
-                           ', '.join([cpc.name for cpc in cpc_list])),
+                    f"{resource_class} with URI {resource_uri} not found in "
+                    f"CPCs {', '.join([cpc.name for cpc in cpc_list])}",
                     Adapter, adapter_managers)
         elif resource_class == 'nic':
             nic_properties = self.client.session.get(resource_uri)
@@ -929,8 +908,8 @@ class MetricObjectValues:
                 filter_args={'object-uri': partition_uri})
             if len(partitions) < 1:
                 raise MetricsResourceNotFound(
-                    "Parent partition with URI {} of NIC with URI {} not found".
-                    format(partition_uri, resource_uri),
+                    f"Parent partition with URI {partition_uri} of NIC with "
+                    f"URI {resource_uri} not found",
                     Partition, [])
             partition = partitions[0]
             nic_managers = [partition.nics]
@@ -939,8 +918,8 @@ class MetricObjectValues:
                 resource = partition.nics.find(**filter_args)
             except NotFound:
                 raise MetricsResourceNotFound(
-                    "NIC with URI {} not found in its parent partition {}.{}".
-                    format(resource_uri, cpc.name, partition.name),
+                    f"NIC with URI {resource_uri} not found in its parent "
+                    f"partition {cpc.name}.{partition.name}",
                     Nic, nic_managers)
         else:
             raise ValueError(

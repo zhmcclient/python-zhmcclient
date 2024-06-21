@@ -985,15 +985,15 @@ def test_auto_updater_all(desc, testcase, caplog):
         else:
             exp_messages = [item[2] for item in exp_log_entries]
             caplog_messages = [item.message for item in caplog_records]
+            exp_msg_str = '\n'.join(exp_messages)
+            caplog_msg_str = '\n'.join(caplog_messages)
             raise AssertionError(
-                "Did not find expected log message pattern at index {} "
-                "in captured log records starting at index {}.\n"
+                f"Did not find expected log message pattern at index {eix} "
+                f"in captured log records starting at index {next_aix}.\n"
                 "\nExpected log record message patterns:\n"
-                "{}\n"
+                f"{exp_msg_str}\n"
                 "\nCaptured log record messages:\n"
-                "{}".
-                format(eix, next_aix, '\n'.join(exp_messages),
-                       '\n'.join(caplog_messages)))
+                f"{caplog_msg_str}")
 
     # Verify the list() results and the local resources in the manager object
     for mgr_uri, exp_res_uris, exp_local_res_uris in exp_lists:
@@ -1018,9 +1018,9 @@ def test_auto_updater_all(desc, testcase, caplog):
             except KeyError:
                 exp_value = None
             if exp_value is not None:
-                assert value == exp_value, \
-                    "Unexpected value for property {} of resource {}". \
-                    format(name, faked_res_obj.uri)
+                assert value == exp_value, (
+                    f"Unexpected value for property {name} of resource "
+                    f"{faked_res_obj.uri}")
 
     # Disable the resource and manager objects for auto-updating.
     # This causes them to be unregistered from the auto updater.

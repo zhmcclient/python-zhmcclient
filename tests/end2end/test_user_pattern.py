@@ -57,8 +57,9 @@ def test_upatt_find_list(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support user patterns".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "user patterns")
 
     # Pick the user patterns to test with
     upatt_list = console.user_patterns.list()
@@ -87,8 +88,9 @@ def test_upatt_property(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support user patterns".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "user patterns")
 
     # Pick the user patterns to test with
     upatt_list = console.user_patterns.list()
@@ -118,8 +120,9 @@ def test_upatt_crud(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support user patterns".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "user patterns")
 
     upatt_name = TEST_PREFIX + ' test_upatt_crud upatt1'
     upatt_name_new = upatt_name + ' new'
@@ -131,8 +134,8 @@ def test_upatt_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test user pattern from previous run: {p!r}".
-            format(p=upatt_name), UserWarning)
+            f"Deleting test user pattern from previous run: {upatt_name!r}",
+            UserWarning)
         upatt.delete()
 
     # Pick a template user to be the template user for the user pattern
@@ -158,9 +161,9 @@ def test_upatt_crud(hmc_session):  # noqa: F811
         upatt = console.user_patterns.create(upatt_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_warn("HMC userid {u!r} is not authorized for task "
-                      "'Manage User Patterns' on HMC {h}".
-                      format(u=hd.userid, h=hd.host))
+            skip_warn(
+                f"HMC userid {hd.userid!r} is not authorized for task "
+                f"'Manage User Patterns' on HMC {hd.host}")
         else:
             raise
 

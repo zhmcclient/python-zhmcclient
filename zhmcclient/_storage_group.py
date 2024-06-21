@@ -313,9 +313,9 @@ class StorageGroup(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, StorageGroupManager), \
-            "StorageGroup init: Expected manager type {}, got {}"  \
-            .format(StorageGroupManager, type(manager))
+        assert isinstance(manager, StorageGroupManager), (
+            f"StorageGroup init: Expected manager type {StorageGroupManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._storage_volumes = None
@@ -407,8 +407,7 @@ class StorageGroup(BaseResource):
         if query_parms_str:
             query_parms_str = f'?{query_parms_str}'
 
-        uri = '{}/operations/get-partitions{}'.format(
-            self.uri, query_parms_str)
+        uri = f'{self.uri}/operations/get-partitions{query_parms_str}'
 
         sg_cpc = self.cpc
         part_mgr = sg_cpc.partitions
@@ -473,13 +472,13 @@ class StorageGroup(BaseResource):
                 body['email-insert'] = email_insert
         else:
             if email_cc_addresses:
-                raise ValueError("email_cc_addresses must not be specified if "
-                                 "there is no email_to_addresses: {!r}"
-                                 .format(email_cc_addresses))
+                raise ValueError(
+                    "email_cc_addresses must not be specified if there is no "
+                    f"email_to_addresses: {email_cc_addresses!r}")
             if email_insert:
-                raise ValueError("email_insert must not be specified if "
-                                 "there is no email_to_addresses: {!r}"
-                                 .format(email_insert))
+                raise ValueError(
+                    "email_insert must not be specified if there is no "
+                    f"email_to_addresses: {email_insert!r}")
 
         self.manager.session.post(
             uri=self.uri + '/operations/delete', resource=self, body=body)

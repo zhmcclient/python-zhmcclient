@@ -228,10 +228,9 @@ class Client:
                 # noinspection PyUnboundLocalVariable
                 if current_time > start_time + operation_timeout:
                     raise OperationTimeout(
-                        "Waiting for Console at {} to become available timed "
-                        "out (operation timeout: {} s)".
-                        format(self.session.host, operation_timeout),
-                        operation_timeout)
+                        f"Waiting for Console at {self.session.host} to become "
+                        "available timed out (operation timeout: "
+                        f"{operation_timeout} s)", operation_timeout)
             time.sleep(10)  # Avoid hot spin loop
 
     def to_hmc_yaml(self):
@@ -352,8 +351,7 @@ class Client:
 
         # Dump internal state
         av = self.query_api_version()
-        api_version_str = "{}.{}". \
-            format(av['api-major-version'], av['api-minor-version'])
+        api_version_str = f"{av['api-major-version']}.{av['api-minor-version']}"
         resource_dict['host'] = self.session.host
         resource_dict['api_version'] = api_version_str
 

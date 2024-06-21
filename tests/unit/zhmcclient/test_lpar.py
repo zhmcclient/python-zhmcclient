@@ -302,10 +302,10 @@ class TestLpar:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=lpar.__class__.__name__,
-                               id=id(lpar)),
-                        repr_str)
+        assert re.match(
+            rf'^{lpar.__class__.__name__}\s+at\s+'
+            rf'0x{id(lpar):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "lpar_name", [
@@ -928,8 +928,8 @@ class TestLpar:
             for pname, exp_value in exp_properties.items():
                 act_value = lpar.get_property(pname)
                 assert act_value == exp_value, \
-                    "Unexpected value for property {!r}: got {!r}, " \
-                    "expected {!r}".format(pname, act_value, exp_value)
+                    f"Unexpected value for property {pname!r}: " \
+                    f"got {act_value!r}, expected {exp_value!r}"
 
     TESTCASES_SCSI_DUMP = [
         # Testcases for test_lpar_scsi_dump()
@@ -1119,8 +1119,8 @@ class TestLpar:
             for pname, exp_value in exp_properties.items():
                 act_value = lpar.get_property(pname)
                 assert act_value == exp_value, \
-                    "Unexpected value for property {!r}: got {!r}, " \
-                    "expected {!r}".format(pname, act_value, exp_value)
+                    f"Unexpected value for property {pname!r}: " \
+                    f"got {act_value!r}, expected {exp_value!r}"
 
     TESTCASES_NVME_LOAD = [
         # Testcases for test_lpar_nvme_load()
@@ -1275,8 +1275,8 @@ class TestLpar:
             for pname, exp_value in exp_properties.items():
                 act_value = lpar.get_property(pname)
                 assert act_value == exp_value, \
-                    "Unexpected value for property {!r}: got {!r}, " \
-                    "expected {!r}".format(pname, act_value, exp_value)
+                    f"Unexpected value for property {pname!r}: " \
+                    f"got {act_value!r}, expected {exp_value!r}"
 
     TESTCASES_NVME_DUMP = [
         # Testcases for test_lpar_nvme_dump()
@@ -1429,8 +1429,8 @@ class TestLpar:
             for pname, exp_value in exp_properties.items():
                 act_value = lpar.get_property(pname)
                 assert act_value == exp_value, \
-                    "Unexpected value for property {!r}: got {!r}, " \
-                    "expected {!r}".format(pname, act_value, exp_value)
+                    f"Unexpected value for property {pname!r}: " \
+                    f"got {act_value!r}, expected {exp_value!r}"
 
     @pytest.mark.parametrize(
         "filter_args, exp_names", [
@@ -1476,8 +1476,8 @@ class TestLpar:
             lpar_props = dict(lpar.properties)
             for pname in LIST_PERMITTED_LPARS_PROPS:
                 assert pname in lpar_props, (
-                    "Property {!r} missing from returned LPAR properties, "
-                    "got: {!r}".format(pname, lpar_props))
+                    f"Property {pname!r} missing from returned LPAR "
+                    f"properties, got: {lpar_props!r}")
 
     @pytest.mark.parametrize(
         "list_kwargs, prop_names", [

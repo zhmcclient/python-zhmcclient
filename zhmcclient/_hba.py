@@ -234,9 +234,9 @@ class Hba(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, HbaManager), \
-            "Hba init: Expected manager type {}, got {}" \
-            .format(HbaManager, type(manager))
+        assert isinstance(manager, HbaManager), (
+            f"Hba init: Expected manager type {HbaManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call

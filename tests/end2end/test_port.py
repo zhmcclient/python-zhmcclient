@@ -67,13 +67,14 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
             for port in port_list:
                 adapter_port_tuples.append((adapter, port))
         if not adapter_port_tuples:
-            skip_warn("No adapters with ports on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No adapters with ports on CPC {cpc.name} managed by HMC "
+                f"{hd.host}")
         adapter_port_tuples = pick_test_resources(adapter_port_tuples)
 
         for adapter, port in adapter_port_tuples:
-            print("Testing on CPC {c} with port {p!r} of adapter {a!r}".
-                  format(c=cpc.name, p=port.name, a=adapter.name))
+            print(f"Testing on CPC {cpc.name} with port {port.name!r} of "
+                  f"adapter {adapter.name!r}")
             runtest_find_list(
                 session, adapter.ports, port.name, 'name', 'element-uri',
                 PORT_VOLATILE_PROPS, PORT_MINIMAL_PROPS, PORT_LIST_PROPS)
@@ -101,13 +102,14 @@ def test_port_property(dpm_mode_cpcs):  # noqa: F811
             for port in port_list:
                 adapter_port_tuples.append((adapter, port))
         if not adapter_port_tuples:
-            skip_warn("No adapters with ports on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No adapters with ports on CPC {cpc.name} managed by "
+                f"HMC {hd.host}")
         adapter_port_tuples = pick_test_resources(adapter_port_tuples)
 
         for adapter, port in adapter_port_tuples:
-            print("Testing on CPC {c} with port {p!r} of adapter {a!r}".
-                  format(c=cpc.name, p=port.name, a=adapter.name))
+            print(f"Testing on CPC {cpc.name} with port {port.name!r} of "
+                  f"adapter {adapter.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -138,8 +140,7 @@ def test_port_update(dpm_mode_cpcs):  # noqa: F811
         else:
             warnings.warn(
                 "Deleting test Hipersocket adapter from previous run: "
-                "{a!r} on CPC {c}".
-                format(a=adapter_name, c=cpc.name), UserWarning)
+                f"{adapter_name!r} on CPC {cpc.name}", UserWarning)
             adapter.delete()
 
         adapter = None

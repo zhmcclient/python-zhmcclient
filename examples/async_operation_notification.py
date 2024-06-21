@@ -50,8 +50,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -69,8 +69,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -87,16 +86,16 @@ try:
                 'maximum-memory': 4096,
             })
     except zhmcclient.Error as exc:
-        print("Error: Cannot create partition {} on CPC {}: {}: {}".
-              format(part_name, cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot create partition {part_name} on CPC {cpc.name}: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     try:
         print(f"Starting partition {part.name} asynchronously ...")
         job = part.start(wait_for_completion=False)
 
-        print("Creating a notification receiver for topic {} ...".
-              format(job_topic_name))
+        print("Creating a notification receiver for topic "
+              f"{job_topic_name} ...")
         try:
             receiver = zhmcclient.NotificationReceiver(
                 job_topic_name, host, userid, password)
@@ -114,7 +113,7 @@ try:
                         break
                     else:
                         print("Received completion notification for another job: "
-                              "{} - continue to wait".format(headers['job-uri']))
+                              f"{headers['job-uri']} - continue to wait")
             except zhmcclient.NotificationError as exc:
                 print(f"Notification Error: {exc} - reconnecting")
                 continue
@@ -132,8 +131,8 @@ try:
         try:
             job_status, op_result = job.check_for_completion()
         except zhmcclient.Error as exc:
-            print("Error: Start operation failed with {}: {}".
-                  format(exc.__class__.__name__, exc))
+            print("Error: Start operation failed with "
+                  f"{exc.__class__.__name__}: {exc}")
             sys.exit(1)
         assert job_status == 'complete'
         print("Start operation succeeded")
@@ -144,17 +143,17 @@ try:
             try:
                 part.stop(wait_for_completion=True)
             except zhmcclient.Error as exc:
-                print("Error: Stop operation failed with {}: {}".
-                      format(exc.__class__.__name__, exc))
+                print("Error: Stop operation failed with "
+                      f"{exc.__class__.__name__}: {exc}")
                 sys.exit(1)
 
         print(f"Deleting partition {part.name} ...")
         try:
             part.delete()
         except zhmcclient.Error as exc:
-            print("Error: Cannot delete partition {} on CPC {} for clean up - "
-                  "Please delete it manually: {}: {}".
-                  format(part.name, cpc.name, exc.__class__.__name__, exc))
+            print(f"Error: Cannot delete partition {part.name} on CPC "
+                  f"{cpc.name} for clean up - "
+                  f"Please delete it manually: {exc.__class__.__name_}: {exc}")
             sys.exit(1)
 
 finally:

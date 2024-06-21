@@ -48,10 +48,10 @@ def check(config_items, inventory_data, classname, uri_prop, prop, value):
     missing_uris = {x[uri_prop] for x in inventory_items} - \
         {x[uri_prop] for x in config_items}
     status = 'Error' if extra_uris or missing_uris else 'Ok'
-    print("Checking resource class {!r}: Inventory: {}; DPM config: {} "
-          "(extra: {}, missing: {}); Check status: {}".
-          format(classname, len(inventory_items), len(config_items),
-                 len(extra_uris), len(missing_uris), status))
+    print(f"Checking resource class {classname!r}: "
+          f"Inventory: {len(inventory_items)}; DPM config: {len(config_items)} "
+          f"(extra: {len(extra_uris)}, missing: {len(missing_uris)}); "
+          f"Check status: {status}")
 
 
 print(__doc__)
@@ -63,8 +63,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -73,8 +73,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -85,9 +84,8 @@ try:
     except zhmcclient.ConsistencyError as exc:
         print(f"Error: Cannot export DPM configuration: {exc}")
         sys.exit(1)
-
-    print("Fields in exported DPM configuration: {}".
-          format(', '.join(dpm_config.keys())))
+    fields_str = ', '.join(dpm_config.keys())
+    print(f"Fields in exported DPM configuration: {fields_str}")
 
     print("Checking some items in the exported DPM configuration for "
           "consistency with the inventory data ...")

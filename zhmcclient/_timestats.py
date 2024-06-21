@@ -201,10 +201,9 @@ class TimeStats:
 
             TimeStats: count=1 avg=1.000s min=1.000s max=1.000s get /api/cpcs
         """
-        return "TimeStats: count={:d} avg={:.3f}s min={:.3f}s "\
-               "max={:.3f}s {}".format(
-                   self.count, self.avg_time, self.min_time, self.max_time,
-                   self.name)
+        return (
+            f"TimeStats: count={self.count:d} avg={self.avg_time:.3f}s "
+            f"min={self.min_time:.3f}s max={self.max_time:.3f}s {self.name}")
 
 
 class TimeStatsKeeper:
@@ -313,9 +312,9 @@ class TimeStatsKeeper:
                                      key=lambda item: item[1].avg_time,
                                      reverse=True)
             for name, stats in snapshot_by_avg:
-                ret += "{:5d}  {:7.3f}  {:7.3f}  {:7.3f}  {}\n".format(
-                    stats.count, stats.avg_time, stats.min_time,
-                    stats.max_time, name)
+                ret += (
+                    f"{stats.count:5d}  {stats.avg_time:7.3f}  "
+                    f"{stats.min_time:7.3f}  {stats.max_time:7.3f}  {name}\n")
         else:
             ret += "Disabled.\n"
         return ret.strip()

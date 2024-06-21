@@ -63,13 +63,12 @@ def test_certificates_find_list(all_cpcs):  # noqa: F811
         # Pick the certificates to test with
         cert_list = console.certificates.list()
         if not cert_list:
-            skip_warn("No certificates on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No certificates on CPC {cpc.name} managed by HMC {hd.host}")
         cert_list = pick_test_resources(cert_list)
 
         for cert in cert_list:
-            print("Testing on CPC {c} with cert {ce!r}".
-                  format(c=cpc.name, ce=cert.name))
+            print(f"Testing on CPC {cpc.name} with cert {cert.name!r}")
             # noinspection PyTypeChecker
             runtest_find_list(
                 session, console.certificates, cert.name, 'name', None,

@@ -57,8 +57,7 @@ def fixtureid_hmc_definition(fixture_value):
     elif hd.mock_file:
         hmc_str = f"(mock_file={hd.mock_file})"
     else:
-        hmc_str = "(host={h}, userid={u})".format(
-            h=hd.host, u=hd.userid)
+        hmc_str = f"(host={hd.host}, userid={hd.userid})"
     ret_str = f"hmc_definition={hd.nickname}{hmc_str}"
     return ret_str
 
@@ -170,8 +169,9 @@ def setup_hmc_session(hd):
         try:
             session.logon()
         except zhmcclient.Error as exc:
-            msg = "Cannot log on to HMC {0} at {1} due to {2}: {3}". \
-                format(hd.nickname, hd.host, exc.__class__.__name__, exc)
+            msg = (
+                f"Cannot log on to HMC {hd.nickname} at {hd.host} "
+                f"due to {exc.__class__.__name__}: {exc}")
             hd.skip_msg = msg
             pytest.skip(msg)
 

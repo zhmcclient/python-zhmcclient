@@ -62,13 +62,13 @@ def test_capgrp_find_list(dpm_mode_cpcs):  # noqa: F811
         # Pick the capacity groups to test with
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
-            skip_warn("No capacity groups defined on CPC {c} managed by "
-                      "HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn(f"No capacity groups defined on CPC {cpc.name} managed "
+                      f"by HMC {hd.host}")
         capgrp_list = pick_test_resources(capgrp_list)
 
         for capgrp in capgrp_list:
-            print("Testing on CPC {c} with capacity group {g!r}".
-                  format(c=cpc.name, g=capgrp.name))
+            print(f"Testing on CPC {cpc.name} with capacity group "
+                  f"{capgrp.name!r}")
             runtest_find_list(
                 session, cpc.capacity_groups, capgrp.name, 'name',
                 'element-uri', CAPGRP_VOLATILE_PROPS, CAPGRP_MINIMAL_PROPS,
@@ -92,13 +92,13 @@ def test_capgrp_property(dpm_mode_cpcs):  # noqa: F811
         # Pick the capacity groups to test with
         capgrp_list = cpc.capacity_groups.list()
         if not capgrp_list:
-            skip_warn("No capacity groups defined on CPC {c} managed by "
-                      "HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn(f"No capacity groups defined on CPC {cpc.name} managed "
+                      f"by HMC {hd.host}")
         capgrp_list = pick_test_resources(capgrp_list)
 
         for capgrp in capgrp_list:
-            print("Testing on CPC {c} with capacity group {g!r}".
-                  format(c=cpc.name, g=capgrp.name))
+            print(f"Testing on CPC {cpc.name} with capacity group "
+                  f"{capgrp.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -129,9 +129,8 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test capacity group from previous run: {p!r} "
-                "on CPC {c}".
-                format(p=capgrp_name, c=cpc.name), UserWarning)
+                "Deleting test capacity group from previous run: "
+                f"{capgrp_name!r} on CPC {cpc.name}", UserWarning)
             capgrp.delete()
         try:
             capgrp = cpc.capacity_groups.find(name=capgrp_name_new)
@@ -139,9 +138,8 @@ def test_capgrp_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test capacity group from previous run: {p!r} "
-                "on CPC {c}".
-                format(p=capgrp_name_new, c=cpc.name), UserWarning)
+                f"Deleting test capacity group from previous run: "
+                f"{capgrp_name_new!r} on CPC {cpc.name}", UserWarning)
             capgrp.delete()
 
         # Test creating the capacity group

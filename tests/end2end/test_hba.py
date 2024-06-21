@@ -69,13 +69,14 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
             for hba in hba_list:
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
-            skip_warn("No partitions with HBAs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions with HBAs on CPC {cpc.name} managed by HMC "
+                f"{hd.host}")
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:
-            print("Testing on CPC {c} with HBA {h!r} of partition {p!r}".
-                  format(c=cpc.name, h=hba.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with HBA {hba.name!r} of "
+                  f"partition {part.name!r}")
             runtest_find_list(
                 session, part.hbas, hba.name, 'name', 'wwpn',
                 HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
@@ -103,13 +104,14 @@ def test_hba_property(dpm_mode_cpcs):  # noqa: F811
             for hba in hba_list:
                 part_hba_tuples.append((part, hba))
         if not part_hba_tuples:
-            skip_warn("No partitions with HBAs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions with HBAs on CPC {cpc.name} managed by "
+                f"HMC {hd.host}")
         part_hba_tuples = pick_test_resources(part_hba_tuples)
 
         for part, hba in part_hba_tuples:
-            print("Testing on CPC {c} with HBA {h!r} of partition {p!r}".
-                  format(c=cpc.name, h=hba.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with HBA {hba.name!r} of "
+                  f"partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -142,8 +144,8 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: {p!r} on CPC {c}".
-                format(p=part_name, c=cpc.name), UserWarning)
+                f"Deleting test partition from previous run: {part_name!r} on "
+                f"CPC {cpc.name}", UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
                 part.stop()
@@ -154,9 +156,8 @@ def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
 
             # Pick a FICON adapter backing the HBA
             adapters = cpc.adapters.findall(**{'type': 'fcp'})
-            assert len(adapters) >= 1, \
-                "CPC {c} does not have any FCP-type FICON adapters". \
-                format(c=cpc.name)
+            assert len(adapters) >= 1, (
+                f"CPC {cpc.name} does not have any FCP-type FICON adapters")
             adapter = adapters[-1]  # Pick the last adapter found
             port = adapter.ports.list()[0]  # Pick its first port
 

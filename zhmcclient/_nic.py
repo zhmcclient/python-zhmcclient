@@ -265,9 +265,9 @@ class Nic(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, NicManager), \
-            "Nic init: Expected manager type {}, got {}" \
-            .format(NicManager, type(manager))
+        assert isinstance(manager, NicManager), (
+            f"Nic init: Expected manager type {NicManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call
@@ -390,13 +390,11 @@ class Nic(BaseResource):
                     break
             else:
                 raise ConsistencyError(
-                    "HMC inconsistency: NIC {c}.{p}.{n} (URI {nu}) has a "
-                    "backing adapter {c}.{a} (URI {au}) that does not have a "
-                    "port with the required port index {i} ".
-                    format(c=cpc.name, p=partition.name, n=self.name,
-                           nu=self.uri, a=adapter.name, au=adapter.uri,
-                           i=port_index)
-                )
+                    f"HMC inconsistency: NIC {cpc.name}.{partition.name}."
+                    f"{self.name} (URI {self.uri}) has a backing adapter "
+                    f"{cpc.name}.{adapter.name} (URI {adapter.uri}) that does "
+                    f"not have a port with the required port index "
+                    f"{port_index}")
             return port
 
         # Handle port-based NICs (RoCE, CNA)
@@ -412,7 +410,6 @@ class Nic(BaseResource):
             return port
 
         raise ConsistencyError(
-            "HMC inconsistency: NIC {c}.{p}.{n} (URI {nu}) has neither "
-            "'virtual-switch-uri' nor 'network-adapter-port-uri' properties".
-            format(c=cpc.name, p=partition.name, n=self.name, nu=self.uri)
-        )
+            f"HMC inconsistency: NIC {cpc.name}.{partition.name}.{self.name} "
+            f"(URI {self.uri}) has neither 'virtual-switch-uri' nor "
+            "'network-adapter-port-uri' properties")

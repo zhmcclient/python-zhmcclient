@@ -68,14 +68,14 @@ def test_vfunc_find_list(dpm_mode_cpcs):  # noqa: F811
             for vfunc in vfunc_list:
                 part_vfunc_tuples.append((part, vfunc))
         if not part_vfunc_tuples:
-            skip_warn("No partitions with virtual functions on CPC {c} "
-                      "managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions with virtual functions on CPC {cpc.name} "
+                f"managed by HMC {hd.host}")
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
-            print("Testing on CPC {c} with virtual function {f!r} of partition "
-                  "{p!r}".format(c=cpc.name, f=vfunc.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with virtual function "
+                  f"{vfunc.name!r} of partition {part.name!r}")
             runtest_find_list(
                 session, part.virtual_functions, vfunc.name, 'name',
                 'description', VFUNC_VOLATILE_PROPS, VFUNC_MINIMAL_PROPS,
@@ -104,14 +104,14 @@ def test_vfunc_property(dpm_mode_cpcs):  # noqa: F811
             for vfunc in vfunc_list:
                 part_vfunc_tuples.append((part, vfunc))
         if not part_vfunc_tuples:
-            skip_warn("No partitions with virtual functions on CPC {c} "
-                      "managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions with virtual functions on CPC {cpc.name} "
+                f"managed by HMC {hd.host}")
         part_vfunc_tuples = pick_test_resources(part_vfunc_tuples)
 
         for part, vfunc in part_vfunc_tuples:
-            print("Testing on CPC {c} with virtual function {f!r} of partition "
-                  "{p!r}".format(c=cpc.name, f=vfunc.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with virtual function "
+                  f"{vfunc.name!r} of partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -146,8 +146,8 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: {p!r} on CPC {c}".
-                format(p=part_name, c=cpc.name), UserWarning)
+                f"Deleting test partition from previous run: {part_name!r} "
+                f"on CPC {cpc.name}", UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
                 part.stop()
@@ -159,8 +159,8 @@ def test_vfunc_crud(dpm_mode_cpcs):  # noqa: F811
             # Pick a zEDC accelerator adapter that will back the virtual func.
             edc_adapters = cpc.adapters.findall(type='zedc')
             if not edc_adapters:
-                skip_warn("No zEDC accelerator adapters on CPC {c} managed by "
-                          "HMC {h}".format(c=cpc.name, h=hd.host))
+                skip_warn(f"No zEDC accelerator adapters on CPC {cpc.name} "
+                          f"managed by HMC {hd.host}")
             edc_adapter = edc_adapters[-1]  # Pick the last one
 
             # Create a partition that will lateron contain the virtual function

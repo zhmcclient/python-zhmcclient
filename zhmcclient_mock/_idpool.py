@@ -42,8 +42,8 @@ class IdPool:
         """
 
         if lowest > highest:
-            raise ValueError("Lowest value {} is higher than highest {}"
-                             .format(lowest, highest))
+            raise ValueError(
+                f"Lowest value {lowest} is higher than highest {highest}")
 
         # ID value range, using slice semantics (end points past the highest)
         self._range_start = lowest
@@ -127,5 +127,5 @@ class IdPool:
             self._used.remove(id)
             self._free.add(id)
         elif fail_if_not_allocated:
-            raise ValueError("ID value to be freed is not currently "
-                             "allocated: {}".format(id))
+            raise ValueError(
+                f"ID value to be freed is not currently allocated: {id}")

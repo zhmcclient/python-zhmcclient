@@ -67,9 +67,9 @@ class TestFakedHmc:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=hmc.__class__.__name__, id=id(hmc)),
-                        repr_str)
+        assert re.match(
+            rf"^{hmc.__class__.__name__}\s+at\s+"
+            rf"0x{id(hmc):08x}\s+\(\\n.*", repr_str)
 
     def test_hmc_attrs(self):
         """Test FakedHmc attributes."""
@@ -315,10 +315,9 @@ class TestFakedBase:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=resource.__class__.__name__,
-                               id=id(resource)),
-                        repr_str)
+        assert re.match(
+            rf"^{resource.__class__.__name__}\s+at\s+"
+            rf"0x{id(resource):08x}\s+\(\\n.*", repr_str)
 
     def test_manager_repr(self):
         """Test FakedBaseManager.__repr__()."""
@@ -329,10 +328,9 @@ class TestFakedBase:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=manager.__class__.__name__,
-                               id=id(manager)),
-                        repr_str)
+        assert re.match(
+            rf"^{manager.__class__.__name__}\s+at\s+"
+            rf"0x{id(manager):08x}\s+\(\\n.*", repr_str)
 
     def test_manager_attr(self):
         """Test FakedBaseManager attributes."""
@@ -575,10 +573,9 @@ class TestFakedAdapter:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=adapter.__class__.__name__,
-                               id=id(adapter)),
-                        repr_str)
+        assert re.match(
+            rf"^{adapter.__class__.__name__}\s+at\s+"
+            rf"0x{id(adapter):08x}\s+\(\\n.*", repr_str)
 
     def test_adapters_attr(self):
         """Test CPC 'adapters' attribute."""
@@ -701,9 +698,9 @@ class TestFakedCpc:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=cpc.__class__.__name__, id=id(cpc)),
-                        repr_str)
+        assert re.match(
+            rf"^{cpc.__class__.__name__}\s+at\s+"
+            rf"0x{id(cpc):08x}\s+\(\\n.*", repr_str)
 
     def test_cpcs_attr(self):
         """Test HMC 'cpcs' attribute."""
@@ -809,8 +806,8 @@ class TestFakedHba:
         self.adapter1_oid = '747-abc-12345'
         self.adapter1_uri = f'/api/adapters/{self.adapter1_oid}'
         self.port1_oid = '23'
-        self.port1_uri = '/api/adapters/{}/storage-ports/{}' \
-            .format(self.adapter1_oid, self.port1_oid)
+        self.port1_uri = (f'/api/adapters/{self.adapter1_oid}/storage-ports/'
+                          f'{self.port1_oid}')
         self.hba1_oid = '999-123-xyz'
 
         self.cpc1_in_props = {'name': 'cpc1'}
@@ -1086,8 +1083,8 @@ class TestFakedNic:
         self.adapter1_oid = '380-xyz-12345'
         self.adapter1_uri = f'/api/adapters/{self.adapter1_oid}'
         self.port1_oid = '32'
-        self.port1_uri = '/api/adapters/{}/network-ports/{}' \
-            .format(self.adapter1_oid, self.port1_oid)
+        self.port1_uri = (f'/api/adapters/{self.adapter1_oid}/'
+                          f'network-ports/{self.port1_oid}')
         self.nic1_oid = 'ddd-999-123'
 
         self.cpc1_in_props = {'name': 'cpc1'}
@@ -1275,10 +1272,9 @@ class TestFakedPartition:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=partition.__class__.__name__,
-                               id=id(partition)),
-                        repr_str)
+        assert re.match(
+            rf"^{partition.__class__.__name__}\s+at\s+"
+            rf"0x{id(partition):08x}\s+\(\\n.*", repr_str)
 
     def test_partitions_attr(self):
         """Test CPC 'partitions' attribute."""
@@ -2153,24 +2149,24 @@ class TestFakedMetricsContext:
             ])
         faked_hmc.add_metric_values(mo_val3_input)
 
-        exp_mv_resp = '''"partition-usage"
+        exp_mv_resp = f'''"partition-usage"
 "/api/partitions/fake-oid"
-{ts1}
+{ts1_exp}
 12,3
 
 "/api/partitions/fake-oid"
-{ts2}
+{ts2_exp}
 10,5
 
 
 "dpm-system-usage-overview"
 "/api/cpcs/fake-oid"
-{ts3}
+{ts3_exp}
 50,20
 
 
 
-'''.format(ts1=ts1_exp, ts2=ts2_exp, ts3=ts3_exp)
+'''
 
         # Test case where only one M.G.Def is tested
         mc_in_props = {
@@ -2182,10 +2178,9 @@ class TestFakedMetricsContext:
         # the function to be tested:
         mv_resp = mc.get_metric_values_response()
 
-        assert mv_resp == exp_mv_resp, \
-            "Actual response string:\n{!r}\n" \
-            "Expected response string:\n{!r}\n". \
-            format(mv_resp, exp_mv_resp)
+        assert mv_resp == exp_mv_resp, (
+            f"Actual response string:\n{mv_resp!r}\n"
+            f"Expected response string:\n{exp_mv_resp!r}\n")
 
 
 def test_mgd_attr():

@@ -252,15 +252,13 @@ class HMCInventoryFile:
                         yaml.scanner.ScannerError) as exc:
                     new_exc = HMCInventoryFileError(
                         "Invalid YAML syntax in HMC inventory file "
-                        "{0!r}: {1} {2}".
-                        format(self._filepath, exc.__class__.__name__, exc))
+                        f"{self._filepath!r}: {exc.__class__.__name__} {exc}")
                     new_exc.__cause__ = None
                     raise new_exc  # HMCInventoryFileError
         except OSError as exc:
             if exc.errno == errno.ENOENT:
                 new_exc = HMCInventoryFileError(
-                    "The HMC inventory file {0!r} was not found".
-                    format(self._filepath))
+                    f"The HMC inventory file {self._filepath!r} was not found")
                 new_exc.__cause__ = None
                 raise new_exc  # HMCInventoryFileError
             raise
@@ -268,27 +266,24 @@ class HMCInventoryFile:
         try:
             jsonschema.validate(data, HMC_INVENTORY_FILE_SCHEMA)
         except jsonschema.exceptions.ValidationError as exc:
+            elem = '.'.join(str(e) for e in exc.absolute_path)
+            schemaitem = '.'.join(str(e) for e in exc.absolute_schema_path)
             new_exc = HMCInventoryFileError(
-                "Invalid data format in HMC inventory file {f}: {msg}; "
-                "Offending element: {elem}; "
-                "Schema item: {schemaitem}; "
-                "Validator: {valname}={valvalue}".
-                format(f=self._filepath, msg=exc.message,
-                       elem='.'.join(str(e) for e in exc.absolute_path),
-                       schemaitem='.'.join(str(e) for e in
-                                           exc.absolute_schema_path),
-                       valname=exc.validator,
-                       valvalue=exc.validator_value))
+                "Invalid data format in HMC inventory file "
+                f"{self._filepath}: {exc.message}; "
+                f"Offending element: {elem}; "
+                f"Schema item: {schemaitem}; "
+                f"Validator: {exc.validator}={exc.validator_value}")
             new_exc.__cause__ = None
             raise new_exc  # HMCInventoryFileError
 
         self._data.update(data)
 
     def __repr__(self):
-        return "HMCVaultFile(" \
-            "filepath={s.filepath!r}, " \
-            "data={s.data!r})". \
-            format(s=self)
+        return (
+            "HMCVaultFile("
+            f"filepath={self.filepath!r}, "
+            f"data={self.data!r})")
 
     @property
     def filepath(self):

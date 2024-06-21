@@ -70,13 +70,12 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
         # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn("No partitions on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No partitions on CPC {cpc.name} managed by "
+                      f"HMC {hd.host}")
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
-            print("Testing on CPC {c} with partition {p!r}".
-                  format(c=cpc.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with partition {part.name!r}")
             runtest_find_list(
                 session, cpc.partitions, part.name, 'name', 'status',
                 PART_VOLATILE_PROPS, PART_MINIMAL_PROPS, PART_LIST_PROPS,
@@ -100,13 +99,12 @@ def test_part_property(dpm_mode_cpcs):  # noqa: F811
         # Pick the partitions to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn("No partitions on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No partitions on CPC {cpc.name} managed by HMC "
+                      f"{hd.host}")
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
-            print("Testing on CPC {c} with partition {p!r}".
-                  format(c=cpc.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with partition {part.namep!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -137,8 +135,8 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: {p!r} on CPC {c}".
-                format(p=part_name, c=cpc.name), UserWarning)
+                f"Deleting test partition from previous run: {part_name!r} on "
+                f"CPC {cpc.name}", UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
                 part.stop()
@@ -149,8 +147,8 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: {p!r} on CPC {c}".
-                format(p=part_name_new, c=cpc.name), UserWarning)
+                f"Deleting test partition from previous run: {part_name_new!r} "
+                f"on CPC {cpc.name}", UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
                 part.stop()
@@ -229,8 +227,8 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn("No partitions on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
 
         test_part = None
         for part in part_list:
@@ -238,16 +236,16 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
             # Test: List all messages (without begin or end)
             try:
                 if DEBUG:
-                    print("Debug: Test: Listing OS messages of partition {} "
-                          "with no begin/end".format(part.name))
+                    print("Debug: Test: Listing OS messages of partition "
+                          f"{part.name} with no begin/end")
                 result = part.list_os_messages()
             except zhmcclient.HTTPError as exc:
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the partition is not
                     # available
                     if DEBUG:
-                        print("Debug: Partition {} cannot list OS messages".
-                              format(part.name))
+                        print(f"Debug: Partition {part.name} cannot list OS "
+                              "messages")
                     continue
                 raise
 
@@ -257,19 +255,19 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
                 break
 
             if DEBUG:
-                print("Debug: Partition {} has only {} OS messages".
-                      format(part.name, len(all_messages)))
+                print(f"Debug: Partition {part.name} has only "
+                      f"{len(all_messages)} OS messages")
 
         if test_part is None:
-            skip_warn("No partition on CPC {c} has the minimum number of 3 OS "
-                      "messages for the test".format(c=cpc.name))
+            skip_warn(f"No partition on CPC {cpc.name} has the minimum number "
+                      "of 3 OS messages for the test")
 
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
         if DEBUG:
-            print("Debug: Test: Listing OS messages of partition {} with "
-                  "begin={}, end={}".format(test_part.name, all_begin, all_end))
+            print("Debug: Test: Listing OS messages of partition "
+                  f"{test_part.name} with begin={all_begin}, end={all_end}")
         result = test_part.list_os_messages(begin=all_begin, end=all_end)
         messages = result['os-messages']
         assert len(messages) == all_end - all_begin + 1
@@ -287,8 +285,8 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
         if DEBUG:
-            print("Debug: Test: Listing OS messages of partition {} with "
-                  "begin={}, end={}".format(test_part.name, begin, end))
+            print("Debug: Test: Listing OS messages of partition "
+                  f"{test_part.name} with begin={begin}, end={end}")
         result = test_part.list_os_messages(begin=begin, end=end)
         messages = result['os-messages']
         assert len(messages) == end - begin + 1
@@ -374,9 +372,8 @@ def test_console_list_permitted_partitions(desc, input_kwargs, exp_props,
 
         permitted_part_list = console.list_permitted_partitions(**input_kwargs)
         if not permitted_part_list:
-            skip_warn("No partitions on CPC {c} managed by HMC {h} for "
-                      "the user {u}".format(c=cpc.name, h=hd.host,
-                                            u=session.userid))
+            skip_warn(f"No partitions on CPC {cpc.name} managed by HMC "
+                      f"{hd.host} for the user {session.userid}")
 
         permitted_part_list = pick_test_resources(permitted_part_list)
         for partition in permitted_part_list:
@@ -471,8 +468,8 @@ def test_part_get_sustainability_data(
         # Pick the partition to test with
         part_list = cpc.partitions.list()
         if not part_list:
-            skip_warn("No partitions on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
 
         # Pick a random partition to test with
         part = random.choice(part_list)
@@ -489,13 +486,13 @@ def test_part_get_sustainability_data(
 
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn("HMC userid {u!r} is not authorized for task "
-                          "'Environmental Dashboard' on HMC {h}".
-                          format(u=hd.userid, h=hd.host))
+                skip_warn(
+                    f"HMC userid {hd.userid!r} is not authorized for task "
+                    f"'Environmental Dashboard' on HMC {hd.host}")
             elif exc.http_status == 404 and exc.reason == 1:
-                skip_warn("Partition {c} on HMC {h} does not support "
-                          "feature: {e}".
-                          format(c=part.name, h=hd.host, e=exc))
+                skip_warn(
+                    f"Partition {part.name} on HMC {hd.host} does not support "
+                    f"feature: {exc}")
             else:
                 raise
 
@@ -533,11 +530,12 @@ def test_part_get_sustainability_data(
                     # issue only a warning (as opposed to failing).
                     delta_sec = abs((dp_timestamp_dt - exp_oldest_dt).seconds)
                     if delta_sec > 15 * 60:
-                        print("Warning: Oldest data point of metric {!r} is "
-                              "not within 15 minutes of range start: Oldest "
-                              "data point: {}, Range start: {}, Delta: {} sec".
-                              format(metric_name, dp_timestamp_dt,
-                                     exp_oldest_dt, delta_sec))
+                        print(f"Warning: Oldest data point of metric "
+                              f"{metric_name!r} is not within 15 minutes of "
+                              "range start: "
+                              f"Oldest data point: {dp_timestamp_dt}, "
+                              f"Range start: {exp_oldest_dt}, "
+                              f"Delta: {delta_sec} sec")
                 else:
 
                     # For second oldest timestamp on, verify that the delta
@@ -549,10 +547,10 @@ def test_part_get_sustainability_data(
                     if abs(delta_td.seconds - exp_delta.seconds) > \
                             tolerance_pct / 100 * exp_delta.seconds:
                         print("Warning: Timestamp of a data point of metric "
-                              "{!r} is not within expected delta of its "
-                              "previous data point. Actual delta: {}, "
-                              "Expected delta: {} (+/-{}%)".
-                              format(metric_name, delta_td, exp_delta,
-                                     tolerance_pct))
+                              f"{metric_name!r} is not within expected delta "
+                              "of its previous data point. "
+                              f"Actual delta: {delta_td}, "
+                              f"Expected delta: {exp_delta} "
+                              f"(+/-{tolerance_pct}%)")
 
                 previous_dt = dp_timestamp_dt

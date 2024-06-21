@@ -123,10 +123,10 @@ class TestConsole:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=console.__class__.__name__,
-                               id=id(console)),
-                        repr_str)
+        assert re.match(
+            rf'^{console.__class__.__name__}\s+at\s+'
+            rf'0x{id(console):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "wait", [
@@ -167,7 +167,7 @@ class TestConsole:
             except Error as exc:
                 pytest.fail(
                     "Unexpected zhmcclient exception during "
-                    "query_api_version() after HMC restart: {}".format(exc))
+                    f"query_api_version() after HMC restart: {exc}")
         else:
             # The HMC is expected to still be in the restart process, and
             # therefore a simple operation is expected to fail. This test
@@ -179,7 +179,7 @@ class TestConsole:
             except Exception as exc:  # pylint: disable=broad-except
                 pytest.fail(
                     "Unexpected non-zhmcclient exception during "
-                    "query_api_version() after HMC restart: {}".format(exc))
+                    f"query_api_version() after HMC restart: {exc}")
             else:
                 pytest.fail(
                     "Unexpected success of query_api_version() after HMC "
@@ -217,7 +217,7 @@ class TestConsole:
         except Exception as exc:  # pylint: disable=broad-except
             pytest.fail(
                 "Unexpected non-zhmcclient exception during "
-                "query_api_version() after HMC shutdown: {}".format(exc))
+                f"query_api_version() after HMC shutdown: {exc}")
         else:
             pytest.fail(
                 "Unexpected success of query_api_version() after HMC "

@@ -44,8 +44,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -54,8 +54,7 @@ try:
     print("Finding CPCs in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
 
     print("Selecting a z14 or higher CPC ...")
@@ -67,14 +66,14 @@ try:
             cpc = _cpc
             break
     if not cpc:
-        print("Error: HMC at {} does not manage any z14 or higher CPC in DPM "
-              "mode".format(host))
+        print(f"Error: HMC at {host} does not manage any z14 or higher CPC "
+              "in DPM mode")
         sys.exit(1)
-    print("Using CPC {} (SE version: {})".
-          format(cpc.name, cpc.get_property('se-version')))
+    se_version = cpc.get_property('se-version')
+    print(f"Using CPC {cpc.name} (SE version: {se_version})")
 
-    print("Listing storage groups of CPC {} and selecting the first FCP "
-          "storage group ...".format(cpc.name))
+    print(f"Listing storage groups of CPC {cpc.name} and selecting the "
+          "first FCP storage group ...")
     storage_groups = cpc.list_associated_storage_groups()
     sg = None
     for _sg in storage_groups:
@@ -82,19 +81,17 @@ try:
             sg = _sg
             break
     if not sg:
-        print("Could not find any FCP storage group for CPC {}".
-              format(cpc.name))
+        print(f"Could not find any FCP storage group for CPC {cpc.name}")
         sys.exit(1)
-    print("Using FCP storage group: {} (type: {}, shared: {}, fulfillment: {})".
-          format(sg.name, sg.get_property('type'), sg.get_property('shared'),
-                 sg.get_property('fulfillment-state')))
+    print(f"Using FCP storage group: {sg.name} (type: {sg.get_property('type')}, "
+          f"shared: {sg.get_property('shared')}, "
+          f"fulfillment: {sg.get_property('fulfillment-state')})")
 
     print(f"Listing partitions attached to storage group {sg.name} ...")
     parts = sg.list_attached_partitions()
     part_names = [p.name for p in parts]
     part_names_str = ', '.join(part_names) if part_names else "<none>"
-    print("Partitions attached to storage group {}: {}".
-          format(sg.name, part_names_str))
+    print(f"Partitions attached to storage group {sg.name}: {part_names_str}")
 
     print(f"Getting connection report for storage group {sg.name} ...")
     report = sg.get_connection_report()

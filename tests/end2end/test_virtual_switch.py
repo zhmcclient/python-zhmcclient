@@ -62,14 +62,14 @@ def test_vswitch_find_list(dpm_mode_cpcs):  # noqa: F811
         # Pick the virtual switches to test with
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
-            skip_warn("No virtual switches (= no OSA/HS network adapters) on "
-                      "CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                "No virtual switches (= no OSA/HS network adapters) on "
+                f"CPC {cpc.name} managed by HMC {hd.host}")
         vswitch_list = pick_test_resources(vswitch_list)
 
         for vswitch in vswitch_list:
-            print("Testing on CPC {c} with virtual switch {v!r}".
-                  format(c=cpc.name, v=vswitch.name))
+            print(f"Testing on CPC {cpc.name} with virtual switch "
+                  f"{vswitch.name!r}")
             runtest_find_list(
                 session, cpc.virtual_switches, vswitch.name, 'name',
                 'description', VSWITCH_VOLATILE_PROPS, VSWITCH_MINIMAL_PROPS,
@@ -93,14 +93,14 @@ def test_vswitch_property(dpm_mode_cpcs):  # noqa: F811
         # Pick the virtual switches to test with
         vswitch_list = cpc.virtual_switches.list()
         if not vswitch_list:
-            skip_warn("No virtual switches (= no OSA/HS network adapters) on "
-                      "CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                "No virtual switches (= no OSA/HS network adapters) on "
+                f"CPC {cpc.name} managed by HMC {hd.host}")
         vswitch_list = pick_test_resources(vswitch_list)
 
         for vswitch in vswitch_list:
-            print("Testing on CPC {c} with virtual switch {v!r}".
-                  format(c=cpc.name, v=vswitch.name))
+            print(f"Testing on CPC {cpc.name} with virtual switch "
+                  f"{vswitch.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'

@@ -82,8 +82,7 @@ class StorageVolumeTemplateManager(BaseManager):
             class_name=RC_STORAGE_TEMPLATE_VOLUME,
             session=storage_group_template.manager.session,
             parent=storage_group_template,
-            base_uri='{}/storage-template-volumes'.format(
-                storage_group_template.uri),
+            base_uri=f'{storage_group_template.uri}/storage-template-volumes',
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -153,8 +152,7 @@ class StorageVolumeTemplateManager(BaseManager):
           :exc:`~zhmcclient.ConnectionError`
         """
         result_prop = 'storage-template-volumes'
-        list_uri = '{}/storage-template-volumes'.format(
-            self.storage_group_template.uri)
+        list_uri = f'{self.storage_group_template.uri}/storage-template-volumes'
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
@@ -255,9 +253,9 @@ class StorageVolumeTemplate(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, StorageVolumeTemplateManager), \
-            "StorageVolumeTemplate init: Expected manager type {}, got {}" \
-            .format(StorageVolumeTemplateManager, type(manager))
+        assert isinstance(manager, StorageVolumeTemplateManager), (
+            "StorageVolumeTemplate init: Expected manager type "
+            f"{StorageVolumeTemplateManager}, got {type(manager)}")
         super().__init__(
             manager, uri, name, properties)
 

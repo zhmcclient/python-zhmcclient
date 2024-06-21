@@ -74,8 +74,8 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
             for stovol in stovol_list:
                 grp_vol_tuples.append((stogrp, stovol))
         if not grp_vol_tuples:
-            skip_warn("No storage groups with volumes associated to CPC {c} "
-                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn("No storage groups with volumes associated to CPC "
+                      f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         # Storage volumes were introduced in HMC 2.14.0 but their names were
@@ -83,11 +83,10 @@ def test_stovol_find_list(dpm_mode_cpcs):  # noqa: F811
         unique_name = (hmc_version >= (2, 14, 1))
         if not unique_name:
             print("Tolerating non-unique storage volume names on HMC "
-                  "version {}".format(hmc_version))
+                  f"version {hmc_version}")
         for stogrp, stovol in grp_vol_tuples:
-            print("Testing on CPC {c} with storage volume {v!r} of "
-                  "storage group {g!r}".
-                  format(c=cpc.name, v=stovol.name, g=stogrp.name))
+            print(f"Testing on CPC {cpc.name} with storage volume "
+                  f"{stovol.name!r} of storage group {stogrp.name!r}")
             runtest_find_list(
                 session, stogrp.storage_volumes, stovol.name, 'name', 'size',
                 STOVOL_VOLATILE_PROPS, STOVOL_MINIMAL_PROPS, STOVOL_LIST_PROPS,
@@ -122,8 +121,8 @@ def test_stovol_property(dpm_mode_cpcs):  # noqa: F811
             for stovol in stovol_list:
                 grp_vol_tuples.append((stogrp, stovol))
         if not grp_vol_tuples:
-            skip_warn("No storage groups with volumes associated to CPC {c} "
-                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn("No storage groups with volumes associated to CPC "
+                      f"{cpc.name} managed by HMC {hd.host}")
         grp_vol_tuples = pick_test_resources(grp_vol_tuples)
 
         # Storage volumes were introduced in HMC 2.14.0 but their names were
@@ -131,11 +130,10 @@ def test_stovol_property(dpm_mode_cpcs):  # noqa: F811
         unique_name = (hmc_version >= (2, 14, 1))
         if not unique_name:
             print("Tolerating non-unique storage volume names on HMC "
-                  "version {}".format(hmc_version))
+                  f"version {hmc_version}")
         for stogrp, stovol in grp_vol_tuples:
-            print("Testing on CPC {c} with storage volume {v!r} of "
-                  "storage group {g!r}".
-                  format(c=cpc.name, v=stovol.name, g=stogrp.name))
+            print(f"Testing on CPC {cpc.name} with storage volume "
+                  f"{stovol.name!r} of storage group {stogrp.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -170,8 +168,8 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group from previous run: {g!r} on "
-                "CPC {c}".format(g=stogrp_name, c=cpc.name), UserWarning)
+                "Deleting test storage group from previous run: "
+                f"{stogrp_name!r} on CPC {cpc.name}", UserWarning)
             stogrp.delete()
 
         stogrp = None
@@ -206,20 +204,20 @@ def test_stovol_crud(dpm_mode_cpcs):  # noqa: F811
                     f"Input property {pn!r} is not in created storage volume:\n"
                     f"{stovol!r}")
                 assert stovol.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage volume:\n" \
-                    "{!r}".format(pn, sorted(stovol.properties))
+                    f"Unexpected value for property {pn!r} of storage " \
+                    f"volume:\n{stovol.properties!r}"
             stovol.pull_full_properties()
             for pn, exp_value in stovol_input_props.items():
                 assert stovol.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage volume:\n" \
-                    "{!r}".format(pn, sorted(stovol.properties))
+                    f"Unexpected value for property {pn!r} of storage " \
+                    f"volume:\n{stovol.properties!r}"
             for pn, exp_value in stovol_auto_props.items():
                 assert pn in stovol.properties, (
                     f"Automatically returned property {pn!r} is not in "
                     f"created storage volume:\n{stovol!r}")
                 assert stovol.properties[pn] == exp_value, \
-                    "Unexpected value for property {!r} of storage volume:\n" \
-                    "{!r}".format(pn, sorted(stovol.properties))
+                    f"Unexpected value for property {pn!r} of storage " \
+                    f"volume:\n{stovol.properties!r}"
 
             # Test updating a property of the storage volume
 

@@ -226,9 +226,9 @@ class StorageGroupTemplate(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, StorageGroupTemplateManager), \
-            "StorageGroupTemplate init: Expected manager type {}, got {}" \
-            .format(StorageGroupTemplateManager, type(manager))
+        assert isinstance(manager, StorageGroupTemplateManager), (
+            "StorageGroupTemplate init: Expected manager type "
+            f"{StorageGroupTemplateManager}, got {type(manager)}")
         super().__init__(
             manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):

@@ -25,9 +25,7 @@ HMC.
 import sys
 import uuid
 import logging
-import time
 import requests.packages.urllib3
-from time import sleep
 from datetime import datetime, timedelta
 
 import zhmcclient
@@ -50,9 +48,11 @@ ENABLE_LOGGING = False
 if ENABLE_LOGGING:
     logging.basicConfig(level=logging.DEBUG, stream=sys.stderr)
 
+
 def delta_ms(start_dt, end_dt):
     """Return float that is the time delta in milliseconds"""
     return (end_dt - start_dt) / timedelta(microseconds=1) / 1000
+
 
 print(__doc__)
 
@@ -63,8 +63,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 cleanup_partition = None
@@ -74,8 +74,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -86,15 +85,15 @@ try:
     start_dt = datetime.now()
     part_list = part_mgr.list()
     end_dt = datetime.now()
-    print("Result of list(): returned {} partitions in {} ms".
-          format(len(part_list), delta_ms(start_dt, end_dt)))
+    print(f"Result of list(): returned {len(part_list)} partitions in "
+          f"{delta_ms(start_dt, end_dt)} ms")
 
     print("Enabling auto-updating for partition manager")
     try:
         part_mgr.enable_auto_update()
     except zhmcclient.Error as exc:
-        print("Error: Cannot auto-enable partition manager for CPC {}: {}: {}".
-              format(cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot auto-enable partition manager for CPC "
+              f"{cpc.name}: {exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     print("Listing partitions using list() "
@@ -102,8 +101,8 @@ try:
     start_dt = datetime.now()
     part_list = part_mgr.list()
     end_dt = datetime.now()
-    print("Result of list(): returned {} partitions in {} ms".
-          format(len(part_list), delta_ms(start_dt, end_dt)))
+    print(f"Result of list(): returned {len(part_list)} partitions in "
+          f"{delta_ms(start_dt, end_dt)} ms")
 
     part_name = f"zhmc_test_{uuid.uuid4()}"
     print(f"Creating partition {part_name} ...")
@@ -119,8 +118,8 @@ try:
         part = cpc.partitions.create(properties=part_props)
         cleanup_partition = part
     except zhmcclient.Error as exc:
-        print("Error: Cannot create partition {} on CPC {}: {}: {}".
-              format(part_name, cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot create partition {part_name} on CPC {cpc.name}: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
     print(f"Partition uri: {part.uri}")
 
@@ -129,25 +128,25 @@ try:
     start_dt = datetime.now()
     part_list = part_mgr.list()
     end_dt = datetime.now()
-    print("Result of list(): returned {} partitions in {} ms".
-          format(len(part_list), delta_ms(start_dt, end_dt)))
+    print(f"Result of list(): returned {len(part_list)} partitions in "
+          f"{delta_ms(start_dt, end_dt)} ms")
 
     print("Listing partitions using list() "
           "(auto-enabled - uses from local list) ...")
     start_dt = datetime.now()
     part_list = part_mgr.list()
     end_dt = datetime.now()
-    print("Result of list(): returned {} partitions in {} ms".
-          format(len(part_list), delta_ms(start_dt, end_dt)))
+    print(f"Result of list(): returned {len(part_list)} partitions in "
+          f"{delta_ms(start_dt, end_dt)} ms")
 
     print(f"Deleting partition {part.name} (uri: {part.uri}) ...")
     try:
         part.delete()
         cleanup_partition = None
     except zhmcclient.Error as exc:
-        print("Error: Cannot delete partition {} on CPC {} for clean up - "
-              "Please delete it manually: {}: {}".
-              format(part.name, cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot delete partition {part.name} on CPC {cpc.name} "
+              "for clean up - Please delete it manually: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     print("Listing partitions using list() "
@@ -155,8 +154,8 @@ try:
     start_dt = datetime.now()
     part_list = part_mgr.list()
     end_dt = datetime.now()
-    print("Result of list(): returned {} partitions in {} ms".
-          format(len(part_list), delta_ms(start_dt, end_dt)))
+    print(f"Result of list(): returned {len(part_list)} partitions in "
+          f"{delta_ms(start_dt, end_dt)} ms")
 
     print("Disabling auto-updating for partition manager")
     part_mgr.disable_auto_update()
@@ -165,8 +164,8 @@ try:
     start_dt = datetime.now()
     part_list = part_mgr.list()
     end_dt = datetime.now()
-    print("Result of list(): returned {} partitions in {} ms".
-          format(len(part_list), delta_ms(start_dt, end_dt)))
+    print(f"Result of list(): returned {len(part_list)} partitions in "
+          f"{delta_ms(start_dt, end_dt)} ms")
 
 finally:
     if cleanup_partition:
@@ -174,8 +173,8 @@ finally:
         try:
             cleanup_partition.delete()
         except zhmcclient.Error as exc:
-            print("Error: Cannot delete partition {} on CPC {} for clean up - "
-                  "Please delete it manually: {}: {}".
-                  format(part.name, cpc.name, exc.__class__.__name__, exc))
+            print(f"Error: Cannot delete partition {part.name} on CPC "
+                  f"{cpc.name} for clean up - "
+                  f"Please delete it manually: {exc.__class__.__name__}: {exc}")
     print("Logging off ...")
     session.logoff()

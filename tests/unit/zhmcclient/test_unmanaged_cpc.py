@@ -74,10 +74,10 @@ class TestUnmanagedCpc:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=ucpc_mgr.__class__.__name__,
-                               id=id(ucpc_mgr)),
-                        repr_str)
+        assert re.match(
+            rf'^{ucpc_mgr.__class__.__name__}\s+at\s+'
+            rf'0x{id(ucpc_mgr):08x}\s+\(\\n.*',
+            repr_str)
 
     def test_ucpc_manager_initial_attrs(self):
         """Test initial attributes of UnmanagedCpcManager."""
@@ -139,7 +139,7 @@ class TestUnmanagedCpc:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=ucpc1.__class__.__name__,
-                               id=id(ucpc1)),
-                        repr_str)
+        assert re.match(
+            rf'^{ucpc1.__class__.__name__}\s+at\s+'
+            rf'0x{id(ucpc1):08x}\s+\(\\n.*',
+            repr_str)

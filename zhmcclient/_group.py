@@ -186,9 +186,9 @@ class Group(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, GroupManager), \
-            "Group init: Expected manager type {}, got {}" \
-            .format(GroupManager, type(manager))
+        assert isinstance(manager, GroupManager), (
+            f"Group init: Expected manager type {GroupManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     def dump(self):

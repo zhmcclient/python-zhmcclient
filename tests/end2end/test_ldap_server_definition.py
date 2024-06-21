@@ -59,19 +59,17 @@ def test_ldapsrvdef_find_list(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support LDAP server "
-                  "definitions".format(h=hd.host, v=hmc_version))
+        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
+                  "support LDAP server definitions")
 
     # Pick the LDAP server definitions to test with
     ldapsrvdef_list = console.ldap_server_definitions.list()
     if not ldapsrvdef_list:
-        skip_warn("No LDAP server definitions defined on HMC {h}".
-                  format(h=hd.host))
+        skip_warn(f"No LDAP server definitions defined on HMC {hd.host}")
     ldapsrvdef_list = pick_test_resources(ldapsrvdef_list)
 
     for ldapsrvdef in ldapsrvdef_list:
-        print("Testing with LDAP server definition {d!r}".
-              format(d=ldapsrvdef.name))
+        print(f"Testing with LDAP server definition {ldapsrvdef.name!r}")
         runtest_find_list(
             hmc_session, console.ldap_server_definitions, ldapsrvdef.name,
             'name', 'element-uri', LDAPSRVDEF_VOLATILE_PROPS,
@@ -91,19 +89,17 @@ def test_ldapsrvdef_property(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support LDAP server "
-                  "definitions".format(h=hd.host, v=hmc_version))
+        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
+                  "support LDAP server definitions")
 
     # Pick the LDAP server definitions to test with
     ldapsrvdef_list = console.ldap_server_definitions.list()
     if not ldapsrvdef_list:
-        skip_warn("No LDAP server definitions defined on HMC {h}".
-                  format(h=hd.host))
+        skip_warn(f"No LDAP server definitions defined on HMC {hd.host}")
     ldapsrvdef_list = pick_test_resources(ldapsrvdef_list)
 
     for ldapsrvdef in ldapsrvdef_list:
-        print("Testing with LDAP server definition {d!r}".
-              format(d=ldapsrvdef.name))
+        print(f"Testing with LDAP server definition {ldapsrvdef.name!r}")
 
         # Select a property that is not returned by list()
         non_list_prop = 'description'
@@ -124,8 +120,8 @@ def test_ldapsrvdef_crud(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support LDAP server "
-                  "definitions".format(h=hd.host, v=hmc_version))
+        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
+                  "support LDAP server definitions")
 
     ldapsrvdef_name = TEST_PREFIX + ' test_ldapsrvdef_crud ldapsrvdef1'
     ldapsrvdef_name_new = ldapsrvdef_name + ' new'
@@ -138,8 +134,8 @@ def test_ldapsrvdef_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test LDAP server definition from previous run: {d!r}".
-            format(d=ldapsrvdef_name), UserWarning)
+            "Deleting test LDAP server definition from previous run: "
+            f"{ldapsrvdef_name!r}", UserWarning)
         ldapsrvdef.delete()
 
     # Test creating the LDAP server definition
@@ -162,9 +158,8 @@ def test_ldapsrvdef_crud(hmc_session):  # noqa: F811
             ldapsrvdef_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_warn("HMC userid {u!r} is not authorized for task "
-                      "'Manage LDAP Server Definitions' on HMC {h}".
-                      format(u=hd.userid, h=hd.host))
+            skip_warn(f"HMC userid {hd.userid!r} is not authorized for task "
+                      f"'Manage LDAP Server Definitions' on HMC {hd.host}")
         else:
             raise
 

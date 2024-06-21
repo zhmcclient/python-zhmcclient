@@ -110,8 +110,7 @@ class ActivationProfileManager(BaseManager):
         try:
             activation_profile_class = ACTIVATION_PROFILE_CLASSES[profile_type]
         except KeyError:
-            raise ValueError("Unknown activation profile type: {}".
-                             format(profile_type))
+            raise ValueError(f"Unknown activation profile type: {profile_type}")
 
         super().__init__(
             resource_class=ActivationProfile,
@@ -215,8 +214,8 @@ class ActivationProfileManager(BaseManager):
         list_uri = f'{self.cpc.uri}/{result_prop}'
         if self._profile_type != 'image' and additional_properties is not None:
             raise TypeError(
-                "list() for {} profiles does not support "
-                "'additional_properties' parameter".format(self._profile_type))
+                f"list() for {self._profile_type} profiles does not support "
+                "'additional_properties' parameter")
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args,
             additional_properties)
@@ -270,9 +269,9 @@ class ActivationProfileManager(BaseManager):
         # specify the profile name in input property 'profile-name'.
         if result is not None:
             warnings.warn(
-                "The Create {pt} Activation Profile operation now has "
-                "response data with properties: {pl!r}".
-                format(pt=self._profile_type, pl=result.keys()), UserWarning)
+                f"The Create {self._profile_type} Activation Profile operation "
+                f"now has response data with properties: {result.keys()!r}",
+                UserWarning)
         name = properties['profile-name']
         uri = f'{uri}/{name}'
 
@@ -306,9 +305,9 @@ class ActivationProfile(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, ActivationProfileManager), \
-            "ActivationProfile init: Expected manager type {}, got {}" \
-            .format(ActivationProfileManager, type(manager))
+        assert isinstance(manager, ActivationProfileManager), (
+            "ActivationProfile init: Expected manager type "
+            f"{ActivationProfileManager}, got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call

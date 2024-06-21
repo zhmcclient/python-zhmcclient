@@ -161,7 +161,7 @@ class Task(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, TaskManager), \
-            "Console init: Expected manager type {}, got {}" \
-            .format(TaskManager, type(manager))
+        assert isinstance(manager, TaskManager), (
+            f"Console init: Expected manager type {TaskManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
