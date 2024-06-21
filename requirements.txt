@@ -13,7 +13,7 @@ pytz>=2019.1
 
 # requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
 #   remove ImportWarning in six
-requests>=2.31.0
+requests>=2.32.3
 
 stomp-py>=8.1.1
 
