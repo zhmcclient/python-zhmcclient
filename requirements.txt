@@ -18,7 +18,8 @@ pytz>=2019.1; python_version >= '3.10'
 #   remove ImportWarning in six
 requests>=2.25.0; python_version <= '3.5'
 requests>=2.26.0; python_version == '3.6'
-requests>=2.31.0; python_version >= '3.7'
+requests>=2.31.0; python_version == '3.7'
+requests>=2.32.3; python_version >= '3.8'
 
 # six 1.16.0 removes the ImportWarning raised by Python 3.10
 six>=1.14.0; python_version <= '3.9'
