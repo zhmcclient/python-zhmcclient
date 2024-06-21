@@ -17,13 +17,14 @@ a fully automated installation.
 import sys
 import time
 import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
 import yaml
 import stomp
 import zhmcclient
 
+requests.packages.urllib3.disable_warnings()
 
 PRINT_METADATA = False
+
 
 def receive_until_KeyboardInterrupt(receiver):
     while True:
@@ -36,9 +37,8 @@ def receive_until_KeyboardInterrupt(receiver):
                         held = os_msg['is-held']
                         priority = os_msg['is-priority']
                         prompt = os_msg.get('prompt-text', None)
-                        print("# OS message {} (held: {}, priority: {}, "
-                              "prompt: {}):".
-                              format(msg_id, held, priority, prompt))
+                        print(f"# OS message {msg_id} (held: {held}, "
+                              f"priority: {priority}, prompt: {prompt}):")
                     msg_txt = os_msg['message-text'].strip('\n')
                     print(msg_txt)
         except zhmcclient.NotificationError as exc:
@@ -54,8 +54,10 @@ def receive_until_KeyboardInterrupt(receiver):
         else:
             raise AssertionError("Receiver was closed - should not happen")
 
+
 def get_password(host, userid):
-    return input("password for user {} on host {}:".format(userid, host))
+    return input(f"password for user {userid} on host {host}:")
+
 
 def load_config(config_filepath):
     """
@@ -73,6 +75,7 @@ def load_config(config_filepath):
     """
     with open(config_filepath) as f:
         return yaml.safe_load(f)
+
 
 def main(config_filepath):
     config = load_config(config_filepath)

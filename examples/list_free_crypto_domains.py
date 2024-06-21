@@ -43,8 +43,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -53,8 +53,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -64,12 +63,12 @@ try:
     crypto_adapter_names = [ca.name for ca in crypto_adapters]
     print("Found crypto adapters:")
     for ca in crypto_adapters:
-        print("  {} (type: {})".format(ca.name, ca.get_property('crypto-type')))
+        print(f"  {ca.name} (type: {ca.get_property('crypto-type')})")
 
     print("Determining crypto domains that are free on all crypto adapters of "
-          "CPC {} ...".format(cpc.name))
+          f"CPC {cpc.name} ...")
     free_domains = cpc.get_free_crypto_domains(crypto_adapters)
-    # print("Free domains (as list): {}".format(free_domains))
+    # print(f"Free domains (as list): {free_domains}")
 
     # Convert this list of numbers into better readable number ranges:
     ranges = []

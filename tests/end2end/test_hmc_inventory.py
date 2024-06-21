@@ -48,20 +48,18 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
 
         print(f"Checking CPC {cpc_name}")
 
-        assert cpc_name in cpc_names, \
-            "CPC {c} defined in inventory file for HMC {n!r} at {h} is not " \
-            "managed by that HMC. Actually managed CPCs: {cl}". \
-            format(c=cpc_name, n=hd.nickname, h=hd.host,
-                   cl=', '.join(cpc_names))
+        assert cpc_name in cpc_names, (
+            f"CPC {cpc_name} defined in inventory file for HMC {hd.nickname!r} "
+            f"at {hd.host} is not managed by that HMC. Actually managed "
+            f"CPCs: {', '.join(cpc_names)}")
 
         cpc = client.cpcs.find(name=cpc_name)
 
         try:
             cpc.pull_full_properties()
         except zhmcclient.ConnectionError as exc:
-            print("Cannot retrieve properties for CPC {c} (skipping it): "
-                  "{e}: {m}".
-                  format(c=cpc_name, e=exc.__class__.__name__, m=exc))
+            print(f"Cannot retrieve properties for CPC {cpc_name} "
+                  f"(skipping it): {exc.__class__.__name__}: {exc}")
             continue
 
         cpc_props = dict(cpc.properties)
@@ -71,20 +69,18 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
                 continue
 
             hmc_prop_name = def_prop_name.replace('_', '-')
-            assert hmc_prop_name in cpc_props, \
-                "Property {dp!r} defined in inventory file for CPC {c} for " \
-                "HMC {n!r} does not actually exist on that CPC (as {hp!r})". \
-                format(dp=def_prop_name, hp=hmc_prop_name, c=cpc_name,
-                       n=hd.nickname)
+            assert hmc_prop_name in cpc_props, (
+                f"Property {def_prop_name!r} defined in inventory file for "
+                f"CPC {cpc_name} for HMC {hd.nickname!r} does not actually "
+                f"exist on that CPC (as {hmc_prop_name!r})")
 
             cpc_value = cpc_props[hmc_prop_name]
             def_cpc_value = def_cpc_props[def_prop_name]
-            assert def_cpc_value == cpc_value, \
-                "Property {dp!r} defined in inventory file for CPC {c} for " \
-                "HMC {n!r} has an unexpected value: " \
-                "inventory file: {dv!r}, actual value: {hv!r}". \
-                format(dp=def_prop_name, c=cpc_name, n=hd.nickname,
-                       dv=def_cpc_value, hv=cpc_value)
+            assert def_cpc_value == cpc_value, (
+                f"Property {def_prop_name!r} defined in inventory file for "
+                f"CPC {cpc_name} for HMC {hd.nickname!r} has an unexpected "
+                f"value: inventory file: {def_cpc_value!r}, actual value: "
+                f"{cpc_value!r}")
 
 
 @pytest.mark.skip   # Disabled by default
@@ -111,8 +107,8 @@ def test_hmcdef_check_all_hmcs():
 
         for cpc_name in hd.cpcs:
 
-            print("Checking CPC {c} defined for HMC {n!r} at {h}".
-                  format(c=cpc_name, n=hd.nickname, h=hd.host))
+            print(f"Checking CPC {cpc_name} defined for HMC {hd.nickname!r} at "
+                  f"{hd.host}")
 
             session = zhmcclient.Session(
                 hd.host, hd.userid, hd.password,
@@ -125,19 +121,17 @@ def test_hmcdef_check_all_hmcs():
                 try:
                     session.logon()
                 except zhmcclient.ConnectionError as exc:
-                    print("Cannot logon to HMC at {h} (skipping it): {e}: {m}".
-                          format(h=hd.host,
-                                 e=exc.__class__.__name__, m=exc))
+                    print(f"Cannot logon to HMC at {hd.host} (skipping it): "
+                          f"{exc.__class__.__name__}: {exc}")
                     continue
 
                 cpcs = client.cpcs.list()
                 cpc_names = [cpc.name for cpc in cpcs]
 
-                assert cpc_name in cpc_names, \
-                    "CPC {c} defined in inventory file for HMC {n!r} at {h} " \
-                    "is not managed by that HMC. Actually managed CPCs: {cl}". \
-                    format(c=cpc_name, n=hd.nickname, h=hd.host,
-                           cl=', '.join(cpc_names))
+                assert cpc_name in cpc_names, (
+                    f"CPC {cpc_name} defined in inventory file for HMC "
+                    f"{hd.nickname!r} at {hd.host} is not managed by that "
+                    f"HMC. Actually managed CPCs: {', '.join(cpc_names)}")
 
             finally:
                 session.logoff()

@@ -105,21 +105,21 @@ class HMCDefinition:
         self._add_vars = add_vars or {}
 
     def __repr__(self):
-        return "HMCDefinition(" \
-            "nickname={s.nickname!r}, " \
-            "description={s.description!r}, " \
-            "contact={s.contact!r}, " \
-            "access_via={s.access_via!r}, " \
-            "mock_file={s.mock_file!r}, " \
-            "host={s.host!r}, " \
-            "userid={s.userid!r}, " \
-            "password=..., " \
-            "verify={s.verify!r}, " \
-            "ca_certs={s.ca_certs!r}, " \
-            "verify_cert={s.verify_cert!r}, " \
-            "cpcs={s.cpcs!r}, " \
-            "add_vars={s.add_vars!r})". \
-            format(s=self)
+        return (
+            "HMCDefinition("
+            f"nickname={self.nickname!r}, "
+            f"description={self.description!r}, "
+            f"contact={self.contact!r}, "
+            f"access_via={self.access_via!r}, "
+            f"mock_file={self.mock_file!r}, "
+            f"host={self.host!r}, "
+            f"userid={self.userid!r}, "
+            f"password=..., "
+            f"verify={self.verify!r}, "
+            f"ca_certs={self.ca_certs!r}, "
+            f"verify_cert={self.verify_cert!r}, "
+            f"cpcs={self.cpcs!r}, "
+            f"add_vars={self.add_vars!r})")
 
     @property
     def nickname(self):

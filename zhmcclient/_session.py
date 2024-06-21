@@ -40,6 +40,7 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME, \
     HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER, \
     DEFAULT_HMC_PORT
+from ._utils import repr_obj_id
 from ._version import __version__
 
 __all__ = ['Session', 'Job', 'RetryTimeoutConfig', 'get_password_interface']
@@ -450,24 +451,22 @@ class Session:
         """
         headers = _headers_for_logging(self.headers)
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _hosts={s._hosts!r},\n"
-            "  _userid={s._userid!r},\n"
-            "  _password='...',\n"
-            "  _verify_cert={s._verify_cert!r},\n"
-            "  _get_password={s._get_password!r},\n"
-            "  _retry_timeout_config={s._retry_timeout_config!r},\n"
-            "  _actual_host={s._actual_host!r},\n"
-            "  _base_url={s._base_url!r},\n"
-            "  _headers={headers!r},\n"
-            "  _session_id={blanked_out!r},\n"
-            "  _session={s._session!r}\n"
-            "  _object_topic={s._object_topic!r}\n"
-            "  _job_topic={s._job_topic!r}\n"
-            "  _auto_updater={s._auto_updater!r}\n"
-            ")".
-            format(classname=self.__class__.__name__, id=id(self), s=self,
-                   headers=headers, blanked_out=BLANKED_OUT))
+            f"{repr_obj_id(self)} (\n"
+            f"  _hosts={self._hosts!r},\n"
+            f"  _userid={self._userid!r},\n"
+            f"  _password='...',\n"
+            f"  _verify_cert={self._verify_cert!r},\n"
+            f"  _get_password={self._get_password!r},\n"
+            f"  _retry_timeout_config={self._retry_timeout_config!r},\n"
+            f"  _actual_host={self._actual_host!r},\n"
+            f"  _base_url={self._base_url!r},\n"
+            f"  _headers={headers!r},\n"
+            f"  _session_id={BLANKED_OUT!r},\n"
+            f"  _session={self._session!r}\n"
+            f"  _object_topic={self._object_topic!r}\n"
+            f"  _job_topic={self._job_topic!r}\n"
+            f"  _auto_updater={self._auto_updater!r}\n"
+            ")")
         return ret
 
     @property
@@ -834,8 +833,7 @@ class Session:
         """
         Encapsulates how the base URL of the HMC is constructed.
         """
-        return "{scheme}://{host}:{port}".format(
-            scheme=_HMC_SCHEME, host=host, port=port)
+        return f"{_HMC_SCHEME}://{host}:{port}"
 
     def _determine_actual_host(self):
         """
@@ -963,8 +961,7 @@ class Session:
                 content = dict2json(content_dict)
             trunc = 30000
             if content_len > trunc:
-                content_label = 'content(first {} B of {} B)'. \
-                    format(trunc, content_len)
+                content_label = f"content(first {trunc} B of {content_len} B)"
                 content_msg = content[0:trunc] + '...(truncated)'
             else:
                 content_label = f'content({content_len} B)'
@@ -984,7 +981,7 @@ class Session:
                 name = resource.properties.get(name_prop, '<unknown>')
                 names.insert(0, name)
                 resource = resource.manager.parent
-            res_str = " ({} {})".format(res_class, '.'.join(names))
+            res_str = f" ({res_class} {'.'.join(names)})"
         else:
             res_str = ""
 
@@ -1040,8 +1037,8 @@ class Session:
             else:
                 trunc = 30000
                 if content_len > trunc:
-                    content_label = 'content(first {} B of {} B)'. \
-                        format(trunc, content_len)
+                    content_label = \
+                        f"content(first {trunc} B of {content_len} B)"
                     content_msg = content[0:trunc] + '...(truncated)'
                 else:
                     content_label = f'content({len(content)} B)'
@@ -1061,7 +1058,7 @@ class Session:
                 name = resource.properties.get(name_prop, '<unknown>')
                 names.insert(0, name)
                 resource = resource.manager.parent
-            res_str = " ({} {})".format(res_class, '.'.join(names))
+            res_str = f" ({res_class} {'.'.join(names)})"
         else:
             res_str = ""
 
@@ -1163,8 +1160,8 @@ class Session:
 
             msg = result_object.get('message', None)
             raise ServerAuthError(
-                "HTTP authentication failed with {},{}: {}".
-                format(result.status_code, reason, msg),
+                "HTTP authentication failed with "
+                f"{result.status_code},{reason}: {msg}",
                 HTTPError(result_object))
 
         result_object = _result_object(result)
@@ -1422,8 +1419,8 @@ class Session:
 
                 msg = result_object.get('message', None)
                 raise ServerAuthError(
-                    "HTTP authentication failed with {},{}: {}".
-                    format(result.status_code, reason, msg),
+                    "HTTP authentication failed with "
+                    f"{result.status_code},{reason}: {msg}",
                     HTTPError(result_object))
 
             result_object = _result_object(result)
@@ -1526,8 +1523,8 @@ class Session:
 
             msg = result_object.get('message', None)
             raise ServerAuthError(
-                "HTTP authentication failed with {},{}: {}".
-                format(result.status_code, reason, msg),
+                "HTTP authentication failed with "
+                f"{result.status_code},{reason}: {msg}",
                 HTTPError(result_object))
 
         result_object = _result_object(result)
@@ -1926,9 +1923,8 @@ class Job:
                 current_time = time.time()
                 if current_time > start_time + operation_timeout:
                     raise OperationTimeout(
-                        "Waiting for completion of job {} timed out "
-                        "(operation timeout: {} s)".
-                        format(self.uri, operation_timeout),
+                        f"Waiting for completion of job {self.uri} timed out "
+                        f"(operation timeout: {operation_timeout} s)",
                         operation_timeout)
 
             time.sleep(10)  # Avoid hot spin loop
@@ -2020,15 +2016,12 @@ def _result_object(result):
             return result.json(object_pairs_hook=OrderedDict)
         except ValueError as exc:
             new_exc = ParseError(
-                "JSON parse error in HTTP response: {}. "
-                "HTTP request: {} {}. "
-                "Response status {}. "
-                "Response content-type: {!r}. "
-                "Content (max.1000, decoded using {}): {}".
-                format(exc.args[0],
-                       result.request.method, result.request.url,
-                       result.status_code, content_type, result.encoding,
-                       _text_repr(result.text, 1000)))
+                f"JSON parse error in HTTP response: {exc.args[0]}. "
+                f"HTTP request: {result.request.method} {result.request.url}. "
+                f"Response status {result.status_code}. "
+                f"Response content-type: {content_type!r}. "
+                f"Content (max.1000, decoded using {result.encoding}): "
+                f"{_text_repr(result.text, 1000)}")
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ParseError
 
@@ -2089,14 +2082,11 @@ def _result_object(result):
         return content_bytes.decode('utf-8')  # as a unicode object
 
     raise ParseError(
-        "Unknown content type in HTTP response: {}. "
-        "HTTP request: {} {}. "
-        "Response status {}. "
-        "Content (max.1000, decoded using {}): {}".
-        format(content_type,
-               result.request.method, result.request.url,
-               result.status_code, result.encoding,
-               _text_repr(result.text, 1000)))
+        f"Unknown content type in HTTP response: {content_type}. "
+        f"HTTP request: {result.request.method} {result.request.url}. "
+        f"Response status {result.status_code}. "
+        f"Content (max.1000, decoded using {result.encoding}): "
+        f"{_text_repr(result.text, 1000)}")
 
 
 def json2dict(json_str):

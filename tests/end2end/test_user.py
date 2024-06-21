@@ -57,8 +57,9 @@ def test_user_find_list(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support users".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "users")
 
     # Pick the users to test with
     user_list = console.users.list()
@@ -87,8 +88,9 @@ def test_user_property(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support users".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "users")
 
     # Pick the users to test with
     user_list = console.users.list()
@@ -118,8 +120,9 @@ def test_user_crud(hmc_session):  # noqa: F811
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
     if hmc_version_info < (2, 13, 0):
-        skip_warn("HMC {h} of version {v} does not yet support users".
-                  format(h=hd.host, v=hmc_version))
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet support "
+            "users")
 
     user_name = TEST_PREFIX + '_test_user_crud_user1'
     user_name_new = user_name + '_new'
@@ -132,8 +135,8 @@ def test_user_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test user from previous run: {u!r}".
-            format(u=user_name), UserWarning)
+            f"Deleting test user from previous run: {user_name!r}",
+            UserWarning)
         user.delete()
     try:
         pwrule = console.password_rules.find(name=pwrule_name)
@@ -141,8 +144,8 @@ def test_user_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test password rule from previous run: {r!r}".
-            format(r=pwrule_name), UserWarning)
+            f"Deleting test password rule from previous run: {pwrule_name!r}",
+            UserWarning)
         pwrule.delete()
 
     # Pick a password rule for the user
@@ -173,9 +176,9 @@ def test_user_crud(hmc_session):  # noqa: F811
         user = console.users.create(user_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_warn("HMC userid {u!r} is not authorized for task {t!r} on "
-                      "HMC {h}".
-                      format(u=hd.userid, t=task_name, h=hd.host))
+            skip_warn(
+                f"HMC userid {hd.userid!r} is not authorized for task "
+                f"{task_name!r} on HMC {hd.host}")
         else:
             raise
 

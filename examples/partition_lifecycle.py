@@ -44,8 +44,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -54,8 +54,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -74,15 +73,14 @@ try:
     try:
         part = cpc.partitions.create(properties=part_props)
     except zhmcclient.Error as exc:
-        print("Error: Cannot create partition {} on CPC {}: {}: {}".
-              format(part_name, cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot create partition {part_name} on CPC {cpc.name}: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     print(f"Starting partition {part.name} ...")
     part.start()
 
-    print("Current partition description: {}".
-          format(part.get_property('description')))
+    print(f"Current partition description: {part.get_property('description')}")
     new_description = "Updated partition description."
     updated_properties = {}
     updated_properties["description"] = new_description
@@ -90,13 +88,13 @@ try:
     print(f"Updating partition description to: {new_description}")
     part.update_properties(updated_properties)
 
-    print("Partition description on local resource object: {}".
-          format(part.get_property('description')))
+    print("Partition description on local resource object: "
+          f"{part.get_property('description')}")
 
     print("Refreshing properties of local resource object ...")
     part.pull_full_properties()
-    print("Partition description on local resource object: {}".
-          format(part.get_property('description')))
+    print("Partition description on local resource object: "
+          f"{part.get_property('description')}")
 
 finally:
     print("Logging off ...")

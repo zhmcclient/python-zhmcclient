@@ -191,9 +191,9 @@ class Console(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, ConsoleManager), \
-            "Console init: Expected manager type {}, got {}" \
-            .format(ConsoleManager, type(manager))
+        assert isinstance(manager, ConsoleManager), (
+            f"Console init: Expected manager type {ConsoleManager}, got "
+            f"{type(manager)}")
         super().__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):
@@ -695,16 +695,15 @@ class Console(BaseResource):
             ['name', 'type', 'status', 'has-unacceptable-status', 'cpc-name'],
             filter_args)
         if additional_properties:
-            ap_parm = 'additional-properties={}'.format(
-                ','.join(additional_properties))
+            ap_parm = f"additional-properties={','.join(additional_properties)}"
             query_parms.append(ap_parm)
         query_parms_str = make_query_str(query_parms)
 
         # Perform the operation with the HMC, including any server-side
         # filtering.
         # Note: "List Permitted Partitions" was introduced in HMC/SE 2.14.0.
-        uri = '{}/operations/list-permitted-partitions{}'.format(
-            self.uri, query_parms_str)
+        uri = (f'{self.uri}/operations/list-permitted-partitions'
+               f'{query_parms_str}')
         result = self.manager.session.get(uri, resource=self)
 
         cpcs_by_uri = {}  # caches local Cpc objects for CPCs already seen
@@ -852,15 +851,14 @@ class Console(BaseResource):
         hmc_supports_additional_properties = api_version_info >= (4, 10)
 
         if additional_properties and hmc_supports_additional_properties:
-            ap_parm = 'additional-properties={}'.format(
-                ','.join(additional_properties))
+            ap_parm = f"additional-properties={','.join(additional_properties)}"
             query_parms.append(ap_parm)
         query_parms_str = make_query_str(query_parms)
 
         # Perform the operation with the HMC, including any server-side
         # filtering.
-        uri = '{}/operations/list-permitted-logical-partitions{}'.format(
-            self.uri, query_parms_str)
+        uri = (f'{self.uri}/operations/list-permitted-logical-partitions'
+               f'{query_parms_str}')
         result = self.manager.session.get(uri, resource=self)
 
         cpcs_by_uri = {}  # caches local Cpc objects for CPCs already seen
@@ -1020,16 +1018,15 @@ class Console(BaseResource):
              'firmware-update-pending', 'cpc-name', 'dpm-enabled'],
             filter_args)
         if additional_properties:
-            ap_parm = 'additional-properties={}'.format(
-                ','.join(additional_properties))
+            ap_parm = f"additional-properties={','.join(additional_properties)}"
             query_parms.append(ap_parm)
         query_parms_str = make_query_str(query_parms)
 
         # Perform the operation with the HMC, including any server-side
         # filtering.
         # Note: "List Permitted Adapters" was introduced in HMC/SE 2.14.0.
-        uri = '{}/operations/list-permitted-adapters{}'.format(
-            self.uri, query_parms_str)
+        uri = (f'{self.uri}/operations/list-permitted-adapters'
+               f'{query_parms_str}')
         result = self.manager.session.get(uri, resource=self)
 
         adapter_obj_list = []

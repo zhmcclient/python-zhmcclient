@@ -93,9 +93,9 @@ def test_autoupdate_prop(dpm_mode_cpcs):  # noqa: F811
                 if desc_auto == new_desc:
                     break
                 sleep(delay)
-            assert desc_auto == new_desc, \
-                "Property did not auto-update after {} seconds". \
-                format(attempts * delay)
+            assert desc_auto == new_desc, (
+                f"Property did not auto-update after {attempts * delay} "
+                "seconds")
 
             # Delete the partition through the first partition object
             part.delete()
@@ -114,9 +114,9 @@ def test_autoupdate_prop(dpm_mode_cpcs):  # noqa: F811
                 if ceased:
                     break
                 sleep(delay)
-            assert ceased, \
-                "Ceased-existence state did not auto-update after {} seconds". \
-                format(attempts * delay)
+            assert ceased, (
+                "Ceased-existence state did not auto-update after "
+                f"{attempts * delay} seconds")
 
             # Test that accessing certain properties/methods on the
             # second (auto-updated) partition raises CeasedExistence
@@ -230,8 +230,8 @@ def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
         # Get the initial set of partitions, for later comparison
         initial_part_list = cpc.partitions.list()
         if not initial_part_list:
-            skip_warn("No partitions on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
         initial_part_names = {p.name for p in initial_part_list}
 
         # Enable auto-updating on partition manager and check partition list

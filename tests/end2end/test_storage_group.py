@@ -65,13 +65,13 @@ def test_stogrp_find_list(dpm_mode_cpcs):  # noqa: F811
         # Pick the storage groups to test with
         stogrp_list = cpc.list_associated_storage_groups()
         if not stogrp_list:
-            skip_warn("No storage groups associated to CPC {c} managed by "
-                      "HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn(f"No storage groups associated to CPC {cpc.name} "
+                      f"managed by HMC {hd.host}")
         stogrp_list = pick_test_resources(stogrp_list)
 
         for stogrp in stogrp_list:
-            print("Testing on CPC {c} with storage group {g!r}".
-                  format(c=cpc.name, g=stogrp.name))
+            print(f"Testing on CPC {cpc.name} with storage group "
+                  f"{stogrp.name!r}")
             runtest_find_list(
                 session, console.storage_groups, stogrp.name, 'name',
                 'object-uri', STOGRP_VOLATILE_PROPS, STOGRP_MINIMAL_PROPS,
@@ -96,13 +96,13 @@ def test_stogrp_property(dpm_mode_cpcs):  # noqa: F811
         # Pick the storage groups to test with
         stogrp_list = cpc.list_associated_storage_groups()
         if not stogrp_list:
-            skip_warn("No storage groups associated to CPC {c} managed by "
-                      "HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn(f"No storage groups associated to CPC {cpc.name} "
+                      f"managed by HMC {hd.host}")
         stogrp_list = pick_test_resources(stogrp_list)
 
         for stogrp in stogrp_list:
-            print("Testing on CPC {c} with storage group {g!r}".
-                  format(c=cpc.name, g=stogrp.name))
+            print(f"Testing on CPC {cpc.name} with storage group "
+                  f"{stogrp.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -135,8 +135,8 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group from previous run: {g!r} on "
-                "CPC {c}".format(g=stogrp_name, c=cpc.name), UserWarning)
+                f"Deleting test storage group from previous run: "
+                f"{stogrp_name!r} on CPC {cpc.name}", UserWarning)
             stogrp.delete()
         try:
             stogrp = console.storage_groups.find(name=stogrp_name_new)
@@ -144,8 +144,8 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group from previous run: {g!r} on "
-                "CPC {c}".format(g=stogrp_name_new, c=cpc.name), UserWarning)
+                "Deleting test storage group from previous run: "
+                f"{stogrp_name_new!r} on CPC {cpc.name}", UserWarning)
             stogrp.delete()
 
         # Test creating the storage group
@@ -165,18 +165,21 @@ def test_stogrp_crud(dpm_mode_cpcs):  # noqa: F811
         stogrp = console.storage_groups.create(stogrp_input_props)
 
         for pn, exp_value in stogrp_input_props.items():
-            assert stogrp.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage group:\n" \
-                "{!r}".format(pn, sorted(stogrp.properties))
+            assert stogrp.properties[pn] == exp_value, (
+                f"Unexpected value for property {pn!r} of storage group:\n"
+                f"{stogrp.properties!r}")
         stogrp.pull_full_properties()
         for pn, exp_value in stogrp_input_props.items():
-            assert stogrp.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage group:\n" \
-                "{!r}".format(pn, sorted(stogrp.properties))
+            assert stogrp.properties[pn] == exp_value, (
+                f"Unexpected value for property {pn!r} of storage group:\n"
+                f"{stogrp.properties!r}")
         for pn, exp_value in stogrp_auto_props.items():
-            assert stogrp.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage group:\n" \
-                "{!r}".format(pn, sorted(stogrp.properties))
+            assert pn in stogrp.properties, (
+                f"Automatically returned property {pn!r} is not in "
+                f"created storage group:\n{stogrp!r}")
+            assert stogrp.properties[pn] == exp_value, (
+                f"Unexpected value for property {pn!r} of storage group:\n"
+                f"{stogrp.properties!r}")
 
         # Test updating a property of the storage group
 

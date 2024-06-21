@@ -46,8 +46,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -56,8 +56,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -65,26 +64,23 @@ try:
     print(f"Finding an active partition on CPC {cpc.name} ...")
     parts = cpc.partitions.list(filter_args={'status': 'active'})
     if not parts:
-        print("Error: CPC {} does not have any active partitions".
-              format(cpc.name))
+        print(f"Error: CPC {cpc.name} does not have any active partitions")
         sys.exit(1)
     part = parts[0]
-    print("Using partition {} with status {}".
-          format(part.name, part.get_property('status')))
+    print(f"Using partition {part.name} with status "
+          f"{part.get_property('status')}")
 
-    print("Opening OS message channel for partition {} on CPC {} (including "
-          "refresh messages) ...".
-          format(part.name, cpc.name))
+    print(f"Opening OS message channel for partition {part.name} on CPC "
+          f"{cpc.name} (including refresh messages) ...")
     try:
         msg_topic = part.open_os_message_channel(include_refresh_messages=True)
     except zhmcclient.Error as exc:
-        print("Error: Cannot open OS message channel for partition {}: {}: {}".
-              format(part.name, exc.__class__.__name__, exc))
+        print("Error: Cannot open OS message channel for partition "
+              f"{part.name}: {exc.__class__.__name__}: {exc}")
         sys.exit(1)
     print(f"OS message channel notification topic: {msg_topic}")
 
-    print("Creating a notification receiver for topic {} ...".
-          format(msg_topic))
+    print(f"Creating a notification receiver for topic {msg_topic} ...")
     try:
         receiver = zhmcclient.NotificationReceiver(
             msg_topic, host, userid, password)
@@ -106,9 +102,8 @@ try:
                         held = os_msg['is-held']
                         priority = os_msg['is-priority']
                         prompt = os_msg.get('prompt-text', None)
-                        print("# OS message {} (held: {}, priority: {}, "
-                              "prompt: {}):".
-                              format(msg_id, held, priority, prompt))
+                        print(f"# OS message {msg_id} (held: {held}, "
+                              f"priority: {priority}, prompt: {prompt}):")
                     msg_txt = os_msg['message-text'].strip('\n')
                     print(msg_txt)
         except zhmcclient.NotificationError as exc:

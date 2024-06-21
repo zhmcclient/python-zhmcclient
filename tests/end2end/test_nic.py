@@ -73,13 +73,14 @@ def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
             for nic in nic_list:
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
-            skip_warn("No partitions with NICs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No partitions with NICs on CPC {cpc.name} managed by HMC "
+                f"{hd.host}")
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:
-            print("Testing on CPC {c} with NIC {n!r} of partition {p!r}".
-                  format(c=cpc.name, n=nic.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with NIC {nic.name!r} of "
+                  f"partition {part.name!r}")
             runtest_find_list(
                 session, part.nics, nic.name, 'name', 'type',
                 NIC_VOLATILE_PROPS, NIC_MINIMAL_PROPS, NIC_LIST_PROPS)
@@ -107,13 +108,13 @@ def test_nic_property(dpm_mode_cpcs):  # noqa: F811
             for nic in nic_list:
                 part_nic_tuples.append((part, nic))
         if not part_nic_tuples:
-            skip_warn("No partitions with NICs on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No partitions with NICs on CPC {cpc.name} managed by "
+                      f"HMC {hd.host}")
         part_nic_tuples = pick_test_resources(part_nic_tuples)
 
         for part, nic in part_nic_tuples:
-            print("Testing on CPC {c} with NIC {n!r} of partition {p!r}".
-                  format(c=cpc.name, n=nic.name, p=part.name))
+            print(f"Testing on CPC {cpc.name} with NIC {nic.name!r} of "
+                  f"partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -146,8 +147,8 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test partition from previous run: {p!r} on CPC {c}".
-                format(p=part_name, c=cpc.name), UserWarning)
+                f"Deleting test partition from previous run: {part_name!r} on "
+                f"CPC {cpc.name}", UserWarning)
             status = part.get_property('status')
             if status != 'stopped':
                 part.stop()
@@ -158,8 +159,8 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test Hipersocket adapter from previous run: {a!r} on "
-                "CPC {c}".format(a=hs_adapter_name, c=cpc.name), UserWarning)
+                "Deleting test Hipersocket adapter from previous run: "
+                f"{hs_adapter_name!r} on CPC {cpc.name}", UserWarning)
             adapter.delete()
 
         part = None
@@ -280,8 +281,8 @@ def test_nic_backing_port_port_based(dpm_mode_cpcs):  # noqa: F811
             break
 
     if not port_nics:
-        pytest.skip("CPC {c} does not have any partitions with port-based NICs".
-                    format(c=cpc.name))
+        pytest.skip(f"CPC {cpc.name} does not have any partitions with "
+                    "port-based NICs")
 
     # Pick the port-based NIC to test with
     nic = random.choice(port_nics)
@@ -347,8 +348,8 @@ def test_nic_backing_port_vswitch_based(dpm_mode_cpcs):  # noqa: F811
             break
 
     if not vswitch_nics:
-        pytest.skip("CPC {c} does not have any partitions with vswitch-based "
-                    "NICs".format(c=cpc.name))
+        pytest.skip(f"CPC {cpc.name} does not have any partitions with "
+                    "vswitch-based NICs")
 
     # Pick the port-based NIC to test with
     nic = random.choice(vswitch_nics)

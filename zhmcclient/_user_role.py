@@ -212,9 +212,9 @@ class UserRole(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, UserRoleManager), \
-            "Console init: Expected manager type {}, got {}" \
-            .format(UserRoleManager, type(manager))
+        assert isinstance(manager, UserRoleManager), (
+            f"Console init: Expected manager type {UserRoleManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call
@@ -348,7 +348,7 @@ class UserRole(BaseResource):
         else:
             raise TypeError(
                 "permitted_object must be a string or BaseResource, but is: "
-                "{}".format(type(permitted_object)))
+                f"{type(permitted_object)}")
         body = {
             'permitted-object': perm_obj,
             'permitted-object-type': perm_type,
@@ -429,7 +429,7 @@ class UserRole(BaseResource):
         else:
             raise TypeError(
                 "permitted_object must be a string or BaseResource, but is: "
-                "{}".format(type(permitted_object)))
+                f"{type(permitted_object)}")
         body = {
             'permitted-object': perm_obj,
             'permitted-object-type': perm_type,

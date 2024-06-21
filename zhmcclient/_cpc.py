@@ -290,9 +290,9 @@ class Cpc(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, CpcManager), \
-            "Cpc init: Expected manager type {}, got {}" \
-            .format(CpcManager, type(manager))
+        assert isinstance(manager, CpcManager), (
+            f"Cpc init: Expected manager type {CpcManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
         # The manager objects for child resources (with lazy initialization):
@@ -519,8 +519,8 @@ class Cpc(BaseResource):
         try:
             return self.get_property('maximum-partitions')
         except KeyError:
-            new_exc = ValueError("Unknown machine type/model: {}-{}".
-                                 format(machine_type, machine_model))
+            new_exc = ValueError(
+                f"Unknown machine type/model: {machine_type}-{machine_model}")
             new_exc.__cause__ = None
             raise new_exc  # ValueError
 
@@ -622,14 +622,15 @@ class Cpc(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC {}"
-                             .format(self.name))
+            raise ValueError(
+                f"Firmware features are not supported on CPC {self.name}")
         for feature in feature_list:
             if feature['name'] == feature_name:
                 break
         else:
-            raise ValueError("Firmware feature {} is not available on CPC {}"
-                             .format(feature_name, self.name))
+            raise ValueError(
+                f"Firmware feature {feature_name} is not available on CPC "
+                f"{self.name}")
         return feature['state']  # pylint: disable=undefined-loop-variable
 
     @logged_api_call
@@ -665,8 +666,8 @@ class Cpc(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC {}"
-                             .format(self.name))
+            raise ValueError(
+                f"Firmware features are not supported on CPC {self.name}")
         return feature_list
 
     @logged_api_call
@@ -1480,17 +1481,18 @@ class Cpc(BaseResource):
         em_list = result['objects']
         if len(em_list) != 1:
             uris = [em_obj['object-uri'] for em_obj in em_list]
-            raise ParseError("Energy management data returned for no resource "
-                             "or for more than one resource: {!r}".format(uris))
+            raise ParseError(
+                "Energy management data returned for no resource or for "
+                f"more than one resource: {uris!r}")
         em_cpc_obj = em_list[0]
         if em_cpc_obj['object-uri'] != self.uri:
-            raise ParseError("Energy management data returned for an "
-                             "unexpected resource: {!r}"
-                             .format(em_cpc_obj['object-uri']))
+            raise ParseError(
+                "Energy management data returned for an unexpected resource: "
+                f"{em_cpc_obj['object-uri']!r}")
         if em_cpc_obj['error-occurred']:
-            raise ParseError("Errors occurred when retrieving energy "
-                             "management data for CPC. Operation result: {!r}"
-                             .format(result))
+            raise ParseError(
+                "Errors occurred when retrieving energy management data for "
+                f"CPC. Operation result: {result!r}")
         cpc_props = em_cpc_obj['properties']
         return cpc_props
 
@@ -1551,7 +1553,7 @@ class Cpc(BaseResource):
         if 'cpc-uri' in filter_args:
             raise ValueError(
                 "The filter_args parameter specifies the 'cpc-uri' property "
-                "with value: {}".format(filter_args['cpc-uri']))
+                f"with value: {filter_args['cpc-uri']}")
         filter_args['cpc-uri'] = self.uri
 
         sg_list = self.manager.console.storage_groups.list(
@@ -1883,8 +1885,8 @@ class Cpc(BaseResource):
                 auto_start_body.append(auto_start_item)
             else:
                 raise TypeError(
-                    "Invalid type for auto_start_list parameter: {}".
-                    format(type(auto_start_list)))
+                    "Invalid type for auto_start_list parameter: "
+                    f"{type(auto_start_list)}")
 
         body = {
             'auto-start-list': auto_start_body,
@@ -3029,17 +3031,16 @@ def retrieveInventoryData(client):
     error_msgs = []
     for item in inventory_list:
         if item.get('class') == 'inventory-error':
-            msg = ("Inventory error {} for resource with URI {}: {}; "
-                   "Details: {}".format(
-                       item.get('inventory-error-code'),
-                       item.get('uri'),
-                       item.get('inventory-error-text'),
-                       dict(item.get('inventory-error-details'))))
+            msg = (
+                f"Inventory error {item.get('inventory-error-code')} for "
+                f"resource with URI {item.get('uri')}: "
+                f"{item.get('inventory-error-text')}; "
+                f"Details: {dict(item.get('inventory-error-details'))}")
             error_msgs.append(msg)
     if error_msgs:
+        msgs = '\n  '.join(error_msgs)
         raise ConsistencyError(
-            "Some resources could not be fully inventoried:\n  {}".
-            format('\n  '.join(error_msgs)))
+            f"Some resources could not be fully inventoried:\n  {msgs}")
     return inventory_list
 
 

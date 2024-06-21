@@ -340,10 +340,10 @@ class TestCapacityGroup:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=capacity_group.__class__.__name__,
-                               id=id(capacity_group)),
-                        repr_str)
+        assert re.match(
+            rf'^{capacity_group.__class__.__name__}\s+at\s+'
+            rf'0x{id(capacity_group):08x}\s+\(\\n.*',
+            repr_str)
 
     def test_cg_delete_empty(self):
         """Test CapacityGroup.delete() of empty capacity group."""

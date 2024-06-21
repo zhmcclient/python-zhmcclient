@@ -486,8 +486,7 @@ class TestCpc:
                 'adapter-id': '12D',
             })
         else:
-            raise ValueError("Invalid value for crypto_name: {}"
-                             .format(adapter_name))
+            raise ValueError(f"Invalid value for crypto_name: {adapter_name}")
         return faked_crypto_adapter
 
     @staticmethod
@@ -639,10 +638,10 @@ class TestCpc:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=cpc.__class__.__name__,
-                               id=id(cpc)),
-                        repr_str)
+        assert re.match(
+            rf'^{cpc.__class__.__name__}\s+at\s+'
+            rf'0x{id(cpc):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "cpc_name, exp_dpm_enabled", [
@@ -2041,8 +2040,7 @@ def test_cpc_install_and_activate(
                 assert exc.message == response_body['message']
             else:
                 raise AssertionError(
-                    "Unexpected exception: {}: {}".
-                    format(exc.__class__.__name__, exc))
+                    f"Unexpected exception: {exc.__class__.__name__}: {exc}")
 
         else:
 
@@ -2141,8 +2139,7 @@ def test_delete_retrieved_internal_code(
                 assert exc.message == response_body['message']
             else:
                 raise AssertionError(
-                    "Unexpected exception: {}: {}".
-                    format(exc.__class__.__name__, exc))
+                    f"Unexpected exception: {exc.__class__.__name__}: {exc}")
 
         else:
 

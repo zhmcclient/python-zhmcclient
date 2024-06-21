@@ -68,7 +68,7 @@ from ._resource import BaseResource
 from ._port import PortManager
 from ._logging import logged_api_call
 from ._utils import repr_dict, repr_manager, repr_timestamp, matches_filters, \
-    divide_filter_args, make_query_str, RC_ADAPTER
+    divide_filter_args, make_query_str, RC_ADAPTER, repr_obj_id
 
 __all__ = ['AdapterManager', 'Adapter']
 
@@ -302,9 +302,9 @@ class Adapter(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, AdapterManager), \
-            "Adapter init: Expected manager type {}, got {}" \
-            .format(AdapterManager, type(manager))
+        assert isinstance(manager, AdapterManager), (
+            f"Adapter init: Expected manager type {AdapterManager}, got "
+            f"{type(manager)}")
         super().__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._ports = None
@@ -412,8 +412,7 @@ class Adapter(BaseResource):
         if card_type.startswith('crypto-express-'):
             max_domains = self.manager.cpc.maximum_active_partitions
         else:
-            raise ValueError("Unknown crypto card type: {!r}".
-                             format(card_type))
+            raise ValueError(f"Unknown crypto card type: {card_type!r}")
         return max_domains
 
     @logged_api_call
@@ -485,25 +484,15 @@ class Adapter(BaseResource):
         Return a string with the state of this Adapter, for debug purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _manager={_manager_classname} at 0x{_manager_id:08x},\n"
-            "  _uri={_uri!r},\n"
-            "  _full_properties={_full_properties!r},\n"
-            "  _properties_timestamp={_properties_timestamp},\n"
-            "  _properties={_properties},\n"
-            "  _ports(lazy)={_ports}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                _manager_classname=self._manager.__class__.__name__,
-                _manager_id=id(self._manager),
-                _uri=self._uri,
-                _full_properties=self._full_properties,
-                _properties_timestamp=repr_timestamp(
-                    self._properties_timestamp),
-                _properties=repr_dict(self._properties, indent=4),
-                _ports=repr_manager(self._ports, indent=2),
-            ))
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager={repr_obj_id(self._manager)},\n"
+            f"  _uri={self._uri!r},\n"
+            f"  _full_properties={self._full_properties!r},\n"
+            "  _properties_timestamp="
+            f"{repr_timestamp(self._properties_timestamp)},\n"
+            f"  _properties={repr_dict(self._properties, indent=4)},\n"
+            f"  _ports(lazy)={repr_manager(self._ports, indent=2)}\n"
+            ")")
         return ret
 
     @logged_api_call
@@ -664,8 +653,8 @@ class Adapter(BaseResource):
         query_parms, client_filters = divide_filter_args(
             query_props, filter_args)
         query_parms_str = make_query_str(query_parms)
-        uri = '{}/operations/get-partitions-assigned-to-adapter{}'.format(
-            self.uri, query_parms_str)
+        uri = (f'{self.uri}/operations/get-partitions-assigned-to-adapter'
+               f'{query_parms_str}')
 
         result = self.manager.session.get(uri, resource=self)
 

@@ -181,8 +181,7 @@ def repr_list(lst, indent):
         bm = '('
         em = ')'
     else:
-        raise TypeError("Object must be an iterable, but is a {}"
-                        .format(type(lst)))
+        raise TypeError(f"Object must be an iterable, but is a {type(lst)}")
     ret = bm + '\n'
     for value in lst:
         ret += _indent(f'{value!r},\n', 2)
@@ -198,8 +197,7 @@ def repr_dict(dct, indent):
     if dct is None:
         return 'None'
     if not isinstance(dct, Mapping):
-        raise TypeError("Object must be a mapping, but is a {}"
-                        .format(type(dct)))
+        raise TypeError(f"Object must be a mapping, but is a {type(dct)}")
     if isinstance(dct, OrderedDict):
         kind = 'ordered'
         ret = '%s {\n' % kind  # non standard syntax for the kind indicator
@@ -222,14 +220,21 @@ def repr_timestamp(timestamp):
     if timestamp is None:
         return 'None'
     dt = datetime_from_timestamp(timestamp)
-    ret = "{} ({})".format(timestamp,
-                           dt.strftime('%Y-%m-%d %H:%M:%S.%f %Z'))
+    ret = f"{timestamp} ({dt.strftime('%Y-%m-%d %H:%M:%S.%f %Z')})"
     return ret
 
 
 def repr_manager(manager, indent):
     """Return a debug representation of a manager object."""
     return repr_text(repr(manager), indent=indent)
+
+
+def repr_obj_id(obj):
+    """
+    Return a string that shows the class and ID value of the input object,
+    for use in repr() functions.
+    """
+    return f"{obj.__class__.__name__} at 0x{id(obj):08x}"
 
 
 def datetime_from_timestamp(ts, tzinfo=pytz.utc):
@@ -297,8 +302,8 @@ def datetime_from_timestamp(ts, tzinfo=pytz.utc):
         raise ValueError("HMC timestamp value must not be None.")
     if ts < 0:
         raise ValueError(
-            "Negative HMC timestamp value {} cannot be represented as "
-            "datetime.".format(ts))
+            f"Negative HMC timestamp value {ts} cannot be represented as "
+            "datetime.")
     epoch_seconds = ts // 1000
     delta_microseconds = ts % 1000 * 1000
     if tzinfo is None:
@@ -415,7 +420,7 @@ def divide_filter_args(query_props, filter_args):
                 client_filter_args[prop_name] = prop_match
     # query_parms_str = '&'.join(query_parms)
     # if query_parms_str:
-    #     query_parms_str = '?{}'.format(query_parms_str)
+    #     query_parms_str = f'?{query_parms_str}'
 
     return query_parms, client_filter_args
 
@@ -638,9 +643,9 @@ def warn_deprecated_parameter(cls, method, name, value, default):
     """
     if value != default:
         warnings.warn(
-            "Use of the '{pn}' parameter of zhmcclient.{cn}.{mn}() has no "
-            "function anymore and is deprecated".
-            format(pn=name, cn=cls.__name__, mn=method.__name__),
+            f"Use of the '{name}' parameter of "
+            f"zhmcclient.{cls.__name__}.{method.__name__}() has no "
+            "function anymore and is deprecated",
             DeprecationWarning, stacklevel=5)
         # Note on stacklevel=5:
         # * base value 1 (get out of warnings.warn)

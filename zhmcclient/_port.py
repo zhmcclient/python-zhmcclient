@@ -76,7 +76,7 @@ class PortManager(BaseManager):
             base_uri='',
             # TODO: Re-enable the following when unit/test_hba.py has been
             # converted to using the zhmcclient mock support:
-            # base_uri='{}/{}'.format(adapter.uri, adapter.port_uri_segment),
+            # base_uri=f'{adapter.uri}/{adapter.port_uri_segment}'
             oid_prop='element-id',
             uri_prop='element-uri',
             name_prop='name',
@@ -196,9 +196,9 @@ class Port(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, PortManager), \
-            "Port init: Expected manager type {}, got {}" \
-            .format(PortManager, type(manager))
+        assert isinstance(manager, PortManager), (
+            f"Port init: Expected manager type {PortManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call

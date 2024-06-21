@@ -75,9 +75,9 @@ def standard_activation_profile_props(cpc, profile_name, profile_type):
             actprof_input_props['number-shared-general-purpose-processors'] = 1
             actprof_input_props['operating-mode'] = 'esa390'
             warnings.warn(
-                "CPC {c} shows neither IFL nor CP processors, specifying 1 CP "
-                "for image activation profile creation.".
-                format(c=cpc.name), End2endTestWarning)
+                f"CPC {cpc.name} shows neither IFL nor CP processors, "
+                "specifying 1 CP for image activation profile creation.",
+                End2endTestWarning)
 
     return actprof_input_props
 
@@ -117,9 +117,9 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
         except zhmcclient.NotFound:
             pass
         else:
-            msg = ("Preparation: Delete {pt} activation profile {ap!r} on CPC "
-                   "{c} from previous run".
-                   format(pt=profile_type, ap=actprof_name, c=cpc.name))
+            msg = (
+                f"Preparation: Delete {profile_type} activation profile "
+                f"{actprof_name!r} on CPC {cpc.name} from previous run")
             warnings.warn(msg, UserWarning)
             logger.info(msg)
             _actprof.delete()
@@ -190,14 +190,14 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
         # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
-            skip_warn("No {t} activation profiles on CPC {c} managed by "
-                      "HMC {h}".
-                      format(t=profile_type, c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No {profile_type} activation profiles on CPC {cpc.name} "
+                f"managed by HMC {hd.host}")
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:
-            print("Testing on CPC {c} with {pt} activation profile {ap!r}".
-                  format(c=cpc.name, pt=profile_type, ap=actprof.name))
+            print(f"Testing on CPC {cpc.name} with {profile_type} activation "
+                  f"profile {actprof.name!r}")
             if profile_type == 'image':
                 actprof_additional_props = ACTPROF_ADDITIONAL_PROPS
             else:
@@ -229,14 +229,14 @@ def test_actprof_property(classic_mode_cpcs, profile_type):  # noqa: F811
         # Pick the activation profiles to test with
         actprof_list = actprof_mgr.list()
         if not actprof_list:
-            skip_warn("No {t} activation profiles on CPC {c} managed by "
-                      "HMC {h}".
-                      format(t=profile_type, c=cpc.name, h=hd.host))
+            skip_warn(
+                f"No {profile_type} activation profiles on CPC {cpc.name} "
+                f"managed by HMC {hd.host}")
         actprof_list = pick_test_resources(actprof_list)
 
         for actprof in actprof_list:
-            print("Testing on CPC {c} with {pt} activation profile {ap!r}".
-                  format(c=cpc.name, pt=profile_type, ap=actprof.name))
+            print(f"Testing on CPC {cpc.name} with {profile_type} activation "
+                  f"profile {actprof.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'

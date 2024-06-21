@@ -45,8 +45,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -55,8 +55,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -73,8 +72,8 @@ try:
                 'maximum-memory': 4096,
             })
     except zhmcclient.Error as exc:
-        print("Error: Cannot create partition {} on CPC {}: {}: {}".
-              format(part_name, cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot create partition {part_name} on CPC {cpc.name}: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     try:
@@ -82,14 +81,13 @@ try:
         job = part.start(wait_for_completion=False)
 
         sleep_time = 1
-        print("Polling for job completion with sleep time {} sec ...".
-              format(sleep_time))
+        print(f"Polling for job completion with sleep time {sleep_time} sec ...")
         while True:
             try:
                 job_status, op_result = job.check_for_completion()
             except zhmcclient.Error as exc:
                 print("Error: Job completed; Start operation failed with "
-                      "{}: {}".format(exc.__class__.__name__, exc))
+                      f"{exc.__class__.__name__}: {exc}")
                 break
             print(f"Job status: {job_status}")
             if job_status == 'complete':
@@ -103,17 +101,17 @@ try:
             try:
                 part.stop(wait_for_completion=True)
             except zhmcclient.Error as exc:
-                print("Error: Stop operation failed with {}: {}".
-                      format(exc.__class__.__name__, exc))
+                print("Error: Stop operation failed with "
+                      f"{exc.__class__.__name__}: {exc}")
                 sys.exit(1)
 
         print(f"Deleting partition {part.name} ...")
         try:
             part.delete()
         except zhmcclient.Error as exc:
-            print("Error: Cannot delete partition {} on CPC {} for clean up - "
-                  "Please delete it manually: {}: {}".
-                  format(part.name, cpc.name, exc.__class__.__name__, exc))
+            print(f"Error: Cannot delete partition {part.name} on CPC "
+                  "{cpc.name} for clean up - "
+                  f"Please delete it manually: {exc.__class__.__name__}: {exc}")
             sys.exit(1)
 
 finally:

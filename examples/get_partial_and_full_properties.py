@@ -44,24 +44,23 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
     client = zhmcclient.Client(session)
 
     for full_properties in (False, True):
-        print("Listing CPCs with full_properties={} ...".
-              format(full_properties))
+        print(f"Listing CPCs with full_properties={full_properties} ...")
         start_dt = datetime.now()
         cpcs = client.cpcs.list(full_properties)
         end_dt = datetime.now()
         duration = end_dt - start_dt
         print(f"Duration: {duration}")
         for cpc in cpcs:
-            print("Number of properties returned for CPC {}: {}".
-                  format(cpc.name, len(cpc.properties)))
+            print(f"Number of properties returned for CPC {cpc.name}: "
+                  f"{len(cpc.properties)}")
 
 finally:
     print("Logging off ...")

@@ -23,7 +23,7 @@ import yamlloader
 import jsonschema
 import zhmcclient
 
-from zhmcclient._utils import datetime_from_isoformat
+from zhmcclient._utils import datetime_from_isoformat, repr_obj_id
 
 from ._hmc import FakedHmc, FakedMetricObjectValues
 from ._urihandler import UriHandler, HTTPError, URIS
@@ -722,25 +722,20 @@ class FakedSession(zhmcclient.Session):
         purposes.
         """
         ret = (
-            "{classname} at 0x{id:08x} (\n"
-            "  _hosts = {s._hosts!r}\n"
-            "  _userid = {s._userid!r}\n"
-            "  _password = '...'\n"
-            "  _get_password = {s._get_password!r}\n"
-            "  _retry_timeout_config = {s._retry_timeout_config!r}\n"
-            "  _actual_host = {s._actual_host!r}\n"
-            "  _base_url = {s._base_url!r}\n"
-            "  _headers = {s._headers!r}\n"
-            "  _session_id = {s._session_id!r}\n"
-            "  _session = {s._session!r}\n"
-            "  _hmc = {hmc_classname} at 0x{hmc_id:08x}\n"
-            "  _urihandler = {s._urihandler!r}\n"
-            ")".format(
-                classname=self.__class__.__name__,
-                id=id(self),
-                hmc_classname=self._hmc.__class__.__name__,
-                hmc_id=id(self._hmc),
-                s=self))
+            f"{repr_obj_id(self)} (\n"
+            f"  _hosts = {self._hosts!r}\n"
+            f"  _userid = {self._userid!r}\n"
+            f"  _password = '...'\n"
+            f"  _get_password = {self._get_password!r}\n"
+            f"  _retry_timeout_config = {self._retry_timeout_config!r}\n"
+            f"  _actual_host = {self._actual_host!r}\n"
+            f"  _base_url = {self._base_url!r}\n"
+            f"  _headers = {self._headers!r}\n"
+            f"  _session_id = {self._session_id!r}\n"
+            f"  _session = {self._session!r}\n"
+            f"  _hmc = {repr_obj_id(self._hmc)}\n"
+            f"  _urihandler = {self._urihandler!r}\n"
+            ")")
         return ret
 
     @property
@@ -844,8 +839,7 @@ class FakedSession(zhmcclient.Session):
             else:
                 file_str = ""
             new_exc = HmcDefinitionYamlError(
-                "Invalid YAML syntax in faked HMC definition{fs}: {msg}".
-                format(fs=file_str, msg=exc))
+                f"Invalid YAML syntax in faked HMC definition{file_str}: {exc}")
             new_exc.__cause__ = None
             raise new_exc  # HmcDefinitionYamlError
 
@@ -896,17 +890,14 @@ class FakedSession(zhmcclient.Session):
                 file_str = f" in file {filepath}"
             else:
                 file_str = ""
+            elem = '.'.join(str(e) for e in exc.absolute_path)
+            schemaitem = '.'.join(str(e) for e in exc.absolute_schema_path)
             new_exc = HmcDefinitionSchemaError(
-                "Invalid data format in faked HMC definition{fs}: {msg}; "
-                "Offending element: {elem}; "
-                "Schema item: {schemaitem}; "
-                "Validator: {valname}={valvalue}".
-                format(fs=file_str, msg=exc.message,
-                       elem='.'.join(str(e) for e in exc.absolute_path),
-                       schemaitem='.'.join(str(e) for e in
-                                           exc.absolute_schema_path),
-                       valname=exc.validator,
-                       valvalue=exc.validator_value))
+                f"Invalid data format in faked HMC definition{file_str}: "
+                f"{exc.message}; "
+                f"Offending element: {elem}; "
+                f"Schema item: {schemaitem}; "
+                f"Validator: {exc.validator}={exc.validator_value}")
             new_exc.__cause__ = None
             raise new_exc  # HmcDefinitionSchemaError
 

@@ -86,13 +86,13 @@ def test_timestatskeeper_get():
     snapshot_length = len(keeper.snapshot())
     assert snapshot_length == 0, \
         "Verify that initial state has no time statistics. " \
-        "Actual number = {}".format(snapshot_length)
+        f"Actual number = {snapshot_length}"
 
     stats = keeper.get_stats('foo')
     snapshot_length = len(keeper.snapshot())
     assert snapshot_length == 0, \
         "Verify that getting a new stats with a disabled keeper results " \
-        "in no time statistics. Actual number = {}".format(snapshot_length)
+        f"in no time statistics. Actual number = {snapshot_length}"
     assert stats.keeper == keeper
     assert stats.name == "disabled"  # stats for disabled keeper
     assert stats.count == 0
@@ -106,7 +106,7 @@ def test_timestatskeeper_get():
     snapshot_length = len(keeper.snapshot())
     assert snapshot_length == 1, \
         "Verify that getting a new stats with an enabled keeper results " \
-        "in one time statistics. Actual number = {}".format(snapshot_length)
+        f"in one time statistics. Actual number = {snapshot_length}"
 
     assert stats.keeper == keeper
     assert stats.name == 'foo'
@@ -120,7 +120,7 @@ def test_timestatskeeper_get():
     assert snapshot_length == 1, \
         "Verify that getting an existing stats with an enabled keeper " \
         "results in the same number of time statistics. " \
-        "Actual number = {}".format(snapshot_length)
+        f"Actual number = {snapshot_length}"
 
 
 def test_timestatskeeper_measure_enabled():
@@ -140,15 +140,15 @@ def test_timestatskeeper_measure_enabled():
     for op_name in stats_dict:
         stats = stats_dict[op_name]
         assert stats.count == 1
-        assert time_abs_delta(stats.avg_time, dur) < delta, \
-            "avg time: actual: {}, expected: {}, delta: {}" \
-            .format(stats.avg_time, dur, delta)
-        assert time_abs_delta(stats.min_time, dur) < delta, \
-            "min time: actual: {}, expected: {}, delta: {}" \
-            .format(stats.min_time, dur, delta)
-        assert time_abs_delta(stats.max_time, dur) < delta, \
-            "max time: actual: {}, expected: {}, delta: {}" \
-            .format(stats.max_time, dur, delta)
+        assert time_abs_delta(stats.avg_time, dur) < delta, (
+            f"avg time: actual: {stats.avg_time}, expected: {dur}, "
+            f"delta: {delta}")
+        assert time_abs_delta(stats.min_time, dur) < delta, (
+            f"min time: actual: {stats.min_time}, expected: {dur}, "
+            f"delta: {delta}")
+        assert time_abs_delta(stats.max_time, dur) < delta, (
+            f"max time: actual: {stats.max_time}, expected: {dur}, "
+            f"delta: {delta}")
 
     stats.reset()
     assert stats.count == 0
@@ -236,15 +236,15 @@ def test_timestatskeeper_measure_avg_min_max():
     for op_name in stats_dict:
         stats = stats_dict[op_name]
         assert stats.count == 3
-        assert time_abs_delta(stats.avg_time, avg_dur) < delta, \
-            "avg time: actual: {}, expected: {}, delta: {}" \
-            .format(stats.avg_time, avg_dur, delta)
-        assert time_abs_delta(stats.min_time, min_dur) < delta, \
-            "min time: actual: {}, expected: {}, delta: {}" \
-            .format(stats.min_time, min_dur, delta)
-        assert time_abs_delta(stats.max_time, max_dur) < delta, \
-            "max time: actual: {}, expected: {}, delta: {}" \
-            .format(stats.max_time, max_dur, delta)
+        assert time_abs_delta(stats.avg_time, avg_dur) < delta, (
+            f"avg time: actual: {stats.avg_time}, expected: {avg_dur}, "
+            f"delta: {delta}")
+        assert time_abs_delta(stats.min_time, min_dur) < delta, (
+            f"min time: actual: {stats.min_time}, expected: {avg_dur}, "
+            f"delta: {delta}")
+        assert time_abs_delta(stats.max_time, max_dur) < delta, (
+            f"max time: actual: {stats.max_time}, expected: {avg_dur}, "
+            f"delta: {delta}")
 
 
 def test_timestatskeeper_only_end():

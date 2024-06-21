@@ -298,10 +298,10 @@ class TestMetricsContext:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=metricscontext.__class__.__name__,
-                               id=id(metricscontext)),
-                        repr_str)
+        assert re.match(
+            rf'^{metricscontext.__class__.__name__}\s+at\s+'
+            rf'0x{id(metricscontext):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "initial_status, exp_exc", [

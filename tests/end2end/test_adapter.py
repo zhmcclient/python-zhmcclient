@@ -68,13 +68,11 @@ def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
         # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
         if not adapter_list:
-            skip_warn("No adapters on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No adapters on CPC {cpc.name} managed by HMC {hd.host}")
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:
-            print("Testing on CPC {c} with adapter {a!r}".
-                  format(c=cpc.name, a=adapter.name))
+            print(f"Testing on CPC {cpc.name} with adapter {adapter.name!r}")
             runtest_find_list(
                 session, cpc.adapters, adapter.name, 'name', 'object-uri',
                 ADAPTER_VOLATILE_PROPS, ADAPTER_MINIMAL_PROPS,
@@ -98,13 +96,11 @@ def test_adapter_property(dpm_mode_cpcs):  # noqa: F811
         # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
         if not adapter_list:
-            skip_warn("No adapters on CPC {c} managed by HMC {h}".
-                      format(c=cpc.name, h=hd.host))
+            skip_warn(f"No adapters on CPC {cpc.name} managed by HMC {hd.host}")
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:
-            print("Testing on CPC {c} with adapter {a!r}".
-                  format(c=cpc.name, a=adapter.name))
+            print(f"Testing on CPC {cpc.name} with adapter {adapter.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -136,8 +132,7 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
         else:
             warnings.warn(
                 "Deleting test Hipersocket adapter from previous run: "
-                "{a!r} on CPC {c}".
-                format(a=adapter_name, c=cpc.name), UserWarning)
+                f"{adapter_name!r} on CPC {cpc.name}", UserWarning)
             adapter.delete()
         try:
             adapter = cpc.adapters.find(name=adapter_name_new)
@@ -146,8 +141,7 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
         else:
             warnings.warn(
                 "Deleting test Hipersocket adapter from previous run: "
-                "{a!r} on CPC {c}".
-                format(a=adapter_name_new, c=cpc.name), UserWarning)
+                f"{adapter_name_new!r} on CPC {cpc.name}", UserWarning)
             adapter.delete()
 
         # Create a Hipersocket adapter
@@ -238,10 +232,8 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
             family = adapter.get_property('adapter-family')
             if family not in family_adapters:
                 warnings.warn(
-                    "Ignoring adapter {a!r} on CPC {c} with an unknown "
-                    "family: '{f}'".
-                    format(c=cpc.name, a=adapter.name, f=family),
-                    UserWarning)
+                    f"Ignoring adapter {adapter.name!r} on CPC {cpc.name} with "
+                    f"an unknown family: '{family}'", UserWarning)
                 continue
             if adapter.get_property('type') == 'osm':
                 # Skip OSM adapters since they cannot be assigned to partitions
@@ -259,17 +251,16 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
             for family, all_adapters in family_adapters.items():
                 if not all_adapters:
                     warnings.warn(
-                        "CPC {c} has no adapters of family '{f}'".
-                        format(c=cpc.name, f=family), UserWarning)
+                        f"CPC {cpc.name} has no adapters of family '{family}'",
+                        UserWarning)
                     continue
 
                 if family in ('hipersockets', 'osa'):
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
-                        print("Testing on CPC {c} with adapter {a!r} "
-                              "(family '{f}')".
-                              format(c=cpc.name, a=test_adapter.name, f=family))
+                        print(f"Testing on CPC {cpc.name} with adapter "
+                              f"{test_adapter.name!r} (family '{family}')")
 
                         # The method to be tested
                         before_parts = test_adapter.list_assigned_partitions()
@@ -306,9 +297,8 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
-                        print("Testing on CPC {c} with adapter {a!r} "
-                              "(family '{f}')".
-                              format(c=cpc.name, a=test_adapter.name, f=family))
+                        print(f"Testing on CPC {cpc.name} with adapter "
+                              f"{test_adapter.name!r} (family '{family}')")
 
                         # The method to be tested
                         before_parts = test_adapter.list_assigned_partitions()
@@ -356,9 +346,8 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                             continue
 
                         found_test_adapter = True
-                        print("Testing on CPC {c} with FCP adapter {a!r} "
-                              "(family '{f}')".
-                              format(c=cpc.name, a=test_adapter.name, f=family))
+                        print(f"Testing on CPC {cpc.name} with FCP adapter "
+                              f"{test_adapter.name!r} (family '{family}')")
 
                         found_adapters = []
                         for part in before_parts:
@@ -379,17 +368,16 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
 
                     if not found_test_adapter:
                         warnings.warn(
-                            "CPC {c} has no FCP adapter with that is assigned "
-                            "to any partition - cannot test FCP adapters".
-                            format(c=cpc.name), UserWarning)
+                            f"CPC {cpc.name} has no FCP adapter with that is "
+                            "assigned to any partition - cannot test FCP "
+                            "adapters", UserWarning)
 
                 elif family == 'accelerator':
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
-                        print("Testing on CPC {c} with adapter {a!r} "
-                              "(family '{f}')".
-                              format(c=cpc.name, a=test_adapter.name, f=family))
+                        print(f"Testing on CPC {cpc.name} with adapter "
+                              f"{test_adapter.name!r} (family '{family}')")
 
                         # The method to be tested
                         before_parts = test_adapter.list_assigned_partitions()
@@ -431,9 +419,8 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                             continue
 
                         found_test_adapter = True
-                        print("Testing on CPC {c} with adapter {a!r} "
-                              "(family '{f}')".
-                              format(c=cpc.name, a=test_adapter.name, f=family))
+                        print(f"Testing on CPC {cpc.name} with adapter "
+                              f"{test_adapter.name!r} (family '{family}')")
 
                         found_adapter_uris = []
                         for part in before_parts:
@@ -451,9 +438,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
 
                     if not found_test_adapter:
                         warnings.warn(
-                            "CPC {c} has no Crypto adapter that is assigned "
-                            "to any partition - cannot test Crypto adapters".
-                            format(c=cpc.name), UserWarning)
+                            f"CPC {cpc.name} has no Crypto adapter that is "
+                            "assigned to any partition - cannot test Crypto "
+                            "adapters", UserWarning)
 
                 elif family == 'nvme':
                     print(f"TODO: Implement test for family {family}")
@@ -565,9 +552,9 @@ def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
                 exp_names = [a.name for a in adapters_by_base[base_id]]
                 exp_names.remove(adapter.name)
 
-            assert sibling_ids == exp_ids, \
-                "Adapter '{}' has unexpected siblings: got: {}, expected: {}". \
-                format(adapter.name, sibling_names, exp_names)
+            assert sibling_ids == exp_ids, (
+                f"Adapter '{adapter.name}' has unexpected siblings: got: "
+                f"{sibling_names}, expected: {exp_names}")
 
 
 # Properties in returned adapters, where each list item is a
@@ -695,11 +682,10 @@ def test_adapter_list_permitted(
                             and pname not in actual_pnames:
                         warnings.warn(
                             "The 'firmware-update-pending' property is not "
-                            "returned for adapters on CPC {cn!r} (SE "
-                            "version {cv}). Check on the SE 'Manage Firmware "
-                            "Features' task whether feature "
-                            "LI_1580_CRYPTO_AUTO_TOGGLE is enabled.".
-                            format(cn=cpc.name, cv=cpc.prop('se-version')))
+                            f"returned for adapters on CPC {cpc.name!r} (SE "
+                            f"version {cpc.prop('se-version')}). Check on the "
+                            "SE 'Manage Firmware Features' task whether "
+                            "feature LI_1580_CRYPTO_AUTO_TOGGLE is enabled.")
                     else:
                         assert pname in actual_pnames, \
                             f"Actual adapter: {adapter!r}"

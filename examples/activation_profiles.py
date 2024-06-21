@@ -43,8 +43,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -53,8 +53,7 @@ try:
     print("Finding a CPC in classic mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': False})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in classic mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in classic mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -64,8 +63,8 @@ try:
     try:
         profiles = cpc.reset_activation_profiles.list()
     except zhmcclient.Error as exc:
-        print("Error: Cannot list reset activation profiles for CPC {}: {}: {}".
-              format(cpc.name, exc.__class__.__name__, exc))
+        print("Error: Cannot list reset activation profiles for CPC "
+              f"{cpc.name}: {exc.__class__.__name__}: {exc}")
         sys.exit(1)
     for profile in profiles:
         print(profile.name, profile.get_property('element-uri'))
@@ -75,8 +74,8 @@ try:
     try:
         profiles = cpc.image_activation_profiles.list()
     except zhmcclient.Error as exc:
-        print("Error: Cannot list image activation profiles for CPC {}: {}: {}".
-              format(cpc.name, exc.__class__.__name__, exc))
+        print("Error: Cannot list image activation profiles for CPC "
+              f"{cpc.name}: {exc.__class__.__name__}: {exc}")
         sys.exit(1)
     for profile in profiles:
         print(profile.name, profile.get_property('element-uri'))
@@ -86,8 +85,8 @@ try:
     try:
         profiles = cpc.load_activation_profiles.list()
     except zhmcclient.Error as exc:
-        print("Error: Cannot list load activation profiles for CPC {}: {}: {}".
-              format(cpc.name, exc.__class__.__name__, exc))
+        print("Error: Cannot list load activation profiles for CPC "
+              f"{cpc.name}: {exc.__class__.__name__}: {exc}")
         sys.exit(1)
     for profile in profiles:
         print(profile.name, profile.get_property('element-uri'))

@@ -44,8 +44,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -64,8 +64,7 @@ try:
         print(f"Using first CPC {cpc.name}")
 
     for full_properties in (False, True):
-        print("\nListing partitions with full_properties={} ...".
-              format(full_properties))
+        print(f"\nListing partitions with full_properties={full_properties} ...")
         start_dt = datetime.now()
         partitions = cpc.partitions.list(full_properties)
         end_dt = datetime.now()
@@ -77,10 +76,9 @@ try:
             num_props += len(partition.properties)
         print(f"Duration: {duration.total_seconds():.2f} s")
         print(f"Number of partitions: {len(partitions)}")
-        print("Number of non-stopped partitions: {}".
-              format(len(non_stopped_partitions)))
-        print("Average number of properties per partition: {:.1f}".
-              format(num_props / len(partitions)))
+        print(f"Number of non-stopped partitions: {len(non_stopped_partitions)}")
+        avg_props = num_props / len(partitions)
+        print(f"Average number of properties per partition: {avg_props:.1f}")
 
 finally:
     print("Logging off ...")

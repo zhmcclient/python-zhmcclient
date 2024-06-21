@@ -93,8 +93,8 @@ def test_group_crud(hmc_session):  # noqa: F811
         pass
     else:
         warnings.warn(
-            "Deleting test group from previous run: {g!r}".
-            format(g=group_name), UserWarning)
+            f"Deleting test group from previous run: {group_name!r}",
+            UserWarning)
         group.delete()
 
     # Test creating the group
@@ -113,9 +113,9 @@ def test_group_crud(hmc_session):  # noqa: F811
             group = console.groups.create(group_input_props)
         except zhmcclient.HTTPError as exc:
             if exc.http_status == 403 and exc.reason == 1:
-                skip_warn("HMC userid {u!r} is not authorized for task "
-                          "'Grouping' on HMC {h}".
-                          format(u=hd.userid, h=hd.host))
+                skip_warn(
+                    f"HMC userid {hd.userid!r} is not authorized for task "
+                    f"'Grouping' on HMC {hd.host}")
             else:
                 raise
 

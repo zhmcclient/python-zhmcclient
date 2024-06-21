@@ -234,9 +234,9 @@ class Partition(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, PartitionManager), \
-            "Partition init: Expected manager type {}, got {}" \
-            .format(PartitionManager, type(manager))
+        assert isinstance(manager, PartitionManager), (
+            f"Partition init: Expected manager type {PartitionManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
         # The manager objects for child resources (with lazy initialization):
         self._nics = None
@@ -318,14 +318,16 @@ class Partition(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC {}"
-                             .format(self.manager.cpc.name))
+            raise ValueError(
+                "Firmware features are not supported on CPC "
+                f"{self.manager.cpc.name}")
         for feature in feature_list:
             if feature['name'] == feature_name:
                 break
         else:
-            raise ValueError("Firmware feature {} is not available on CPC {}"
-                             .format(feature_name, self.manager.cpc.name))
+            raise ValueError(
+                f"Firmware feature {feature_name} is not available on CPC "
+                f"{self.manager.cpc.name}")
         return feature['state']  # pylint: disable=undefined-loop-variable
 
     @logged_api_call
@@ -362,8 +364,9 @@ class Partition(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError("Firmware features are not supported on CPC {}"
-                             .format(self.manager.cpc.name))
+            raise ValueError(
+                "Firmware features are not supported on CPC "
+                f"{self.manager.cpc.name}")
         return feature_list
 
     @logged_api_call
@@ -834,8 +837,9 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        query_parms_str = '?image-name={}&ins-file-name={}'. \
-            format(quote(image_name, safe=''), quote(ins_file_name, safe=''))
+        query_parms_str = (
+            f"?image-name={quote(image_name, safe='')}"
+            f"&ins-file-name={quote(ins_file_name, safe='')}")
         self.manager.session.post(
             self.uri + '/operations/mount-iso-image' + query_parms_str,
             resource=self, body=image)
@@ -1052,9 +1056,9 @@ class Partition(BaseResource):
             # pylint: disable=possibly-used-before-assignment
             if status_timeout > 0 and time.time() > end_time:
                 raise StatusTimeout(
-                    "Waiting for partition {} to reach status(es) '{}' timed "
-                    "out after {} s - current status is '{}'".
-                    format(self.name, statuses, status_timeout, actual_status),
+                    f"Waiting for partition {self.name} to reach status(es) "
+                    f"'{statuses}' timed out after {status_timeout} s - "
+                    f"current status is '{actual_status}'",
                     actual_status, statuses, status_timeout)
 
             time.sleep(1)  # Avoid hot spin loop

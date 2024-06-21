@@ -19,7 +19,6 @@ Example that lists partitions with name filtering.
 
 import sys
 import requests.packages.urllib3
-from datetime import datetime
 
 import zhmcclient
 from zhmcclient.testutils import hmc_definitions
@@ -60,8 +59,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -75,8 +74,7 @@ try:
     else:
         filter_args = None
 
-    print("\nListing partitions with filter_args={!r} ...".
-          format(filter_args))
+    print(f"\nListing partitions with filter_args={filter_args!r} ...")
     partitions = cpc.partitions.list(filter_args=filter_args)
     print("Resulting partitions (sorted):")
     for part in sorted(partitions, key=lambda p: p.name):

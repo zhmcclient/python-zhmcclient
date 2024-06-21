@@ -209,9 +209,9 @@ class PasswordRule(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, PasswordRuleManager), \
-            "Console init: Expected manager type {}, got {}" \
-            .format(PasswordRuleManager, type(manager))
+        assert isinstance(manager, PasswordRuleManager), (
+            f"Console init: Expected manager type {PasswordRuleManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call

@@ -112,8 +112,7 @@ class InvalidResourceError(HTTPError):
             method, uri,
             http_status=404,
             reason=reason,
-            message="Unknown resource with URI: {}{}"
-            .format(resource_uri, handler_txt))
+            message=f"Unknown resource with URI: {resource_uri}{handler_txt}")
 
 
 class InvalidMethodError(HTTPError):
@@ -130,8 +129,7 @@ class InvalidMethodError(HTTPError):
             method, uri,
             http_status=404,
             reason=1,
-            message="Invalid HTTP method {} on URI: {} {}"
-            .format(method, uri, handler_txt))
+            message=f"Invalid HTTP method {method} on URI: {uri} {handler_txt}")
 
 
 class BadRequestError(HTTPError):
@@ -260,9 +258,8 @@ def parse_query_parms(method, uri):
         if len(items) != 2:
             raise BadRequestError(
                 method, uri, reason=1,
-                message="Invalid format for URI query parameter: {!r} "
-                "(valid format is: 'name=value').".
-                format(query_item))
+                message="Invalid format for URI query parameter: "
+                f"{query_item!r} (valid format is: 'name=value').")
         name = unquote(items[0])
         value = unquote(items[1])
         if name in query_parms:
@@ -296,7 +293,7 @@ def check_required_fields(method, uri, body, field_names):
         if field_name not in body:
             raise BadRequestError(method, uri, reason=5,
                                   message="Missing required field in request "
-                                  "body: {}".format(field_name))
+                                  f"body: {field_name}")
 
 
 def check_required_subfields(method, uri, element, element_str, field_names):
@@ -310,10 +307,10 @@ def check_required_subfields(method, uri, element, element_str, field_names):
 
     for field_name in field_names:
         if field_name not in element:
-            raise BadRequestError(method, uri, reason=5,
-                                  message="Missing required field in request "
-                                  "body within {}: {}".
-                                  format(element_str, field_name))
+            raise BadRequestError(
+                method, uri, reason=5,
+                message="Missing required field in request body within "
+                f"{element_str}: {field_name}")
 
 
 def check_valid_cpc_status(method, uri, cpc):
@@ -342,19 +339,18 @@ def check_valid_cpc_status(method, uri, cpc):
         if uri.startswith(cpc.uri):
             # The uri targets the CPC (either is the CPC uri or some
             # multiplicity under the CPC uri)
-            raise ConflictError(method, uri, reason=1,
-                                message="The operation cannot be performed "
-                                "because the targeted CPC {} has a status "
-                                "that is not valid for the operation: {}".
-                                format(cpc.name, status))
+            raise ConflictError(
+                method, uri, reason=1,
+                message="The operation cannot be performed because the "
+                f"targeted CPC {cpc.name} has a status that is not valid "
+                f"for the operation: {status}")
 
         # The uri targets a resource hosted by the CPC
-        raise ConflictError(method, uri, reason=6,
-                            message="The operation cannot be performed "
-                            "because CPC {} hosting the targeted resource "
-                            "has a status that is not valid for the "
-                            "operation: {}".
-                            format(cpc.name, status))
+        raise ConflictError(
+            method, uri, reason=6,
+            message=f"The operation cannot be performed because CPC {cpc.name} "
+            "hosting the targeted resource has a status that is not valid "
+            f"for the operation: {status}")
 
 
 def check_partition_status(method, uri, partition, valid_statuses=None,
@@ -382,21 +378,18 @@ def check_partition_status(method, uri, partition, valid_statuses=None,
 
             # The uri targets the partition (either is the partition uri or
             # some multiplicity under the partition uri)
-            raise ConflictError(method, uri, reason=1,
-                                message="The operation cannot be performed "
-                                "because the targeted partition {} has a "
-                                "status that is not valid for the operation: "
-                                "{}".
-                                format(partition.name, status))
+            raise ConflictError(
+                method, uri, reason=1,
+                message="The operation cannot be performed because the "
+                f"targeted partition {partition.name} has a status that is "
+                f"not valid for the operation: {status}")
 
         # The uri targets a resource hosted by the partition
-        raise ConflictError(method, uri,
-                            reason=1,  # Note: 6 not used for partitions
-                            message="The operation cannot be performed "
-                            "because partition {} hosting the targeted "
-                            "resource has a status that is not valid for "
-                            "the operation: {}".
-                            format(partition.name, status))
+        raise ConflictError(
+            method, uri, reason=1,  # Note: 6 not used for partitions
+            message="The operation cannot be performed because partition "
+            f"{partition.name} hosting the targeted resource has a status "
+            f"that is not valid for the operation: {status}")
 
 
 def check_writable(method, uri, body, writeable):
@@ -426,8 +419,7 @@ def check_set_noninput(method, uri, properties, prop_name, prop_value):
     if prop_name in properties:
         raise BadRequestError(
             method, uri, reason=6,
-            message="Property cannot be provided as input: {!r}".
-            format(prop_name))
+            message=f"Property cannot be provided as input: {prop_name!r}")
     properties[prop_name] = prop_value
 
 
@@ -447,7 +439,7 @@ def check_invalid_query_parms(method, uri, query_parms, valid_query_parms):
         new_exc = BadRequestError(
             method, uri, reason=1,
             message="Unrecognized or unsupported query parameters: "
-            "{!r}".format(invalid_parms))
+            f"{invalid_parms!r}")
         new_exc.__cause__ = None
         raise new_exc  # zhmcclient_mock.BadRequestError
 
@@ -551,9 +543,8 @@ class GenericGetPropertiesHandler:
                 except KeyError:
                     new_exc = BadRequestError(
                         method, uri, reason=14,
-                        message="Invalid property {!r} in 'properties' query "
-                        "parameter for resource with URI {!r}".
-                        format(pname, uri))
+                        message=f"Invalid property {pname!r} in 'properties' "
+                        f"query parameter for resource with URI {uri!r}")
                     new_exc.__cause__ = None
                     raise new_exc  # BadRequestError
             return ret_props
@@ -1115,8 +1106,8 @@ class UsersHandler:
         elif user_type == 'system-defined':
             raise BadRequestError(
                 method, uri, reason=4,
-                message="System-defined users cannot be created: {!r}".
-                format(user_name))
+                message="System-defined users cannot be created: "
+                f"{user_name!r}")
         else:
             raise BadRequestError(
                 method, uri, reason=4,
@@ -1196,8 +1187,7 @@ class UserHandler(GenericGetPropertiesHandler):
         if type_ == 'pattern-based':
             raise BadRequestError(
                 method, uri, reason=312,
-                message="Cannot delete pattern-based user {!r}".
-                format(user.name))
+                message=f"Cannot delete pattern-based user {user.name!r}")
         # Delete the mocked resource
         user.manager.remove(user.oid)
 
@@ -1226,8 +1216,8 @@ class UserAddUserRoleHandler:
         if user_type in ('pattern-based', 'system-defined'):
             raise BadRequestError(
                 method, uri, reason=314,
-                message="Cannot add user role to user of type {}: {}".
-                format(user_type, user_uri))
+                message=f"Cannot add user role to user of type {user_type}: "
+                f"{user_uri}")
         user_role_uri = body['user-role-uri']
         try:
             hmc.lookup_by_uri(user_role_uri)
@@ -1264,8 +1254,8 @@ class UserRemoveUserRoleHandler:
         if user_type in ('pattern-based', 'system-defined'):
             raise BadRequestError(
                 method, uri, reason=314,
-                message="Cannot remove user role from user of type {}: {}".
-                format(user_type, user_uri))
+                message="Cannot remove user role from user of type "
+                f"{user_type}: {user_uri}")
         user_role_uri = body['user-role-uri']
         try:
             user_role = hmc.lookup_by_uri(user_role_uri)
@@ -1277,8 +1267,8 @@ class UserRemoveUserRoleHandler:
                 or user_role_uri not in user.properties['user-roles']:
             raise ConflictError(
                 method, uri, reason=316,
-                message="User {!r} does not have User Role {!r}".
-                format(user.name, user_role.name))
+                message=f"User {user.name!r} does not have User Role "
+                f"{user_role.name!r}")
         user.properties['user-roles'].remove(user_role_uri)
 
 
@@ -1330,8 +1320,7 @@ class UserRolesHandler:
             raise BadRequestError(
                 method, uri, reason=6,
                 message="The 'type' property cannot be specified when "
-                "creating a user role (type: {!r}, uri: {!r})".
-                format(body['type'], uri))
+                f"creating a user role (type: {body['type']!r}, uri: {uri!r})")
         properties = copy.deepcopy(body)
         # createable/updateable
         properties.setdefault('description', '')
@@ -1412,7 +1401,7 @@ class UserRoleAddPermissionHandler:
         if user_role.properties['type'] == 'system-defined':
             raise BadRequestError(
                 method, uri, reason=314, message="Cannot add permission to "
-                "system-defined user role: {}".format(user_role_uri))
+                f"system-defined user role: {user_role_uri}")
         # Apply defaults, so our internally stored copy has all fields:
         permission = copy.deepcopy(body)
         if 'include-members' not in permission:
@@ -1450,7 +1439,7 @@ class UserRoleRemovePermissionHandler:
         if user_role.properties['type'] == 'system-defined':
             raise BadRequestError(
                 method, uri, reason=314, message="Cannot remove permission "
-                "from system-defined user role: {}".format(user_role_uri))
+                f"from system-defined user role: {user_role_uri}")
         # Apply defaults, so we can locate it based upon all fields:
         permission = copy.deepcopy(body)
         if 'include-members' not in permission:
@@ -1804,8 +1793,8 @@ class CpcSetPowerSaveHandler:
         power_saving = body['power-saving']
         if power_saving not in ['high-performance', 'low-power', 'custom']:
             raise BadRequestError(method, uri, reason=7,
-                                  message="Invalid power-saving value: {!r}"
-                                  .format(power_saving))
+                                  message="Invalid power-saving value: "
+                                  f"{power_saving!r}")
 
         cpc.properties['cpc-power-saving'] = power_saving
         cpc.properties['cpc-power-saving-state'] = power_saving
@@ -1839,7 +1828,7 @@ class CpcSetPowerCappingHandler:
         if power_capping_state not in ['disabled', 'enabled', 'custom']:
             raise BadRequestError(method, uri, reason=7,
                                   message="Invalid power-capping-state value: "
-                                  "{!r}".format(power_capping_state))
+                                  f"{power_capping_state!r}")
 
         if power_capping_state == 'enabled' and power_cap_current is None:
             raise BadRequestError(method, uri, reason=7,
@@ -2012,17 +2001,16 @@ class CpcActivateHandler:
         force = body.get('force', False)
         status = cpc.properties['status']
         if status in CPC_BAD_STATUSES:
-            raise ConflictError(method, uri, reason=1,
-                                message="The operation cannot be performed "
-                                "because the targeted CPC {} has a bad status "
-                                "{!r}".
-                                format(cpc.name, status))
+            raise ConflictError(
+                method, uri, reason=1,
+                message="The operation cannot be performed because the "
+                f"targeted CPC {cpc.name} has a bad status {status!r}")
         if status in CPC_ACTIVE_STATUSES and not force:
-            raise ConflictError(method, uri, reason=1,
-                                message="The operation cannot be performed "
-                                "because the targeted CPC {} already has an "
-                                "active status {!r} and force is not specified".
-                                format(cpc.name, status))
+            raise ConflictError(
+                method, uri, reason=1,
+                message="The operation cannot be performed because the "
+                f"targeted CPC {cpc.name} already has an active status "
+                f"{status!r} and force is not specified")
         cpc.properties['status'] = 'operating'
         cpc.properties['last-used-activation-profile'] = profile_name
         # TODO: Set last-used-iocds from profile
@@ -2051,17 +2039,16 @@ class CpcDeactivateHandler:
         force = body.get('force', False)
         status = cpc.properties['status']
         if status in CPC_BAD_STATUSES:
-            raise ConflictError(method, uri, reason=1,
-                                message="The operation cannot be performed "
-                                "because the targeted CPC {} has a bad status "
-                                "{!r}".
-                                format(cpc.name, status))
+            raise ConflictError(
+                method, uri, reason=1,
+                message="The operation cannot be performed because the "
+                f"targeted CPC {cpc.name} has a bad status {status!r}")
         if status in CPC_ACTIVE_STATUSES and not force:
-            raise ConflictError(method, uri, reason=1,
-                                message="The operation cannot be performed "
-                                "because the targeted CPC {} has an active "
-                                "status {!r} and force is not specified".
-                                format(cpc.name, status))
+            raise ConflictError(
+                method, uri, reason=1,
+                message="The operation cannot be performed because the "
+                f"targeted CPC {cpc.name} has an active status {status!r} "
+                "and force is not specified")
         cpc.properties['status'] = 'no-power'
 
 
@@ -2147,10 +2134,10 @@ class CpcExportPortNamesListHandler:
             if partition_cpc.oid != cpc_oid:
                 raise BadRequestError(
                     method, uri, reason=149,
-                    message="Partition {!r} specified in 'partitions' field "
-                    "is not in the targeted CPC with ID {!r} (but in the CPC "
-                    "with ID {!r})."
-                    .format(partition.uri, cpc_oid, partition_cpc.oid))
+                    message=f"Partition {partition.uri!r} specified in "
+                    "'partitions' field is not in the targeted CPC with ID "
+                    f"{cpc_oid!r} (but in the CPC with ID "
+                    f"{partition_cpc.oid!r}).")
             partition_name = partition.properties.get('name', '')
             for hba in partition.hbas.list():
                 port_uri = hba.properties['adapter-port-uri']
@@ -2159,8 +2146,7 @@ class CpcExportPortNamesListHandler:
                 adapter_id = adapter.properties.get('adapter-id', '')
                 devno = hba.properties.get('device-number', '')
                 wwpn = hba.properties.get('wwpn', '')
-                wwpn_str = '{},{},{},{}'.format(partition_name, adapter_id,
-                                                devno, wwpn)
+                wwpn_str = f'{partition_name},{adapter_id},{devno},{wwpn}'
                 wwpn_list.append(wwpn_str)
         return {
             'wwpn-list': wwpn_list
@@ -2207,9 +2193,9 @@ class CpcAddTempCapacityHandler:
             if current_software_model is not None:
                 raise BadRequestError(
                     method, uri, reason=277,
-                    message="Cannot activate temporary software model {} "
-                    "because temporary software model {} is already active".
-                    format(software_model, current_software_model))
+                    message="Cannot activate temporary software model "
+                    f"{software_model} because temporary software model "
+                    f"{current_software_model} is already active")
             # We accept any software model, and imply the desired total number
             # of general purpose processors from the last two digits.
             pnum = int(software_model[1:])
@@ -2218,11 +2204,10 @@ class CpcAddTempCapacityHandler:
             if pnum < cpc.properties[pname]:
                 raise BadRequestError(
                     method, uri, reason=276,
-                    message="Cannot activate temporary software model {} "
-                    "because its target number of {} {} processors is below "
-                    "the current number of {} {} processors".
-                    format(software_model, pnum, ptype, cpc.properties[pname],
-                           ptype))
+                    message="Cannot activate temporary software model "
+                    f"{software_model} because its target number of {pnum} "
+                    f"{ptype} processors is below the current number of "
+                    f"{cpc.properties[pname]} {ptype} processors")
             cpc.properties[pname] = pnum
             cpc.properties['software-model-permanent-plus-temporary'] = \
                 software_model
@@ -2233,8 +2218,8 @@ class CpcAddTempCapacityHandler:
                 if ptype not in CPC_PROPNAME_FROM_PROCTYPE:
                     raise BadRequestError(
                         method, uri, reason=276,
-                        message="Invalid processor type {} was specified in a "
-                        "processor-info entry".format(ptype))
+                        message=f"Invalid processor type {ptype} was "
+                        "specified in a processor-info entry")
                 pname = CPC_PROPNAME_FROM_PROCTYPE[ptype]
                 if psteps is not None:
                     # TODO: Check against installed number of processors
@@ -2269,9 +2254,9 @@ class CpcRemoveTempCapacityHandler:
             if current_software_model is None:
                 raise BadRequestError(
                     method, uri, reason=277,
-                    message="Cannot deactivate temporary software model {} "
-                    "because no temporary software model is currently active".
-                    format(software_model))
+                    message="Cannot deactivate temporary software model "
+                    f"{software_model} because no temporary software model "
+                    "is currently active")
             # We accept any software model, and imply the desired total number
             # of general purpose processors from the last two digits.
             pnum = int(software_model[1:])
@@ -2280,11 +2265,10 @@ class CpcRemoveTempCapacityHandler:
             if pnum > cpc.properties[pname]:
                 raise BadRequestError(
                     method, uri, reason=276,
-                    message="Cannot activate temporary software model {} "
-                    "because its target number of {} {} processors is above "
-                    "the current number of {} {} processors".
-                    format(software_model, pnum, ptype, cpc.properties[pname],
-                           ptype))
+                    message="Cannot activate temporary software model "
+                    f"{software_model} because its target number of {pnum} "
+                    f"{ptype} processors is above the current number of "
+                    f"{cpc.properties[pname]} {ptype} processors")
             cpc.properties[pname] = pnum
             cpc.properties['software-model-permanent-plus-temporary'] = None
         if processor_info is not None:
@@ -2294,17 +2278,17 @@ class CpcRemoveTempCapacityHandler:
                 if ptype not in CPC_PROPNAME_FROM_PROCTYPE:
                     raise BadRequestError(
                         method, uri, reason=276,
-                        message="Invalid processor type {} was specified in a "
-                        "processor-info entry".format(ptype))
+                        message=f"Invalid processor type {ptype} was "
+                        "specified in a processor-info entry")
                 pname = CPC_PROPNAME_FROM_PROCTYPE[ptype]
                 if psteps is not None:
                     if cpc.properties[pname] - psteps < 1:
                         raise BadRequestError(
                             method, uri, reason=276,
-                            message="Cannot reduce the number of {} {} "
-                            "processors by {} because at least one processor "
-                            "must remain.".
-                            format(cpc.properties[pname], ptype, psteps))
+                            message="Cannot reduce the number of "
+                            f"{cpc.properties[pname]} {ptype} processors by "
+                            f"{psteps} because at least one processor must "
+                            "remain.")
                     cpc.properties[pname] -= psteps
 
 
@@ -3039,8 +3023,7 @@ class AdapterChangeCryptoTypeHandler:
                                'ep11-coprocessor']:
             raise BadRequestError(
                 method, uri, reason=8,
-                message="Invalid value for 'crypto-type' field: {}"
-                .format(crypto_type))
+                message=f"Invalid value for 'crypto-type' field: {crypto_type}")
 
         # Reflect the result of changing the crypto type
         adapter.properties['crypto-type'] = crypto_type
@@ -3077,7 +3060,7 @@ class AdapterChangeAdapterTypeHandler:
             raise BadRequestError(
                 method, uri, reason=18,
                 message="The adapter type cannot be changed for adapter "
-                "family: {}".format(adapter_family))
+                f"family: {adapter_family}")
 
         # Check the adapter status
         adapter_status = adapter.properties.get('status', None)
@@ -3085,22 +3068,22 @@ class AdapterChangeAdapterTypeHandler:
             raise BadRequestError(
                 method, uri, reason=18,
                 message="The adapter type cannot be changed for adapter "
-                "status: {}".format(adapter_status))
+                f"status: {adapter_status}")
 
         # Check the validity of the new adapter type
         if new_adapter_type not in ['fc', 'fcp', 'not-configured']:
             raise BadRequestError(
                 method, uri, reason=8,
-                message="Invalid new value for 'type' field: {}"
-                .format(new_adapter_type))
+                message="Invalid new value for 'type' field: "
+                f"{new_adapter_type}")
 
         # Check that the new adapter type is not already set
         adapter_type = adapter.properties.get('type', None)
         if new_adapter_type == adapter_type:
             raise BadRequestError(
                 method, uri, reason=8,
-                message="New value for 'type' field is already set: {}"
-                .format(new_adapter_type))
+                message="New value for 'type' field is already set: "
+                f"{new_adapter_type}")
 
         # TODO: Reject if adapter is attached to a partition.
 
@@ -3212,7 +3195,7 @@ class PartitionsHandler:
             Note: Has a small chance to not be unique.
             """
             random_str = randrange(16 ^ 4)  # nosec B311
-            return "{:_<4.4s}{:04X}".format(partition_name.upper(), random_str)
+            return f"{partition_name.upper():_<4.4s}{random_str:04X}"
 
         def _partition_id():
             """"
@@ -4036,11 +4019,10 @@ class NicsHandler:
             nic_name = body.get('name', None)
             raise BadRequestError(
                 method, uri, reason=5,
-                message="The input properties for creating a NIC {!r} in "
-                "partition {!r} must specify either the "
+                message=f"The input properties for creating a NIC {nic_name!r} "
+                f"in partition {partition.name!r} must specify either the "
                 "'network-adapter-port-uri' or the "
-                "'virtual-switch-uri' property.".
-                format(nic_name, partition.name))
+                "'virtual-switch-uri' property.")
 
         # We have ensured that the vswitch exists, so no InputError handling
         new_nic = partition.nics.add(body)
@@ -4318,7 +4300,7 @@ class StorageGroupsHandler:
                     raise BadRequestError(
                         method, uri, 5,
                         "Invalid value for storage-volumes 'operation' "
-                        "field: {}".format(operation))
+                        f"field: {operation}")
 
         return {
             'object-uri': new_storage_group.uri,
@@ -4394,7 +4376,7 @@ class StorageGroupModifyHandler:
                     raise BadRequestError(
                         method, uri, 5,
                         "Invalid value for storage-volumes 'operation' "
-                        "field: {}".format(operation))
+                        f"field: {operation}")
 
         return {
             'element-uris': sv_uris,  # SVs created, maintaining the order
@@ -4486,8 +4468,8 @@ class StorageGroupAddCandidatePortsHandler:
             if ap_uri in candidate_adapter_port_uris:
                 raise ConflictError(method, uri, 483,
                                     "Adapter port is already in candidate "
-                                    "list of storage group {}: {}"
-                                    .format(storage_group.name, ap_uri))
+                                    "list of storage group "
+                                    f"{storage_group.name}: {ap_uri}")
             candidate_adapter_port_uris.append(ap_uri)
 
 
@@ -4525,8 +4507,8 @@ class StorageGroupRemoveCandidatePortsHandler:
             if ap_uri not in candidate_adapter_port_uris:
                 raise ConflictError(method, uri, 479,
                                     "Adapter port is not in candidate "
-                                    "list of storage group {}: {}"
-                                    .format(storage_group.name, ap_uri))
+                                    "list of storage group "
+                                    f"{storage_group.name}: {ap_uri}")
             candidate_adapter_port_uris.remove(ap_uri)
 
 
@@ -4647,7 +4629,7 @@ class StorageTemplatesHandler:
                     raise BadRequestError(
                         method, uri, 5,
                         "Invalid value for storage-template-volumes "
-                        "'operation' field: {}".format(operation))
+                        f"'operation' field: {operation}")
 
         return {
             'object-uri': new_sgt.uri,
@@ -4724,7 +4706,7 @@ class StorageTemplateModifyHandler:
                     raise BadRequestError(
                         method, uri, 5,
                         "Invalid value for storage-volumes 'operation' "
-                        "field: {}".format(operation))
+                        f"field: {operation}")
 
         return {
             'element-uris': sv_uris,  # SVs created, maintaining the order
@@ -4854,9 +4836,8 @@ class CapacityGroupHandler(GenericGetPropertiesHandler,
         if partition_uris:
             raise ConflictError(
                 method, uri, reason=110,
-                message="Capacity group {!r} is not empty and contains "
-                "partitions with URIs {!r}".
-                format(capacity_group.name, partition_uris))
+                message=f"Capacity group {capacity_group.name!r} is not empty "
+                f"and contains partitions with URIs {partition_uris!r}")
 
         # Delete the mocked resource
         capacity_group.manager.remove(capacity_group.oid)
@@ -4908,24 +4889,24 @@ class CapacityGroupAddPartitionHandler:
         processor_mode = partition.properties.get('processor-mode', 'shared')
         if processor_mode != 'shared':
             raise ConflictError(method, uri, 170,
-                                "Partition {} is in {} processor mode"
-                                .format(partition.name, processor_mode))
+                                f"Partition {partition.name} is in "
+                                f"{processor_mode} processor mode")
 
         # Check the partition is not in this capacity group
         partition_uris = capacity_group.properties['partition-uris']
         if partition.uri in partition_uris:
             raise ConflictError(method, uri, 130,
-                                "Partition {} is already a member of "
-                                "this capacity group {}"
-                                .format(partition.name, capacity_group.name))
+                                f"Partition {partition.name} is already a "
+                                "member of this capacity group "
+                                f"{capacity_group.name}")
 
         # Check the partition is not in any other capacity group
         for cg in cpc.capacity_groups.list():
             if partition.uri in cg.properties['partition-uris']:
                 raise ConflictError(method, uri, 120,
-                                    "Partition {} is already a member of "
-                                    "another capacity group {}"
-                                    .format(partition.name, cg.name))
+                                    f"Partition {partition.name} is already a "
+                                    "member of another capacity group "
+                                    f"{cg.name}")
 
         # Reflect the result of adding the partition to the capacity group
         capacity_group.properties['partition-uris'].append(partition.uri)
@@ -4977,9 +4958,8 @@ class CapacityGroupRemovePartitionHandler:
         partition_uris = capacity_group.properties['partition-uris']
         if partition.uri not in partition_uris:
             raise ConflictError(method, uri, 140,
-                                "Partition {} is not a member of "
-                                "capacity group {}"
-                                .format(partition.name, capacity_group.name))
+                                f"Partition {partition.name} is not a member "
+                                f"of capacity group {capacity_group.name}")
 
         # Reflect the result of removing the partition from the capacity group
         capacity_group.properties['partition-uris'].remove(partition.uri)
@@ -5094,11 +5074,11 @@ class LparActivateHandler:
         status = lpar.properties.get('status', None)
         force = body.get('force', False) if body else False
         if status == 'operating' and not force:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be activated "
-                              "because the LPAR is in status {} "
-                              "(and force was not specified).".
-                              format(lpar.name, status))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be activated because "
+                f"the LPAR is in status {status} (and force was not "
+                "specified).")
 
         act_profile_name = body.get('activation-profile-name', None)
         if not act_profile_name:
@@ -5109,11 +5089,11 @@ class LparActivateHandler:
 
         # Perform the check between LPAR name and profile name
         if act_profile_name != lpar.name:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be activated "
-                              "because the name of the image activation "
-                              "profile {!r} is different from the LPAR name.".
-                              format(lpar.name, act_profile_name))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be activated because "
+                "the name of the image activation profile "
+                f"{act_profile_name!r} is different from the LPAR name.")
 
         # Reflect the activation in the resource
         lpar.properties['status'] = LparActivateHandler.get_status()
@@ -5160,17 +5140,17 @@ class LparDeactivateHandler:
             # Note that the current behavior (on EC12) is that force=True
             # still causes this error to be returned (different behavior
             # compared to the Activate and Load operations).
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be deactivated "
-                              "because the LPAR is already deactivated "
-                              "(and force was not specified).".
-                              format(lpar.name))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be deactivated because "
+                "the LPAR is already deactivated (and force was not "
+                "specified).")
         if status == 'operating' and not force:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be deactivated "
-                              "because the LPAR is in status {} "
-                              "(and force was not specified).".
-                              format(lpar.name, status))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be deactivated because "
+                f"the LPAR is in status {status} (and force was not "
+                "specified).")
 
         # Reflect the deactivation in the resource
         lpar.properties['status'] = LparDeactivateHandler.get_status()
@@ -5217,16 +5197,15 @@ class LparLoadHandler:
         store_status_indicator = body.get('store-status-indicator',
                                           False) if body else False
         if status == 'not-activated':
-            raise ConflictError(method, uri, reason=0,
-                                message="LPAR {!r} could not be loaded "
-                                "because the LPAR is in status {}.".
-                                format(lpar.name, status))
+            raise ConflictError(
+                method, uri, reason=0,
+                message=f"LPAR {lpar.name!r} could not be loaded because "
+                f"the LPAR is in status {status}.")
         if status == 'operating' and not force:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be loaded "
-                              "because the LPAR is already loaded "
-                              "(and force was not specified).".
-                              format(lpar.name))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                "LPAR is already loaded (and force was not specified).")
 
         load_address = body.get('load-address', None) if body else None
         if not load_address:
@@ -5235,12 +5214,11 @@ class LparLoadHandler:
             load_address = lpar.properties.get('last-used-load-address', None)
         if load_address is None:
             # TODO: Verify actual error for this case on a z14.
-            raise BadRequestError(method, uri, reason=5,
-                                  message="LPAR {!r} could not be loaded "
-                                  "because a load address is not specified "
-                                  "in the request or in the Lpar last-used "
-                                  "property".
-                                  format(lpar.name))
+            raise BadRequestError(
+                method, uri, reason=5,
+                message=f"LPAR {lpar.name!r} could not be loaded because a "
+                "load address is not specified in the request or in the Lpar "
+                "last-used property")
 
         load_parameter = body.get('load-parameter', None) if body else None
         if not load_parameter:
@@ -5306,16 +5284,15 @@ class LparScsiLoadHandler:
         force = body.get('force', False)
 
         if status == 'not-activated':
-            raise ConflictError(method, uri, reason=0,
-                                message="LPAR {!r} could not be loaded "
-                                "because the LPAR is in status {}.".
-                                format(lpar.name, status))
+            raise ConflictError(
+                method, uri, reason=0,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                f"LPAR is in status {status}.")
         if status == 'operating' and not force:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be loaded "
-                              "because the LPAR is already loaded "
-                              "(and force was not specified).".
-                              format(lpar.name))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                "LPAR is already loaded (and force was not specified).")
 
         hmc_version_str = cpc.manager.hmc.hmc_version
         hmc_version = tuple(map(int, hmc_version_str.split('.')))
@@ -5400,16 +5377,15 @@ class LparScsiDumpHandler:
         force = body.get('force', False)
 
         if status == 'not-activated':
-            raise ConflictError(method, uri, reason=0,
-                                message="LPAR {!r} could not be loaded "
-                                "because the LPAR is in status {}.".
-                                format(lpar.name, status))
+            raise ConflictError(
+                method, uri, reason=0,
+                message=f"LPAR {lpar.name!r} could not be loaded because "
+                f"the LPAR is in status {status}.")
         if status == 'operating' and not force:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be loaded "
-                              "because the LPAR is already loaded "
-                              "(and force was not specified).".
-                              format(lpar.name))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                "LPAR is already loaded (and force was not specified).")
 
         hmc_version_str = cpc.manager.hmc.hmc_version
         hmc_version = tuple(map(int, hmc_version_str.split('.')))
@@ -5491,16 +5467,15 @@ class LparNvmeLoadHandler:
         force = body.get('force', False)
 
         if status == 'not-activated':
-            raise ConflictError(method, uri, reason=0,
-                                message="LPAR {!r} could not be loaded "
-                                "because the LPAR is in status {}.".
-                                format(lpar.name, status))
+            raise ConflictError(
+                method, uri, reason=0,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                f"LPAR is in status {status}.")
         if status == 'operating' and not force:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be loaded "
-                              "because the LPAR is already loaded "
-                              "(and force was not specified).".
-                              format(lpar.name))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                "LPAR is already loaded (and force was not specified).")
 
         hmc_version_str = cpc.manager.hmc.hmc_version
         hmc_version = tuple(map(int, hmc_version_str.split('.')))
@@ -5579,16 +5554,15 @@ class LparNvmeDumpHandler:
         force = body.get('force', False)
 
         if status == 'not-activated':
-            raise ConflictError(method, uri, reason=0,
-                                message="LPAR {!r} could not be loaded "
-                                "because the LPAR is in status {}.".
-                                format(lpar.name, status))
+            raise ConflictError(
+                method, uri, reason=0,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                f"LPAR is in status {status}.")
         if status == 'operating' and not force:
-            raise ServerError(method, uri, reason=263,
-                              message="LPAR {!r} could not be loaded "
-                              "because the LPAR is already loaded "
-                              "(and force was not specified).".
-                              format(lpar.name))
+            raise ServerError(
+                method, uri, reason=263,
+                message=f"LPAR {lpar.name!r} could not be loaded because the "
+                "LPAR is already loaded (and force was not specified).")
 
         hmc_version_str = cpc.manager.hmc.hmc_version
         hmc_version = tuple(map(int, hmc_version_str.split('.')))

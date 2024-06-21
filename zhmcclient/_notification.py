@@ -51,10 +51,10 @@ for a DPM partition::
                     msg_id = os_msg['message-id']
                     print("OS message #%s:\\n%s" % (msg_id, msg_txt))
         except zhmcclient.NotificationError as exc:
-            print("Notification Error: {} - reconnecting".format(exc))
+            print(f"Notification Error: {exc} - reconnecting")
             continue
         except stomp.exception.StompException as exc:
-            print("STOMP Error: {} - reconnecting".format(exc))
+            print("fSTOMP Error: {exc} - reconnecting")
             continue
         except KeyboardInterrupt:
             print("Keyboard Interrupt - leaving")
@@ -397,8 +397,7 @@ class NotificationReceiver:
             # and finally raises stomp.ConnectFailedException
             self._conn.connect(self._userid, self._password, wait=True)
         except Exception as exc:
-            msg = ("STOMP connection failed: {}: {}".
-                   format(exc.__class__.__name__, exc))
+            msg = f"STOMP connection failed: {exc.__class__.__name__}: {exc}"
             JMS_LOGGER.warning(msg)
             raise NotificationConnectionError(msg)
         JMS_LOGGER.info("STOMP connection successfully established")
@@ -420,9 +419,7 @@ class NotificationReceiver:
         """
         Create the subscription ID from the subscription ID number.
         """
-        id_value = ('zhmcclient.{pid}.{conn_id}.{sub_id}'.
-                    format(pid=self._process_pid, conn_id=id(self),
-                           sub_id=sub_id))
+        id_value = f'zhmcclient.{self._process_pid}.{id(self)}.{sub_id}'
         return id_value
 
     @logged_api_call
@@ -454,8 +451,7 @@ class NotificationReceiver:
         try:
             self._conn.subscribe(destination=dest, id=id_value, ack='auto')
         except Exception as exc:
-            msg = ("STOMP subscription failed: {}: {}".
-                   format(exc.__class__.__name__, exc))
+            msg = f"STOMP subscription failed: {exc.__class__.__name__}: {exc}"
             JMS_LOGGER.warning(msg)
             raise NotificationSubscriptionError(msg)
         return id_value
@@ -482,8 +478,8 @@ class NotificationReceiver:
             sub_id = self._sub_ids[topic_name]
         except KeyError:
             raise SubscriptionNotFound(
-                "Subscription topic {!r} is not currently subscribed for".
-                format(topic_name))
+                f"Subscription topic {topic_name!r} is not currently "
+                "subscribed for")
         id_value = self._id_value(sub_id)
         JMS_LOGGER.info(
             "Unsubscribing via STOMP from object notification topic '%s'",
@@ -491,8 +487,9 @@ class NotificationReceiver:
         try:
             self._conn.unsubscribe(id=id_value)
         except Exception as exc:
-            msg = ("STOMP unsubscription failed: {}: {}".
-                   format(exc.__class__.__name__, exc))
+            msg = (
+                f"STOMP unsubscription failed: {exc.__class__.__name__}: "
+                f"{exc}")
             JMS_LOGGER.warning(msg)
             raise NotificationSubscriptionError(msg)
 
@@ -527,8 +524,8 @@ class NotificationReceiver:
             sub_id = self._sub_ids[topic_name]
         except KeyError:
             raise SubscriptionNotFound(
-                "Subscription topic {!r} is not currently subscribed for".
-                format(topic_name))
+                f"Subscription topic {topic_name!r} is not currently "
+                "subscribed for")
         return self._id_value(sub_id)
 
     @logged_api_call
@@ -642,14 +639,14 @@ class NotificationReceiver:
                     msg_obj = json.loads(item.message)
                 except Exception as exc:
                     raise NotificationParseError(
-                        "Cannot convert JMS message body to JSON: {}: {}".
-                        format(exc.__class__.__name__, exc),
+                        "Cannot convert JMS message body to JSON: "
+                        f"{exc.__class__.__name__}: {exc}",
                         item.message)
             elif item.msgtype == 'error':
                 if 'message' in item.headers:
                     # Not sure that is always the case, but it was the case
                     # in issue #770.
-                    details = ": {}".format(item.headers['message'].strip())
+                    details = f": {item.headers['message'].strip()}"
                 else:
                     details = ""
                 raise NotificationJMSError(
@@ -683,8 +680,8 @@ class NotificationReceiver:
                                 "dropping %s event", item_.msgtype)
                         break
                 raise NotificationConnectionError(
-                    "STOMP received {} heartbeat timeouts and "
-                    "{} disconnect messages".format(num_hbto, num_disc))
+                    f"STOMP received {num_hbto} heartbeat timeouts and "
+                    f"{num_disc} disconnect messages")
             else:
                 raise RuntimeError(
                     f"Invalid handover item: {item.msgtype}")

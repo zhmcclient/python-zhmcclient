@@ -160,8 +160,7 @@ def logged_api_call(func):
         apifunc_str = f'{func.__name__}()'
     else:
         # The decorated API function is defined in a class or in a function
-        apifunc_str = '{owner}.{func}()'.format(owner=apifunc_owner,
-                                                func=func.__name__)
+        apifunc_str = f'{apifunc_owner}.{func.__name__}()'
 
     logger = get_logger(API_LOGGER_NAME)
 
@@ -220,15 +219,15 @@ def logged_api_call(func):
         _log_it = is_external_call() and logger.isEnabledFor(logging.DEBUG)
 
         if _log_it:
-            logger.debug("Called: {}, args: {:.500}, kwargs: {:.500}".
-                         format(apifunc_str, log_escaped(repr(args)),
-                                log_escaped(repr(kwargs))))
+            logger.debug("Called: %s, args: %.500s, kwargs: %.500s",
+                         apifunc_str, log_escaped(repr(args)),
+                         log_escaped(repr(kwargs)))
 
         result = func(*args, **kwargs)
 
         if _log_it:
-            logger.debug("Return: {}, result: {:.1000}".
-                         format(apifunc_str, log_escaped(repr(result))))
+            logger.debug("Return: %s, result: %.1000s",
+                         apifunc_str, log_escaped(repr(result)))
 
         return result
 

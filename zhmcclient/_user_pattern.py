@@ -252,9 +252,9 @@ class UserPattern(BaseResource):
         #   properties (dict):
         #     Properties to be set for this resource object. May be `None` or
         #     empty.
-        assert isinstance(manager, UserPatternManager), \
-            "Console init: Expected manager type {}, got {}" \
-            .format(UserPatternManager, type(manager))
+        assert isinstance(manager, UserPatternManager), (
+            f"Console init: Expected manager type {UserPatternManager}, "
+            f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
     @logged_api_call

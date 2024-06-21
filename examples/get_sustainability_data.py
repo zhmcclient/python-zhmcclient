@@ -19,7 +19,6 @@ Example that gets the sustainability data of a CPC.
 
 import sys
 import requests.packages.urllib3
-from pprint import pprint
 
 import zhmcclient
 from zhmcclient.testutils import hmc_definitions
@@ -46,8 +45,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -73,7 +72,7 @@ try:
         for metric_name, metric_array in data.items():
             print(f"{metric_name}:")
             for dp in metric_array:
-                print("  {}: {}".format(dp['timestamp'], dp['data']))
+                print(f"  {dp['timestamp']}: {dp['data']}")
 
     if cpc.dpm_enabled:
         parts = cpc.partitions.list()
@@ -83,8 +82,7 @@ try:
         part_str = "LPAR"
     part = parts[0]
     print('')
-    print('Getting sustainability metrics on {}: {}'.
-          format(part_str, part.name))
+    print(f'Getting sustainability metrics on {part_str}: {part.name}')
     print(f'Range: {range}')
     print(f'Resolution: {resolution}')
     try:
@@ -99,7 +97,7 @@ try:
         for metric_name, metric_array in data.items():
             print(f"{metric_name}:")
             for dp in metric_array:
-                print("  {}: {}".format(dp['timestamp'], dp['data']))
+                print(f"  {dp['timestamp']}: {dp['data']}")
 
     if rc != 0:
         print("Error happened - see above")

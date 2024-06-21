@@ -51,8 +51,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -61,8 +61,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -79,8 +78,8 @@ try:
                 'maximum-memory': 4096,
             })
     except zhmcclient.Error as exc:
-        print("Error: Cannot create partition {} on CPC {}: {}: {}".
-              format(part_name, cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot create partition {part_name} on CPC {cpc.name}: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     try:
@@ -88,41 +87,40 @@ try:
             with open(image_file, 'rb') as image_fp:
                 image_name = os.path.basename(image_file)
                 image_size_mb = 1.0 * os.path.getsize(image_file) / 1024 / 1024
-                print("Mounting ISO image to partition {} ...".
-                      format(part.name))
-                print("  Image file: {} (size: {:.1f} MB)".
-                      format(image_file, image_size_mb))
+                print(f"Mounting ISO image to partition {part.name} ...")
+                print(f"  Image file: {image_file} (size: {image_size_mb:.1f} MB)")
                 print(f"  Image name: {image_name}")
                 print(f"  Image INS file: {image_insfile}")
                 try:
                     part.mount_iso_image(image_fp, image_name, image_insfile)
                 except zhmcclient.Error as exc:
-                    print("Error: Cannot mount ISO file {}: {}: {}".
-                          format(image_file, exc.__class__.__name__, exc))
+                    print(f"Error: Cannot mount ISO file {image_file}: "
+                          f"{exc.__class__.__name__}: {exc}")
                     sys.exit(1)
         except OSError as exc:
-            print("Error: Cannot open image file {}: {}: {}".
-                  format(image_file, exc.__class__.__name__, exc))
+            print(f"Error: Cannot open image file {image_file}: "
+                  f"{exc.__class__.__name__}: {exc}")
             sys.exit(1)
 
         part.pull_full_properties()
+        image_name = part.get_property('boot-iso-image-name')
         print("Partition property 'boot-iso-image-name' has been set to image "
-              "name: {}".format(part.get_property('boot-iso-image-name')))
+              f"name: {image_name}")
 
         print("Setting 'iso-image' as a boot device ...")
         try:
             part.update_properties({'boot-device': 'iso-image'})
         except zhmcclient.Error as exc:
-            print("Error: Cannot update properties of partition {}: {}: {}".
-                  format(part.name, exc.__class__.__name__, exc))
+            print(f"Error: Cannot update properties of partition {part.name}: "
+                  f"{exc.__class__.__name__}: {exc}")
             sys.exit(1)
 
         print(f"Starting partition {part.name} ...")
         try:
             part.start()
         except zhmcclient.Error as exc:
-            print("Error: Cannot start partition {}: {}: {}".
-                  format(part.name, exc.__class__.__name__, exc))
+            print(f"Error: Cannot start partition {part.name}: "
+                  f"{exc.__class__.__name__}: {exc}")
             sys.exit(1)
 
         part.pull_full_properties()
@@ -135,17 +133,17 @@ try:
             try:
                 part.stop(wait_for_completion=True)
             except zhmcclient.Error as exc:
-                print("Error: Stop operation failed with {}: {}".
-                      format(exc.__class__.__name__, exc))
+                print("Error: Stop operation failed with "
+                      f"{exc.__class__.__name__}: {exc}")
                 sys.exit(1)
 
         print(f"Deleting partition {part.name} ...")
         try:
             part.delete()
         except zhmcclient.Error as exc:
-            print("Error: Cannot delete partition {} on CPC {} for clean up - "
-                  "Please delete it manually: {}: {}".
-                  format(part.name, cpc.name, exc.__class__.__name__, exc))
+            print(f"Error: Cannot delete partition {part.name} on CPC "
+                  f"{cpc.name} for clean up - "
+                  f"Please delete it manually: {exc.__class__.__name__}: {exc}")
             sys.exit(1)
 
 finally:

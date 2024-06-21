@@ -74,10 +74,10 @@ class TestGroup:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=group_mgr.__class__.__name__,
-                               id=id(group_mgr)),
-                        repr_str)
+        assert re.match(
+            rf'^{group_mgr.__class__.__name__}\s+at\s+'
+            rf'0x{id(group_mgr):08x}\s+\(\\n.*',
+            repr_str)
 
     def test_group_manager_initial_attrs(self):
         """Test initial attributes of GroupManager."""
@@ -192,10 +192,10 @@ class TestGroup:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=group1.__class__.__name__,
-                               id=id(group1)),
-                        repr_str)
+        assert re.match(
+            rf'^{group1.__class__.__name__}\s+at\s+'
+            rf'0x{id(group1):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "input_props, exp_exc", [

@@ -67,13 +67,13 @@ def test_stogrptpl_find_list(dpm_mode_cpcs):  # noqa: F811
         stogrptpl_list = console.storage_group_templates.findall(
             **{'cpc-uri': cpc.uri})
         if not stogrptpl_list:
-            skip_warn("No storage group templates associated to CPC {c} "
-                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn("No storage group templates associated to CPC "
+                      f"{cpc.name} managed by HMC {hd.host}")
         stogrptpl_list = pick_test_resources(stogrptpl_list)
 
         for stogrptpl in stogrptpl_list:
-            print("Testing on CPC {c} with storage group template {g!r}".
-                  format(c=cpc.name, g=stogrptpl.name))
+            print(f"Testing on CPC {cpc.name} with storage group template "
+                  f"{stogrptpl.name!r}")
             runtest_find_list(
                 session, console.storage_group_templates, stogrptpl.name,
                 'name', 'object-uri', STOGRPTPL_VOLATILE_PROPS,
@@ -100,13 +100,13 @@ def test_stogrptpl_property(dpm_mode_cpcs):  # noqa: F811
         stogrptpl_list = console.storage_group_templates.findall(
             **{'cpc-uri': cpc.uri})
         if not stogrptpl_list:
-            skip_warn("No storage group templates associated to CPC {c} "
-                      "managed by HMC {h}".format(c=cpc.name, h=hd.host))
+            skip_warn("No storage group templates associated to CPC "
+                      f"{cpc.name} managed by HMC {hd.host}")
         stogrptpl_list = pick_test_resources(stogrptpl_list)
 
         for stogrptpl in stogrptpl_list:
-            print("Testing on CPC {c} with storage group template {g!r}".
-                  format(c=cpc.name, g=stogrptpl.name))
+            print(f"Testing on CPC {cpc.name} with storage group template "
+                  f"{stogrptpl.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -140,8 +140,8 @@ def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group template from previous run: {g!r} "
-                "on CPC {c}".format(g=stogrptpl_name, c=cpc.name), UserWarning)
+                "Deleting test storage group template from previous run: "
+                f"{stogrptpl_name!r} on CPC {cpc.name}", UserWarning)
             stogrptpl.delete()
         try:
             stogrptpl = console.storage_group_templates.find(
@@ -150,9 +150,8 @@ def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811
             pass
         else:
             warnings.warn(
-                "Deleting test storage group template from previous run: {g!r} "
-                "on CPC {c}".
-                format(g=stogrptpl_name_new, c=cpc.name), UserWarning)
+                "Deleting test storage group template from previous run: "
+                f"{stogrptpl_name_new!r} on CPC {cpc.name}", UserWarning)
             stogrptpl.delete()
 
         # Test creating the storage group template
@@ -173,17 +172,20 @@ def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811
 
         for pn, exp_value in stogrptpl_input_props.items():
             assert stogrptpl.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage group tpl:\n" \
-                "{!r}".format(pn, sorted(stogrptpl.properties))
+                f"Unexpected value for property {pn!r} of storage group " \
+                f"tpl:\n{stogrptpl.properties!r}"
         stogrptpl.pull_full_properties()
         for pn, exp_value in stogrptpl_input_props.items():
             assert stogrptpl.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage group tpl:\n" \
-                "{!r}".format(pn, sorted(stogrptpl.properties))
+                f"Unexpected value for property {pn!r} of storage group " \
+                f"tpl:\n{stogrptpl.properties!r}"
         for pn, exp_value in stogrptpl_auto_props.items():
+            assert pn in stogrptpl.properties, (
+                f"Automatically returned property {pn!r} is not in "
+                f"created storage group template:\n{stogrptpl!r}")
             assert stogrptpl.properties[pn] == exp_value, \
-                "Unexpected value for property {!r} of storage group tpl:\n" \
-                "{!r}".format(pn, sorted(stogrptpl.properties))
+                f"Unexpected value for property {pn!r} of storage group " \
+                f"template:\n{stogrptpl.properties!r}"
 
         # Test updating a property of the storage group template
 

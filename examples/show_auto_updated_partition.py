@@ -45,8 +45,8 @@ try:
     session = zhmcclient.Session(
         host, userid, password, verify_cert=verify_cert)
 except zhmcclient.Error as exc:
-    print("Error: Cannot establish session with HMC {}: {}: {}".
-          format(host, exc.__class__.__name__, exc))
+    print(f"Error: Cannot establish session with HMC {host}: "
+          f"{exc.__class__.__name__}: {exc}")
     sys.exit(1)
 
 try:
@@ -55,8 +55,7 @@ try:
     print("Finding a CPC in DPM mode ...")
     cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
     if not cpcs:
-        print("Error: HMC at {} does not manage any CPCs in DPM mode".
-              format(host))
+        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
     cpc = cpcs[0]
     print(f"Using CPC {cpc.name}")
@@ -75,8 +74,8 @@ try:
     try:
         part = cpc.partitions.create(properties=part_props)
     except zhmcclient.Error as exc:
-        print("Error: Cannot create partition {} on CPC {}: {}: {}".
-              format(part_name, cpc.name, exc.__class__.__name__, exc))
+        print(f"Error: Cannot create partition {part_name} on CPC {cpc.name}: "
+              f"{exc.__class__.__name__}: {exc}")
         sys.exit(1)
 
     try:
@@ -91,20 +90,20 @@ try:
         # The property that will be updated
         part_prop = 'description'
 
-        print("Enabling auto-update for partition object 1 for partition {} "
-              "(id={})".format(part_name, id(partition1)))
+        print("Enabling auto-update for partition object 1 for partition "
+              f"{part_name} (id={id(partition1)})")
         partition1.enable_auto_update()
 
         print("Not enabling auto-update for partition object 2 for partition "
-              "{} (id={})".format(part_name, id(partition2)))
+              f"{part_name} (id={id(partition2)})")
 
-        print("Entering loop that displays property '{}' of partition objects "
-              "1 and 2".format(part_prop))
+        print(f"Entering loop that displays property '{part_prop}' of "
+              "partition objects 1 and 2")
         print("")
-        print("==> Update property '{}' of partition '{}' on CPC '{}' from "
-              "another session".format(part_prop, part_name, cpc.name))
-        print("==> Delete partition '{}' on CPC '{}' from another "
-              "session".format(part_name, cpc.name))
+        print(f"==> Update property '{part_prop}' of partition '{part_name}' "
+              f"on CPC '{cpc.name}' from another session")
+        print(f"==> Delete partition '{part_name}' on CPC '{cpc.name}' from "
+              "another session")
         print("")
         try:
             while True:
@@ -113,8 +112,8 @@ try:
                 except zhmcclient.CeasedExistence:
                     value1 = 'N/A'
                 value2 = partition2.prop(part_prop)
-                print("Property '{}' on partition objects 1: {!r}, 2: {!r}".
-                      format(part_prop, value1, value2))
+                print(f"Property '{part_prop}' on partition objects 1: "
+                      f"{value1!r}, 2: {value2!r}")
                 sleep(1)
         except KeyboardInterrupt:
             print("Keyboard interrupt - leaving loop")
@@ -127,9 +126,9 @@ try:
         try:
             part.delete()
         except zhmcclient.Error as exc:
-            print("Error: Cannot delete partition {} on CPC {} for clean up - "
-                  "Please delete it manually: {}: {}".
-                  format(part.name, cpc.name, exc.__class__.__name__, exc))
+            print(f"Error: Cannot delete partition {part.name} on CPC "
+                  f"{cpc.name} for clean up - "
+                  f"Please delete it manually: {exc.__class__.__name__}: {exc}")
             sys.exit(1)
 
 finally:

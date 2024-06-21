@@ -83,7 +83,7 @@ def print_hmc_definitions():
         print(f"{hd.nickname:20s} {str(host):24s} {hd.description}")
 
     print("\nGroups in inventory file:")
-    print("{:20s} {}".format("Group name", "HMCs in the group"))
+    print("Group name           HMCs in the group")
     for group_name in hmcdefs.list_all_group_names():
         hmc_names = ', '.join(
             [hd.nickname for hd in hmcdefs.list_hmcs(group_name)])
@@ -363,10 +363,9 @@ class HMCDefinitions:
                     auth_vars = auth[nickname]
                 except KeyError:
                     new_exc = HMCNoVaultError(
-                        "HMC {n!r} defined in HMC inventory file {i} has "
-                        "no corresponding entry in HMC vault file {v}".
-                        format(n=nickname, i=inv_file,
-                               v=hmc_vault.filepath))
+                        f"HMC {nickname!r} defined in HMC inventory file "
+                        f"{inv_file} has no corresponding entry in HMC "
+                        f"vault file {hmc_vault.filepath}")
                     new_exc.__cause__ = None
                     raise new_exc  # HMCNoVaultError
 
@@ -377,12 +376,12 @@ class HMCDefinitions:
                 host_vars['ca_certs'] = auth_vars.get('ca_certs', None)
 
     def __repr__(self):
-        return "HMCDefinitions(" \
-            "inventory_file={s.inventory_file!r}, " \
-            "vault_file={s.vault_file!r}, " \
-            "testhmc={s.testhmc!r}, " \
-            "group_names={s.group_names!r})". \
-            format(s=self)
+        return (
+            "HMCDefinitions("
+            f"inventory_file={self.inventory_file!r}, "
+            f"vault_file={self.vault_file!r}, "
+            f"testhmc={self.testhmc!r}, "
+            f"group_names={self.group_names!r})")
 
     @property
     def inventory_file(self):
@@ -455,8 +454,8 @@ class HMCDefinitions:
                     break
             else:
                 new_exc = HMCNotFound(
-                    "HMC group or nickname {n!r} not found in HMC inventory "
-                    "file {i}".format(n=name, i=self._inventory_file))
+                    f"HMC group or nickname {name!r} not found in HMC "
+                    f"inventory file {self._inventory_file}")
                 new_exc.__cause__ = None
                 raise new_exc  # HMCNotFound
 

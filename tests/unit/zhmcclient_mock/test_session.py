@@ -309,8 +309,7 @@ def test_session_to_from_yaml():
 
     if debug_yamlfile:
         filename = 'tmp_hmcdef.yaml'
-        print("Creating file with faked HMC definition: {}".
-              format(filename))
+        print(f"Creating file with faked HMC definition: {filename}")
         # pylint: disable=unspecified-encoding
         with open(filename, 'w') as fp:
             fp.write(hmc_yaml)

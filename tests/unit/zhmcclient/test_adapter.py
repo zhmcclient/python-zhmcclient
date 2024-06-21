@@ -429,10 +429,10 @@ class TestAdapter:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=adapter.__class__.__name__,
-                               id=id(adapter)),
-                        repr_str)
+        assert re.match(
+            rf'^{adapter.__class__.__name__}\s+at\s+'
+            rf'0x{id(adapter):08x}\s+\(\\n.*',
+            repr_str)
 
     def test_max_crypto_domains(self):
         """Test Adapter.maximum_crypto_domains on z13 and z13s."""

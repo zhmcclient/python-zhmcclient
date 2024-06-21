@@ -79,10 +79,10 @@ class TestLdapServerDefinition:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=ldap_srv_def_mgr.__class__.__name__,
-                               id=id(ldap_srv_def_mgr)),
-                        repr_str)
+        assert re.match(
+            rf'^{ldap_srv_def_mgr.__class__.__name__}\s+at\s+'
+            rf'0x{id(ldap_srv_def_mgr):08x}\s+\(\\n.*',
+            repr_str)
 
     def test_ldap_srv_def_manager_initial_attrs(self):
         """Test initial attributes of LdapServerDefinitionManager."""
@@ -203,10 +203,10 @@ class TestLdapServerDefinition:
 
         repr_str = repr_str.replace('\n', '\\n')
         # We check just the begin of the string:
-        assert re.match(r'^{classname}\s+at\s+0x{id:08x}\s+\(\\n.*'.
-                        format(classname=ldap_srv_def1.__class__.__name__,
-                               id=id(ldap_srv_def1)),
-                        repr_str)
+        assert re.match(
+            rf'^{ldap_srv_def1.__class__.__name__}\s+at\s+'
+            rf'0x{id(ldap_srv_def1):08x}\s+\(\\n.*',
+            repr_str)
 
     @pytest.mark.parametrize(
         "input_props, exp_exc", [

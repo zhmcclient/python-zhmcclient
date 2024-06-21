@@ -148,10 +148,9 @@ def defined_cpcs(session, mode):
         cpcs = [cpc for cpc in actual_cpcs if cpc.name == cpc_name]
         if not cpcs:
             msg_txt = (
-                "CPC {c} defined for HMC {n} at {h} in HMC definition file is "
-                "not managed by that HMC. Actually managed CPCs: {cl}".
-                format(c=cpc_name, n=hd.nickname, h=hd.host,
-                       cl=', '.join(actual_cpc_names)))
+                f"CPC {cpc_name} defined for HMC {hd.nickname} at {hd.host} "
+                "in HMC definition file is not managed by that HMC. "
+                f"Actually managed CPCs: {', '.join(actual_cpc_names)}")
             warnings.warn(msg_txt, UserWarning)
             pytest.skip(msg_txt)
         cpc = cpcs[0]
