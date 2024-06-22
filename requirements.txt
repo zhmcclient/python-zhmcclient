@@ -38,7 +38,10 @@ yamlloader>=0.5.5
 # jsonschema 4.0.0 was yanked (and does not install), but older pip versions don't recognize that
 # jsonschema is also used by jupyter and requires >=3.0.1
 # jsonschema 3.0.1 and 3.0.2 may cause pkg_resources.DistributionNotFound; fixed in 3.1.0.
-jsonschema>=3.1.0,!=4.0.0
+jsonschema>=3.1.0,!=4.0.0; python_version <= '3.12'
+# TODO: Remove temporary circumvention to pin jsonschema to <4.18.0 when pyo3-ffi
+#       supports Python 3.13 (see https://github.com/PyO3/pyo3/issues/4038#issuecomment-2156363013)
+jsonschema>=3.1.0,!=4.0.0,<4.18.0; python_version >= '3.13'
 
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
