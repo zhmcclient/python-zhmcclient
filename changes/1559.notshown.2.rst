@@ -1,0 +1,1 @@
+Second fix for RTD issue: Generate version file in RTD case.
