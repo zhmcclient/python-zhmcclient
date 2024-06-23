@@ -65,7 +65,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     NicsHandler, NicHandler, \
     VirtualFunctionsHandler, VirtualFunctionHandler, \
     AdaptersHandler, AdapterHandler, AdapterChangeCryptoTypeHandler, \
-    AdapterChangeAdapterTypeHandler, \
+    AdapterChangeAdapterTypeHandler, AdapterGetAssignedPartitionsHandler, \
     NetworkPortHandler, \
     StoragePortHandler, \
     VirtualSwitchesHandler, VirtualSwitchHandler, \
@@ -797,12 +797,12 @@ def standard_test_hmc():
                             'object-id': 'fake-stogrp-oid-1',
                             'name': 'fake_stogrp_name_1',
                             'description': 'Storage Group #1',
-                            'cpc-uri': '/api/cpcs/1',
+                            'cpc-uri': '/api/cpcs/2',
                             'type': 'fcp',
                             'shared': False,
                             'fulfillment-state': 'complete',
                             'candidate-adapter-port-uris': [
-                                '/api/cpcs/1/adapters/2',
+                                '/api/cpcs/2/adapters/2',
                             ],
                             # 'storage-volume-uris' managed automatically
                         },
@@ -826,7 +826,7 @@ def standard_test_hmc():
                             'object-id': 'fake-stotpl-oid-1',
                             'name': 'fake_stotpl_name_1',
                             'description': 'Storage Group Template #1',
-                            'cpc-uri': '/api/cpcs/1',
+                            'cpc-uri': '/api/cpcs/2',
                             'type': 'fcp',
                             'shared': False,
                             # 'storage-template-volume-uris' managed automatic.
@@ -908,6 +908,15 @@ def standard_test_hmc():
                             'hba-uris': [],   # updated automatically
                             'nic-uris': [],   # updated automatically
                             'virtual-function-uris': [],   # updated autom.
+                            'crypto-configuration': {
+                                'crypto-adapter-uris': ['/api/adapters/4'],
+                                'crypto-domain-configurations': [
+                                    {
+                                        'domain-index': 0,
+                                        'access-mode': 'control-usage',
+                                    },
+                                ],
+                            },
                         },
                         'hbas': [
                             {
@@ -928,6 +937,7 @@ def standard_test_hmc():
                                     'element-id': '1',
                                     'name': 'nic_1',
                                     'description': 'NIC #1 in Partition #1',
+                                    'type': 'roce',
                                     'network-adapter-port-uri':
                                         '/api/adapters/3/network-ports/1',
                                     'device-number': '2001',
@@ -941,6 +951,7 @@ def standard_test_hmc():
                                     'name': 'vf_1',
                                     'description': 'VF #1 in Partition #1',
                                     'device-number': '3001',
+                                    'adapter-uri': '/api/adapters/5',
                                 },
                             },
                         ],
@@ -1034,6 +1045,16 @@ def standard_test_hmc():
                             'detected-card-type': 'crypto-express-5s',
                             'crypto-number': 7,
                             'crypto-type': 'accelerator',
+                        },
+                    },
+                    {
+                        'properties': {
+                            'object-id': '5',
+                            'name': 'zedc_5',
+                            'description': 'zEDC compression #5 in CPC #2',
+                            'adapter-family': 'accelerator',
+                            'adapter-id': 'FEF',
+                            'detected-card-type': 'zedc-express',
                         },
                     },
                 ],
@@ -4271,6 +4292,13 @@ class TestAdapterHandlers:
                     'adapter-family': 'crypto',
                     'adapter-id': 'EEF',
                 },
+                {
+                    'object-uri': '/api/adapters/5',
+                    'name': 'zedc_5',
+                    'status': 'active',
+                    'adapter-family': 'accelerator',
+                    'adapter-id': 'FEF',
+                },
             ]
         }
         assert adapters == exp_adapters
@@ -4450,6 +4478,200 @@ class TestAdapterChangeAdapterTypeHandler:
         assert resp is None
 
 
+class TestAdapterGetAssignedPartitionsHandler:
+    """
+    All tests for class AdapterGetAssignedPartitionsHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        AdapterGetAssignedPartitionsHandler and other needed handlers.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/cpcs/([^/]+)/adapters(?:\?(.*))?', AdaptersHandler),
+            (r'/api/adapters/([^/]+)', AdapterHandler),
+            (r'/api/adapters/([^/]+)/operations/'
+             r'get-partitions-assigned-to-adapter(?:\?(.*))?',
+             AdapterGetAssignedPartitionsHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_adapter_part_nic_nofilter(self):
+        """
+        Test network adapter without filters, successful.
+        """
+
+        exp_partition_uri = '/api/partitions/1'
+        exp_partition_name = 'partition_1'
+        exp_partition_status = 'stopped'
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/3/operations/get-partitions-assigned-to-adapter',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 1
+
+        part1_info = partition_infos[0]
+        assert part1_info['object-uri'] == exp_partition_uri
+        assert part1_info['name'] == exp_partition_name
+        assert part1_info['status'] == exp_partition_status
+
+    def test_adapter_part_nic_match_name(self):
+        """
+        Test network adapter with matching 'name' filter, successful.
+        """
+
+        exp_partition_uri = '/api/partitions/1'
+        exp_partition_name = 'partition_1'
+        exp_partition_status = 'stopped'
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/3/operations/get-partitions-assigned-to-adapter'
+            f'?name={exp_partition_name}',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 1
+
+        part1_info = partition_infos[0]
+        assert part1_info['object-uri'] == exp_partition_uri
+        assert part1_info['name'] == exp_partition_name
+        assert part1_info['status'] == exp_partition_status
+
+    def test_adapter_part_nic_nomatch_name(self):
+        """
+        Test network adapter with non-matching 'name' filter, successful.
+        """
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/3/operations/get-partitions-assigned-to-adapter'
+            '?name=foo',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 0
+
+    def test_adapter_part_nic_match_status(self):
+        """
+        Test network adapter with matching 'status' filter, successful.
+        """
+
+        exp_partition_uri = '/api/partitions/1'
+        exp_partition_name = 'partition_1'
+        exp_partition_status = 'stopped'
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/3/operations/get-partitions-assigned-to-adapter'
+            f'?status={exp_partition_status}',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 1
+
+        part1_info = partition_infos[0]
+        assert part1_info['object-uri'] == exp_partition_uri
+        assert part1_info['name'] == exp_partition_name
+        assert part1_info['status'] == exp_partition_status
+
+    def test_adapter_part_nic_nomatch_status(self):
+        """
+        Test network adapter with non-matching 'status' filter, successful.
+        """
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/3/operations/get-partitions-assigned-to-adapter'
+            '?status=active',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 0
+
+    def xtest_adapter_part_ficon_nofilter(self):
+        # TODO: Enable test again when FakedStorageGroup supports VSRs
+        """
+        Test FICON adapter without filters, successful.
+        """
+
+        exp_partition_uri = '/api/partitions/1'
+        exp_partition_name = 'partition_1'
+        exp_partition_status = 'stopped'
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/2/operations/get-partitions-assigned-to-adapter',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 1
+
+        part1_info = partition_infos[0]
+        assert part1_info['object-uri'] == exp_partition_uri
+        assert part1_info['name'] == exp_partition_name
+        assert part1_info['status'] == exp_partition_status
+
+    def test_adapter_part_crypto_nofilter(self):
+        """
+        Test crypto adapter without filters, successful.
+        """
+
+        exp_partition_uri = '/api/partitions/1'
+        exp_partition_name = 'partition_1'
+        exp_partition_status = 'stopped'
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/4/operations/get-partitions-assigned-to-adapter',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 1
+
+        part1_info = partition_infos[0]
+        assert part1_info['object-uri'] == exp_partition_uri
+        assert part1_info['name'] == exp_partition_name
+        assert part1_info['status'] == exp_partition_status
+
+    def test_adapter_part_accel_nofilter(self):
+        """
+        Test accelerator adapter without filters, successful.
+        """
+
+        exp_partition_uri = '/api/partitions/1'
+        exp_partition_name = 'partition_1'
+        exp_partition_status = 'stopped'
+
+        # the function to be tested:
+        resp = self.urihandler.get(
+            self.hmc,
+            '/api/adapters/5/operations/get-partitions-assigned-to-adapter',
+            True)
+
+        partition_infos = resp['partitions-assigned-to-adapter']
+        assert len(partition_infos) == 1
+
+        part1_info = partition_infos[0]
+        assert part1_info['object-uri'] == exp_partition_uri
+        assert part1_info['name'] == exp_partition_name
+        assert part1_info['status'] == exp_partition_status
+
+
 class TestNetworkPortHandlers:
     """
     All tests for class NetworkPortHandler.
@@ -4623,6 +4845,17 @@ class TestPartitionHandlers:
             'partition-link-uris': [],
             'storage-group-uris': [],
             'tape-link-uris': [],
+            'crypto-configuration': {
+                'crypto-adapter-uris': [
+                    '/api/adapters/4',
+                ],
+                'crypto-domain-configurations': [
+                    {
+                        'access-mode': 'control-usage',
+                        'domain-index': 0,
+                    },
+                ],
+            },
         }
         assert partition1 == exp_partition1
 
@@ -5828,7 +6061,7 @@ class TestNicHandler:
             'network-adapter-port-uri': '/api/adapters/3/network-ports/1',
             'device-number': '2001',
             'ssc-management-nic': False,
-            'type': 'iqd',
+            'type': 'roce',
         }
         assert nic1 == exp_nic1
 
@@ -5956,6 +6189,7 @@ class TestVirtualFunctionHandler:
             'name': 'vf_1',
             'description': 'VF #1 in Partition #1',
             'device-number': '3001',
+            'adapter-uri': '/api/adapters/5',
         }
         assert vf1 == exp_vf1
 
@@ -6166,7 +6400,7 @@ class TestStorageGroupHandlers:
             'storage-groups': [
                 {
                     'object-uri': '/api/storage-groups/fake-stogrp-oid-1',
-                    'cpc-uri': '/api/cpcs/1',
+                    'cpc-uri': '/api/cpcs/2',
                     'name': 'fake_stogrp_name_1',
                     'fulfillment-state': 'complete',
                     'type': 'fcp',
@@ -6189,7 +6423,7 @@ class TestStorageGroupHandlers:
             'object-uri': '/api/storage-groups/fake-stogrp-oid-1',
             'class': 'storage-group',
             'parent': '/api/console',
-            'cpc-uri': '/api/cpcs/1',
+            'cpc-uri': '/api/cpcs/2',
             'name': 'fake_stogrp_name_1',
             'description': 'Storage Group #1',
             'fulfillment-state': 'complete',
@@ -6199,7 +6433,7 @@ class TestStorageGroupHandlers:
                 '/api/storage-groups/fake-stogrp-oid-1/storage-volumes/'
                 'fake-stovol-oid-1',
             ],
-            'candidate-adapter-port-uris': ['/api/cpcs/1/adapters/2'],
+            'candidate-adapter-port-uris': ['/api/cpcs/2/adapters/2'],
         }
         assert stogrp1 == exp_stogrp1
 
@@ -6312,7 +6546,7 @@ class TestStorageTemplateHandlers:
             'storage-templates': [
                 {
                     'object-uri': '/api/storage-templates/fake-stotpl-oid-1',
-                    'cpc-uri': '/api/cpcs/1',
+                    'cpc-uri': '/api/cpcs/2',
                     'name': 'fake_stotpl_name_1',
                     'type': 'fcp',
                 },
@@ -6334,7 +6568,7 @@ class TestStorageTemplateHandlers:
             'object-uri': '/api/storage-templates/fake-stotpl-oid-1',
             'class': 'storage-template',
             'parent': '/api/console',
-            'cpc-uri': '/api/cpcs/1',
+            'cpc-uri': '/api/cpcs/2',
             'name': 'fake_stotpl_name_1',
             'description': 'Storage Group Template #1',
             'type': 'fcp',

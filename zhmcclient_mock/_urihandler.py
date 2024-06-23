@@ -3091,6 +3091,136 @@ class AdapterChangeAdapterTypeHandler:
         adapter.properties['type'] = new_adapter_type
 
 
+class AdapterGetAssignedPartitionsHandler:
+    """
+    Handler class for operation: Get Partitions Assigned to Adapter.
+    """
+
+    valid_query_parms_get = ['name', 'status']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Partitions Assigned to Adapter (requires DPM mode)."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        adapter_uri = uri.split('/operations/')[0]
+        try:
+            adapter = hmc.lookup_by_uri(adapter_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        cpc = adapter.manager.parent
+        if not cpc.dpm_enabled:
+            raise CpcNotInDpmError(method, uri, cpc)
+
+        adapter_family = adapter.properties['adapter-family']
+        filter_args = query_parms
+        assigned_partitions = []
+        for partition in cpc.partitions.list(filter_args):
+
+            if adapter_family in ('hipersockets', 'osa', 'roce', 'cna'):
+                # Check if partition has a NIC backed by this adapter
+                for nic in partition.nics.list():
+                    if nic.properties['type'] in ('iqd', 'osd'):
+                        vswitch_uri = nic.properties['virtual-switch-uri']
+                        try:
+                            vswitch = hmc.lookup_by_uri(vswitch_uri)
+                        except KeyError:
+                            new_exc = InvalidResourceError(method, vswitch_uri)
+                            new_exc.__cause__ = None
+                            raise new_exc
+                        backing_adapter_uri = vswitch.properties[
+                            'backing-adapter-uri']
+                        if backing_adapter_uri == adapter_uri:
+                            assigned_partitions.append(partition)
+                            break  # Finding one NIC is sufficient
+                    else:
+                        # roce, cna
+                        backing_port_uri = nic.properties[
+                            'network-adapter-port-uri']
+                        try:
+                            port = hmc.lookup_by_uri(backing_port_uri)
+                        except KeyError:
+                            new_exc = InvalidResourceError(
+                                method, backing_port_uri)
+                            new_exc.__cause__ = None
+                            raise new_exc
+                        if port.manager.parent.uri == adapter_uri:
+                            assigned_partitions.append(partition)
+                            break  # Finding one NIC is sufficient
+
+            # TODO: Finish implementaton when FakedStorageGroup supports VSRs
+            # elif adapter_family in ('ficon'):
+            #     # Check if partition has a storage group attached that has
+            #     # a VSR backed by this adapter
+            #     console = hmc.consoles.console
+            #     for sg in console.storage_groups.list({'cpc-uri': cpc.uri}):
+            #         found_partition = None
+            #         for vsr_uri in sg.virtual_storage_resources.list():
+            #             try:
+            #                 vsr = hmc.lookup_by_uri(vsr_uri)
+            #             except KeyError:
+            #                 new_exc = InvalidResourceError(method, vsr_uri)
+            #                 new_exc.__cause__ = None
+            #                 raise new_exc
+            #             if vsr.properties['partition-uri'] != partition.uri:
+            #                 continue
+            #             port_uri = vsr.properties['adapter-port-uri']
+            #             try:
+            #                 port = hmc.lookup_by_uri(port_uri)
+            #             except KeyError:
+            #                 new_exc = InvalidResourceError(method, port_uri)
+            #                 new_exc.__cause__ = None
+            #                 raise new_exc
+            #             if port.manager.parent.uri == adapter_uri:
+            #                 found_partition = partition
+            #                 break  # Finding one VSR is sufficient
+            #         if found_partition:
+            #             assigned_partitions.append(found_partition)
+            #             break  # Finding one VSR is sufficient
+
+            elif adapter_family in ('crypto'):
+                # Check if partition has a crypto config that includes this
+                # adapter
+                crypto_config = partition.properties['crypto-configuration']
+                crypto_adapter_uris = crypto_config['crypto-adapter-uris']
+                if adapter_uri in crypto_adapter_uris:
+                    assigned_partitions.append(partition)
+
+            elif adapter_family in ('accelerator'):
+                # Check if partition has a virtual function backed by this
+                # adapter
+                for vf in partition.virtual_functions.list():
+                    vf_adapter_uri = vf.properties['adapter-uri']
+                if vf_adapter_uri == adapter_uri:
+                    assigned_partitions.append(partition)
+            else:
+                pass
+                # TODO: Enable check again when FakedStorageGroup supports VSRs
+                # raise AssertionError(
+                #     f"Adapter card with family {adapter_family} is not "
+                #     "supported in zhmcclient_mock")
+
+            # TODO: Add support for "nvme" - NVMA storage card.
+            # TODO: Add support for "coupling" - Coupling card.
+            # TODO: Add support for "ism" - Internal Shared Memory card.
+            # TODO: Add support for "zhyperlink" - zHyperLink Express.
+
+        part_infos = []
+        for partition in assigned_partitions:
+            part_info = {
+                'object-uri': partition.properties['object-uri'],
+                'name': partition.properties['name'],
+                'status': partition.properties.get('status'),
+            }
+            part_infos.append(part_info)
+
+        return {'partitions-assigned-to-adapter': part_infos}
+
+
 class NetworkPortHandler(GenericGetPropertiesHandler):
     """
     Handler class for HTTP methods on single NetworkPort resource.
@@ -5936,6 +6066,9 @@ URIS = (
      AdapterChangeCryptoTypeHandler),
     (r'/api/adapters/([^/]+)/operations/change-adapter-type',
      AdapterChangeAdapterTypeHandler),
+    (r'/api/adapters/([^/]+)/operations/'
+     r'get-partitions-assigned-to-adapter(?:\?(.*))?',
+     AdapterGetAssignedPartitionsHandler),
 
     (r'/api/adapters/([^/]+)/network-ports/([^?/]+)(?:\?(.*))?',
      NetworkPortHandler),
