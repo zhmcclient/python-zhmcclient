@@ -645,7 +645,7 @@ end2end: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py
 .PHONY:	end2end_mocked
 end2end_mocked: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	-bash -c "TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	bash -c "TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 .PHONY: authors
