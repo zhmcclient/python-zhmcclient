@@ -20,6 +20,20 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.16.2
+^^^^^^^^^^^^^^
+
+Released: 2024-06-23
+
+**Bug fixes:**
+
+* Addressed safety issues up to 2024-06-21
+
+**Cleanup:**
+
+* Fixed new issues reported by new flake8 7.0.0.
+
+
 Version 1.16.1
 ^^^^^^^^^^^^^^
 
