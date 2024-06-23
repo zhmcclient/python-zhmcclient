@@ -1,0 +1,3 @@
+Fixed the RTD build by using the version from the highest tag that is
+reachable from the checked out branch, if the version file _version_scm.py
+is not available.
