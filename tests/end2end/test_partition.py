@@ -104,7 +104,7 @@ def test_part_property(dpm_mode_cpcs):  # noqa: F811
         part_list = pick_test_resources(part_list)
 
         for part in part_list:
-            print(f"Testing on CPC {cpc.name} with partition {part.namep!r}")
+            print(f"Testing on CPC {cpc.name} with partition {part.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
