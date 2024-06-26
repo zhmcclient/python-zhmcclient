@@ -868,7 +868,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-7.  Verify the publishing
+7.  Verify the publishing and hide the previous fix version in ReadTheDocs
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -881,17 +881,21 @@ local clone of the python-zhmcclient Git repo.
     * Verify that the new version has a release on Github at
       https://github.com/zhmcclient/python-zhmcclient/releases
 
-    * Verify that the new version has documentation on ReadTheDocs at
-      https://python-zhmcclient.readthedocs.io/en/latest/changes.html
+    * Go to https://readthedocs.org/projects/python-zhmcclient/versions/ and:
 
-      The new version ``M.N.U`` should be automatically active on ReadTheDocs,
-      causing the documentation for the new version to be automatically
-      built and published.
+      - Verify that the new version ``M.N.U`` has been built successfully
+        and shows up at
+        https://python-zhmcclient.readthedocs.io/en/latest/changes.html.
+        If you cannot see the new version once its build is complete, a typical
+        issue may be that it was not activated automatically. Activate the new
+        version in that case.
 
-      If you cannot see the new version after some minutes, log in to
-      https://readthedocs.org/projects/python-zhmcclient/versions/
-      and activate the new version.
-
+      - Go to the settings of the previous fix version in ReadTheDocs
+        (i.e. ``M.N.U-1``) if that exists, and set it to "hidden" (it remains
+        active). Hiding it causes it to be removed from the version list shown
+        at the bottom of the left hand pane of the generated documentation.
+        Keeping it active will cause any links to that version (that users may
+        have obtained in the past), still to work.
 
 .. _`Starting a new version`:
 
