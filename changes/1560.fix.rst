@@ -1,0 +1,2 @@
+Docs: Added bibliography entries for HMC API books 2.11 - 2.12 back in,
+without links (they are not downloadable anymore).

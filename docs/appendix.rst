@@ -620,6 +620,15 @@ Bibliography
    HMC API
        The Web Services API of the z Systems Hardware Management Console, described in the following books:
 
+   HMC API 2.11.1
+       IBM SC27-2616, System z Hardware Management Console Web Services API (Version 2.11.1) (no longer available for download)
+
+   HMC API 2.12.0
+       IBM SC27-2617, System z Hardware Management Console Web Services API (Version 2.12.0) (no longer available for download)
+
+   HMC API 2.12.1
+       IBM SC27-2626, System z Hardware Management Console Web Services API (Version 2.12.1) (no longer available for download)
+
    HMC API 2.13.0
        `IBM SC27-2627-00a, z Systems Hardware Management Console Web Services API (Version 2.13.0) <https://www.ibm.com/docs/en/module_1707928542006/pdf/SC27-2627-00a.pdf>`_
 
