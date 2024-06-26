@@ -1,0 +1,1 @@
+Added release step to hide previous fix version on RTD

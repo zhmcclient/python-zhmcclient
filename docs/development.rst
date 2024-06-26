@@ -868,7 +868,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-7.  Verify the publishing and hide the previous fix version in ReadTheDocs
+7.  Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -881,21 +881,34 @@ local clone of the python-zhmcclient Git repo.
     * Verify that the new version has a release on Github at
       https://github.com/zhmcclient/python-zhmcclient/releases
 
-    * Go to https://readthedocs.org/projects/python-zhmcclient/versions/ and:
+    * Verify that the new version shows up in the version list when clicking
+      on "v:master" at the bottom of the left hand pane at
+      https://python-zhmcclient.readthedocs.io/. You may need to reload the
+      page, or click on a different version, or restart your browser to get it
+      updated, and ReadTheDocs first needs to finish its build for that to work.
 
-      - Verify that the new version ``M.N.U`` has been built successfully
-        and shows up at
-        https://python-zhmcclient.readthedocs.io/en/master/changes.html.
-        If you cannot see the new version once its build is complete, a typical
-        issue may be that it was not activated automatically. Activate the new
-        version in that case.
+      If the new version does not show up after some time, go to
+      https://readthedocs.org/projects/python-zhmcclient/builds/ to see whether
+      the new version was built, and if so, whether there was a build problem.
 
-      - Go to the settings of the previous fix version in ReadTheDocs
-        (i.e. ``M.N.U-1``) if that exists, and set it to "hidden" (it remains
-        active). Hiding it causes it to be removed from the version list shown
-        at the bottom of the left hand pane of the generated documentation.
-        Keeping it active will cause any links to that version (that users may
-        have obtained in the past), still to work.
+      If the new version was not built at all, log on to
+      https://readthedocs.org/ and go to
+      https://readthedocs.org/projects/python-zhmcclient/versions/
+      and edit the new version and set it to "active" (normally, that is done
+      automatically by ReadTheDocs for new tags).
+
+8.  Hide previous fix version on ReadTheDocs
+
+    When releasing a fix version != 0 (e.g. M.N.1), log on to
+    https://readthedocs.org/ and go to
+    https://readthedocs.org/projects/python-zhmcclient/versions/ and
+    edit the previous fix version (i.e. ``M.N.U-1``) and set it to "hidden"
+    (it remains active). Hiding it causes it to be removed from the version
+    list shown when clicking on "v:master" at
+    https://python-zhmcclient.readthedocs.io/. Keeping it active will
+    ensure that any links to that version that were obtained earlier, still
+    work.
+
 
 .. _`Starting a new version`:
 
