@@ -1,2 +1,2 @@
 Docs: Reduced number of versions shown in generated documentation to only
-the latest fix version of each minor version.
+the latest fix version of each minor version, and the master version.
