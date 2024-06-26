@@ -39,7 +39,7 @@ $ pip install zhmcclient
 ```
 
 For more details, see the
-[Installation section](http://python-zhmcclient.readthedocs.io/en/latest/intro.html#installation)
+[Installation section](http://python-zhmcclient.readthedocs.io/en/master/intro.html#installation)
 in the documentation.
 
 # Quickstart
@@ -82,9 +82,9 @@ P0000M96 PART1
 
 For the latest released version on PyPI:
 
--   [Documentation](http://python-zhmcclient.readthedocs.io/en/latest/)
+-   [Documentation](http://python-zhmcclient.readthedocs.io)
 -   [Change
-    log](http://python-zhmcclient.readthedocs.io/en/latest/changes.html)
+    log](http://python-zhmcclient.readthedocs.io/en/master/changes.html)
 
 # zhmc CLI
 
@@ -101,7 +101,7 @@ dependencies.
 # Contributing
 
 For information on how to contribute to this project, see the
-[Development section](http://python-zhmcclient.readthedocs.io/en/latest/development.html)
+[Development section](http://python-zhmcclient.readthedocs.io/en/master/development.html)
 in the documentation.
 
 # License

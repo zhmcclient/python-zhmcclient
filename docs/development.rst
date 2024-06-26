@@ -885,7 +885,7 @@ local clone of the python-zhmcclient Git repo.
 
       - Verify that the new version ``M.N.U`` has been built successfully
         and shows up at
-        https://python-zhmcclient.readthedocs.io/en/latest/changes.html.
+        https://python-zhmcclient.readthedocs.io/en/master/changes.html.
         If you cannot see the new version once its build is complete, a typical
         issue may be that it was not activated automatically. Activate the new
         version in that case.

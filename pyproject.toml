@@ -62,9 +62,9 @@ dynamic = ["version", "dependencies", "optional-dependencies"]
 [project.urls]
 Homepage = "https://github.com/zhmcclient/python-zhmcclient"
 "Bug Tracker" = "https://github.com/zhmcclient/python-zhmcclient/issues"
-Documentation = "https://python-zhmcclient.readthedocs.io/en/stable/"
+Documentation = "https://python-zhmcclient.readthedocs.io"
 "Source Code" = "https://github.com/zhmcclient/python-zhmcclient"
-Changelog = "https://python-zhmcclient.readthedocs.io/en/stable/changes.html"
+Changelog = "https://python-zhmcclient.readthedocs.io/en/master/changes.html"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
