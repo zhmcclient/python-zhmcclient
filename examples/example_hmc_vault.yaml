@@ -6,7 +6,7 @@
 # file.
 #
 # The format of HMC vault files is described in
-# https://python-zhmcclient.readthedocs.io/en/latest/development.html#hmc-vault-file
+# https://python-zhmcclient.readthedocs.io/en/master/development.html#hmc-vault-file
 
 hmc_auth:
 
@@ -18,8 +18,7 @@ hmc_auth:
   MOCKED_Z16_CLASSIC:
     userid: dummy
     password: dummy
-  
+
   MOCKED_Z16_DPM:
     userid: dummy
     password: dummy
-  

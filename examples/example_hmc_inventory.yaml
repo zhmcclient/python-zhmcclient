@@ -6,7 +6,7 @@
 # in a corresponding HMC vault file.
 #
 # The format of HMC inventory files is described in
-# https://python-zhmcclient.readthedocs.io/en/latest/development.html#hmc-inventory-file
+# https://python-zhmcclient.readthedocs.io/en/master/development.html#hmc-inventory-file
 
 all:
   hosts:
