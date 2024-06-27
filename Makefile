@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# Makefile for zhmcclient project
+# Makefile for z hmcclient project
 #
 # Supported OS platforms for this makefile:
 #     Linux (any distro)
