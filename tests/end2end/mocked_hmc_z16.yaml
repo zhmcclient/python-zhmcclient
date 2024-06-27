@@ -290,6 +290,14 @@ hmc_definition:
                 fulfillment-state: complete
                 size: 10.0
                 usage: boot
+          virtual_storage_resources:
+            - properties:
+                element-id: vsr1
+                name: Virtual storage resource 1
+                description: Virtual storage resource 1
+                device-number: '1300'
+                adapter-port-uri: /api/adapters/fcp1
+                partition-uri: /api/partitions/part1
   cpcs:
     - properties:
         # class: created automatically
