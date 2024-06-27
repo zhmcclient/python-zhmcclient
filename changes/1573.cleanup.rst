@@ -1,0 +1,3 @@
+Test: Transitioned from using change fragment files '...notshown.rst' for
+changes that should not appear in the change log, to using a new label
+'no change log' on the PR.

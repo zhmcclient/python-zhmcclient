@@ -112,9 +112,10 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Make sure this change adds or changes at least one change fragment file
+    - name: Make sure this change adds or changes at least one change fragment file (unless label 'no change log')
+      if: ${{ ! contains(github.event.pull_request.labels.*.name, 'no change log') }}
       run: |
-        bash -c "! git diff --exit-code origin/${{ github.base_ref }} changes/*.rst >/dev/null || (echo 'Please add or modify a change fragment file in the changes directory - for details read the Making a change section in the docs'; exit 1)"
+        bash -c "! git diff --exit-code origin/${{ github.base_ref }} changes/*.rst >/dev/null || (echo ''; echo 'Error: This change does not include change log data in the ´changes´ directory. Please either add the ´no change log´ label to the PR if no change log is needed, or modify a change fragment file in the ´changes´ directory - for details read the ´Making a change´ section in the docs'; echo ''; exit 1)"
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:

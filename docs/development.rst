@@ -636,12 +636,9 @@ For changes that have no corresponding issue:
 
     towncrier create noissue.<number>.<type>.rst --edit
 
-For changes where you do not want to create a change log entry:
-
-.. code-block:: sh
-
-    towncrier create noissue.<number>.notshown.rst --edit
-    # The file content will be ignored - it can also be empty
+For changes where you do not want to create a change log entry, you need to
+set the 'no change log' label on the pull request. This indicates that the
+change should not show up in the change log.
 
 where:
 
@@ -680,8 +677,6 @@ where:
   - ``cleanup`` - A cleanup in the code, documentation or development
     environment, that does not fix a bug and is not an enhanced functionality.
     This will show up in the "Cleanup" section of the change log.
-
-  - ``notshown`` - The change will not be shown in the change log.
 
 This command will create a new change fragment file in the ``changes``
 directory and will bring up your editor (usually vim).
