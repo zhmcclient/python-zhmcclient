@@ -334,10 +334,30 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageVolume"
                     },
                 },
+                "virtual_storage_resources": {
+                    "description": "The VSRs of this storage group",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VirtualStorageResource"
+                    },
+                },
             },
         },
         "StorageVolume": {
             "description": "A storage volume of a storage group",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
+        "VirtualStorageResource": {
+            "description": "A VSR of a storage group",
             "type": "object",
             "additionalProperties": False,
             "required": [

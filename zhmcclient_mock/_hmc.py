@@ -52,6 +52,8 @@ __all__ = ['InputError',
            'FakedVirtualFunctionManager', 'FakedVirtualFunction',
            'FakedVirtualSwitchManager', 'FakedVirtualSwitch',
            'FakedStorageGroupManager', 'FakedStorageGroup',
+           'FakedStorageVolumeManager', 'FakedStorageVolume',
+           'FakedVirtualStorageResourceManager', 'FakedVirtualStorageResource',
            'FakedStorageGroupTemplateManager', 'FakedStorageGroupTemplate',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
@@ -3164,9 +3166,13 @@ class FakedStorageGroup(FakedBaseResource):
             properties=properties)
         if 'storage-volume-uris' not in self._properties:
             self._properties['storage-volume-uris'] = []
+        if 'virtual-storage-resource-uris' not in self._properties:
+            self._properties['virtual-storage-resource-uris'] = []
         if 'shared' not in self._properties:
             self._properties['shared'] = False
         self._storage_volumes = FakedStorageVolumeManager(
+            hmc=manager.hmc, storage_group=self)
+        self._virtual_storage_resources = FakedVirtualStorageResourceManager(
             hmc=manager.hmc, storage_group=self)
 
     def __repr__(self):
@@ -3182,6 +3188,8 @@ class FakedStorageGroup(FakedBaseResource):
             f"  _properties = {repr_dict(self._properties, indent=2)}\n"
             "  _storage_volumes = "
             f"{repr_manager(self.storage_volumes, indent=2)}\n"
+            "  _virtual_storage_resources = "
+            f"{repr_manager(self.virtual_storage_resources, indent=2)}\n"
             ")")
         return ret
 
@@ -3192,6 +3200,14 @@ class FakedStorageGroup(FakedBaseResource):
         faked StorageVolume resources of this StorageGroup.
         """
         return self._storage_volumes
+
+    @property
+    def virtual_storage_resources(self):
+        """
+        :class:`~zhmcclient_mock.FakedVirtualStorageResourceManager`: Access to
+        the faked VirtualStorageResource resources of this StorageGroup.
+        """
+        return self._virtual_storage_resources
 
 
 class FakedStorageVolumeManager(FakedBaseManager):
@@ -3265,6 +3281,89 @@ class FakedStorageVolume(FakedBaseResource):
         """
         Return a string with the state of this faked StorageVolume resource,
         for debug purposes.
+        """
+        ret = (
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            ")")
+        return ret
+
+
+class FakedVirtualStorageResourceManager(FakedBaseManager):
+    """
+    A manager for faked VirtualStorageResource resources within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, storage_group):
+        super().__init__(
+            hmc=hmc,
+            parent=storage_group,
+            resource_class=FakedVirtualStorageResource,
+            base_uri=storage_group.uri + '/virtual-storage-resources',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='virtual-storage-resource',
+            name_prop='name')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked VirtualStorageResource resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the object ID,
+              if not specified.
+            * 'class' will be auto-generated to 'virtual-storage-resource',
+              if not specified.
+            * 'virtual-storage-resource-uris' array in parent storage group will
+              be updated to add the URI of the new faked
+              VirtualStorageResource resource.
+
+        Returns:
+
+          :class:`~zhmcclient_mock.FakedVirtualStorageResource`: The faked
+            VirtualStorageResource resource.
+        """
+        vsr = super().add(properties)
+        stogrp = vsr.manager.parent
+        if vsr.uri not in stogrp.properties['virtual-storage-resource-uris']:
+            stogrp.properties['virtual-storage-resource-uris'].append(vsr.uri)
+        return vsr
+
+
+class FakedVirtualStorageResource(FakedBaseResource):
+    """
+    A faked VirtualStorageResource resource within a faked StorageGroup (see
+    :class:`zhmcclient_mock.FakedStorageGroup`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked VirtualStorageResource
+        resource, for debug purposes.
         """
         ret = (
             f"{repr_obj_id(self)} (\n"
