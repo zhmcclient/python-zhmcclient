@@ -4684,6 +4684,48 @@ class StorageVolumeHandler(GenericGetPropertiesHandler):
     pass
 
 
+class VirtualStorageResourcesHandler:
+    """
+    Handler class for HTTP methods on set of VirtualStorageResource resources.
+    """
+
+    valid_query_parms_get = ['name', 'device-number', 'adapter-port-uri',
+                             'partition-uri']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Storage Volumes of a Storage Group."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        sg_uri = re.sub('/virtual-storage-resources$', '', uri)
+        try:
+            sg = hmc.lookup_by_uri(sg_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        result_vsrs = []
+        for vsr in sg.virtual_storage_resources.list(filter_args):
+            result_vsr = {}
+            for prop in vsr.properties:
+                if prop in ('element-uri', 'name', 'device-number',
+                            'adapter-port-uri', 'partition-uri'):
+                    result_vsr[prop] = vsr.properties[prop]
+            result_vsrs.append(result_vsr)
+        return {'virtual-storage-resources': result_vsrs}
+
+
+class VirtualStorageResourceHandler(GenericGetPropertiesHandler):
+    """
+    Handler class for HTTP methods on single VirtualStorageResource resource.
+    """
+    pass
+
+
 class StorageTemplatesHandler:
     """
     Handler class for HTTP methods on set of StorageGroupTemplate resources.
@@ -6132,6 +6174,11 @@ URIS = (
      StorageVolumesHandler),
     (r'/api/storage-groups/([^/]+)/storage-volumes/([^?/]+)(?:\?(.*))?',
      StorageVolumeHandler),
+
+    (r'/api/storage-groups/([^/]+)/virtual-storage-resources(?:\?(.*))?',
+     VirtualStorageResourcesHandler),
+    (r'/api/storage-groups/([^/]+)/virtual-storage-resources/'
+     r'([^?/]+)(?:\?(.*))?', VirtualStorageResourceHandler),
 
     (r'/api/storage-templates(?:\?(.*))?', StorageTemplatesHandler),
     (r'/api/storage-templates/([^?/]+)(?:\?(.*))?', StorageTemplateHandler),

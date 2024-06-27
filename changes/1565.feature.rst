@@ -1,0 +1,2 @@
+Mock: Added zhmcclient mock support for Virtual Storage Resources in Storage
+Groups.

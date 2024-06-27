@@ -72,6 +72,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     VirtualSwitchGetVnicsHandler, \
     StorageGroupsHandler, StorageGroupHandler, \
     StorageVolumesHandler, StorageVolumeHandler, \
+    VirtualStorageResourcesHandler, VirtualStorageResourceHandler, \
     StorageTemplatesHandler, StorageTemplateHandler, \
     StorageTemplateVolumesHandler, StorageTemplateVolumeHandler, \
     CapacityGroupsHandler, CapacityGroupHandler, \
@@ -805,6 +806,7 @@ def standard_test_hmc():
                                 '/api/cpcs/2/adapters/2',
                             ],
                             # 'storage-volume-uris' managed automatically
+                            # 'virtual-storage-resource-uris' managed autom.
                         },
                         'storage_volumes': [
                             {
@@ -815,6 +817,19 @@ def standard_test_hmc():
                                     'fulfillment-state': 'complete',
                                     'size': 10.0,
                                     'usage': 'boot',
+                                },
+                            },
+                        ],
+                        'virtual_storage_resources': [
+                            {
+                                'properties': {
+                                    'element-id': 'fake-vsr-oid-1',
+                                    'name': 'fake_vsr_name_1',
+                                    'description':
+                                    'Virtual Storage Resource #1',
+                                    'device-number': '1300',
+                                    'partition-uri': None,
+                                    'adapter-port-uri': None,
                                 },
                             },
                         ],
@@ -6433,6 +6448,10 @@ class TestStorageGroupHandlers:
                 '/api/storage-groups/fake-stogrp-oid-1/storage-volumes/'
                 'fake-stovol-oid-1',
             ],
+            'virtual-storage-resource-uris': [
+                '/api/storage-groups/fake-stogrp-oid-1/'
+                'virtual-storage-resources/fake-vsr-oid-1',
+            ],
             'candidate-adapter-port-uris': ['/api/cpcs/2/adapters/2'],
         }
         assert stogrp1 == exp_stogrp1
@@ -6513,6 +6532,78 @@ class TestStorageVolumeHandlers:
             'usage': 'boot',
         }
         assert stovol1 == exp_stovol1
+
+
+class TestVirtualStorageResourceHandlers:
+    """
+    All tests for classes VirtualStorageResourcesHandler and
+    VirtualStorageResourceHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        VirtualStorageResourcesHandler and VirtualStorageResourceHandler.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/storage-groups/([^/]+)/virtual-storage-resources'
+             r'(?:\?(.*))?', VirtualStorageResourcesHandler),
+            (r'/api/storage-groups/([^/]+)/virtual-storage-resources/([^/]+)',
+             VirtualStorageResourceHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_vsr_list(self):
+        """
+        Test GET Virtual Storage Resources of Storage Group (list).
+        """
+
+        # the function to be tested:
+        vsrs = self.urihandler.get(
+            self.hmc,
+            '/api/storage-groups/fake-stogrp-oid-1/virtual-storage-resources',
+            True)
+
+        exp_vsrs = {  # properties reduced to those returned by List
+            'virtual-storage-resources': [
+                {
+                    'element-uri': '/api/storage-groups/fake-stogrp-oid-1/'
+                                   'virtual-storage-resources/fake-vsr-oid-1',
+                    'name': 'fake_vsr_name_1',
+                    'device-number': '1300',
+                    'partition-uri': None,
+                    'adapter-port-uri': None,
+                },
+            ]
+        }
+        assert vsrs == exp_vsrs
+
+    def test_vsr_get(self):
+        """
+        Test GET Virtual Storage Resource.
+        """
+
+        # the function to be tested:
+        vsr1 = self.urihandler.get(
+            self.hmc, '/api/storage-groups/fake-stogrp-oid-1/'
+            'virtual-storage-resources/fake-vsr-oid-1', True)
+
+        exp_vsr1 = {
+            'element-id': 'fake-vsr-oid-1',
+            'element-uri': '/api/storage-groups/fake-stogrp-oid-1/'
+                           'virtual-storage-resources/fake-vsr-oid-1',
+            'class': 'virtual-storage-resource',
+            'parent': '/api/storage-groups/fake-stogrp-oid-1',
+            'name': 'fake_vsr_name_1',
+            'description': 'Virtual Storage Resource #1',
+            'device-number': '1300',
+            'partition-uri': None,
+            'adapter-port-uri': None,
+        }
+        assert vsr1 == exp_vsr1
 
 
 class TestStorageTemplateHandlers:
