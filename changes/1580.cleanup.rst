@@ -1,0 +1,3 @@
+Mock: Changed all 'list()' methods when used in a mocked environment, to return
+the properties with a value of 'None' instead of omitting it, when the mock
+environment did not add the property.

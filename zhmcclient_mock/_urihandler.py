@@ -808,6 +808,8 @@ class ConsoleListUnmanagedCpcsHandler:
 
     valid_query_parms_get = ['name']
 
+    returned_props = ['name', 'object-uri']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -826,9 +828,8 @@ class ConsoleListUnmanagedCpcsHandler:
         filter_args = query_parms
         for ucpc in console.unmanaged_cpcs.list(filter_args):
             result_ucpc = {}
-            for prop in ucpc.properties:
-                if prop in ('object-uri', 'name'):
-                    result_ucpc[prop] = ucpc.properties[prop]
+            for prop in cls.returned_props:
+                result_ucpc[prop] = ucpc.properties[prop]
             result_ucpcs.append(result_ucpc)
         return {'cpcs': result_ucpcs}
 
@@ -842,6 +843,12 @@ class ConsoleListPermittedPartitionsHandler:
                              'has-unacceptable-status', 'cpc-name',
                              'additional-properties']
 
+    returned_props = [
+        'name', 'object-uri', 'type', 'status', 'has-unacceptable-status',
+        # plus additional-properties
+        # plus properties not from Partition
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -849,7 +856,10 @@ class ConsoleListPermittedPartitionsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', '').split(',')
+        if 'additional-properties' in query_parms:
+            add_props = query_parms.pop('additional-properties').split(',')
+        else:
+            add_props = []
         filter_args = query_parms
 
         result_partitions = []
@@ -866,17 +876,13 @@ class ConsoleListPermittedPartitionsHandler:
 
                 for partition in cpc.partitions.list(filter_args):
                     result_partition = {}
-                    for prop in ('object-uri', 'name', 'status',
-                                 'type', 'has-unacceptable-status'):
+                    for prop in cls.returned_props + add_props:
                         result_partition[prop] = \
-                            partition.properties.get(prop, None)
+                            partition.properties.get(prop)
                     result_partition['cpc-name'] = cpc.name
                     result_partition['cpc-object-uri'] = cpc.uri
                     result_partition['se-version'] = \
                         cpc.properties.get('se-version', None)
-                    for prop in add_props:
-                        result_partition[prop] = \
-                            partition.properties.get(prop, None)
                     result_partitions.append(result_partition)
 
         return {'partitions': result_partitions}
@@ -891,6 +897,13 @@ class ConsoleListPermittedLparsHandler:
                              'has-unacceptable-status', 'cpc-name',
                              'additional-properties']
 
+    returned_props = [
+        'name', 'object-uri', 'activation-mode', 'status',
+        'has-unacceptable-status',
+        # plus additional-properties
+        # plus properties not from LPAR
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -898,7 +911,10 @@ class ConsoleListPermittedLparsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', '').split(',')
+        if 'additional-properties' in query_parms:
+            add_props = query_parms.pop('additional-properties').split(',')
+        else:
+            add_props = []
         filter_args = query_parms
 
         result_lpars = []
@@ -915,26 +931,12 @@ class ConsoleListPermittedLparsHandler:
 
                 for lpar in cpc.lpars.list(filter_args):
                     result_lpar = {}
-                    result_lpar['object-uri'] = \
-                        lpar.properties.get('object-uri', None)
-                    result_lpar['name'] = \
-                        lpar.properties.get('name', None)
-                    result_lpar['activation-mode'] = \
-                        lpar.properties.get('activation-mode', None)
-                    result_lpar['status'] = \
-                        lpar.properties.get('status', None)
-                    result_lpar['has-unacceptable-status'] = \
-                        lpar.properties.get(
-                            'has-unacceptable-status', None)
+                    for prop in cls.returned_props + add_props:
+                        result_lpar[prop] = lpar.properties.get(prop)
                     result_lpar['cpc-name'] = cpc.name
                     result_lpar['cpc-object-uri'] = cpc.uri
                     result_lpar['se-version'] = \
                         cpc.properties.get('se-version', None)
-                    for prop in add_props:
-                        try:
-                            result_lpar[prop] = lpar.properties[prop]
-                        except KeyError:
-                            pass
                     result_lpars.append(result_lpar)
 
         return {'logical-partitions': result_lpars}
@@ -949,6 +951,13 @@ class ConsoleListPermittedAdaptersHandler:
                              'status', 'firmware-update-pending', 'cpc-name',
                              'dpm-enabled', 'additional-properties']
 
+    returned_props = [
+        'object-uri', 'name', 'adapter-id', 'adapter-family', 'type',
+        'status', 'firmware-update-pending',
+        # plus additional-properties
+        # plus properties not from Adapter
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -962,7 +971,10 @@ class ConsoleListPermittedAdaptersHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', '').split(',')
+        if 'additional-properties' in query_parms:
+            add_props = query_parms.pop('additional-properties').split(',')
+        else:
+            add_props = []
         filter_args = query_parms
 
         result_adapters = []
@@ -980,31 +992,15 @@ class ConsoleListPermittedAdaptersHandler:
 
                 for adapter in cpc.adapters.list(filter_args):
                     result_adapter = {}
-                    result_adapter['object-uri'] = \
-                        adapter.properties.get('object-uri', None)
-                    result_adapter['name'] = \
-                        adapter.properties.get('name', None)
-                    result_adapter['adapter-id'] = \
-                        adapter.properties.get('adapter-id', None)
-                    result_adapter['adapter-family'] = \
-                        adapter.properties.get('adapter-family', None)
-                    result_adapter['type'] = \
-                        adapter.properties.get('type', None)
-                    result_adapter['status'] = \
-                        adapter.properties.get('status', None)
-                    result_adapter['firmware-update-pending'] = \
-                        adapter.properties.get('firmware-update-pending', None)
+                    for prop in cls.returned_props + add_props:
+                        result_adapter[prop] = \
+                            adapter.properties.get(prop)
                     result_adapter['cpc-name'] = cpc.name
                     result_adapter['cpc-object-uri'] = cpc.uri
                     result_adapter['se-version'] = \
                         cpc.properties.get('se-version', None)
                     result_adapter['dpm-enabled'] = \
                         cpc.properties.get('dpm-enabled', None)
-                    for prop in add_props:
-                        try:
-                            result_adapter[prop] = adapter.properties[prop]
-                        except KeyError:
-                            pass
                     result_adapters.append(result_adapter)
 
         return {'adapters': result_adapters}
@@ -1016,6 +1012,8 @@ class UsersHandler:
     """
 
     valid_query_parms_get = ['name', 'type']
+
+    returned_props = ['object-uri', 'name', 'type']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -1035,9 +1033,8 @@ class UsersHandler:
         result_users = []
         for user in console.users.list(filter_args):
             result_user = {}
-            for prop in user.properties:
-                if prop in ('object-uri', 'name', 'type'):
-                    result_user[prop] = user.properties[prop]
+            for prop in cls.returned_props:
+                result_user[prop] = user.properties.get(prop)
             result_users.append(result_user)
         return {'users': result_users}
 
@@ -1279,6 +1276,8 @@ class UserRolesHandler:
 
     valid_query_parms_get = ['name', 'type']
 
+    returned_props = ['object-uri', 'name', 'type']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -1297,9 +1296,8 @@ class UserRolesHandler:
         result_user_roles = []
         for user_role in console.user_roles.list(filter_args):
             result_user_role = {}
-            for prop in user_role.properties:
-                if prop in ('object-uri', 'name', 'type'):
-                    result_user_role[prop] = user_role.properties[prop]
+            for prop in cls.returned_props:
+                result_user_role[prop] = user_role.properties.get(prop)
             result_user_roles.append(result_user_role)
         return {'user-roles': result_user_roles}
 
@@ -1458,6 +1456,8 @@ class TasksHandler:
 
     valid_query_parms_get = ['name']
 
+    returned_props = ['element-uri', 'name']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -1476,9 +1476,8 @@ class TasksHandler:
         result_tasks = []
         for task in console.tasks.list(filter_args):
             result_task = {}
-            for prop in task.properties:
-                if prop in ('element-uri', 'name'):
-                    result_task[prop] = task.properties[prop]
+            for prop in cls.returned_props:
+                result_task[prop] = task.properties.get(prop)
             result_tasks.append(result_task)
         return {'tasks': result_tasks}
 
@@ -1496,6 +1495,8 @@ class UserPatternsHandler:
     """
 
     valid_query_parms_get = ['name', 'type']
+
+    returned_props = ['element-uri', 'name', 'type']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -1515,9 +1516,9 @@ class UserPatternsHandler:
         result_user_patterns = []
         for user_pattern in console.user_patterns.list(filter_args):
             result_user_pattern = {}
-            for prop in user_pattern.properties:
-                if prop in ('element-uri', 'name', 'type'):
-                    result_user_pattern[prop] = user_pattern.properties[prop]
+            for prop in cls.returned_props:
+                result_user_pattern[prop] = \
+                    user_pattern.properties.get(prop)
             result_user_patterns.append(result_user_pattern)
         return {'user-patterns': result_user_patterns}
 
@@ -1556,6 +1557,8 @@ class PasswordRulesHandler:
 
     valid_query_parms_get = ['name', 'type']
 
+    returned_props = ['element-uri', 'name', 'type']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -1574,9 +1577,9 @@ class PasswordRulesHandler:
         result_password_rules = []
         for password_rule in console.password_rules.list(filter_args):
             result_password_rule = {}
-            for prop in password_rule.properties:
-                if prop in ('element-uri', 'name', 'type'):
-                    result_password_rule[prop] = password_rule.properties[prop]
+            for prop in cls.returned_props:
+                result_password_rule[prop] = \
+                    password_rule.properties.get(prop)
             result_password_rules.append(result_password_rule)
         return {'password-rules': result_password_rules}
 
@@ -1654,6 +1657,8 @@ class LdapServerDefinitionsHandler:
 
     valid_query_parms_get = ['name']
 
+    returned_props = ['element-uri', 'name']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -1672,9 +1677,9 @@ class LdapServerDefinitionsHandler:
         result_ldap_srv_defs = []
         for ldap_srv_def in console.ldap_server_definitions.list(filter_args):
             result_ldap_srv_def = {}
-            for prop in ldap_srv_def.properties:
-                if prop in ('element-uri', 'name', 'type'):
-                    result_ldap_srv_def[prop] = ldap_srv_def.properties[prop]
+            for prop in cls.returned_props:
+                result_ldap_srv_def[prop] = \
+                    ldap_srv_def.properties.get(prop)
             result_ldap_srv_defs.append(result_ldap_srv_def)
         return {'ldap-server-definitions': result_ldap_srv_defs}
 
@@ -1742,6 +1747,12 @@ class CpcsHandler:
 
     valid_query_parms_get = ['name']
 
+    returned_props = [
+        'object-uri', 'name', 'status',
+        # Added in HMC version 2.14.0:
+        'has-unacceptable-status', 'dpm-enabled', 'se-version',
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -1754,9 +1765,8 @@ class CpcsHandler:
         result_cpcs = []
         for cpc in hmc.cpcs.list(filter_args):
             result_cpc = {}
-            for prop in cpc.properties:
-                if prop in ('object-uri', 'name', 'status'):
-                    result_cpc[prop] = cpc.properties[prop]
+            for prop in cls.returned_props:
+                result_cpc[prop] = cpc.properties.get(prop)
             result_cpcs.append(result_cpc)
         return {'cpcs': result_cpcs}
 
@@ -2323,6 +2333,8 @@ class GroupsHandler:
 
     valid_query_parms_get = ['name']
 
+    returned_props = ['object-uri', 'name']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -2341,9 +2353,8 @@ class GroupsHandler:
         result_groups = []
         for group in console.groups.list(filter_args):
             result_group = {}
-            for prop in group.properties:
-                if prop in ('object-uri', 'name'):
-                    result_group[prop] = group.properties[prop]
+            for prop in cls.returned_props:
+                result_group[prop] = group.properties.get(prop)
             result_groups.append(result_group)
         return {'groups': result_groups}
 
@@ -2871,6 +2882,11 @@ class AdaptersHandler:
     valid_query_parms_get = ['name', 'adapter-id', 'adapter-family', 'type',
                              'status', 'additional-properties']
 
+    returned_props = [
+        'object-uri', 'name', 'adapter-id', 'adapter-family', 'type', 'status',
+        # plus additional-properties
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -2879,7 +2895,10 @@ class AdaptersHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', '').split(',')
+        if 'additional-properties' in query_parms:
+            add_props = query_parms.pop('additional-properties').split(',')
+        else:
+            add_props = []
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -2893,12 +2912,8 @@ class AdaptersHandler:
         if cpc.dpm_enabled:
             for adapter in cpc.adapters.list(filter_args):
                 result_adapter = {}
-                for prop in adapter.properties:
-                    if prop in ('object-uri', 'name', 'adapter-id',
-                                'adapter-family', 'type', 'status'):
-                        result_adapter[prop] = adapter.properties[prop]
-                    if prop in add_props:
-                        result_adapter[prop] = adapter.properties[prop]
+                for prop in cls.returned_props + add_props:
+                    result_adapter[prop] = adapter.properties.get(prop)
                 result_adapters.append(result_adapter)
         return {'adapters': result_adapters}
 
@@ -3098,6 +3113,8 @@ class AdapterGetAssignedPartitionsHandler:
 
     valid_query_parms_get = ['name', 'status']
 
+    returned_props = ['object-uri', 'name', 'status']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -3211,11 +3228,9 @@ class AdapterGetAssignedPartitionsHandler:
 
         part_infos = []
         for partition in assigned_partitions:
-            part_info = {
-                'object-uri': partition.properties['object-uri'],
-                'name': partition.properties['name'],
-                'status': partition.properties.get('status'),
-            }
+            part_info = {}
+            for prop in cls.returned_props:
+                part_info[prop] = partition.properties.get(prop)
             part_infos.append(part_info)
 
         return {'partitions-assigned-to-adapter': part_infos}
@@ -3279,6 +3294,11 @@ class PartitionsHandler:
 
     valid_query_parms_get = ['name', 'status', 'type', 'additional-properties']
 
+    returned_props = [
+        'object-uri', 'name', 'status', 'type',
+        # plus additional-properties
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -3287,7 +3307,10 @@ class PartitionsHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', '').split(',')
+        if 'additional-properties' in query_parms:
+            add_props = query_parms.pop('additional-properties').split(',')
+        else:
+            add_props = []
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -3303,11 +3326,8 @@ class PartitionsHandler:
         if cpc.dpm_enabled:
             for partition in cpc.partitions.list(filter_args):
                 result_partition = {}
-                for prop in partition.properties:
-                    if prop in ('object-uri', 'name', 'status', 'type'):
-                        result_partition[prop] = partition.properties[prop]
-                    if prop in add_props:
-                        result_partition[prop] = partition.properties[prop]
+                for prop in cls.returned_props + add_props:
+                    result_partition[prop] = partition.properties.get(prop)
                 result_partitions.append(result_partition)
         return {'partitions': result_partitions}
 
@@ -4291,6 +4311,11 @@ class VirtualSwitchesHandler:
 
     valid_query_parms_get = ['name', 'type', 'additional-properties']
 
+    returned_props = [
+        'object-uri', 'name', 'type',
+        # plus additional-properties
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -4299,7 +4324,10 @@ class VirtualSwitchesHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', '').split(',')
+        if 'additional-properties' in query_parms:
+            add_props = query_parms.pop('additional-properties').split(',')
+        else:
+            add_props = []
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -4313,11 +4341,8 @@ class VirtualSwitchesHandler:
         if cpc.dpm_enabled:
             for vswitch in cpc.virtual_switches.list(filter_args):
                 result_vswitch = {}
-                for prop in vswitch.properties:
-                    if prop in ('object-uri', 'name', 'type'):
-                        result_vswitch[prop] = vswitch.properties[prop]
-                    if prop in add_props:
-                        result_vswitch[prop] = vswitch.properties[prop]
+                for prop in cls.returned_props + add_props:
+                    result_vswitch[prop] = vswitch.properties.get(prop)
                 result_vswitches.append(result_vswitch)
         return {'virtual-switches': result_vswitches}
 
@@ -4365,6 +4390,9 @@ class StorageGroupsHandler:
 
     valid_query_parms_get = ['cpc-uri', 'name', 'fulfillment-state', 'type']
 
+    returned_props = ['object-uri', 'cpc-uri', 'name', 'fulfillment-state',
+                      'type']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -4377,10 +4405,8 @@ class StorageGroupsHandler:
         result_storage_groups = []
         for sg in hmc.consoles.console.storage_groups.list(filter_args):
             result_sg = {}
-            for prop in sg.properties:
-                if prop in ('object-uri', 'cpc-uri', 'name',
-                            'fulfillment-state', 'type'):
-                    result_sg[prop] = sg.properties[prop]
+            for prop in cls.returned_props:
+                result_sg[prop] = sg.properties.get(prop)
             result_storage_groups.append(result_sg)
         return {'storage-groups': result_storage_groups}
 
@@ -4650,6 +4676,9 @@ class StorageVolumesHandler:
     valid_query_parms_get = ['name', 'fulfillment-state', 'maximum-size',
                              'minimum-size', 'usage']
 
+    returned_props = ['element-uri', 'name', 'fulfillment-state', 'size',
+                      'usage']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -4669,10 +4698,8 @@ class StorageVolumesHandler:
         result_storage_volumes = []
         for sv in sg.storage_volumes.list(filter_args):
             result_sv = {}
-            for prop in sv.properties:
-                if prop in ('element-uri', 'name', 'fulfillment-state', 'size',
-                            'usage'):
-                    result_sv[prop] = sv.properties[prop]
+            for prop in cls.returned_props:
+                result_sv[prop] = sv.properties.get(prop)
             result_storage_volumes.append(result_sv)
         return {'storage-volumes': result_storage_volumes}
 
@@ -4691,6 +4718,8 @@ class StorageTemplatesHandler:
 
     valid_query_parms_get = ['cpc-uri', 'name', 'type']
 
+    returned_props = ['object-uri', 'cpc-uri', 'name', 'type']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -4706,9 +4735,8 @@ class StorageTemplatesHandler:
         for sgt in hmc.consoles.console.storage_group_templates.list(
                 filter_args):
             result_sgt = {}
-            for prop in sgt.properties:
-                if prop in ('object-uri', 'cpc-uri', 'name', 'type'):
-                    result_sgt[prop] = sgt.properties[prop]
+            for prop in cls.returned_props:
+                result_sgt[prop] = sgt.properties.get(prop)
             result_storage_group_templates.append(result_sgt)
         return {'storage-templates': result_storage_group_templates}
 
@@ -4850,6 +4878,8 @@ class StorageTemplateVolumesHandler:
 
     valid_query_parms_get = ['name', 'maximum-size', 'minimum-size', 'usage']
 
+    returned_props = ['element-uri', 'name', 'size', 'usage']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -4869,9 +4899,8 @@ class StorageTemplateVolumesHandler:
         result_storage_volume_templates = []
         for sv in sgt.storage_volume_templates.list(filter_args):
             result_sv = {}
-            for prop in sv.properties:
-                if prop in ('element-uri', 'name', 'size', 'usage'):
-                    result_sv[prop] = sv.properties[prop]
+            for prop in cls.returned_props:
+                result_sv[prop] = sv.properties.get(prop)
             result_storage_volume_templates.append(result_sv)
         return {'storage-template-volumes': result_storage_volume_templates}
 
@@ -4889,6 +4918,8 @@ class CapacityGroupsHandler:
     """
 
     valid_query_parms_get = ['name']
+
+    returned_props = ['element-uri', 'name']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -4910,9 +4941,8 @@ class CapacityGroupsHandler:
         result_capacity_groups = []
         for cg in cpc.capacity_groups.list(filter_args):
             result_cg = {}
-            for prop in cg.properties:
-                if prop in ('element-uri', 'name'):
-                    result_cg[prop] = cg.properties[prop]
+            for prop in cls.returned_props:
+                result_cg[prop] = cg.properties.get(prop)
             result_capacity_groups.append(result_cg)
         return {'capacity-groups': result_capacity_groups}
 
@@ -5102,6 +5132,8 @@ class LparsHandler:
 
     valid_query_parms_get = ['name']
 
+    returned_props = ['object-uri', 'name', 'status']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -5123,9 +5155,8 @@ class LparsHandler:
         if not cpc.dpm_enabled:
             for lpar in cpc.lpars.list(filter_args):
                 result_lpar = {}
-                for prop in lpar.properties:
-                    if prop in ('object-uri', 'name', 'status'):
-                        result_lpar[prop] = lpar.properties[prop]
+                for prop in cls.returned_props:
+                    result_lpar[prop] = lpar.properties.get(prop)
                 result_lpars.append(result_lpar)
         return {'logical-partitions': result_lpars}
 
@@ -5736,6 +5767,8 @@ class ResetActProfilesHandler:
 
     valid_query_parms_get = ['name']
 
+    returned_props = ['element-uri', 'name']
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -5759,9 +5792,8 @@ class ResetActProfilesHandler:
         if not cpc.dpm_enabled:
             for profile in cpc.reset_activation_profiles.list(filter_args):
                 result_profile = {}
-                for prop in profile.properties:
-                    if prop in ('element-uri', 'name'):
-                        result_profile[prop] = profile.properties[prop]
+                for prop in cls.returned_props:
+                    result_profile[prop] = profile.properties.get(prop)
                 result_profiles.append(result_profile)
         return {'reset-activation-profiles': result_profiles}
 
@@ -5782,6 +5814,11 @@ class ImageActProfilesHandler:
 
     valid_query_parms_get = ['name', 'additional-properties']
 
+    returned_props = [
+        'element-uri', 'name',
+        # plus additional-properties
+    ]
+
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
         # pylint: disable=unused-argument
@@ -5792,7 +5829,10 @@ class ImageActProfilesHandler:
         uri, query_parms = parse_query_parms(method, uri)
         check_invalid_query_parms(
             method, uri, query_parms, cls.valid_query_parms_get)
-        add_props = query_parms.pop('additional-properties', '').split(',')
+        if 'additional-properties' in query_parms:
+            add_props = query_parms.pop('additional-properties').split(',')
+        else:
+            add_props = []
         filter_args = query_parms
 
         cpc_oid = uri_parms[0]
@@ -5806,11 +5846,8 @@ class ImageActProfilesHandler:
         if not cpc.dpm_enabled:
             for profile in cpc.image_activation_profiles.list(filter_args):
                 result_profile = {}
-                for prop in profile.properties:
-                    if prop in ('element-uri', 'name'):
-                        result_profile[prop] = profile.properties[prop]
-                    if prop in add_props:
-                        result_profile[prop] = profile.properties[prop]
+                for prop in cls.returned_props + add_props:
+                    result_profile[prop] = profile.properties.get(prop)
                 result_profiles.append(result_profile)
         return {'image-activation-profiles': result_profiles}
 
@@ -5830,6 +5867,8 @@ class LoadActProfilesHandler:
     """
 
     valid_query_parms_get = ['name']
+
+    returned_props = ['element-uri', 'name']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -5854,9 +5893,8 @@ class LoadActProfilesHandler:
         if not cpc.dpm_enabled:
             for profile in cpc.load_activation_profiles.list(filter_args):
                 result_profile = {}
-                for prop in profile.properties:
-                    if prop in ('element-uri', 'name'):
-                        result_profile[prop] = profile.properties[prop]
+                for prop in cls.returned_props:
+                    result_profile[prop] = profile.properties.get(prop)
                 result_profiles.append(result_profile)
         return {'load-activation-profiles': result_profiles}
 

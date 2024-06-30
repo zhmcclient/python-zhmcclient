@@ -44,6 +44,7 @@ HMC1_RESOURCES = {
                     'properties': {
                         'object-id': 'user1',
                         'name': 'User 1',
+                        'type': 'standard',
                     },
                 },
             ],
@@ -60,6 +61,7 @@ HMC1_RESOURCES = {
                     'properties': {
                         'element-id': 'userpattern1',
                         'name': 'User pattern 1',
+                        'type': 'glob-like',
                     },
                 },
             ],
@@ -68,6 +70,7 @@ HMC1_RESOURCES = {
                     'properties': {
                         'element-id': 'passwordrule1',
                         'name': 'Password rule 1',
+                        'type': 'user-defined',
                     },
                 },
             ],
@@ -100,12 +103,18 @@ HMC1_RESOURCES = {
                     'properties': {
                         'object-id': 'sg1',
                         'name': 'Storage group 1',
+                        'type': 'shared',
+                        'cpc-uri': '/api/cpcs/cpc1',
+                        'fulfillment-state': 'complete',
                     },
                     'storage_volumes': [
                         {
                             'properties': {
                                 'element-id': 'sv1',
                                 'name': 'Storage volume 1',
+                                'fulfillment-state': 'complete',
+                                'size': '10',
+                                'usage': 'boot',
                             },
                         },
                     ],

@@ -456,8 +456,8 @@ def assert_equal_resource(res1, res2):
     if names1 != names2:
         raise AssertionError(
             "Resources do not have the same set of properties:\n"
-            f"- res1 names: {names1}\n"
-            f"- res2 names: {names2}\n")
+            f"- res1 names: {sorted(names1)}\n"
+            f"- res2 names: {sorted(names2)}\n")
     for name in res1.properties:
         value1 = res1.properties[name]
         value2 = res2.properties[name]

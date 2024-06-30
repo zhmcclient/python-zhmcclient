@@ -854,6 +854,8 @@ def standard_test_hmc():
                     'dpm-enabled': False,
                     'description': 'CPC #1 (classic mode)',
                     'status': 'operating',
+                    'has-unacceptable-status': False,
+                    'se-version': '2.15.0',
                 },
                 'lpars': [
                     {
@@ -897,12 +899,15 @@ def standard_test_hmc():
                     'dpm-enabled': True,
                     'description': 'CPC #2 (DPM mode)',
                     'status': 'active',
+                    'has-unacceptable-status': False,
+                    'se-version': '2.16.0',
                 },
                 'partitions': [
                     {
                         'properties': {
                             'object-id': '1',
                             'name': 'partition_1',
+                            'type': 'linux',
                             'description': 'Partition #1 in CPC #2',
                             'status': 'stopped',
                             'hba-uris': [],   # updated automatically
@@ -967,6 +972,7 @@ def standard_test_hmc():
                             'network-port-uris': [],   # updated automatically
                             'status': 'active',
                             'adapter-id': 'BEF',
+                            'type': 'osd',
                         },
                         'ports': [
                             {
@@ -986,6 +992,7 @@ def standard_test_hmc():
                             'adapter-family': 'ficon',
                             'storage-port-uris': [],   # updated automatically
                             'adapter-id': 'CEF',
+                            'type': 'fcp',
                         },
                         'ports': [
                             {
@@ -1005,6 +1012,7 @@ def standard_test_hmc():
                             'adapter-family': 'ficon',
                             'storage-port-uris': [],   # updated automatically
                             'adapter-id': 'CEE',
+                            'type': 'fcp',
                         },
                         'ports': [
                             {
@@ -1024,6 +1032,7 @@ def standard_test_hmc():
                             'adapter-family': 'roce',
                             'network-port-uris': [],   # updated automatically
                             'adapter-id': 'DEF',
+                            'type': 'roce',
                         },
                         'ports': [
                             {
@@ -1042,6 +1051,7 @@ def standard_test_hmc():
                             'description': 'Crypto #4 in CPC #2',
                             'adapter-family': 'crypto',
                             'adapter-id': 'EEF',
+                            'type': 'crypto',
                             'detected-card-type': 'crypto-express-5s',
                             'crypto-number': 7,
                             'crypto-type': 'accelerator',
@@ -1054,6 +1064,7 @@ def standard_test_hmc():
                             'description': 'zEDC compression #5 in CPC #2',
                             'adapter-family': 'accelerator',
                             'adapter-id': 'FEF',
+                            'type': 'zedc',
                             'detected-card-type': 'zedc-express',
                         },
                     },
@@ -1064,6 +1075,7 @@ def standard_test_hmc():
                             'object-id': '1',
                             'name': 'vswitch_osa_1',
                             'description': 'Vswitch for OSA #1 in CPC #2',
+                            'type': 'osd',
                         },
                     },
                 ],
@@ -1121,6 +1133,8 @@ class TestGenericGetPropertiesHandler:
             'is-ensemble-member': False,
             'description': 'CPC #1 (classic mode)',
             'status': 'operating',
+            'has-unacceptable-status': False,
+            'se-version': '2.15.0',
         }
         assert cpc1 == exp_cpc1
 
@@ -3472,11 +3486,17 @@ class TestCpcHandlers:
                     'object-uri': '/api/cpcs/1',
                     'name': 'cpc_1',
                     'status': 'operating',
+                    'has-unacceptable-status': False,
+                    'dpm-enabled': False,
+                    'se-version': '2.15.0',
                 },
                 {
                     'object-uri': '/api/cpcs/2',
                     'name': 'cpc_2',
                     'status': 'active',
+                    'has-unacceptable-status': False,
+                    'dpm-enabled': True,
+                    'se-version': '2.16.0',
                 },
             ]
         }
@@ -3500,6 +3520,8 @@ class TestCpcHandlers:
             'is-ensemble-member': False,
             'description': 'CPC #1 (classic mode)',
             'status': 'operating',
+            'has-unacceptable-status': False,
+            'se-version': '2.15.0',
         }
         assert cpc1 == exp_cpc1
 
@@ -4263,6 +4285,7 @@ class TestAdapterHandlers:
                     'status': 'active',
                     'adapter-family': 'osa',
                     'adapter-id': 'BEF',
+                    'type': 'osd',
                 },
                 {
                     'object-uri': '/api/adapters/2',
@@ -4270,6 +4293,7 @@ class TestAdapterHandlers:
                     'status': 'active',
                     'adapter-family': 'ficon',
                     'adapter-id': 'CEF',
+                    'type': 'fcp',
                 },
                 {
                     'object-uri': '/api/adapters/2a',
@@ -4277,6 +4301,7 @@ class TestAdapterHandlers:
                     'status': 'active',
                     'adapter-family': 'ficon',
                     'adapter-id': 'CEE',
+                    'type': 'fcp',
                 },
                 {
                     'object-uri': '/api/adapters/3',
@@ -4284,6 +4309,7 @@ class TestAdapterHandlers:
                     'status': 'active',
                     'adapter-family': 'roce',
                     'adapter-id': 'DEF',
+                    'type': 'roce',
                 },
                 {
                     'object-uri': '/api/adapters/4',
@@ -4291,6 +4317,7 @@ class TestAdapterHandlers:
                     'status': 'active',
                     'adapter-family': 'crypto',
                     'adapter-id': 'EEF',
+                    'type': 'crypto',
                 },
                 {
                     'object-uri': '/api/adapters/5',
@@ -4298,6 +4325,7 @@ class TestAdapterHandlers:
                     'status': 'active',
                     'adapter-family': 'accelerator',
                     'adapter-id': 'FEF',
+                    'type': 'zedc',
                 },
             ]
         }
@@ -4322,6 +4350,7 @@ class TestAdapterHandlers:
             'adapter-family': 'osa',
             'network-port-uris': ['/api/adapters/1/network-ports/1'],
             'adapter-id': 'BEF',
+            'type': 'osd',
         }
         assert adapter1 == exp_adapter1
 
@@ -4466,7 +4495,7 @@ class TestAdapterChangeAdapterTypeHandler:
         """
 
         operation_body = {
-            'type': 'fcp',
+            'type': 'fc',
         }
 
         # the function to be tested:
@@ -4818,6 +4847,7 @@ class TestPartitionHandlers:
                     'object-uri': '/api/partitions/1',
                     'name': 'partition_1',
                     'status': 'stopped',
+                    'type': 'linux',
                 },
             ]
         }
@@ -4839,6 +4869,7 @@ class TestPartitionHandlers:
             'name': 'partition_1',
             'description': 'Partition #1 in CPC #2',
             'status': 'stopped',
+            'type': 'linux',
             'hba-uris': ['/api/partitions/1/hbas/1'],
             'nic-uris': ['/api/partitions/1/nics/1'],
             'virtual-function-uris': ['/api/partitions/1/virtual-functions/1'],
@@ -6298,6 +6329,7 @@ class TestVirtualSwitchHandlers:
                 {
                     'object-uri': '/api/virtual-switches/1',
                     'name': 'vswitch_osa_1',
+                    'type': 'osd',
                     # status not set in resource -> not in response
                 },
             ]
@@ -6320,6 +6352,7 @@ class TestVirtualSwitchHandlers:
             'parent': '/api/cpcs/2',
             'name': 'vswitch_osa_1',
             'description': 'Vswitch for OSA #1 in CPC #2',
+            'type': 'osd',
             'connected-vnic-uris': [],  # auto-generated
         }
         assert vswitch1 == exp_vswitch1
