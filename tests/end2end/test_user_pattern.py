@@ -152,7 +152,7 @@ def test_upatt_crud(hmc_session):  # noqa: F811
         'pattern': TEST_PREFIX + ' test_upatt_crud .+',
         'type': 'regular-expression',
         'retention-time': 180,
-        'user-template-uri': template_user.uri,  # required until z13
+        'specific-template-uri': template_user.uri,
     }
     upatt_auto_props = {}
 

@@ -158,6 +158,43 @@ hmc_definition:
             web-services-api-session-idle-timeout: 360
             user-roles:
               - /api/user-roles/hmc-all-system-managed-objects
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # object-uri: created automatically
+            object-id: usertemplate1
+            name: USERTEMPLATE1
+            description: "User template 1"
+            allow-management-interfaces: true
+            allow-remote-access: true
+            authentication-type: local
+            default-group-uri: null
+            disable-delay: 1
+            disabled: false
+            disruptive-pw-required: true
+            disruptive-text-required: false
+            email-address: null
+            force-password-change: false
+            force-shared-secret-key-change: null
+            idle-timeout: 0
+            inactivity-timeout: 0
+            is-locked: false
+            ldap-server-definition-uri: null
+            max-failed-logins: 3
+            max-web-services-api-sessions: 1000
+            min-pw-change-time: 0
+            multi-factor-authentication-required: false
+            password: bla
+            password-expires: -1
+            password-rule-uri: /api/console/password-rules/passwordrule1
+            replication-overwrite-possible: false
+            session-timeout: 0
+            type: template
+            userid-on-ldap-server: null
+            verify-timeout: 15
+            web-services-api-session-idle-timeout: 360
+            user-roles:
+              - /api/user-roles/hmc-all-system-managed-objects
 
       user_roles:
         - properties:
@@ -213,6 +250,26 @@ hmc_definition:
             element-id: userpattern1
             name: "User pattern 1"
             description: "User pattern 1"
+            type: regular-expression
+            pattern: ".*@ibm.com"
+            domain-name-restrictions: null
+            domain-name-restrictions-ldap-server-definition-name: null
+            domain-name-restrictions-ldap-server-definition-uri: null
+            ldap-group-default-template-name: null
+            ldap-group-default-template-uri: null
+            ldap-group-ldap-server-definition-name: null
+            ldap-group-ldap-server-definition-uri: null
+            ldap-group-to-template-mappings: null
+            ldap-server-definition-name: null
+            ldap-server-definition-uri: null
+            replication-overwrite-possible: false
+            retention-time: 1
+            search-order-index: 2
+            specific-template-uri: null
+            template-name-override: null
+            template-name-override-default-template-uri: null
+            template-name-override-ldap-server-definition-uri: null
+            user-template-uri: null
 
       password_rules:
         - properties:
@@ -298,6 +355,7 @@ hmc_definition:
                 device-number: '1300'
                 adapter-port-uri: /api/adapters/fcp1
                 partition-uri: /api/partitions/part1
+
   cpcs:
     - properties:
         # class: created automatically
