@@ -65,7 +65,7 @@ class TestUserPattern:
             'pattern': pattern,
             'type': type_,
             'retention-time': 0,
-            'user-template-uri': user_template_uri,
+            'specific-template-uri': user_template_uri,
         })
         return faked_user_pattern
 
@@ -186,17 +186,17 @@ class TestUserPattern:
               'name': 'a',
               'pattern': 'a*',
               'type': 'glob-like',
-              'retention-time': 0},  # props missing
+              'retention-time': 0},  # user template identif. method missing
              None,
-             HTTPError({'http-status': 400, 'reason': 5})),
+             HTTPError({'http-status': 400, 'reason': 15})),
             ({'description': 'fake description X',
               'name': 'a',
               'pattern': 'a*',
               'type': 'glob-like',
               'retention-time': 28,
-              'user-template-uri': '/api/users/oid-tpl'},
+              'specific-template-uri': '/api/users/oid-tpl'},
              ['element-uri', 'name', 'description', 'pattern', 'type',
-              'retention-time', 'user-template-uri'],
+              'retention-time', 'specific-template-uri'],
              None),
         ]
     )
@@ -328,7 +328,7 @@ class TestUserPattern:
             'pattern': 'a*',
             'type': 'glob-like',
             'retention-time': 28,
-            'user-template-uri': '/api/users/oid-tpl',
+            'specific-template-uri': '/api/users/oid-tpl',
         }
 
         user_pattern_mgr = self.console.user_patterns

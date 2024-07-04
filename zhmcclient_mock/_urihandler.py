@@ -1535,9 +1535,48 @@ class UserPatternsHandler:
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient_mock.InvalidResourceError
         check_required_fields(method, uri, body,
-                              ['name', 'pattern', 'type', 'retention-time',
-                               'user-template-uri'])
-        new_user_pattern = console.user_patterns.add(body)
+                              ['name', 'pattern', 'type', 'retention-time'])
+
+        # Note: user-template-uri was required until HMC 2.13. Since 2.14,
+        # one of three user template identification methods is required
+
+        # Check that exacly one user template identification method is
+        # specified.
+        m1_used = body.get('specific-template-uri') is not None
+        m2_used = body.get('template-name-override') is not None
+        m3_used = body.get('ldap-group-to-template-mappings') is not None
+        methods_used = m1_used + m2_used + m3_used
+        if methods_used == 0:
+            raise BadRequestError(
+                method, uri, reason=15,
+                message="Unable to determine template identification method "
+                "from request body")
+        if methods_used > 1:
+            raise BadRequestError(
+                method, uri, reason=15,
+                message="More than one template identification method "
+                "specified in request body")
+
+        properties = copy.deepcopy(body)
+        properties.setdefault('description', '')
+        properties.setdefault('search-order-index', 0)
+        properties.setdefault('replication-overwrite-possible', False)
+        properties.setdefault('user-template-uri', None)
+        properties.setdefault('ldap-server-definition-uri', None)
+        properties.setdefault('template-name-override', None)
+        properties.setdefault('domain-name-restrictions', None)
+        properties.setdefault('specific-template-uri', None)
+        properties.setdefault(
+            'template-name-override-ldap-server-definition-uri', None)
+        properties.setdefault(
+            'template-name-override-default-template-uri', None)
+        properties.setdefault('ldap-group-to-template-mappings', None)
+        properties.setdefault('ldap-group-ldap-server-definition-uri', None)
+        properties.setdefault('ldap-group-default-template-uri', None)
+        properties.setdefault(
+            'domain-name-restrictions-ldap-server-definition-uri', None)
+
+        new_user_pattern = console.user_patterns.add(properties)
         return {'element-uri': new_user_pattern.uri}
 
 

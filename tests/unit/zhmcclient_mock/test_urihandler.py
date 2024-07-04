@@ -752,7 +752,8 @@ def standard_test_hmc():
                             'pattern': 'fake_user_name_*',
                             'type': 'glob-like',
                             'retention-time': 0,
-                            'user-template-uri': '/api/users/fake-user-oid-1',
+                            'specific-template-uri':
+                            '/api/users/fake-user-oid-1',
                         },
                     },
                 ],
@@ -1574,7 +1575,7 @@ class TestConsoleReorderUserPatternsHandler:
                 'pattern': name + '*',
                 'type': 'glob-like',
                 'retention-time': 0,
-                'user-template-uri': 'fake-uri',
+                'specific-template-uri': 'fake-uri',
             }
             resp = self.urihandler.post(self.hmc, '/api/console/user-patterns',
                                         user_pattern, True, True)
@@ -2982,7 +2983,7 @@ class TestUserPatternHandlers:
             'pattern': 'fake_user_name_*',
             'type': 'glob-like',
             'retention-time': 0,
-            'user-template-uri': '/api/users/fake-user-oid-1',
+            'specific-template-uri': '/api/users/fake-user-oid-1',
         }
         assert user_pattern1 == exp_user_pattern1
 
@@ -2997,7 +2998,7 @@ class TestUserPatternHandlers:
             'pattern': 'user*',
             'type': 'glob-like',
             'retention-time': 0,
-            'user-template-uri': '/api/users/fake-user-oid-1',
+            'specific-template-uri': '/api/users/fake-user-oid-1',
         }
 
         # the function to be tested:
@@ -3070,7 +3071,7 @@ class TestUserPatternHandlers:
             'pattern': 'user*',
             'type': 'glob-like',
             'retention-time': 0,
-            'user-template-uri': '/api/users/fake-user-oid-1',
+            'specific-template-uri': '/api/users/fake-user-oid-1',
         }
 
         # Create the User Pattern
