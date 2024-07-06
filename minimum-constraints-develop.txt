@@ -42,7 +42,10 @@ pytest-cov==2.7.0
 coveralls==3.3.0
 
 # Safety CI by pyup.io
-safety==3.0.1
+safety==3.0.1; python_version <= '3.12'
+# TODO: Remove temporary circumvention to pin safety to <3.0.0 when pyo3-ffi
+#       supports Python 3.13 (see https://github.com/PyO3/pyo3/issues/4038#issuecomment-2156363013)
+safety==2.3.4; python_version >= '3.13'
 safety-schemas==0.0.2
 # TODO: Change to dparse 0.6.4 once released
 dparse==0.6.4b0
