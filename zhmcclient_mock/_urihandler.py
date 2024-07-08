@@ -444,6 +444,27 @@ def check_invalid_query_parms(method, uri, query_parms, valid_query_parms):
         raise new_exc  # zhmcclient_mock.BadRequestError
 
 
+def properties_copy(properties):
+    """
+    Return a deep copy of the properties that is independent of the input.
+
+    Parameters:
+        properties (DictView or dict): Input properties
+    """
+    return copy.deepcopy(dict(properties))
+
+
+def prop_copy(prop):
+    """
+    Return a deep copy of a single property value that is independent of the
+    input.
+
+    Parameters:
+        prop (object): Input property value
+    """
+    return copy.deepcopy(prop)
+
+
 class UriHandler:
     """
     Handle HTTP methods against a set of known URIs and invoke respective
@@ -548,7 +569,7 @@ class GenericGetPropertiesHandler:
                     new_exc.__cause__ = None
                     raise new_exc  # BadRequestError
             return ret_props
-        return dict(resource.properties)
+        return properties_copy(resource.properties)
 
 
 class GenericUpdatePropertiesHandler:
@@ -829,7 +850,7 @@ class ConsoleListUnmanagedCpcsHandler:
         for ucpc in console.unmanaged_cpcs.list(filter_args):
             result_ucpc = {}
             for prop in cls.returned_props:
-                result_ucpc[prop] = ucpc.properties[prop]
+                result_ucpc[prop] = prop_copy(ucpc.properties[prop])
             result_ucpcs.append(result_ucpc)
         return {'cpcs': result_ucpcs}
 
@@ -932,7 +953,7 @@ class ConsoleListPermittedLparsHandler:
                 for lpar in cpc.lpars.list(filter_args):
                     result_lpar = {}
                     for prop in cls.returned_props + add_props:
-                        result_lpar[prop] = lpar.properties.get(prop)
+                        result_lpar[prop] = prop_copy(lpar.properties.get(prop))
                     result_lpar['cpc-name'] = cpc.name
                     result_lpar['cpc-object-uri'] = cpc.uri
                     result_lpar['se-version'] = \
@@ -1034,7 +1055,7 @@ class UsersHandler:
         for user in console.users.list(filter_args):
             result_user = {}
             for prop in cls.returned_props:
-                result_user[prop] = user.properties.get(prop)
+                result_user[prop] = prop_copy(user.properties.get(prop))
             result_users.append(result_user)
         return {'users': result_users}
 
@@ -1297,7 +1318,8 @@ class UserRolesHandler:
         for user_role in console.user_roles.list(filter_args):
             result_user_role = {}
             for prop in cls.returned_props:
-                result_user_role[prop] = user_role.properties.get(prop)
+                result_user_role[prop] = \
+                    prop_copy(user_role.properties.get(prop))
             result_user_roles.append(result_user_role)
         return {'user-roles': result_user_roles}
 
@@ -1477,7 +1499,7 @@ class TasksHandler:
         for task in console.tasks.list(filter_args):
             result_task = {}
             for prop in cls.returned_props:
-                result_task[prop] = task.properties.get(prop)
+                result_task[prop] = prop_copy(task.properties.get(prop))
             result_tasks.append(result_task)
         return {'tasks': result_tasks}
 
@@ -1805,7 +1827,7 @@ class CpcsHandler:
         for cpc in hmc.cpcs.list(filter_args):
             result_cpc = {}
             for prop in cls.returned_props:
-                result_cpc[prop] = cpc.properties.get(prop)
+                result_cpc[prop] = prop_copy(cpc.properties.get(prop))
             result_cpcs.append(result_cpc)
         return {'cpcs': result_cpcs}
 
@@ -2393,7 +2415,7 @@ class GroupsHandler:
         for group in console.groups.list(filter_args):
             result_group = {}
             for prop in cls.returned_props:
-                result_group[prop] = group.properties.get(prop)
+                result_group[prop] = prop_copy(group.properties.get(prop))
             result_groups.append(result_group)
         return {'groups': result_groups}
 
@@ -2558,10 +2580,10 @@ def get_inventory_for_adapter(hmc):
     for cpc in cpcs:
         adapters = cpc.adapters.list()
         for adapter in adapters:
-            result.append(dict(adapter.properties))
+            result.append(properties_copy(adapter.properties))
             ports = adapter.ports.list()
             for port in ports:
-                result.append(dict(port.properties))
+                result.append(properties_copy(port.properties))
     return result
 
 
@@ -2572,16 +2594,16 @@ def get_inventory_for_partition(hmc):
     for cpc in cpcs:
         partitions = cpc.partitions.list()
         for partition in partitions:
-            result.append(dict(partition.properties))
+            result.append(properties_copy(partition.properties))
             nics = partition.nics.list()
             for nic in nics:
-                result.append(dict(nic.properties))
+                result.append(properties_copy(nic.properties))
             hbas = partition.hbas.list()
             for hba in hbas:
-                result.append(dict(hba.properties))
+                result.append(properties_copy(hba.properties))
             vfs = partition.virtual_functions.list()
             for vf in vfs:
-                result.append(dict(vf.properties))
+                result.append(properties_copy(vf.properties))
     return result
 
 
@@ -2592,7 +2614,7 @@ def get_inventory_for_partition_link(hmc):
     # TODO: Implement mock support for this resource class; then enable:
     # partlinks = hmc.consoles.console.partition_links.list()
     # for partlink in partlinks:
-    #     result.append(dict(partlink.properties))
+    #     result.append(properties_copy(partlink.properties))
     return result
 
 
@@ -2603,7 +2625,7 @@ def get_inventory_for_virtual_switch(hmc):
     for cpc in cpcs:
         vswitches = cpc.virtual_switches.list()
         for vswitch in vswitches:
-            result.append(dict(vswitch.properties))
+            result.append(properties_copy(vswitch.properties))
     return result
 
 
@@ -2614,7 +2636,7 @@ def get_inventory_for_storage_site(hmc):
     # TODO: Implement mock support for this resource class; then enable:
     # stosites = hmc.consoles.console.storage_sites.list()
     # for stosite in stosites:
-    #     result.append(dict(stosite.properties))
+    #     result.append(properties_copy(stosite.properties))
     return result
 
 
@@ -2625,7 +2647,7 @@ def get_inventory_for_storage_fabric(hmc):
     # TODO: Implement mock support for this resource class; then enable:
     # stofabrics = hmc.consoles.console.storage_fabrics.list()
     # for stofabric in stofabrics:
-    #     result.append(dict(stofabric.properties))
+    #     result.append(properties_copy(stofabric.properties))
     return result
 
 
@@ -2638,7 +2660,7 @@ def get_inventory_for_storage_switch(hmc):
     # for stosite in stosites:
     #     stoswitches = stosite.storage_switches.list()
     #     for stoswitch in stoswitches:
-    #         result.append(dict(stoswitch.properties))
+    #         result.append(properties_copy(stoswitch.properties))
     return result
 
 
@@ -2651,7 +2673,7 @@ def get_inventory_for_storage_subsystem(hmc):
     # for stosite in stosites:
     #     stosubsystems = stosite.storage_subsystems.list()
     #     for stosubsystem in stosubsystems:
-    #         result.append(dict(stosubsystem.properties))
+    #         result.append(properties_copy(stosubsystem.properties))
     return result
 
 
@@ -2666,7 +2688,7 @@ def get_inventory_for_storage_control_unit(hmc):
     #     for stosubsystem in stosubsystems:
     #         stocus = stosubsystem.storage_control_units.list()
     #         for stocu in stocus:
-    #             result.append(dict(stocu.properties))
+    #             result.append(properties_copy(stocu.properties))
     return result
 
 
@@ -2675,7 +2697,7 @@ def get_inventory_for_storage_group(hmc):
     result = []
     stogroups = hmc.consoles.console.storage_groups.list()
     for stogroup in stogroups:
-        result.append(dict(stogroup.properties))
+        result.append(properties_copy(stogroup.properties))
     return result
 
 
@@ -2686,7 +2708,7 @@ def get_inventory_for_storage_template(hmc):
     # TODO: Implement mock support for this resource class; then enable:
     # stotemplates = hmc.consoles.console.storage_templates.list()
     # for stotemplate in stotemplates:
-    #     result.append(dict(stotemplate.properties))
+    #     result.append(properties_copy(stotemplate.properties))
     return result
 
 
@@ -2697,7 +2719,7 @@ def get_inventory_for_tape_link(hmc):
     # TODO: Implement mock support for this resource class; then enable:
     # tapelinks = hmc.consoles.console.tape_links.list()
     # for tapelink in tapelinks:
-    #     result.append(dict(tapelink.properties))
+    #     result.append(properties_copy(tapelink.properties))
     return result
 
 
@@ -2709,7 +2731,7 @@ def get_inventory_for_tape_library(hmc):
     # tapelibs = hmc.consoles.console.tape_libraries.list()
     # result = []
     # for tapelib in tapelibs:
-    #     result.append(dict(tapelib.properties))
+    #     result.append(properties_copy(tapelib.properties))
     return result
 
 
@@ -2718,7 +2740,7 @@ def get_inventory_for_cpc(hmc):
     result = []
     cpcs = hmc.cpcs.list()
     for cpc in cpcs:
-        result.append(dict(cpc.properties))
+        result.append(properties_copy(cpc.properties))
     return result
 
 
@@ -2729,7 +2751,7 @@ def get_inventory_for_logical_partition(hmc):
     for cpc in cpcs:
         lpars = cpc.lpars.list()
         for lpar in lpars:
-            result.append(dict(lpar.properties))
+            result.append(properties_copy(lpar.properties))
     return result
 
 
@@ -2737,7 +2759,7 @@ def get_inventory_for_console(hmc):
     """Get inventory data for resource class 'console'"""
     console = hmc.console
     result = []
-    result.append(dict(console.properties))
+    result.append(properties_copy(console.properties))
     return result
 
 
@@ -2746,7 +2768,7 @@ def get_inventory_for_custom_group(hmc):
     groups = hmc.consoles.console.groups.list()
     result = []
     for group in groups:
-        result.append(dict(group.properties))
+        result.append(properties_copy(group.properties))
     return result
 
 
@@ -2755,7 +2777,7 @@ def get_inventory_for_user(hmc):
     users = hmc.consoles.console.users.list()
     result = []
     for user in users:
-        result.append(dict(user.properties))
+        result.append(properties_copy(user.properties))
     return result
 
 
@@ -2764,7 +2786,7 @@ def get_inventory_for_user_role(hmc):
     userroles = hmc.consoles.console.user_roles.list()
     result = []
     for userrole in userroles:
-        result.append(dict(userrole.properties))
+        result.append(properties_copy(userrole.properties))
     return result
 
 
@@ -2773,7 +2795,7 @@ def get_inventory_for_certificate(hmc):
     certificates = hmc.consoles.console.certificates.list()
     result = []
     for certificate in certificates:
-        result.append(dict(certificate.properties))
+        result.append(properties_copy(certificate.properties))
     return result
 
 
@@ -2952,7 +2974,8 @@ class AdaptersHandler:
             for adapter in cpc.adapters.list(filter_args):
                 result_adapter = {}
                 for prop in cls.returned_props + add_props:
-                    result_adapter[prop] = adapter.properties.get(prop)
+                    result_adapter[prop] = \
+                        prop_copy(adapter.properties.get(prop))
                 result_adapters.append(result_adapter)
         return {'adapters': result_adapters}
 
@@ -3366,7 +3389,8 @@ class PartitionsHandler:
             for partition in cpc.partitions.list(filter_args):
                 result_partition = {}
                 for prop in cls.returned_props + add_props:
-                    result_partition[prop] = partition.properties.get(prop)
+                    result_partition[prop] = \
+                        prop_copy(partition.properties.get(prop))
                 result_partitions.append(result_partition)
         return {'partitions': result_partitions}
 
@@ -4381,7 +4405,8 @@ class VirtualSwitchesHandler:
             for vswitch in cpc.virtual_switches.list(filter_args):
                 result_vswitch = {}
                 for prop in cls.returned_props + add_props:
-                    result_vswitch[prop] = vswitch.properties.get(prop)
+                    result_vswitch[prop] = \
+                        prop_copy(vswitch.properties.get(prop))
                 result_vswitches.append(result_vswitch)
         return {'virtual-switches': result_vswitches}
 
@@ -4445,7 +4470,7 @@ class StorageGroupsHandler:
         for sg in hmc.consoles.console.storage_groups.list(filter_args):
             result_sg = {}
             for prop in cls.returned_props:
-                result_sg[prop] = sg.properties.get(prop)
+                result_sg[prop] = prop_copy(sg.properties.get(prop))
             result_storage_groups.append(result_sg)
         return {'storage-groups': result_storage_groups}
 
@@ -4738,7 +4763,7 @@ class StorageVolumesHandler:
         for sv in sg.storage_volumes.list(filter_args):
             result_sv = {}
             for prop in cls.returned_props:
-                result_sv[prop] = sv.properties.get(prop)
+                result_sv[prop] = prop_copy(sv.properties.get(prop))
             result_storage_volumes.append(result_sv)
         return {'storage-volumes': result_storage_volumes}
 
@@ -4780,7 +4805,7 @@ class VirtualStorageResourcesHandler:
             for prop in vsr.properties:
                 if prop in ('element-uri', 'name', 'device-number',
                             'adapter-port-uri', 'partition-uri'):
-                    result_vsr[prop] = vsr.properties[prop]
+                    result_vsr[prop] = prop_copy(vsr.properties[prop])
             result_vsrs.append(result_vsr)
         return {'virtual-storage-resources': result_vsrs}
 
@@ -4817,7 +4842,7 @@ class StorageTemplatesHandler:
                 filter_args):
             result_sgt = {}
             for prop in cls.returned_props:
-                result_sgt[prop] = sgt.properties.get(prop)
+                result_sgt[prop] = prop_copy(sgt.properties.get(prop))
             result_storage_group_templates.append(result_sgt)
         return {'storage-templates': result_storage_group_templates}
 
@@ -4981,7 +5006,7 @@ class StorageTemplateVolumesHandler:
         for sv in sgt.storage_volume_templates.list(filter_args):
             result_sv = {}
             for prop in cls.returned_props:
-                result_sv[prop] = sv.properties.get(prop)
+                result_sv[prop] = prop_copy(sv.properties.get(prop))
             result_storage_volume_templates.append(result_sv)
         return {'storage-template-volumes': result_storage_volume_templates}
 
@@ -5023,7 +5048,7 @@ class CapacityGroupsHandler:
         for cg in cpc.capacity_groups.list(filter_args):
             result_cg = {}
             for prop in cls.returned_props:
-                result_cg[prop] = cg.properties.get(prop)
+                result_cg[prop] = prop_copy(cg.properties.get(prop))
             result_capacity_groups.append(result_cg)
         return {'capacity-groups': result_capacity_groups}
 
@@ -5237,7 +5262,7 @@ class LparsHandler:
             for lpar in cpc.lpars.list(filter_args):
                 result_lpar = {}
                 for prop in cls.returned_props:
-                    result_lpar[prop] = lpar.properties.get(prop)
+                    result_lpar[prop] = prop_copy(lpar.properties.get(prop))
                 result_lpars.append(result_lpar)
         return {'logical-partitions': result_lpars}
 
@@ -5874,7 +5899,8 @@ class ResetActProfilesHandler:
             for profile in cpc.reset_activation_profiles.list(filter_args):
                 result_profile = {}
                 for prop in cls.returned_props:
-                    result_profile[prop] = profile.properties.get(prop)
+                    result_profile[prop] = \
+                        prop_copy(profile.properties.get(prop))
                 result_profiles.append(result_profile)
         return {'reset-activation-profiles': result_profiles}
 
@@ -5928,7 +5954,8 @@ class ImageActProfilesHandler:
             for profile in cpc.image_activation_profiles.list(filter_args):
                 result_profile = {}
                 for prop in cls.returned_props + add_props:
-                    result_profile[prop] = profile.properties.get(prop)
+                    result_profile[prop] = \
+                        prop_copy(profile.properties.get(prop))
                 result_profiles.append(result_profile)
         return {'image-activation-profiles': result_profiles}
 
@@ -5975,7 +6002,8 @@ class LoadActProfilesHandler:
             for profile in cpc.load_activation_profiles.list(filter_args):
                 result_profile = {}
                 for prop in cls.returned_props:
-                    result_profile[prop] = profile.properties.get(prop)
+                    result_profile[prop] = \
+                        prop_copy(profile.properties.get(prop))
                 result_profiles.append(result_profile)
         return {'load-activation-profiles': result_profiles}
 
