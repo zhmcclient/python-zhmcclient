@@ -499,7 +499,7 @@ release:
 	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
 	bash -c 'git checkout $$(cat branch.tmp)'
 	git pull
-	@bash -c 'if [ -n "$$(git branch -l release_$(VERSION))" ]; then echo "Creating release branch release_$(VERSION)"; git checkout -b release_$(VERSION); fi'
+	@bash -c 'if [ -z "$$(git branch -l release_$(VERSION))" ]; then echo "Creating release branch release_$(VERSION)"; git checkout -b release_$(VERSION); fi'
 	git checkout release_$(VERSION)
 	make authors
 	towncrier build --version $(VERSION) --yes
