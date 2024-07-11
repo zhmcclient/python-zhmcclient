@@ -806,7 +806,16 @@ local clone of the python-zhmcclient Git repo.
     milestones to a future version, and proceed with the release process. You
     may need to create the milestone for the future version.
 
-2.  Create and push the release branch:
+2.  Run the Safety tool:
+
+    .. code-block:: sh
+
+        RUN_TYPE=release make safety
+
+    If any of the two safety runs fails, fix the safety issues that are reported,
+    in a separate branch/PR.
+
+3.  Create and push the release branch:
 
     .. code-block:: sh
 
@@ -814,12 +823,16 @@ local clone of the python-zhmcclient Git repo.
 
     This includes the following steps:
 
-    * finalize the change log
+    * create the release branch (``release_M.N.U``), if not yet existing
     * make sure the AUTHORS.md file is up to date
-    * run the safety tool in release mode
-    * push the release branch (``release_M.N.U``)
+    * update the change log from the change fragment files, and delete those
+    * commit the changes to the release branch
+    * push the release branch
 
-3.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
+    If this command fails, the fix can be committed to the release branch
+    and the command above can be retried.
+
+4.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
@@ -834,19 +847,19 @@ local clone of the python-zhmcclient Git repo.
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-4.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+5.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-5.  On GitHub, close milestone ``M.N.U``.
+6.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix. If the milestone does not have open items
     anymore, close the milestone.
 
-6.  Publish the package
+7.  Publish the package
 
     .. code-block:: sh
 
@@ -862,7 +875,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-7.  Verify the publishing
+8.  Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -891,7 +904,7 @@ local clone of the python-zhmcclient Git repo.
       and edit the new version and set it to "active" (normally, that is done
       automatically by ReadTheDocs for new tags).
 
-8.  Hide previous fix version on ReadTheDocs
+9.  Hide previous fix version on ReadTheDocs
 
     When releasing a fix version != 0 (e.g. M.N.1), log on to
     https://readthedocs.org/ and go to
