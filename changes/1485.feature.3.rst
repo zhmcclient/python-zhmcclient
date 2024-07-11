@@ -1,3 +1,0 @@
-In addition to the `zhmcclient.__version__` property which provides the package
-version as a string, a new `zhmcclient.__version_tuple__` property provides
-it as a tuple of integer values.

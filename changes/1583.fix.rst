@@ -1,5 +1,0 @@
-Mock: Fixed that resource properties returned from zhmcclient mock support
-were not independent of the internal resource object's state. For properties
-that are lists or dicts, that has lead to the issue that changes to the
-internal state of the (mocked) resource object were immediately visible
-to a user that had previouly obtained the resource properties.

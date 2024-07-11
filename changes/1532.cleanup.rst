@@ -1,2 +1,0 @@
-Dev: Dropped the 'make upload' target, because the release to PyPI has
-been migrated to using a publish workflow.

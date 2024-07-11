@@ -1,1 +1,0 @@
-Third fix for RTD issue: Add requirements.txt to python.install config.
