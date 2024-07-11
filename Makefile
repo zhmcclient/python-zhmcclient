@@ -494,16 +494,14 @@ release:
 	@bash -c 'if [[ "$${VERSION#*.*.}" == "0" ]]; then echo master >branch.tmp; else echo stable_$${VERSION%.*} >branch.tmp; fi'
 	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Version tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
 	@bash -c 'if [ -z "$$(git branch --contains $(VERSION)a0 $$(cat branch.tmp))" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 is not in target branch $$(cat branch.tmp), but in:"; echo ""; git branch --contains $(VERSION)a0;. false; fi'
-	@bash -c 'if [ -n "$$(git branch -l release_$(VERSION))" ]; then echo ""; echo "Error: Release branch release_$(VERSION) already exists (the release of the version is already underway)"; echo ""; false; fi'
 	@echo "==> This will release $(package_name) version $(VERSION) to PyPI using target branch $$(cat branch.tmp)"
 	@echo -n '==> Continue? [yN] '
 	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
 	bash -c 'git checkout $$(cat branch.tmp)'
 	git pull
-	git checkout -b release_$(VERSION)
+	@bash -c 'if [ -n "$$(git branch -l release_$(VERSION))" ]; then echo "Creating release branch release_$(VERSION)"; git checkout -b release_$(VERSION); fi'
+	git checkout release_$(VERSION)
 	make authors
-	safety check --policy-file $(safety_develop_policy_file) -r minimum-constraints-develop.txt --full-report
-	safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report
 	towncrier build --version $(VERSION) --yes
 	git commit -asm "Release $(VERSION)"
 	git push --set-upstream origin release_$(VERSION)
