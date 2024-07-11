@@ -141,7 +141,7 @@ pywinpty==0.5; os_name == "nt"
 # Indirect dependencies for development that are not in dev-requirements.txt
 
 alabaster==0.7.9
-anyio==3.1.0
+anyio==4.4.0
 appdirs==1.4.3
 appnope==0.1.0
 argon2-cffi==21.2.0
