@@ -1,2 +1,0 @@
-Test: Removed the checking for change fragment files from the test workflow
-again.

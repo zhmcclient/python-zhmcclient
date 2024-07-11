@@ -1,3 +1,0 @@
-Mock: Updated the set of properties returned by
-'LdapServerDefinitionManager.list()' and 'CpcManager.list()' when used in a
-mocked environment, to the behavior of HMC version 2.16.0.

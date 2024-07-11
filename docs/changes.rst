@@ -20,6 +20,138 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.17.0
+^^^^^^^^^^^^^^
+
+Released: 2024-07-11
+
+**Bug fixes:**
+
+* Install: Increased the minimum version of the 'jsonschema' package to 3.1.0
+  to get a fix for a 'pkg_resources.DistributionNotFound' exception that occurs
+  in certain cases.
+
+* Test: Fixed str/int issue in end2end tests in skip_missing_api_feature().
+
+* Mock: Fixed the "Modify Storage Group Properties" HMC operation in the
+  zhmcclient mock support.
+
+* Mock: Consolidated the different assumptions in the zhmcclient mock support and
+  the end2end testcases regarding whether the implemented behavior depends on the
+  mocked HMC or CPC generation (e.g. support or not support the 'properties'
+  query parameter on some List operations). Now, the zhmcclient mock support
+  always implements only the behavior of the latest HMC / CPC generation.
+
+* Addressed safety issues up to 2024-06-21
+
+* Install: Changed the name of the dependent package 'stomp.py' to use its
+  canonical name 'stomp-py' since that prevented installation of packages using
+  zhmcclient under certain circumstances (e.g. with minimum package levels). (`#1516 <https://github.com/zhmcclient/python-zhmcclient/issues/1516>`_)
+
+* Docs: Fixed incorrect formatting of bullet lists. (`#1544 <https://github.com/zhmcclient/python-zhmcclient/issues/1544>`_)
+
+* Mock+Test: Added missing defaults for properties 'shared', 'description' and
+  'fulfillment-state' to the mocked 'Create Storage Group' operation.
+  Added missing properties and fixed property name typos in the end2end
+  mock test files mocked_hmc_z14.yaml and mocked_hmc_z16.yaml. (`#1548 <https://github.com/zhmcclient/python-zhmcclient/issues/1548>`_)
+
+* Docs: Added bibliography entries for HMC API books 2.11 - 2.12 back in,
+  without links (they are not downloadable anymore). (`#1560 <https://github.com/zhmcclient/python-zhmcclient/issues/1560>`_)
+
+* Mock: Fixed the handling of the 'additional-properties' query parameter
+  when not provided, by no longer producing a property with empty name. (`#1580 <https://github.com/zhmcclient/python-zhmcclient/issues/1580>`_)
+
+* Mock: Updated the set of properties returned by
+  'LdapServerDefinitionManager.list()' and 'CpcManager.list()' when used in a
+  mocked environment, to the behavior of HMC version 2.16.0. (`#1580 <https://github.com/zhmcclient/python-zhmcclient/issues/1580>`_)
+
+* Fixed mock support for create user pattern. (`#1581 <https://github.com/zhmcclient/python-zhmcclient/issues/1581>`_)
+
+* Mock: Fixed that resource properties returned from zhmcclient mock support
+  were not independent of the internal resource object's state. For properties
+  that are lists or dicts, that has lead to the issue that changes to the
+  internal state of the (mocked) resource object were immediately visible
+  to a user that had previouly obtained the resource properties. (`#1583 <https://github.com/zhmcclient/python-zhmcclient/issues/1583>`_)
+
+**Enhancements:**
+
+* Test: Added more exhaustive z14 and z16 mock files to the tests/end2end
+  directory and used them for the 'make end2end_mocked' tests.
+
+* Test: Improved the checking in the test_storage_volume.py end2end test module.
+
+* Test: Enabled the checking for success again in "make end2end_mocked".
+
+* Mock: Added zhmcclient mock support for "Get Partitions Assigned to Adapter"
+  operation. (`#1247 <https://github.com/zhmcclient/python-zhmcclient/issues/1247>`_)
+
+* Mock: Added zhmcclient mock support for the "Get Inventory" operation, and
+  enabled and improved its unit test. (`#1248 <https://github.com/zhmcclient/python-zhmcclient/issues/1248>`_)
+
+* Added zhmcclient mock support for 'Console.list_permitted_adapters()'.
+  This is used by the end2end_mocked testcases of the ibm.ibm_zhmc Ansible
+  collection. (`#1309 <https://github.com/zhmcclient/python-zhmcclient/issues/1309>`_)
+
+* Dev: Migrated from setup.py to pyproject.toml with setuptools as build backend.
+  This provides for automatic determination of the package version without
+  having to edit a version file. (`#1485 <https://github.com/zhmcclient/python-zhmcclient/issues/1485>`_)
+
+* In addition to the `zhmcclient.__version__` property which provides the package
+  version as a string, a new `zhmcclient.__version_tuple__` property provides
+  it as a tuple of integer values. (`#1485 <https://github.com/zhmcclient/python-zhmcclient/issues/1485>`_)
+
+* Added support for running the 'ruff' checker via "make ruff" and added that
+  to the test workflow. (`#1526 <https://github.com/zhmcclient/python-zhmcclient/issues/1526>`_)
+
+* Added support for running the 'bandit' checker with a new make target
+  'bandit', and added that to the GitHub Actions test workflow. Adjusted
+  the code in order to pass the bandit check:
+
+    - Changed the use of 'yamlloader.ordereddict.Loader' to 'SafeLoader'.
+    - Added bandit ignore markers where appropriate. (`#1527 <https://github.com/zhmcclient/python-zhmcclient/issues/1527>`_)
+
+* Dev: Encapsulated the starting of a new version into a new 'make start' target.
+  This performs the steps up to creating a PR. (`#1532 <https://github.com/zhmcclient/python-zhmcclient/issues/1532>`_)
+
+* Dev: Encapsulated the releasing of a version into a new 'make release' target.
+  This performs the steps up to creating a PR.
+  The release to PyPI happens when the PR is merged. (`#1533 <https://github.com/zhmcclient/python-zhmcclient/issues/1533>`_)
+
+* Mock: Added zhmcclient mock support for Storage Group Templates and their
+  Volumes. (`#1541 <https://github.com/zhmcclient/python-zhmcclient/issues/1541>`_)
+
+* Mock: Added zhmcclient mock support for Virtual Storage Resources in Storage
+  Groups. (`#1565 <https://github.com/zhmcclient/python-zhmcclient/issues/1565>`_)
+
+**Cleanup:**
+
+* Fixed new issues reported by new flake8 7.0.0.
+
+* Dev: Changed the outdated 'py.test' command name to 'pytest'.
+
+* Dropped support for Python below 3.8. Cleaned up the dependencies, Makefile,
+  source code, and test code.
+
+  Increased minimum version of the following Python packages the installation
+  depends upon:
+  - pytz to 2019.1 (only on Python 3.8/3.9 - was already there on Python >= 3.10)
+  - pytest (extra: test) to 6.2.5 (only on Python 3.8/3.9 - was already there
+    on Python >= 3.10) (`#1489 <https://github.com/zhmcclient/python-zhmcclient/issues/1489>`_)
+
+* Dev: Dropped the 'make upload' target, because the release to PyPI has
+  been migrated to using a publish workflow. (`#1532 <https://github.com/zhmcclient/python-zhmcclient/issues/1532>`_)
+
+* Converted most remaining uses of format() to f-strings. (`#1542 <https://github.com/zhmcclient/python-zhmcclient/issues/1542>`_)
+
+* Docs: Reduced number of versions shown in generated documentation to only
+  the latest fix version of each minor version, and the master version.
+  Updated the release instructions and links in the documentation accordingly. (`#1567 <https://github.com/zhmcclient/python-zhmcclient/issues/1567>`_)
+
+* Mock: Changed all 'list()' methods when used in a mocked environment, to return
+  the properties with a value of 'None' instead of omitting it, when the mock
+  environment did not add the property. (`#1580 <https://github.com/zhmcclient/python-zhmcclient/issues/1580>`_)
+
+
 Version 1.16.0
 ^^^^^^^^^^^^^^
 

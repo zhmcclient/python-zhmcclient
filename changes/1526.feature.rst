@@ -1,2 +1,0 @@
-Added support for running the 'ruff' checker via "make ruff" and added that
-to the test workflow.
