@@ -806,7 +806,42 @@ local clone of the python-zhmcclient Git repo.
     milestones to a future version, and proceed with the release process. You
     may need to create the milestone for the future version.
 
-2.  Run the Safety tool:
+2.  Set shell variables for the version that is being released and the branch
+    it is based on:
+
+    * ``MNU`` - Full version M.N.U that is being released
+    * ``MN`` - Major and minor version M.N of that full version
+    * ``BRANCH`` - Name of the branch the version that is being released is
+      based on
+
+    When releasing a new major version (e.g. ``1.0.0``) based on the master
+    branch:
+
+    .. code-block:: sh
+
+        MNU=1.0.0
+        MN=1.0
+        BRANCH=master
+
+    When releasing a new minor version (e.g. ``0.9.0``) based on the master
+    branch:
+
+    .. code-block:: sh
+
+        MNU=0.9.0
+        MN=0.9
+        BRANCH=master
+
+    When releasing a new update version (e.g. ``0.8.1``) based on the stable
+    branch of its minor version:
+
+    .. code-block:: sh
+
+        MNU=0.8.1
+        MN=0.8
+        BRANCH=stable_${MN}
+
+3.  Run the Safety tool:
 
     .. code-block:: sh
 
@@ -815,11 +850,11 @@ local clone of the python-zhmcclient Git repo.
     If any of the two safety runs fails, fix the safety issues that are reported,
     in a separate branch/PR.
 
-3.  Create and push the release branch:
+4.  Create and push the release branch:
 
     .. code-block:: sh
 
-        VERSION=M.N.U make release
+        VERSION=${MNU} make release
 
     This includes the following steps:
 
@@ -832,7 +867,7 @@ local clone of the python-zhmcclient Git repo.
     If this command fails, the fix can be committed to the release branch
     and the command above can be retried.
 
-4.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
+5.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
@@ -847,19 +882,19 @@ local clone of the python-zhmcclient Git repo.
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-5.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+6.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-6.  On GitHub, close milestone ``M.N.U``.
+7.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix. If the milestone does not have open items
     anymore, close the milestone.
 
-7.  Publish the package
+8.  Publish the package
 
     .. code-block:: sh
 
@@ -875,7 +910,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-8.  Verify the publishing
+9.  Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -904,7 +939,7 @@ local clone of the python-zhmcclient Git repo.
       and edit the new version and set it to "active" (normally, that is done
       automatically by ReadTheDocs for new tags).
 
-9.  Hide previous fix version on ReadTheDocs
+10. Hide previous fix version on ReadTheDocs
 
     When releasing a fix version != 0 (e.g. M.N.1), log on to
     https://readthedocs.org/ and go to
@@ -938,23 +973,58 @@ has the remote name ``origin`` in your local clone.
 Any commands in the following steps are executed in the main directory of your
 local clone of the python-zhmcclient Git repo.
 
-1.  Create and push the start branch:
+1.  Set shell variables for the version that is being started and the branch it
+    is based on:
+
+    * ``MNU`` - Full version M.N.U that is being started
+    * ``MN`` - Major and minor version M.N of that full version
+    * ``BRANCH`` -  Name of the branch the version that is being started is
+      based on
+
+    When starting a new major version (e.g. ``1.0.0``) based on the master
+    branch:
 
     .. code-block:: sh
 
-        VERSION=M.N.U make start
+        MNU=1.0.0
+        MN=1.0
+        BRANCH=master
+
+    When starting a new minor version (e.g. ``0.9.0``) based on the master
+    branch:
+
+    .. code-block:: sh
+
+        MNU=0.9.0
+        MN=0.9
+        BRANCH=master
+
+    When starting a new minor version (e.g. ``0.8.1``) based on the stable
+    branch of its minor version:
+
+    .. code-block:: sh
+
+        MNU=0.8.1
+        MN=0.8
+        BRANCH=stable_${MN}
+
+2.  Create and push the start branch:
+
+    .. code-block:: sh
+
+        VERSION=${MNU} make start
 
     This includes the following steps:
 
     * push the start tag (``M.N.Ua0``)
     * push the start branch (``start_M.N.U``)
 
-2.  On GitHub, create a milestone for the new version ``M.N.U``.
+3.  On GitHub, create a milestone for the new version ``M.N.U``.
 
     You can create a milestone in GitHub via Issues -> Milestones -> New
     Milestone.
 
-3.  On GitHub, create a Pull Request for the start branch ``start_M.N.U``.
+4.  On GitHub, create a Pull Request for the start branch ``start_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When starting a version based on a stable branch, you
@@ -964,7 +1034,7 @@ local clone of the python-zhmcclient Git repo.
 
     Set the milestone of that PR to the new version ``M.N.U``.
 
-4.  On GitHub, go through all open issues and pull requests that still have
+5.  On GitHub, go through all open issues and pull requests that still have
     milestones for previous releases set, and either set them to the new
     milestone, or to have no milestone.
 
@@ -972,11 +1042,11 @@ local clone of the python-zhmcclient Git repo.
     should not be any such issues or pull requests anymore. So this step here
     is just an additional safeguard.
 
-5.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
+6.  On GitHub, once the checks for the Pull Request for branch ``start_M.N.U``
     have succeeded, merge the Pull Request (no review is needed). This
     automatically deletes the branch on GitHub.
 
-6.  Update and clean up the local repo:
+7.  Update and clean up the local repo:
 
     .. code-block:: sh
 
