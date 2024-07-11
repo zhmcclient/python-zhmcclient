@@ -1,2 +1,0 @@
-Mock: Fixed the handling of the 'additional-properties' query parameter
-when not provided, by no longer producing a property with empty name.

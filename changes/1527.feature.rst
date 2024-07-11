@@ -1,6 +1,0 @@
-Added support for running the 'bandit' checker with a new make target
-'bandit', and added that to the GitHub Actions test workflow. Adjusted
-the code in order to pass the bandit check:
-
-  - Changed the use of 'yamlloader.ordereddict.Loader' to 'SafeLoader'.
-  - Added bandit ignore markers where appropriate.

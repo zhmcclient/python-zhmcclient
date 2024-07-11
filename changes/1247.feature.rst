@@ -1,2 +1,0 @@
-Mock: Added zhmcclient mock support for "Get Partitions Assigned to Adapter"
-operation.
