@@ -46,7 +46,7 @@ jsonschema>=3.1.0,!=4.0.0
 # Since we changed to use the allowed_methods attribute introduced in urllib3
 # 1.26.0, and our minimum version of requests (2.25.0) only requires
 # urllib3>=1.21.0, we need to require a minimum version of urllib3.
-urllib3>=1.26.18
+urllib3>=1.26.19
 
 # pyrsistent is used by jsonschema>=3.0
 # pyrsistent 0.15.0 started using the FileNotFoundError built-in exception that
