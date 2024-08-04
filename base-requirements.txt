@@ -7,5 +7,5 @@
 
 pip>=23.3
 setuptools>=66.1.0
-setuptools-scm[toml]>=6.4.0
+setuptools-scm[toml]>=8.1.0
 wheel>=0.38.1
