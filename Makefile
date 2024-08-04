@@ -127,10 +127,7 @@ mock_package_name := zhmcclient_mock
 # Note: The package version is automatically calculated by setuptools_scm based
 # on the most recent tag in the commit history, increasing the least significant
 # version indicator by 1.
-# Note: Errors in getting the version (e.g. if setuptools-scm is not installed)
-# are detected in _check_version. We avoid confusion by suppressing such errors
-# here.
-package_version := $(shell $(PYTHON_CMD) -m setuptools_scm 2>$(DEV_NULL))
+package_version := $(shell $(PYTHON_CMD) -m setuptools_scm)
 
 # The version file is recreated by setuptools-scm on every build, so it is
 # excluuded from git, and also from some dependency lists.
@@ -151,7 +148,7 @@ sdist_file := $(dist_dir)/$(package_name)-$(package_version).tar.gz
 
 dist_files := $(bdist_file) $(sdist_file)
 
-# Source files in the packages
+# Source files in the packages, excluding the $(version_file)
 package_py_files := \
     $(filter-out $(version_file), $(wildcard $(package_name)/*.py)) \
     $(wildcard $(package_name)/*/*.py) \
@@ -174,6 +171,7 @@ doc_dependent_files := \
     $(wildcard $(doc_conf_dir)/*.rst) \
     $(wildcard $(doc_conf_dir)/notebooks/*.ipynb) \
     $(package_py_files) \
+    $(version_file) \
     examples/example_hmc_inventory.yaml \
     examples/example_hmc_vault.yaml \
 
@@ -245,13 +243,12 @@ pytest_cov_files := .coveragerc
 # Files to be built
 build_files := $(bdist_file) $(sdist_file)
 
-# Files the distribution archive depends upon.
-# This is also used for 'include' statements in MANIFEST.in.
-# Wildcards can be used directly (i.e. without wildcard function).
-dist_included_files := \
+# Files the distribution archives depend upon.
+dist_dependent_files := \
     pyproject.toml \
     LICENSE \
     README.md \
+    AUTHORS.md \
     requirements.txt \
     extra-testutils-requirements.txt \
     $(package_py_files) \
@@ -281,7 +278,7 @@ help:
 	@echo "  all        - Do all of the above"
 	@echo "  end2end    - Run end2end tests (adds to coverage results)"
 	@echo "  end2end_show - Show HMCs defined for end2end tests"
-	@echo "  authors - Generate AUTHORS.md file from git log"
+	@echo "  authors    - Generate AUTHORS.md file from git log"
 	@echo "  uninstall  - Uninstall package from active Python environment"
 	@echo "  release    - Begin the release a version to PyPI (requires VERSION to be set)"
 	@echo "  start      - Begin the start of a new version to PyPI (requires VERSION to be set)"
@@ -335,18 +332,15 @@ pip_list:
 	@echo "Makefile: Python packages as seen by make:"
 	$(PIP_CMD) list
 
+.PHONY: _always
+_always:
+
 .PHONY: env
 env:
 	@echo "Makefile: Environment variables as seen by make:"
 	$(ENV)
 
-.PHONY: _check_version
-_check_version:
-ifeq (,$(package_version))
-	$(error Package version could not be determined)
-endif
-
-$(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done: Makefile base-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
+$(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done: base-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing/upgrading pip, setuptools and wheel with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) -r base-requirements.txt
@@ -374,7 +368,7 @@ builddoc: html
 html: $(doc_build_dir)/html/docs/index.html
 	@echo "Makefile: $@ done."
 
-$(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files) $(bdist_file)
+$(doc_build_dir)/html/docs/index.html: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	@echo "Running Sphinx to create HTML pages"
 	-$(call RM_FUNC,$@)
 	$(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
@@ -382,7 +376,7 @@ $(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PA
 	@echo "Done: Created the HTML pages with top level file: $@"
 
 .PHONY: pdf
-pdf: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files) $(bdist_file)
+pdf: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	@echo "Running Sphinx to create PDF files"
 	$(doc_cmd) -b latex $(doc_opts) $(doc_build_dir)/pdf
 	@echo "Running LaTeX files through pdflatex..."
@@ -392,7 +386,7 @@ pdf: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_
 	@echo "Makefile: $@ done."
 
 .PHONY: man
-man: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files) $(bdist_file)
+man: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	@echo "Running Sphinx to create manual pages"
 	$(doc_cmd) -b man $(doc_opts) $(doc_build_dir)/man
 	@echo
@@ -400,7 +394,7 @@ man: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_
 	@echo "Makefile: $@ done."
 
 .PHONY: docchanges
-docchanges: $(bdist_file)
+docchanges: $(doc_dependent_files)
 	@echo "Running Sphinx to create the doc changes overview file"
 	$(doc_cmd) -b changes $(doc_opts) $(doc_build_dir)/changes
 	@echo
@@ -408,7 +402,7 @@ docchanges: $(bdist_file)
 	@echo "Makefile: $@ done."
 
 .PHONY: doclinkcheck
-doclinkcheck: $(bdist_file)
+doclinkcheck: $(doc_dependent_files)
 	@echo "Running Sphinx to check the doc links"
 	$(doc_cmd) -b linkcheck $(doc_opts) $(doc_build_dir)/linkcheck
 	@echo
@@ -416,7 +410,7 @@ doclinkcheck: $(bdist_file)
 	@echo "Makefile: $@ done."
 
 .PHONY: doccoverage
-doccoverage: $(bdist_file)
+doccoverage: $(doc_dependent_files)
 	@echo "Running Sphinx to doc coverage results"
 	$(doc_cmd) -b coverage $(doc_opts) $(doc_build_dir)/coverage
 	@echo "Done: Created the doc coverage results in: $(doc_build_dir)/coverage/python.txt"
@@ -440,6 +434,10 @@ safety: $(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/saf
 
 .PHONY: bandit
 bandit: $(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done
+	@echo "Makefile: $@ done."
+
+.PHONY: check_reqs
+check_reqs: $(done_dir)/check_reqs_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
 .PHONY: install
@@ -533,64 +531,53 @@ start:
 	@echo "Done: Pushed the start branch to GitHub - now go there and create a PR."
 	@echo "Makefile: $@ done."
 
-# Note: The build depends on the right files specified in MANIFEST.in.
-# We generate the MANIFEST.in file automatically, to have a single point of
-# control (this Makefile) for what gets into the distribution archive.
-MANIFEST.in: Makefile $(dist_included_files)
-	@echo "Makefile: Creating the manifest input file"
-	echo "# MANIFEST.in file generated by Makefile - DO NOT EDIT!!" >$@
-ifeq ($(PLATFORM),Windows_native)
-	for %%f in ($(dist_included_files)) do (echo include %%f >>$@)
-else
-	echo "$(dist_included_files)" | xargs -n 1 echo include >>$@
-endif
-	@echo "Makefile: Done creating the manifest input file: $@"
-
 # Distribution archives.
-$(sdist_file): pyproject.toml MANIFEST.in $(dist_included_files)
+$(sdist_file): pyproject.toml $(dist_dependent_files)
 	@echo "Makefile: Building the source distribution archive: $(sdist_file)"
 	$(PYTHON_CMD) -m build --sdist --outdir $(dist_dir) .
 	@echo "Makefile: Done building the source distribution archive: $(sdist_file)"
 
-$(bdist_file): pyproject.toml MANIFEST.in $(dist_included_files)
+$(bdist_file) $(version_file): pyproject.toml $(dist_dependent_files)
 	@echo "Makefile: Building the wheel distribution archive: $(bdist_file)"
 	$(PYTHON_CMD) -m build --wheel --outdir $(dist_dir) -C--universal .
 	@echo "Makefile: Done building the wheel distribution archive: $(bdist_file)"
 
-$(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(pylint_rc_file) $(check_py_files)
+$(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(pylint_rc_file) $(check_py_files)
 	@echo "Makefile: Running Pylint"
 	-$(call RM_FUNC,$@)
 	pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
 	echo "done" >$@
 	@echo "Makefile: Done running Pylint"
 
-$(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_develop_policy_file) minimum-constraints-develop.txt minimum-constraints-install.txt
+$(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(safety_develop_policy_file) minimum-constraints-develop.txt minimum-constraints-install.txt
 	@echo "Makefile: Running Safety for development packages"
 	-$(call RM_FUNC,$@)
 	bash -c "safety check --policy-file $(safety_develop_policy_file) -r minimum-constraints-develop.txt --full-report || test '$(RUN_TYPE)' != 'release' || exit 1"
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for development packages"
 
-$(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(safety_install_policy_file) minimum-constraints-install.txt
+$(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(safety_install_policy_file) minimum-constraints-install.txt
 	@echo "Makefile: Running Safety for install packages"
 	-$(call RM_FUNC,$@)
 	safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for install packages"
 
-$(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(bandit_rc_file) $(check_py_files)
+$(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(bandit_rc_file) $(check_py_files)
 	@echo "Makefile: Running Bandit"
 	-$(call RM_FUNC,$@)
 	bandit -c $(bandit_rc_file) -l -r $(package_name) $(mock_package_name)
 	echo "done" >$@
 	@echo "Makefile: Done running Bandit"
 
-$(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(flake8_rc_file) $(check_py_files)
+$(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(flake8_rc_file) $(check_py_files)
+	@echo "Makefile: Running Flake8"
 	-$(call RM_FUNC,$@)
 	flake8 $(check_py_files)
 	echo "done" >$@
+	@echo "Makefile: Done running Flake8"
 
-$(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done Makefile $(ruff_rc_file) $(check_py_files)
+$(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(ruff_rc_file) $(check_py_files)
 	@echo "Makefile: Running Ruff"
 	-$(call RM_FUNC,$@)
 	ruff --version
@@ -598,8 +585,8 @@ $(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PA
 	echo "done" >$@
 	@echo "Makefile: Done running Ruff"
 
-.PHONY: check_reqs
-check_reqs: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-develop.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
+$(done_dir)/check_reqs_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-develop.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
+	-$(call RM_FUNC,$@)
 	@echo "Makefile: Checking missing dependencies of this package"
 	bash -c "cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt; pip-missing-reqs $(package_name) --requirements-file=tmp_requirements.txt"
 	-$(call RM_FUNC,tmp_requirements.txt)
@@ -615,10 +602,10 @@ else
 	rm -f tmp_minimum-constraints.txt
 	@echo "Makefile: Done checking missing dependencies of some development packages in our minimum versions"
 endif
-	@echo "Makefile: $@ done."
+	echo "done" >$@
 
 .PHONY: test
-test: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
+test: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
 	-$(call RMDIR_R_FUNC,htmlcov)
 	pytest --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
 	@echo "Makefile: $@ done."
@@ -634,27 +621,31 @@ else
 endif
 
 .PHONY:	end2end
-end2end: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
+end2end: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
 	bash -c "TESTEND2END_LOAD=true pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 # TODO: Enable rc checking again once the remaining issues are resolved
 .PHONY:	end2end_mocked
-end2end_mocked: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
+end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
 	bash -c "TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 .PHONY: authors
-authors: _check_version
-	echo "# Authors of this project" >AUTHORS.md
-	echo "" >>AUTHORS.md
-	echo "Sorted list of authors derived from git commit history:" >>AUTHORS.md
-	echo '```' >>AUTHORS.md
-	git shortlog --summary --email | cut -f 2 | sort >>AUTHORS.md
-	echo '```' >>AUTHORS.md
-	@echo '$@ done.'
+authors: AUTHORS.md
+	@echo "Makefile: $@ done."
+
+# Make sure the AUTHORS.md file is up to date but has the old date when it did not change to prevent redoing dependent targets
+AUTHORS.md: _always
+	echo "# Authors of this project" >AUTHORS.md.tmp
+	echo "" >>AUTHORS.md.tmp
+	echo "Sorted list of authors derived from git commit history:" >>AUTHORS.md.tmp
+	echo '```' >>AUTHORS.md.tmp
+	git shortlog --summary --email | cut -f 2 | sort >>AUTHORS.md.tmp
+	echo '```' >>AUTHORS.md.tmp
+	sh -c "if ! diff -q AUTHORS.md.tmp AUTHORS.md; then mv AUTHORS.md.tmp AUTHORS.md; else rm AUTHORS.md.tmp; fi"
 
 .PHONY:	end2end_show
 end2end_show:

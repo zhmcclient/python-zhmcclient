@@ -8,7 +8,7 @@ requires = [
     # Keep in sync with base-requirements.txt and the base dependencies in
     # minimum-constraints-install.txt
     "setuptools>=66.1.0",
-    "setuptools-scm[toml]>=6.4.0",
+    "setuptools-scm[toml]>=8.1.0",
     "wheel>=0.38.1"
 ]
 build-backend = "setuptools.build_meta"
