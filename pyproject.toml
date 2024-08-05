@@ -74,4 +74,4 @@ testutils = {file = ['extra-testutils-requirements.txt']}
 
 [tool.setuptools_scm]
 # Get the version from the Git tag, and write a version file:
-write_to = "zhmcclient/_version_scm.py"
+version_file = "zhmcclient/_version_scm.py"
