@@ -88,14 +88,16 @@ autodocsumm>=0.2.12
 Babel>=2.9.1
 
 # PyLint (no imports, invoked via pylint script)
-pylint>=2.15.0
-astroid>=2.12.4
+pylint>=3.0.1
+astroid>=3.0.1
 lazy-object-proxy>=1.4.3
 wrapt>=1.14
+# platformdirs is also used by tox
 platformdirs>=4.1.0
+# isort 4.3.8 fixes an issue with py310 and works on py310 (Note that isort 5.10.0 has official support for py310)
 isort>=4.3.8
 tomlkit>=0.10.1
-dill>=0.3.6
+dill>=0.3.7
 
 # Flake8 and dependents (no imports, invoked via flake8 script):
 flake8>=6.1.0
