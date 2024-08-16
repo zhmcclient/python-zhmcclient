@@ -262,7 +262,7 @@ help:
 	@echo "Package version will be: $(package_version)"
 	@echo ""
 	@echo "Make targets:"
-	@echo "  install    - Install package in active Python environment"
+	@echo "  install    - Install package in active Python environment (non-editable)"
 	@echo "  develop    - Prepare the development environment by installing prerequisites"
 	@echo "  check_reqs - Perform missing dependency checks"
 	@echo "  check      - Run Flake8 on sources"
@@ -446,11 +446,11 @@ install: $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done
 
 $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
-	@echo "Installing $(package_name) (editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
-	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -e .
+	@echo "Installing $(package_name) (non-editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
+	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) .
 	$(PYTHON_CMD) -c "import $(package_name); print('ok')"
 	$(PYTHON_CMD) -c "import $(mock_package_name); print('ok')"
-	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -e .[testutils]
+	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) .[testutils]
 	$(PYTHON_CMD) -c "import $(package_name).testutils; print('ok')"
 	echo "done" >$@
 
@@ -588,9 +588,10 @@ $(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PA
 $(done_dir)/check_reqs_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-develop.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
 	-$(call RM_FUNC,$@)
 	@echo "Makefile: Checking missing dependencies of this package"
-	bash -c "cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt; pip-missing-reqs $(package_name) --requirements-file=tmp_requirements.txt"
-	-$(call RM_FUNC,tmp_requirements.txt)
-	pip-missing-reqs $(package_name) --requirements-file=minimum-constraints-install.txt
+	cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt
+	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=tmp_requirements.txt
+	$(call RM_FUNC,tmp_requirements.txt)
+	pip-missing-reqs $(package_name) --ignore-module $(package_name) --ignore-module $(mock_package_name) --requirements-file=minimum-constraints-install.txt
 	@echo "Makefile: Done checking missing dependencies of this package"
 ifeq ($(PLATFORM),Windows_native)
 # Reason for skipping on Windows is https://github.com/r1chardj0n3s/pip-check-reqs/issues/67
