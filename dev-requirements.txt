@@ -57,6 +57,7 @@ pydantic>=1.10.13
 typer>=0.12.0
 typer-cli>=0.12.0
 typer-slim>=0.12.0
+psutil>=6.0.0
 
 # Bandit checker
 bandit>=1.7.8
