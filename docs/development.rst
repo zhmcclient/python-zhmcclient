@@ -852,7 +852,14 @@ local clone of the python-zhmcclient Git repo.
 
     Roll back the PR into any maintained stable branches.
 
-4.  Create and push the release branch:
+4.  Check for any
+    `dependabot alerts <https://github.com/zhmcclient/python-zhmcclient/security/dependabot>`_.
+
+    If there are any dependabot alerts, fix them in a separate branch/PR.
+
+    Roll back the PR into any maintained stable branches.
+
+5.  Create and push the release branch:
 
     .. code-block:: sh
 
@@ -869,7 +876,7 @@ local clone of the python-zhmcclient Git repo.
     If this command fails, the fix can be committed to the release branch
     and the command above can be retried.
 
-5.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
+6.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
 
     Important: When creating Pull Requests, GitHub by default targets the
     ``master`` branch. When releasing based on a stable branch, you need to
@@ -884,19 +891,19 @@ local clone of the python-zhmcclient Git repo.
     tests for all defined environments, since it discovers by the branch name
     that this is a PR for a release.
 
-6.  On GitHub, once the checks for that Pull Request have succeeded, merge the
+7.  On GitHub, once the checks for that Pull Request have succeeded, merge the
     Pull Request (no review is needed). This automatically deletes the branch
     on GitHub.
 
     If the PR did not succeed, fix the issues.
 
-7.  On GitHub, close milestone ``M.N.U``.
+8.  On GitHub, close milestone ``M.N.U``.
 
     Verify that the milestone has no open items anymore. If it does have open
     items, investigate why and fix. If the milestone does not have open items
     anymore, close the milestone.
 
-8.  Publish the package
+9.  Publish the package
 
     .. code-block:: sh
 
@@ -912,7 +919,7 @@ local clone of the python-zhmcclient Git repo.
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
 
-9.  Verify the publishing
+10. Verify the publishing
 
     Wait for the "publish" workflow for the new release to have completed:
     https://github.com/zhmcclient/python-zhmcclient/actions/workflows/publish.yml
@@ -941,7 +948,7 @@ local clone of the python-zhmcclient Git repo.
       and edit the new version and set it to "active" (normally, that is done
       automatically by ReadTheDocs for new tags).
 
-10. Hide previous fix version on ReadTheDocs
+11. Hide previous fix version on ReadTheDocs
 
     When releasing a fix version != 0 (e.g. M.N.1), log on to
     https://readthedocs.org/ and go to
