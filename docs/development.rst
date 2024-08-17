@@ -863,7 +863,7 @@ local clone of the python-zhmcclient Git repo.
 
     .. code-block:: sh
 
-        VERSION=${MNU} make release
+        VERSION=${MNU} make release_branch
 
     This includes the following steps:
 
@@ -907,14 +907,14 @@ local clone of the python-zhmcclient Git repo.
 
     .. code-block:: sh
 
-        git checkout ${BRANCH}
-        git pull
-        git branch -D release_${MNU}
-        git branch -D -r origin/release_${MNU}
-        git tag -f ${MNU}
-        git push -f --tags
+        VERSION=${MNU} make release_publish
 
-    Pushing the new tag will cause the "publish" workflow to run. That workflow
+    This includes the following steps:
+
+    * create and push the release tag
+    * clean up the release branch
+
+    Pushing the release tag will cause the "publish" workflow to run. That workflow
     builds the package, publishes it on PyPI, creates a release for it on
     Github, and finally creates a new stable branch on Github if the master
     branch was released.
@@ -1021,12 +1021,14 @@ local clone of the python-zhmcclient Git repo.
 
     .. code-block:: sh
 
-        VERSION=${MNU} make start
+        VERSION=${MNU} make start_branch
 
     This includes the following steps:
 
-    * push the start tag (``M.N.Ua0``)
-    * push the start branch (``start_M.N.U``)
+    * create the start branch (``start_M.N.U``), if not yet existing
+    * create a dummy change
+    * commit and push the start branch (``start_M.N.U``)
+    * create and push the start tag (``M.N.Ua0``)
 
 3.  On GitHub, create a milestone for the new version ``M.N.U``.
 
