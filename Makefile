@@ -280,8 +280,9 @@ help:
 	@echo "  end2end_show - Show HMCs defined for end2end tests"
 	@echo "  authors    - Generate AUTHORS.md file from git log"
 	@echo "  uninstall  - Uninstall package from active Python environment"
-	@echo "  release    - Begin the release a version to PyPI (requires VERSION to be set)"
-	@echo "  start      - Begin the start of a new version to PyPI (requires VERSION to be set)"
+	@echo "  release_branch - Create a release branch for releasing a version (requires VERSION to be set)"
+	@echo "  release_publish - Publish a version to PyPI (requires VERSION to be set)"
+	@echo "  start_branch - Create a start branch for a new version (requires VERSION to be set)"
 	@echo "  clean      - Remove any temporary files"
 	@echo "  clobber    - Remove any build products"
 	@echo "  platform   - Display the information about the platform as seen by make"
@@ -483,16 +484,16 @@ clean:
 all: install develop check_reqs check ruff pylint test end2end_mocked safety bandit installtest build builddoc
 	@echo "Makefile: $@ done."
 
-.PHONY: release
-release:
+.PHONY: release_branch
+release_branch:
 	@bash -c 'if [ -z "$(VERSION)" ]; then echo ""; echo "Error: VERSION env var is not set"; echo ""; false; fi'
 	@bash -c 'if [ -n "$$(git status -s)" ]; then echo ""; echo "Error: Local git repo has uncommitted files:"; echo ""; git status; false; fi'
 	git fetch origin
 	@bash -c 'if [ -z "$$(git tag -l $(VERSION)a0)" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 does not exist (the version has not been started)"; echo ""; false; fi'
 	@bash -c 'if [[ "$${VERSION#*.*.}" == "0" ]]; then echo master >branch.tmp; else echo stable_$${VERSION%.*} >branch.tmp; fi'
-	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Version tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
+	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Release tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
 	@bash -c 'if [ -z "$$(git branch --contains $(VERSION)a0 $$(cat branch.tmp))" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 is not in target branch $$(cat branch.tmp), but in:"; echo ""; git branch --contains $(VERSION)a0;. false; fi'
-	@echo "==> This will release $(package_name) version $(VERSION) to PyPI using target branch $$(cat branch.tmp)"
+	@echo "==> This will start the release of $(package_name) version $(VERSION) to PyPI using target branch $$(cat branch.tmp)"
 	@echo -n '==> Continue? [yN] '
 	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
 	bash -c 'git checkout $$(cat branch.tmp)'
@@ -507,13 +508,34 @@ release:
 	@echo "Done: Pushed the release branch to GitHub - now go there and create a PR."
 	@echo "Makefile: $@ done."
 
-.PHONY: start
-start:
+.PHONY: release_publish
+release_publish:
+	@bash -c 'if [ -z "$(VERSION)" ]; then echo ""; echo "Error: VERSION env var is not set"; echo ""; false; fi'
+	@bash -c 'if [ -n "$$(git status -s)" ]; then echo ""; echo "Error: Local git repo has uncommitted files:"; echo ""; git status; false; fi'
+	git fetch origin
+	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Release tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
+	@bash -c 'if [[ "$${VERSION#*.*.}" == "0" ]]; then echo master >branch.tmp; else echo stable_$${VERSION%.*} >branch.tmp; fi'
+	@bash -c 'if [ "$$(git log --format=format:%s $$(cat branch.tmp)~..$$(cat branch.tmp))" != "Release $(VERSION)" ]; then echo ""; echo "Error: Release branch has not been created yet"; echo ""; false; fi'
+	@echo "==> This will publish $(package_name) version $(VERSION) to PyPI"
+	@echo -n '==> Continue? [yN] '
+	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
+	bash -c 'git checkout $$(cat branch.tmp)'
+	git pull
+	git tag -f $(VERSION)
+	git push -f --tags
+	git branch -D release_$(VERSION)
+	git branch -D -r origin/release_$(VERSION)
+	rm -f branch.tmp
+	@echo "Done: Triggered the publish workflow - now wait for it to finish and verify the publishing."
+	@echo "Makefile: $@ done."
+
+.PHONY: start_branch
+start_branch:
 	@bash -c 'if [ -z "$(VERSION)" ]; then echo ""; echo "Error: VERSION env var is not set"; echo ""; false; fi'
 	@bash -c 'if [ -n "$$(git status -s)" ]; then echo ""; echo "Error: Local git repo has uncommitted files:"; echo ""; git status; false; fi'
 	git fetch origin
 	@bash -c 'if [[ "$${VERSION#*.*.}" == "0" ]]; then echo master >branch.tmp; else echo stable_$${VERSION%.*} >branch.tmp; fi'
-	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Version tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
+	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Release tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
 	@bash -c 'if [ -n "$$(git tag -l $(VERSION)a0)" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 already exists (the new version has alreay been started)"; echo ""; false; fi'
 	@bash -c 'if [ -n "$$(git branch -l release_$(VERSION))" ]; then echo ""; echo "Error: Start branch start_$(VERSION) already exists (the start of the new version is already underway)"; echo ""; false; fi'
 	@echo "==> This will start new version $(VERSION) using target branch $$(cat branch.tmp)"
