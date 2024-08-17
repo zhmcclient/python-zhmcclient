@@ -845,10 +845,12 @@ local clone of the python-zhmcclient Git repo.
 
     .. code-block:: sh
 
-        RUN_TYPE=release make safety
+        make safety
 
     If any of the two safety runs fails, fix the safety issues that are reported,
     in a separate branch/PR.
+
+    Roll back the PR into any maintained stable branches.
 
 4.  Create and push the release branch:
 
