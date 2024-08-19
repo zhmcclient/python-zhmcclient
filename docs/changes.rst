@@ -20,6 +20,25 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.17.1
+^^^^^^^^^^^^^^
+
+Released: 2024-08-19
+
+**Bug fixes:**
+
+* Addressed safety issues up to 2024-08-18.
+
+* Docs: Fixed an RTD build issue that lead to not showing any API documentation. (`#1611 <https://github.com/zhmcclient/python-zhmcclient/issues/1611>`_)
+
+**Cleanup:**
+
+* Docs: Simplified version retrieval in docs build by using setuptools_scm.
+
+* Test: Increased minimum version of pylint to 3.0.1 to address an issue
+  when importing setuptools_scm in conf.py.
+
+
 Version 1.17.0
 ^^^^^^^^^^^^^^
 
