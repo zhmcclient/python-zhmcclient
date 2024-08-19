@@ -244,11 +244,14 @@ pytest_cov_files := .coveragerc
 build_files := $(bdist_file) $(sdist_file)
 
 # Files the distribution archives depend upon.
+# AUTHORS.md is intentionally not in that list even though it is included in the
+# binary distribution archive, because we don't want it to change during the
+# 'make build' that is run in the publish workflow (that would lead to an
+# attempt to release a development version).
 dist_dependent_files := \
     pyproject.toml \
     LICENSE \
     README.md \
-    AUTHORS.md \
     requirements.txt \
     extra-testutils-requirements.txt \
     $(package_py_files) \
@@ -685,7 +688,7 @@ AUTHORS.md: _always
 	echo '```' >>AUTHORS.md.tmp
 	git shortlog --summary --email | cut -f 2 | sort >>AUTHORS.md.tmp
 	echo '```' >>AUTHORS.md.tmp
-	sh -c "if ! diff -q AUTHORS.md.tmp AUTHORS.md; then mv AUTHORS.md.tmp AUTHORS.md; else rm AUTHORS.md.tmp; fi"
+	sh -c "if ! diff AUTHORS.md.tmp AUTHORS.md; then mv AUTHORS.md.tmp AUTHORS.md; else rm AUTHORS.md.tmp; fi"
 
 .PHONY:	end2end_show
 end2end_show:
