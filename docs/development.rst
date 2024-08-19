@@ -956,7 +956,6 @@ local clone of the python-zhmcclient Git repo.
     * create the start branch (``start_M.N.U``), if not yet existing
     * create a dummy change
     * commit and push the start branch (``start_M.N.U``)
-    * create and push the start tag (``M.N.Ua0``)
 
 2.  On GitHub, create a milestone for the new version ``M.N.U``.
 
@@ -986,20 +985,12 @@ local clone of the python-zhmcclient Git repo.
 
 6.  Update and clean up the local repo (replace M,N,U accordingly):
 
-    When starting an ``M.N.0`` version:
-
     .. code-block:: sh
 
-        git checkout master
-        git pull
-        git branch -D start_M.U
-        git branch -D -r origin/start_M.N.U
+        VERSION=M.N.U make start_tag
 
-    Otherwise:
+    This includes the following steps:
 
-    .. code-block:: sh
-
-        git checkout stable_M.N
-        git pull
-        git branch -D start_M.U
-        git branch -D -r origin/start_M.N.U
+    * checkout and pull the branch that was released (``master`` or ``stable_M.N``)
+    * delete the start branch (``start_M.N.U``) locally and remotely
+    * create and push the start tag (``M.N.Ua0``)
