@@ -1016,7 +1016,6 @@ local clone of the python-zhmcclient Git repo.
 
     This includes the following steps:
 
-    * push the start tag (``M.N.Ua0``)
     * push the start branch (``start_M.N.U``)
 
 3.  On GitHub, create a milestone for the new version ``M.N.U``.
