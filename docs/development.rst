@@ -1046,7 +1046,7 @@ local clone of the python-zhmcclient Git repo.
     have succeeded, merge the Pull Request (no review is needed). This
     automatically deletes the branch on GitHub.
 
-7.  Update and clean up the local repo:
+7.  Create the release start tag and clean up the start branch:
 
     .. code-block:: sh
 
@@ -1054,3 +1054,5 @@ local clone of the python-zhmcclient Git repo.
         git pull
         git branch -D start_${MNU}
         git branch -D -r origin/start_${MNU}
+        git tag -f ${MNU}a0
+      	git push -f --tags
