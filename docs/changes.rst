@@ -21,7 +21,7 @@ Change log
 
 .. towncrier start
 Version 1.17.1
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 Released: 2024-08-19
 
