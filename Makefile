@@ -526,8 +526,6 @@ start:
 	git add changes/noissue.$(VERSION).notshown.rst
 	git commit -asm "Start $(VERSION)"
 	git push --set-upstream origin start_$(VERSION)
-	git tag $(VERSION)a0
-	git push --tags
 	@echo "Done: Pushed the start branch to GitHub - now go there and create a PR."
 	@echo "Makefile: $@ done."
 
