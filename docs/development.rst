@@ -782,7 +782,8 @@ This section shows the steps for releasing a version to `PyPI
 It covers all variants of versions that can be released:
 
 * Releasing a new major version (Mnew.0.0) based on the master branch
-* Releasing a new minor version (M.Nnew.0) based on the master branch
+* Releasing a new minor version (M.Nnew.0) based on the master branch or based
+  on an earlier stable branch
 * Releasing a new update version (M.N.Unew) based on the stable branch of its
   minor version
 
@@ -830,6 +831,16 @@ local clone of the python-zhmcclient Git repo.
 
         VERSION=M.N.U make release_branch
 
+    This uses the default branch determined from ``VERSION``: For ``M.N.0``,
+    the ``master`` branch is used, otherwise the ``stable_M.N`` branch is used.
+    That covers for all cases except if you want to release a new minor version
+    based on an earlier stable branch. In that case, you need to specify that
+    branch:
+
+    .. code-block:: sh
+
+        VERSION=M.N.0 BRANCH=stable_M.N make release_branch
+
     This includes the following steps:
 
     * create the release branch (``release_M.N.U``), if not yet existing
@@ -843,8 +854,9 @@ local clone of the python-zhmcclient Git repo.
 
 5.  On GitHub, create a Pull Request for the release branch ``release_M.N.U``.
 
-    Important: When releasing an ``M.N.0`` version, the default target branch
-    ``master`` is correct. Otherwise, change the target branch to ``stable_M.N``.
+    Important: GitHub uses ``master`` as the default target branch. When
+    releasing based on a stable branch, you need to change the target branch
+    to the intended ``stable_M.N`` branch.
 
     Set the milestone of that PR to version ``M.N.U``.
 
@@ -872,6 +884,12 @@ local clone of the python-zhmcclient Git repo.
 
         VERSION=M.N.U make release_publish
 
+    or (see step 4):
+
+    .. code-block:: sh
+
+        VERSION=M.N.0 BRANCH=stable_M.N make release_publish
+
     This includes the following steps:
 
     * create and push the release tag
@@ -879,7 +897,7 @@ local clone of the python-zhmcclient Git repo.
 
     Pushing the release tag will cause the "publish" workflow to run. That workflow
     builds the package, publishes it on PyPI, creates a release for it on
-    Github, and finally creates a new stable branch on Github if the master
+    GitHub, and finally creates a new stable branch on GitHub if the master
     branch was released.
 
 9.  Verify the publishing
@@ -892,7 +910,7 @@ local clone of the python-zhmcclient Git repo.
     * Verify that the new version is available on PyPI at
       https://pypi.python.org/pypi/zhmcclient/
 
-    * Verify that the new version has a release on Github at
+    * Verify that the new version has a release on GitHub at
       https://github.com/zhmcclient/python-zhmcclient/releases
 
     * Verify that the new version shows up in the version list when clicking
@@ -934,7 +952,8 @@ This section shows the steps for starting development of a new version.
 This section covers all variants of new versions:
 
 * Starting a new major version (Mnew.0.0) based on the master branch
-* Starting a new minor version (M.Nnew.0) based on the master branch
+* Starting a new minor version (M.Nnew.0) based on the master branch or based
+  on an earlier stable branch
 * Starting a new update version (M.N.Unew) based on the stable branch of its
   minor version
 
@@ -951,6 +970,16 @@ local clone of the python-zhmcclient Git repo.
 
         VERSION=M.N.U make start_branch
 
+    This uses the default branch determined from ``VERSION``: For ``M.N.0``,
+    the ``master`` branch is used, otherwise the ``stable_M.N`` branch is used.
+    That covers for all cases except if you want to start a new minor version
+    based on an earlier stable branch. In that case, you need to specify that
+    branch:
+
+    .. code-block:: sh
+
+        VERSION=M.N.0 BRANCH=stable_M.N make start_branch
+
     This includes the following steps:
 
     * create the start branch (``start_M.N.U``), if not yet existing
@@ -964,8 +993,9 @@ local clone of the python-zhmcclient Git repo.
 
 3.  On GitHub, create a Pull Request for the start branch ``start_M.N.U``.
 
-    Important: When starting an ``M.N.0`` version, the default target branch
-    ``master`` is correct. Otherwise, change the target branch to ``stable_M.N``.
+    Important: GitHub uses ``master`` as the default target branch. When
+    releasing based on a stable branch, you need to change the target branch
+    to the intended ``stable_M.N`` branch.
 
     No review is needed for this PR.
 
@@ -989,8 +1019,14 @@ local clone of the python-zhmcclient Git repo.
 
         VERSION=M.N.U make start_tag
 
+    or (see step 1):
+
+    .. code-block:: sh
+
+        VERSION=M.N.0 BRANCH=stable_M.N make start_tag
+
     This includes the following steps:
 
-    * checkout and pull the branch that was released (``master`` or ``stable_M.N``)
+    * checkout and pull the branch that was started (``master`` or ``stable_M.N``)
     * delete the start branch (``start_M.N.U``) locally and remotely
     * create and push the start tag (``M.N.Ua0``)
