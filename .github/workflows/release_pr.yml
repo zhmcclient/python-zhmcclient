@@ -62,7 +62,7 @@ jobs:
           github.rest.pulls.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            title: "Release ${{ steps.set-version.outputs.result",
+            title: "Release ${{ steps.set-version.outputs.result }}",
             body: "Merging this PR will trigger the publishing to PyPI.",
             head: "${{ github.ref_name }}",
             base: "${{ steps.set-target-branch.outputs.result }}",
