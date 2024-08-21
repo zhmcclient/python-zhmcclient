@@ -44,10 +44,10 @@ jobs:
           const version = "${{ github.ref_name }}".match("release_(.+)(_.+)?$")[1]
           const branch_match = "${{ github.ref_name }}".match("release_(.+)(_(.+))?$")
           var result
-          if branch_match {
+          if (branch_match) {
               result = branch_match[3]
           }
-          elif version.match('\.0$') {
+          else if (version.match('\.0$')) {
               result = 'master'
           }
           else {
