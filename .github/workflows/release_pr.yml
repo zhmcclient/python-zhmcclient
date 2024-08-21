@@ -43,6 +43,10 @@ jobs:
         script: |
           const version = "${{ github.ref_name }}".match("release_(.+)(_.+)?$")[1]
           const branch_match = "${{ github.ref_name }}".match("release_(.+)(_(.+))?$")
+          console.log(branch_match)
+          console.log(branch_match[1])
+          console.log(branch_match[2])
+          console.log(branch_match[3])
           var result
           if (branch_match) {
               result = branch_match[3]
