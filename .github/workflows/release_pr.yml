@@ -1,0 +1,71 @@
+# This GitHub workflow will create the release PR.
+# For more information see:
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+
+name: release_pr
+
+on:
+  push:  # When pushing a release branch
+    branches:
+    # Release branch formats:
+    # release_M.N.U - targets a default branch (master for M.N.0, stable_M.N otherwise)
+    # release_M.N.0_BRANCH - targets the specified branch
+    - "release_*"
+
+jobs:
+  release_pr:
+    name: Create the release PR
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check validity of pushed release branch name
+      run: |
+        if [[ ${{ github.ref_name }} =~ ^release_[0-9]+\.[0-9]+\.[0-9]+(_.+)?$ ]]; then
+          echo "Pushed release branch '${{ github.ref_name }}' is valid";
+        else
+          echo "Pushed release branch '${{ github.ref_name }}' is invalid (must be 'release_M.N.U' or 'release_M.N.U_BRANCH')";
+          false;
+        fi
+    - name: Set version from pushed release branch name
+      id: set-version
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          const result = "${{ github.ref_name }}".match("release_(.+)(_.+)?$")[1]
+          console.log(result)
+          return result
+    - name: Set target branch from pushed release branch name
+      id: set-target-branch
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          const version = "${{ github.ref_name }}".match("release_(.+)(_.+)?$")[1]
+          const branch = "${{ github.ref_name }}".match("release_(.+)(_.+)?$")[2]
+          const result
+          if branch {
+              result = branch
+          }
+          elif version.match('\.0$') {
+              result = 'master'
+          }
+          else version.match('\.0$') {
+              result = 'stable_' + version.match('()\d\.\d)(\.\d)')[1]
+          }
+          console.log(result)
+          return result
+    - name: Create PR on Github for the pushed release branch
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.pulls.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: "Release ${{ steps.set-version.outputs.result",
+            body: "Merging this PR will trigger the publishing to PyPI.",
+            head: "${{ github.ref_name }}",
+            base: "${{ steps.set-target-branch.outputs.result }}",
+          });
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
