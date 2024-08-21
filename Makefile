@@ -497,7 +497,7 @@ release_pr:
 	@bash -c 'if [ -z "$$(git tag -l $(VERSION)a0)" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 does not exist (the version has not been started)"; echo ""; false; fi'
 	@bash -c 'if [ -n "$$(git tag -l $(VERSION))" ]; then echo ""; echo "Error: Release tag $(VERSION) already exists (the version has already been released)"; echo ""; false; fi'
 	@bash -c 'if [[ -n "$${BRANCH}" ]]; then echo "$(BRANCH)" >target_branch.tmp; elif [[ "$${VERSION#*.*.}" == "0" ]]; then echo "master" >target_branch.tmp; else echo "stable_$${VERSION%.*}" >target_branch.tmp; fi'
-	@bash -c 'if [[ -n "$${BRANCH}" ]]; then echo "release_$(VERSION)_$(BRANCH)" >release_branch.tmp; else echo  echo "release_$(VERSION)" >release_branch.tmp; fi'
+	@bash -c 'if [[ -n "$${BRANCH}" ]]; then echo "release_$(VERSION)_$(BRANCH)" >release_branch.tmp; else echo "release_$(VERSION)" >release_branch.tmp; fi'
 	@bash -c 'if [ -z "$$(git branch --contains $(VERSION)a0 $$(cat target_branch.tmp))" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 is not in target branch $$(cat target_branch.tmp), but in:"; echo ""; git branch --contains $(VERSION)a0;. false; fi'
 	@echo "==> This will create the release PR for version $(VERSION) using target branch $$(cat target_branch.tmp)"
 	@echo -n '==> Continue? [yN] '
