@@ -11,7 +11,7 @@ on:
     # Release branch formats:
     # release_M.N.U - targets a default branch (master for M.N.0, stable_M.N otherwise)
     # release_M.N.0_BRANCH - targets the specified branch
-    - "release_*"
+    - release_*
 
 jobs:
   release_pr:
