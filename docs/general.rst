@@ -262,6 +262,36 @@ Exceptions
    :autosummary-inherited-members:
    :special-members: __str__
 
+.. autoclass:: zhmcclient.OSConsoleError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.OSConsoleConnectedError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.OSConsoleNotConnectedError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.OSConsoleWebSocketError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.OSConsoleAuthError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
 
 .. _`Constants`:
 
@@ -459,3 +489,20 @@ prints its output:
     if __name__ == '__main__':
         rc = main()
         sys.exit(rc)
+
+The :ref:`OSConsole` section describes a more convenient approach for
+interacting with the OS consoles.
+
+
+.. _`OSConsole`:
+
+OSConsole
+---------
+
+.. automodule:: zhmcclient._os_console
+
+.. autoclass:: zhmcclient.OSConsole
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
