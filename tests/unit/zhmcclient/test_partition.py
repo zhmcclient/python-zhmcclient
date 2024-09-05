@@ -1017,6 +1017,8 @@ class TestPartition:
 
     # TODO: Test for Partition.send_os_command()
 
+    # TODO: Test for Partition.create_os_websocket()
+
     # TODO: Test for Partition.wait_for_status()
 
     # TODO: Test for Partition.increase_crypto_config()

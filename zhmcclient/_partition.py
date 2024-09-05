@@ -1009,6 +1009,67 @@ class Partition(BaseResource):
         return result
 
     @logged_api_call
+    def create_os_websocket(self, force_takeover=False):
+        """
+        Create a WebSocket on the HMC, which allows accessing the console of
+        the operating system running in the partition using the integrated
+        ASCII console of the HMC, and return the WebSocket URI for use by a
+        WebSocket client.
+
+        This is done by performing the "Get ASCII Console WebSocket URI"
+        HMC operation.
+
+        For more details on how to use a WebSocket client to interact with the
+        integrated ASCII console, see
+        :ref:`Using WebSocket to access OS console`.
+
+        Authorization requirements:
+
+        * Object-access permission to this Partition.
+        * Task permission to the "Integrated ASCII Console" task.
+
+        Parameters:
+
+          force_takeover (bool):
+            Boolean controlling whether to break any possibly existing
+            WebSockets on other HMCs to the same partition, as follows:
+
+            * If `True`, existing WebSockets are broken up and the operation
+              proceeds.
+
+            * If `False`, existing WebSockets are not broken up and the
+              operation fails.
+
+            Note that only existing WebSockets on *other* HMCs can be taken
+            over, but not existing WebSockets on the current HMC.
+
+        Returns:
+
+          :term:`string`:
+
+            Returns a string representing the canonical URI of the new
+            WebSocket, e.g.
+            ``/api/websock/4a4f1hj12hldmm26brcpfnydk663gt6gtyxq4iwto26g2r6wq1/1``.
+
+            Depending on which WebSocket client is used, a full URI may need to
+            be constructed from the returned string by prepending the secure
+            WebSocket URI scheme ``wss`` and the HMC's IP address and port, e.g.
+            ``wss://9.10.11.12:6794/api/websock/4a4f1hj12hldmm26brcpfnydk663gt6gtyxq4iwto26g2r6wq1/1``.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """  # pylint: disable=line-too-long
+        body = {'force-takeover': force_takeover}
+        result = self.manager.session.post(
+            self.uri + '/operations/get-ascii-console-websocket-uri',
+            resource=self, body=body)
+        return result['websocket-uri']
+
+    @logged_api_call
     def wait_for_status(self, status, status_timeout=None):
         """
         Wait until the status of this partition has a desired value.
