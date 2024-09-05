@@ -294,6 +294,39 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
             assert message in all_messages
 
 
+def test_part_create_os_websocket(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test "Get ASCII Console WebSocket URI" operation on partitions
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        if hd.mock_file:
+            skip_warn("zhmcclient mock does not support 'Get ASCII Console "
+                      "WebSocket URI' operation")
+
+        # Pick the partition to test with
+        active_part_list = cpc.partitions.list(filter_args={'status': 'active'})
+        if not active_part_list:
+            skip_warn(
+                f"No partitions on CPC {cpc.name} managed by HMC {hd.host} "
+                "with an active status")
+
+        # Pick a random partition to test with
+        part = random.choice(active_part_list)
+
+        ws_uri = part.create_os_websocket()
+
+        assert ws_uri.startswith('/api/websock/')
+
+
 # Full set of properties that are common on all types of partitions:
 COMMON_PROPS_LIST = ['name', 'object-uri', 'type', 'status',
                      'has-unacceptable-status']
