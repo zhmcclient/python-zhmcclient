@@ -34,7 +34,11 @@ from zhmcclient import (
     NotificationJMSError, NotificationParseError,
     NotificationConnectionError, NotificationSubscriptionError,
     SubscriptionNotFound, ConsistencyError,
-    CeasedExistence
+    CeasedExistence,
+    # OSConsoleError - base class, not raised
+    OSConsoleConnectedError,
+    OSConsoleNotConnectedError, OSConsoleWebSocketError,
+    OSConsoleAuthError,
 )
 from zhmcclient import ConnectionError  # pylint: disable=redefined-builtin
 from zhmcclient_mock import FakedSession
@@ -95,6 +99,10 @@ def func_args(arg_values, arg_names):
         NotificationConnectionError,
         NotificationSubscriptionError,
         SubscriptionNotFound,
+        OSConsoleConnectedError,
+        OSConsoleNotConnectedError,
+        OSConsoleWebSocketError,
+        OSConsoleAuthError,
     ]
 )
 def test_simple_exc(exc_class):

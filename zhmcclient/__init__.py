@@ -59,4 +59,5 @@ from ._storage_group_template import *          # noqa: F401
 from ._storage_volume_template import *         # noqa: F401
 from ._capacity_group import *         # noqa: F401
 from ._certificates import *         # noqa: F401
+from ._os_console import *         # noqa: F401
 from ._debug_info import *         # noqa: F401

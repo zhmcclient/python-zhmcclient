@@ -28,6 +28,8 @@ names:
   for the :ref:`auto-updating` support, but not for
   the :class:`~zhmcclient.NotificationReceiver` class.
 
+* 'zhmcclient.os' for interactions with OS consoles, at the debug level.
+
 For HMC operations and API calls that contain the HMC password or HMC session
 tokens, the password is hidden in the log message by replacing it with a few
 '*' characters.

@@ -26,7 +26,10 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'MetricsResourceNotFound', 'NotificationError',
            'NotificationJMSError', 'NotificationParseError',
            'NotificationConnectionError', 'NotificationSubscriptionError',
-           'SubscriptionNotFound', 'ConsistencyError', 'CeasedExistence']
+           'SubscriptionNotFound', 'ConsistencyError', 'CeasedExistence',
+           'OSConsoleError', 'OSConsoleConnectedError',
+           'OSConsoleNotConnectedError', 'OSConsoleWebSocketError',
+           'OSConsoleAuthError']
 
 
 class Error(Exception):
@@ -1579,3 +1582,77 @@ class CeasedExistence(Error):
             f"classname={self.__class__.__name__!r}; "
             f"message={self.args[0]!r}; "
             f"resource_uri={self.resource_uri!r}")
+
+
+class OSConsoleError(Error):
+    """
+    This exception indicates errors related to OS consoles.
+
+    Exceptions of this class are not raised; only derived exceptions are
+    raised.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, msg):
+        # pylint: disable=useless-super-delegation
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        super().__init__(msg)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return f"{self.__class__.__name__}(message={self.args[0]!r})"
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={};
+        """
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
+
+
+class OSConsoleConnectedError(OSConsoleError):
+    """
+    This exception indicates that the WebSocket is connected when it should not
+    be connected.
+    """
+    pass
+
+
+class OSConsoleNotConnectedError(OSConsoleError):
+    """
+    This exception indicates that the WebSocket is not connected when it should
+    be connected.
+    """
+    pass
+
+
+class OSConsoleWebSocketError(OSConsoleError):
+    """
+    This exception indicates a problem with a WebSocket operation.
+    """
+    pass
+
+
+class OSConsoleAuthError(OSConsoleError):
+    """
+    This exception indicates an authentication issue when logging in to the OS
+    console.
+    """
+    pass

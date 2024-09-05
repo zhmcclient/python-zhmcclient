@@ -1,0 +1,4 @@
+Added support for encapsulating the interactions with an OS console through
+the WebSocket protocol, by adding a new 'zhmcclient.OSConsole' class. This
+builds on top of the new support for OS console access through the
+WebSocket protocol.

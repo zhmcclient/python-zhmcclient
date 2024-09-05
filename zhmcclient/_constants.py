@@ -46,9 +46,11 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'HMC_LOGGER_NAME',
            'JMS_LOGGER_NAME',
            'API_LOGGER_NAME',
+           'OS_LOGGER_NAME',
            'HTML_REASON_WEB_SERVICES_DISABLED',
            'HTML_REASON_OTHER',
-           'STOMP_MIN_CONNECTION_CHECK_TIME']
+           'STOMP_MIN_CONNECTION_CHECK_TIME',
+           'DEFAULT_WS_TIMEOUT']
 
 
 #: Default HTTP connect timeout in seconds,
@@ -169,6 +171,9 @@ API_LOGGER_NAME = 'zhmcclient.api'
 #: Name of the Python logger that logs JMS notifications.
 JMS_LOGGER_NAME = 'zhmcclient.jms'
 
+#: Name of the Python logger that logs interactions with OS consoles.
+OS_LOGGER_NAME = 'zhmcclient.os'
+
 #: HTTP reason code: Web Services API is not enabled on the HMC.
 HTML_REASON_WEB_SERVICES_DISABLED = 900
 
@@ -178,3 +183,7 @@ HTML_REASON_OTHER = 999
 
 #: Minimum time between checks for STOMP connection loss.
 STOMP_MIN_CONNECTION_CHECK_TIME = 5.0
+
+#: Default WebSocket connect and receive timeout in seconds, for interacting
+#: with the :class:`zhmcclient.OSConsole` class.
+DEFAULT_WS_TIMEOUT = 5
