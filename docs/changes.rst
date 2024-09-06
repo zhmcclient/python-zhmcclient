@@ -20,6 +20,43 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.18.0
+^^^^^^^^^^^^^^
+
+Released: 2024-09-06
+
+**Incompatible changes:**
+
+* Dev: Changed the installation of the zhmcclient package that is done in
+  'make install' from being editable to being non-editable, since pip will stop
+  supporting editable installs.
+
+**Bug fixes:**
+
+* Addressed safety issues up to 2024-08-18.
+
+* Docs: Fixed an RTD build issue that lead to not showing any API documentation. (`#1611 <https://github.com/zhmcclient/python-zhmcclient/issues/1611>`_)
+
+**Cleanup:**
+
+* Docs: Simplified version retrieval in docs build by using setuptools_scm.
+
+* Test: Increased minimum version of pylint to 3.0.1 to address an issue
+  when importing setuptools_scm in conf.py.
+
+* Dev: Relaxed the conditions when safety issues are tolerated:
+  Issues in development dependencies are now tolerated in normal and scheduled
+  test workflow runs (but not in local make runs and release test workflow runs).
+  Issues in installation dependencies are now tolerated in normal test workflow
+  runs (but not in local make runs and scheduled/release test workflow runs).
+
+* Dev: Added to the release instructions to roll back fixes for safety issues
+  into any maintained stable branches.
+
+* Dev: Added to the release instructions to check and fix dependabot issues,
+  and to roll back any fixes into any maintained stable branches.
+
+
 Version 1.17.0
 ^^^^^^^^^^^^^^
 
