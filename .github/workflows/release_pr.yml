@@ -55,12 +55,12 @@ jobs:
           }
           console.log(result)
           return result
-    - name: Generate Github app token
-      uses: actions/create-github-app-token@v1
-      id: generate-token
-      with:
-        app-id: ${{ secrets.APP_ID }}
-        private-key: ${{ secrets.APP_PRIVATE_KEY }}
+    # - name: Generate Github app token
+    #   uses: actions/create-github-app-token@v1
+    #   id: generate-token
+    #   with:
+    #     app-id: ${{ secrets.APP_ID }}
+    #     private-key: ${{ secrets.APP_PRIVATE_KEY }}
     - name: Create PR on Github for the pushed release branch
       uses: actions/github-script@v7
       with:
@@ -74,4 +74,4 @@ jobs:
             base: "${{ steps.set-target-branch.outputs.result }}",
           });
       env:
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ secrets.PAT_ZHMCCLIENT_CREATE_PR }}
