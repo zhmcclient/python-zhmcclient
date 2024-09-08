@@ -168,7 +168,7 @@ importlib-resources==1.4.0
 jedi==0.17.2
 Jinja2==3.1.4
 keyring==18.0.0
-lxml==4.9.2
+lxml==4.9.2  # test
 MarkupSafe==2.0.0
 # nbconvert 6.x depends on mistune<2 and >=0.8.1 (mistune 0.8.4 is the highest version that satisfies that)
 mistune==0.8.4
