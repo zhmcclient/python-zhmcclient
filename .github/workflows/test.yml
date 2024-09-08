@@ -75,6 +75,16 @@ jobs:
                 \"package_level\": \"minimum\" \
               }, \
               { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.13.0-rc.1\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.13.0-rc.1\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
                 \"os\": \"windows-latest\", \
                 \"python-version\": \"3.8\", \
                 \"package_level\": \"minimum\" \
@@ -82,6 +92,16 @@ jobs:
               { \
                 \"os\": \"windows-latest\", \
                 \"python-version\": \"3.12\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.13.0-rc.1\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.13.0-rc.1\", \
                 \"package_level\": \"latest\" \
               } \
             ] \

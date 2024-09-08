@@ -26,10 +26,10 @@ nocasedict>=1.0.2
 # PyYAML 5.4 has wheel archives for Python 2.7, 3.6 - 3.9
 # PyYAML 6.0.0 has wheel archives for Python 3.6 - 3.11
 # PyYAML 6.0.1 has wheel archives for Python 3.6 - 3.12
+# PyYAML 6.0.2 has wheel archives for Python 3.8 - 3.13
 # PyYAML 5.4.x and 6.0.0 fail to install when no wheel archives are available since Cython 3
 #   was released, see issue https://github.com/yaml/pyyaml/issues/724. Fixed in 6.0.1.
-PyYAML>=5.3.1,!=5.4.0,!=5.4.1; python_version <= '3.11'
-PyYAML>=5.3.1,!=5.4.0,!=5.4.1,!=6.0.0; python_version >= '3.12'
+PyYAML>=6.0.2
 
 # yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
 yamlloader>=0.5.5
@@ -50,6 +50,5 @@ jsonschema>=4.0.1
 urllib3>=1.26.19
 
 # pyrsistent is used by jsonschema>=3.0
-# pyrsistent 0.15.0 started using the FileNotFoundError built-in exception that
-# was added only in Python 3. pyrsistent 0.15.1 fixed that by defining it locally for py27.
-pyrsistent>=0.15.1
+# pyrsistent 0.20.0 has official support for Python 3.12
+pyrsistent>=0.20.0
