@@ -120,37 +120,40 @@ ruff>=0.3.5
 #       packages.
 # Note: notebook 6.5.1 starts using nbclassic which seems to introduce some challenges for pip
 #       dependency resolution, so for now we pin notebook to <6.5.
-notebook>=6.4.12,<6.5
-jupyter>=1.0.0
-jupyter-console>=5.2.0,<6.0.0
-ipywidgets>=5.2.2,<6.0.0
-nbconvert>=6.0.0,<7.0.0
+# TODO: Re-enable for Python 3.13 on Windows once pywin32 install issue is solved, see
+#       https://github.com/mhammond/pywin32/issues/2367
+notebook>=6.4.12,<6.5; sys_platform != 'win32' or python_version <= '3.12'
+jupyter>=1.0.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyter-console>=5.2.0,<6.0.0; sys_platform != 'win32' or python_version <= '3.12'
+ipywidgets>=5.2.2,<6.0.0; sys_platform != 'win32' or python_version <= '3.12'
+nbconvert>=6.0.0,<7.0.0; sys_platform != 'win32' or python_version <= '3.12'
 # nbconvert 6.x requires nbclient>=0.5.0,<0.6.0
-nbclient>=0.5.9,<0.6.0
+nbclient>=0.5.9,<0.6.0; sys_platform != 'win32' or python_version <= '3.12'
 # nbclient 0.5.x requires nbformat>=5.0
-nbformat>=5.0.2,<6.0.0
-qtconsole>=5.4.0
-ipykernel>=4.5.2,<5.0.0
-jupyter-client>=6.1.5,<7.0.0
-jupyterlab-widgets>=1.0.2,<2.0.0
-jupyterlab-pygments>=0.2.0
-jupyter-core>=4.11.2,<5.0.0
-ipython-genutils>=0.2.0
-ipython>=5.1.0,<6.0
+nbformat>=5.0.2,<6.0.0; sys_platform != 'win32' or python_version <= '3.12'
+qtconsole>=5.4.0; sys_platform != 'win32' or python_version <= '3.12'
+ipykernel>=4.5.2,<5.0.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyter-client>=6.1.5,<7.0.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab-widgets>=1.0.2,<2.0.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab-pygments>=0.2.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyter-core>=4.11.2,<5.0.0; sys_platform != 'win32' or python_version <= '3.12'
+ipython-genutils>=0.2.0; sys_platform != 'win32' or python_version <= '3.12'
+ipython>=5.1.0,<6.0; sys_platform != 'win32' or python_version <= '3.12'
 
 # Pywin32 is used (at least?) by jupyter.
 # Pywin32 version 226 needs to be excluded, see issues #1946 and #1975.
 # pywin32 version 302 added support for Python 3.10
 # pywin32 version 303 added support for Python 3.11
 pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
-pywin32>=306; sys_platform == 'win32' and python_version >= '3.12'
+# TODO: Re-enable for Python 3.13 once pywin32 install issue is solved, see
+#       https://github.com/mhammond/pywin32/issues/2367
+pywin32>=306; sys_platform == 'win32' and python_version == '3.12'
 
 # The tornado package is used by ipykernel which is used by jupyter.
 tornado>=6.4.1
 
-# pyzmq 17.0.0,17.1.0 fail installation when wheel is used
-pyzmq>=24.0.0; python_version <= '3.11'
-pyzmq>=25.1.1; python_version >= '3.12'
+# pyzmq 26.1.0 added wheel archives for Python 3.13
+pyzmq>=26.1.0
 
 # Aditional dependencies of examples
 tabulate>=0.8.1
