@@ -83,6 +83,11 @@ jobs:
                 \"os\": \"windows-latest\", \
                 \"python-version\": \"3.12\", \
                 \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
+                \"python-version\": \"3.13.0-rc.1\", \
+                \"package_level\": \"latest\" \
               } \
             ] \
           }" >> $GITHUB_OUTPUT; \
@@ -136,6 +141,15 @@ jobs:
         RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make platform env
+    - name: Debug - Install pywin32 on Windows
+      if: startsWith(matrix.os, 'windows')
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+      run: |
+        python --version
+        pip --version
+        pip install pywin32
     - name: Install the package and its dependents
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
