@@ -20,11 +20,22 @@ Unit tests for _exceptions module.
 import re
 import pytest
 
-from zhmcclient import Error, ConnectTimeout, ReadTimeout, \
-    RetriesExceeded, AuthError, ClientAuthError, ServerAuthError, ParseError, \
-    VersionError, HTTPError, OperationTimeout, StatusTimeout, NoUniqueMatch, \
-    NotFound, Client, NotificationJMSError, NotificationParseError, \
-    ConsistencyError
+from zhmcclient import Client, Adapter
+# Import the exceptions, same order as in _exceptions.py
+from zhmcclient import (
+    Error,
+    # ConnectionError - see below
+    ConnectTimeout, ReadTimeout,
+    RetriesExceeded, AuthError, ClientAuthError,
+    ServerAuthError, ParseError, VersionError, HTTPError,
+    OperationTimeout, StatusTimeout, NoUniqueMatch, NotFound,
+    MetricsResourceNotFound,
+    # NotificationError - base class, not raised
+    NotificationJMSError, NotificationParseError,
+    NotificationConnectionError, NotificationSubscriptionError,
+    SubscriptionNotFound, ConsistencyError,
+    CeasedExistence
+)
 from zhmcclient import ConnectionError  # pylint: disable=redefined-builtin
 from zhmcclient_mock import FakedSession
 
@@ -76,6 +87,24 @@ def func_args(arg_values, arg_names):
         else:
             posargs.append(value)
     return posargs, kwargs
+
+
+@pytest.mark.parametrize(
+    "exc_class", [
+        ConsistencyError,
+        NotificationConnectionError,
+        NotificationSubscriptionError,
+        SubscriptionNotFound,
+    ]
+)
+def test_simple_exc(exc_class):
+    """Test a simple exception class that has only a message argument"""
+    msg = 'bla'
+    exc = exc_class(msg)
+
+    act_msg = str(exc.args[0])
+
+    assert act_msg == msg
 
 
 class MyError(Error):
@@ -1392,16 +1421,19 @@ class TestNoUniqueMatch:
         assert str_def.find(' message=') >= 0
 
 
-class NotFoundManagerIndicator:
+class AddManagerIndicator:
     # pylint: disable=too-few-public-methods
     """
-    Indicator class for the 'manager' argument of NotFound().
+    Indicator class for the 'manager' argument of some exceptions.
+
+    If an object of this class is specified in a testcase, it is replaced by an
+    actual manager object in the testcase setup.
     """
     pass
 
 
-# Indicator for the 'manager' argument of NotFound().
-NOTFOUND_MANAGER = NotFoundManagerIndicator()
+# Indicator for the 'manager' argument of of some exceptions.
+ADD_MANAGER = AddManagerIndicator()
 
 
 TESTCASES_NOTFOUND_INITIAL_ATTRS = [
@@ -1415,13 +1447,13 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
     # * exp_message_pattern (str) - Regexp pattern to match expected exception
     #   message, or None to not perform a match.
     #
-    # The tests all lead to a successful reation of a NotFound object.
-    # In all input and expected items, NOTFOUND_MANAGER can be used to
+    # The tests all lead to a successful creation of a NotFound object.
+    # In all input and expected items, ADD_MANAGER can be used to
     # specify the value for the 'manager' argument or attribute; it will
     # be replaced with a manager object.
 
     (
-        "msessage as positional arg",
+        "message as positional arg",
         [None, None, "foo"],
         dict(),
         dict(
@@ -1444,11 +1476,11 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
     ),
     (
         "manager but no filter_args as positional arg",
-        [None, NOTFOUND_MANAGER],
+        [None, ADD_MANAGER],
         dict(),
         dict(
             filter_args=None,
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         r"^Could not find Adapter using filter arguments None in Cpc "
     ),
@@ -1456,21 +1488,21 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
         "manager but no filter_args as keyword arg",
         [],
         dict(
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         dict(
             filter_args=None,
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         r"^Could not find Adapter using filter arguments None in Cpc "
     ),
     (
         "manager and one filter_arg as positional arg",
-        [{"adapter-id": "1c0"}, NOTFOUND_MANAGER],
+        [{"adapter-id": "1c0"}, ADD_MANAGER],
         dict(),
         dict(
             filter_args={"adapter-id": "1c0"},
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         r"^Could not find Adapter using filter arguments {'adapter-id': '1c0'} "
         r"in Cpc "
@@ -1480,11 +1512,11 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
         [],
         dict(
             filter_args={"adapter-id": "1c0"},
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         dict(
             filter_args={"adapter-id": "1c0"},
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         r"^Could not find Adapter using filter arguments {'adapter-id': '1c0'} "
         r"in Cpc "
@@ -1494,11 +1526,11 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
         [],
         dict(
             filter_args={"adapter-id": "1c0", "name": "foo"},
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         dict(
             filter_args={"adapter-id": "1c0", "name": "foo"},
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         r"^Could not find Adapter using filter arguments "
         r".*(?=.*'adapter-id': '1c0')(?=.*'name': 'foo').* in Cpc "
@@ -1509,7 +1541,7 @@ TESTCASES_NOTFOUND_INITIAL_ATTRS = [
         dict(
             message="foo",
             filter_args={"adapter-id": "1c0"},
-            manager=NOTFOUND_MANAGER,
+            manager=ADD_MANAGER,
         ),
         dict(
             filter_args=None,
@@ -1566,13 +1598,13 @@ class TestNotFound:
 
         args = []
         for value in input_args:
-            if value == NOTFOUND_MANAGER:
+            if value == ADD_MANAGER:
                 value = manager
             args.append(value)
 
         kwargs = {}
         for name, value in input_kwargs.items():
-            if value == NOTFOUND_MANAGER:
+            if value == ADD_MANAGER:
                 value = manager
             kwargs[name] = value
 
@@ -1590,7 +1622,7 @@ class TestNotFound:
 
         # Validate other exception attributes
         for name, exp_value in exp_attrs.items():
-            if exp_value == NOTFOUND_MANAGER:
+            if exp_value == ADD_MANAGER:
                 exp_value = manager
             assert hasattr(exc, name)
             value = getattr(exc, name)
@@ -1664,6 +1696,192 @@ class TestNotFound:
         assert str_def.find(
             f' parent_classname={manager.parent.__class__.__name__!r};') >= 0
         assert str_def.find(f' parent_name={manager.parent.name!r};') >= 0
+        assert str_def.find(' message=') >= 0
+
+
+TESTCASES_MR_NOTFOUND_INITIAL_ATTRS = [
+    # Testcases for test_mr_notfound_initial_attrs()
+    #
+    # Each list item is a testcase with the following tuple items:
+    # * desc (str) - Testcase description.
+    # * input_args (list) - Positional arguments for MetricsResourceNotFound()
+    # * input_kwargs (dict) - Keyword arguments for MetricsResourceNotFound()
+    # * exp_attrs (dict) - Expected attributes of MetricsResourceNotFound()
+    # * exp_message_pattern (str) - Regexp pattern to match expected exception
+    #   message, or None to not perform a match.
+    #
+    # The tests all lead to a successful creation of a MetricsResourceNotFound
+    # object.
+    # In all input and expected items, ADD_MANAGER can be used to
+    # specify the value for the 'manager' argument or attribute; it will
+    # be replaced with a manager object.
+
+    # MetricsResourceNotFound init args: msg, resource_class, managers
+
+    (
+        "Positional args - just msg",
+        ["foo", None, None],
+        dict(),
+        dict(
+            resource_class=None,
+            managers=None,
+        ),
+        r"^foo$"
+    ),
+    (
+        "Positional args - all args",
+        ["foo", Adapter, [ADD_MANAGER]],
+        dict(),
+        dict(
+            resource_class=Adapter,
+        ),
+        r"^foo$"
+    ),
+    (
+        "Keyword args - all args",
+        [],
+        dict(
+            msg="foo",
+            resource_class=Adapter,
+            managers=[ADD_MANAGER]),
+        dict(
+            resource_class=Adapter,
+        ),
+        r"^foo$"
+    ),
+]
+
+
+class TestMetricsResourceNotFound:
+    """All tests for exception class MetricsResourceNotFound."""
+
+    def setup_method(self):
+        """
+        Setup that is called by pytest before each test method.
+        """
+        # pylint: disable=attribute-defined-outside-init
+
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.faked_cpc = self.session.hmc.cpcs.add({
+            'object-id': 'faked-cpc1',
+            'parent': None,
+            'class': 'cpc',
+            'name': 'cpc_1',
+            'description': 'CPC #1',
+            'status': 'active',
+            'dpm-enabled': True,
+            'is-ensemble-member': False,
+            'iml-mode': 'dpm',
+        })
+        self.faked_osa1 = self.faked_cpc.adapters.add({
+            'object-id': 'fake-osa1',
+            'parent': self.faked_cpc.uri,
+            'class': 'adapter',
+            'name': 'osa 1',
+            'description': 'OSA #1',
+            'status': 'inactive',
+            'type': 'osd',
+        })
+        self.client = Client(self.session)
+
+    @pytest.mark.parametrize(
+        "desc, input_args, input_kwargs, exp_attrs, exp_message_pattern",
+        TESTCASES_MR_NOTFOUND_INITIAL_ATTRS)
+    def test_mr_notfound_initial_attrs(
+            self, desc, input_args, input_kwargs, exp_attrs,
+            exp_message_pattern):
+        # pylint: disable=unused-argument
+        """Test initial attributes of MetricsResourceNotFound."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+
+        args = []
+        for value in input_args:
+            if isinstance(value, list) and value[0] == ADD_MANAGER:
+                for i, item in enumerate(value):
+                    assert item == ADD_MANAGER
+                    value[i] = manager
+            args.append(value)
+
+        kwargs = {}
+        for name, value in input_kwargs.items():
+            if isinstance(value, list) and value[0] == ADD_MANAGER:
+                for i, item in enumerate(value):
+                    assert item == ADD_MANAGER
+                    value[i] = manager
+            kwargs[name] = value
+
+        # Execute the code to be tested
+        exc = MetricsResourceNotFound(*args, **kwargs)
+
+        assert isinstance(exc, Error)
+
+        # Validate exception message
+        assert len(exc.args) == 1
+        message = exc.args[0]
+        assert isinstance(message, str)
+        if exp_message_pattern:
+            assert re.match(exp_message_pattern, message)
+
+        # Validate other exception attributes
+        for name, exp_value in exp_attrs.items():
+            assert hasattr(exc, name)
+            value = getattr(exc, name)
+            if isinstance(exp_value, list) and exp_value[0] == ADD_MANAGER:
+                assert len(value) == len(exp_value)
+                for i, item in enumerate(exp_value):
+                    assert value[i] == item
+            else:
+                assert value == exp_value
+
+    def test_mr_notfound_repr(self):
+        """All tests for MetricsResourceNotFound.__repr__()."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+
+        exc = MetricsResourceNotFound("foo", Adapter, [manager])
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        repr_str = repr(exc)
+
+        # We check the one-lined string just roughly
+        repr_str = repr_str.replace('\n', '\\n')
+        assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
+
+    def test_mr_notfound_str(self):
+        """All tests for MetricsResourceNotFound.__str__()."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+
+        exc = MetricsResourceNotFound("foo", Adapter, [manager])
+
+        exp_str = str(exc.args[0])
+
+        # Execute the code to be tested
+        str_str = str(exc)
+
+        assert str_str == exp_str
+
+    def test_mr_notfound_str_def(self):
+        """All tests for MetricsResourceNotFound.str_def()."""
+
+        cpc = self.client.cpcs.find(name='cpc_1')
+        manager = cpc.adapters
+
+        exc = MetricsResourceNotFound("foo", Adapter, [manager])
+
+        classname = exc.__class__.__name__
+
+        # Execute the code to be tested
+        str_def = exc.str_def()
+
+        str_def = ' ' + str_def
+        assert str_def.find(f' classname={classname!r};') >= 0
         assert str_def.find(' message=') >= 0
 
 
@@ -1844,15 +2062,114 @@ def test_notiparseerror_str_def(msg, jms_message):
     assert str_def.find(f' message={msg!r};') >= 0
 
 
+TESTCASES_CEASEDEXISTENCE_INITIAL_ATTRS = [
+    # Testcases for test_ceasedexistence_initial_attrs()
+    #
+    # Each list item is a testcase with the following tuple items:
+    # * desc (str) - Testcase description.
+    # * input_args (list) - Positional arguments for CeasedExistence()
+    # * input_kwargs (dict) - Keyword arguments for CeasedExistence()
+    # * exp_attrs (dict) - Expected attributes of CeasedExistence()
+    # * exp_message_pattern (str) - Regexp pattern to match expected exception
+    #   message, or None to not perform a match.
+    #
+    # The tests all lead to a successful creation of a CeasedExistence
+    # object.
+    # In all input and expected items, ADD_MANAGER can be used to
+    # specify the value for the 'manager' argument or attribute; it will
+    # be replaced with a manager object.
+
+    # CeasedExistence init args: resource_uri
+
+    (
+        "Positional args",
+        ["/api/foo"],
+        dict(),
+        dict(
+            resource_uri="/api/foo",
+        ),
+        r"^Resource no longer exists: /api/foo$"
+    ),
+    (
+        "Keyword args",
+        [],
+        dict(
+            resource_uri="/api/foo",
+        ),
+        dict(
+            resource_uri="/api/foo",
+        ),
+        r"^Resource no longer exists: /api/foo$"
+    ),
+]
+
+
 @pytest.mark.parametrize(
-    "exc_class, msg", [
-        (ConsistencyError, 'bla'),
-    ]
-)
-def test_simple_exc(exc_class, msg):
-    """Test a simple exception class"""
-    exc = exc_class(msg)
+    "desc, input_args, input_kwargs, exp_attrs, exp_message_pattern",
+    TESTCASES_CEASEDEXISTENCE_INITIAL_ATTRS)
+def test_ceasedexistence_initial_attrs(
+        desc, input_args, input_kwargs, exp_attrs,
+        exp_message_pattern):
+    # pylint: disable=unused-argument
+    """Test initial attributes of CeasedExistence."""
 
-    act_msg = str(exc.args[0])
+    # Execute the code to be tested
+    exc = CeasedExistence(*input_args, **input_kwargs)
 
-    assert act_msg == msg
+    assert isinstance(exc, Error)
+
+    # Validate exception message
+    assert len(exc.args) == 1
+    message = exc.args[0]
+    assert isinstance(message, str)
+    if exp_message_pattern:
+        assert re.match(exp_message_pattern, message)
+
+    # Validate other exception attributes
+    for name, exp_value in exp_attrs.items():
+        assert hasattr(exc, name)
+        value = getattr(exc, name)
+        assert value == exp_value
+
+
+def test_ceasedexistence_repr():
+    """All tests for CeasedExistence.__repr__()."""
+
+    exc = CeasedExistence("/api/foo")
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    repr_str = repr(exc)
+
+    # We check the one-lined string just roughly
+    repr_str = repr_str.replace('\n', '\\n')
+    assert re.match(fr'^{classname}\s*\(.*\)$', repr_str)
+
+
+def test_ceasedexistence_str():
+    """All tests for CeasedExistence.__str__()."""
+
+    exc = CeasedExistence("/api/foo")
+
+    exp_str = str(exc.args[0])
+
+    # Execute the code to be tested
+    str_str = str(exc)
+
+    assert str_str == exp_str
+
+
+def test_ceasedexistence_str_def():
+    """All tests for CeasedExistence.str_def()."""
+
+    exc = CeasedExistence("/api/foo")
+
+    classname = exc.__class__.__name__
+
+    # Execute the code to be tested
+    str_def = exc.str_def()
+
+    str_def = ' ' + str_def
+    assert str_def.find(f' classname={classname!r};') >= 0
+    assert str_def.find(' message=') >= 0
