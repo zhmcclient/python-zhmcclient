@@ -1250,7 +1250,7 @@ class MetricsResourceNotFound(Error):
         Return a string with the state of this exception object, for debug
         purposes.
         """
-        return f"{self.__class__.__name__}(message={self.args[0]!r}"
+        return f"{self.__class__.__name__}(message={self.args[0]!r})"
 
     def str_def(self):
         """
