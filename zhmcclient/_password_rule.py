@@ -42,6 +42,10 @@ class PasswordRuleManager(BaseManager):
     :class:`~zhmcclient.Console` object:
 
     * :attr:`zhmcclient.Console.password_rules`
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, console):
@@ -107,6 +111,10 @@ class PasswordRuleManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
+
         Authorization requirements:
 
         * User-related-access permission to the Password Rule objects included
@@ -148,6 +156,10 @@ class PasswordRuleManager(BaseManager):
     def create(self, properties):
         """
         Create a new Password Rule in this HMC.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -196,6 +208,10 @@ class PasswordRule(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.PasswordRuleManager`).
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -221,6 +237,10 @@ class PasswordRule(BaseResource):
 
         The Password Rule must be user-defined. System-defined Password Rules
         cannot be deleted.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -249,6 +269,10 @@ class PasswordRule(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 

@@ -41,6 +41,10 @@ class TaskManager(BaseManager):
     :class:`~zhmcclient.Console` object:
 
     * :attr:`zhmcclient.Console.tasks`
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, console):
@@ -102,9 +106,11 @@ class TaskManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
-        Authorization requirements:
+        HMC/SE version requirements:
 
-        * None
+        * HMC version >= 2.13.0
+
+        Authorization requirements: None
 
         Parameters:
 
@@ -148,6 +154,10 @@ class Task(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.TaskManager`).
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, manager, uri, name=None, properties=None):

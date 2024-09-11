@@ -49,6 +49,10 @@ class NicManager(BaseManager):
     :class:`~zhmcclient.Partition` object (in DPM mode):
 
     * :attr:`~zhmcclient.Partition.nics`
+
+    HMC/SE version requirements:
+
+    * SE version 2.13.1
     """
 
     def __init__(self, partition):
@@ -100,6 +104,10 @@ class NicManager(BaseManager):
         * Otherwise, the corresponding array property for this resource in the
           parent object is used to list the resources, and the provided filter
           arguments are applied.
+
+        HMC/SE version requirements:
+
+        * SE version 2.13.1
 
         Authorization requirements:
 
@@ -199,6 +207,10 @@ class NicManager(BaseManager):
 
               properties['network-adapter-port-uri'] = port.uri
 
+        HMC/SE version requirements:
+
+        * SE version 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -252,6 +264,10 @@ class Nic(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.NicManager`).
+
+    HMC/SE version requirements:
+
+    * SE version 2.13.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -274,6 +290,10 @@ class Nic(BaseResource):
     def delete(self):
         """
         Delete this NIC.
+
+        HMC/SE version requirements:
+
+        * SE version 2.13.1
 
         Authorization requirements:
 
@@ -309,6 +329,10 @@ class Nic(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version 2.13.1
 
         Authorization requirements:
 
@@ -356,6 +380,10 @@ class Nic(BaseResource):
         backing port.
         In this case, 'Retrieve ... Properties' operations are performed for
         the port and the adapter.
+
+        HMC/SE version requirements:
+
+        * SE version 2.13.1
 
         Returns:
 

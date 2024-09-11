@@ -151,6 +151,8 @@ class CpcManager(BaseManager):
     :class:`~zhmcclient.Client` object:
 
     * :attr:`~zhmcclient.Client.cpcs`
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, client):
@@ -231,6 +233,8 @@ class CpcManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to any CPC to be included in the result.
@@ -277,6 +281,8 @@ class Cpc(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.CpcManager`).
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -497,6 +503,8 @@ class Cpc(BaseResource):
         z16-A01                                       85
         =============================  ==================
 
+        HMC/SE version requirements: None
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -589,16 +597,18 @@ class Cpc(BaseResource):
     @logged_api_call
     def feature_enabled(self, feature_name):
         """
-        Indicates whether the specified firmware feature is enabled for this
-        CPC.
+        Indicates whether the specified
+        :ref:`firmware feature <firmware features>` is enabled for this CPC.
 
-        The HMC must generally support firmware features (HMC version >=
-        2.14.0 with HMC API version >= 2.23), and the specified firmware
-        feature must be available for the CPC.
+        The specified firmware feature must be available for the CPC.
 
         For a list of available firmware features, see section
         "Firmware Features" in the :term:`HMC API` book, or use the
         :meth:`feature_info` method.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.14.0 with HMC API version >= 2.23
 
         Authorization requirements:
 
@@ -638,10 +648,12 @@ class Cpc(BaseResource):
     @logged_api_call
     def feature_info(self):
         """
-        Returns information about the firmware features available for this CPC.
+        Returns information about the :ref:`firmware features` available for
+        this CPC.
 
-        The HMC must generally support firmware features (HMC version >=
-        2.14.0 with HMC API version >= 2.23).
+        HMC/SE version requirements:
+
+        * HMC version >= 2.14.0 with HMC API version >= 2.23
 
         Authorization requirements:
 
@@ -681,6 +693,8 @@ class Cpc(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -722,6 +736,10 @@ class Cpc(BaseResource):
 
         The CPC must be set for DPM operational mode (i.e. its 'dpm-enabled'
         property is True) and must currently be inactive.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -792,6 +810,10 @@ class Cpc(BaseResource):
 
         The CPC must be set for DPM operational mode (i.e. its 'dpm-enabled'
         property is True) and must currently be active.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -864,6 +886,8 @@ class Cpc(BaseResource):
 
         The CPC must be set for classic operational mode (i.e. its 'dpm-enabled'
         property is False).
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -943,6 +967,8 @@ class Cpc(BaseResource):
         The CPC must be set for classic operational mode (i.e. its 'dpm-enabled'
         property is False).
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -1008,6 +1034,8 @@ class Cpc(BaseResource):
 
         This operation is not permitted when the CPC is in DPM mode.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -1039,6 +1067,8 @@ class Cpc(BaseResource):
 
         This operation is not permitted when the CPC is in DPM mode.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -1069,6 +1099,13 @@ class Cpc(BaseResource):
         specified :term:`Partitions <Partition>` of this CPC.
 
         This method performs the HMC operation "Export WWPN List".
+
+        The CPC must be set for DPM operational mode (i.e. its 'dpm-enabled'
+        property is True) and must currently be active.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -1179,6 +1216,10 @@ class Cpc(BaseResource):
         incompatibly. Once the interface remains stable, this experimental
         marker will be removed.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -1262,6 +1303,8 @@ class Cpc(BaseResource):
 
         Whether a CPC currently allows this method is described in the
         "cpc-power-save-allowed" property of the CPC.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -1356,6 +1399,8 @@ class Cpc(BaseResource):
 
         Whether a CPC currently allows this method is described in the
         "cpc-power-cap-allowed" property of the CPC.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -1459,6 +1504,8 @@ class Cpc(BaseResource):
         (FC 0020) is installed and enabled, and returns empty values for most
         properties, otherwise.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -1507,11 +1554,12 @@ class Cpc(BaseResource):
         Return the :term:`storage groups <storage group>` that are associated
         to this CPC.
 
-        If the CPC does not support the "dpm-storage-management" feature, or
-        does not have it enabled, an empty list is returned.
-
         Storage groups for which the authenticated user does not have
         object-access permission are not included.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -1582,7 +1630,9 @@ class Cpc(BaseResource):
         * 484: Target WWPN cannot be reached.
         * 485: Target WWPN can be reached, but LUN cannot be reached.
 
-        The CPC must have the "dpm-storage-management" feature enabled.
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Parameters:
 
@@ -1652,6 +1702,13 @@ class Cpc(BaseResource):
         the CPC or the limits of the capacity record, the operation will fail,
         unless the `force` parameter is `True`.
 
+        HMC/SE version requirements: None
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC.
+        * Task permission to the "Perform Model Conversion" task.
+
         Parameters:
 
           record_id (:term:`string`):
@@ -1693,11 +1750,6 @@ class Cpc(BaseResource):
             `True` indicates that the operation should proceed if not enough
             processors are available. `True` is permitted only for CBU, CPE
             and loaner capacity records.
-
-        Authorization requirements:
-
-        * Object-access permission to the CPC.
-        * Task permission to the "Perform Model Conversion" task.
 
         Raises:
 
@@ -1752,6 +1804,13 @@ class Cpc(BaseResource):
         installed record. If you want a record deleted, you must manually
         delete the record on the "Installed Records" page in the HMC GUI.
 
+        HMC/SE version requirements: None
+
+        Authorization requirements:
+
+        * Object-access permission to the CPC.
+        * Task permission to the "Perform Model Conversion" task.
+
         Parameters:
 
           record_id (:term:`string`):
@@ -1783,11 +1842,6 @@ class Cpc(BaseResource):
             If an item for a type of specialty processor is not provided, or
             if the value of the item is `None`, the number of specialty
             processors of that type will remain unchanged.
-
-        Authorization requirements:
-
-        * Object-access permission to the CPC.
-        * Task permission to the "Perform Model Conversion" task.
 
         Raises:
 
@@ -1832,6 +1886,17 @@ class Cpc(BaseResource):
 
         This method requires the CPC to be in DPM mode.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+        * Task permission to the "System Details" task.
+        * Object-access permission to all partitions specified in the auto-start
+          list.
+
         Parameters:
 
           auto_start_list (list): The auto-start list to be set.
@@ -1852,13 +1917,6 @@ class Cpc(BaseResource):
               partitions in the partition group to be auto-started.
             - name (string): Name of the partition group.
             - description (string): Description of the partition group.
-
-        Authorization requirements:
-
-        * Object-access permission to this CPC.
-        * Task permission to the "System Details" task.
-        * Object-access permission to all partitions specified in the auto-start
-          list.
 
         Raises:
 
@@ -1912,6 +1970,10 @@ class Cpc(BaseResource):
         This method performs the "Import DPM Configuration" HMC operation.
 
         This method requires the CPC to be in DPM mode.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.0
 
         Authorization requirements:
 
@@ -1992,6 +2054,10 @@ class Cpc(BaseResource):
 
         This method requires the CPC to be in DPM mode.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -2050,9 +2116,16 @@ class Cpc(BaseResource):
     @logged_api_call
     def list_api_features(self, name=None):
         """
-        Returns information about the Web Services API features (introduced with
-        Web Services version 4.10) available on the CPC, see
-        :ref:`Feature enablement`.
+        Returns information about the Web Services API features available on
+        the CPC, see :ref:`Feature enablement`.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.16.0 with HMC API version >= 4.10
+
+        Authorization requirements:
+
+        * None
 
         Parameters:
 
@@ -2060,17 +2133,11 @@ class Cpc(BaseResource):
             A regular expression used to limit returned objects to those that
             have a matching name field.
 
-        Authorization requirements:
-
-        * None
-
         Returns:
 
           list of strings: The list of API features that are available on this
-          CPC. For API versions prior to 4.10, an empty list is returned.
-
+          CPC. Below the required HMC version, an empty list is returned.
         """
-        # TODO: add reference to WSAPI book chapter regarding API features
         return get_features(self.manager.session, self.uri, name)
 
     @logged_api_call
@@ -2104,6 +2171,10 @@ class Cpc(BaseResource):
 
         Note that it is not possible to downgrade the SE firmware with this
         operation.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.16.0
 
         Authorization requirements:
 
@@ -2272,6 +2343,10 @@ class Cpc(BaseResource):
         Note that it is not possible to downgrade the SE firmware with this
         operation.
 
+        HMC/SE version requirements:
+
+        * :ref`API feature` "cpc-install-and-activate"
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -2400,6 +2475,10 @@ class Cpc(BaseResource):
         Note that it is not possible to downgrade the SE firmware with this
         operation.
 
+        HMC/SE version requirements:
+
+        * :ref`API feature` "cpc-install-and-activate"
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -2481,6 +2560,8 @@ class Cpc(BaseResource):
 
         The CTN must be STP-only; mixed CTNs will be rejected.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -2515,6 +2596,8 @@ class Cpc(BaseResource):
         This is done by performing the "Set STP Configuration" operation.
 
         The CTN must be STP-only; mixed CTNs will be rejected.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -2584,6 +2667,8 @@ class Cpc(BaseResource):
 
         The CTN must be STP-only; mixed CTNs will be rejected.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -2624,6 +2709,8 @@ class Cpc(BaseResource):
 
         The CTN must be STP-only; mixed CTNs will be rejected.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -2659,6 +2746,8 @@ class Cpc(BaseResource):
         The CTN must be STP-only; mixed CTNs will be rejected.
 
         The CPC must not be the current time server of its current CTN.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -2858,6 +2947,10 @@ class Cpc(BaseResource):
         This method performs the "Get CPC Historical Sustainability Data" HMC
         operation.
 
+        HMC/SE version requirements:
+
+        * :ref`API feature` environmental-metrics"
+
         Authorization requirements:
 
         * Object-access permission to this CPC
@@ -2879,7 +2972,7 @@ class Cpc(BaseResource):
           resolution (:term:`string`):
             Resolution for the requested data points. This is the time interval
             in between the data points. For systems where the
-            "environmental-metrics" feature is not available, the minimum
+            "environmental-metrics" API feature is not available, the minimum
             resolution is "one-hour".
 
             The possible values are as follows:

@@ -17,9 +17,9 @@ A :term:`Certificate` represents an X.509 certificate.
 
 Certificates are top level resources, but at this point, only certificates of
 type "secure-boot" are supported. Such certificates are always associated to a
-specific :term:`CPC`. They can only be used if the API feature
-"secure-boot-with-certificates" is available on both, :term:`HMC` and
-:term:`CPC`.
+specific :term:`CPC`. They can only be used if the
+:ref:`API feature <API features>` "secure-boot-with-certificates" is available
+on both, :term:`HMC` and :term:`CPC`.
 
 They can be assigned to one or more :term:`LPAR`, :term:`Partition`, or
 :term:`Image Activation Profile` to be used during the load/start of the
@@ -51,6 +51,10 @@ class CertificateManager(BaseManager):
 
     * :attr:`~zhmcclient.Console.certificates` of a :class:`~zhmcclient.Console`
       object.
+
+    HMC/SE version requirements:
+
+    * :ref:`API feature <API features>` "secure-boot-with-certificates"
     """
 
     def __init__(self, console):
@@ -91,6 +95,10 @@ class CertificateManager(BaseManager):
              additional_properties=None):
         """
         List the certificates defined in the HMC.
+
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "secure-boot-with-certificates"
 
         Authorization requirements:
 
@@ -137,6 +145,10 @@ class CertificateManager(BaseManager):
     def import_certificate(self, cpc, properties):
         """
         Imports a certificate to a CPC.
+
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "secure-boot-with-certificates"
 
         Authorization requirements:
 
@@ -190,6 +202,10 @@ class Certificate(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.CertificateManager`).
+
+    HMC/SE version requirements:
+
+    * :ref:`API feature <API features>` "secure-boot-with-certificates"
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -230,6 +246,10 @@ class Certificate(BaseResource):
         """
         Delete this Certificate.
 
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "secure-boot-with-certificates"
+
         Authorization requirements:
 
         * Object-access permission to this Certificate.
@@ -255,6 +275,10 @@ class Certificate(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "secure-boot-with-certificates"
 
         Authorization requirements:
 
@@ -291,6 +315,10 @@ class Certificate(BaseResource):
     def get_encoded(self):
         """
         Gets the Base64 encoded string and the file format of this certificate.
+
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "secure-boot-with-certificates"
 
         Authorization requirements:
 

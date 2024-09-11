@@ -22,7 +22,7 @@ initial set of storage volumes, using the
 Storage group template objects can be created, updated and deleted.
 
 Storage group template objects can only be defined in CPCs that are in
-DPM mode and that have the "dpm-storage-management" feature enabled.
+DPM mode and have SE version >= 2.14.1.
 """
 
 
@@ -50,6 +50,10 @@ class StorageGroupTemplateManager(BaseManager):
 
     * :attr:`~zhmcclient.Console.storage_group_templates` of a
       :class:`~zhmcclient.Console` object.
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.14.1
     """
 
     def __init__(self, console):
@@ -115,6 +119,10 @@ class StorageGroupTemplateManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
+
         Authorization requirements:
 
         * Object-access permission to any storage group templates to be
@@ -157,6 +165,10 @@ class StorageGroupTemplateManager(BaseManager):
 
         The new storage group will be associated with the CPC identified by the
         `cpc-uri` input property.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
 
         Authorization requirements:
 
@@ -213,6 +225,10 @@ class StorageGroupTemplate(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.StorageGroupTemplateManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.14.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -271,6 +287,10 @@ class StorageGroupTemplate(BaseResource):
         Storage groups and their volumes that have been created from the
         template that is deleted, are not affected.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
+
         Authorization requirements:
 
         * Object-access permission to this storage group template.
@@ -307,6 +327,10 @@ class StorageGroupTemplate(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
 
         Authorization requirements:
 

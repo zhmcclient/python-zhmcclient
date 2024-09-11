@@ -46,6 +46,10 @@ class UserRoleManager(BaseManager):
     :class:`~zhmcclient.Console` object:
 
     * :attr:`zhmcclient.Console.user_roles`
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, console):
@@ -111,6 +115,10 @@ class UserRoleManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
+
         Authorization requirements:
 
         * User-related-access permission to the User Role objects included in
@@ -151,6 +159,10 @@ class UserRoleManager(BaseManager):
     def create(self, properties):
         """
         Create a new (user-defined) User Role in this HMC.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -199,6 +211,10 @@ class UserRole(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.UserRoleManager`).
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -224,6 +240,10 @@ class UserRole(BaseResource):
 
         The User Role must be user-defined. System-defined User Roles cannot be
         deleted.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -252,6 +272,10 @@ class UserRole(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -303,6 +327,10 @@ class UserRole(BaseResource):
           permission for these resources.
 
         The User Role must be user-defined.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -384,6 +412,10 @@ class UserRole(BaseResource):
           permission for these resources.
 
         The User Role must be user-defined.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 

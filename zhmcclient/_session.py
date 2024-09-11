@@ -133,6 +133,8 @@ class RetryTimeoutConfig:
     """
     A configuration setting that specifies verious retry counts and timeout
     durations.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, connect_timeout=None, connect_retries=None,
@@ -276,6 +278,8 @@ class Session:
     requests against the HMC API. Instance variable
     :attr:`~zhmcclient.Session.time_stats_keeper` is used to enable/disable the
     measurements, and to print the statistics.
+
+    HMC/SE version requirements: None
     """
 
     default_rt_config = RetryTimeoutConfig(

@@ -33,7 +33,8 @@ Storage volumes are contained in :term:`storage groups <storage group>`.
 You can create as many storage volumes as you want in a storage group.
 
 Storage groups and storage volumes only can be defined in CPCs that are in
-DPM mode and that have the "dpm-storage-management" feature enabled.
+DPM mode and that have the "dpm-storage-management"
+:ref:`firmware feature <firmware features>` enabled.
 """
 
 
@@ -62,6 +63,10 @@ class StorageVolumeManager(BaseManager):
     :class:`~zhmcclient.StorageGroup` object:
 
     * :attr:`~zhmcclient.StorageGroup.storage_volumes`
+
+    HMC/SE version requirements:
+
+    * :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, storage_group):
@@ -126,6 +131,10 @@ class StorageVolumeManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to this storage group.
@@ -174,6 +183,10 @@ class StorageVolumeManager(BaseManager):
 
         This method performs the "Modify Storage Group Properties" operation,
         requesting creation of the volume.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -289,6 +302,10 @@ class StorageVolume(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.StorageVolumeManager`).
+
+    HMC/SE version requirements:
+
+    * :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -334,6 +351,10 @@ class StorageVolume(BaseResource):
 
         This method performs the "Modify Storage Group Properties" operation,
         requesting deletion of the volume.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -424,6 +445,10 @@ class StorageVolume(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -522,6 +547,17 @@ class StorageVolume(BaseResource):
         owning storage group are "complete", the owning storage group's
         "fulfillment-state" property will also be set to "complete".
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
+        Authorization requirements:
+
+        * Object-access permission to the storage group owning this storage
+          volume.
+        * Task permission to the "Configure Storage - Storage Administrator"
+          task.
+
         Parameters:
 
           control_unit (:class:`~zhmcclient.ControlUnit`):
@@ -532,13 +568,6 @@ class StorageVolume(BaseResource):
             Unit address of the backing ECKD volume within its logical control
             unit,
             as a hexadecimal number of up to 2 characters in any lexical case.
-
-        Authorization requirements:
-
-        * Object-access permission to the storage group owning this storage
-          volume.
-        * Task permission to the "Configure Storage - Storage Administrator"
-          task.
 
         Raises:
 
@@ -588,6 +617,17 @@ class StorageVolume(BaseResource):
         owning storage group are "complete", the owning storage group's
         "fulfillment-state" property will also be set to "complete".
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
+        Authorization requirements:
+
+        * Object-access permission to the storage group owning this storage
+          volume.
+        * Task permission to the "Configure Storage - Storage Administrator"
+          task.
+
         Parameters:
 
           wwpn (:term:`string`):
@@ -602,13 +642,6 @@ class StorageVolume(BaseResource):
 
           host_port (:class:`~zhmcclient.Port`):
             Storage port on the CPC that will be used to boot from.
-
-        Authorization requirements:
-
-        * Object-access permission to the storage group owning this storage
-          volume.
-        * Task permission to the "Configure Storage - Storage Administrator"
-          task.
 
         Raises:
 

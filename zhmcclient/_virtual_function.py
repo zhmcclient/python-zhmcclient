@@ -47,6 +47,10 @@ class VirtualFunctionManager(BaseManager):
     :class:`~zhmcclient.Partition` object (in DPM mode):
 
     * :attr:`~zhmcclient.Partition.virtual_functions`
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, partition):
@@ -98,6 +102,10 @@ class VirtualFunctionManager(BaseManager):
           parent object is used to list the resources, and the provided filter
           arguments are applied.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -136,6 +144,10 @@ class VirtualFunctionManager(BaseManager):
     def create(self, properties):
         """
         Create a Virtual Function in this Partition.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -190,6 +202,10 @@ class VirtualFunction(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.VirtualFunctionManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -212,6 +228,10 @@ class VirtualFunction(BaseResource):
     def delete(self):
         """
         Delete this Virtual Function.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -247,6 +267,10 @@ class VirtualFunction(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 

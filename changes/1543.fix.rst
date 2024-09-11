@@ -1,0 +1,5 @@
+Docs: Fixed the description of the 'Cpc.list_associated_storage_groups()'
+method; it previously had stated that when the "dpm-storage-management" firmware
+feature is not enabled, the method would be returning an empty list. That was
+corrected in the documentation to match the actual behavior, which is to
+fail.

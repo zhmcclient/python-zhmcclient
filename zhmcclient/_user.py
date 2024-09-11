@@ -39,6 +39,10 @@ class UserManager(BaseManager):
     :class:`~zhmcclient.Console` object:
 
     * :attr:`zhmcclient.Console.users`
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, console):
@@ -104,6 +108,10 @@ class UserManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
+
         Authorization requirements:
 
         * User-related-access permission to the User object included in the
@@ -145,6 +153,10 @@ class UserManager(BaseManager):
     def create(self, properties):
         """
         Create a new User in this HMC.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -195,6 +207,10 @@ class User(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.UserManager`).
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -217,6 +233,10 @@ class User(BaseResource):
     def delete(self):
         """
         Delete this User.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -243,6 +263,10 @@ class User(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -286,6 +310,10 @@ class User(BaseResource):
 
         This User must not be a system-defined or pattern-based user.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
+
         Authorization requirements:
 
         * Task permission to the "Manage Users" task to modify a standard user
@@ -316,6 +344,10 @@ class User(BaseResource):
         Remove the specified User Role from this User.
 
         This User must not be a system-defined or pattern-based user.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 

@@ -50,6 +50,10 @@ class PortManager(BaseManager):
     Objects of this class are not directly created by the user; they are
     accessible as properties in higher level resources (in this case, the
     :class:`~zhmcclient.Adapter` object).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, adapter, port_type):
@@ -130,6 +134,10 @@ class PortManager(BaseManager):
           parent object is used to list the resources, and the provided filter
           arguments are applied.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Adapter.
@@ -183,6 +191,10 @@ class Port(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.PortManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -208,6 +220,10 @@ class Port(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 

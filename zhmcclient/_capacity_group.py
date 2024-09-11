@@ -47,6 +47,10 @@ class CapacityGroupManager(BaseManager):
     :class:`~zhmcclient.Cpc` object (in DPM mode):
 
     * :attr:`~zhmcclient.Cpc.capacity_groups`
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, cpc):
@@ -100,6 +104,10 @@ class CapacityGroupManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -141,6 +149,10 @@ class CapacityGroupManager(BaseManager):
         Create a Capacity Group in this CPC.
 
         The new Capacity Group initially has no partitions.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -219,6 +231,10 @@ class CapacityGroup(BaseResource):
 
         The Capacity Group must not contain any Partitions.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to the CPC containing this Capacity Group.
@@ -244,6 +260,10 @@ class CapacityGroup(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -292,6 +312,10 @@ class CapacityGroup(BaseResource):
         Capacity Group and must not yet be a member of this (or any other)
         Capacity Group.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to the CPC containing this Capacity Group.
@@ -325,6 +349,10 @@ class CapacityGroup(BaseResource):
         cap values defined for this Capacity Group.
 
         The Partition must be a member of this Capacity Group.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 

@@ -97,6 +97,8 @@ class MetricsContextManager(BaseManager):
     Objects of this class are not directly created by the user; they are
     accessible via the :attr:`~zhmcclient.Client.metrics_contexts` attribute
     of the :class:`~zhmcclient.Client` object connected to the HMC.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, client):
@@ -164,6 +166,8 @@ class MetricsContextManager(BaseManager):
         created through a second :class:`~zhmcclient.Client` object will not be
         listed.
 
+        HMC/SE version requirements: None
+
         Parameters:
 
           full_properties (bool):
@@ -188,6 +192,8 @@ class MetricsContextManager(BaseManager):
         """
         Create a :term:`Metrics Context` resource in the HMC this client is
         connected to.
+
+        HMC/SE version requirements: None
 
         Parameters:
 
@@ -304,6 +310,8 @@ class MetricsContext(BaseResource):
         the `MetricsResponse` string returned by this method, and provides
         structured access to the metrics values.
 
+        HMC/SE version requirements: None
+
         Returns:
 
           :term:`string`:
@@ -323,6 +331,8 @@ class MetricsContext(BaseResource):
     def delete(self):
         """
         Delete this :term:`Metrics Context` resource.
+
+        HMC/SE version requirements: None
 
         Raises:
 
@@ -346,6 +356,8 @@ class MetricGroupDefinition(_MetricGroupDefinitionTuple):
     """
     A :func:`namedtuple <py:collections.namedtuple>` representing definitional
     information for a metric group.
+
+    HMC/SE version requirements: None
     """
 
     def __new__(cls, name, resource_class, metric_definitions):
@@ -393,6 +405,8 @@ class MetricDefinition(_MetricDefinitionTuple):
     """
     A :func:`namedtuple <py:collections.namedtuple>` representing definitional
     information for a single metric.
+
+    HMC/SE version requirements: None
     """
 
     def __new__(cls, index, name, type, unit):
@@ -583,6 +597,8 @@ class MetricsResponse:
     Represents the metric values returned by one call to the
     :meth:`~zhmcclient.MetricsContext.get_metrics` method, and provides
     structured access to the data.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, metrics_context, metrics_response_str):
@@ -722,6 +738,8 @@ class MetricGroupValues:
     """
     Represents the metric values for a metric group in a MetricsResponse
     string.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, name, object_values):
@@ -760,6 +778,8 @@ class MetricObjectValues:
     """
     Represents the metric values for a single resource at a single point in
     time.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, client, metric_group_definition, resource_uri,

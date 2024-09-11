@@ -37,13 +37,14 @@ group is attached to a partition, and are removed automatically upon
 detachment.
 
 The :term:`HBA` resource objects known from DPM mode before introduction of the
-"dpm-storage-management" feature are no longer exposed.
+"dpm-storage-management" firmware feature are no longer exposed.
 
 Virtual storage resource objects are contained in :term:`storage group`
 objects.
 
 Storage groups and storage volumes only can be defined in CPCs that are in
-DPM mode and that have the "dpm-storage-management" feature enabled.
+DPM mode and that have the "dpm-storage-management"
+:ref:`firmware feature <firmware features>` enabled.
 """
 
 
@@ -72,6 +73,10 @@ class VirtualStorageResourceManager(BaseManager):
     :class:`~zhmcclient.StorageGroup` object:
 
     * :attr:`~zhmcclient.StorageGroup.virtual_storage_resources`
+
+    HMC/SE version requirements:
+
+    * :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, storage_group):
@@ -135,6 +140,10 @@ class VirtualStorageResourceManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to this storage group.
@@ -182,6 +191,10 @@ class VirtualStorageResource(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.VirtualStorageResourceManager`).
+
+    HMC/SE version requirements:
+
+    * :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -216,6 +229,10 @@ class VirtualStorageResource(BaseResource):
         Note that a virtual storage resource is always attached to a partition,
         as long as it exists.
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to the storage group owning this
@@ -245,6 +262,10 @@ class VirtualStorageResource(BaseResource):
 
         The returned adapter port object has only a minimal set of properties
         set ('object-id', 'object-uri', 'class', 'parent').
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -280,6 +301,10 @@ class VirtualStorageResource(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 

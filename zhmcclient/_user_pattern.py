@@ -53,6 +53,10 @@ class UserPatternManager(BaseManager):
     :class:`~zhmcclient.Console` object:
 
     * :attr:`zhmcclient.Console.user_patterns`
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, console):
@@ -118,6 +122,10 @@ class UserPatternManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
+
         Authorization requirements:
 
         * User-related-access permission to the User Pattern objects included
@@ -158,6 +166,10 @@ class UserPatternManager(BaseManager):
     def create(self, properties):
         """
         Create a new User Pattern in this HMC.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -203,6 +215,10 @@ class UserPatternManager(BaseManager):
         The order of User Patterns determines the search order during logon
         processing.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
+
         Authorization requirements:
 
         * Task permission to the "Manage User Patterns" task.
@@ -239,6 +255,10 @@ class UserPattern(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.UserPatternManager`).
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.0
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -261,6 +281,10 @@ class UserPattern(BaseResource):
     def delete(self):
         """
         Delete this User Pattern.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -286,6 +310,10 @@ class UserPattern(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 

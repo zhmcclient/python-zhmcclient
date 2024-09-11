@@ -544,18 +544,118 @@ Note that this also works for other list-related methods such as
 Feature enablement
 ------------------
 
-Starting with HMC version 2.14.0 and API version 2.23, so called "Firmware
-features" were enabled for specific objects. To indicate this, the
-"available-features-list" property was introduced to the objects that are
-affected. These features may be enabled by default from a specific HMC or SE
-version onwards or enabled by using standard feature enablement mechanisms.
-"Firmware features" are discussed in :term:`HMC API` book Chapter 6, "Firmware
-Features".
+.. _`Firmware features`:
 
-Starting with API version 4.10, information about Firmware capabilities is
-exposed using the "API features" concept. Therefore, beginning with API version
-4.10, WSAPI clients must use this new mechanism. Neither the API version itself
-nor existing "Firmware features" will be updated for every future collection of
-functional additions or changes. Information about available "API features"
-can be retrieved separately via :meth:`zhmcclient.Console.list_api_features`
-and :meth:`zhmcclient.Cpc.list_api_features`.
+Firmware features
+~~~~~~~~~~~~~~~~~
+
+*Firmware features* have been introduced in HMC/SE version 2.14.0 with
+HMC API version 2.23. They had originally been called just "features", and
+with the later introduction of "API features", they had been renamed to
+"firmware features".
+
+Firmware features exist at the level of the CPC/SE. In order to support users
+who are authorized for access to partitions but not to the CPC, the HMC WS-API
+makes the information also available on partition objects, but all partitions
+show the same feature information for the CPC of the partition.
+
+Firmware features can be *available* (or not). A firmware feature is available
+when it has been introduced with a particular HMC/SE version.
+
+When a firmware feature is available, it can be *enabled* (or not). When it
+is enabled, its functionality is active.
+
+The enablement state of firmware features cannot be controlled through the
+HMC WS-API. Firmware features may be always enabled once introduced (that is
+the case for all currently existing firmware features), or can be enabled by
+using standard feature enablement mechanisms.
+
+The available firmware features and their enablement state are indicated
+in the "available-features-list" property on the :meth:`zhmcclient.Cpc` and
+:meth:`zhmcclient.Partition` objects.
+
+That information can be retrieved via the following methods:
+
+* :meth:`zhmcclient.Cpc.feature_enabled`
+* :meth:`zhmcclient.Cpc.feature_info`
+* :meth:`zhmcclient.Partition.feature_enabled`
+* :meth:`zhmcclient.Partition.feature_info`
+
+Firmware features have the following :ref:`HMC/SE version requirements`:
+
+===========================================  =============  =============  ====================
+Firmware feature                             HMC version    SE version     Enablement mechanism
+===========================================  =============  =============  ====================
+dpm-storage-management                       >= 2.14.0 (1)  >= 2.14.0 (1)  Always enabled
+dpm-fcp-tape-management                      >= 2.15.0      >= 2.15.0      Always enabled
+dpm-smcd-partition-link-management           >= 2.16.0      >= 2.16.0      Always enabled
+===========================================  =============  =============  ====================
+
+Note (1): Requires to be at HMC API version >= 2.23, which on HMC 2.14
+requires MCL P42675.232 and on SE 2.14 requires MCL P42601.286.
+
+Firmware features are discussed further in :term:`HMC API` book Chapter 6,
+"Features".
+
+.. _`API features`:
+
+API features
+~~~~~~~~~~~~
+
+*API features* have been introduced in HMC version 2.16.0 with
+HMC API version 4.10. On an HMC 2.16, this requires bundle H14 and on an
+SE 2.16, this requires bundle S19.
+
+API features exist at the level of the HMC, at the level of each CPC/SE,
+or both.
+
+The functionality of an API feature is available when introduced with a
+particular HMC/SE version, so there is no separate enablement state (you can
+say that they are always enabled). If an API feature applies to both HMC and SE,
+then it must be available on both HMC and SE in order for its functionality
+to become fully available.
+
+Information about API features can be retrieved via the methods:
+
+* :meth:`zhmcclient.Console.list_api_features`
+* :meth:`zhmcclient.Cpc.list_api_features`
+
+API features have the following :ref:`HMC/SE version requirements`:
+
+===========================================  =============  =============
+API feature                                  HMC version    SE version
+===========================================  =============  =============
+adapter-network-information                  >= 2.16.0 (1)  >= 2.16.0 (1)
+bcpii-notifications                          N/A (2)        >= 2.16.0 (1)
+cpc-delete-retrieved-internal-code           >= 2.16.0 (1)  >= 2.16.0 (1)
+cpc-install-and-activate                     >= 2.16.0 (1)  >= 2.16.0 (1)
+create-delete-activation-profiles            >= 2.16.0 (1)  >= 2.16.0 (1)
+dpm-ctc-partition-link-management            >= 2.16.0 (1)  >= 2.16.0 (1)
+dpm-hipersockets-partition-link-management   >= 2.16.0 (1)  >= 2.16.0 (1)
+dpm-smcd-partition-link-management           >= 2.16.0 (1)  >= 2.16.0 (1)
+environmental-metrics                        >= 2.16.0 (1)  >= 2.16.0 (1)
+hmc-delete-retrieved-internal-code           >= 2.16.0 (1)  N/A (2)
+ldap-direct-authentication                   >= 2.16.0 (1)  N/A (2)
+mobile-enhanced-push                         >= 2.16.0 (1)  >= 2.16.0 (1)
+oem-hmc-ids                                  >= 2.16.0 (1)  N/A (2)
+pmg-child-management-permission              >= 2.16.0 (1)  N/A (2)
+rc-409-15                                    >= 2.16.0 (1)  >= 2.16.0 (1)
+rcl-history                                  >= 2.16.0 (1)  >= 2.16.0 (1)
+rcl-progress                                 >= 2.16.0 (1)  >= 2.16.0 (1)
+report-a-problem                             >= 2.16.0 (1)  >= 2.16.0 (1)
+secure-boot-with-certificates                >= 2.16.0 (1)  >= 2.16.0 (1)
+secure-execution-key-management              >= 2.16.0 (1)  >= 2.16.0 (1)
+switch-support-elements                      >= 2.16.0 (1)  >= 2.16.0 (1)
+===========================================  =============  =============
+
+Note (1): Requires to be at HMC API version >= 4.10, which on HMC 2.16 requires
+bundle H14 and on SE 2.16 requires bundle S19.
+
+Note (2): N/A means that the API feature does not have a dependency on the
+version of that element (HMC or SE) (in addition to the normal version
+requirements between HMC and SE). For example, the
+"hmc-delete-retrieved-internal-code" API feature depends only on the HMC
+version, so it is available with all SE versions that can be managed by the HMC.
+
+API features are discussed further in :term:`HMC API` book Chapter 6,
+"Features".
