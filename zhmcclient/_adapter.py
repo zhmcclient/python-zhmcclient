@@ -86,6 +86,10 @@ class AdapterManager(BaseManager):
     :class:`~zhmcclient.Cpc` object (in DPM mode):
 
     * :attr:`~zhmcclient.Cpc.adapters`
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, cpc):
@@ -161,6 +165,10 @@ class AdapterManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -208,6 +216,10 @@ class AdapterManager(BaseManager):
     def create_hipersocket(self, properties):
         """
         Create and configure a HiperSockets Adapter in this CPC.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -259,6 +271,10 @@ class Adapter(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.AdapterManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     # Name of property for port URIs, dependent on adapter family
@@ -422,6 +438,10 @@ class Adapter(BaseResource):
 
         The Adapter must be a HiperSockets Adapter.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to the HiperSockets Adapter to be deleted.
@@ -447,6 +467,10 @@ class Adapter(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -504,6 +528,10 @@ class Adapter(BaseResource):
         The cryptographic adapter must be varied offline before its crypto
         type can be reconfigured.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Adapter.
@@ -557,6 +585,10 @@ class Adapter(BaseResource):
         must not already have the desired adapter type, they must not be
         attached to any partition, and they must not have an adapter status
         of 'exceptions'.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -619,6 +651,10 @@ class Adapter(BaseResource):
 
         This method is not supported for OSA adapters configured as OSM
         (because those cannot be assigned to partitions).
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -689,6 +725,10 @@ class Adapter(BaseResource):
         This is useful for example to determine the affected Adapter objects
         when replacing the adapter card, or when changing the type of a FICON
         Express adepter (see :meth:`~zhmcclient.Adapter.change_adapter_type`).
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 

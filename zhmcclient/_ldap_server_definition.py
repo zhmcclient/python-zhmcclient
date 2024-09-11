@@ -42,6 +42,10 @@ class LdapServerDefinitionManager(BaseManager):
     :class:`~zhmcclient.Console` object:
 
     * :attr:`zhmcclient.Console.ldap_server_definitions`
+
+    HMC/SE version requirements:
+
+    * HMC version == 2.13.0
     """
 
     def __init__(self, console):
@@ -106,6 +110,10 @@ class LdapServerDefinitionManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * HMC version == 2.13.0
+
         Authorization requirements:
 
         * User-related-access permission to the LDAP Server Definition objects
@@ -147,6 +155,10 @@ class LdapServerDefinitionManager(BaseManager):
     def create(self, properties):
         """
         Create a new LDAP Server Definition in this HMC.
+
+        HMC/SE version requirements:
+
+        * HMC version == 2.13.0
 
         Authorization requirements:
 
@@ -196,6 +208,10 @@ class LdapServerDefinition(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.LdapServerDefinitionManager`).
+
+    HMC/SE version requirements:
+
+    * HMC version == 2.13.0
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -219,6 +235,10 @@ class LdapServerDefinition(BaseResource):
     def delete(self):
         """
         Delete this LDAP Server Definition.
+
+        HMC/SE version requirements:
+
+        * HMC version == 2.13.0
 
         Authorization requirements:
 
@@ -244,6 +264,10 @@ class LdapServerDefinition(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * HMC version == 2.13.0
 
         Authorization requirements:
 

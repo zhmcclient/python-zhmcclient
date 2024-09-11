@@ -59,6 +59,8 @@ class ConsoleManager(BaseManager):
     :class:`~zhmcclient.Client` object:
 
     * :attr:`zhmcclient.Client.consoles`
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, client):
@@ -126,6 +128,8 @@ class ConsoleManager(BaseManager):
         The listing of resources is handled by constructing a singleton
         object that represents the HMC of the current session.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * None
@@ -178,6 +182,8 @@ class Console(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.ConsoleManager`).
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -332,6 +338,8 @@ class Console(BaseResource):
         An automatic re-logon will be performed under the covers, because the
         HMC restart invalidates the currently used HMC session.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Task permission for the "Shutdown/Restart" task.
@@ -396,6 +404,10 @@ class Console(BaseResource):
         An automatic re-logon will be performed under the covers, because the
         HMC startup invalidates the currently used HMC session.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.12.0
+
         Authorization requirements:
 
         * Task permission for the "Shutdown/Restart" task.
@@ -431,6 +443,8 @@ class Console(BaseResource):
 
         The HMC represented by this Console object must participate in a
         {primary, alternate} pairing.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -469,6 +483,10 @@ class Console(BaseResource):
         """
         Return the console audit log entries, optionally filtered by their
         creation time.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -514,6 +532,10 @@ class Console(BaseResource):
         """
         Return the console security log entries, optionally filtered by their
         creation time.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.13.0
 
         Authorization requirements:
 
@@ -561,9 +583,11 @@ class Console(BaseResource):
 
         For details, see :meth:`~zhmcclient.UnmanagedCpc.list`.
 
-        Authorization requirements:
+        HMC/SE version requirements:
 
-        * None
+        * HMC version >= 2.13.1
+
+        Authorization requirements: None
 
         Parameters:
 
@@ -599,8 +623,7 @@ class Console(BaseResource):
         """
         List the permitted partitions of CPCs in DPM mode managed by this HMC.
 
-        *Added in version 1.0; requires HMC 2.14.0 or later and otherwise
-        raises HTTPError(404.4).*
+        *Added in version 1.0*
 
         Any CPCs in classic mode managed by the HMC will be ignored for this
         operation.
@@ -633,6 +656,10 @@ class Console(BaseResource):
         * se-version (string): SE version of the parent CPC of the partition,
           as M.N.U string. Note that this property is returned only on newer
           HMC 2.16 versions (HMC API version 4.10 or higher).
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.14.0
 
         Authorization requirements:
 
@@ -676,9 +703,9 @@ class Console(BaseResource):
             List of property names that are to be returned in addition to the
             default properties.
 
-            This parameter requires API feature
+            Using this parameter requires :ref:`API features`
             "dpm-hipersockets-partition-link-management" or
-            "dpm-ctc-partition-link-management".
+            "dpm-ctc-partition-link-management" on the HMC.
 
         Returns:
 
@@ -753,7 +780,7 @@ class Console(BaseResource):
         """
         List the permitted LPARs of CPCs in classic mode managed by this HMC.
 
-        *Added in version 1.0; requires HMC 2.14.0 or later*
+        *Added in version 1.0*
 
         Any CPCs in DPM mode managed by the HMC will be ignored for this
         operation.
@@ -786,6 +813,10 @@ class Console(BaseResource):
         * se-version (string): SE version of the parent CPC of the LPAR, as
           M.N.U string. Note that this property is returned only on newer HMC
           2.16 versions (HMC API version 4.10 or higher).
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.14.0
 
         Authorization requirements:
 
@@ -926,16 +957,12 @@ class Console(BaseResource):
         classic-mode CPCs that are managed by the targeted HMC and to which the
         user has object-access permission.
 
-        *If 'additional_properties' is not used, requires HMC API version 4.1 or
-        later (= HMC version 2.16.0 GA-level) and otherwise raises
-        HTTPError(404.4).*
-
-        *If 'additional_properties' is used, requires HMC API version 4.10 or
-        later (= HMC version 2.16.0 plus some post-GA code level) and
-        otherwise raises HTTPError(404.4).*
-
         The adapters in the result can be additionally limited by specifying
         filter arguments.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.16.0
 
         Authorization requirements:
 
@@ -988,6 +1015,9 @@ class Console(BaseResource):
             List of property names that are to be returned in addition to the
             default properties.
 
+            Using this parameter requires :ref:`API feature <API features>`
+            "adapter-network-information".
+
         Returns:
 
           : A list of :class:`~zhmcclient.Adapter` objects.
@@ -1024,7 +1054,7 @@ class Console(BaseResource):
 
         # Perform the operation with the HMC, including any server-side
         # filtering.
-        # Note: "List Permitted Adapters" was introduced in HMC/SE 2.14.0.
+        # Note: "List Permitted Adapters" was introduced in HMC/SE 2.16.0.
         uri = (f'{self.uri}/operations/list-permitted-adapters'
                f'{query_parms_str}')
         result = self.manager.session.get(uri, resource=self)
@@ -1082,9 +1112,14 @@ class Console(BaseResource):
     @logged_api_call
     def list_api_features(self, name=None):
         """
-        Returns information about the Web Services API features (introduced with
-        Web Services version 4.10) available on this console, see
-        :ref:`Feature enablement`.
+        Returns information about the :ref:`API features` available on
+        this console.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.16.0 with HMC API version >= 4.10
+
+        Authorization requirements: None
 
         Parameters:
 
@@ -1092,14 +1127,10 @@ class Console(BaseResource):
             A regular expression used to limit returned objects to those that
             have a matching name field.
 
-        Authorization requirements:
-
-        * None
-
         Returns:
 
           list of strings: The list of API features that are available on this
-          client. For API versions prior to 4.10, an empty list is returned.
+          client. For HMC API versions prior to 4.10, an empty list is returned.
 
         """
         # TODO: add reference to WSAPI book chapter regarding API features
@@ -1143,6 +1174,10 @@ class Console(BaseResource):
 
         For HMCs that run on an HMA that also hosts an SE (e.g. z16 and higher),
         the HMC firmware can only be upgraded if the HMA hosts an alternate SE.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.16.0
 
         Authorization requirements:
 
@@ -1272,6 +1307,10 @@ class Console(BaseResource):
 
         This is done by performing the "Console Delete Retrieved Internal Code"
         operation.
+
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "hmc-delete-retrieved-internal-code"
 
         Authorization requirements:
 

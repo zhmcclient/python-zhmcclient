@@ -64,6 +64,10 @@ class OSConsole:
     This class encapsulates the interactions with the console of an operating
     system running in a partition, by using the WebSocket protocol supported by
     the HMC.
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.14.0 with HMC API version >= 2.22
     """
 
     def __init__(self, partition, ws_timeout=DEFAULT_WS_TIMEOUT):

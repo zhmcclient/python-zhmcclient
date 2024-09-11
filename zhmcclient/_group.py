@@ -46,6 +46,8 @@ class GroupManager(BaseManager):
 
     Derived from :class:`~zhmcclient.BaseManager`; see there for common methods
     and attributes.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, console):
@@ -83,6 +85,8 @@ class GroupManager(BaseManager):
     def list(self, full_properties=False, filter_args=None):
         """
         List the Groups managed by the HMC this client is connected to.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -123,6 +127,8 @@ class GroupManager(BaseManager):
     def create(self, properties):
         """
         Create a Group in the HMC.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -173,6 +179,8 @@ class Group(BaseResource):
 
     Note that Group objects do not have any writeable properties, so they
     do not have an ``update_properties()`` method.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -220,6 +228,8 @@ class Group(BaseResource):
         """
         Delete this Group.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this Group.
@@ -245,6 +255,8 @@ class Group(BaseResource):
 
         The group must be defined without a pattern-matching specification.
         The member resource must not already be a member of this group.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -275,6 +287,8 @@ class Group(BaseResource):
         The group must be defined without a pattern-matching specification.
         The resource must be a member of this group.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this Group.
@@ -300,6 +314,8 @@ class Group(BaseResource):
     def list_members(self):
         """
         List Group members.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 

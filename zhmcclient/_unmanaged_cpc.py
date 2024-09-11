@@ -48,6 +48,10 @@ class UnmanagedCpcManager(BaseManager):
     :class:`~zhmcclient.Console` object:
 
     * :attr:`~zhmcclient.Console.unmanaged_cpcs`
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.1
     """
 
     def __init__(self, console):
@@ -113,9 +117,11 @@ class UnmanagedCpcManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
-        Authorization requirements:
+        HMC/SE version requirements:
 
-        * None
+        * HMC version >= 2.13.1
+
+        Authorization requirements: None
 
         Parameters:
 
@@ -157,6 +163,10 @@ class UnmanagedCpc(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.UnmanagedCpcManager`).
+
+    HMC/SE version requirements:
+
+    * HMC version >= 2.13.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):

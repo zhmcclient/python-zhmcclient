@@ -86,6 +86,8 @@ class ActivationProfileManager(BaseManager):
     * :attr:`~zhmcclient.Cpc.reset_activation_profiles`
     * :attr:`~zhmcclient.Cpc.image_activation_profiles`
     * :attr:`~zhmcclient.Cpc.load_activation_profiles`
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, cpc, profile_type):
@@ -173,6 +175,8 @@ class ActivationProfileManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -226,7 +230,9 @@ class ActivationProfileManager(BaseManager):
         Create and configure an Activation Profiles on this CPC, of the profile
         type managed by this object.
 
-        Supported only on z16 and later CPCs.
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "create-delete-activation-profiles"
 
         Authorization requirements:
 
@@ -292,6 +298,8 @@ class ActivationProfile(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.ActivationProfileManager`).
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -315,7 +323,9 @@ class ActivationProfile(BaseResource):
         """
         Delete this Activation Profile.
 
-        Supported only on z16 and later CPCs.
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "create-delete-activation-profiles"
 
         Authorization requirements:
 
@@ -341,6 +351,8 @@ class ActivationProfile(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -376,9 +388,9 @@ class ActivationProfile(BaseResource):
         """
         Assigns a :term:`Certificate` to this Image Activation Profile.
 
-        :ref:`Feature enablement` requirements:
+        HMC/SE version requirements:
 
-        *  "secure-boot-with-certificates" must be available on HMC and CPC
+        * :ref:`API feature <API features>` "secure-boot-with-certificates".
 
         Authorization requirements:
 
@@ -409,9 +421,9 @@ class ActivationProfile(BaseResource):
         """
         Unassign a :term:`Certificate` from this Image Activation Profile.
 
-        :ref:`Feature enablement` requirements:
+        HMC/SE version requirements:
 
-        *  "secure-boot-with-certificates" must be available on HMC and CPC
+        * :ref:`API feature <API features>` "secure-boot-with-certificates".
 
         Authorization requirements:
 

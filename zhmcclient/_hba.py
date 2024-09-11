@@ -21,10 +21,10 @@ an :term:`FCP Adapter`. More specifically, an HBA connects a Partition with an
 HBA resources are contained in Partition resources.
 
 HBA resources only exist in :term:`CPCs <CPC>` that are in DPM mode and when
-the "dpm-storage-management" feature is not enabled. See section
-:ref:`Storage Groups` for details. When the "dpm-storage-management" feature is
-enabled, :term:`virtual HBAs <HBA>` are represented as
-:term:`Virtual Storage Resource` resources.
+the "dpm-storage-management" :ref:`firmware feature <firmware features>` is not
+enabled. See section :ref:`Storage Groups` for details. When the
+"dpm-storage-management" firmware feature is enabled, :term:`virtual HBAs <HBA>`
+are represented as :term:`Virtual Storage Resource` resources.
 """
 
 
@@ -52,8 +52,10 @@ class HbaManager(BaseManager):
 
     * :attr:`~zhmcclient.Partition.hbas`
 
-    Note that this instance variable will be `None` if the
-    "dpm-storage-management" feature is enabled.
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1 without
+      :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, partition):
@@ -105,6 +107,11 @@ class HbaManager(BaseManager):
         * Otherwise, the corresponding array property for this resource in the
           parent object is used to list the resources, and the provided filter
           arguments are applied.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1 without
+          :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -167,6 +174,11 @@ class HbaManager(BaseManager):
 
             properties['adapter-port-uri'] = port.uri
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1 without
+          :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -220,6 +232,11 @@ class Hba(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.HbaManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1 without
+      :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -243,6 +260,11 @@ class Hba(BaseResource):
     def delete(self):
         """
         Delete this HBA.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1 without
+          :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -278,6 +300,11 @@ class Hba(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1 without
+          :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -318,6 +345,11 @@ class Hba(BaseResource):
         Reassign this HBA to a new underlying :term:`FCP port`.
 
         This method performs the HMC operation "Reassign Storage Adapter Port".
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1 without
+          :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 

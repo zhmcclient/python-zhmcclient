@@ -36,6 +36,8 @@ class Client:
     A client to an HMC.
 
     This is the main class for users of this package.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, session):

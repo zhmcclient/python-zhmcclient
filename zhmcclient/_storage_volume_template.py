@@ -28,8 +28,7 @@ storage volume template will cause a storage volume to be created in the new
 storage group.
 
 Storage group templates and storage volume templates only can be defined in
-CPCs that are in DPM mode and that have the "dpm-storage-management" feature
-enabled.
+CPCs that are in DPM mode and have SE version >= 2.14.1.
 """
 
 
@@ -58,6 +57,10 @@ class StorageVolumeTemplateManager(BaseManager):
     :class:`~zhmcclient.StorageGroupTemplate` object:
 
     * :attr:`~zhmcclient.StorageGroupTemplate.storage_volume_templates`
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.14.1
     """
 
     def __init__(self, storage_group_template):
@@ -121,6 +124,10 @@ class StorageVolumeTemplateManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
+
         Authorization requirements:
 
         * Object-access permission to this storage group template.
@@ -164,6 +171,10 @@ class StorageVolumeTemplateManager(BaseManager):
 
         This method performs the "Modify Storage Template Properties"
         operation, requesting creation of the volume.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
 
         Authorization requirements:
 
@@ -240,6 +251,10 @@ class StorageVolumeTemplate(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.StorageVolumeTemplateManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.14.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -266,6 +281,10 @@ class StorageVolumeTemplate(BaseResource):
 
         This method performs the "Modify Storage Template Properties"
         operation, requesting deletion of the volume template.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
 
         Authorization requirements:
 
@@ -318,6 +337,10 @@ class StorageVolumeTemplate(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
 
         Authorization requirements:
 

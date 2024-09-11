@@ -60,6 +60,10 @@ class PartitionManager(BaseManager):
     :class:`~zhmcclient.Cpc` object (in DPM mode):
 
     * :attr:`~zhmcclient.Cpc.partitions`
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, cpc):
@@ -124,6 +128,10 @@ class PartitionManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -173,6 +181,10 @@ class PartitionManager(BaseManager):
         """
         Create and configure a Partition in this CPC.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -221,6 +233,10 @@ class Partition(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.PartitionManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -260,10 +276,11 @@ class Partition(BaseResource):
         :class:`~zhmcclient.HbaManager`: Access to the :term:`HBAs <HBA>` in
         this Partition.
 
-        If the "dpm-storage-management" feature is enabled (i.e. starting with
-        z14), the CPC will not have any HBA objects anymore (they are now
-        Virtual Storage Resources), but this property still provides a manager
-        object for consistency.
+        On systems with the "dpm-storage-management"
+        :ref:`firmware feature <firmware features>` (i.e. z14), the CPC will
+        not have any HBA objects anymore (they are now Virtual Storage Resource
+        objects), but this property still provides a manager object for
+        consistency.
         """
         # We do here some lazy loading.
         if not self._hbas:
@@ -284,16 +301,19 @@ class Partition(BaseResource):
     @logged_api_call
     def feature_enabled(self, feature_name):
         """
-        Indicates whether the specified firmware feature is enabled for the CPC
-        of this partition.
+        Indicates whether the specified
+        :ref:`firmware feature <firmware features>` is enabled for the CPC of
+        this partition.
 
-        The HMC must generally support firmware features (HMC version >=
-        2.14.0 with HMC API version >= 2.23), and the specified firmware
-        feature must be available for the CPC.
+        The specified firmware feature must be available for the CPC.
 
         For a list of available firmware features, see section
         "Firmware Features" in the :term:`HMC API` book, or use the
         :meth:`feature_info` method.
+
+        HMC/SE version requirements:
+
+        * HMC version >= 2.14.0 with HMC API version >= 2.23
 
         Authorization requirements:
 
@@ -333,11 +353,12 @@ class Partition(BaseResource):
     @logged_api_call
     def feature_info(self):
         """
-        Returns information about the firmware features available for the CPC
-        of this partition.
+        Returns information about the :ref:`firmware features` available for
+        the CPC of this partition.
 
-        The HMC must generally support firmware features (HMC version >=
-        2.14.0 with HMC API version >= 2.23).
+        HMC/SE version requirements:
+
+        * HMC version >= 2.14.0 with HMC API version >= 2.23
 
         Authorization requirements:
 
@@ -387,6 +408,10 @@ class Partition(BaseResource):
 
         TODO: Describe what happens if the maximum number of active partitions
         is exceeded.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -465,6 +490,10 @@ class Partition(BaseResource):
         Stop (deactivate) this Partition, using the HMC operation "Stop
         Partition".
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -540,6 +569,10 @@ class Partition(BaseResource):
         """
         Delete this Partition.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -565,6 +598,10 @@ class Partition(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -605,8 +642,10 @@ class Partition(BaseResource):
         device and starting its execution, using the HMC operation
         'Dump Partition'.
 
-        This operation requires that the CPC does not have the storage
-        management feature (i.e. is a z13).
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1 without
+          :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -674,8 +713,9 @@ class Partition(BaseResource):
         volume and starting its execution, using the HMC operation
         'Start Dump Program'.
 
-        This operation requires that the CPC has the storage management feature
-        (i.e. is a z14 or later).
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -741,6 +781,10 @@ class Partition(BaseResource):
         Initiates a PSW restart for this Partition, using the HMC operation
         'Perform PSW Restart'.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -802,6 +846,10 @@ class Partition(BaseResource):
         When the partition already has an ISO image associated,
         the newly uploaded image replaces the current one.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -852,6 +900,10 @@ class Partition(BaseResource):
         operation 'Unmount ISO Image'. This operation sets the partition's
         'boot-iso-image-name' and 'boot-iso-ins-file' properties to null.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -872,6 +924,10 @@ class Partition(BaseResource):
         """
         Open a JMS message channel to this partition's operating system,
         returning the string "topic" representing the message channel.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -916,6 +972,10 @@ class Partition(BaseResource):
     def send_os_command(self, os_command_text, is_priority=False):
         """
         Send a command to the operating system running in this partition.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -966,6 +1026,10 @@ class Partition(BaseResource):
         indicates a loss of messages. A loss may be due to that space
         limitation, or it may be due to the deletion of messages by a console
         user or the OS.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.0
 
         Authorization requirements:
 
@@ -1024,6 +1088,10 @@ class Partition(BaseResource):
         integrated ASCII console, see
         :ref:`Using WebSocket to access OS console`.
 
+        HMC/SE version requirements:
+
+        * HMC version >= 2.14.0 with HMC API version >= 2.22
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -1074,6 +1142,10 @@ class Partition(BaseResource):
     def wait_for_status(self, status, status_timeout=None):
         """
         Wait until the status of this partition has a desired value.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Parameters:
 
@@ -1144,6 +1216,10 @@ class Partition(BaseResource):
         is called to add adapter B and domain configurations for domains 1 and
         2, the resulting crypto configuration of the partition will include
         domains 0, 1, and 2 on each of the adapters A and B.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -1217,6 +1293,10 @@ class Partition(BaseResource):
         and domain 2, the resulting crypto configuration of the partition will
         include domains 0 and 1 on each of the adapters A and B.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -1261,6 +1341,10 @@ class Partition(BaseResource):
         For the general principle for maintaining crypto configurations of
         partitions, see :meth:`~zhmcclient.Partition.increase_crypto_config`.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -1302,6 +1386,10 @@ class Partition(BaseResource):
 
         Supported CPC versions: z14 GA2 and above, and the corresponding
         LinuxOne systems.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.1
 
         Authorization requirements:
 
@@ -1346,7 +1434,9 @@ class Partition(BaseResource):
         and thus of the entire storage group changes as volumes are discovered
         by DPM, and will eventually reach "complete".
 
-        The CPC must have the "dpm-storage-management" feature enabled.
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -1386,7 +1476,9 @@ class Partition(BaseResource):
         fulfillment state. The fulfillment state of its storage volumes
         changes as volumes are discovered by DPM.
 
-        The CPC must have the "dpm-storage-management" feature enabled.
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -1416,7 +1508,9 @@ class Partition(BaseResource):
         """
         Return the storage groups that are attached to this partition.
 
-        The CPC must have the "dpm-storage-management" feature enabled.
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -1459,9 +1553,9 @@ class Partition(BaseResource):
         """
         Assigns a :term:`Certificate` to this partition.
 
-        :ref:`Feature enablement` requirements:
+        HMC/SE version requirements:
 
-        *  "secure-boot-with-certificates" must be available on HMC and CPC
+        * :ref:`API feature <API features>` "secure-boot-with-certificates"
 
         Authorization requirements:
 
@@ -1492,9 +1586,9 @@ class Partition(BaseResource):
         """
         Unassign a :term:`Certificate` from this partition.
 
-        :ref:`Feature enablement` requirements:
+        HMC/SE version requirements:
 
-        *  "secure-boot-with-certificates" must be available on HMC and CPC
+        * :ref:`API feature <API features>` "secure-boot-with-certificates"
 
         Authorization requirements:
 
@@ -1572,6 +1666,10 @@ class Partition(BaseResource):
         This method performs the "Get Partition Historical Sustainability Data"
         HMC operation.
 
+        HMC/SE version requirements:
+
+        * :ref:`API feature <API features>` "environmental-metrics"
+
         Authorization requirements:
 
         * Object-access permission to this partition
@@ -1593,7 +1691,7 @@ class Partition(BaseResource):
           resolution (:term:`string`):
             Resolution for the requested data points. This is the time interval
             in between the data points. For systems where the
-            "environmental-metrics" feature is not available, the minimum
+            "environmental-metrics" API feature is not available, the minimum
             resolution is "one-hour".
 
             The possible values are as follows:

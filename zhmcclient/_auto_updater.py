@@ -78,6 +78,8 @@ class AutoUpdater:
 
     Zhmcclient resource objects or manager objects that are not enabled for
     auto-updating remain unchanged.
+
+    HMC/SE version requirements: None
     """
 
     default_stomp_rt_config = StompRetryTimeoutConfig(

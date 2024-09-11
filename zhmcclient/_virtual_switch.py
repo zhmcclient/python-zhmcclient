@@ -49,6 +49,10 @@ class VirtualSwitchManager(BaseManager):
     :class:`~zhmcclient.Cpc` object (in DPM mode):
 
     * :attr:`~zhmcclient.Cpc.virtual_switches`
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, cpc):
@@ -112,6 +116,10 @@ class VirtualSwitchManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -170,6 +178,10 @@ class VirtualSwitch(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.VirtualSwitchManager`).
+
+    HMC/SE version requirements:
+
+    * SE version >= 2.13.1
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -195,6 +207,10 @@ class VirtualSwitch(BaseResource):
 
         This method performs the "Get Connected VNICs of a Virtual Switch" HMC
         operation.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -246,6 +262,10 @@ class VirtualSwitch(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 

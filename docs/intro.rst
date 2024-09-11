@@ -486,10 +486,59 @@ HMC, or you can specify the HMC related parameters in the example scripts
 directly.
 
 
-.. _`Versioning`:
+.. _`HMC/SE version requirements`:
 
-Versioning
-----------
+HMC/SE version requirements
+---------------------------
+
+This section describes how dependencies of zhmcclient functionality to HMC or SE
+versions are documented.
+
+The following version related indicators are relevant for the HMC Web Services
+API:
+
+* **HMC version** (e.g. 2.16) - The version of the HMC. This corresponds to the
+  machine generation of the CPC with which the HMC was delivered and to the
+  "driver level" of the HMC, e.g. an HMC version 2.16 corresponds to z16 and
+  driver level D51C.
+
+* **HMC API version** (e.g. 4.10) - The HMC Web Services API has its own
+  version, independent of the HMC version.
+
+* **SE version** (e.g. 2.16) - The version of the SE. This corresponds to the
+  machine generation of the CPC and to the "driver level" of the SE/CPC, e.g.
+  an SE version 2.16 corresponds to z16 and driver level D51C.
+
+* **Firmware features** - This is the first feature concept that was introduced
+  with HMC version 2.14.0 and  HMC API version 2.23.
+  See :ref:`Firmware features` for more details.
+
+* **API features** - This is a newer feature concept that was introduced with
+  HMC version 2.16.0 and HMC API version 4.10.
+  See :ref:`API features` for more details.
+
+HMC/SE version dependent zhmcclient functionalities are described using the
+version indicator that fits best and thus results in the simplest description.
+
+Zhmcclient functionalities in this sense are Python classes, methods, and
+functions exposed at the zhmcclient Python API, and their descriptions
+have a paragraph "HMC/SE version requirements" that describes the version
+dependency.
+
+If a method (or property) in a Python class in this documentation does not show
+an HMC/SE version dependency, then the HMC/SE version dependency of its
+containing Python class applies. If the HMC/SE version dependency is documented
+as "None", or if a Python class does not show an HMC/SE version dependency,
+then there is no version related restriction, and the functionality was
+available since the introduction of Web Services on the HMC in HMC/SE version
+2.11.0 (z196 machine).
+
+
+.. _`Versioning`:
+.. _`Package versioning`:
+
+Package Versioning
+------------------
 
 This documentation applies to version |release| of the zhmcclient package. You
 can also see that version in the top left corner of this page.

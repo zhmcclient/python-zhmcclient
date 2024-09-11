@@ -55,6 +55,8 @@ class LparManager(BaseManager):
     :class:`~zhmcclient.Cpc` object (in DPM mode):
 
     * :attr:`~zhmcclient.Cpc.lpars`
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, cpc):
@@ -116,6 +118,8 @@ class LparManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this CPC.
@@ -163,6 +167,8 @@ class Lpar(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.LparManager`).
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -188,6 +194,8 @@ class Lpar(BaseResource):
 
         This method serializes with other methods that access or change
         properties on the same Python object.
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -258,6 +266,8 @@ class Lpar(BaseResource):
         - if the 'load-at-activation' property of the image profile is True,
           the desired state is "operating".
         - else, the desired state is "not-operating".
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -404,6 +414,8 @@ class Lpar(BaseResource):
         state "not-activated", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -509,6 +521,8 @@ class Lpar(BaseResource):
         operation has completed, and waits until the status is in the desired
         state "operating", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -688,6 +702,8 @@ class Lpar(BaseResource):
         state "operating", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -856,6 +872,10 @@ class Lpar(BaseResource):
         state "operating", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.15.0
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -1017,6 +1037,10 @@ class Lpar(BaseResource):
         state "operating", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.15.0
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -1163,6 +1187,8 @@ class Lpar(BaseResource):
         state "operating", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -1295,6 +1321,10 @@ class Lpar(BaseResource):
         state "operating", or if `allow_status_exceptions` was
         set additionally in the state "exceptions".
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.16.0
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -1414,6 +1444,8 @@ class Lpar(BaseResource):
         * "operating"
         * "exceptions"
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -1503,6 +1535,8 @@ class Lpar(BaseResource):
         * "operating"
         * "exceptions"
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -1590,6 +1624,8 @@ class Lpar(BaseResource):
         * "not-operating"
         * "operating" - this requires setting the "force" flag
         * "exceptions" - this requires setting the "force" flag
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -1693,6 +1729,8 @@ class Lpar(BaseResource):
         * "operating" - this requires setting the "force" flag
         * "exceptions" - this requires setting the "force" flag
 
+        HMC/SE version requirements: None
+
         Authorization requirements:
 
         * Object-access permission to this LPAR.
@@ -1783,6 +1821,10 @@ class Lpar(BaseResource):
         Open a JMS message channel to this LPAR's operating system, returning
         the string "topic" representing the message channel.
 
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
+
         Authorization requirements:
 
         * Object-access permission to this Partition.
@@ -1826,6 +1868,10 @@ class Lpar(BaseResource):
     def send_os_command(self, os_command_text, is_priority=False):
         """
         Send a command to the operating system running in this LPAR.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.13.1
 
         Authorization requirements:
 
@@ -1878,6 +1924,10 @@ class Lpar(BaseResource):
         indicates a loss of messages. A loss may be due to that space
         limitation, or it may be due to the deletion of messages by a console
         user or the OS.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.14.0
 
         Authorization requirements:
 
@@ -1953,6 +2003,8 @@ class Lpar(BaseResource):
         * "not-operating"
         * "operating"
         * "exceptions"
+
+        HMC/SE version requirements: None
 
         Authorization requirements:
 
@@ -2030,6 +2082,8 @@ class Lpar(BaseResource):
         """
         Wait until the status of this LPAR has a desired value.
 
+        HMC/SE version requirements: None
+
         Parameters:
 
           status (:term:`string` or iterable of :term:`string`):
@@ -2104,9 +2158,9 @@ class Lpar(BaseResource):
         """
         Assigns a :term:`Certificate` to this LPAR.
 
-        :ref:`Feature enablement` requirements:
+        HMC/SE version requirements:
 
-        *  "secure-boot-with-certificates" must be available on HMC and CPC
+        * :ref`API feature` "secure-boot-with-certificates"
 
         Authorization requirements:
 
@@ -2137,9 +2191,9 @@ class Lpar(BaseResource):
         """
         Unassign a :term:`Certificate` from this LPAR.
 
-        :ref:`Feature enablement` requirements:
+        HMC/SE version requirements:
 
-        *  "secure-boot-with-certificates" must be available on HMC and CPC
+        * :ref`API feature` "secure-boot-with-certificates"
 
         Authorization requirements:
 
@@ -2177,6 +2231,10 @@ class Lpar(BaseResource):
         This method performs the "Get LPAR Historical Sustainability Data"
         HMC operation.
 
+        HMC/SE version requirements:
+
+        * :ref`API feature` "environmental-metrics"
+
         Authorization requirements:
 
         * Object-access permission to this LPAR
@@ -2198,7 +2256,7 @@ class Lpar(BaseResource):
           resolution (:term:`string`):
             Resolution for the requested data points. This is the time interval
             in between the data points. For systems where the
-            "environmental-metrics" feature is not available, the minimum
+            "environmental-metrics" API feature is not available, the minimum
             resolution is "one-hour".
 
             The possible values are as follows:

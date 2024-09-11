@@ -14,12 +14,13 @@
 
 """
 Starting with the z14-ZR1 and LinuxONE Rockhopper II machine generations, the
-"dpm-storage-management" firmware feature has been introduced to support a
-simpler management of FCP and FICON (=ECKD) storage for DPM mode. If machines
-of these generations are in DPM mode, the feature is always enabled and cannot
-be disabled.
+"dpm-storage-management" :ref:`firmware feature <firmware features>` has been
+introduced to support a simpler management of FCP and FICON (=ECKD) storage for
+DPM mode. If machines of these generations are in DPM mode, the feature is
+always enabled and cannot be disabled.
 
-When the "dpm-storage-management" feature is enabled, :term:`storage group`
+When the "dpm-storage-management" :ref:`firmware feature <firmware features>`
+is enabled, :term:`storage group`
 and :term:`storage volume` resources can be defined on the HMC, and can cause
 fulfillment requests to be sent via email to storage administrators.
 Once these requests are satisfied on the actual storage subsystem and possibly
@@ -51,13 +52,14 @@ different for the two storage architectures: For FCP, the virtualized HBA is
 visible as a device, and the storage volumes (LUNs) are not represented as
 devices. For FICON, each ECKD volume is visible as a device, but the
 virtualized FICON adapter port is not represented as a device. When the
-"dpm-storage-management" feature is enabled, each storage-related
-z/Architecture device that is visible to a partition is represented as a
-:term:`virtual storage resource` object. The virtual storage resource objects
-are instantiated automatically when a storage group is attached to a partition.
-The :term:`HBA` resource objects known from DPM mode before the introduction of
-the "dpm-storage-management" feature are not exposed anymore (their equivalent
-are now the :term:`virtual storage resource` objects).
+"dpm-storage-management" :ref:`firmware feature <firmware features>` is enabled,
+each storage-related z/Architecture device that is visible to a partition is
+represented as a :term:`virtual storage resource` object. The virtual storage
+resource objects are instantiated automatically when a storage group is attached
+to a partition. The :term:`HBA` resource objects known from DPM mode before the
+introduction of the "dpm-storage-management"
+:ref:`firmware feature <firmware features>` are not exposed anymore (their
+equivalent are now the :term:`virtual storage resource` objects).
 
 Single storage volumes cannot be attached to partitions, only entire storage
 groups can be. In fact, storage volume objects do not even exist outside the
@@ -75,7 +77,7 @@ virtual storage resource objects are instantiated separately for each
 attachment.
 
 Storage groups can only be associated with CPCs that have the
-"dpm-storage-management" feature enabled.
+"dpm-storage-management" :ref:`firmware feature <firmware features>` enabled.
 """
 
 
@@ -105,6 +107,10 @@ class StorageGroupManager(BaseManager):
 
     * :attr:`~zhmcclient.Console.storage_groups` of a
       :class:`~zhmcclient.Console` object.
+
+    HMC/SE version requirements:
+
+    * :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, console):
@@ -171,6 +177,10 @@ class StorageGroupManager(BaseManager):
           remaining filter arguments are applied on the client side on the list
           result.
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to any storage groups to be included in the
@@ -224,6 +234,10 @@ class StorageGroupManager(BaseManager):
 
         The new storage group will be associated with the CPC identified by the
         `cpc-uri` input property.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -300,6 +314,10 @@ class StorageGroup(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.StorageGroupManager`).
+
+    HMC/SE version requirements:
+
+    * :ref:`firmware feature <firmware features>` "dpm-storage-management"
     """
 
     def __init__(self, manager, uri, name=None, properties=None):
@@ -368,6 +386,10 @@ class StorageGroup(BaseResource):
         Return the partitions to which this storage group is currently
         attached, optionally filtered by partition name and status.
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to this storage group.
@@ -429,6 +451,10 @@ class StorageGroup(BaseResource):
         deletion of the storage volumes on the storage subsystem and cleanup of
         any resources related to the storage group (e.g. zones on a SAN switch,
         or host objects on a storage subsystem).
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -504,6 +530,10 @@ class StorageGroup(BaseResource):
         This method serializes with other methods that access or change
         properties on the same Python object.
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to this storage group.
@@ -561,6 +591,10 @@ class StorageGroup(BaseResource):
         ports that are added, are validated by the CPC during discovery,
         and may or may not actually be used.
 
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
+
         Authorization requirements:
 
         * Object-access permission to this storage group.
@@ -600,6 +634,10 @@ class StorageGroup(BaseResource):
         candidate adapter ports do not need to be managed by the user. Any
         ports that are removed using this function, might actually be added
         again by the CPC dependent on the results of discovery.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Authorization requirements:
 
@@ -641,6 +679,10 @@ class StorageGroup(BaseResource):
         any changes that have been made during discovery. The source for this
         information is the 'candidate-adapter-port-uris' property of the
         storage group object.
+
+        HMC/SE version requirements:
+
+        * :ref:`firmware feature <firmware features>` "dpm-storage-management"
 
         Parameters:
 
@@ -703,6 +745,11 @@ class StorageGroup(BaseResource):
         :meth:`~zhmcclient.StorageGroup.get_connection_report`. It is
         recommended to retrieve the connection report and verify that it
         reports correct volumes.
+
+        HMC/SE version requirements:
+
+        * HMC Version >= 2.14.1 with HMC API version >= 2.37
+        * SE Version >= 2.14.1
 
         Authorization requirements:
 
@@ -782,6 +829,11 @@ class StorageGroup(BaseResource):
                 for config in subsys['storage-configurations']:
                     if config['volumes-configuration-status'] != "correct-volumes":
                         # report incorrect volumes
+
+        HMC/SE version requirements:
+
+        * HMC Version >= 2.14.1 with HMC API version >= 2.37
+        * SE Version >= 2.14.1
 
         Authorization requirements:
 

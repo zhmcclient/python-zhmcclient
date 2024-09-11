@@ -110,6 +110,8 @@ class StompRetryTimeoutConfig:
     """
     A configuration setting that specifies various retry and timeout related
     parameters for STOMP connections to the HMC for receiving notifictions.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, connect_timeout=None, connect_retries=None,
@@ -247,6 +249,8 @@ class NotificationReceiver:
     The HMC userid used by the JMS listener does not need to be the one that
     was used for the client session in which the notification topic was
     originally created.
+
+    HMC/SE version requirements: None
     """
 
     default_stomp_rt_config = StompRetryTimeoutConfig(

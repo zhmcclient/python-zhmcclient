@@ -59,6 +59,8 @@ class TimeStats:
     created by the user. Instead, the
     :meth:`zhmcclient.TimeStatsKeeper.get_stats` method should be used to
     create objects of this class.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self, keeper, name):
@@ -220,6 +222,8 @@ class TimeStatsKeeper:
     If disabled, calls to these methods do not accumulate any time.
 
     Initially, the statistics keeper is disabled.
+
+    HMC/SE version requirements: None
     """
 
     def __init__(self):
