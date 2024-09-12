@@ -643,6 +643,7 @@ def test_adapter_list_permitted(
 
     console = all_cpcs[0].manager.console
     session = console.manager.session
+    client = console.manager.client
     hd = session.hmc_definition
 
     if hd.mock_file:
@@ -670,8 +671,10 @@ def test_adapter_list_permitted(
         adapters = console.list_permitted_adapters(**input_kwargs)
 
         # Verify the result
+        returned_cpc_names = set()
         for adapter in adapters:
             cpc = adapter.manager.parent
+            returned_cpc_names.add(cpc.name)
             cpc_version = list(map(int, cpc.prop('se-version').split('.')))
             assert isinstance(adapter, zhmcclient.Adapter)
             for pname, min_cpc_version in exp_props:
@@ -689,3 +692,17 @@ def test_adapter_list_permitted(
                     else:
                         assert pname in actual_pnames, \
                             f"Actual adapter: {adapter!r}"
+
+        # Verify that adapters are returned:
+        # * For all DPM-mode CPCs (of any version)
+        # * For all classic-mode CPCs of z15 or higher
+        # The logic below assumes that each CPC has at least one adapter.
+        expected_cpc_names = set()
+        for cpc in client.cpcs.list():
+            cpc_version = list(map(int, cpc.prop('se-version').split('.')))
+            if cpc.dpm_enabled or cpc_version >= (2, 15):
+                expected_cpc_names.add(cpc.name)
+        assert returned_cpc_names == expected_cpc_names, (
+            "Invalid set of CPCs of returned adapters:\n"
+            f"Returned CPCs: {','.join(returned_cpc_names)}"
+            f"Expected CPCs: {','.join(expected_cpc_names)}")
