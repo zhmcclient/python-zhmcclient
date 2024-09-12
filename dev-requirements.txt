@@ -171,3 +171,9 @@ pip-check-reqs>=2.5.1; python_version >= '3.9'
 # pywinpty <1.1.1 does not have metadata for required Python or dependent packages.
 # pywinpty 1.0 requires maturin which fails installation on py>=3.7
 pywinpty>=0.5,<1.0; os_name == "nt"
+
+# pytz is actually covered in requirements.txt, but we need to repeat it here
+# because development packages pull it in, so the exclusion of 2024.2 is active
+# for development as well.
+# pytz 2024.2 introduced an issue that causes our tests to fail.
+pytz>=2019.1,!=2024.2

@@ -1,0 +1,1 @@
+Circumvented an issue with pytz by excluding pytz version 2024.2.
