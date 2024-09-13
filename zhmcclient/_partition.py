@@ -284,14 +284,16 @@ class Partition(BaseResource):
     @logged_api_call
     def feature_enabled(self, feature_name):
         """
-        Indicates whether the specified feature is enabled for the CPC of this
-        partition.
+        Indicates whether the specified firmware feature is enabled for the CPC
+        of this partition.
 
-        The HMC must generally support features, and the specified feature must
-        be available for the CPC.
+        The HMC must generally support firmware features (HMC version >=
+        2.14.0 with HMC API version >= 2.23), and the specified firmware
+        feature must be available for the CPC.
 
-        For a list of available features, see section "Features" in the
-        :term:`HMC API`, or use the :meth:`feature_info` method.
+        For a list of available firmware features, see section
+        "Firmware Features" in the :term:`HMC API` book, or use the
+        :meth:`feature_info` method.
 
         Authorization requirements:
 
@@ -299,18 +301,18 @@ class Partition(BaseResource):
 
         Parameters:
 
-          feature_name (:term:`string`): The name of the feature.
+          feature_name (:term:`string`): The name of the firmware feature.
 
         Returns:
 
-          bool: `True` if the feature is enabled, or `False` if the feature is
-          disabled (but available).
+          bool: `True` if the firmware feature is enabled, or `False` if the
+          firmware feature is disabled.
 
         Raises:
 
-          :exc:`ValueError`: Features are not supported on the HMC.
-          :exc:`ValueError`: The specified feature is not available for the
-            CPC.
+          :exc:`ValueError`: Firmware features are not supported on the HMC.
+          :exc:`ValueError`: The specified firmware feature is not available
+            for the CPC.
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
@@ -318,23 +320,24 @@ class Partition(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError(
-                "Firmware features are not supported on CPC "
-                f"{self.manager.cpc.name}")
+            raise ValueError("Firmware features are not supported on the HMC")
         for feature in feature_list:
             if feature['name'] == feature_name:
                 break
         else:
             raise ValueError(
-                f"Firmware feature {feature_name} is not available on CPC "
+                f"Firmware feature {feature_name} is not available for CPC "
                 f"{self.manager.cpc.name}")
         return feature['state']  # pylint: disable=undefined-loop-variable
 
     @logged_api_call
     def feature_info(self):
         """
-        Returns information about the features available for the CPC of this
-        partition.
+        Returns information about the firmware features available for the CPC
+        of this partition.
+
+        The HMC must generally support firmware features (HMC version >=
+        2.14.0 with HMC API version >= 2.23).
 
         Authorization requirements:
 
@@ -343,7 +346,7 @@ class Partition(BaseResource):
         Returns:
 
           :term:`iterable`:
-            An iterable where each item represents one feature that is
+            An iterable where each item represents one firmware feature that is
             available for the CPC of this partition.
 
             Each item is a dictionary with the following items:
@@ -351,12 +354,12 @@ class Partition(BaseResource):
             * `name` (:term:`unicode string`): Name of the feature.
             * `description` (:term:`unicode string`): Short description of
               the feature.
-            * `state` (bool): Enablement state of the feature (`True` if the
+            * `state` (bool): Enablement state of the feature (`True` if
               enabled, `False` if disabled).
 
         Raises:
 
-          :exc:`ValueError`: Features are not supported on the HMC.
+          :exc:`ValueError`: Firmware features are not supported on the HMC.
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
@@ -364,9 +367,7 @@ class Partition(BaseResource):
         """
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
-            raise ValueError(
-                "Firmware features are not supported on CPC "
-                f"{self.manager.cpc.name}")
+            raise ValueError("Firmware features are not supported on the HMC")
         return feature_list
 
     @logged_api_call
