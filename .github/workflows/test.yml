@@ -40,71 +40,9 @@ jobs:
           }" >> $GITHUB_OUTPUT; \
         else \
           echo "matrix={ \
-            \"os\": [ \"ubuntu-latest\" ], \
-            \"python-version\": [ \"3.12\" ], \
-            \"package_level\": [ \"minimum\", \"latest\" ], \
-            \"include\": [ \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.8\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.9\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.13.0-rc.1\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"ubuntu-latest\", \
-                \"python-version\": \"3.13.0-rc.1\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.8\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.12\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.13.0-rc.1\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"macos-latest\", \
-                \"python-version\": \"3.13.0-rc.1\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.8\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.12\", \
-                \"package_level\": \"latest\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.13.0-rc.1\", \
-                \"package_level\": \"minimum\" \
-              }, \
-              { \
-                \"os\": \"windows-latest\", \
-                \"python-version\": \"3.13.0-rc.1\", \
-                \"package_level\": \"latest\" \
-              } \
-            ] \
+            \"os\": [ \"ubuntu-latest\", \"macos-latest\" ], \
+            \"python-version\": [ \"3.8\", \"3.9\", \"3.11\", \"3.12\" ], \
+            \"package_level\": [ \"minimum\", \"latest\" ] \
           }" >> $GITHUB_OUTPUT; \
         fi
     - name: Show matrix in JSON
@@ -142,10 +80,28 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - name: Debug PATH
+      run: |
+        echo "PATH"
+        echo $PATH | tr ":" "\n"
+    - name: Debug PATH with login shell
+      shell: bash -l {0}
+      run: |
+        echo "PATH"
+        echo $PATH | tr ":" "\n"
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Debug PATH without login shell
+      run: |
+        echo "PATH"
+        echo $PATH | tr ":" "\n"
+    - name: Debug PATH with login shell
+      shell: bash -l {0}
+      run: |
+        echo "PATH"
+        echo $PATH | tr ":" "\n"
     - name: Display initial Python packages
       run: |
         echo "Installed Python packages:"
@@ -179,6 +135,50 @@ jobs:
       run: |
         echo "Installed Python packages:"
         pip list
+    - name: Debug Python files on macos
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        export python_mnu=$(python --version | sed -e 's/Python //')
+        export python_mn=${{ matrix.python-version }}
+        echo "Directory /Library/Frameworks/Python.framework/Versions/Current:"
+        ls -ld /Library/Frameworks/Python.framework/Versions/Current || true
+        echo "Directory /Library/Frameworks/Python.framework/Versions/Current/bin:"
+        ls -ld /Library/Frameworks/Python.framework/Versions/Current/bin || true
+        echo "Files in /Library/Frameworks/Python.framework/Versions/Current/bin/:"
+        ls -l /Library/Frameworks/Python.framework/Versions/Current/bin/ || true
+        echo "Directory /Library/Frameworks/Python.framework/Versions/${python_mn}:"
+        ls -ld /Library/Frameworks/Python.framework/Versions/${python_mn} || true
+        echo "Directory /Library/Frameworks/Python.framework/Versions/${python_mn}/bin:"
+        ls -ld /Library/Frameworks/Python.framework/Versions/${python_mn}/bin || true
+        echo "Files in /Library/Frameworks/Python.framework/Versions/${python_mn}/bin/:"
+        ls -l /Library/Frameworks/Python.framework/Versions/${python_mn}/bin/ || true
+        echo "Directory /Users/runner/hostedtoolcache/Python/${python_mnu}:"
+        ls -ld /Users/runner/hostedtoolcache/Python/${python_mnu} || true
+        echo "Directory /Users/runner/hostedtoolcache/Python/${python_mnu}/arm64/bin:"
+        ls -ld /Users/runner/hostedtoolcache/Python/${python_mnu}/arm64/bin || true
+        echo "Files in /Users/runner/hostedtoolcache/Python/${python_mnu}/arm64/bin/:"
+        ls -l /Users/runner/hostedtoolcache/Python/${python_mnu}/arm64/bin/ || true
+    - name: Debug coveralls without login shell
+      run: |
+        echo "Python import location for coveralls:"
+        python -c "import coveralls; print(coveralls.__file__)"
+        echo "Which coveralls:"
+        which -a coveralls
+        echo "Coveralls script:"
+        cat $(which coveralls)
+        echo "Invoke coveralls --version:"
+        coveralls --version
+    - name: Debug coveralls with login shell
+      shell: bash -l {0}
+      run: |
+        echo "Python import location for coveralls:"
+        python -c "import coveralls; print(coveralls.__file__)"
+        echo "Which coveralls:"
+        which -a coveralls
+        echo "Coveralls script:"
+        cat $(which coveralls)
+        echo "Invoke coveralls --version:"
+        coveralls --version
     - name: Show package dependency tree
       run: |
         echo "Package dependency tree of installed Python packages:"
