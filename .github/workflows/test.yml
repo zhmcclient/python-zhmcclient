@@ -71,6 +71,11 @@ jobs:
               }, \
               { \
                 \"os\": \"macos-latest\", \
+                \"python-version\": \"3.11\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
                 \"python-version\": \"3.12\", \
                 \"package_level\": \"minimum\" \
               }, \
@@ -228,7 +233,6 @@ jobs:
       run: |
         make end2end_mocked
     - name: Send coverage result to coveralls.io
-      shell: bash -l {0}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_PARALLEL: true
