@@ -20,6 +20,24 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.17.2
+^^^^^^^^^^^^^^
+
+Released: 2024-10-04
+
+**Bug fixes:**
+
+* Dev: Fixed description of 'make start' in docs for starting a new release.
+
+* Fixed new issue 'too-many-positional-arguments' reported by Pylint 3.3.0.
+
+* Circumvented an issue with pytz by excluding pytz version 2024.2. (`#1660 <https://github.com/zhmcclient/python-zhmcclient/issues/1660>`_)
+
+* Test: Fixed the issue that coveralls was not found in the test workflow on MacOS
+  with Python 3.9-3.11, by running it without login shell. Added Python 3.11 on
+  MacOS to the normal tests. (`#1665 <https://github.com/zhmcclient/python-zhmcclient/issues/1665>`_)
+
+
 Version 1.17.1
 ^^^^^^^^^^^^^^^
 
