@@ -58,6 +58,7 @@ from ._storage_volume import *         # noqa: F401
 from ._virtual_storage_resource import *        # noqa: F401
 from ._storage_group_template import *          # noqa: F401
 from ._storage_volume_template import *         # noqa: F401
+from ._partition_link import *         # noqa: F401
 from ._capacity_group import *         # noqa: F401
 from ._certificates import *         # noqa: F401
 from ._os_console import *         # noqa: F401

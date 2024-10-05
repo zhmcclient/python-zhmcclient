@@ -40,6 +40,7 @@ from ._unmanaged_cpc import UnmanagedCpcManager
 from ._group import GroupManager
 from ._utils import get_features
 from ._certificates import CertificateManager
+from ._partition_link import PartitionLinkManager
 
 __all__ = ['ConsoleManager', 'Console']
 
@@ -206,6 +207,7 @@ class Console(BaseResource):
         # The manager objects for child resources (with lazy initialization):
         self._storage_groups = None
         self._storage_group_templates = None
+        self._partition_links = None
         self._users = None
         self._user_roles = None
         self._user_patterns = None
@@ -239,6 +241,17 @@ class Console(BaseResource):
         if not self._storage_group_templates:
             self._storage_group_templates = StorageGroupTemplateManager(self)
         return self._storage_group_templates
+
+    @property
+    def partition_links(self):
+        """
+        :class:`~zhmcclient.PartitionLinkManager`:
+          Manager object for the Partition Links in scope of this Console.
+        """
+        # We do here some lazy loading.
+        if not self._partition_links:
+            self._partition_links = PartitionLinkManager(self)
+        return self._partition_links
 
     @property
     def users(self):

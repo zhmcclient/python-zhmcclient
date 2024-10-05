@@ -1,0 +1,5 @@
+Added support for Partition Links with a new 'zhmcclient.PartitionLink'
+resource class (and corresponding manager class). Added the following
+methods for partition links to the 'zhmcclient.Partition' class:
+'attach_network_link()', 'detach_network_link()',
+'attach_ctc_link()', 'detach_ctc_link()', 'list_attached_partition_links()'.

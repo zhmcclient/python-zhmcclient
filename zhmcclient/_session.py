@@ -1288,6 +1288,14 @@ class Session:
             HMC operation for a description of the members of the returned
             JSON object.
 
+            If the HMC operation response has a "Location" header, it is the
+            URI of the newly created resource. If the response does not
+            have an 'object-uri' or 'element-uri' field, this method adds the
+            URI from the "Location" header field to the response as the
+            'location-uri' field. This is needed e.g. for the
+            "Create Partition Link" operation, because that operation does not
+            return the new URI in any response field.
+
           * For asynchronous HMC operations with `wait_for_completion=False`:
 
             If this method returns, the asynchronous execution of the HMC
@@ -1403,10 +1411,22 @@ class Session:
                 # This is the most common case to return 202: An
                 # asynchronous job has been started.
                 result_object = _result_object(result)
+                try:
+                    location_uri = result.headers['Location']
+                except KeyError:
+                    location_uri = None
                 job_uri = result_object['job-uri']
                 job = Job(self, job_uri, 'POST', uri)
                 if wait_for_completion:
-                    return job.wait_for_completion(operation_timeout)
+                    result = job.wait_for_completion(operation_timeout)
+                    # The following addition of 'location-uri' from the
+                    # Location header is for cases where a create operation
+                    # does not return the new URI in the response. For example,
+                    # the "Create Partition Link" operation does that.
+                    if location_uri and 'element-uri' not in result and \
+                            'object-uri' not in result:
+                        result['location-uri'] = location_uri
+                    return result
                 return job
 
             if result.status_code == 403:

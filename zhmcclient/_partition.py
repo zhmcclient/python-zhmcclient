@@ -36,7 +36,7 @@ from requests.utils import quote
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._exceptions import StatusTimeout
+from ._exceptions import StatusTimeout, PartitionLinkError
 from ._nic import NicManager
 from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
@@ -1549,6 +1549,528 @@ class Partition(BaseResource):
                 if full_properties:
                     sg.pull_full_properties()
         return sg_list
+
+    def attach_network_link(
+            self, partition_link, number_of_nics=1, nic_property_list=None,
+            wait_for_completion=True, operation_timeout=None):
+        """
+        Attach a Hipersockets-type or SMC-D-type partition link to this
+        partition, creating corresponding NICs for the partition.
+
+        For Hipersockets-type partition links, the NICs for the partition are
+        available as :class:`~zhmcclient.NIC` objects in the
+        :attr:`~zhmcclient.Partition.nics` property. For SMC-D type partition
+        links, the NICs are not externalized by the HMC as objects. Their
+        properties can be found in the :class:`~zhmcclient.PartitionLink`
+        object.
+
+        This method performs the "Modify Partition Link" HMC operation with the
+        ``added-connections`` parameter.
+
+        By default, this method waits for completion of its asynchronous job.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.16.0
+        * for technology-specific support, see the API features described in
+          :ref:`Partition Links`
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to the partition link.
+        * Task permission to the "Partition Link Details" task.
+
+        Parameters:
+
+          partition_link (:class:`~zhmcclient.PartitionLink`): The partition
+            link that will be attached to this partition.
+
+          number_of_nics (int): Number of NICs to be created for the partition
+            as endpoints for the partition link.
+
+          nic_property_list (list of dict): List whose items specify the
+            properties for the NICs to be created. `None` is treated as an empty
+            list. The list must have no more items than the number of NICs to be
+            created. NICs beyond the end of the list are created with default
+            properties.
+
+            The following NIC properties may be specified in the list items:
+
+            * ``device-number`` (string): Device number. For Hipersockets, 3
+              consecutive device numbers are used, starting with the specified
+              device number. For SMC-D, the specified device number is used
+              as the single device number. Default: auto-generated.
+            * ``fid`` (int): SMC-D only: FID. Default: auto-generated.
+            * ``vlan-id`` (int): Hipersockets only: VLAN ID. None means no
+              VLAN is used. Default: No VLAN is used.
+            * ``mac-address`` (string): Hipersockets only: MAC address.
+              Default: auto-generated.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the asynchronous job on the HMC.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job on the HMC. The special value 0 means that no timeout is set.
+            `None` means that the default async operation timeout of the
+            session is used. If the timeout expires when
+            `wait_for_completion=True`, a :exc:`~zhmcclient.OperationTimeout`
+            is raised.
+
+        Returns:
+
+          * If `wait_for_completion` is `True`, returns `None`.
+
+          * If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+            This job does not support cancellation.
+
+        Raises:
+
+          :exc:`~zhmcclient.PartitionLinkError`
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+
+        Examples:
+
+          * Attach a Hipersockets-type partition link to a partition, and
+            specify device number and VLAN::
+
+                part1.attach_network_link(
+                    hs_link, nic_property_list=[
+                        {
+                            'device-number': '1300',
+                            'vlan-id': '53',
+                        }
+                    ])
+        """
+        body = {}
+        bc = {
+            'partition-uri': self.uri,
+            'number-of-nics': number_of_nics,
+        }
+        if nic_property_list:
+            nics = []
+            for nic_props in nic_property_list:
+                nic = {}
+                if 'device-number' in nic_props:
+                    nic['device-numbers'] = [nic_props.pop('device-number')]
+                nic.update(nic_props)
+                nics.append(nic)
+            bc['nics'] = nics
+        body['added-connections'] = [bc]
+
+        result = self.manager.session.post(
+            uri=f'{partition_link.uri}/operations/modify',
+            resource=partition_link,
+            body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+
+        if wait_for_completion:
+            for op_result in result['operation-results']:
+                if op_result['operation-status'] != "attached":
+                    raise PartitionLinkError(result['operation-results'])
+            return None
+
+        return result  # Job
+
+    def detach_network_link(
+            self, partition_link, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Detach a Hipersockets-type or SMC-D-type partition link from this
+        partition, deleting the corresponding NICs for the partition.
+
+        This method performs the "Modify Partition Link" HMC operation with the
+        ``removed-partition-uris`` parameter.
+
+        By default, this method waits for completion of its asynchronous job.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.16.0
+        * for technology-specific support, see the API features described in
+          :ref:`Partition Links`
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to the partition link.
+        * Task permission to the "Partition Link Details" task.
+
+        Parameters:
+
+          partition_link (:class:`~zhmcclient.PartitionLink`): The partition
+            link that will be detached from this partition.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the asynchronous job on the HMC.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job on the HMC. The special value 0 means that no timeout is set.
+            `None` means that the default async operation timeout of the
+            session is used. If the timeout expires when
+            `wait_for_completion=True`, a :exc:`~zhmcclient.OperationTimeout`
+            is raised.
+
+        Returns:
+
+          * If `wait_for_completion` is `True`, returns `None`.
+
+          * If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+            This job does not support cancellation.
+
+        Raises:
+
+          :exc:`~zhmcclient.PartitionLinkError`
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {
+            'removed-partition-uris': [self.uri],
+        }
+
+        result = self.manager.session.post(
+            uri=f'{partition_link.uri}/operations/modify',
+            resource=partition_link,
+            body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+
+        if wait_for_completion:
+            for op_result in result['operation-results']:
+                if op_result['operation-status'] != "detached":
+                    raise PartitionLinkError(result['operation-results'])
+            return None
+
+        return result  # Job
+
+    def attach_ctc_link(
+            self, partition_link, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Attach a CTC-type partition link to this partition, creating
+        corresponding CTC endpoints (devices) in the partition.
+
+        The CTC endpoints are not externalized by the HMC as objects. Their
+        properties (e.g. device numbers) can be found in the
+        :class:`~zhmcclient.PartitionLink` object.
+
+        This method performs the "Modify Partition Link" HMC operation with the
+        ``added-partition-uris`` parameter.
+
+        By default, this method waits for completion of its asynchronous job.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.16.0
+        * for technology-specific support, see the API features described in
+          :ref:`Partition Links`
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to the partition link.
+        * Task permission to the "Partition Link Details" task.
+
+        Parameters:
+
+          partition_link (:class:`~zhmcclient.PartitionLink`): The partition
+            link that will be attached to this partition.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the asynchronous job on the HMC.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job on the HMC. The special value 0 means that no timeout is set.
+            `None` means that the default async operation timeout of the
+            session is used. If the timeout expires when
+            `wait_for_completion=True`, a :exc:`~zhmcclient.OperationTimeout`
+            is raised.
+
+        Returns:
+
+          * If `wait_for_completion` is `True`, returns `None`.
+
+          * If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+            This job does not support cancellation.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+
+        Examples:
+
+          * Attach a CTC-type partition link to a partition, using
+            auto-generated device numbers::
+
+                part1.attach_ctc_link(part_link)
+
+          * For attaching a CTC-type partition link with specific device
+            numbers, the :meth:`~zhmcclient.PartitionLink.update_properties`
+            method can be used::
+
+                part_link.update_properties({
+                    "added-partition-uris": [part.uri],
+                    "modified-paths": [
+                        # Repeat for each path of the partition link:
+                        {
+                            "devices": [
+                                # Repeat for each desired communication path
+                                # between any two partitions:
+                                {
+                                    "endpoint-pair": [
+                                        {
+                                            "device-numbers": [DEVNOxx, ...],
+                                            "partition-uri": part.uri
+                                        },
+                                        {
+                                            "device-numbers": [DEVNOxx, ...],
+                                            "partition-uri": other_part.uri
+                                        }
+                                    ]
+                                },
+                            ],
+                            "adapter-port-uri": fc_port1.uri,
+                            "connecting-adapter-port-uri": fc_port2.uri
+                        }
+                    ]
+                })
+        """
+        body = {
+            'added-partition-uris': [self.uri],
+        }
+
+        result = self.manager.session.post(
+            uri=f'{partition_link.uri}/operations/modify',
+            resource=partition_link,
+            body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+
+        if wait_for_completion:
+            for op_result in result['operation-results']:
+                if op_result['operation-status'] != "attached":
+                    raise PartitionLinkError(result['operation-results'])
+            return None
+
+        return result  # Job
+
+    def detach_ctc_link(
+            self, partition_link, wait_for_completion=True,
+            operation_timeout=None):
+        """
+        Detach a CTC-type partition link from this partition, deleting
+        corresponding CTC endpoints (devices) in the partition.
+
+        This method performs the "Modify Partition Link" HMC operation with the
+        ``removed-partition-uris`` parameter.
+
+        By default, this method waits for completion of its asynchronous job.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.16.0
+        * for technology-specific support, see the API features described in
+          :ref:`Partition Links`
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to the partition link.
+        * Task permission to the "Partition Link Details" task.
+
+        Parameters:
+
+          partition_link (:class:`~zhmcclient.PartitionLink`): The partition
+            link that will be detached from this partition.
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the asynchronous job on the HMC.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job on the HMC. The special value 0 means that no timeout is set.
+            `None` means that the default async operation timeout of the
+            session is used. If the timeout expires when
+            `wait_for_completion=True`, a :exc:`~zhmcclient.OperationTimeout`
+            is raised.
+
+        Returns:
+
+          * If `wait_for_completion` is `True`, returns `None`.
+
+          * If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC.
+            This job does not support cancellation.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {
+            'removed-partition-uris': [self.uri],
+        }
+
+        result = self.manager.session.post(
+            uri=f'{partition_link.uri}/operations/modify',
+            resource=partition_link,
+            body=body,
+            wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+
+        if wait_for_completion:
+            for op_result in result['operation-results']:
+                if op_result['operation-status'] != "detached":
+                    raise PartitionLinkError(result['operation-results'])
+            return None
+
+        return result  # Job
+
+    @logged_api_call
+    def list_attached_partition_links(
+            self, type=None, name=None, state=None, additional_properties=None):
+        # pylint: disable=redefined-builtin
+        """
+        Return the partition links attached to this partition, optionally
+        filtered by partition link type, name and status.
+
+        This method performs the "List Partition Links" HMC operation.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.16.0
+        * for technology-specific support, see the API features described in
+          :ref:`Partition Links`
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+        * Object-access permission to all partition links returned (only those
+          are returned).
+
+        Parameters:
+
+          type (:term:`string`): Filter string to limit returned partition
+            links to those with the specified type. Valid values are: "smc-d",
+            "hipersockets", "ctc". If `None`, no filtering for the partition
+            link type takes place.
+
+          name (:term:`string`): Filter pattern (regular expression)
+            to limit returned partition links to those that have a matching
+            name. If `None`, no filtering for the partition link name takes
+            place.
+
+          state (:term:`string`): Filter string to limit returned partition
+            links to those with the specified state. Valid values are:
+            "complete", "incomplete", "updating". If `None`, no filtering for
+            the partition link state takes place.
+
+          additional_properties (list of string): Additional properties to
+            be included in the returned :class:`~zhmcclient.PartitionLink`
+            objects, in addition to the minimum list of ('cpc-uri', 'state',
+            'name', 'type', 'object-uri'). The properties must be specified
+            with hyphens in their names (not underscores).
+
+        Returns:
+
+          List of :class:`~zhmcclient.PartitionLink` objects representing the
+          partition links attached to this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        cpc = self.manager.cpc
+        console = cpc.manager.console
+
+        filter_args = {
+            'cpc-uri': cpc.uri,
+        }
+        if type:
+            filter_args['type'] = type
+        if name:
+            filter_args['name'] = name
+        if state:
+            filter_args['state'] = state
+
+        # Always get additional properties that are needed lateron, to avoid
+        # extra 'Get Partition Link Properties' operations for them.
+        if additional_properties is None:
+            additional_properties = []
+        additional_props = list(additional_properties)
+        if 'paths' not in additional_props:
+            additional_props.append('paths')
+        if 'bus-connections' not in additional_props:
+            additional_props.append('bus-connections')
+
+        pl_list = console.partition_links.list(
+            filter_args=filter_args,
+            additional_properties=additional_props)
+
+        # Restrict to partition links attached to this partition
+        attached_pl_list = []
+        for pl in pl_list:
+            add_pl = None
+            pl_type = pl.get_property('type')
+            if pl_type == 'ctc':
+                for path_item in pl.get_property('paths'):
+                    for device_item in path_item.get('devices'):
+                        for endpoint in device_item.get('endpoint-pair'):
+                            part_uri = endpoint.get('partition-uri')
+                            if part_uri == self.uri:
+                                add_pl = pl
+                                break
+                        if add_pl:
+                            break
+                    if add_pl:
+                        break
+            else:
+                # Hipersockets or SMC-D
+                for bc_item in pl.get_property('bus-connections'):
+                    part_uri = bc_item.get('partition-uri')
+                    if part_uri == self.uri:
+                        add_pl = pl
+                        break
+            if add_pl:
+                attached_pl_list.append(add_pl)
+
+        return attached_pl_list
 
     @logged_api_call
     def assign_certificate(self, certificate):

@@ -23,6 +23,9 @@ import random
 import time
 import warnings
 import logging
+from copy import deepcopy
+import pprint
+from collections.abc import Mapping, MappingView
 import pytest
 
 import zhmcclient
@@ -113,6 +116,36 @@ class End2endTestWarning(UserWarning):
     Python warning indicating an issue with an end2end test.
     """
     pass
+
+
+def assert_properties(act_obj, exp_obj):
+    """
+    Check that actual properties match expected properties.
+
+    The expected properties may specify only a subset of the actual properties.
+    Only the expected properties are checked.
+
+    The property values may have any type, including nested dictionaries and
+    lists. For nested dictionaries and lists, each item is matched recursively.
+
+    Parameters:
+      act_obj (dict): The actual object. Initially, a dict with properties.
+      exp_obj (dict): The expected object. Initially, a dict with properties.
+    """
+    if isinstance(exp_obj, dict):
+        for name, exp_value in exp_obj.items():
+            assert name in act_obj, (
+                f"Expected property {name!r} is not in actual properties:\n"
+                f"{act_obj!r}")
+            act_value = act_obj[name]
+            assert_properties(act_value, exp_value)
+    elif isinstance(exp_obj, list):
+        for i, exp_value in enumerate(exp_obj):
+            act_value = act_obj[i]
+            assert_properties(act_value, exp_value)
+    else:
+        assert act_obj == exp_obj, (
+            f"Unexpected value: {act_obj!r}; Expected: {exp_obj!r}")
 
 
 def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
@@ -632,6 +665,31 @@ def _skipif_api_feature_not_on_cpc_and_hmc(feature, cpc):
         skip_warn(f"API feature {feature} not available on HMC {console.name}")
 
 
+def skipif_no_partition_link_feature(cpc):
+    """
+    Skip the test if not all of the Partition Link related API features are
+    enabled for the specified CPC, or if the CPC does not yet support all of
+    them:
+
+    * "dpm-smcd-partition-link-management"
+    * "dpm-hipersockets-partition-link-management"
+    * "dpm-ctc-partition-link-management"
+
+    Note that there are code levels for z16 where only SMC-D is enabled, but not
+    Hipersockets and CTC.
+    """
+    has_all_features = (
+        has_api_feature(
+            "dpm-smcd-partition-link-management", cpc) and  # noqa: W504
+        has_api_feature(
+            "dpm-hipersockets-partition-link-management", cpc) and  # noqa: W504
+        has_api_feature(
+            "dpm-ctc-partition-link-management", cpc))
+    if not has_all_features:
+        skip_warn("The partition link related API features are not all enabled "
+                  f"or not all supported on CPC {cpc.name}")
+
+
 def has_api_feature(feature, cpc):
     """
     Returns True if the given API feature is available on the specified CPC
@@ -656,6 +714,13 @@ def standard_partition_props(cpc, part_name):
         'processor-mode': 'shared',  # used for filtering
         'type': 'linux',  # used for filtering
     }
+
+    # Get the properties used lateron, to improve performance.
+    cpc.pull_properties([
+        'processor-count-ifl',
+        'processor-count-general-purpose',
+    ])
+
     if cpc.prop('processor-count-ifl'):
         part_input_props['ifl-processors'] = 2
     elif cpc.prop('processor-count-general-purpose'):
@@ -878,3 +943,47 @@ def skip_missing_api_feature(
             pytest.skip(
                 f"CPC API feature {cpc_feature!r} is not available for "
                 f"CPC {cpc.name!r}")
+
+
+def pformat_as_dict(dict_):
+    """
+    Return the pretty-printed dict-like input object, where any MappingView or
+    Mapping has been replaced with a standard dict, and any tuple has been
+    replaced with a standard list.
+    """
+    return pprint.pformat(
+        copy_dict(dict_), indent=2, width=160, sort_dicts=False, compact=True)
+
+
+def copy_dict(dict_):
+    """
+    Return a deep copy of the dict-like input object, where any MappingView or
+    Mapping has been replaced with a standard dict.
+    """
+    ret = {}
+    for k, v in dict_.items():
+        if isinstance(v, (Mapping, MappingView)):
+            v = copy_dict(v)
+        elif isinstance(v, (list, tuple)):
+            v = copy_list(v)
+        else:
+            v = deepcopy(v)
+        ret[k] = v
+    return ret
+
+
+def copy_list(list_):
+    """
+    Return a deep copy of the list-like input object, where any list or tuple
+    has been replaced with a standard list.
+    """
+    ret = []
+    for v in list_:
+        if isinstance(v, (Mapping, MappingView)):
+            v = copy_dict(v)
+        elif isinstance(v, (list, tuple)):
+            v = copy_list(v)
+        else:
+            v = deepcopy(v)
+        ret.append(v)
+    return ret
