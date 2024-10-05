@@ -61,6 +61,7 @@ RC_STORAGE_CONTROL_UNIT = 'storage-control-unit'
 RC_VIRTUAL_TAPE_RESOURCE = 'virtual-tape-resource'
 RC_TAPE_LINK = 'tape-link'
 RC_TAPE_LIBRARY = 'tape-library'
+RC_PARTITION_LINK = 'partition-link'
 RC_CERTIFICATE = 'certificate'
 #
 # For CPCs in classic mode:
@@ -102,6 +103,7 @@ RC_CHILDREN_CONSOLE = (
     RC_USER,
     RC_LDAP_SERVER_DEFINITION,
     RC_CPC,  # For unmanaged CPCs
+    RC_PARTITION_LINK,
 )
 # Resource classes that are children of zhmcclient.Client (= top level)
 RC_CHILDREN_CLIENT = (
@@ -136,6 +138,7 @@ VALID_RESOURCE_CLASSES = frozenset([
     RC_VIRTUAL_TAPE_RESOURCE,
     RC_TAPE_LINK,
     RC_TAPE_LIBRARY,
+    RC_PARTITION_LINK,
     RC_RESET_ACTIVATION_PROFILE,
     RC_IMAGE_ACTIVATION_PROFILE,
     RC_LOAD_ACTIVATION_PROFILE,
