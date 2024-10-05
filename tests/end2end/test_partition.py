@@ -22,6 +22,7 @@ test partitions.
 
 import warnings
 import random
+import uuid
 from datetime import timedelta, datetime, timezone
 import pytest
 from requests.packages import urllib3
@@ -33,9 +34,14 @@ from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
-    standard_partition_props, runtest_find_list, runtest_get_properties
+    standard_partition_props, runtest_find_list, runtest_get_properties, \
+    setup_logging, pformat_as_dict
 
 urllib3.disable_warnings()
+
+# Logging for zhmcclient HMC interactions and test functions
+LOGGING = False
+LOG_FILE = 'test_partition.log'
 
 # Print debug messages in tests
 DEBUG = False
@@ -51,6 +57,37 @@ PART_ADDITIONAL_PROPS = ['description', 'short-name']
 
 # Properties whose values can change between retrievals of Partition objects
 PART_VOLATILE_PROPS = []
+
+
+def assert_ctc_partition_link(partlink, num_paths, num_partitions):
+    """
+    Assert that the partition link currently has the expected number of
+    connections between partitions, and the expected number of paths.
+    Each partition must be connected to every other partition.
+    """
+    paths = partlink.get_property('paths')
+
+    act_num_paths = len(paths)
+    assert act_num_paths == num_paths, (
+        "Unexpected number of paths in CTC-type partition link "
+        f"{partlink.name!r}:\n"
+        f"  Expected: {num_paths}\n"
+        f"  Actual: {act_num_paths}\n"
+        "Partition link properties:\n"
+        f"{pformat_as_dict(partlink.properties)}")
+
+    # Number of connections between all partitions
+    num_devices = int(num_partitions * (num_partitions - 1) / 2)
+
+    for path in paths:
+        act_num_devices = len(path['devices'])
+        assert act_num_devices == num_devices, (
+            "Unexpected number of partition connections in CTC-type "
+            f"partition link {partlink.name!r}:\n"
+            f"  Expected: {num_devices}\n"
+            f"  Actual: {act_num_devices}\n"
+            "Partition link properties:\n"
+            f"{pformat_as_dict(partlink.properties)}")
 
 
 def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
@@ -587,3 +624,343 @@ def test_part_get_sustainability_data(
                               f"(+/-{tolerance_pct}%)")
 
                 previous_dt = dp_timestamp_dt
+
+
+TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
+    # Test cases for test_part_attach_detach_network_link(), each as a tuple
+    # with these items:
+    # * desc: Testcase short description
+    # * type: Partition link type ("hipersockets", "smc-d")
+    # * number_of_nics: Number of NICs to be created during attach
+    # * nic_property_list: Properties of the NICs to be created during attach
+    (
+        "Hipersockets, 1 NIC with default properties",
+        "hipersockets",
+        1,
+        []
+    ),
+    (
+        "Hipersockets, 2 NICs with default properties",
+        "hipersockets",
+        2,
+        []
+    ),
+    (
+        "Hipersockets, 1 NIC with devno",
+        "hipersockets",
+        1,
+        [
+            {
+                'device-number': '4711',
+            },
+        ]
+    ),
+    (
+        "Hipersockets, 1 NIC with VLAN",
+        "hipersockets",
+        1,
+        [
+            {
+                'vlan-id': 53,
+            },
+        ]
+    ),
+    (
+        "SMC-D, 1 NIC with default properties",
+        "smc-d",
+        1,
+        []
+    ),
+    (
+        "SMC-D, 2 NICs with default properties",
+        "smc-d",
+        2,
+        []
+    ),
+    (
+        "SMC-D, 1 NIC with with devno",
+        "smc-d",
+        1,
+        [
+            {
+                'device-number': '4711',
+            },
+        ]
+    ),
+    # Note: Disabled because it currently fails
+    # (
+    #     "SMC-D, 1 NIC with with FID",
+    #     "smc-d",
+    #     1,
+    #     [
+    #         {
+    #             'fid': 53,
+    #         },
+    #     ]
+    # ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, type, number_of_nics, nic_property_list",
+    TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK)
+def test_part_attach_detach_network_link(
+        desc, type, number_of_nics, nic_property_list,
+        dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument,redefined-builtin
+    """
+    Test for Partition.attach/detach_network_link()
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        console = cpc.manager.client.consoles.console
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        if hd.mock_file:
+            skip_warn("zhmcclient mock does not support "
+                      "Partition.attach/detach_network_link()")
+
+        part = None
+        partlink = None
+
+        try:
+
+            partlink_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+            partlink_input_props = {
+                "name": partlink_name,
+                "type": type,
+                "cpc-uri": cpc.uri,
+            }
+            partlink = console.partition_links.create(partlink_input_props)
+            part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+            part = cpc.partitions.create(
+                standard_partition_props(cpc, part_name))
+
+            # The code to be tested
+            part.attach_network_link(
+                partlink, number_of_nics, nic_property_list)
+
+            # Verify the partition link is now attached
+            attached_pls = part.list_attached_partition_links()
+            assert len(attached_pls) == 1
+            attached_pl = attached_pls[0]
+            assert attached_pl.uri == partlink.uri
+
+            # Verify the number of NICs in the partition link data
+            partlink.pull_full_properties()
+            bc_list = partlink.get_property('bus-connections')
+            assert len(bc_list) == 1   # = attached partitions
+            bc = bc_list[0]
+            assert bc["partition-uri"] == part.uri
+            assert len(bc["nics"]) == number_of_nics
+
+            # Verify the number of NIC element objects in the partition
+            # Note: for SMC-D, NICs are not represented in the partition
+            part.pull_full_properties()
+            nics = part.nics.list()
+            nic_uris = part.get_property('nic-uris')
+            if type == "hipersockets":
+                assert len(nics) == len(nic_uris) == number_of_nics
+            else:  # type == "smc-d":
+                assert len(nics) == len(nic_uris) == 0
+
+            # The code to be tested
+            part.detach_network_link(partlink)
+
+            # Verify the partition link is no longer attached
+            attached_pls = part.list_attached_partition_links()
+            assert len(attached_pls) == 0
+
+            # Verify the number of NICs in the partition link data
+            partlink.pull_full_properties()
+            bc_list = partlink.get_property('bus-connections')
+            assert len(bc_list) == 0   # = attached partitions
+
+            # Verify the number of NIC element objects in the partition
+            # Note: for SMC-D, NICs are not represented in the partition
+            part.pull_full_properties()
+            nics = part.nics.list()
+            nic_uris = part.get_property('nic-uris')
+            if type == "hipersockets":
+                # Note: Detaching a partition link currently does not delete
+                # the NIC in the partition.
+                if len(nics) > 0 or len(nic_uris) > 0:
+                    # warnings.warn(
+                    print("Debug: Detaching Hipersocket partition link did "
+                          "not delete the NICs in the partition:\n"
+                          f"{nic_uris}\n{nics}")
+            else:  # type == "smc-d":
+                assert len(nics) == len(nic_uris) == 0
+
+        finally:
+            if partlink:
+                partlink.delete()
+            if part:
+                part.delete()
+
+
+TESTCASES_PART_ATTACH_DETACH_CTC_LINK = [
+    # Test cases for test_part_attach_detach_ctc_link(), each as a tuple
+    # with these items:
+    # * desc: Testcase short description
+    # * num_partitions: Number of partitions for creating the PL
+    # * num_paths: Number of paths for creating the PL
+    (
+        "2 partitions, 1 path",
+        2,
+        1,
+    ),
+    (
+        "3 partitions, 2 paths",
+        3,
+        2,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, num_partitions, num_paths",
+    TESTCASES_PART_ATTACH_DETACH_CTC_LINK)
+def test_part_attach_detach_ctc_link(
+        desc, num_partitions, num_paths,
+        dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name,unused-argument,redefined-builtin
+    """
+    Test for Partition.attach/detach_ctc_link()
+    """
+    logger = setup_logging(LOGGING, 'test_part_attach_detach_ctc_link',
+                           LOG_FILE)
+    logger.debug("Entered test function")
+
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        logger.debug("Testing with CPC %s", cpc.name)
+
+        console = cpc.manager.client.consoles.console
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        if hd.mock_file:
+            skip_warn("zhmcclient mock does not support "
+                      "Partition.attach/detach_ctc_link()")
+
+        pl_parts = []
+        partlink = None
+        test_part = None
+
+        try:
+
+            # Select the adapters for the paths of the partition link.
+            # We use the same adapter for each connection, because if we use
+            # different adapters, we cannot determine which ones actually do
+            # have a physical connection.
+            adapters = cpc.adapters.list(
+                filter_args={'type': 'fc', 'status': 'active'})
+            if len(adapters) < num_paths:
+                pytest.skip(f"CPC {cpc.name} has less than {num_paths} "
+                            "online FC adapters for CTC")
+            path_adapters = random.sample(adapters, num_paths)
+
+            # Create the initial partitions for the partition link
+            for i in range(0, num_partitions):
+                part_name = f"{TEST_PREFIX}_{i}_{uuid.uuid4().hex}"
+                logger.debug("Preparing properties for creation of initial "
+                             "PL partition %s", part_name)
+                part_props = standard_partition_props(cpc, part_name)
+                logger.debug("Creating initial PL partition %s", part_name)
+                part = cpc.partitions.create(part_props)
+                pl_parts.append(part)
+
+            # Create the partition link
+            partlink_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+            paths = []
+            for i in range(0, num_paths):
+                path = {
+                    "adapter-port-uri": path_adapters[i].uri,
+                    "connecting-adapter-port-uri": path_adapters[i].uri,
+                }
+                paths.append(path)
+            partlink_input_props = {
+                "name": partlink_name,
+                "type": 'ctc',
+                "cpc-uri": cpc.uri,
+                "partitions": [p.uri for p in pl_parts],
+                "paths": paths,
+            }
+            logger.debug("Creating partition link %s", partlink_name)
+            partlink = console.partition_links.create(partlink_input_props)
+
+            logger.debug("Partition link after creation (default properties):\n"
+                         "%s", pformat_as_dict(partlink.properties))
+            partlink.pull_full_properties()
+            logger.debug("Partition link after creation (full properties):\n"
+                         "%s", pformat_as_dict(partlink.properties))
+            assert_ctc_partition_link(partlink, num_paths, num_partitions)
+
+            # Create the test partition (to which the PL is attached)
+            test_part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+            logger.debug("Preparing properties for creation of "
+                         "test partition %s", test_part_name)
+            test_part_props = standard_partition_props(cpc, test_part_name)
+            logger.debug("Creating test partition %s", test_part_name)
+            test_part = cpc.partitions.create(test_part_props)
+
+            # Verify the partition link is not attached.
+            # The code to be tested
+            attached_pls = test_part.list_attached_partition_links()
+            assert len(attached_pls) == 0
+
+            logger.debug("Attaching partition link to test partition")
+
+            # The code to be tested
+            test_part.attach_ctc_link(partlink)
+            num_partitions += 1
+
+            partlink.pull_full_properties()
+            logger.debug("Partition link after attach (full properties):\n"
+                         "%s", pformat_as_dict(partlink.properties))
+            assert_ctc_partition_link(partlink, num_paths, num_partitions)
+
+            # Verify the partition link is now attached.
+            # The code to be tested
+            attached_pls = test_part.list_attached_partition_links()
+            assert len(attached_pls) == 1
+            attached_pl = attached_pls[0]
+            assert attached_pl.uri == partlink.uri
+
+            logger.debug("Detaching partition link from test partition")
+
+            # The code to be tested
+            test_part.detach_ctc_link(partlink)
+            num_partitions -= 1
+
+            partlink.pull_full_properties()
+            logger.debug("Partition link after detach (full properties):\n"
+                         "%s", pformat_as_dict(partlink.properties))
+            assert_ctc_partition_link(partlink, num_paths, num_partitions)
+
+            # Verify the partition link is no longer attached.
+            # The code to be tested
+            attached_pls = test_part.list_attached_partition_links()
+            assert len(attached_pls) == 0
+
+        finally:
+            if partlink:
+                logger.debug("Deleting partition link %s", partlink.name)
+                partlink.delete()
+            if test_part:
+                logger.debug("Deleting test partition %s", test_part.name)
+                test_part.delete()
+            for part in pl_parts:
+                logger.debug("Deleting initial PL partition %s", part.name)
+                part.delete()
+            logger.debug("Leaving test function")

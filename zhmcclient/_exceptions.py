@@ -29,7 +29,7 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'SubscriptionNotFound', 'ConsistencyError', 'CeasedExistence',
            'OSConsoleError', 'OSConsoleConnectedError',
            'OSConsoleNotConnectedError', 'OSConsoleWebSocketError',
-           'OSConsoleAuthError']
+           'OSConsoleAuthError', 'PartitionLinkError']
 
 
 class Error(Exception):
@@ -1656,3 +1656,65 @@ class OSConsoleAuthError(OSConsoleError):
     console.
     """
     pass
+
+
+class PartitionLinkError(Error):
+    # pylint: disable=redefined-builtin
+    """
+    This exception indicates that an operation on a partition link has completed
+    its asynchronous operation with failed operation results or with pending
+    retries during SE restart.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, operation_results):
+        """
+        Parameters:
+
+          operation_results (list of dict):
+            The 'operation-results' field of the job completion result.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        op_msg_list = []
+        for op_result in operation_results:
+            uri = op_result['partition-uri']
+            status = op_result['operation-status']
+            op_msg_list.append(f"operation status {status} for partition {uri}")
+        op_msg = ", ".join(op_msg_list)
+        msg = f"Partition link operation failed with: {op_msg}"
+        super().__init__(msg)
+        self._operation_results = operation_results
+
+    @property
+    def operation_results(self):
+        """
+        list of dict: The value of the 'operation-results' field of the job
+        completion result.
+        """
+        return self._operation_results
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return (
+            f"{self.__class__.__name__}("
+            f"message={self.args[0]!r}, "
+            f"operation_results={self._operation_results!r})")
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={}; operation_results={}
+        """
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r}; "
+            f"operation_results={self._operation_results!r}")
