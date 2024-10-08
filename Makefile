@@ -563,12 +563,12 @@ start_tag:
 	git fetch origin
 	@bash -c 'if [ -n "$$(git tag -l $(VERSION)a0)" ]; then echo ""; echo "Error: Release start tag $(VERSION)a0 already exists (the new version has alreay been started)"; echo ""; false; fi'
 	@bash -c 'if [[ -n "$${BRANCH}" ]]; then echo $${BRANCH} >branch.tmp; elif [[ "$${VERSION#*.*.}" == "0" ]]; then echo "master" >branch.tmp; else echo "stable_$${VERSION%.*}" >branch.tmp; fi'
-	@bash -c 'if [ "$$(git log --format=format:%s $$(cat branch.tmp)~..$$(cat branch.tmp))" != "Start $(VERSION)" ]; then echo ""; echo "Error: Start branch $$(cat branch.tmp) has not been created yet"; echo ""; false; fi'
 	@echo "==> This will complete the start of new version $(VERSION) using target branch $$(cat branch.tmp)"
 	@echo -n '==> Continue? [yN] '
 	@bash -c 'read answer; if [ "$$answer" != "y" ]; then echo "Aborted."; false; fi'
 	bash -c 'git checkout $$(cat branch.tmp)'
 	git pull
+	@bash -c 'if [ "$$(git log --format=format:%s $$(cat branch.tmp)~..$$(cat branch.tmp))" != "Start $(VERSION)" ]; then echo ""; echo "Error: Start PR for $(VERSION) has not been merged yet"; echo ""; false; fi'
 	git tag -f $(VERSION)a0
 	git push -f --tags
 	git branch -D start_$(VERSION)
