@@ -1,5 +1,0 @@
-Added support for using the integrated ASCII console of operating systems
-running in partitions in DPM mode via the WebSocket protocol, by adding a new
-method 'zhmcclient.Partition.create_os_websocket()'.
-Added a new documentation section "Using WebSocket to access OS console" that
-documents how to interact with the integrated ASCII console from Python code.

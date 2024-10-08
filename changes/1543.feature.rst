@@ -1,2 +1,0 @@
-Docs: Documented HMC/SE version requirements and improved the description of
-firmware and API features.
