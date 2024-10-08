@@ -124,23 +124,25 @@ ruff>=0.3.5
 #       dependency resolution, so for now we pin notebook to <6.5.
 # TODO: Re-enable for Python 3.13 on Windows once pywin32 install issue is solved, see
 #       https://github.com/mhammond/pywin32/issues/2367
-notebook>=6.4.12,<6.5; sys_platform != 'win32' or python_version <= '3.12'
+notebook>=7.1.2; sys_platform != 'win32' or python_version <= '3.12'
 jupyter>=1.0.0; sys_platform != 'win32' or python_version <= '3.12'
-jupyter-console>=5.2.0,<6.0.0; sys_platform != 'win32' or python_version <= '3.12'
-ipywidgets>=5.2.2,<6.0.0; sys_platform != 'win32' or python_version <= '3.12'
-nbconvert>=6.0.0,<7.0.0; sys_platform != 'win32' or python_version <= '3.12'
-# nbconvert 6.x requires nbclient>=0.5.0,<0.6.0
-nbclient>=0.5.9,<0.6.0; sys_platform != 'win32' or python_version <= '3.12'
-# nbclient 0.5.x requires nbformat>=5.0
-nbformat>=5.0.2,<6.0.0; sys_platform != 'win32' or python_version <= '3.12'
-qtconsole>=5.4.0; sys_platform != 'win32' or python_version <= '3.12'
-ipykernel>=4.5.2,<5.0.0; sys_platform != 'win32' or python_version <= '3.12'
-jupyter-client>=6.1.5,<7.0.0; sys_platform != 'win32' or python_version <= '3.12'
-jupyterlab-widgets>=1.0.2,<2.0.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyter-console>=6.6.3; sys_platform != 'win32' or python_version <= '3.12'
+ipywidgets>=8.0.5; sys_platform != 'win32' or python_version <= '3.12'
+nbconvert>=7.2.10; sys_platform != 'win32' or python_version <= '3.12'
+nbclient>=0.7.4; sys_platform != 'win32' or python_version <= '3.12'
+nbformat>=5.8.0; sys_platform != 'win32' or python_version <= '3.12'
+qtconsole>=5.4.2; sys_platform != 'win32' or python_version <= '3.12'
+ipykernel>=6.22.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyter-client>=8.1.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab-widgets>=3.0.7; sys_platform != 'win32' or python_version <= '3.12'
 jupyterlab-pygments>=0.2.0; sys_platform != 'win32' or python_version <= '3.12'
-jupyter-core>=4.11.2,<5.0.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyter-core>=5.3.0; sys_platform != 'win32' or python_version <= '3.12'
 ipython-genutils>=0.2.0; sys_platform != 'win32' or python_version <= '3.12'
-ipython>=5.1.0,<6.0; sys_platform != 'win32' or python_version <= '3.12'
+ipython>=8.10.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyter-server>=2.5.0; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab>=4.1.1; sys_platform != 'win32' or python_version <= '3.12'
+jupyterlab-server>=2.22.1; sys_platform != 'win32' or python_version <= '3.12'
+notebook-shim>=0.2.3; sys_platform != 'win32' or python_version <= '3.12'
 
 # Pywin32 is used (at least?) by jupyter.
 # Pywin32 version 226 needs to be excluded, see issues #1946 and #1975.
@@ -172,7 +174,7 @@ pip-check-reqs>=2.5.1; python_version >= '3.9'
 # pywinpty is used by terminado <- notebook <- jupyter
 # pywinpty <1.1.1 does not have metadata for required Python or dependent packages.
 # pywinpty 1.0 requires maturin which fails installation on py>=3.7
-pywinpty>=0.5,<1.0; os_name == "nt"
+pywinpty>=2.0.3; os_name == "nt"
 
 # pytz is actually covered in requirements.txt, but we need to repeat it here
 # because development packages pull it in, so the exclusion of 2024.2 is active

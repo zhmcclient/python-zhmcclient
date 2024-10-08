@@ -40,7 +40,8 @@ yamlloader>=0.5.5
 # jsonschema is also used by jupyter and requires >=3.0.1
 # jsonschema 3.0.1 and 3.0.2 may cause pkg_resources.DistributionNotFound; fixed in 3.1.0.
 # jsonschema >=3.2.0 is required for Python 3.13 to get rid of the use of js-regex
-jsonschema>=4.0.1
+# jupyterlab-server 2.25.3 depends on jsonschema>=4.18.0
+jsonschema>=4.18.0
 
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
