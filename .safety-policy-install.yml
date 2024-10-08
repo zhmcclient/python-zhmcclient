@@ -26,10 +26,6 @@ security:
     #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
     #     expires: {date}   # optional: Date when this ignore will expire
     ignore-vulnerabilities:
-        39611:
-            reason: Fixed version PyYAML 5.4.0 (and 6.0.0) fails to install since Cython 3 was released; No risk since full_load method and FullLoader are not used
-        67599:
-            reason: There is no fixed pip version
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False

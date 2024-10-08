@@ -26,20 +26,6 @@ security:
     #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
     #     expires: {date}   # optional: Date when this ignore will expire
     ignore-vulnerabilities:
-        44634:
-            reason: Fixed ipython version 6.0.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
-        50463:
-            reason: Fixed ipywidgets version 8.0.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
-        50664:
-            reason: Fixed ipywidgets version 8.0.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
-        50792:
-            reason: Fixed nbconvert version 6.5.1 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
-        51457:
-            reason: Py package is no longer being fixed (latest version 1.11.0)
-        53269:
-            reason: Fixed ipython version 8.1.0 cannot be used without major work on dependencies; Risk is minimal since these versions are used only in development
-        68477:
-            reason: Fixed virtualenv version 20.21.0 requires Python>=3.7 but is used only on Python>=3.12 due to other constraints
         70612:
             reason: Disputed issue in jinja2 version 3.1.3 - No known fix
 
