@@ -31,7 +31,7 @@ PyYAML==6.0.2
 yamlloader==0.5.5
 
 # jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils and jupyter
-jsonschema==4.0.1
+jsonschema==4.18.0
 
 # websocket-client is also used by stomp-py 8.0 and notebook(?) 6.4
 websocket-client==1.8.0
@@ -55,7 +55,7 @@ pyrsistent==0.20.0
 
 # All other indirect dependencies for install that are not in requirements.txt
 
-attrs==19.2.0
+attrs==22.2.0
 chardet==5.2.0
 docopt==0.6.2
 # idna>3 requires using requests >=2.26.0
