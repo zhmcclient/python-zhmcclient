@@ -20,6 +20,95 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.18.0
+^^^^^^^^^^^^^^
+
+Released: 2024-10-08
+
+**Incompatible changes:**
+
+* Dev: Changed the installation of the zhmcclient package that is done in
+  'make install' from being editable to being non-editable, since pip will stop
+  supporting editable installs.
+
+**Bug fixes:**
+
+* Addressed safety issues up to 2024-08-18.
+
+* Fixed installation errors on Python 3.13 by increasing the minimum versions of
+  install dependencies PyYAML to 6.0.2, pyrsistent to 0.20.0 and wheel to 0.41.3.
+  This was done for all Python versions, to simplify dependencies.
+  Increased the minimum versions of some development dependencies for the same
+  reason.
+
+* Fixed new issue 'too-many-positional-arguments' reported by Pylint 3.3.0.
+
+* Fixed dependabot issue #25. This caused the minimum version of the
+  'jsonschema' package to be increased to 4.18.0.
+
+* Docs: Fixed the description of the 'Cpc.list_associated_storage_groups()'
+  method; it previously had stated that when the "dpm-storage-management" firmware
+  feature is not enabled, the method would be returning an empty list. That was
+  corrected in the documentation to match the actual behavior, which is to
+  fail. (`#1543 <https://github.com/zhmcclient/python-zhmcclient/issues/1543>`_)
+
+* Docs: Fixed an RTD build issue that lead to not showing any API documentation. (`#1611 <https://github.com/zhmcclient/python-zhmcclient/issues/1611>`_)
+
+* Circumvented an issue with pytz by excluding pytz version 2024.2. (`#1660 <https://github.com/zhmcclient/python-zhmcclient/issues/1660>`_)
+
+* Test: Fixed the issue that coveralls was not found in the test workflow on MacOS
+  with Python 3.9-3.11, by running it without login shell. Added Python 3.11 on
+  MacOS to the normal tests. (`#1665 <https://github.com/zhmcclient/python-zhmcclient/issues/1665>`_)
+
+**Enhancements:**
+
+* Test: Added unit tests for exceptions that did not have one.
+
+* Fixed a missing closing parenthesis in MetricsResourceNotFound.__repr__().
+
+* Test: Improved end2end test for 'Console.list_permitted_adapters()'.
+
+* Added support for encapsulating the interactions with an OS console through
+  the WebSocket protocol, by adding a new 'zhmcclient.OSConsole' class. This
+  builds on top of the new support for OS console access through the
+  WebSocket protocol. (`#618 <https://github.com/zhmcclient/python-zhmcclient/issues/618>`_)
+
+* Added support for using the integrated ASCII console of operating systems
+  running in partitions in DPM mode via the WebSocket protocol, by adding a new
+  method 'zhmcclient.Partition.create_os_websocket()'.
+  Added a new documentation section "Using WebSocket to access OS console" that
+  documents how to interact with the integrated ASCII console from Python code. (`#618 <https://github.com/zhmcclient/python-zhmcclient/issues/618>`_)
+
+* Test: Added tests for Python 3.13 (rc.1). (`#1505 <https://github.com/zhmcclient/python-zhmcclient/issues/1505>`_)
+
+* Test: Added tests for Python 3.13 (final version). (`#1506 <https://github.com/zhmcclient/python-zhmcclient/issues/1506>`_)
+
+* Docs: Documented HMC/SE version requirements and improved the description of
+  firmware and API features. (`#1543 <https://github.com/zhmcclient/python-zhmcclient/issues/1543>`_)
+
+**Cleanup:**
+
+* Docs: Simplified version retrieval in docs build by using setuptools_scm.
+
+* Test: Increased minimum version of pylint to 3.0.1 to address an issue
+  when importing setuptools_scm in conf.py.
+
+* Dev: Relaxed the conditions when safety issues are tolerated:
+  Issues in development dependencies are now tolerated in normal and scheduled
+  test workflow runs (but not in local make runs and release test workflow runs).
+  Issues in installation dependencies are now tolerated in normal test workflow
+  runs (but not in local make runs and scheduled/release test workflow runs).
+
+* Dev: Added to the release instructions to roll back fixes for safety issues
+  into any maintained stable branches.
+
+* Dev: Added to the release instructions to check and fix dependabot issues,
+  and to roll back any fixes into any maintained stable branches.
+
+* Docs: Clarified descriptions of the 'feature_enabled()' and
+  'feature_info()' methods of classes 'Partition' and 'Cpc'.
+
+
 Version 1.17.0
 ^^^^^^^^^^^^^^
 
