@@ -16,6 +16,10 @@ jobs:
     name: Build and publish to PyPI
     if: startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest
+    environment: pypi  # GitHub environment that must exist
+    permissions:
+      id-token: write
+      # contents: write
     steps:
 
     #-------- Info gathering and checks
@@ -144,7 +148,9 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         packages-dir: dist
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        repository-url: https://test.pypi.org/legacy/
+        # Pypi has a trusted publisher defined, so we do not need a password:
+        # https://pypi.org/manage/project/zhmcclient/settings/publishing/
 
     #-------- Creation of Github release
     - name: Determine whether release on Github exists for the pushed tag
