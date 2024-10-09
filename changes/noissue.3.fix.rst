@@ -1,1 +1,2 @@
-Dev: Fixed missing removal of temp file in 'make start_branch'.
+Dev: Fixed checks and missing removal of temp file in make targets for releasing
+and starting a version.
