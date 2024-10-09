@@ -118,6 +118,8 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
       with:
+        # fetch-depth 0 checks out all history for all branches and tags.
+        # This is needed to get the authors from git.
         fetch-depth: 0
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
@@ -126,6 +128,9 @@ jobs:
     - name: Development setup
       run: |
         make develop
+    - name: Display Python packages
+      run: |
+        pip list
 
     #-------- Publishing of package
     - name: Build the distribution
