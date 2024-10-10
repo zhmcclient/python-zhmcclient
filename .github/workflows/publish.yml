@@ -139,17 +139,11 @@ jobs:
     - name: Display the distribution directory
       run: |
         ls -l dist
-    # - name: Publish distribution to TestPyPI
-    #   uses: pypa/gh-action-pypi-publish@release/v1
-    #   with:
-    #     packages_dir: dist
-    #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-    #     repository_url: https://test.pypi.org/legacy/
     - name: Publish distribution to PyPI
       if: startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        packages_dir: dist
+        packages-dir: dist
         password: ${{ secrets.PYPI_API_TOKEN }}
 
     #-------- Creation of Github release
