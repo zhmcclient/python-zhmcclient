@@ -683,19 +683,15 @@ authors: AUTHORS.md
 	@echo "Makefile: $@ done."
 
 # Make sure the AUTHORS.md file is up to date but has the old date when it did
-# not change to prevent redoing dependent targets. In GitHub Actions, the
-# 'git shortlog' command does not return authors anymore since around 8/2024.
-# This is tolerated by leaving the file unchanged.
+# not change to prevent redoing dependent targets.
 AUTHORS.md: _always
 	echo "# Authors of this project" >AUTHORS.md.tmp
 	echo "" >>AUTHORS.md.tmp
 	echo "Sorted list of authors derived from git commit history:" >>AUTHORS.md.tmp
 	echo '```' >>AUTHORS.md.tmp
-	sh -c "git shortlog --summary --email | cut -f 2 | sort >log.tmp"
-	sh -c "cat log.tmp >>AUTHORS.md.tmp"
+	sh -c "git shortlog --summary --email HEAD | cut -f 2 | sort >>AUTHORS.md.tmp"
 	echo '```' >>AUTHORS.md.tmp
-	sh -c "if ! grep -q '[^[:space:]]' log.tmp; then echo 'Warning - git shortlog does not display any authors - leaving AUTHORS.md file unchanged'; else if ! diff -q AUTHORS.md.tmp AUTHORS.md; then echo 'Updating AUTHORS.md as follows:'; diff AUTHORS.md.tmp AUTHORS.md; mv AUTHORS.md.tmp AUTHORS.md; else echo 'AUTHORS.md was already up to date'; fi; fi"
-	sh -c "rm -f log.tmp AUTHORS.md.tmp"
+	sh -c "if ! diff -q AUTHORS.md.tmp AUTHORS.md; then echo 'Updating AUTHORS.md as follows:'; diff AUTHORS.md.tmp AUTHORS.md; mv AUTHORS.md.tmp AUTHORS.md; else echo 'AUTHORS.md was already up to date'; rm AUTHORS.md.tmp; fi"
 
 .PHONY:	end2end_show
 end2end_show:

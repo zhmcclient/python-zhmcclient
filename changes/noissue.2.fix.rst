@@ -1,3 +1,3 @@
-Dev: Made creation/update of AUTHORS.md tolerant when 'git shortlog' does not
-show any authors - it then issues a warning and leaves the existing file
-unchanged.
+Dev: In the make commands to create/update AUTHORS.md, added a reftag to the
+'git shortlog' command to fix the issue that without a terminal (e.g. in GitHub
+Actions), the command did not display any authors.
