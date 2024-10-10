@@ -398,6 +398,26 @@ Storage Volume Templates
    :special-members: __str__
 
 
+.. _`Partition Links`:
+
+Partition Links
+---------------
+
+.. automodule:: zhmcclient._partition_link
+
+.. autoclass:: zhmcclient.PartitionLinkManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.PartitionLink
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Capacity Groups`:
 
 Capacity Groups
