@@ -682,7 +682,10 @@ end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_f
 authors: AUTHORS.md
 	@echo "Makefile: $@ done."
 
-# Make sure the AUTHORS.md file is up to date but has the old date when it did not change to prevent redoing dependent targets
+# Make sure the AUTHORS.md file is up to date but has the old date when it did
+# not change to prevent redoing dependent targets. In GitHub Actions, the
+# 'git shortlog' command does not return authors anymore since around 8/2024.
+# This is tolerated by leaving the file unchanged.
 AUTHORS.md: _always
 	echo "# Authors of this project" >AUTHORS.md.tmp
 	echo "" >>AUTHORS.md.tmp
