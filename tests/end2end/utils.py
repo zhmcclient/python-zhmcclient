@@ -632,6 +632,25 @@ def _skipif_api_feature_not_on_cpc_and_hmc(feature, cpc):
         skip_warn(f"API feature {feature} not available on HMC {console.name}")
 
 
+def skipif_no_partition_link_feature(cpc):
+    """
+    Skip the test if the "dpm-smcd-partition-link-management" API feature is
+    not enabled for the specified CPC, or if the CPC does not yet support it.
+
+    Note that the three partition-link related API features are always all
+    enabled or all disabled:
+
+    * "dpm-smcd-partition-link-management"
+    * "dpm-hipersockets-partition-link-management"
+    * "dpm-ctc-partition-link-management"
+    """
+    has_partition_link = has_api_feature(
+        "dpm-smcd-partition-link-management", cpc)
+    if not has_partition_link:
+        skip_warn("Partition link related API features not enabled or not "
+                  f"supported on CPC {cpc.name}")
+
+
 def has_api_feature(feature, cpc):
     """
     Returns True if the given API feature is available on the specified CPC
