@@ -45,15 +45,17 @@ coveralls>=3.3.0
 
 # Safety CI by pyup.io
 # Safety 3.0.0 requires exact versions of authlib==1.2.0 and jwt==1.3.1.
-safety>=3.0.1
-safety-schemas>=0.0.2
+# Safety 3.0.x pins pydantic to <2.0, preventing bug fixes.
+# pydantic 2.8.0 fixes an install issue on Python 3.13.
+safety>=3.1.0
+safety-schemas>=0.0.2,!=0.0.7
 # TODO: Change to dparse 0.6.4 once released
 dparse>=0.6.4b0
 ruamel.yaml>=0.17.21
 click>=8.0.2
 Authlib>=1.2.0
 marshmallow>=3.15.0
-pydantic>=1.10.13
+pydantic>=2.8.0
 typer>=0.12.0
 typer-cli>=0.12.0
 typer-slim>=0.12.0
