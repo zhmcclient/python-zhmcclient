@@ -20,6 +20,17 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.18.2
+^^^^^^^^^^^^^^
+
+Released: 2024-11-28
+
+**Bug fixes:**
+
+* Fixed that incorrect password-like properties were added with blanked-out values
+  to the API and HMC log.
+
+
 Version 1.18.1
 ^^^^^^^^^^^^^^
 
