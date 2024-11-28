@@ -967,11 +967,9 @@ class Session:
                 # structured data such as a password or session IDs.
                 pass
             else:
-                for prop in BLANKED_OUT_PROPERTIES:
-                    try:
-                        content_dict[prop] = BLANKED_OUT_STRING
-                    except KeyError:
-                        pass
+                for pname in BLANKED_OUT_PROPERTIES:
+                    if pname in content_dict:
+                        content_dict[pname] = BLANKED_OUT_STRING
                 content = dict2json(content_dict)
             trunc = 30000
             if content_len > trunc:
