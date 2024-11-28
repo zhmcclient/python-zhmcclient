@@ -39,7 +39,7 @@ $ pip install zhmcclient
 ```
 
 For more details, see the
-[Installation section](http://python-zhmcclient.readthedocs.io/en/master/intro.html#installation)
+[Installation section](http://python-zhmcclient.readthedocs.io/en/stable/intro.html#installation)
 in the documentation.
 
 # Quickstart
@@ -82,9 +82,8 @@ P0000M96 PART1
 
 For the latest released version on PyPI:
 
--   [Documentation](http://python-zhmcclient.readthedocs.io)
--   [Change
-    log](http://python-zhmcclient.readthedocs.io/en/master/changes.html)
+- [Documentation](http://python-zhmcclient.readthedocs.io/en/stable)
+- [Change log](http://python-zhmcclient.readthedocs.io/en/stable/changes.html)
 
 # zhmc CLI
 
@@ -101,10 +100,10 @@ dependencies.
 # Contributing
 
 For information on how to contribute to this project, see the
-[Development section](http://python-zhmcclient.readthedocs.io/en/master/development.html)
+[Development section](http://python-zhmcclient.readthedocs.io/en/stable/development.html)
 in the documentation.
 
 # License
 
 The zhmcclient package is licensed under the
-[Apache 2.0 License](https://github.com/zhmcclient/python-zhmcclient/tree/master/LICENSE).
+[Apache 2.0 License](https://github.com/zhmcclient/python-zhmcclient/tree/stable/LICENSE).
