@@ -22,9 +22,9 @@ import copy
 import logging
 import pytest
 
-from zhmcclient import Client, HTTPError, NotFound, User, BLANKED_OUT_STRING
+from zhmcclient import Client, HTTPError, NotFound, User
 from zhmcclient_mock import FakedSession
-from tests.common.utils import assert_resources
+from tests.common.utils import assert_resources, assert_blanked_in_message
 
 
 class TestUser:
@@ -228,9 +228,9 @@ class TestUser:
                     assert value == exp_value
 
             # Verify the API call log record for blanked-out properties.
-            if 'password' in input_props:
-                exp_str = f"'password': '{BLANKED_OUT_STRING}'"
-                assert call_record.message.find(exp_str) > 0
+            assert_blanked_in_message(
+                call_record.message, input_props,
+                ['password'])
 
     def test_user_repr(self):
         """Test User.__repr__()."""
