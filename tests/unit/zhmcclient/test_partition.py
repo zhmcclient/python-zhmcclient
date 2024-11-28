@@ -19,9 +19,11 @@ Unit tests for _partition module.
 
 import re
 import copy
+import logging
 import pytest
 
-from zhmcclient import Client, Partition, HTTPError, NotFound
+from zhmcclient import Client, Partition, HTTPError, NotFound, \
+    BLANKED_OUT_STRING
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -307,22 +309,42 @@ class TestPartition:
             ({'name': 'fake-part-x',
               'ifl-processors': 2,
               'initial-memory': 4096,
-              'maximum-memory': 4096},
-             ['object-uri', 'name', 'initial-memory', 'maximum-memory',
-              'ifl-processors'],
-             None),
-            ({'name': 'fake-part-x',
-              'ifl-processors': 2,
-              'initial-memory': 4096,
               'maximum-memory': 4096,
               'description': 'fake description X'},
              ['object-uri', 'name', 'initial-memory', 'maximum-memory',
               'ifl-processors', 'description'],
              None),
+            ({'name': 'fake-part-x',
+              'ifl-processors': 2,
+              'initial-memory': 4096,
+              'maximum-memory': 4096,
+              'boot-device': 'ftp',
+              'boot-ftp-host': 'host',
+              'boot-ftp-username': 'user',
+              'boot-ftp-password': 'bla',
+              'boot-ftp-insfile': 'ins'},
+             ['object-uri', 'name', 'initial-memory', 'maximum-memory',
+              'ifl-processors', 'boot-device', 'boot-ftp-host',
+              'boot-ftp-username', 'boot-ftp-insfile'],
+             None),
+            ({'name': 'fake-part-x',
+              'ifl-processors': 2,
+              'initial-memory': 4096,
+              'maximum-memory': 4096,
+              'type': 'ssc',
+              'ssc-host-name': 'host',
+              'ssc-master-userid': 'user',
+              'ssc-master-pw': 'bla'},
+             ['object-uri', 'name', 'initial-memory', 'maximum-memory',
+              'ifl-processors', 'type', 'ssc-host-name', 'ssc-master-userid'],
+             None),
         ]
     )
-    def test_pm_create(self, input_props, exp_prop_names, exp_exc):
+    def test_pm_create(self, caplog, input_props, exp_prop_names, exp_exc):
         """Test PartitionManager.create()."""
+
+        logger_name = "zhmcclient.api"
+        caplog.set_level(logging.DEBUG, logger=logger_name)
 
         partition_mgr = self.cpc.partitions
 
@@ -345,6 +367,9 @@ class TestPartition:
             # the input properties plus 'object-uri'.
             partition = partition_mgr.create(properties=input_props)
 
+            # Get its API call log record
+            call_record = caplog.records[-2]
+
             # Check the resource for consistency within itself
             assert isinstance(partition, Partition)
             partition_name = partition.name
@@ -361,6 +386,14 @@ class TestPartition:
                     value = partition.properties[prop_name]
                     exp_value = input_props[prop_name]
                     assert value == exp_value
+
+            # Verify the API call log record for blanked-out properties.
+            if 'boot-ftp-password' in input_props:
+                exp_str = f"'boot-ftp-password': '{BLANKED_OUT_STRING}'"
+                assert call_record.message.find(exp_str) > 0
+            if 'ssc-master-pw' in input_props:
+                exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
+                assert call_record.message.find(exp_str) > 0
 
     def test_pm_resource_object(self):
         """
@@ -673,8 +706,12 @@ class TestPartition:
              'ssc-master-pw': None},
         ]
     )
-    def test_partition_update_properties(self, input_props, partition_name):
+    def test_partition_update_properties(
+            self, caplog, input_props, partition_name):
         """Test Partition.update_properties()."""
+
+        logger_name = "zhmcclient.api"
+        caplog.set_level(logging.DEBUG, logger=logger_name)
 
         # Add faked partitions
         self.add_partition1()
@@ -688,6 +725,9 @@ class TestPartition:
 
         # Execute the code to be tested
         partition.update_properties(properties=input_props)
+
+        # Get its API call log record
+        call_record = caplog.records[-2]
 
         # Verify that the resource object already reflects the property
         # updates.
@@ -711,6 +751,14 @@ class TestPartition:
             assert prop_name in partition.properties
             prop_value = partition.properties[prop_name]
             assert prop_value == exp_prop_value
+
+        # Verify the API call log record for blanked-out properties.
+        if 'boot-ftp-password' in input_props:
+            exp_str = f"'boot-ftp-password': '{BLANKED_OUT_STRING}'"
+            assert call_record.message.find(exp_str) > 0
+        if 'ssc-master-pw' in input_props:
+            exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
+            assert call_record.message.find(exp_str) > 0
 
     def test_partition_update_name(self):
         """

@@ -50,7 +50,8 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'HTML_REASON_WEB_SERVICES_DISABLED',
            'HTML_REASON_OTHER',
            'STOMP_MIN_CONNECTION_CHECK_TIME',
-           'DEFAULT_WS_TIMEOUT']
+           'DEFAULT_WS_TIMEOUT',
+           'BLANKED_OUT_STRING']
 
 
 #: Default HTTP connect timeout in seconds,
@@ -187,3 +188,7 @@ STOMP_MIN_CONNECTION_CHECK_TIME = 5.0
 #: Default WebSocket connect and receive timeout in seconds, for interacting
 #: with the :class:`zhmcclient.OSConsole` class.
 DEFAULT_WS_TIMEOUT = 5
+
+#: Replacement string for blanked out sensitive values in log entries, such as
+#: passwords or session tokens.
+BLANKED_OUT_STRING = '********'
