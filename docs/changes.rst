@@ -20,6 +20,36 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.18.1
+^^^^^^^^^^^^^^
+
+Released: 2024-11-28
+
+**Bug fixes:**
+
+* Fixed safety issues up to 2024-11-28.
+
+* Dev: In the make commands to create/update AUTHORS.md, added a reftag to the
+  'git shortlog' command to fix the issue that without a terminal (e.g. in GitHub
+  Actions), the command did not display any authors.
+
+* Dev: Fixed checks and missing removal of temp file in make targets for releasing
+  and starting a version.
+
+* Fixed that all password-like properties are no longer written in clear text to
+  the Python loggers "zhmcclient.api" and "zhmcclient.hmc", but are now blanked
+  out. Previously, that was done only for the "zhmcclient.hmc" logger for creation
+  and update of HMC users.
+
+* Fixed incorrect check for start branch in 'make start_tag'. (`#1689 <https://github.com/zhmcclient/python-zhmcclient/issues/1689>`_)
+
+**Enhancements:**
+
+* Dev: Enhanced the zhmcclient API logging code so that in the debugger,
+  zhmcclient API functions now have less logging steps to go through until the
+  actual API function is reached.
+
+
 Version 1.18.0
 ^^^^^^^^^^^^^^
 
