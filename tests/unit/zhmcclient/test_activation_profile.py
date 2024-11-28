@@ -19,9 +19,10 @@ Unit tests for _activation_profile module.
 
 import copy
 import re
+import logging
 import pytest
 
-from zhmcclient import Client, ActivationProfile
+from zhmcclient import Client, ActivationProfile, BLANKED_OUT_STRING
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -338,10 +339,14 @@ class TestActivationProfile:
             }},
             {'group-profile-uri': None},
             {'zaware-gateway-info': None},
+            {'ssc-master-pw': 'bla', 'zaware-master-pw': 'bla'},
         ]
     )
-    def test_profile_update_properties(self, input_props, profile_type):
+    def test_profile_update_properties(self, caplog, input_props, profile_type):
         """Test ActivationProfile.update_properties()."""
+
+        logger_name = "zhmcclient.api"
+        caplog.set_level(logging.DEBUG, logger=logger_name)
 
         mgr_attr = profile_type + '_activation_profiles'
         profile_mgr = getattr(self.cpc, mgr_attr)
@@ -353,6 +358,9 @@ class TestActivationProfile:
 
         # Execute the code to be tested
         profile.update_properties(properties=input_props)
+
+        # Get its API call log record
+        call_record = caplog.records[-2]
 
         # Verify that the resource object already reflects the property
         # updates.
@@ -376,3 +384,11 @@ class TestActivationProfile:
             assert prop_name in profile.properties
             prop_value = profile.properties[prop_name]
             assert prop_value == exp_prop_value
+
+        # Verify the API call log record for blanked-out properties.
+        if 'ssc-master-pw' in input_props:
+            exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
+            assert call_record.message.find(exp_str) > 0
+        if 'zaware-master-pw' in input_props:
+            exp_str = f"'zaware-master-pw': '{BLANKED_OUT_STRING}'"
+            assert call_record.message.find(exp_str) > 0

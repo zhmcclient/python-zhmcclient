@@ -19,9 +19,10 @@ Unit tests for _user module.
 
 import re
 import copy
+import logging
 import pytest
 
-from zhmcclient import Client, HTTPError, NotFound, User
+from zhmcclient import Client, HTTPError, NotFound, User, BLANKED_OUT_STRING
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -180,8 +181,12 @@ class TestUser:
              None),
         ]
     )
-    def test_user_manager_create(self, input_props, exp_prop_names, exp_exc):
+    def test_user_manager_create(
+            self, caplog, input_props, exp_prop_names, exp_exc):
         """Test UserManager.create()."""
+
+        logger_name = "zhmcclient.api"
+        caplog.set_level(logging.DEBUG, logger=logger_name)
 
         user_mgr = self.console.users
 
@@ -202,6 +207,9 @@ class TestUser:
             # Execute the code to be tested.
             user = user_mgr.create(properties=input_props)
 
+            # Get its API call log record
+            call_record = caplog.records[-2]
+
             # Check the resource for consistency within itself
             assert isinstance(user, User)
             user_name = user.name
@@ -218,6 +226,11 @@ class TestUser:
                     value = user.properties[prop_name]
                     exp_value = input_props[prop_name]
                     assert value == exp_value
+
+            # Verify the API call log record for blanked-out properties.
+            if 'password' in input_props:
+                exp_str = f"'password': '{BLANKED_OUT_STRING}'"
+                assert call_record.message.find(exp_str) > 0
 
     def test_user_repr(self):
         """Test User.__repr__()."""

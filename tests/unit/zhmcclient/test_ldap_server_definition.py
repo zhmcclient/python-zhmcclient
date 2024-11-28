@@ -19,9 +19,11 @@ Unit tests for _ldap_srv_def module.
 
 import re
 import copy
+import logging
 import pytest
 
-from zhmcclient import Client, HTTPError, NotFound, LdapServerDefinition
+from zhmcclient import Client, HTTPError, NotFound, LdapServerDefinition, \
+    BLANKED_OUT_STRING
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -149,11 +151,20 @@ class TestLdapServerDefinition:
               'search-distinguished-name': 'test{0}'},
              ['element-uri', 'name', 'description'],
              None),
+            ({'name': 'a',
+              'primary-hostname-ipaddr': '10.11.12.13',
+              'search-distinguished-name': 'test{0}',
+              'bind-password': 'bla'},
+             ['element-uri', 'name', 'bind-password'],
+             None),
         ]
     )
     def test_ldap_srv_def_manager_create(
-            self, input_props, exp_prop_names, exp_exc):
+            self, caplog, input_props, exp_prop_names, exp_exc):
         """Test LdapServerDefinitionManager.create()."""
+
+        logger_name = "zhmcclient.api"
+        caplog.set_level(logging.DEBUG, logger=logger_name)
 
         ldap_srv_def_mgr = self.console.ldap_server_definitions
 
@@ -174,6 +185,9 @@ class TestLdapServerDefinition:
             # Execute the code to be tested.
             ldap_srv_def = ldap_srv_def_mgr.create(properties=input_props)
 
+            # Get its API call log record
+            call_record = caplog.records[-2]
+
             # Check the resource for consistency within itself
             assert isinstance(ldap_srv_def, LdapServerDefinition)
             ldap_srv_def_name = ldap_srv_def.name
@@ -190,6 +204,11 @@ class TestLdapServerDefinition:
                     value = ldap_srv_def.properties[prop_name]
                     exp_value = input_props[prop_name]
                     assert value == exp_value
+
+            # Verify the API call log record for blanked-out properties.
+            if 'bind-password' in input_props:
+                exp_str = f"'bind-password': '{BLANKED_OUT_STRING}'"
+                assert call_record.message.find(exp_str) > 0
 
     def test_ldap_srv_def_repr(self):
         """Test LdapServerDefinition.__repr__()."""
@@ -287,10 +306,14 @@ class TestLdapServerDefinition:
         "input_props", [
             {},
             {'description': 'New LDAP Server Definition description'},
+            {'bind-password': 'bla'},
         ]
     )
-    def test_ldap_srv_def_update_properties(self, input_props):
+    def test_ldap_srv_def_update_properties(self, caplog, input_props):
         """Test LdapServerDefinition.update_properties()."""
+
+        logger_name = "zhmcclient.api"
+        caplog.set_level(logging.DEBUG, logger=logger_name)
 
         ldap_srv_def_name = 'faked_a'
 
@@ -305,6 +328,9 @@ class TestLdapServerDefinition:
 
         # Execute the code to be tested
         ldap_srv_def.update_properties(properties=input_props)
+
+        # Get its API call log record
+        call_record = caplog.records[-2]
 
         # Verify that the resource object already reflects the property
         # updates.
@@ -329,3 +355,8 @@ class TestLdapServerDefinition:
             assert prop_name in ldap_srv_def.properties
             prop_value = ldap_srv_def.properties[prop_name]
             assert prop_value == exp_prop_value
+
+        # Verify the API call log record for blanked-out properties.
+        if 'bind-password' in input_props:
+            exp_str = f"'bind-password': '{BLANKED_OUT_STRING}'"
+            assert call_record.message.find(exp_str) > 0
