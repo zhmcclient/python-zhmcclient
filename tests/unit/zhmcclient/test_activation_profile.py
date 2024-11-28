@@ -22,9 +22,9 @@ import re
 import logging
 import pytest
 
-from zhmcclient import Client, ActivationProfile, BLANKED_OUT_STRING
+from zhmcclient import Client, ActivationProfile
 from zhmcclient_mock import FakedSession
-from tests.common.utils import assert_resources
+from tests.common.utils import assert_resources, assert_blanked_in_message
 
 
 class TestActivationProfile:
@@ -386,9 +386,6 @@ class TestActivationProfile:
             assert prop_value == exp_prop_value
 
         # Verify the API call log record for blanked-out properties.
-        if 'ssc-master-pw' in input_props:
-            exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
-            assert call_record.message.find(exp_str) > 0
-        if 'zaware-master-pw' in input_props:
-            exp_str = f"'zaware-master-pw': '{BLANKED_OUT_STRING}'"
-            assert call_record.message.find(exp_str) > 0
+        assert_blanked_in_message(
+            call_record.message, input_props,
+            ['ssc-master-pw', 'zaware-master-pw'])

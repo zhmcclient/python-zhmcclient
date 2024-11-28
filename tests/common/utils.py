@@ -502,3 +502,21 @@ def timestamp_aware(dt):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=tz.tzlocal())  # new object
     return dt
+
+
+def assert_blanked_in_message(message, properties, blanked_properties):
+    """
+    Assert that a message containing a string representation of a properties
+    dict has the desired properties blanked out.
+
+    Parameters:
+        message (str): The message to be checked.
+        properties (dict): Properties that can possibly be in the message
+          (with hyphened names).
+        blanked_properties (list of str): The names of the properties that
+          need to be blanked out in the message (with hyphened names).
+    """
+    for pname in blanked_properties:
+        if pname in properties:
+            exp_str = f"'{pname}': '{zhmcclient.BLANKED_OUT_STRING}'"
+            assert message.find(exp_str) > 0
