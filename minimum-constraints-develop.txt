@@ -14,7 +14,7 @@ six==1.16.0
 # PEP517 package builder, used in Makefile
 build==1.0.0
 # build requires virtualenv.cli_run which was added in virtualenv 20.1
-virtualenv==20.25.0
+virtualenv==20.26.6
 pyproject-hooks==1.1.0
 
 # Change log
