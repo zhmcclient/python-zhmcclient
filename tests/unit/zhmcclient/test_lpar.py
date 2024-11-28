@@ -24,11 +24,10 @@ from unittest import mock
 import pytest
 import requests_mock
 
-from zhmcclient import Client, Lpar, HTTPError, StatusTimeout, Job, \
-    BLANKED_OUT_STRING
+from zhmcclient import Client, Lpar, HTTPError, StatusTimeout, Job
 from zhmcclient_mock import FakedSession, LparActivateHandler, \
     LparDeactivateHandler, LparLoadHandler
-from tests.common.utils import assert_resources
+from tests.common.utils import assert_resources, assert_blanked_in_message
 
 # pylint: disable=unused-import,line-too-long
 from tests.common.http_mocked_fixtures import http_mocked_session  # noqa: F401
@@ -373,12 +372,9 @@ class TestLpar:
             assert prop_value == exp_prop_value
 
         # Verify the API call log record for blanked-out properties.
-        if 'ssc-master-pw' in input_props:
-            exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
-            assert call_record.message.find(exp_str) > 0
-        if 'zaware-master-pw' in input_props:
-            exp_str = f"'zaware-master-pw': '{BLANKED_OUT_STRING}'"
-            assert call_record.message.find(exp_str) > 0
+        assert_blanked_in_message(
+            call_record.message, input_props,
+            ['ssc-master-pw', 'zaware-master-pw'])
 
     @pytest.mark.parametrize(
         "initial_profile, profile_kwargs, exp_profile, exp_profile_exc", [

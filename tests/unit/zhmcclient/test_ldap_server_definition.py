@@ -22,10 +22,9 @@ import copy
 import logging
 import pytest
 
-from zhmcclient import Client, HTTPError, NotFound, LdapServerDefinition, \
-    BLANKED_OUT_STRING
+from zhmcclient import Client, HTTPError, NotFound, LdapServerDefinition
 from zhmcclient_mock import FakedSession
-from tests.common.utils import assert_resources
+from tests.common.utils import assert_resources, assert_blanked_in_message
 
 
 class TestLdapServerDefinition:
@@ -206,9 +205,9 @@ class TestLdapServerDefinition:
                     assert value == exp_value
 
             # Verify the API call log record for blanked-out properties.
-            if 'bind-password' in input_props:
-                exp_str = f"'bind-password': '{BLANKED_OUT_STRING}'"
-                assert call_record.message.find(exp_str) > 0
+            assert_blanked_in_message(
+                call_record.message, input_props,
+                ['bind-password'])
 
     def test_ldap_srv_def_repr(self):
         """Test LdapServerDefinition.__repr__()."""
@@ -357,6 +356,6 @@ class TestLdapServerDefinition:
             assert prop_value == exp_prop_value
 
         # Verify the API call log record for blanked-out properties.
-        if 'bind-password' in input_props:
-            exp_str = f"'bind-password': '{BLANKED_OUT_STRING}'"
-            assert call_record.message.find(exp_str) > 0
+        assert_blanked_in_message(
+            call_record.message, input_props,
+            ['bind-password'])
