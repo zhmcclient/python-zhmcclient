@@ -187,7 +187,8 @@ class Lpar(BaseResource):
             f"got {type(manager)}")
         super().__init__(manager, uri, name, properties)
 
-    @logged_api_call
+    @logged_api_call(blanked_properties=['ssc-master-pw', 'zaware-master-pw'],
+                     properties_pos=1)
     def update_properties(self, properties):
         """
         Update writeable properties of this LPAR.

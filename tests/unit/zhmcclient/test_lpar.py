@@ -19,11 +19,13 @@ Unit tests for _lpar module.
 
 import re
 import copy
+import logging
 from unittest import mock
 import pytest
 import requests_mock
 
-from zhmcclient import Client, Lpar, HTTPError, StatusTimeout, Job
+from zhmcclient import Client, Lpar, HTTPError, StatusTimeout, Job, \
+    BLANKED_OUT_STRING
 from zhmcclient_mock import FakedSession, LparActivateHandler, \
     LparDeactivateHandler, LparLoadHandler
 from tests.common.utils import assert_resources
@@ -319,12 +321,17 @@ class TestLpar:
             {'description': 'New lpar description'},
             {'acceptable-status': ['operating', 'not-operating'],
              'description': 'New lpar description'},
-            {'ssc-master-userid': None,
-             'ssc-master-pw': None},
+            {'ssc-master-userid': 'user',
+             'ssc-master-pw': 'bla'},
+            {'zaware-master-userid': 'user',
+             'zaware-master-pw': 'bla'},
         ]
     )
-    def test_lpar_update_properties(self, input_props, lpar_name):
+    def test_lpar_update_properties(self, caplog, input_props, lpar_name):
         """Test Lpar.update_properties()."""
+
+        logger_name = "zhmcclient.api"
+        caplog.set_level(logging.DEBUG, logger=logger_name)
 
         # Add faked lpars
         self.add_lpar1()
@@ -338,6 +345,9 @@ class TestLpar:
 
         # Execute the code to be tested
         lpar.update_properties(properties=input_props)
+
+        # Get its API call log record
+        call_record = caplog.records[-2]
 
         # Verify that the resource object already reflects the property
         # updates.
@@ -361,6 +371,14 @@ class TestLpar:
             assert prop_name in lpar.properties
             prop_value = lpar.properties[prop_name]
             assert prop_value == exp_prop_value
+
+        # Verify the API call log record for blanked-out properties.
+        if 'ssc-master-pw' in input_props:
+            exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
+            assert call_record.message.find(exp_str) > 0
+        if 'zaware-master-pw' in input_props:
+            exp_str = f"'zaware-master-pw': '{BLANKED_OUT_STRING}'"
+            assert call_record.message.find(exp_str) > 0
 
     @pytest.mark.parametrize(
         "initial_profile, profile_kwargs, exp_profile, exp_profile_exc", [

@@ -23,16 +23,24 @@ import pytest
 from testfixtures import LogCapture
 
 from zhmcclient._logging import logged_api_call, get_logger
-
+from zhmcclient._constants import BLANKED_OUT_STRING
 
 #
 # Various uses of the @logged_api_call decorator
 #
 
+
 @logged_api_call
 def decorated_global_function():
     """A decorated function at the global (module) level."""
     pass
+
+
+@logged_api_call(blanked_properties=['hideme'], properties_pos=0)
+def decorated_global_props_function(properties):
+    """A decorated function with properties at the global (module) level,
+    where the 'hideme' property is blanked out in the API log."""
+    return properties
 
 
 def global1_function():
@@ -136,8 +144,8 @@ def call_from_global(func, *args, **kwargs):
 # Some expected values that are constant
 _EXP_LOGGER_NAME = 'zhmcclient.api'
 _EXP_LOG_LEVEL = 'DEBUG'
-_EXP_LOG_MSG_ENTER_PATTERN = "Called: .*, args: .*, kwargs: .*"
-_EXP_LOG_MSG_LEAVE_PATTERN = "Return: .*, result: .*"
+_EXP_LOG_MSG_ENTER_PATTERN = "Called: (.*), args: (.*), kwargs: (.*)"
+_EXP_LOG_MSG_LEAVE_PATTERN = "Return: (.*), result: (.*)"
 
 
 @pytest.fixture()
@@ -155,9 +163,9 @@ def capture():
 # Test cases
 #
 
-def assert_log_capture(log_capture, exp_apifunc):
-    # pylint: disable=unused-argument
-    # Note: exp_apifunc is shown when pytest displays a traceback.
+def assert_log_capture(
+        log_capture, *, func_pattern=None, args_pattern=None,
+        kwargs_pattern=None, return_pattern=None):
     """
     Assert that the log capture is as expected.
     """
@@ -167,13 +175,23 @@ def assert_log_capture(log_capture, exp_apifunc):
     assert enter_record.name == _EXP_LOGGER_NAME
     assert enter_record.levelname == _EXP_LOG_LEVEL
     assert re.match(_EXP_LOG_MSG_ENTER_PATTERN, enter_record.msg)
-    # We don't check the function name and its pos and kw args
+    func_str, args_str, kwargs_str = enter_record.args
+    if func_pattern:
+        assert re.search(func_pattern, func_str)
+    if args_pattern:
+        assert re.search(args_pattern, args_str)
+    if kwargs_pattern:
+        assert re.search(kwargs_pattern, kwargs_str)
 
     leave_record = log_capture.records[1]
     assert leave_record.name == _EXP_LOGGER_NAME
     assert leave_record.levelname == _EXP_LOG_LEVEL
     assert re.match(_EXP_LOG_MSG_LEAVE_PATTERN, leave_record.msg)
-    # We don't check the function name and its pos and kw args
+    func_str, return_str = leave_record.args
+    if func_pattern:
+        assert re.search(func_pattern, func_str)
+    if return_pattern:
+        assert re.search(return_pattern, return_str)
 
 
 def test_1a_global_from_global(capture):
@@ -183,7 +201,8 @@ def test_1a_global_from_global(capture):
 
     call_from_global(decorated_global_function)
 
-    assert_log_capture(capture, 'decorated_global_function()')
+    assert_log_capture(
+        capture, func_pattern='decorated_global_function')
 
 
 def test_1b_global_from_method(capture):
@@ -192,7 +211,40 @@ def test_1b_global_from_method(capture):
 
     CallerClass().call_from_method(decorated_global_function)
 
-    assert_log_capture(capture, 'decorated_global_function()')
+    assert_log_capture(
+        capture, func_pattern='decorated_global_function')
+
+
+def test_1c_global_props_args_from_global(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated global function with properties as args,
+    from a global function."""
+    props = {
+        'prop1': 'value1',
+        'hideme': 'secret',
+    }
+    blanked_props = {
+        'prop1': 'value1',
+        'hideme': BLANKED_OUT_STRING,
+    }
+    call_from_global(decorated_global_props_function, props)
+
+    assert_log_capture(
+        capture, func_pattern='decorated_global_props_function',
+        args_pattern=re.escape(str(blanked_props)),
+        return_pattern=re.escape(str(props)))
+
+
+def test_1c_global_props_kwargs_from_global(capture):
+    # pylint: disable=redefined-outer-name
+    """Simple test calling a decorated global function with properties as
+    kwargs, from a global function."""
+
+    call_from_global(decorated_global_props_function,
+                     properties={'prop1': 'value1'})
+
+    assert_log_capture(
+        capture, func_pattern='decorated_global_props_function')
 
 
 def test_2a_global_inner1_from_global(capture):
@@ -204,7 +256,8 @@ def test_2a_global_inner1_from_global(capture):
 
     call_from_global(decorated_inner1_function)
 
-    assert_log_capture(capture, 'global1_function.decorated_inner1_function()')
+    assert_log_capture(
+        capture, func_pattern='global1_function.decorated_inner1_function')
 
 
 def test_2b_global_inner1_from_method(capture):
@@ -216,7 +269,8 @@ def test_2b_global_inner1_from_method(capture):
 
     CallerClass().call_from_method(decorated_inner1_function)
 
-    assert_log_capture(capture, 'global1_function.decorated_inner1_function()')
+    assert_log_capture(
+        capture, func_pattern='global1_function.decorated_inner1_function')
 
 
 def test_3a_global_inner2_from_global(capture):
@@ -228,7 +282,8 @@ def test_3a_global_inner2_from_global(capture):
 
     call_from_global(decorated_inner2_function)
 
-    assert_log_capture(capture, 'inner1_function.decorated_inner2_function()')
+    assert_log_capture(
+        capture, func_pattern='inner1_function.decorated_inner2_function')
 
 
 def test_3b_global_inner1_from_method(capture):
@@ -240,7 +295,8 @@ def test_3b_global_inner1_from_method(capture):
 
     CallerClass().call_from_method(decorated_inner2_function)
 
-    assert_log_capture(capture, 'inner1_function.decorated_inner2_function()')
+    assert_log_capture(
+        capture, func_pattern='inner1_function.decorated_inner2_function')
 
 
 def test_4a_method_from_global(capture):
@@ -252,7 +308,8 @@ def test_4a_method_from_global(capture):
 
     call_from_global(decorated_method, d)
 
-    assert_log_capture(capture, 'Decorator1Class.decorated_method()')
+    assert_log_capture(
+        capture, func_pattern='Decorator1Class.decorated_method')
 
 
 def test_4b_method_from_method(capture):
@@ -264,7 +321,8 @@ def test_4b_method_from_method(capture):
 
     CallerClass().call_from_method(decorated_method, d)
 
-    assert_log_capture(capture, 'Decorator1Class.decorated_method()')
+    assert_log_capture(
+        capture, func_pattern='Decorator1Class.decorated_method')
 
 
 def test_5a_method_from_global(capture):
@@ -277,7 +335,8 @@ def test_5a_method_from_global(capture):
 
     call_from_global(decorated_inner_function)
 
-    assert_log_capture(capture, 'method.decorated_inner_function()')
+    assert_log_capture(
+        capture, func_pattern='method.decorated_inner_function')
 
 
 def test_5b_method_from_method(capture):
@@ -290,7 +349,8 @@ def test_5b_method_from_method(capture):
 
     CallerClass().call_from_method(decorated_inner_function)
 
-    assert_log_capture(capture, 'method.decorated_inner_function()')
+    assert_log_capture(
+        capture, func_pattern='method.decorated_inner_function')
 
 
 def test_decorated_class():

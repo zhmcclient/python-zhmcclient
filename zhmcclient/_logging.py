@@ -75,9 +75,10 @@ Examples:
 
 import logging
 import inspect
-from decorator import decorate  # requires decorator>=4.0
+import functools
+from collections.abc import Mapping, Sequence
 
-from ._constants import API_LOGGER_NAME
+from ._constants import API_LOGGER_NAME, BLANKED_OUT_STRING
 
 __all__ = []
 
@@ -105,7 +106,8 @@ def get_logger(name):
     return logger
 
 
-def logged_api_call(func):
+def logged_api_call(
+        org_func=None, *, blanked_properties=None, properties_pos=None):
     """
     Function decorator that causes the decorated API function or method to log
     calls to itself to a logger.
@@ -115,7 +117,24 @@ def logged_api_call(func):
 
     Parameters:
 
-      func (function object): The original function being decorated.
+      org_func (function object): The original function being decorated.
+        Will be `None` if the decorator is specified with its optional
+        argument 'blanked_properties'.
+
+      blanked_properties (list of str): Optional: List of properties in the
+        'properties' argument of the decorated API function that should be
+        blanked out before being logged. Can be used to hide password
+        properties.
+        This parameter is required when 'properties_pos' is used.
+        This parameter must be specified as a keyword argument.
+
+      properties_pos (int): Optional: 0-based index of the 'properties'
+        parameter in the argument list of the decorated API function.
+        For methods, the 'self' or 'cls' parameter is included in the position.
+        This parameter is needed in case the properties are passed as a
+        positional argument by the caller of the API function.
+        This parameter is required when 'blanked_properties' is used.
+        This parameter must be specified as a keyword argument.
 
     Returns:
 
@@ -128,109 +147,196 @@ def logged_api_call(func):
         method (and not on top of the @property decorator).
     """
 
-    # Note that in this decorator function, we are in a module loading context,
-    # where the decorated functions are being defined. When this decorator
-    # function is called, its call stack represents the definition of the
-    # decorated functions. Not all global definitions in the module have been
-    # defined yet, and methods of classes that are decorated with this
-    # decorator are still functions at this point (and not yet methods).
+    if blanked_properties is not None and properties_pos is None:
+        raise TypeError(
+            "If the @logged_api_call decorator is specified with "
+            "'blanked_properties', 'properties_pos' must also be specified.")
 
-    module = inspect.getmodule(func)
-    if not inspect.isfunction(func) or not hasattr(module, '__name__'):
-        raise TypeError("The @logged_api_call decorator must be used on a "
-                        "function or method (and not on top of the @property "
-                        "decorator)")
+    if properties_pos is not None and blanked_properties is None:
+        raise TypeError(
+            "If the @logged_api_call decorator is specified with "
+            "'properties_pos', 'blanked_properties' must also be specified.")
 
-    try:
-        # We avoid the use of inspect.getouterframes() because it is slow,
-        # and use the pointers up the stack frame, instead.
+    if blanked_properties is not None and (
+            not isinstance(blanked_properties, Sequence) or  # noqa: W504
+            isinstance(blanked_properties, str)):
+        raise TypeError(
+            "The 'blanked_properties' parameter of the @logged_api_call "
+            "decorator must be a list of strings.")
 
-        this_frame = inspect.currentframe()  # this decorator function here
-        apifunc_frame = this_frame.f_back  # the decorated API function
-
-        apifunc_owner = inspect.getframeinfo(apifunc_frame)[2]
-
-    finally:
-        # Recommended way to deal with frame objects to avoid ref cycles
-        del this_frame
-        del apifunc_frame
-
-    # TODO: For inner functions, show all outer levels instead of just one.
-
-    if apifunc_owner == '<module>':
-        # The decorated API function is defined globally (at module level)
-        apifunc_str = f'{func.__name__}()'
-    else:
-        # The decorated API function is defined in a class or in a function
-        apifunc_str = f'{apifunc_owner}.{func.__name__}()'
-
-    logger = get_logger(API_LOGGER_NAME)
-
-    def is_external_call():
+    def _decorate(func):
         """
-        Return a boolean indicating whether the call to the decorated API
-        function is an external call (vs. b eing an internal call).
+        The actual decorator function that always gets the original decorated
+        function, independent of whether the 'logged_api_call' decorator was
+        specified with or without its optional arguments.
+
+        Parameters:
+
+          func (function object): The original function being decorated.
         """
+
+        # Note that in this decorator function, we are in a module loading
+        # context, where the decorated functions are being defined. When this
+        # decorator function is called, its call stack represents the
+        # definition of the decorated functions. Not all global definitions in
+        # the module have been defined yet, and methods of classes that are
+        # decorated with this decorator are still functions at this point (and
+        # not yet methods).
+
+        if not inspect.isfunction(func):
+            raise TypeError("The @logged_api_call decorator must be used on a "
+                            "function or method (and not on top of the "
+                            "@property decorator)")
+
         try:
             # We avoid the use of inspect.getouterframes() because it is slow,
             # and use the pointers up the stack frame, instead.
 
-            log_it_frame = inspect.currentframe()  # this log_it() function
-            log_api_call_frame = log_it_frame.f_back  # the log_api_call() func
-            apifunc_frame = log_api_call_frame.f_back  # the decorated API func
-            apicaller_frame = apifunc_frame.f_back  # caller of API function
-            apicaller_module = inspect.getmodule(apicaller_frame)
-            if apicaller_module is None:
-                apicaller_module_name = "<unknown>"
-            else:
-                apicaller_module_name = apicaller_module.__name__
+            this_frame = inspect.currentframe()  # this function
+            apifunc_frame = this_frame.f_back  # the decorated API function
+            if org_func:
+                # In this case, there is one more decorator function nesting
+                apifunc_frame = apifunc_frame.f_back
+            apifunc_owner = inspect.getframeinfo(apifunc_frame)[2]
+
         finally:
             # Recommended way to deal with frame objects to avoid ref cycles
-            del log_it_frame
-            del log_api_call_frame
+            del this_frame
             del apifunc_frame
-            del apicaller_frame
-            del apicaller_module
 
-        # Log only if the caller is not from the zhmcclient package
-        return apicaller_module_name.split('.')[0] != 'zhmcclient'
+        # TODO: For inner functions, show all outer levels instead of just one.
 
-    def log_api_call(func, *args, **kwargs):
-        """
-        Log entry to and exit from the decorated function, at the debug level.
+        func_name = getattr(func, '__name__', '<unknown>')
+        if apifunc_owner == '<module>':
+            # The decorated API function is defined globally (at module level)
+            apifunc_str = f'{func_name}()'
+        else:
+            # The decorated API function is defined in a class or in a function
+            apifunc_str = f'{apifunc_owner}.{func_name}()'
 
-        Note that this wrapper function is called every time the decorated
-        function/method is called, but that the log message only needs to be
-        constructed when logging for this logger and for this log level is
-        turned on. Therefore, we do as much as possible in the decorator
-        function, plus we use %-formatting and lazy interpolation provided by
-        the log functions, in order to save resources in this function here.
+        logger = get_logger(API_LOGGER_NAME)
 
-        Parameters:
+        def is_external_call():
+            """
+            Return a boolean indicating whether the call to the decorated API
+            function is made from outside of the zhmcclient package.
+            """
+            try:
+                # We avoid the use of inspect.getouterframes() because it is
+                # slow, and use the pointers up the stack frame, instead.
 
-          func (function object): The decorated function.
+                this_frame = inspect.currentframe()  # this function
+                log_api_call_frame = this_frame.f_back  # log_api_call()
+                apifunc_frame = log_api_call_frame.f_back  # the decorated func
+                apicaller_frame = apifunc_frame.f_back  # caller of API func
+                apicaller_module = inspect.getmodule(apicaller_frame)
+                if apicaller_module is None:
+                    apicaller_module_name = "<unknown>"
+                else:
+                    apicaller_module_name = apicaller_module.__name__
+            finally:
+                # Recommended way to deal with frame objects to avoid ref
+                # cycles
+                del this_frame
+                del log_api_call_frame
+                del apifunc_frame
+                del apicaller_frame
+                del apicaller_module
 
-          *args: Any positional arguments for the decorated function.
+            # Log only if the caller is not from the zhmcclient package
+            return apicaller_module_name.split('.')[0] != 'zhmcclient'
 
-          **kwargs: Any keyword arguments for the decorated function.
-        """
+        def blanked_dict(properties):
+            """
+            Return a copy of the properties dict, with blanked out values
+            according to the 'blanked_properties' and 'properties_pos'
+            arguments of the 'logged_api_call' decorator.
+            """
+            # properties may also be a DictView (subclass of Mapping)
+            assert isinstance(properties, Mapping)
+            copied_properties = dict(properties)
+            for pn in blanked_properties:
+                try:
+                    copied_properties[pn] = BLANKED_OUT_STRING
+                except KeyError:
+                    pass
+            return copied_properties
 
-        # Note that in this function, we are in the context where the
-        # decorated function is actually called.
+        def blanked_args(args, kwargs):
+            """
+            Return a copy of args and kwargs, whereby the 'properties' argument
+            has items blanked out according to the 'blanked_properties' and
+            'properties_pos' arguments of the 'logged_api_call' decorator.
+            """
+            logged_kwargs = dict(kwargs)
+            logged_args = list(args)
+            if blanked_properties is not None:
+                if 'properties' in kwargs:
+                    logged_kwargs['properties'] = \
+                        blanked_dict(kwargs['properties'])
+                else:
+                    logged_args[properties_pos] = \
+                        blanked_dict(args[properties_pos])
+            return tuple(logged_args), logged_kwargs
 
-        _log_it = is_external_call() and logger.isEnabledFor(logging.DEBUG)
-
-        if _log_it:
+        def log_call(args, kwargs):
+            """
+            Log the call to the API function.
+            """
+            logged_args, logged_kwargs = blanked_args(args, kwargs)
             logger.debug("Called: %s, args: %.500s, kwargs: %.500s",
-                         apifunc_str, log_escaped(repr(args)),
-                         log_escaped(repr(kwargs)))
+                         apifunc_str,
+                         log_escaped(repr(logged_args)),
+                         log_escaped(repr(logged_kwargs)))
 
-        result = func(*args, **kwargs)
-
-        if _log_it:
+        def log_return(result):
+            """
+            Log the return from the API function.
+            """
             logger.debug("Return: %s, result: %.1000s",
                          apifunc_str, log_escaped(repr(result)))
 
-        return result
+        @functools.wraps(func)
+        def log_api_call(*args, **kwargs):
+            """
+            Log entry to and exit from the decorated function, at the debug
+            level.
 
-    return decorate(func, log_api_call)
+            Note that this wrapper function is called every time the decorated
+            function/method is called, but that the log message only needs to
+            be constructed when logging for this logger and for this log level
+            is turned on. Therefore, we do as much as possible in the decorator
+            function, plus we use %-formatting and lazy interpolation provided
+            by the log functions, in order to save resources in this function
+            here.
+
+            Parameters:
+
+              func (function object): The decorated function.
+
+              *args: Any positional arguments for the decorated function.
+
+              **kwargs: Any keyword arguments for the decorated function.
+            """
+
+            # Note that in this function, we are in the context where the
+            # decorated function is actually called.
+            _log_it = is_external_call() and logger.isEnabledFor(logging.DEBUG)
+
+            if _log_it:
+                log_call(args, kwargs)
+
+            result = func(*args, **kwargs)  # The zhmcclient function
+
+            if _log_it:
+                log_return(result)
+
+            return result
+
+        return log_api_call
+
+    # When the logged_api_call decorator is specified with its optional
+    # arguments, org_func is None
+    if org_func:
+        return _decorate(org_func)
+    return _decorate

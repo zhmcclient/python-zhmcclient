@@ -39,7 +39,7 @@ from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
     DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME, \
     HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER, \
-    DEFAULT_HMC_PORT
+    DEFAULT_HMC_PORT, BLANKED_OUT_STRING
 from ._utils import repr_obj_id
 from ._version import __version__
 
@@ -54,7 +54,14 @@ _STD_HEADERS = {
     'Accept': '*/*'
 }
 
-BLANKED_OUT = '********'  # Replacement for blanked out sensitive values
+# Properties whose values are always blanked out in the HMC log entries
+BLANKED_OUT_PROPERTIES = [
+    'boot-ftp-password',    # partition create/update
+    'bind-password',        # LDAP server def. create/update
+    'ssc-master-pw',        # image profile cr/upd, part. cr/upd, LPAR upd
+    'password',             # user create/update
+    'zaware-master-pw',     # image profile create/update, LPAR update
+]
 
 
 def _handle_request_exc(exc, retry_timeout_config):
@@ -263,7 +270,7 @@ def _headers_for_logging(headers):
     """
     if headers and 'X-API-Session' in headers:
         headers = headers.copy()
-        headers['X-API-Session'] = BLANKED_OUT
+        headers['X-API-Session'] = BLANKED_OUT_STRING
     return headers
 
 
@@ -465,7 +472,7 @@ class Session:
             f"  _actual_host={self._actual_host!r},\n"
             f"  _base_url={self._base_url!r},\n"
             f"  _headers={headers!r},\n"
-            f"  _session_id={BLANKED_OUT!r},\n"
+            f"  _session_id={BLANKED_OUT_STRING!r},\n"
             f"  _session={self._session!r}\n"
             f"  _object_topic={self._object_topic!r}\n"
             f"  _job_topic={self._job_topic!r}\n"
@@ -960,8 +967,11 @@ class Session:
                 # structured data such as a password or session IDs.
                 pass
             else:
-                if 'password' in content_dict:
-                    content_dict['password'] = BLANKED_OUT
+                for prop in BLANKED_OUT_PROPERTIES:
+                    try:
+                        content_dict[prop] = BLANKED_OUT_STRING
+                    except KeyError:
+                        pass
                 content = dict2json(content_dict)
             trunc = 30000
             if content_len > trunc:
@@ -1029,11 +1039,11 @@ class Session:
                 if 'request-headers' in content_dict:
                     headers_dict = content_dict['request-headers']
                     if 'x-api-session' in headers_dict:
-                        headers_dict['x-api-session'] = BLANKED_OUT
+                        headers_dict['x-api-session'] = BLANKED_OUT_STRING
                 if 'api-session' in content_dict:
-                    content_dict['api-session'] = BLANKED_OUT
+                    content_dict['api-session'] = BLANKED_OUT_STRING
                 if 'session-credential' in content_dict:
-                    content_dict['session-credential'] = BLANKED_OUT
+                    content_dict['session-credential'] = BLANKED_OUT_STRING
                 content = dict2json(content_dict)
             if status >= 400:
                 content_label = 'content'
