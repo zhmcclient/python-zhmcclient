@@ -22,10 +22,9 @@ import copy
 import logging
 import pytest
 
-from zhmcclient import Client, Partition, HTTPError, NotFound, \
-    BLANKED_OUT_STRING
+from zhmcclient import Client, Partition, HTTPError, NotFound
 from zhmcclient_mock import FakedSession
-from tests.common.utils import assert_resources
+from tests.common.utils import assert_resources, assert_blanked_in_message
 
 # Object IDs and names of our faked partitions:
 PART1_OID = 'part1-oid'
@@ -388,12 +387,9 @@ class TestPartition:
                     assert value == exp_value
 
             # Verify the API call log record for blanked-out properties.
-            if 'boot-ftp-password' in input_props:
-                exp_str = f"'boot-ftp-password': '{BLANKED_OUT_STRING}'"
-                assert call_record.message.find(exp_str) > 0
-            if 'ssc-master-pw' in input_props:
-                exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
-                assert call_record.message.find(exp_str) > 0
+            assert_blanked_in_message(
+                call_record.message, input_props,
+                ['boot-ftp-password', 'ssc-master-pw'])
 
     def test_pm_resource_object(self):
         """
@@ -753,12 +749,9 @@ class TestPartition:
             assert prop_value == exp_prop_value
 
         # Verify the API call log record for blanked-out properties.
-        if 'boot-ftp-password' in input_props:
-            exp_str = f"'boot-ftp-password': '{BLANKED_OUT_STRING}'"
-            assert call_record.message.find(exp_str) > 0
-        if 'ssc-master-pw' in input_props:
-            exp_str = f"'ssc-master-pw': '{BLANKED_OUT_STRING}'"
-            assert call_record.message.find(exp_str) > 0
+        assert_blanked_in_message(
+            call_record.message, input_props,
+            ['boot-ftp-password', 'ssc-master-pw'])
 
     def test_partition_update_name(self):
         """
