@@ -255,11 +255,9 @@ def logged_api_call(
             # properties may also be a DictView (subclass of Mapping)
             assert isinstance(properties, Mapping)
             copied_properties = dict(properties)
-            for pn in blanked_properties:
-                try:
-                    copied_properties[pn] = BLANKED_OUT_STRING
-                except KeyError:
-                    pass
+            for pname in blanked_properties:
+                if pname in copied_properties:
+                    copied_properties[pname] = BLANKED_OUT_STRING
             return copied_properties
 
         def blanked_args(args, kwargs):
