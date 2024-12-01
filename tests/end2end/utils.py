@@ -115,6 +115,36 @@ class End2endTestWarning(UserWarning):
     pass
 
 
+def assert_properties(act_obj, exp_obj):
+    """
+    Check that actual properties match expected properties.
+
+    The expected properties may specify only a subset of the actual properties.
+    Only the expected properties are checked.
+
+    The property values may have any type, including nested dictionaries and
+    lists. For nested dictionaries and lists, each item is matched recursively.
+
+    Parameters:
+      act_obj (dict): The actual object. Initially, a dict with properties.
+      exp_obj (dict): The expected object. Initially, a dict with properties.
+    """
+    if isinstance(exp_obj, dict):
+        for name, exp_value in exp_obj.items():
+            assert name in act_obj, (
+                f"Expected property {name!r} is not in actual properties:\n"
+                f"{act_obj!r}")
+            act_value = act_obj[name]
+            assert_properties(act_value, exp_value)
+    elif isinstance(exp_obj, list):
+        for i, exp_value in enumerate(exp_obj):
+            act_value = act_obj[i]
+            assert_properties(act_value, exp_value)
+    else:
+        assert act_obj == exp_obj, (
+            f"Unexpected value: {act_obj!r}; Expected: {exp_obj!r}")
+
+
 def assert_res_props(res, exp_props, ignore_values=None, prop_names=None):
     """
     Check the properties of a resource object.
@@ -630,6 +660,25 @@ def _skipif_api_feature_not_on_cpc_and_hmc(feature, cpc):
     console_features = console.list_api_features()
     if feature not in console_features:
         skip_warn(f"API feature {feature} not available on HMC {console.name}")
+
+
+def skipif_no_partition_link_feature(cpc):
+    """
+    Skip the test if the "dpm-smcd-partition-link-management" API feature is
+    not enabled for the specified CPC, or if the CPC does not yet support it.
+
+    Note that the three partition-link related API features are always all
+    enabled or all disabled:
+
+    * "dpm-smcd-partition-link-management"
+    * "dpm-hipersockets-partition-link-management"
+    * "dpm-ctc-partition-link-management"
+    """
+    has_partition_link = has_api_feature(
+        "dpm-smcd-partition-link-management", cpc)
+    if not has_partition_link:
+        skip_warn("Partition link related API features not enabled or not "
+                  f"supported on CPC {cpc.name}")
 
 
 def has_api_feature(feature, cpc):

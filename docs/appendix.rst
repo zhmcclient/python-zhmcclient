@@ -489,6 +489,11 @@ Resources scoped to CPCs in DPM mode
 
      For details, see section :ref:`Partitions`.
 
+  Partition Link
+     A resource that interconnects two or more :term:`Partitions <Partition>`,
+     using one of multiple interconnect technologies such as SMC-D,
+     Hipersockets, or CTC.
+
   Port
      The physical connector port (jack) of an :term:`Adapter`.
 
