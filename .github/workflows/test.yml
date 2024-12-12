@@ -36,7 +36,31 @@ jobs:
           echo "matrix={ \
             \"os\": [ \"ubuntu-latest\", \"macos-latest\", \"windows-latest\" ], \
             \"python-version\": [ \"3.8\", \"3.9\", \"3.10\", \"3.11\", \"3.12\", \"3.13\" ], \
-            \"package_level\": [ \"minimum\", \"latest\" ] \
+            \"package_level\": [ \"minimum\", \"latest\" ], \
+            \"exclude\": [ \
+              { \
+                \"os\": \"ubuntu-latest\", \
+                \"python-version\": \"3.8\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"ubuntu-latest\", \
+                \"python-version\": \"3.8\", \
+                \"package_level\": \"latest\" \
+              } \
+            ], \
+            \"include\": [ \
+              { \
+                \"os\": \"ubuntu-22.04\", \
+                \"python-version\": \"3.8\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"ubuntu-22.04\", \
+                \"python-version\": \"3.8\", \
+                \"package_level\": \"latest\" \
+              } \
+            ] \
           }" >> $GITHUB_OUTPUT; \
         else \
           echo "matrix={ \
@@ -45,7 +69,7 @@ jobs:
             \"package_level\": [ \"minimum\", \"latest\" ], \
             \"include\": [ \
               { \
-                \"os\": \"ubuntu-latest\", \
+                \"os\": \"ubuntu-22.04\", \
                 \"python-version\": \"3.8\", \
                 \"package_level\": \"minimum\" \
               }, \
