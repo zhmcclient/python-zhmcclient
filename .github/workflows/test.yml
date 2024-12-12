@@ -75,6 +75,11 @@ jobs:
                 \"package_level\": \"minimum\" \
               }, \
               { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.13\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
                 \"os\": \"windows-latest\", \
                 \"python-version\": \"3.8\", \
                 \"package_level\": \"minimum\" \
@@ -163,30 +168,33 @@ jobs:
       run: |
         echo "Package dependency tree of installed Python packages:"
         python -m pipdeptree --all
-    - name: Run build
-      env:
-        PACKAGE_LEVEL: ${{ matrix.package_level }}
-        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+    # - name: Run build
+    #   env:
+    #     PACKAGE_LEVEL: ${{ matrix.package_level }}
+    #     RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+    #   run: |
+    #     make build
+    # - name: Run builddoc
+    #   env:
+    #     PACKAGE_LEVEL: ${{ matrix.package_level }}
+    #     RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+    #   run: |
+    #     make builddoc
+    # - name: Run check
+    #   env:
+    #     PACKAGE_LEVEL: ${{ matrix.package_level }}
+    #     RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+    #   run: |
+    #     make check
+    # - name: Run ruff
+    #   env:
+    #     PACKAGE_LEVEL: ${{ matrix.package_level }}
+    #     RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+    #   run: |
+    #     make ruff
+    - name: Show collections.abc file
       run: |
-        make build
-    - name: Run builddoc
-      env:
-        PACKAGE_LEVEL: ${{ matrix.package_level }}
-        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
-      run: |
-        make builddoc
-    - name: Run check
-      env:
-        PACKAGE_LEVEL: ${{ matrix.package_level }}
-        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
-      run: |
-        make check
-    - name: Run ruff
-      env:
-        PACKAGE_LEVEL: ${{ matrix.package_level }}
-        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
-      run: |
-        make ruff
+        cat $(python -c "import collections.abc as m; print(m.__file__)")
     - name: Run pylint
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}

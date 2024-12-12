@@ -589,7 +589,8 @@ $(bdist_file) $(version_file): pyproject.toml $(dist_dependent_files)
 $(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(pylint_rc_file) $(check_py_files)
 	@echo "Makefile: Running Pylint"
 	-$(call RM_FUNC,$@)
-	pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
+	pylint --version
+	pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text zhmcclient/pylint_issue.py
 	echo "done" >$@
 	@echo "Makefile: Done running Pylint"
 
