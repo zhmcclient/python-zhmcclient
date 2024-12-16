@@ -31,11 +31,14 @@ jobs:
       # This technique documented in:
       #    https://stackoverflow.com/questions/65384420/how-to-make-a-github-action-matrix-element-conditional
       # TODO: Find a way to define this with less escapes.
+      # TODO: Python 3.13 was pinned to 3.13.0 to work around a pylint issue
+      #       https://github.com/pylint-dev/pylint/issues/10112 on Python 3.13.1.
+      #       Remove that pinning again when it is fixed.
       run: |
         if [[ "${{ github.event_name }}" == "schedule" || "${{ github.head_ref }}" =~ ^release_ ]]; then \
           echo "matrix={ \
             \"os\": [ \"ubuntu-latest\", \"macos-latest\", \"windows-latest\" ], \
-            \"python-version\": [ \"3.8\", \"3.9\", \"3.10\", \"3.11\", \"3.12\", \"3.13\" ], \
+            \"python-version\": [ \"3.8\", \"3.9\", \"3.10\", \"3.11\", \"3.12\", \"3.13.0\" ], \
             \"package_level\": [ \"minimum\", \"latest\" ], \
             \"exclude\": [ \
               { \
@@ -65,7 +68,7 @@ jobs:
         else \
           echo "matrix={ \
             \"os\": [ \"ubuntu-latest\" ], \
-            \"python-version\": [ \"3.13\" ], \
+            \"python-version\": [ \"3.13.0\" ], \
             \"package_level\": [ \"minimum\", \"latest\" ], \
             \"include\": [ \
               { \
@@ -95,7 +98,7 @@ jobs:
               }, \
               { \
                 \"os\": \"macos-latest\", \
-                \"python-version\": \"3.13\", \
+                \"python-version\": \"3.13.0\", \
                 \"package_level\": \"minimum\" \
               }, \
               { \
@@ -105,7 +108,7 @@ jobs:
               }, \
               { \
                 \"os\": \"windows-latest\", \
-                \"python-version\": \"3.13\", \
+                \"python-version\": \"3.13.0\", \
                 \"package_level\": \"latest\" \
               } \
             ] \
