@@ -461,18 +461,20 @@ class Session:
         Return a string with the state of this session, for debug purposes.
         """
         headers = _headers_for_logging(self.headers)
+        blanked_session_id = BLANKED_OUT_STRING if self._session_id else None
+        blanked_password = BLANKED_OUT_STRING if self._password else None
         ret = (
             f"{repr_obj_id(self)} (\n"
             f"  _hosts={self._hosts!r},\n"
             f"  _userid={self._userid!r},\n"
-            f"  _password='...',\n"
+            f"  _password={blanked_password!r},\n"
             f"  _verify_cert={self._verify_cert!r},\n"
             f"  _get_password={self._get_password!r},\n"
             f"  _retry_timeout_config={self._retry_timeout_config!r},\n"
             f"  _actual_host={self._actual_host!r},\n"
             f"  _base_url={self._base_url!r},\n"
             f"  _headers={headers!r},\n"
-            f"  _session_id={BLANKED_OUT_STRING!r},\n"
+            f"  _session_id={blanked_session_id!r},\n"
             f"  _session={self._session!r}\n"
             f"  _object_topic={self._object_topic!r}\n"
             f"  _job_topic={self._job_topic!r}\n"
