@@ -815,17 +815,23 @@ class Session:
           :exc:`~zhmcclient.ServerAuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        if self._userid is None:
-            raise ClientAuthError("Userid is not provided.")
-
         # Determine working HMC for this session
         self._actual_host = self._determine_actual_host()
         self._base_url = self._create_base_url(self._actual_host, self._port)
+
+        HMC_LOGGER.debug("Logging on to HMC %s", self._actual_host)
+
+        if self._userid is None:
+            raise ClientAuthError("Userid is not provided.")
 
         if self._password is None:
             if self._get_password:
                 self._password = \
                     self._get_password(self._actual_host, self._userid)
+            elif self._session_id:
+                raise ClientAuthError(
+                    "Session ID is not valid and no password for fresh "
+                    "logon was provided.")
             else:
                 raise ClientAuthError("Password is not provided.")
 
@@ -920,6 +926,8 @@ class Session:
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        HMC_LOGGER.debug("Logging off from HMC %s", self._actual_host)
+
         session_uri = '/api/sessions/this-session'
         try:
             self.delete(session_uri, logon_required=False, renew_session=False)
