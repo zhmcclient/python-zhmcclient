@@ -108,6 +108,11 @@ jobs:
               }, \
               { \
                 \"os\": \"windows-latest\", \
+                \"python-version\": \"3.8\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"windows-latest\", \
                 \"python-version\": \"3.13.0\", \
                 \"package_level\": \"latest\" \
               } \
