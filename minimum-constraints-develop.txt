@@ -145,7 +145,8 @@ pip-check-reqs==2.4.3; python_version <= '3.8'
 pip-check-reqs==2.5.1; python_version >= '3.9'
 
 # pywinpty is used by terminado <- notebook <- jupyter
-pywinpty==2.0.12; os_name == "nt"
+pywinpty==2.0.12; os_name == "nt" and python_version >= '3.8' and python_version <= '3.12'
+pywinpty==2.0.14; os_name == "nt" and python_version >= '3.13'
 
 # Indirect dependencies for development that are not in dev-requirements.txt
 

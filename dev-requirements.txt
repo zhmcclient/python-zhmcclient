@@ -175,7 +175,11 @@ pip-check-reqs>=2.5.1; python_version >= '3.9'
 
 # pywinpty is used by terminado <- notebook <- jupyter
 # pywinpty>=1.0 requires maturin to build. Meanwhile, it works.
-pywinpty>=2.0.12; os_name == "nt"
+# pywinpty 2.0.14 has an issue with latest maturin on Python 3.8, see https://github.com/andfoy/pywinpty/issues/486
+# pywinpty 2.0.12/13 has the above issue on Python 3.13
+pywinpty>=2.0.12,!=2.0.14; os_name == "nt" and python_version == '3.8'
+pywinpty>=2.0.12; os_name == "nt" and python_version >= '3.9' and python_version <= '3.12'
+pywinpty>=2.0.14; os_name == "nt" and python_version >= '3.13'
 
 # pytz is actually covered in requirements.txt, but we need to repeat it here
 # because development packages pull it in, so the exclusion of 2024.2 is active
