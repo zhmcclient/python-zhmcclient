@@ -679,7 +679,7 @@ class Session:
         return self._auto_updater
 
     @logged_api_call
-    def logon(self, verify=False):
+    def logon(self, verify=False, always=False):
         """
         Make sure this session object is logged on to the HMC.
 
@@ -708,6 +708,9 @@ class Session:
 
           verify (bool): Verify the validity of an existing session ID.
 
+          always (bool): Unconditionally log on, regardless of an existing
+            session ID.
+
         Raises:
 
           :exc:`~zhmcclient.HTTPError`
@@ -717,7 +720,7 @@ class Session:
           :exc:`~zhmcclient.ConnectionError`
         """
         need_logon = False
-        if self._session_id is None:
+        if self._session_id is None or always:
             need_logon = True
         elif verify:
             try:
