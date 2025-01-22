@@ -162,7 +162,7 @@ def setup_hmc_session(hd):
             logger.setLevel(logging.DEBUG)
 
         rt_config = zhmcclient.RetryTimeoutConfig(
-            read_timeout=300,
+            read_timeout=1800,
         )
 
         # Creating a session does not interact with the HMC (logon is deferred)
