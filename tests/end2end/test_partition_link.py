@@ -370,7 +370,6 @@ PARTLINK_CREATE_DELETE_TESTCASES = [
             ],
         },
         {
-            'partitions': ['partition_1.uri', 'partition_2.uri'],
             'paths': [
                 {
                     'starting-device-number': '4000',
