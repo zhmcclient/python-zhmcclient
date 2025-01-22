@@ -35,6 +35,7 @@ from ._user_pattern import UserPatternManager
 from ._password_rule import PasswordRuleManager
 from ._task import TaskManager
 from ._ldap_server_definition import LdapServerDefinitionManager
+from ._mfa_server_definition import MfaServerDefinitionManager
 from ._unmanaged_cpc import UnmanagedCpcManager
 from ._group import GroupManager
 from ._utils import get_features
@@ -211,6 +212,7 @@ class Console(BaseResource):
         self._password_rules = None
         self._tasks = None
         self._ldap_server_definitions = None
+        self._mfa_server_definitions = None
         self._unmanaged_cpcs = None
         self._groups = None
         self._certificates = None
@@ -304,6 +306,18 @@ class Console(BaseResource):
         if not self._ldap_server_definitions:
             self._ldap_server_definitions = LdapServerDefinitionManager(self)
         return self._ldap_server_definitions
+
+    @property
+    def mfa_server_definitions(self):
+        """
+        :class:`~zhmcclient.MfaServerDefinitionManager`: Access to the
+        :term:`MFA Server Definitions <MFA Server Definition>` in this
+        Console.
+        """
+        # We do here some lazy loading.
+        if not self._mfa_server_definitions:
+            self._mfa_server_definitions = MfaServerDefinitionManager(self)
+        return self._mfa_server_definitions
 
     @property
     def unmanaged_cpcs(self):
@@ -1403,6 +1417,7 @@ class Console(BaseResource):
                 "password_rules": [...],
                 "tasks": [...],
                 "ldap_server_definitions": [...],
+                "mfa_server_definitions": [...],
                 "unmanaged_cpcs": [...],
                 "storage_groups": [...],
             }
@@ -1434,6 +1449,9 @@ class Console(BaseResource):
         ldap_server_definitions = self.ldap_server_definitions.dump()
         if ldap_server_definitions:
             resource_dict['ldap_server_definitions'] = ldap_server_definitions
+        mfa_server_definitions = self.mfa_server_definitions.dump()
+        if mfa_server_definitions:
+            resource_dict['mfa_server_definitions'] = mfa_server_definitions
         storage_groups = self.storage_groups.dump()
         if storage_groups:
             resource_dict['storage_groups'] = storage_groups

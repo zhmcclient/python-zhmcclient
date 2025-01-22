@@ -1,0 +1,3 @@
+Added zhmcclient mock support for MFA Server Definitions with a new
+'zhmcclient_mock.FakedMfaServerDefinition' class (and a corresponding manager
+class).

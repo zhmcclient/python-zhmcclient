@@ -67,7 +67,6 @@ RC_CERTIFICATE = 'certificate'
 RC_RESET_ACTIVATION_PROFILE = 'reset-activation-profile'
 RC_IMAGE_ACTIVATION_PROFILE = 'image-activation-profile'
 RC_LOAD_ACTIVATION_PROFILE = 'load-activation-profile'
-RC_LDAP_SERVER_DEFINITION = 'ldap-server-definition'
 RC_LOGICAL_PARTITION = 'logical-partition'
 #
 # For CPCs in any  mode and resources independent of CPCs:
@@ -79,6 +78,8 @@ RC_USER_PATTERN = 'user-pattern'
 RC_USER_ROLE = 'user-role'
 RC_USER = 'user'
 RC_GROUP = 'group'
+RC_LDAP_SERVER_DEFINITION = 'ldap-server-definition'
+RC_MFA_SERVER_DEFINITION = 'mfa-server-definition'
 
 # Resource classes that are children of zhmcclient.Cpc
 RC_CHILDREN_CPC = (
@@ -101,6 +102,7 @@ RC_CHILDREN_CONSOLE = (
     RC_USER_ROLE,
     RC_USER,
     RC_LDAP_SERVER_DEFINITION,
+    RC_MFA_SERVER_DEFINITION,
     RC_CPC,  # For unmanaged CPCs
 )
 # Resource classes that are children of zhmcclient.Client (= top level)
@@ -140,6 +142,7 @@ VALID_RESOURCE_CLASSES = frozenset([
     RC_IMAGE_ACTIVATION_PROFILE,
     RC_LOAD_ACTIVATION_PROFILE,
     RC_LDAP_SERVER_DEFINITION,
+    RC_MFA_SERVER_DEFINITION,
     RC_LOGICAL_PARTITION,
     RC_CONSOLE,
     RC_CPC,

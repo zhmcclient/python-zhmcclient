@@ -558,6 +558,26 @@ LDAP Server Definition
    :special-members: __str__
 
 
+.. _`MFA Server Definition`:
+
+MFA Server Definition
+---------------------
+
+.. automodule:: zhmcclient._mfa_server_definition
+
+.. autoclass:: zhmcclient.MfaServerDefinitionManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.MfaServerDefinition
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+
 .. _`Certificates`:
 
 Certificates
