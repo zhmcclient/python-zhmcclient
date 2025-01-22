@@ -519,7 +519,8 @@ class PartitionLink(BaseResource):
             uri=f'{self.uri}/operations/delete',
             resource=self,
             body=body,
-            wait_for_completion=True)
+            wait_for_completion=True,
+            busy_retries=1, busy_wait=2)
 
         # pylint: disable=protected-access
         self.manager._name_uri_cache.delete(
@@ -577,7 +578,8 @@ class PartitionLink(BaseResource):
             uri=f'{self.uri}/operations/modify',
             resource=self,
             body=properties,
-            wait_for_completion=True)
+            wait_for_completion=True,
+            busy_retries=1, busy_wait=2)
 
         for op_result in result['operation-results']:
             if op_result['operation-status'] \
