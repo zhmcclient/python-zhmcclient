@@ -263,6 +263,13 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
         # The code to be tested
         partlink = console.partition_links.create(partlink_input_props)
 
+        # Remove input properties that are not in data model or that are
+        # different iindata model, so that we can check.
+        if 'partitions' in partlink_input_props:
+            del partlink_input_props['partitions']  # not in data model
+        if 'paths' in partlink_input_props:
+            del partlink_input_props['paths']  # different in data model
+
         for pn, exp_value in partlink_input_props.items():
             assert partlink.properties[pn] == exp_value, (
                 f"Unexpected value for property {pn!r} of partition link:\n"
