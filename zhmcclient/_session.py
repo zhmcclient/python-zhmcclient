@@ -1433,7 +1433,7 @@ class Session:
                 result_object = _result_object(result)
                 reason = result_object.get('reason', None)
                 message = result_object.get('message', None)
-                HMC_LOGGER.debug("Received HTTP status 403.%d on GET %s: %s",
+                HMC_LOGGER.debug("Received HTTP status 403.%d on POST %s: %s",
                                  reason, uri, message)
 
                 if reason in (4, 5):
@@ -1539,7 +1539,7 @@ class Session:
             result_object = _result_object(result)
             reason = result_object.get('reason', None)
             message = result_object.get('message', None)
-            HMC_LOGGER.debug("Received HTTP status 403.%d on GET %s: %s",
+            HMC_LOGGER.debug("Received HTTP status 403.%d on DELETE %s: %s",
                              reason, uri, message)
 
             if reason in (4, 5):
