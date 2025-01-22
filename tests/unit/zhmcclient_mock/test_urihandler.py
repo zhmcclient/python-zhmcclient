@@ -48,6 +48,7 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     UserPatternsHandler, UserPatternHandler, \
     PasswordRulesHandler, PasswordRuleHandler, \
     LdapServerDefinitionsHandler, LdapServerDefinitionHandler, \
+    MfaServerDefinitionsHandler, MfaServerDefinitionHandler, \
     CpcsHandler, CpcHandler, CpcSetPowerSaveHandler, \
     CpcSetPowerCappingHandler, CpcGetEnergyManagementDataHandler, \
     CpcStartHandler, CpcStopHandler, \
@@ -790,6 +791,16 @@ def standard_test_hmc():
                             'name': 'fake_ldap_srv_def_name_1',
                             'description': 'LDAP Srv Def #1',
                             'primary-hostname-ipaddr': '10.11.12.13',
+                        },
+                    },
+                ],
+                'mfa_server_definitions': [
+                    {
+                        'properties': {
+                            'element-id': 'fake-mfa-srv-def-oid-1',
+                            'name': 'fake_mfa_srv_def_name_1',
+                            'description': 'MFA Srv Def #1',
+                            'hostname-ipaddr': '10.11.12.13',
                         },
                     },
                 ],
@@ -3467,6 +3478,195 @@ class TestLdapServerDefinitionHandlers:
         # Verify that it has been deleted
         with pytest.raises(InvalidResourceError):
             self.urihandler.get(self.hmc, new_ldap_srv_def_uri, True)
+
+
+class TestMfaServerDefinitionHandlers:
+    """
+    All tests for classes MfaServerDefinitionsHandler and
+    MfaServerDefinitionHandler.
+    """
+
+    def setup_method(self):
+        """
+        Called by pytest before each test method.
+
+        Creates a Faked HMC with standard resources, and with
+        MfaServerDefinitionsHandler and MfaServerDefinitionHandler.
+        """
+        self.hmc, self.hmc_resources = standard_test_hmc()
+        self.uris = (
+            (r'/api/console/mfa-server-definitions(?:\?(.*))?',
+             MfaServerDefinitionsHandler),
+            (r'/api/console/mfa-server-definitions/([^/]+)',
+             MfaServerDefinitionHandler),
+        )
+        self.urihandler = UriHandler(self.uris)
+
+    def test_mfa_list(self):
+        """
+        Test GET MFA server definitions (list).
+        """
+
+        # the function to be tested:
+        mfa_srv_defs = self.urihandler.get(
+            self.hmc, '/api/console/mfa-server-definitions', True)
+
+        exp_mfa_srv_defs = {  # properties reduced to those returned by List
+            'mfa-server-definitions': [
+                {
+                    'element-uri':
+                        '/api/console/mfa-server-definitions/'
+                        'fake-mfa-srv-def-oid-1',
+                    'name': 'fake_mfa_srv_def_name_1',
+                },
+            ]
+        }
+        assert mfa_srv_defs == exp_mfa_srv_defs
+
+    def test_mfa_list_err_no_console(self):
+        """
+        Test GET MFA server definitions (list) when console does not exist
+        in the faked HMC.
+        """
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        with pytest.raises(InvalidResourceError) as exc_info:
+
+            # the function to be tested:
+            self.urihandler.get(
+                self.hmc, '/api/console/mfa-server-definitions', True)
+
+        exc = exc_info.value
+        assert exc.reason == 1
+
+    def test_mfa_get(self):
+        """
+        Test GET MFA server definition.
+        """
+
+        # the function to be tested:
+        mfa_srv_def1 = self.urihandler.get(
+            self.hmc,
+            '/api/console/mfa-server-definitions/fake-mfa-srv-def-oid-1',
+            True)
+
+        exp_mfa_srv_def1 = {  # properties reduced to those in std test HMC
+            'element-id': 'fake-mfa-srv-def-oid-1',
+            'element-uri':
+                '/api/console/mfa-server-definitions/'
+                'fake-mfa-srv-def-oid-1',
+            'class': 'mfa-server-definition',
+            'parent': '/api/console',
+            'name': 'fake_mfa_srv_def_name_1',
+            'description': 'MFA Srv Def #1',
+            'hostname-ipaddr': '10.11.12.13',
+            'port': 6789,
+            'replication-overwrite-possible': False,
+        }
+        assert mfa_srv_def1 == exp_mfa_srv_def1
+
+    def test_mfa_create_verify(self):
+        """
+        Test POST MFA server definitions (create).
+        """
+
+        new_mfa_srv_def_input = {
+            'name': 'mfa_srv_def_X',
+            'description': 'MFA Srv Def #X',
+            'hostname-ipaddr': '10.11.12.13',
+        }
+
+        # the function to be tested:
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/mfa-server-definitions',
+            new_mfa_srv_def_input, True, True)
+
+        assert len(resp) == 1
+        assert 'element-uri' in resp
+        new_mfa_srv_def_uri = resp['element-uri']
+
+        # the function to be tested:
+        new_mfa_srv_def = self.urihandler.get(
+            self.hmc, new_mfa_srv_def_uri, True)
+
+        new_name = new_mfa_srv_def['name']
+        input_name = new_mfa_srv_def_input['name']
+        assert new_name == input_name
+
+    def test_mfa_create_err_no_console(self):
+        """
+        Test POST MFA server definitions (create) when console does not exist
+        in the faked HMC.
+        """
+
+        # Remove the faked Console object
+        self.hmc.consoles.remove(None)
+
+        new_mfa_srv_def_input = {
+            'name': 'mfa_srv_def_X',
+            'description': 'MFA Srv Def #X',
+        }
+
+        with pytest.raises(InvalidResourceError) as exc_info:
+
+            # the function to be tested:
+            self.urihandler.post(
+                self.hmc, '/api/console/mfa-server-definitions',
+                new_mfa_srv_def_input, True, True)
+
+        exc = exc_info.value
+        assert exc.reason == 1
+
+    def test_mfa_update_verify(self):
+        """
+        Test POST MFA server definition (update).
+        """
+
+        update_mfa_srv_def1 = {
+            'description': 'updated MFA Srv Def #1',
+        }
+
+        # the function to be tested:
+        self.urihandler.post(
+            self.hmc,
+            '/api/console/mfa-server-definitions/fake-mfa-srv-def-oid-1',
+            update_mfa_srv_def1, True, True)
+
+        mfa_srv_def1 = self.urihandler.get(
+            self.hmc,
+            '/api/console/mfa-server-definitions/fake-mfa-srv-def-oid-1',
+            True)
+        assert mfa_srv_def1['description'] == 'updated MFA Srv Def #1'
+
+    def test_mfa_delete_verify(self):
+        """
+        Test DELETE MFA server definition.
+        """
+
+        new_mfa_srv_def_input = {
+            'name': 'mfa_srv_def_X',
+            'description': 'MFA Srv Def #X',
+            'hostname-ipaddr': '10.11.12.13',
+        }
+
+        # Create the MFA Srv Def
+        resp = self.urihandler.post(
+            self.hmc, '/api/console/mfa-server-definitions',
+            new_mfa_srv_def_input, True, True)
+
+        new_mfa_srv_def_uri = resp['element-uri']
+
+        # Verify that it exists
+        self.urihandler.get(self.hmc, new_mfa_srv_def_uri, True)
+
+        # the function to be tested:
+        self.urihandler.delete(self.hmc, new_mfa_srv_def_uri, True)
+
+        # Verify that it has been deleted
+        with pytest.raises(InvalidResourceError):
+            self.urihandler.get(self.hmc, new_mfa_srv_def_uri, True)
 
 
 class TestCpcHandlers:

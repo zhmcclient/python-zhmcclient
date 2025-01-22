@@ -39,6 +39,7 @@ __all__ = ['InputError',
            'FakedPasswordRuleManager', 'FakedPasswordRule',
            'FakedTaskManager', 'FakedTask',
            'FakedLdapServerDefinitionManager', 'FakedLdapServerDefinition',
+           'FakedMfaServerDefinitionManager', 'FakedMfaServerDefinition',
            'FakedActivationProfileManager', 'FakedActivationProfile',
            'FakedAdapterManager', 'FakedAdapter',
            'FakedCpcManager', 'FakedCpc',
@@ -1148,6 +1149,8 @@ class FakedConsole(FakedBaseResource):
         self._tasks = FakedTaskManager(hmc=manager.hmc, console=self)
         self._ldap_server_definitions = FakedLdapServerDefinitionManager(
             hmc=manager.hmc, console=self)
+        self._mfa_server_definitions = FakedMfaServerDefinitionManager(
+            hmc=manager.hmc, console=self)
         self._unmanaged_cpcs = FakedUnmanagedCpcManager(
             hmc=manager.hmc, console=self)
         self._groups = FakedGroupManager(hmc=manager.hmc, console=self)
@@ -1174,6 +1177,8 @@ class FakedConsole(FakedBaseResource):
             f"  _tasks = {repr_manager(self.tasks, indent=2)}\n"
             "  _ldap_server_definitions = "
             f"{repr_manager(self.ldap_server_definitions, indent=2)}\n"
+            "  _mfa_server_definitions = "
+            f"{repr_manager(self.mfa_server_definitions, indent=2)}\n"
             "  _unmanaged_cpcs = "
             f"{repr_manager(self.unmanaged_cpcs, indent=2)}\n"
             f"  _groups = {repr_manager(self.groups, indent=2)}\n"
@@ -1243,6 +1248,14 @@ class FakedConsole(FakedBaseResource):
         the faked LDAP Server Definition resources of this Console.
         """
         return self._ldap_server_definitions
+
+    @property
+    def mfa_server_definitions(self):
+        """
+        :class:`~zhmcclient_mock.FakedMfaServerDefinitionManager`: Access to
+        the faked MFA Server Definition resources of this Console.
+        """
+        return self._mfa_server_definitions
 
     @property
     def unmanaged_cpcs(self):
@@ -1674,6 +1687,80 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
 class FakedLdapServerDefinition(FakedBaseResource):
     """
     A faked LDAP Server Definition resource within a faked HMC (see
+    :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedMfaServerDefinitionManager(FakedBaseManager):
+    """
+    A manager for faked MFA Server Definition resources within a faked HMC
+    (see :class:`zhmcclient_mock.FakedHmc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super().__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedMfaServerDefinition,
+            base_uri=console.uri + '/mfa-server-definitions',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='mfa-server-definition',
+            name_prop='name',
+            case_insensitive_names=True)
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked MFA Server Definition resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'mfa-server-definition',
+              if not specified.
+            * All of the other class-soecific resource properties will be set
+              to a default value consistent with the HMC data model.
+
+        Returns:
+
+          :class:`~zhmcclient_mock.FakedMfaServerDefinition`: The faked
+          MfaServerDefinition resource.
+        """
+        new_mfa = super().add(properties)
+
+        # Resource type specific default values
+        # 'name' is required
+        new_mfa.properties.setdefault('description', '')
+        # 'hostname-ipaddr' is required
+        new_mfa.properties.setdefault('port', 6789)
+        new_mfa.properties.setdefault('replication-overwrite-possible', False)
+
+        return new_mfa
+
+
+class FakedMfaServerDefinition(FakedBaseResource):
+    """
+    A faked MFA Server Definition resource within a faked HMC (see
     :class:`zhmcclient_mock.FakedHmc`).
 
     Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
