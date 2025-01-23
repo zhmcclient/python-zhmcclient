@@ -24,7 +24,6 @@ import random
 import uuid
 from copy import copy
 from pprint import pprint
-import time
 import pytest
 from requests.packages import urllib3
 
@@ -89,41 +88,6 @@ def replace_expressions(obj, replacements):
         return ret_obj
 
     return copy(obj)
-
-
-def wait_for_states(
-        partition_link, states=('complete', 'incomplete'), timeout=30):
-    """
-    Wait for a partition link to reach one of the specified states.
-
-    Raises:
-      OperationTimeout: Timed out.
-    """
-
-    if timeout > 0:
-        start_time = time.time()
-
-    while True:
-        try:
-            partition_link.pull_properties(['state'])
-            state = partition_link.properties['state']
-            if state in states:
-                return
-        except ConnectionError:
-            print("Retrying after ConnectionError while waiting for states "
-                  f"{states} in partition link {partition_link.name!r} "
-                  f"(currently has state {state}).")
-
-        if timeout > 0:
-            current_time = time.time()
-            if current_time > start_time + timeout:
-                raise zhmcclient.OperationTimeout(
-                    f"Waiting for states {states} in partition link "
-                    f"{partition_link.name} timed out (timeout: {timeout} s, "
-                    f"currently has state {state}).)",
-                    timeout)
-
-        time.sleep(2)  # Avoid hot spin loop
 
 
 @pytest.mark.parametrize(
@@ -281,10 +245,10 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
             # The code to be tested
             partlink = console.partition_links.create(partlink_input_props)
 
-            wait_for_states(partlink)
+            partlink.wait_for_states()
 
             # Remove input properties that are not in data model or that are
-            # different iindata model, so that we can check.
+            # different in data model, so that we can check.
             if 'partitions' in partlink_input_props:
                 del partlink_input_props['partitions']  # not in data model
             if 'paths' in partlink_input_props:
@@ -332,7 +296,7 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
         finally:
             # Test deleting the partition link
             if partlink:
-                wait_for_states(partlink)
+                partlink.wait_for_states()
 
                 # The code to be tested
                 partlink.delete()
@@ -506,7 +470,7 @@ def test_partlink_create_delete(
                     pprint(partlink_input_props)
                     raise
 
-                wait_for_states(partlink)
+                partlink.wait_for_states()
 
                 # Prepare the expected properties
                 partlink_exp_props = {
@@ -525,8 +489,8 @@ def test_partlink_create_delete(
 
         finally:
             # Cleanup, but also code to be tested
-            wait_for_states(partlink)
             if partlink:
+                partlink.wait_for_states()
                 partlink.delete()
             if part1:
                 part1.delete()
