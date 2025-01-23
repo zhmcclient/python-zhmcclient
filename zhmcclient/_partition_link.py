@@ -67,14 +67,18 @@ The earlier interfaces for Hipersockets are also supported:
 
 import copy
 import re
+import time
 
 from ._manager import BaseManager
 from ._resource import BaseResource
-from ._logging import logged_api_call
+from ._logging import get_logger, logged_api_call
+from ._constants import HMC_LOGGER_NAME
 from ._utils import RC_PARTITION_LINK
-from ._exceptions import PartitionLinkError
+from ._exceptions import PartitionLinkError, OperationTimeout
 
 __all__ = ['PartitionLinkManager', 'PartitionLink']
+
+HMC_LOGGER = get_logger(HMC_LOGGER_NAME)
 
 
 class PartitionLinkManager(BaseManager):
@@ -468,6 +472,76 @@ class PartitionLink(BaseResource):
                     part_uri_list.append(part_uri)
                     part_list.append(part)
         return part_list
+
+    @logged_api_call
+    def wait_for_states(self, states=('complete', 'incomplete'), timeout=30):
+        """
+        Wait for this partition link to reach one of the specified states.
+
+        If there are changes in partition connectivity underway, the partition
+        link' ``state`` property indicates whether the change is still going
+        on or has reached a stable state, as follows:
+
+          * "complete" - All partitions of this partition link are connected.
+          * "incomplete" - Less than 2 partitions are connected to this
+            partition link or an adapter is in degraded state.
+          * "updating" - Partitions are currently being added or removed from
+            this partition link.
+
+        This method pulls the ``state`` property every 2 seconds until one of
+        the specified states is reached. It times out after the specified
+        timeout.
+
+        HMC/SE version requirements:
+
+        * SE version >= 2.16.0
+
+        Authorization requirements:
+
+        * Object-access permission to this partition link.
+
+        Parameters:
+
+          states (list of string): The states to wait for.
+
+          timeout (int): The timeout in seconds. 0 means not to time out.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+
+        if timeout > 0:
+            start_time = time.time()
+
+        while True:
+            try:
+                self.pull_properties(['state'])
+                state = self.properties['state']
+                if state in states:
+                    return
+            except ConnectionError:
+                HMC_LOGGER.debug(
+                    "Retrying after ConnectionError while waiting for states "
+                    "%s in partition link %r (currently has state %s). This "
+                    "could be because HMC is restarting.",
+                    states, self.name, state)
+
+            if timeout > 0:
+                current_time = time.time()
+                if current_time > start_time + timeout:
+                    raise OperationTimeout(
+                        f"Waiting for states {states} in partition link "
+                        f"{self.name} timed out (timeout: {timeout} s, "
+                        f"currently has state {state})",
+                        timeout)
+
+            time.sleep(2)  # Avoid hot spin loop
 
     @logged_api_call
     def delete(self, force_detach=False):

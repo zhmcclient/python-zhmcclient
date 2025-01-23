@@ -263,6 +263,9 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
         # The code to be tested
         partlink = console.partition_links.create(partlink_input_props)
 
+        # The code to be tested
+        partlink.wait_for_states(['complete'])
+
         # Remove input properties that are not in data model or that are
         # different iindata model, so that we can check.
         if 'partitions' in partlink_input_props:
