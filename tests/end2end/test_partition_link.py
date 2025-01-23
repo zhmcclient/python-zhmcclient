@@ -513,7 +513,8 @@ def test_partlink_create_delete(
 def test_partlink_zzz_cleanup(dpm_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name, exec-used, unused-argument
     """
-    Cleanup any created partition links
+    Cleanup any created partitions and partition links that may have not been
+    cleaned up by the other testcase functions.
     """
     if not dpm_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
@@ -537,3 +538,14 @@ def test_partlink_zzz_cleanup(dpm_mode_cpcs):  # noqa: F811
                 partlink.delete()
             except zhmcclient.HTTPError as exc:
                 print(f"HTTPError during PartitionLink.delete(): {exc}")
+
+        parts = cpc.partitions.findall(name=name_pattern)
+        for part in parts:
+
+            print("Deleting test partition from a prior test run: "
+                  f"{part.name!r} on CPC {cpc.name}")
+
+            try:
+                part.delete()
+            except zhmcclient.HTTPError as exc:
+                print(f"HTTPError during Partition.delete(): {exc}")
