@@ -20,6 +20,25 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.18.3
+^^^^^^^^^^^^^^
+
+Released: 2025-01-23
+
+**Bug fixes:**
+
+* Circumvented an issue when installing pywinpty 2.0.14 with latest version of
+  maturin on Python 3.8, by excluding pywinpty 2.0.14.
+
+* Test: Python 3.13 was pinned to 3.13.0 to work around a pylint issue on
+  Python 3.13.1. (`#1728 <https://github.com/zhmcclient/python-zhmcclient/issues/1728>`_)
+
+**Cleanup:**
+
+* Accommodated rollout of Ubuntu 24.04 on GitHub Actions by using ubuntu-22.04
+  as the OS image for Python 3.8 based test runs.
+
+
 Version 1.18.2
 ^^^^^^^^^^^^^^
 
