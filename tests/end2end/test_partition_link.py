@@ -20,11 +20,11 @@ create, modify and delete test partition links and test partitions.
 """
 
 
-import warnings
 import random
 import uuid
 from copy import copy
 from pprint import pprint
+import time
 import pytest
 from requests.packages import urllib3
 
@@ -89,6 +89,41 @@ def replace_expressions(obj, replacements):
         return ret_obj
 
     return copy(obj)
+
+
+def wait_for_states(
+        partition_link, states=('complete', 'incomplete'), timeout=30):
+    """
+    Wait for a partition link to reach one of the specified states.
+
+    Raises:
+      OperationTimeout: Timed out.
+    """
+
+    if timeout > 0:
+        start_time = time.time()
+
+    while True:
+        try:
+            partition_link.pull_properties(['state'])
+            state = partition_link.properties['state']
+            if state in states:
+                return
+        except ConnectionError:
+            print("Retrying after ConnectionError while waiting for states "
+                  f"{states} in partition link {partition_link.name!r} "
+                  f"(currently has state {state}).")
+
+        if timeout > 0:
+            current_time = time.time()
+            if current_time > start_time + timeout:
+                raise zhmcclient.OperationTimeout(
+                    f"Waiting for states {states} in partition link "
+                    f"{partition_link.name} timed out (timeout: {timeout} s, "
+                    f"currently has state {state}).)",
+                    timeout)
+
+        time.sleep(2)  # Avoid hot spin loop
 
 
 @pytest.mark.parametrize(
@@ -197,33 +232,14 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
         print(f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.client.consoles.console
-        partlink_name = TEST_PREFIX + ' test_partlink_crud partlink1'
+        partlink_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
         partlink_name_new = partlink_name + ' new'
-
-        # Ensure clean starting point
-        try:
-            partlink = console.partition_links.find(name=partlink_name)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            warnings.warn(
-                f"Deleting test partition link from previous run: "
-                f"{partlink_name!r} on CPC {cpc.name}", UserWarning)
-            partlink.delete()
-        try:
-            partlink = console.partition_links.find(name=partlink_name_new)
-        except zhmcclient.NotFound:
-            pass
-        else:
-            warnings.warn(
-                "Deleting test partition link from previous run: "
-                f"{partlink_name_new!r} on CPC {cpc.name}", UserWarning)
-            partlink.delete()
 
         # Test creating the partition link.
         # For Hipersockets and SMC-D-type partition links, we create the
         # link with no partitions attached.
-        # For CTC-type partition links, we attach one partition.
+        # For CTC-type partition links, we create the link with one path
+        # and two initial partitions.
 
         partlink_input_props = {
             'cpc-uri': cpc.uri,
@@ -236,8 +252,8 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
 
             adapters = cpc.adapters.list(
                 filter_args={'type': 'fc', 'state': 'online'})
-            if len(adapters) < 2:
-                pytest.skip(f"CPC {cpc.name} has no two online FC adapters "
+            if len(adapters) < 1:
+                pytest.skip(f"CPC {cpc.name} has no online FC adapters "
                             "for CTC partition link creation")
             adapter = random.choice(adapters)
 
@@ -260,62 +276,69 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
             'cpc-name': cpc.name,
         }
 
-        # The code to be tested
-        partlink = console.partition_links.create(partlink_input_props)
+        partlink = None
+        try:
+            # The code to be tested
+            partlink = console.partition_links.create(partlink_input_props)
 
-        # Remove input properties that are not in data model or that are
-        # different iindata model, so that we can check.
-        if 'partitions' in partlink_input_props:
-            del partlink_input_props['partitions']  # not in data model
-        if 'paths' in partlink_input_props:
-            del partlink_input_props['paths']  # different in data model
+            wait_for_states(partlink)
 
-        for pn, exp_value in partlink_input_props.items():
-            assert partlink.properties[pn] == exp_value, (
-                f"Unexpected value for property {pn!r} of partition link:\n"
-                f"{partlink.properties!r}")
-        partlink.pull_full_properties()
-        for pn, exp_value in partlink_input_props.items():
-            assert partlink.properties[pn] == exp_value, (
-                f"Unexpected value for property {pn!r} of partition link:\n"
-                f"{partlink.properties!r}")
-        for pn, exp_value in partlink_auto_props.items():
-            assert pn in partlink.properties, (
-                f"Automatically returned property {pn!r} is not in "
-                f"created partition link:\n{partlink!r}")
-            assert partlink.properties[pn] == exp_value, (
-                f"Unexpected value for property {pn!r} of partition link:\n"
-                f"{partlink.properties!r}")
+            # Remove input properties that are not in data model or that are
+            # different iindata model, so that we can check.
+            if 'partitions' in partlink_input_props:
+                del partlink_input_props['partitions']  # not in data model
+            if 'paths' in partlink_input_props:
+                del partlink_input_props['paths']  # different in data model
 
-        # Test updating a property of the partition link
+            for pn, exp_value in partlink_input_props.items():
+                assert partlink.properties[pn] == exp_value, (
+                    f"Unexpected value for property {pn!r} of partition link:\n"
+                    f"{partlink.properties!r}")
+            partlink.pull_full_properties()
+            for pn, exp_value in partlink_input_props.items():
+                assert partlink.properties[pn] == exp_value, (
+                    f"Unexpected value for property {pn!r} of partition link:\n"
+                    f"{partlink.properties!r}")
+            for pn, exp_value in partlink_auto_props.items():
+                assert pn in partlink.properties, (
+                    f"Automatically returned property {pn!r} is not in "
+                    f"created partition link:\n{partlink!r}")
+                assert partlink.properties[pn] == exp_value, (
+                    f"Unexpected value for property {pn!r} of partition link:\n"
+                    f"{partlink.properties!r}")
 
-        new_desc = "Updated partition link description."
+            # Test updating a property of the partition link
 
-        # The code to be tested
-        partlink.update_properties(dict(description=new_desc))
+            new_desc = "Updated partition link description."
 
-        assert partlink.properties['description'] == new_desc
-        partlink.pull_full_properties()
-        assert partlink.properties['description'] == new_desc
+            # The code to be tested
+            partlink.update_properties(dict(description=new_desc))
 
-        # Test renaming the partition link
+            assert partlink.properties['description'] == new_desc
+            partlink.pull_full_properties()
+            assert partlink.properties['description'] == new_desc
 
-        # The code to be tested
-        partlink.update_properties(dict(name=partlink_name_new))
+            # Test renaming the partition link
 
-        assert partlink.properties['name'] == partlink_name_new
-        partlink.pull_full_properties()
-        assert partlink.properties['name'] == partlink_name_new
-        with pytest.raises(zhmcclient.NotFound):
-            console.partition_links.find(name=partlink_name)
+            # The code to be tested
+            partlink.update_properties(dict(name=partlink_name_new))
 
-        # Test deleting the partition link
+            assert partlink.properties['name'] == partlink_name_new
+            partlink.pull_full_properties()
+            assert partlink.properties['name'] == partlink_name_new
+            with pytest.raises(zhmcclient.NotFound):
+                console.partition_links.find(name=partlink_name)
 
-        # The code to be tested
-        partlink.delete()
+        finally:
+            # Test deleting the partition link
+            if partlink:
+                wait_for_states(partlink)
 
-        with pytest.raises(zhmcclient.NotFound):
-            console.partition_links.find(name=partlink_name_new)
+                # The code to be tested
+                partlink.delete()
+
+                with pytest.raises(zhmcclient.NotFound):
+                    console.partition_links.find(name=partlink_name_new)
 
 
 PARTLINK_CREATE_DELETE_TESTCASES = [
@@ -483,6 +506,8 @@ def test_partlink_create_delete(
                     pprint(partlink_input_props)
                     raise
 
+                wait_for_states(partlink)
+
                 # Prepare the expected properties
                 partlink_exp_props = {
                     'cpc-uri': cpc.uri,
@@ -500,6 +525,7 @@ def test_partlink_create_delete(
 
         finally:
             # Cleanup, but also code to be tested
+            wait_for_states(partlink)
             if partlink:
                 partlink.delete()
             if part1:
