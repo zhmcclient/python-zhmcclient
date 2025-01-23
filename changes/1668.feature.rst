@@ -1,2 +1,0 @@
-Added support for MFA Server Definitions with a new 'zhmcclient.MfaServerDefinition'
-resource class (and corresponding manager class).

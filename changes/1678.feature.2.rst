@@ -1,6 +1,0 @@
-Because the "Create Partition Link" HMC operation does not return the
-'object-uri' property of the created partition link, the handling of HTTP POST
-operations has been enhanced to add the URI returned in the "Location" header
-field as an artificial property 'location-uri' to the result data, if the
-"Location" header field is set and the result data does not contain 'object-uri'
-or 'element-uri'.

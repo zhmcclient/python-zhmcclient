@@ -20,6 +20,83 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.19.0
+^^^^^^^^^^^^^^
+
+Released: 2025-01-23
+
+**Bug fixes:**
+
+* Fixed safety issues up to 2025-01-23.
+
+* Dev: In the make commands to create/update AUTHORS.md, added a reftag to the
+  'git shortlog' command to fix the issue that without a terminal (e.g. in GitHub
+  Actions), the command did not display any authors.
+
+* Dev: Fixed checks and missing removal of temp file in make targets for releasing
+  and starting a version.
+
+* Fixed that all password-like properties are no longer written in clear text to
+  the Python loggers "zhmcclient.api" and "zhmcclient.hmc", but are now blanked
+  out. Previously, that was done only for the "zhmcclient.hmc" logger for creation
+  and update of HMC users.
+
+* Fixed that incorrect password-like properties were added with blanked-out values
+  to the API and HMC log.
+
+* Circumvented an issue when installing pywinpty 2.0.14 with latest version of
+  maturin on Python 3.8, by excluding pywinpty 2.0.14.
+
+* Fixed incorrect HTTP method name in log messages for receiving HTTP status
+  403 in Session.post() and Session.delete().
+
+* Fixed incorrect check for start branch in 'make start_tag'. (`#1689 <https://github.com/zhmcclient/python-zhmcclient/issues/1689>`_)
+
+* Test: Python 3.13 was pinned to 3.13.0 to work around a pylint issue on
+  Python 3.13.1. (`#1728 <https://github.com/zhmcclient/python-zhmcclient/issues/1728>`_)
+
+**Enhancements:**
+
+* Dev: Enhanced the zhmcclient API logging code so that in the debugger,
+  zhmcclient API functions now have less logging steps to go through until the
+  actual API function is reached.
+
+* Added a boolean parameter 'always' to the 'zhmcclient.Session.logon()' method,
+  which causes the session to always be logged on, regardless of an existing
+  session ID.
+
+* Increased the timeout for HMC operations that is used in end2end tests, from
+  300 sec to 1800 sec. Note that this does not change the default timeout for
+  users of the zhmcclient library, which continues to be 3600 sec.
+
+* Added zhmcclient mock support for MFA Server Definitions with a new
+  'zhmcclient_mock.FakedMfaServerDefinition' class (and a corresponding manager
+  class). (`#1668 <https://github.com/zhmcclient/python-zhmcclient/issues/1668>`_)
+
+* Added support for MFA Server Definitions with a new 'zhmcclient.MfaServerDefinition'
+  resource class (and corresponding manager class). (`#1668 <https://github.com/zhmcclient/python-zhmcclient/issues/1668>`_)
+
+* Because the "Create Partition Link" HMC operation does not return the
+  'object-uri' property of the created partition link, the handling of HTTP POST
+  operations has been enhanced to add the URI returned in the "Location" header
+  field as an artificial property 'location-uri' to the result data, if the
+  "Location" header field is set and the result data does not contain 'object-uri'
+  or 'element-uri'. (`#1678 <https://github.com/zhmcclient/python-zhmcclient/issues/1678>`_)
+
+* Added support for Partition Links with a new 'zhmcclient.PartitionLink'
+  resource class (and corresponding manager class). Added the following
+  methods for partition links to the 'zhmcclient.Partition' class:
+  'attach_network_link()', 'detach_network_link()',
+  'attach_ctc_link()', 'detach_ctc_link()', 'list_attached_partition_links()'. (`#1678 <https://github.com/zhmcclient/python-zhmcclient/issues/1678>`_)
+
+**Cleanup:**
+
+* Consolidated duplicate authors in AUTHORS.md file.
+
+* Accommodated rollout of Ubuntu 24.04 on GitHub Actions by using ubuntu-22.04
+  as the OS image for Python 3.8 based test runs.
+
+
 Version 1.18.0
 ^^^^^^^^^^^^^^
 
