@@ -156,7 +156,7 @@ pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
 pywin32>=306; sys_platform == 'win32' and python_version == '3.12'
 
 # The tornado package is used by ipykernel which is used by jupyter.
-tornado>=6.4.1
+tornado>=6.4.2
 
 # pyzmq 26.1.0 added wheel archives for Python 3.13
 pyzmq>=26.1.0
