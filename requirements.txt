@@ -10,7 +10,8 @@ decorator>=4.0.11
 
 # pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
 # pytz 2024.2 introduced an issue that causes our tests to fail.
-pytz>=2019.1,!=2024.2
+# pytz 2025.1 introduced an issue that causes our tests to fail (https://github.com/stub42/pytz/issues/133)
+pytz>=2019.1,!=2024.2,!=2025.1
 
 # requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
 #   remove ImportWarning in six
