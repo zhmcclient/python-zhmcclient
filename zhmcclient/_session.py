@@ -1185,7 +1185,7 @@ class Session:
     @logged_api_call
     def post(self, uri, resource=None, body=None, logon_required=True,
              wait_for_completion=False, operation_timeout=None,
-             renew_session=True):
+             renew_session=True, busy_retries=0, busy_wait=0):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body.
@@ -1268,6 +1268,11 @@ class Session:
           renew_session (bool):
             Boolean indicating whether the session should be renewed in case
             it is expired.
+
+          busy_retries (int): Number of retries when HMC returns busy
+            (HTTP status 409 with reason=1,2,3,6).
+
+          busy_wait (float): Waiting time in seconds between busy retries.
 
         Returns:
 
@@ -1445,7 +1450,8 @@ class Session:
                             uri, resource=resource, body=body,
                             logon_required=False, renew_session=False,
                             wait_for_completion=wait_for_completion,
-                            operation_timeout=operation_timeout)
+                            operation_timeout=operation_timeout,
+                            busy_retries=busy_retries, busy_wait=busy_wait)
 
                 if reason == 1:
                     # Login user's authentication is fine; this is an
@@ -1458,6 +1464,25 @@ class Session:
                     f"{result.status_code},{reason}: {msg}",
                     HTTPError(result_object))
 
+            if result.status_code == 409:
+                result_object = _result_object(result)
+                reason = result_object.get('reason', None)
+                message = result_object.get('message', None)
+                if reason in (1, 2, 3, 6) and busy_retries > 0:
+                    HMC_LOGGER.debug(
+                        "Retrying operation (%d retries left) after %d s upon "
+                        "receiving HTTP status 409.%d on POST %s: %s ",
+                        busy_retries, busy_wait, reason, uri, message)
+                    busy_retries -= 1
+                    if busy_wait > 0:
+                        time.sleep(busy_wait)
+                    return self.post(
+                        uri, resource=resource, body=body,
+                        logon_required=False, renew_session=False,
+                        wait_for_completion=wait_for_completion,
+                        operation_timeout=operation_timeout,
+                        busy_retries=busy_retries, busy_wait=busy_wait)
+
             result_object = _result_object(result)
             raise HTTPError(result_object)
 
@@ -1467,7 +1492,8 @@ class Session:
 
     @logged_api_call
     def delete(
-            self, uri, resource=None, logon_required=True, renew_session=True):
+            self, uri, resource=None, logon_required=True, renew_session=True,
+            busy_retries=0, busy_wait=0):
         """
         Perform the HTTP DELETE method against the resource identified by a
         URI.
@@ -1495,6 +1521,11 @@ class Session:
             Boolean indicating whether the session should be renewed in case
             it is expired. For example, for the logoff operation, it does not
             make sense to do that.
+
+          busy_retries (int): Number of retries when HMC returns busy
+            (HTTP status 409 with reason=1,2,3,6).
+
+          busy_wait (float): Waiting time in seconds between busy retries.
 
         Raises:
 
@@ -1548,7 +1579,8 @@ class Session:
                 if renew_session:
                     self._do_logon()
                     self.delete(uri, resource=resource, logon_required=False,
-                                renew_session=False)
+                                renew_session=False,
+                                busy_retries=busy_retries, busy_wait=busy_wait)
                     return
 
             if reason == 1:
@@ -1561,6 +1593,24 @@ class Session:
                 "HTTP authentication failed with "
                 f"{result.status_code},{reason}: {msg}",
                 HTTPError(result_object))
+
+        if result.status_code == 409:
+            result_object = _result_object(result)
+            reason = result_object.get('reason', None)
+            message = result_object.get('message', None)
+            if reason in (1, 2, 3, 6) and busy_retries > 0:
+                HMC_LOGGER.debug(
+                    "Retrying operation (%d retries left) after %d s upon "
+                    "receiving HTTP status 409.%d on DELETE %s: %s ",
+                    busy_retries, busy_wait, reason, uri, message)
+                busy_retries -= 1
+                if busy_wait > 0:
+                    time.sleep(busy_wait)
+                self.delete(
+                    uri, resource=resource, logon_required=False,
+                    renew_session=False, busy_retries=busy_retries,
+                    busy_wait=busy_wait)
+                return
 
         result_object = _result_object(result)
         raise HTTPError(result_object)

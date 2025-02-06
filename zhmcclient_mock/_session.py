@@ -1013,7 +1013,7 @@ class FakedSession(zhmcclient.Session):
 
     def post(self, uri, resource=None, body=None, logon_required=True,
              wait_for_completion=True, operation_timeout=None,
-             renew_session=True):
+             renew_session=True, busy_retries=0, busy_wait=0):
         """
         Perform the HTTP POST method against the resource identified by a URI,
         using a provided request body, on the faked HMC.
@@ -1095,6 +1095,17 @@ class FakedSession(zhmcclient.Session):
             This parameter exists for compatibility with real HMCs, but is
             ignored.
 
+          busy_retries (int): Number of retries when HMC returns busy
+            (HTTP status 409 with reason=1,2,3,6).
+
+            This parameter exists for compatibility with real HMCs, but is
+            ignored.
+
+          busy_wait (float): Waiting time in seconds between busy retries.
+
+            This parameter exists for compatibility with real HMCs, but is
+            ignored.
+
         Returns:
 
           :term:`json object`:
@@ -1137,7 +1148,8 @@ class FakedSession(zhmcclient.Session):
             raise new_exc  # zhmcclient.ConnectionError
 
     def delete(
-            self, uri, resource=None, logon_required=True, renew_session=True):
+            self, uri, resource=None, logon_required=True, renew_session=True,
+            busy_retries=0, busy_wait=0):
         """
         Perform the HTTP DELETE method against the resource identified by a
         URI, on the faked HMC.
@@ -1162,6 +1174,17 @@ class FakedSession(zhmcclient.Session):
           renew_session (bool):
             Boolean indicating whether the session should be renewed in case
             it is expired.
+
+            This parameter exists for compatibility with real HMCs, but is
+            ignored.
+
+          busy_retries (int): Number of retries when HMC returns busy
+            (HTTP status 409 with reason=1,2,3,6).
+
+            This parameter exists for compatibility with real HMCs, but is
+            ignored.
+
+          busy_wait (float): Waiting time in seconds between busy retries.
 
             This parameter exists for compatibility with real HMCs, but is
             ignored.
