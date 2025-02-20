@@ -63,7 +63,7 @@ ANSIBLE_VARTYPES = [
 ANSIBLE_HOST_PATTERN = r"^[a-zA-Z_0-9:\.\-]+$"
 
 # Regexp for valid HMC CPC names
-CPCNAME_PATTERN = r"^[A-Z][A-Z0-9_]*$"
+CPCNAME_PATTERN = r"^[A-Z0-9_]*$"
 
 # Regexp for valid HMC resource property names (with underscores instead of
 # hyphens)
