@@ -8,6 +8,7 @@ Andreas Maier <maiera@de.ibm.com>
 Andreas Scheuring <andreas.scheuring@de.ibm.com>
 Andrew Brezovsky <abrezov@us.ibm.com>
 Anil Kumar Dakarapu <anil.kumar.dakarapu@ibm.com>
+Edwin Guenthner <edwin.guenthner@de.ibm.com>
 Edwin Günthner <edwin.guenthner@de.ibm.com>
 Juergen Leopold <leopoldj@de.ibm.com>
 Kavin Raj A M <Kavin.Raj.A.M1@ibm.com>
