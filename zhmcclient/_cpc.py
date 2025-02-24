@@ -3128,11 +3128,15 @@ def retrieveInventoryData(client):
     error_msgs = []
     for item in inventory_list:
         if item.get('class') == 'inventory-error':
+            details = ""
+            if item.get('inventory-error-code') == 5:
+                details = \
+                    f" / Details: {dict(item.get('inventory-error-details'))}"
+
             msg = (
                 f"Inventory error {item.get('inventory-error-code')} for "
                 f"resource with URI {item.get('uri')}: "
-                f"{item.get('inventory-error-text')}; "
-                f"Details: {dict(item.get('inventory-error-details'))}")
+                f"{item.get('inventory-error-text')}{details}")
             error_msgs.append(msg)
     if error_msgs:
         msgs = '\n  '.join(error_msgs)
