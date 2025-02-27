@@ -5,7 +5,7 @@
 # Base dependencies (must be consistent with minimum-constraints-install.txt
 # and build-system.requires in pyproject.toml)
 
-pip>=23.3
+pip>=25.0
 setuptools>=70.0.0
 setuptools-scm[toml]>=8.1.0
 wheel>=0.41.3
