@@ -183,6 +183,7 @@ MarkupSafe==2.0.0
 # nbconvert 7.2.10 depends on mistune<3 and >=2.0.3
 mistune==2.0.3
 nest-asyncio==1.5.4
+nltk==3.9
 # nose is used by older versions of notebook, e.g. 4.3.1
 nose==1.3.7
 pandocfilters==1.4.1
