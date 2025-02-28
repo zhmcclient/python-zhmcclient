@@ -2046,9 +2046,9 @@ class Cpc(BaseResource):
         capacity groups, various storage and tape related resources, and
         certificate objects.
 
-        By default, only those adapters and virtual switches of the CPC are
-        exported that are referenced by other DPM specific configuration
-        objects.
+        By default, only those adapters, virtual switches, network and
+        storage port objects of the CPC are exported that are referenced by
+        other DPM specific configuration objects.
 
         This method performs the "Get Inventory" HMC operation and extracts
         the relevant elements into the result.
@@ -2068,9 +2068,9 @@ class Cpc(BaseResource):
         Parameters:
 
           include_unused_adapters (bool):
-            Controls whether the full set of adapters should be returned,
-            vs. only those that are referenced by other DPM objects that
-            are part of the return data.
+            Controls whether the full set of adapters and corresponding
+            resources should be returned, vs. only those that are referenced
+            by other DPM objects that are part of the return data.
 
         Returns:
 
@@ -2930,7 +2930,7 @@ class Cpc(BaseResource):
             config_dict['certificates'] = certificates
 
         if not include_unused_adapters:
-            _drop_unused_adapters_and_switches(config_dict)
+            _drop_unused_adapters_and_resources(config_dict)
 
         sort_lists(config_dict)
 
@@ -3153,18 +3153,21 @@ def _add_encoded(console, certificates):
         cert_dict.update(cert.get_encoded())
 
 
-def _drop_unused_adapters_and_switches(dpm_config):
+def _drop_unused_adapters_and_resources(dpm_config):
     """
-    Removes all adapters and virtual switch objects from dpm_config in place
-    that aren't referenced by actual DPM configuration elements.
+    Removes all adapters, virtual switch, storage/network port objects from
+    dpm_config in place that aren't referenced by actual DPM configuration
+    elements.
     """
-    _remove_unreferenced_elements(dpm_config,
-                                  'virtual-switches', ['adapters'])
-    _remove_unreferenced_elements(dpm_config, 'adapters',
-                                  ['network-ports', 'storage-ports'])
+    _remove_unreferenced_keys(dpm_config, 'virtual-switches', ['adapters'])
+    removed_adapters = _remove_unreferenced_keys(dpm_config, 'adapters',
+                                                 ['network-ports',
+                                                  'storage-ports'])
+    _remove_child_elements(dpm_config, 'network-ports', removed_adapters)
+    _remove_child_elements(dpm_config, 'storage-ports', removed_adapters)
 
 
-def _remove_unreferenced_elements(dpm_config, key_to_update, keys_to_ignore):
+def _remove_unreferenced_keys(dpm_config, key_to_update, keys_to_ignore):
     """
     Creates a string representation of dpm_config, EXCLUDING keys key_to_update
     and keys_to_ignore. Then iterates the list of key_to_update
@@ -3172,15 +3175,32 @@ def _remove_unreferenced_elements(dpm_config, key_to_update, keys_to_ignore):
     object-id within that string representation. Then updates dpm_config
     for key_to_update in place to that list of elements that are actually
     referenced.
+    Returns a list of object-uri fields of all dropped objects.
     """
     config = str(
         {key: dpm_config[key] for key in dpm_config
          if (key != key_to_update and key not in keys_to_ignore)})
-    referenced = []
+    referenced_keys = []
+    dropped_uris = []
     for elem in dpm_config[key_to_update]:
         if elem['object-id'] in config:
-            referenced.append(elem)
-    dpm_config[key_to_update] = referenced
+            referenced_keys.append(elem)
+        else:
+            dropped_uris.append(elem['object-uri'])
+    dpm_config[key_to_update] = referenced_keys
+    return dropped_uris
+
+
+def _remove_child_elements(dpm_config, key_to_update, dropped_parents):
+    """
+    Updates dpm_config for key_to_update in place removing all those elements
+    with a parent in the list of dropped_parents.
+    """
+    retained = []
+    for elem in dpm_config[key_to_update]:
+        if elem['parent'] not in dropped_parents:
+            retained.append(elem)
+    dpm_config[key_to_update] = retained
 
 
 def sort_lists(dpm_config):
