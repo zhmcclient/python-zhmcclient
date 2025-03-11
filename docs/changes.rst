@@ -20,6 +20,25 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.19.1
+^^^^^^^^^^^^^^
+
+Released: 2025-03-11
+
+**Bug fixes:**
+
+* Fixed missing package dependencies for development.
+
+* Fixed safety issues up to 2025-02-26.
+
+* When handling inventory errors during "Export DPM configuration", only access
+  field "inventory-error-details" if "inventory-error-code" is 5. (`#1760 <https://github.com/zhmcclient/python-zhmcclient/issues/1760>`_)
+
+* Remove unused network and storage port objects from export data, too. (`#1764 <https://github.com/zhmcclient/python-zhmcclient/issues/1764>`_)
+
+* Ensure proper detection of all unreferenced adapters. (`#1764 <https://github.com/zhmcclient/python-zhmcclient/issues/1764>`_)
+
+
 Version 1.19.0
 ^^^^^^^^^^^^^^
 
