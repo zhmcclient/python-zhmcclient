@@ -504,6 +504,7 @@ release_branch:
 	git checkout release_$(VERSION)
 	make authors
 	towncrier build --version $(VERSION) --yes
+	@bash -c 'if ls changes/*.rst >/dev/null 2>/dev/null; then echo ""; echo "Error: There are incorrectly named change fragment files that towncrier did not use:"; ls -1 changes/*.rst; echo ""; false; fi'
 	git commit -asm "Release $(VERSION)"
 	git push --set-upstream origin release_$(VERSION)
 	rm -f branch.tmp
