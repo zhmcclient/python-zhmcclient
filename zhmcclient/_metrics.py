@@ -85,6 +85,10 @@ __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
            'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
            'MetricObjectValues']
 
+# HMC API version for certain HMC versions
+API_VERSION_HMC_2_14_0 = (2, 20)
+API_VERSION_HMC_2_16_0 = (4, 1)
+
 
 class MetricsContextManager(BaseManager):
     """
@@ -878,49 +882,88 @@ class MetricObjectValues:
                 resource = self.client.cpcs.find(**filter_args)
             except NotFound:
                 raise MetricsResourceNotFound(
-                    f"{resource_class} with URI {resource_uri} not found on "
+                    f"CPC with URI {resource_uri} not found on "
                     f"HMC {self.client.session.host}",
                     Cpc, cpc_managers)
         elif resource_class == 'logical-partition':
-            lpar_managers = []
-            cpc_list = self.client.cpcs.list()
-            for cpc in cpc_list:
-                lpar_managers.append(cpc.lpars)
-                try:
-                    filter_args = {'object-uri': resource_uri}
-                    resource = cpc.lpars.find(**filter_args)
-                    break
-                except NotFound:
-                    pass  # Try next CPC
+            filter_args = {'object-uri': resource_uri}
+            if self.client.version_info() >= API_VERSION_HMC_2_14_0:
+                lpars = self.client.consoles.console.list_permitted_lpars(
+                    filter_args=filter_args)
+                if len(lpars) < 1:
+                    raise MetricsResourceNotFound(
+                        f"LPAR with URI {resource_uri} not found",
+                        Lpar, [])
+                resource = lpars[0]
             else:
-                raise MetricsResourceNotFound(
-                    f"{resource_class} with URI {resource_uri} not found in "
-                    f"CPCs {', '.join([cpc.name for cpc in cpc_list])}",
-                    Lpar, lpar_managers)
+                lpar_managers = []
+                cpc_list = self.client.cpcs.list()
+                for cpc in cpc_list:
+                    lpar_managers.append(cpc.lpars)
+                    try:
+                        resource = cpc.lpars.find(**filter_args)
+                        break
+                    except NotFound:
+                        pass  # Try next CPC
+                else:
+                    raise MetricsResourceNotFound(
+                        f"LPAR with URI {resource_uri} not found "
+                        f"in CPCs {', '.join([cpc.name for cpc in cpc_list])}",
+                        Lpar, lpar_managers)
         elif resource_class == 'partition':
-            partitions = self.client.consoles.console.list_permitted_partitions(
-                filter_args={'object-uri': resource_uri})
-            if len(partitions) < 1:
-                raise MetricsResourceNotFound(
-                    f"Partition with URI {resource_uri} not found",
-                    Partition, [])
-            resource = partitions[0]
-        elif resource_class == 'adapter':
-            cpc_list = self.client.cpcs.list()
-            adapter_managers = []
-            for cpc in cpc_list:
-                adapter_managers.append(cpc.adapters)
-                try:
-                    filter_args = {'object-uri': resource_uri}
-                    resource = cpc.adapters.find(**filter_args)
-                    break
-                except NotFound:
-                    pass  # Try next CPC
+            filter_args = {'object-uri': resource_uri}
+            if self.client.version_info() >= API_VERSION_HMC_2_14_0:
+                partitions = \
+                    self.client.consoles.console.list_permitted_partitions(
+                        filter_args=filter_args)
+                if len(partitions) < 1:
+                    raise MetricsResourceNotFound(
+                        f"Partition with URI {resource_uri} not found",
+                        Partition, [])
+                resource = partitions[0]
             else:
-                raise MetricsResourceNotFound(
-                    f"{resource_class} with URI {resource_uri} not found in "
-                    f"CPCs {', '.join([cpc.name for cpc in cpc_list])}",
-                    Adapter, adapter_managers)
+                part_managers = []
+                cpc_list = self.client.cpcs.list()
+                for cpc in cpc_list:
+                    part_managers.append(cpc.partitions)
+                    try:
+                        resource = cpc.partitions.find(**filter_args)
+                        break
+                    except NotFound:
+                        pass  # Try next CPC
+                else:
+                    raise MetricsResourceNotFound(
+                        f"Partition with URI {resource_uri} not found "
+                        f"in CPCs {', '.join([cpc.name for cpc in cpc_list])}",
+                        Partition, part_managers)
+        elif resource_class == 'adapter':
+            filter_args = {'object-uri': resource_uri}
+            fallback = False
+            if self.client.version_info() >= API_VERSION_HMC_2_16_0:
+                adapters = self.client.consoles.console.list_permitted_adapters(
+                    filter_args=filter_args)
+                # The method does not return adapters of CPCs with SE < 2.16.0
+                if len(adapters) < 1:
+                    fallback = True
+                else:
+                    resource = adapters[0]
+            else:
+                fallback = True
+            if fallback:
+                cpc_list = self.client.cpcs.list()
+                adapter_managers = []
+                for cpc in cpc_list:
+                    adapter_managers.append(cpc.adapters)
+                    try:
+                        resource = cpc.adapters.find(**filter_args)
+                        break
+                    except NotFound:
+                        pass  # Try next CPC
+                else:
+                    raise MetricsResourceNotFound(
+                        f"Adapter with URI {resource_uri} not found in "
+                        f"CPCs {', '.join([cpc.name for cpc in cpc_list])}",
+                        Adapter, adapter_managers)
         elif resource_class == 'nic':
             nic_properties = self.client.session.get(resource_uri)
             partition_uri = nic_properties['parent']
@@ -932,6 +975,7 @@ class MetricObjectValues:
                     f"URI {resource_uri} not found",
                     Partition, [])
             partition = partitions[0]
+            cpc = partition.manager.parent
             nic_managers = [partition.nics]
             filter_args = {'element-uri': resource_uri}
             try:
