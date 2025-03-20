@@ -1,0 +1,2 @@
+Fixed a datetime conversion error by excluding pytz 2025.1
+(already shipped in version 1.19.1).
