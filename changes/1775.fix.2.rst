@@ -1,0 +1,2 @@
+Fixed that metrics processing for partition metrics failed on HMC versions older
+than 2.14.0.

@@ -990,6 +990,8 @@ class Console(BaseResource):
         HMC/SE version requirements:
 
         * HMC version >= 2.16.0
+        * The adapters of CPCs with SE version < 2.16.0 that are not enabled
+          for DPM are not included in the result.
 
         Authorization requirements:
 
