@@ -74,7 +74,7 @@ class HMCDefinition:
             Optional, defaults to `None`.
 
           cpcs (dict): CPCs managed by the HMC that are to be tested.
-            If `None`, no CPCs are tested.
+            If `None`, all managed CPCs are tested.
 
             * key: CPC name.
             * value: dict of expected CPC properties, using underscored
@@ -101,7 +101,7 @@ class HMCDefinition:
         self._password = password
         self._verify = verify
         self._ca_certs = ca_certs
-        self._cpcs = cpcs or {}
+        self._cpcs = cpcs
         self._add_vars = add_vars or {}
 
     def __repr__(self):
@@ -242,6 +242,7 @@ class HMCDefinition:
     def cpcs(self):
         """
         dict: CPCs managed by the HMC that are to be tested.
+        If `None`, all managed CPCs are tested.
 
         Each dict item represents one CPC:
 
