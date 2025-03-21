@@ -17,12 +17,13 @@ Pytest fixtures for CPCs.
 """
 
 
-import warnings
 import pytest
 import zhmcclient
 
 # pylint: disable=unused-import
 from ._hmc_definition_fixtures import hmc_session  # noqa: F401
+from ._hmc_inventory_file import HMCInventoryFileError
+
 
 __all__ = ['all_cpcs', 'dpm_mode_cpcs', 'classic_mode_cpcs']
 
@@ -53,8 +54,9 @@ def all_cpcs(request, hmc_session):  # noqa: F811
     Pytest fixture representing the set of all CPCs to test against, regardless
     of their operational mode.
 
-    The CPCs to test against are defined in the ``cpcs`` variable for the
-    HMC entry in the :ref:`HMC inventory file`.
+    The set of CPCs to test against is defined in the ``cpcs`` variable in the
+    HMC entry in the :ref:`HMC inventory file`; if that variable is omitted, it
+    is the set of all managed CPCs.
 
     A test function parameter with the name of this fixture resolves to a list
     of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
@@ -79,9 +81,12 @@ def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
     """
     Pytest fixture representing the set of CPCs in DPM mode to test against.
 
-    The CPCs to test against are defined in the ``cpcs`` variable in the
-    HMC entry in the :ref:`HMC inventory file` and have their ``dpm_enabled``
-    property set to ``true``.
+    The set of CPCs to test against is the subset of all CPCs to be tested that
+    is in DPM mode.
+
+    The set of all CPCs to be tested is defined in the ``cpcs`` variable in the
+    HMC entry in the :ref:`HMC inventory file`; if that variable is omitted, it
+    is the set of all managed CPCs.
 
     A test function parameter with the name of this fixture resolves to a list
     of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
@@ -106,9 +111,12 @@ def classic_mode_cpcs(request, hmc_session):  # noqa: F811
     """
     Pytest fixture representing the set of CPCs in classic mode to test against.
 
-    The CPCs to test against are defined in the ``cpcs`` variable in the
-    HMC entry in the :ref:`HMC inventory file` and have their ``dpm_enabled``
-    property set to ``false``.
+    The set of CPCs to test against is the subset of all CPCs to be tested that
+    is in classic mode.
+
+    The set of all CPCs to be tested is defined in the ``cpcs`` variable in the
+    HMC entry in the :ref:`HMC inventory file`; if that variable is omitted, it
+    is the set of all managed CPCs.
 
     A test function parameter with the name of this fixture resolves to a list
     of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
@@ -126,8 +134,8 @@ def classic_mode_cpcs(request, hmc_session):  # noqa: F811
 
 def defined_cpcs(session, mode):
     """
-    Return a list of CPCs defined in the HMC definition file, that are actually
-    managed by the HMC, and that actually have the desired operational mode.
+    Return a list of CPCs defined in the HMC definition file, that are
+    managed by the HMC, and that have the desired operational mode.
 
     Parameters:
 
@@ -140,20 +148,30 @@ def defined_cpcs(session, mode):
       list of :class:`zhmcclient.Cpc`: The CPCs in the desired mode.
     """
     client = zhmcclient.Client(session)
-    actual_cpcs = client.cpcs.list()
-    actual_cpc_names = [cpc.name for cpc in actual_cpcs]
+    managed_cpcs = client.cpcs.list()
+    managed_cpc_names = [cpc.name for cpc in managed_cpcs]
     hd = session.hmc_definition
+    test_cpc_names = list(hd.cpcs.keys()) if hd.cpcs else managed_cpc_names
+
     result_cpcs = []
-    for cpc_name in hd.cpcs:
-        cpcs = [cpc for cpc in actual_cpcs if cpc.name == cpc_name]
+    for cpc_name in test_cpc_names:
+
+        cpcs = [cpc for cpc in managed_cpcs if cpc.name == cpc_name]
         if not cpcs:
-            msg_txt = (
-                f"CPC {cpc_name} defined for HMC {hd.nickname} at {hd.host} "
-                "in HMC definition file is not managed by that HMC. "
-                f"Actually managed CPCs: {', '.join(actual_cpc_names)}")
-            warnings.warn(msg_txt, UserWarning)
-            pytest.skip(msg_txt)
+            raise HMCInventoryFileError(
+                f"CPC {cpc_name} defined for HMC {hd.nickname} in the HMC "
+                "inventory file is not managed by that HMC. "
+                f"Managed CPCs: {', '.join(managed_cpc_names)}")
         cpc = cpcs[0]
+
+        if hd.cpcs and cpc_name in hd.cpcs:
+            hd_props = hd.cpcs[cpc_name]
+            hd_dpm_enabled = hd_props.get('dpm_enabled', None)
+            if hd_dpm_enabled is not None and hd_dpm_enabled != cpc.dpm_enabled:
+                raise HMCInventoryFileError(
+                    f"CPC {cpc_name} defined for HMC {hd.nickname} in the HMC "
+                    f"inventory file defines dpm_enabled={hd_dpm_enabled}, "
+                    f"but the actual CPC has dpm_enabled={cpc.dpm_enabled}.")
 
         if mode == 'dpm' and not cpc.dpm_enabled:
             continue
