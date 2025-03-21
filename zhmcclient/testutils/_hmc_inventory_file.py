@@ -111,7 +111,7 @@ HMC_INVENTORY_FILE_SCHEMA = {
                 },
                 "cpcs": {
                     "description": "CPCs managed by this HMC that are to be "
-                                   "tested. If omitted or None, no CPCs are "
+                                   "tested. If omitted, all managed CPCs are "
                                    "tested.",
                     "type": "object",
                     "additionalProperties": False,

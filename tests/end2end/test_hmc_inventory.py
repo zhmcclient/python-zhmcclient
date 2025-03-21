@@ -25,10 +25,46 @@ import zhmcclient
 # pylint: disable=unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401
 from zhmcclient.testutils import HMCDefinitions
+from zhmcclient.testutils import all_cpcs  # noqa: F401, E501
+from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
+from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
+# pylint: enable=unused-import
 
 from .utils import is_cpc_property_hmc_inventory
 
 urllib3.disable_warnings()
+
+
+def _print_cpc(cpc):
+    mode_str = 'DPM' if cpc.dpm_enabled else 'classic'
+    print(f"Found test CPC {cpc.name} ({mode_str} mode)")
+
+
+def test_hmcdef_all_cpcs(all_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Display all CPCs to be tested.
+    """
+    for cpc in all_cpcs:
+        _print_cpc(cpc)
+
+
+def test_hmcdef_dpm_cpcs(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Display DPM mode CPCs to be tested.
+    """
+    for cpc in dpm_mode_cpcs:
+        _print_cpc(cpc)
+
+
+def test_hmcdef_classic_cpcs(classic_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Display classic mode CPCs to be tested.
+    """
+    for cpc in classic_mode_cpcs:
+        _print_cpc(cpc)
 
 
 def test_hmcdef_cpcs(hmc_session):  # noqa: F811

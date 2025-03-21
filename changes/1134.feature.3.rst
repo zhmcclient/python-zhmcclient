@@ -1,0 +1,4 @@
+End2end test: Specifying a CPC in an HMC entry of the HMC inventory file that
+is not managed by the HMC now causes pytest to error out. Previously, the CPC
+was skipped and a warning was issued. This is to better indicate that the
+expectation of the HMC inventory file was not met by the actual environment.
