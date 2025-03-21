@@ -196,7 +196,7 @@ def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
         print(f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.client.consoles.console
-        partlink_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+        partlink_name = f"{TEST_PREFIX}_crud_{uuid.uuid4().hex}"
         partlink_name_new = partlink_name + ' new'
 
         # Test creating the partition link.
@@ -402,7 +402,7 @@ def test_partlink_create_delete(
         print(f"Testing on CPC {cpc.name}")
 
         console = cpc.manager.client.consoles.console
-        partlink_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+        partlink_name = f"{TEST_PREFIX}_cre_del_{uuid.uuid4().hex}"
         replacements = {}  # Replacements for testcase expressions
         part1 = None
         part2 = None
@@ -522,7 +522,8 @@ def test_partlink_zzz_cleanup(dpm_mode_cpcs):  # noqa: F811
         for partlink in partlinks:
 
             print("Deleting test partition link from a prior test run: "
-                  f"{partlink.name!r} on CPC {cpc.name}")
+                  f"{partlink.name!r} on CPC {cpc.name} "
+                  "- please open a zhmcclient issue for that")
 
             try:
                 partlink.delete()
@@ -533,7 +534,8 @@ def test_partlink_zzz_cleanup(dpm_mode_cpcs):  # noqa: F811
         for part in parts:
 
             print("Deleting test partition from a prior test run: "
-                  f"{part.name!r} on CPC {cpc.name}")
+                  f"{part.name!r} on CPC {cpc.name} "
+                  "- please open a zhmcclient issue for that")
 
             try:
                 part.delete()
