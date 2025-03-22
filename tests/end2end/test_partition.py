@@ -31,20 +31,14 @@ import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
+from .utils import logger  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties, \
-    setup_logging, pformat_as_dict
+    pformat_as_dict
 
 urllib3.disable_warnings()
-
-# Logging for zhmcclient HMC interactions and test functions
-LOGGING = False
-LOG_FILE = 'test_partition.log'
-
-# Print debug messages in tests
-DEBUG = False
 
 # Properties in minimalistic Partition objects (e.g. find_by_name())
 PART_MINIMAL_PROPS = ['object-uri', 'name']
@@ -243,7 +237,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
             cpc.partitions.find(name=part_name_new)
 
 
-def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
+def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test "List OS Messages" operation on partitions
@@ -272,17 +266,16 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
 
             # Test: List all messages (without begin or end)
             try:
-                if DEBUG:
-                    print("Debug: Test: Listing OS messages of partition "
-                          f"{part.name} with no begin/end")
+                logger.debug(
+                    "Listing OS messages of partition %s with no begin/end",
+                    part.name)
                 result = part.list_os_messages()
             except zhmcclient.HTTPError as exc:
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the partition is not
                     # available
-                    if DEBUG:
-                        print(f"Debug: Partition {part.name} cannot list OS "
-                              "messages")
+                    logger.debug(
+                        "Partition %s cannot list OS messages", part.name)
                     continue
                 raise
 
@@ -291,9 +284,9 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
                 test_part = part
                 break
 
-            if DEBUG:
-                print(f"Debug: Partition {part.name} has only "
-                      f"{len(all_messages)} OS messages")
+            logger.debug(
+                "Partition %s has only %d OS messages",
+                part.name, len(all_messages))
 
         if test_part is None:
             skip_warn(f"No partition on CPC {cpc.name} has the minimum number "
@@ -302,9 +295,9 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
-        if DEBUG:
-            print("Debug: Test: Listing OS messages of partition "
-                  f"{test_part.name} with begin={all_begin}, end={all_end}")
+        logger.debug(
+            "Listing OS messages of partition %s with begin=%s, end=%s",
+            test_part.name, all_begin, all_end)
         result = test_part.list_os_messages(begin=all_begin, end=all_end)
         messages = result['os-messages']
         assert len(messages) == all_end - all_begin + 1
@@ -321,9 +314,9 @@ def test_part_list_os_messages(dpm_mode_cpcs):  # noqa: F811
                 break
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
-        if DEBUG:
-            print("Debug: Test: Listing OS messages of partition "
-                  f"{test_part.name} with begin={begin}, end={end}")
+        logger.debug(
+            "Listing OS messages of partition %s with begin=%s, end=%s",
+            test_part.name, begin, end)
         result = test_part.list_os_messages(begin=begin, end=end)
         messages = result['os-messages']
         assert len(messages) == end - begin + 1
@@ -827,16 +820,12 @@ TESTCASES_PART_ATTACH_DETACH_CTC_LINK = [
     "desc, num_partitions, num_paths",
     TESTCASES_PART_ATTACH_DETACH_CTC_LINK)
 def test_part_attach_detach_ctc_link(
-        desc, num_partitions, num_paths,
-        dpm_mode_cpcs):  # noqa: F811
+        logger, dpm_mode_cpcs,  # noqa: F811
+        desc, num_partitions, num_paths):
     # pylint: disable=redefined-outer-name,unused-argument,redefined-builtin
     """
     Test for Partition.attach/detach_ctc_link()
     """
-    logger = setup_logging(LOGGING, 'test_part_attach_detach_ctc_link',
-                           LOG_FILE)
-    logger.debug("Entered test function")
-
     if not dpm_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
@@ -963,4 +952,3 @@ def test_part_attach_detach_ctc_link(
             for part in pl_parts:
                 logger.debug("Deleting initial PL partition %s", part.name)
                 part.delete()
-            logger.debug("Leaving test function")

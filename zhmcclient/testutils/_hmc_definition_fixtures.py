@@ -19,6 +19,7 @@ Pytest fixtures for mocked HMCs.
 
 import os
 import logging
+import time
 import pytest
 import zhmcclient
 import zhmcclient_mock
@@ -26,17 +27,13 @@ import zhmcclient_mock
 from ._hmc_definition import HMCDefinition
 from ._hmc_definitions import hmc_definitions
 
-__all__ = ['hmc_definition', 'hmc_session']
+__all__ = ['hmc_definition', 'hmc_session', 'LOG_FORMAT_STRING',
+           'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE']
 
-# Log file
-TESTLOGFILE = os.getenv('TESTLOGFILE', None)
-if TESTLOGFILE:
-    LOG_HANDLER = logging.FileHandler(TESTLOGFILE, encoding='utf-8')
-    LOG_FORMAT_STRING = '%(asctime)s %(name)s %(levelname)s %(message)s'
-    LOG_HANDLER.setFormatter(logging.Formatter(LOG_FORMAT_STRING))
-else:
-    LOG_HANDLER = None
-    LOG_FORMAT_STRING = None
+# Log parameters when logging is enabled via TESTLOGFILE
+LOG_FORMAT_STRING = '%(asctime)s %(levelname)s %(name)s: %(message)s'
+LOG_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
+LOG_DATETIME_TIMEZONE = time.gmtime  # Used as formatter converter function
 
 
 def fixtureid_hmc_definition(fixture_value):
@@ -139,26 +136,33 @@ def setup_hmc_session(hd):
         # A real HMC
 
         # Enable debug logging if specified
-        if LOG_HANDLER:
+        log_file = os.getenv('TESTLOGFILE', None)
+        if log_file:
+
+            logging.Formatter.converter = LOG_DATETIME_TIMEZONE
+            log_formatter = logging.Formatter(
+                LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
+            log_handler = logging.FileHandler(log_file, encoding='utf-8')
+            log_handler.setFormatter(log_formatter)
 
             logger = logging.getLogger('zhmcclient.hmc')
-            if LOG_HANDLER not in logger.handlers:
-                logger.addHandler(LOG_HANDLER)
+            if log_handler not in logger.handlers:
+                logger.addHandler(log_handler)
             logger.setLevel(logging.DEBUG)
 
             logger = logging.getLogger('zhmcclient.api')
-            if LOG_HANDLER not in logger.handlers:
-                logger.addHandler(LOG_HANDLER)
+            if log_handler not in logger.handlers:
+                logger.addHandler(log_handler)
             logger.setLevel(logging.DEBUG)
 
             logger = logging.getLogger('zhmcclient.jms')
-            if LOG_HANDLER not in logger.handlers:
-                logger.addHandler(LOG_HANDLER)
+            if log_handler not in logger.handlers:
+                logger.addHandler(log_handler)
             logger.setLevel(logging.DEBUG)
 
             logger = logging.getLogger('zhmcclient.os')
-            if LOG_HANDLER not in logger.handlers:
-                logger.addHandler(LOG_HANDLER)
+            if log_handler not in logger.handlers:
+                logger.addHandler(log_handler)
             logger.setLevel(logging.DEBUG)
 
         rt_config = zhmcclient.RetryTimeoutConfig(
