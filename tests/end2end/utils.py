@@ -29,86 +29,61 @@ from collections.abc import Mapping, MappingView
 import pytest
 
 import zhmcclient
+from zhmcclient.testutils import LOG_FORMAT_STRING, LOG_DATETIME_FORMAT, \
+    LOG_DATETIME_TIMEZONE
 
 # Prefix used for names of resources that are created during tests
 TEST_PREFIX = 'zhmcclient_tests_end2end'
 
 
-def setup_logging(enable_logging, testfunc_name, log_file=None):
+@pytest.fixture(scope='function')
+def logger(request):
     """
-    Set up logging for end2end testcases.
+    Pytest fixture that provides a logger for an end2end test function.
 
-    If enable_logging is True, two loggers are created and enabled for logging
-    to the specified log_file:
-      * A logger named "zhmcclient.hmc" for logging the HMC interactions.
-        That logger is used by the zhmcclient package.
-      * A logger named testfunc_name for logging additional information the
-        test function may need to log. This logger is returned.
-    Because this setup function is called for each invocation of a test
+    This functionm creates a logger named after the test function.
+    Using this fixture as an argument in a test function resolves to that
+    logger.
+
+    Logging is enabled by setting the env var TESTLOGFILE. If logging is
+    enabled, the logger is set to debug level, otherwise the logger is disabled.
+
+    During setup of the fixture, a log entry for entering the test function
+    is written, and during teardown of the fixture, a log entry for leaving
+    the test function is written.
+
+    Because this fixture is called for each invocation of a test
     function, it ends up being called multiple times within the same Python
-    process. Therefore, the loggers are set up only when they do not exist yet.
-
-    If enable_logging is False, the same two loggers are created and logging
-    is disabled on them by setting the log level to NOTSET. The testfunc_name
-    logger is also returned in this case.
+    process. Therefore, the logger is created only when it does not exist yet.
 
     Returns:
-
-        logging.Logger: Logger for testfunc_name
+        logging.Logger: Logger for the test function
     """
-    # log level and format for both loggers
-    log_level = logging.DEBUG
-    log_format = '%(asctime)s %(levelname)s %(name)s: %(message)s'
-    datetime_format = '%Y-%m-%d %H:%M:%S %Z'
-    log_converter = time.gmtime
 
-    zhmcclient_logger = logging.getLogger(zhmcclient.HMC_LOGGER_NAME)
+    log_file = os.getenv('TESTLOGFILE', None)
+    if log_file:
+        logging.Formatter.converter = LOG_DATETIME_TIMEZONE
+        log_formatter = logging.Formatter(
+            LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
+        log_handler = logging.FileHandler(log_file, encoding='utf-8')
+        log_handler.setFormatter(log_formatter)
+
+    testfunc_name = request.function.__name__
     testfunc_logger = logging.getLogger(testfunc_name)
 
-    if enable_logging:
-        assert log_file
+    if log_file and log_handler not in testfunc_logger.handlers:
+        testfunc_logger.addHandler(log_handler)
 
-        abs_log_file = os.path.abspath(log_file)
-
-        zhmcclient_handler = None
-        for handler in zhmcclient_logger.handlers:
-            if isinstance(handler, logging.FileHandler):
-                bfn = handler.baseFilename  # pylint: disable=no-member
-                abs_handler_file = os.path.abspath(bfn)
-                if abs_handler_file == abs_log_file:
-                    zhmcclient_handler = handler
-                    break
-        if not zhmcclient_handler:
-            zhmcclient_handler = logging.FileHandler(log_file)
-            zhmcclient_logger.addHandler(zhmcclient_handler)
-
-        testfunc_handler = None
-        for handler in testfunc_logger.handlers:
-            if isinstance(handler, logging.FileHandler):
-                bfn = handler.baseFilename  # pylint: disable=no-member
-                abs_handler_file = os.path.abspath(bfn)
-                if abs_handler_file == abs_log_file:
-                    testfunc_handler = handler
-                    break
-        if not testfunc_handler:
-            testfunc_handler = logging.FileHandler(log_file)
-            testfunc_logger.addHandler(testfunc_handler)
-
-        logging.Formatter.converter = log_converter
-        formatter = logging.Formatter(
-            log_format, datefmt=datetime_format)
-
-        zhmcclient_handler.setFormatter(formatter)
-        testfunc_handler.setFormatter(formatter)
-
-        zhmcclient_logger.setLevel(log_level)
-        testfunc_logger.setLevel(log_level)
-
+    if log_file:
+        testfunc_logger.setLevel(logging.DEBUG)
     else:
-        zhmcclient_logger.setLevel(logging.NOTSET)
         testfunc_logger.setLevel(logging.NOTSET)
 
-    return testfunc_logger
+    testfunc_logger.debug("Entered test function")
+    try:
+        yield testfunc_logger
+    finally:
+        testfunc_logger.debug("Leaving test function")
 
 
 class End2endTestWarning(UserWarning):

@@ -28,17 +28,13 @@ import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
+from .utils import logger  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, runtest_find_list, \
-    runtest_get_properties, setup_logging, End2endTestWarning, \
-    skip_missing_api_feature
+    runtest_get_properties, End2endTestWarning, skip_missing_api_feature
 
 urllib3.disable_warnings()
-
-# Logging for zhmcclient HMC interactions and test functions
-LOGGING = False
-LOG_FILE = 'test_profile.log'
 
 # Properties in minimalistic ActivationProfile objects (e.g. find_by_name())
 ACTPROF_MINIMAL_PROPS = ['element-uri', 'name']
@@ -85,15 +81,13 @@ def standard_activation_profile_props(cpc, profile_name, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
+def test_actprof_crud(logger, classic_mode_cpcs, profile_type):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test create, read, update and delete an activation profile.
     """
     if not classic_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in classic mode")
-
-    logger = setup_logging(LOGGING, 'test_actprof_crud', LOG_FILE)
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -107,7 +101,7 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
 
         msg = f"Testing on CPC {cpc.name}"
         print(msg)
-        logger.info(msg)
+        logger.debug(msg)
 
         actprof_name = f'ZHMC{profile_type[0].upper()}1'
 
@@ -121,15 +115,15 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
                 f"Preparation: Delete {profile_type} activation profile "
                 f"{actprof_name!r} on CPC {cpc.name} from previous run")
             warnings.warn(msg, UserWarning)
-            logger.info(msg)
+            logger.debug(msg)
             _actprof.delete()
 
         # Test creating the activation profile
         actprof_input_props = standard_activation_profile_props(
             cpc, actprof_name, profile_type)
 
-        logger.info("Test: Create %s activation profile %r on CPC %s",
-                    profile_type, actprof_name, cpc.name)
+        logger.debug("Create %s activation profile %r on CPC %s",
+                     profile_type, actprof_name, cpc.name)
 
         # The code to be tested
         actprof = actprof_mgr.create(actprof_input_props)
@@ -149,8 +143,8 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
 
             new_desc = "Updated activation profile description."
 
-            logger.info("Test: Update a property of %s activation profile "
-                        "%r on CPC %s", profile_type, actprof_name, cpc.name)
+            logger.debug("Update a property of %s activation profile "
+                         "%r on CPC %s", profile_type, actprof_name, cpc.name)
 
             # The code to be tested
             actprof.update_properties(dict(description=new_desc))
@@ -162,8 +156,8 @@ def test_actprof_crud(classic_mode_cpcs, profile_type):  # noqa: F811
         finally:
             # Test deleting the activation profile (also cleanup)
 
-            logger.info("Test: Delete %s activation profile %r on CPC %s",
-                        profile_type, actprof_name, cpc.name)
+            logger.debug("Delete %s activation profile %r on CPC %s",
+                         profile_type, actprof_name, cpc.name)
 
             # The code to be tested
             actprof.delete()

@@ -29,15 +29,11 @@ import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
+from .utils import logger  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
-    standard_partition_props, runtest_find_list, runtest_get_properties, \
-    setup_logging
-
-# Logging for zhmcclient HMC interactions and test functions
-LOGGING = False
-LOG_FILE = 'test_nic.log'
+    standard_partition_props, runtest_find_list, runtest_get_properties
 
 urllib3.disable_warnings()
 
@@ -248,17 +244,13 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
                 adapter.delete()
 
 
-def test_nic_backing_port_port_based(dpm_mode_cpcs):  # noqa: F811
+def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test Nic.backing_port() for port-based NICs (e.g. RoCE, CNA).
     """
     if not dpm_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
-
-    logger = setup_logging(LOGGING, 'test_nic_backing_port_port_based',
-                           LOG_FILE)
-    logger.debug("Entered test function")
 
     cpc = random.choice(dpm_mode_cpcs)
     logger.debug("Testing with CPC %s", cpc.name)
@@ -312,20 +304,14 @@ def test_nic_backing_port_port_based(dpm_mode_cpcs):  # noqa: F811
     result_cpc = result_adapter.manager.parent
     assert result_cpc.uri == cpc.uri
 
-    logger.debug("Leaving test function")
 
-
-def test_nic_backing_port_vswitch_based(dpm_mode_cpcs):  # noqa: F811
+def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test Nic.backing_port() for vswitch-based NICs (e.g. OSA, HS).
     """
     if not dpm_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
-
-    logger = setup_logging(LOGGING, 'test_nic_backing_port_vswitch_based',
-                           LOG_FILE)
-    logger.debug("Entered test function")
 
     cpc = random.choice(dpm_mode_cpcs)
     logger.debug("Testing with CPC %s", cpc.name)
@@ -386,5 +372,3 @@ def test_nic_backing_port_vswitch_based(dpm_mode_cpcs):  # noqa: F811
 
     result_cpc = result_adapter.manager.parent
     assert result_cpc.uri == cpc.uri
-
-    logger.debug("Leaving test function")

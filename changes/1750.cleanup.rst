@@ -1,0 +1,3 @@
+End2end test: Consolidated different ways to enable logging in end2end test
+functions. Logging is now consistently enabled with the TESTLOGFILE env var.
+The log message format has been changed.
