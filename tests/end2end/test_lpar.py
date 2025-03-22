@@ -30,20 +30,13 @@ import zhmcclient
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
+from .utils import logger  # noqa: F401, E501
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, runtest_find_list, \
-    runtest_get_properties, ensure_lpar_inactive, set_resource_property, \
-    setup_logging
+    runtest_get_properties, ensure_lpar_inactive, set_resource_property
 
 urllib3.disable_warnings()
-
-# Print debug messages in tests
-DEBUG = False
-
-# Logging for zhmcclient HMC interactions and test functions
-LOGGING = False
-LOG_FILE = 'test_lpar.log'
 
 # Properties in minimalistic Lpar objects (e.g. find_by_name())
 LPAR_MINIMAL_PROPS = ['object-uri', 'name']
@@ -182,7 +175,8 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
     "desc, input_kwargs, exp_prop_names",
     TESTCASES_CONSOLE_LIST_PERMITTED_LPARS)
 def test_console_list_permitted_lpars(
-        classic_mode_cpcs, desc, input_kwargs, exp_prop_names):  # noqa: F811
+        logger, classic_mode_cpcs,  # noqa: F811
+        desc, input_kwargs, exp_prop_names):
     # pylint: disable=redefined-outer-name
     """
     Test Console.list_permitted_lpars() method
@@ -190,10 +184,7 @@ def test_console_list_permitted_lpars(
     if not classic_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in classic mode")
 
-    logger = setup_logging(LOGGING, 'test_console_list_permitted_lpars',
-                           LOG_FILE)
-    logger.debug("Entered test function with: "
-                 "desc=%r, input_kwargs=%r, exp_prop_names=%r",
+    logger.debug("Arguments: desc=%r, input_kwargs=%r, exp_prop_names=%r",
                  desc, input_kwargs, exp_prop_names)
 
     for cpc in classic_mode_cpcs:
@@ -219,10 +210,8 @@ def test_console_list_permitted_lpars(
                     f"Property {pname!r} missing from returned LPAR "
                     f"properties, got: {lpar_props!r}")
 
-    logger.debug("Leaving test function")
 
-
-def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
+def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test "List OS Messages" operation on LPARs
@@ -250,17 +239,16 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
 
             # Test: List all messages (without begin or end)
             try:
-                if DEBUG:
-                    print("Debug: Test: Listing OS messages of LPAR "
-                          f"{lpar.name} with no begin/end")
+                logger.debug(
+                    "Listing OS messages of LPAR %s with no begin/end",
+                    lpar.name)
                 result = lpar.list_os_messages()
             except zhmcclient.HTTPError as exc:
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the LPAR is not
                     # available
-                    if DEBUG:
-                        print(f"Debug: LPAR {lpar.name} cannot list OS "
-                              "messages")
+                    logger.debug(
+                        "LPAR %s cannot list OS messages", lpar.name)
                     continue
                 raise
 
@@ -269,9 +257,9 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
                 test_lpar = lpar
                 break
 
-            if DEBUG:
-                print(f"Debug: LPAR {lpar.name} has only {len(all_messages)} "
-                      "OS messages")
+            logger.debug(
+                "LPAR %s has only %d OS messages",
+                lpar.name, len(all_messages))
 
         if test_lpar is None:
             skip_warn(f"No LPAR on CPC {cpc.name} has the minimum number of "
@@ -280,9 +268,9 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
-        if DEBUG:
-            print(f"Debug: Test: Listing OS messages of LPAR {test_lpar.name} "
-                  f"with begin={all_begin}, end={all_end}")
+        logger.debug(
+            "Listing OS messages of LPAR %s with begin=%s, end=%s",
+            test_lpar.name, all_begin, all_end)
         result = test_lpar.list_os_messages(begin=all_begin, end=all_end)
         messages = result['os-messages']
         assert len(messages) == all_end - all_begin + 1
@@ -299,9 +287,9 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
                 break
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
-        if DEBUG:
-            print(f"Debug: Test: Listing OS messages of LPAR {test_lpar.name} "
-                  f"with begin={begin}, end={end}")
+        logger.debug(
+            "Listing OS messages of LPAR %s with begin=%s, end=%s",
+            test_lpar.name, begin, end)
         result = test_lpar.list_os_messages(begin=begin, end=end)
         messages = result['os-messages']
         assert len(messages) == end - begin + 1
@@ -310,9 +298,9 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
 
         # Test with begin/end and maximum messages
         max_messages = random.randint(0, end - begin + 1)
-        if DEBUG:
-            print(f"Debug: Test: Listing OS messages of LPAR {test_lpar.name} "
-                  f"with begin={begin}, end={end}, max_messages={max_messages}")
+        logger.debug(
+            "Listing OS messages of LPAR %s with begin=%s, end=%s, "
+            "max_messages=%d", test_lpar.name, begin, end, max_messages)
         result = test_lpar.list_os_messages(
             begin=begin, end=end, max_messages=max_messages)
         messages = result['os-messages']
@@ -322,9 +310,9 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
 
         # Test with is_held
         for is_held in (False, True):
-            if DEBUG:
-                print("Debug: Test: Listing OS messages of LPAR "
-                      f"{test_lpar.name} with is_held={is_held}")
+            logger.debug(
+                "Listing OS messages of LPAR %s with is_held=%s",
+                test_lpar.name, is_held)
             result = test_lpar.list_os_messages(is_held=is_held)
             messages = result['os-messages']
             for message in messages:
@@ -332,9 +320,9 @@ def test_lpar_list_os_messages(classic_mode_cpcs):  # noqa: F811
 
         # Test with is_priority
         for is_priority in (False, True):
-            if DEBUG:
-                print("Debug: Test: Listing OS messages of LPAR "
-                      f"{test_lpar.name} with is_priority={is_priority}")
+            logger.debug(
+                "Listing OS messages of LPAR %s with is_priority=%s",
+                test_lpar.name, is_priority)
             result = test_lpar.list_os_messages(is_priority=is_priority)
             messages = result['os-messages']
             for message in messages:
@@ -525,8 +513,9 @@ LPAR_ACTIVATE_TESTCASES = [
     "exp_props, exp_exc_type, run",
     LPAR_ACTIVATE_TESTCASES)
 def test_lpar_activate(
-        desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs, exp_props,
-        exp_exc_type, run, classic_mode_cpcs):  # noqa: F811
+        logger, classic_mode_cpcs,  # noqa: F811
+        desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs,
+        exp_props, exp_exc_type, run):
     # pylint: disable=redefined-outer-name, unused-argument
     """
     Test Lpar.activate().
@@ -570,8 +559,6 @@ def test_lpar_activate(
 
     if not run:
         skip_warn("Testcase is disabled in testcase definition")
-
-    logger = setup_logging(LOGGING, 'test_lpar_activate', LOG_FILE)
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
@@ -669,29 +656,29 @@ def test_lpar_activate(
 
         msg = f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}"
         print(msg)
-        logger.info(msg)
+        logger.debug(msg)
 
         if run == 'pdb':
             # pylint: disable=forgotten-debug-statement
             pdb.set_trace()
 
-        logger.info("Preparation: Ensuring that LPAR %r is inactive",
-                    lpar.name)
+        logger.debug("Preparation: Ensuring that LPAR %r is inactive",
+                     lpar.name)
         ensure_lpar_inactive(lpar)
 
-        logger.info("Preparation: Setting 'next-activation-profile-name' = %r "
-                    "in LPAR %r", nap_name, lpar.name)
+        logger.debug("Preparation: Setting 'next-activation-profile-name' = %r "
+                     "in LPAR %r", nap_name, lpar.name)
         saved_nap_name = set_resource_property(
             lpar, 'next-activation-profile-name', nap_name)
 
-        logger.info("Preparation: Setting 'load-at-activation' = %r in image "
-                    "profile %r", auto_load, iap.name)
+        logger.debug("Preparation: Setting 'load-at-activation' = %r in image "
+                     "profile %r", auto_load, iap.name)
         saved_auto_load = set_resource_property(
             iap, 'load-at-activation', auto_load)
 
         try:
-            logger.info("Test: Activating LPAR %r (profile arg: %r, "
-                        "add. args: %r)", lpar.name, ap_name, input_kwargs)
+            logger.debug("Activating LPAR %r (profile arg: %r, add. args: %r)",
+                         lpar.name, ap_name, input_kwargs)
 
             if exp_exc_type:
 
@@ -714,8 +701,8 @@ def test_lpar_activate(
                 # Check the expected properties
                 lpar.pull_full_properties()
                 lpar_props = dict(lpar.properties)
-                logger.info("Status of LPAR %r is %r after test",
-                            lpar.name, lpar_props['status'])
+                logger.debug("Status of LPAR %r is %r after test",
+                             lpar.name, lpar_props['status'])
                 for pname, exp_value in exp_props.items():
                     assert pname in lpar_props, (
                         f"Expected property {pname!r} does not exist in "
@@ -725,17 +712,17 @@ def test_lpar_activate(
                         f"Property {pname!r} has unexpected value "
                         f"{act_value!r}; expected value: {exp_value!r}")
         finally:
-            logger.info("Cleanup: Ensuring that LPAR %r is inactive",
-                        lpar.name)
+            logger.debug("Cleanup: Ensuring that LPAR %r is inactive",
+                         lpar.name)
             ensure_lpar_inactive(lpar)
 
-            logger.info("Cleanup: Setting 'next-activation-profile-name' = %r "
-                        "in LPAR %r", saved_nap_name, lpar.name)
+            logger.debug("Cleanup: Setting 'next-activation-profile-name' = %r "
+                         "in LPAR %r", saved_nap_name, lpar.name)
             set_resource_property(
                 lpar, 'next-activation-profile-name', saved_nap_name)
 
-            logger.info("Cleanup: Setting 'load-at-activation' = %r in image "
-                        "profile %r", saved_auto_load, iap.name)
+            logger.debug("Cleanup: Setting 'load-at-activation' = %r in image "
+                         "profile %r", saved_auto_load, iap.name)
             set_resource_property(iap, 'load-at-activation', saved_auto_load)
 
 
