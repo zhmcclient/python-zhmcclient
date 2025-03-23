@@ -1,2 +1,0 @@
-When handling inventory errors during "Export DPM configuration", only access
-field "inventory-error-details" if "inventory-error-code" is 5.
