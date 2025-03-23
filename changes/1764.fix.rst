@@ -1,0 +1,1 @@
+Ensure proper detection of all unreferenced adapters.

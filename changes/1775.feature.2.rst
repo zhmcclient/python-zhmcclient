@@ -1,0 +1,2 @@
+Docs: Clarified in 'Console.list_permitted_adapters()' that the method does
+not return adapters of Z systems before SE version 2.16.0.
