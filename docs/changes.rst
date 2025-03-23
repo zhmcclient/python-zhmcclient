@@ -20,58 +20,6 @@ Change log
 ----------
 
 .. towncrier start
-Version 1.20.0
-^^^^^^^^^^^^^^
-
-Released: 2025-03-23
-
-**Bug fixes:**
-
-* Fixed missing package dependencies for development.
-
-* Fixed safety issues up to 2025-02-26.
-
-* Added support for busy retries to 'Session.post()' and 'Session.delete()'
-  when the HTTP request returns HTTP status 409 with reason codes 1 or 2.
-  The waiting time between retries can also be specified. This can be used
-  by resource class methods that need that.
-  By default, no retries are performed.
-  Changed 'PartitionLink.update_properties()' and 'PartitionLink.delete()' to
-  specify busy retries.
-
-* Fixed a datetime conversion error by excluding pytz 2025.1. (`#1755 <https://github.com/zhmcclient/python-zhmcclient/issues/1755>`_)
-
-* When handling inventory errors during "Export DPM configuration", only access
-  field "inventory-error-details" if "inventory-error-code" is 5. (`#1760 <https://github.com/zhmcclient/python-zhmcclient/issues/1760>`_)
-
-* Remove unused network and storage port objects from export data, too. (`#1764 <https://github.com/zhmcclient/python-zhmcclient/issues/1764>`_)
-
-* Ensure proper detection of all unreferenced adapters. (`#1764 <https://github.com/zhmcclient/python-zhmcclient/issues/1764>`_)
-
-* Fixed incorrect CPC name in exception message when a NIC could not be found
-  during metrics processing. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
-
-* Fixed that metrics processing for partition metrics failed on HMC versions older
-  than 2.14.0. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
-
-**Enhancements:**
-
-* Added check for incorrectly named towncrier change fragment files.
-
-* Added support for waiting for partition links to reach one of a specified set
-  of states with a new 'zhmcclient.PartitionLink.wait_for_states()' method.
-  This can be used to ensure that a partition link is in a stable state before
-  proceeding with other operations on it.
-
-* Dev: Started using the trusted publisher concept of Pypi in order to avoid
-  dealing with Pypi access tokens. (`#1738 <https://github.com/zhmcclient/python-zhmcclient/issues/1738>`_)
-
-* Improved performance of looking up LPARs and adapters in metrics processing. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
-
-* Docs: Clarified in 'Console.list_permitted_adapters()' that the method does
-  not return adapters of Z systems before SE version 2.16.0. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
-
-
 Version 1.19.0
 ^^^^^^^^^^^^^^
 
