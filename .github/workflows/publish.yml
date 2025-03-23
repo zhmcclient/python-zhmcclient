@@ -19,7 +19,6 @@ jobs:
     environment: pypi  # GitHub environment that must exist
     permissions:
       id-token: write
-      # contents: write
     steps:
 
     #-------- Info gathering and checks
@@ -148,8 +147,7 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         packages-dir: dist
-        repository-url: https://test.pypi.org/legacy/
-        # Pypi has a trusted publisher defined, so we do not need a password:
+        # Pypi has a trusted publisher defined for this repo, so we do not need a password:
         # https://pypi.org/manage/project/zhmcclient/settings/publishing/
 
     #-------- Creation of Github release
