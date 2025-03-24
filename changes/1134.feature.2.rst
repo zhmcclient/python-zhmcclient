@@ -1,5 +1,0 @@
-End2end test: Specifying the 'dpm_enabled' property for a CPC in an HMC entry
-of the HMC inventory file with a value that does not match the actual CPC now
-causes pytest to error out. Previously, the CPC was skipped and a warning was
-issued. This is to better indicate that the expectation of the HMC inventory
-file was not met by the actual environment.
