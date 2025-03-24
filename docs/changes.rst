@@ -20,6 +20,20 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.19.2
+^^^^^^^^^^^^^^
+
+Released: 2025-03-24
+
+**Bug fixes:**
+
+* End2end test: Fixed issue by filtering out non-FCP storage groups in
+  test_virtual_storage_resource.
+
+* Fixed a datetime conversion error by excluding pytz 2025.1
+  (already shipped in version 1.19.1). (`#1755 <https://github.com/zhmcclient/python-zhmcclient/issues/1755>`_)
+
+
 Version 1.19.1
 ^^^^^^^^^^^^^^
 
