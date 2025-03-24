@@ -1,3 +1,0 @@
-End2end test: Added support for specifying in the HMC inventory file that all
-managed CPCs are to be tested, by omitting the 'cpcs' property for the HMC
-entry. Previously, omitting that property meant to test no CPC.

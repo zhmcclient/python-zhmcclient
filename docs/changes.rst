@@ -20,6 +20,99 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.20.0
+^^^^^^^^^^^^^^
+
+Released: 2025-03-24
+
+**Bug fixes:**
+
+* Fixed missing package dependencies for development.
+
+* End2end test: Fixed issue by filtering out non-FCP storage groups in
+  test_virtual_storage_resource.
+
+* Fixed safety issues up to 2025-02-26.
+
+* Added support for busy retries to 'Session.post()' and 'Session.delete()'
+  when the HTTP request returns HTTP status 409 with reason codes 1 or 2.
+  The waiting time between retries can also be specified. This can be used
+  by resource class methods that need that.
+  By default, no retries are performed.
+  Changed 'PartitionLink.update_properties()' and 'PartitionLink.delete()' to
+  specify busy retries.
+
+* Fixed a datetime conversion error by excluding pytz 2025.1. (`#1755 <https://github.com/zhmcclient/python-zhmcclient/issues/1755>`_)
+
+* When handling inventory errors during "Export DPM configuration", only access
+  field "inventory-error-details" if "inventory-error-code" is 5. (`#1760 <https://github.com/zhmcclient/python-zhmcclient/issues/1760>`_)
+
+* Remove unused network and storage port objects from export data, too. (`#1764 <https://github.com/zhmcclient/python-zhmcclient/issues/1764>`_)
+
+* Ensure proper detection of all unreferenced adapters. (`#1764 <https://github.com/zhmcclient/python-zhmcclient/issues/1764>`_)
+
+* Fixed incorrect CPC name in exception message when a NIC could not be found
+  during metrics processing. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
+
+* Fixed that metrics processing for partition metrics failed on HMC versions older
+  than 2.14.0. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
+
+**Enhancements:**
+
+* Improved 'repr()' of 'zhmcclient.Session' objects by showing when password and
+  session_id are 'None'.
+
+* Added check for incorrectly named towncrier change fragment files.
+
+* Added support for waiting for partition links to reach one of a specified set
+  of states with a new 'zhmcclient.PartitionLink.wait_for_states()' method.
+  This can be used to ensure that a partition link is in a stable state before
+  proceeding with other operations on it.
+
+* Added log entries for logging on and off at the HMC, after the HMC to be used
+  has been determined.
+
+* Improved error reporting for failed HMC logon by distinguishing the case where
+  a password is not provided but a session ID that is invalid.
+
+* End2end test: Added support for specifying in the HMC inventory file that all
+  managed CPCs are to be tested, by omitting the 'cpcs' property for the HMC
+  entry. Previously, omitting that property meant to test no CPC. (`#1134 <https://github.com/zhmcclient/python-zhmcclient/issues/1134>`_)
+
+* End2end test: Specifying a CPC in an HMC entry of the HMC inventory file that
+  is not managed by the HMC now causes pytest to error out. Previously, the CPC
+  was skipped and a warning was issued. This is to better indicate that the
+  expectation of the HMC inventory file was not met by the actual environment. (`#1134 <https://github.com/zhmcclient/python-zhmcclient/issues/1134>`_)
+
+* End2end test: Specifying the 'dpm_enabled' property for a CPC in an HMC entry
+  of the HMC inventory file with a value that does not match the actual CPC now
+  causes pytest to error out. Previously, the CPC was skipped and a warning was
+  issued. This is to better indicate that the expectation of the HMC inventory
+  file was not met by the actual environment. (`#1134 <https://github.com/zhmcclient/python-zhmcclient/issues/1134>`_)
+
+* Dev: Started using the trusted publisher concept of Pypi in order to avoid
+  dealing with Pypi access tokens. (`#1738 <https://github.com/zhmcclient/python-zhmcclient/issues/1738>`_)
+
+* Improved performance of looking up LPARs and adapters in metrics processing. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
+
+* Docs: Clarified in 'Console.list_permitted_adapters()' that the method does
+  not return adapters of Z systems before SE version 2.16.0. (`#1775 <https://github.com/zhmcclient/python-zhmcclient/issues/1775>`_)
+
+**Cleanup:**
+
+* End2end test: In the test method 'test_partlink_zzz_cleanup()' which cleans
+  up partition links and partitions from previous runs, added the recommendation
+  to open zhmcclient issue in its message reporting partition links or partitions
+  that had to be cleaned up. The partition link names have been changed to
+  indicate which test method produced them. The test method
+  'test_partlink_zzz_cleanup()' stays in place for the time being, as an
+  additional safety net. (`#1749 <https://github.com/zhmcclient/python-zhmcclient/issues/1749>`_)
+
+* End2end test: Consolidated different ways to enable logging in end2end test
+  functions. Logging is now consistently enabled with the TESTLOGFILE env var.
+  The log message format has been changed. (`#1750 <https://github.com/zhmcclient/python-zhmcclient/issues/1750>`_)
+
+
 Version 1.19.0
 ^^^^^^^^^^^^^^
 

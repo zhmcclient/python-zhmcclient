@@ -1,7 +1,0 @@
-End2end test: In the test method 'test_partlink_zzz_cleanup()' which cleans
-up partition links and partitions from previous runs, added the recommendation
-to open zhmcclient issue in its message reporting partition links or partitions
-that had to be cleaned up. The partition link names have been changed to
-indicate which test method produced them. The test method
-'test_partlink_zzz_cleanup()' stays in place for the time being, as an
-additional safety net.
