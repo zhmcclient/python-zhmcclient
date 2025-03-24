@@ -132,7 +132,6 @@ jobs:
     container: ${{ matrix.container }}
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: 1
-      PIP_NO_PYTHON_VERSION_WARNING: 1
     steps:
     - name: Set run type (normal, scheduled, release)
       id: set-run-type
