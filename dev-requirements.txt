@@ -186,4 +186,5 @@ pywinpty>=2.0.14; os_name == "nt" and python_version >= '3.13'
 # for development as well.
 # pytz 2024.2 introduced an issue that causes our tests to fail.
 # pytz 2025.1 introduced an issue that causes our tests to fail (https://github.com/stub42/pytz/issues/133)
-pytz>=2019.1,!=2024.2,!=2025.1
+# pytz 2025.2 introduced an issue that causes our tests to fail.
+pytz>=2019.1,!=2024.2,!=2025.1,!=2025.2
