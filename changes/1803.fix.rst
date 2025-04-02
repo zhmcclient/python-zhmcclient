@@ -1,0 +1,3 @@
+Fixed that 'Console.list_permitted_adapters()' was used in the metrics support
+by incorrectly checking for the API version 4.1. The code now checks for
+availability of the API feature 'adapter-network-information', instead.

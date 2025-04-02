@@ -1,0 +1,2 @@
+Added support for caching the API features returned by
+'Console.list_api_features()' and 'Cpc.list_api_features()'.
