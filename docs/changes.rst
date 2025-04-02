@@ -20,6 +20,27 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.20.1
+^^^^^^^^^^^^^^
+
+Released: 2025-04-02
+
+**Bug fixes:**
+
+* Dev: Fixed permissions for creating GitHub release when releasing a version
+
+* Fixed a datetime conversion error by excluding pytz 2025.2 (`#1800 <https://github.com/zhmcclient/python-zhmcclient/issues/1800>`_)
+
+* Fixed that 'Console.list_permitted_adapters()' was used in the metrics support
+  by incorrectly checking for the API version 4.1. The code now checks for
+  availability of the API feature 'adapter-network-information', instead. (`#1803 <https://github.com/zhmcclient/python-zhmcclient/issues/1803>`_)
+
+**Enhancements:**
+
+* Added support for caching the API features returned by
+  'Console.list_api_features()' and 'Cpc.list_api_features()'. (`#1803 <https://github.com/zhmcclient/python-zhmcclient/issues/1803>`_)
+
+
 Version 1.20.0
 ^^^^^^^^^^^^^^
 
