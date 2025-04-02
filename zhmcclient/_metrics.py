@@ -85,9 +85,11 @@ __all__ = ['MetricsContextManager', 'MetricsContext', 'MetricGroupDefinition',
            'MetricDefinition', 'MetricsResponse', 'MetricGroupValues',
            'MetricObjectValues']
 
-# HMC API version for certain HMC versions
+# Initial HMC API version for certain HMC versions
 API_VERSION_HMC_2_14_0 = (2, 20)
-API_VERSION_HMC_2_16_0 = (4, 1)
+
+# List of API features we check for (since HMC 2.16 and API version 4.10)
+API_FEATURE_ADAPTER_NETWORK_INFORMATION = 'adapter-network-information'
 
 
 class MetricsContextManager(BaseManager):
@@ -939,10 +941,12 @@ class MetricObjectValues:
         elif resource_class == 'adapter':
             filter_args = {'object-uri': resource_uri}
             fallback = False
-            if self.client.version_info() >= API_VERSION_HMC_2_16_0:
+            if self.client.consoles.console.list_api_features(
+                    API_FEATURE_ADAPTER_NETWORK_INFORMATION):
                 adapters = self.client.consoles.console.list_permitted_adapters(
                     filter_args=filter_args)
-                # The method does not return adapters of CPCs with SE < 2.16.0
+                # The method does not return adapters of classic mode CPCs with
+                # SE < 2.16.0
                 if len(adapters) < 1:
                     fallback = True
                 else:
