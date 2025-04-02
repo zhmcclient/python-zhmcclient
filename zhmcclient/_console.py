@@ -218,6 +218,7 @@ class Console(BaseResource):
         self._unmanaged_cpcs = None
         self._groups = None
         self._certificates = None
+        self._api_features = None
 
     @property
     def storage_groups(self):
@@ -1139,10 +1140,14 @@ class Console(BaseResource):
         return adapter_obj_list
 
     @logged_api_call
-    def list_api_features(self, name=None):
+    def list_api_features(self, name=None, force=False):
         """
-        Returns information about the :ref:`API features` available on
-        this console.
+        Returns the :ref:`API features` available on this console.
+
+        The result is cached in this object.
+
+        The list of API features for the console can be found in section
+        "API features" in the :term:`HMC API` book, starting with 2.16.0.
 
         HMC/SE version requirements:
 
@@ -1152,18 +1157,24 @@ class Console(BaseResource):
 
         Parameters:
 
-          name:
-            A regular expression used to limit returned objects to those that
-            have a matching name field.
+          name (string):
+            A regular expression used to limit the result to matching API
+            features. If `None`, no such filtering takes place.
+
+          force (bool):
+            Boolean controlling whether to retrieve the API feature list from
+            the console even when cached.
 
         Returns:
 
           list of strings: The list of API features that are available on this
-          client. For HMC API versions prior to 4.10, an empty list is returned.
-
+          console. For HMC API versions prior to 4.10, an empty list is
+          returned.
         """
-        # TODO: add reference to WSAPI book chapter regarding API features
-        return get_features(self.manager.session, '/api/console', name)
+        if self._api_features is None or force:
+            self._api_features = get_features(
+                self.manager.session, '/api/console', name)
+        return self._api_features
 
     @property
     def certificates(self):
