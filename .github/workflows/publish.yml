@@ -23,7 +23,7 @@ jobs:
     environment: pypi  # For Pypi trusted publishing
     permissions:
       id-token: write  # For Pypi trusted publishing
-      content: write   # For creating GitHub release
+      contents: write  # For creating GitHub release
     steps:
 
     #-------- Info gathering and checks
