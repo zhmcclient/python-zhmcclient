@@ -93,7 +93,22 @@ jobs:
               }, \
               { \
                 \"os\": \"macos-latest\", \
+                \"python-version\": \"3.9\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.9\", \
+                \"package_level\": \"minimum\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
                 \"python-version\": \"3.11\", \
+                \"package_level\": \"latest\" \
+              }, \
+              { \
+                \"os\": \"macos-latest\", \
+                \"python-version\": \"3.13.0\", \
                 \"package_level\": \"latest\" \
               }, \
               { \

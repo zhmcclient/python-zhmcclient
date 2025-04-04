@@ -355,6 +355,12 @@ develop: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done
 
 $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
+	@echo 'Debug: Installing pyzmq from source tarball'
+	which cmake
+	-cmake -version
+	pip list
+	pip install --force-reinstall --no-deps --no-binary pyzmq pyzmq
+	@echo 'Debug: End of installing pyzmq from source tarball'
 	@echo 'Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
 	echo "done" >$@
