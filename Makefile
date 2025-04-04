@@ -321,6 +321,7 @@ endif
 	@echo "Makefile: Platform information as seen by make:"
 	@echo "Platform detected by Makefile: $(PLATFORM)"
 	@$(PYTHON_CMD) -c "import platform; print(f'Platform detected by Python: {platform.platform()}')"
+	@$(PYTHON_CMD) -c "import platform; print(f'HW platform detected by Python: {platform.machine()}')"
 ifeq ($(PLATFORM),Linux)
 	@$(PYTHON_CMD) -c "import ld; d=ld.linux_distribution(); print(f'Linux distro detected by ld: {d[0]} {d[1]}')"
 endif
