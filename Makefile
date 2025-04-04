@@ -313,8 +313,17 @@ help:
 
 .PHONY: platform
 platform:
+ifeq ($(PLATFORM),Linux)
+	@echo "Makefile: Installing ld to get Linux distributions"
+	$(PYTHON_CMD) -m pip install ld
+endif
+	@echo ""
 	@echo "Makefile: Platform information as seen by make:"
-	@echo "Platform: $(PLATFORM)"
+	@echo "Platform detected by Makefile: $(PLATFORM)"
+	@$(PYTHON_CMD) -c "import platform; print(f'Platform detected by Python: {platform.platform()}')"
+ifeq ($(PLATFORM),Linux)
+	@$(PYTHON_CMD) -c "import ld; d=ld.linux_distribution(); print(f'Linux distro detected by ld: {d[0]} {d[1]}')"
+endif
 	@echo "Shell used for commands: $(SHELL)"
 	@echo "Shell flags: $(.SHELLFLAGS)"
 	@echo "Make version: $(MAKE_VERSION)"
