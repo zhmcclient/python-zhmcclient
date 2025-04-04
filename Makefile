@@ -315,9 +315,8 @@ help:
 platform:
 ifeq ($(PLATFORM),Linux)
 	@echo "Makefile: Installing ld to get Linux distributions"
-	$(PYTHON_CMD) -m pip install ld
+	$(PYTHON_CMD) -m pip -q install ld
 endif
-	@echo ""
 	@echo "Makefile: Platform information as seen by make:"
 	@echo "Platform detected by Makefile: $(PLATFORM)"
 	@$(PYTHON_CMD) -c "import platform; print(f'Platform detected by Python: {platform.platform()}')"
