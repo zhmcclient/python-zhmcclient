@@ -157,16 +157,22 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Display initial Python packages
-      run: |
-        echo "Installed Python packages:"
-        pip list
-    - name: Display platform and env vars
+    - name: Display environment
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
         RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
-        make platform env
+        make env
+    - name: Display initial Python packages
+      run: |
+        echo "Installed Python packages:"
+        pip list
+    - name: Display platform
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+      run: |
+        make platform
     - name: Install the package and its dependents
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
