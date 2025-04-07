@@ -21,7 +21,6 @@ import json
 import time
 import re
 from copy import copy
-from collections import OrderedDict
 from collections.abc import Iterable
 import requests
 import urllib3
@@ -2114,7 +2113,7 @@ def _result_object(result):
         # This function is only called when there is content expected.
         # Therefore, a response without content will result in a ParseError.
         try:
-            return result.json(object_pairs_hook=OrderedDict)
+            return result.json()
         except ValueError as exc:
             new_exc = ParseError(
                 f"JSON parse error in HTTP response: {exc.args[0]}. "

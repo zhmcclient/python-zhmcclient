@@ -21,7 +21,6 @@ by the HMC.
 
 import time
 import threading
-from collections import OrderedDict
 # import contextlib
 from immutable_views import DictView
 
@@ -745,8 +744,8 @@ class BaseResource:
           :exc:`~zhmcclient.ConnectionError`
           :exc:`~zhmcclient.CeasedExistence`
         """
-        resource_dict = OrderedDict()
+        resource_dict = {}
         self.pull_full_properties()
-        resource_dict['properties'] = OrderedDict(self._properties)
+        resource_dict['properties'] = dict(self._properties)
         # No child resources
         return resource_dict

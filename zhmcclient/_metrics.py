@@ -64,7 +64,7 @@ The basic usage of the metrics API is shown in this example:
 """
 
 
-from collections import OrderedDict, namedtuple
+from collections import namedtuple
 import re
 from datetime import datetime
 import pytz
@@ -1022,7 +1022,7 @@ class MetricObjectValues:
 
           dict: Resource definition of this object.
         """
-        obj_dict = OrderedDict()
+        obj_dict = {}
         # Faked Simple properties
         obj_dict['group_name'] = self.metric_group_definition.name
         obj_dict['resource_uri'] = self.resource_uri

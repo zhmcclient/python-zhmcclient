@@ -20,10 +20,8 @@ format and define specific variables for HMC authentication.
 """
 
 
-from collections import OrderedDict
 import errno
 import yaml
-import yamlloader
 import jsonschema
 
 __all__ = ['HMCVaultFileError', 'HMCVaultFile']
@@ -138,7 +136,7 @@ class HMCVaultFile:
 
     def __init__(self, filepath):
         self._filepath = filepath
-        self._data = OrderedDict()  # file content
+        self._data = {}  # file content
         self._load_file()
 
     def _load_file(self):
@@ -149,8 +147,7 @@ class HMCVaultFile:
             # pylint: disable=unspecified-encoding
             with open(self._filepath) as fp:
                 try:
-                    data = yaml.load(
-                        fp, Loader=yamlloader.ordereddict.SafeLoader)
+                    data = yaml.safe_load(fp)
                 except (yaml.parser.ParserError,
                         yaml.scanner.ScannerError) as exc:
                     new_exc = HMCVaultFileError(
@@ -198,9 +195,7 @@ class HMCVaultFile:
     @property
     def data(self):
         """
-        :class:`~py:collections.OrderedDict`: Content of the
-        :ref:`HMC vault file`, as nested
-        :class:`~py:collections.OrderedDict` and
-        :class:`~py:list` objects.
+        :class:`~py:dict`: Content of the :ref:`HMC vault file`, as nested
+        :class:`~py:dict` and :class:`~py:list` objects.
         """
         return self._data

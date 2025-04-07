@@ -23,7 +23,6 @@ import time
 import re
 import random
 import threading
-from collections import OrderedDict
 from immutable_views import DictView
 import pytest
 
@@ -508,7 +507,7 @@ class TestManagerDivideFilter(ResourceTestCase):
 
     def test_two_qp(self):
         """Test with two filter arguments that are query parms."""
-        filter_args = OrderedDict([('qp1', 'bar'), ('qp2', 42)])
+        filter_args = {'qp1': 'bar', 'qp2': 42}
 
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
@@ -519,7 +518,7 @@ class TestManagerDivideFilter(ResourceTestCase):
     def test_two_qp_cf(self):
         """Test with two filter arguments where one is a query parm and one is
         a client filter."""
-        filter_args = OrderedDict([('qp1', 'bar'), ('foo', 42)])
+        filter_args = {'qp1': 'bar', 'foo': 42}
 
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
@@ -530,7 +529,7 @@ class TestManagerDivideFilter(ResourceTestCase):
     def test_two_cf_qp(self):
         """Test with two filter arguments where one is a client filter and one
         is a query parm."""
-        filter_args = OrderedDict([('foo', 'bar'), ('qp1', 42)])
+        filter_args = {'foo': 'bar', 'qp1': 42}
 
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
@@ -541,7 +540,7 @@ class TestManagerDivideFilter(ResourceTestCase):
     def test_two_two_qp(self):
         """Test with two filter arguments, one of which is a list of two, and
         both are query parms."""
-        filter_args = OrderedDict([('qp1', 'bar'), ('qp2', [42, 7])])
+        filter_args = {'qp1': 'bar', 'qp2': [42, 7]}
 
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)
@@ -554,7 +553,7 @@ class TestManagerDivideFilter(ResourceTestCase):
         has reserved URI chars, and both are query parms."""
         char_str = '_'.join(self.reserved_chars)
         escape_str = '_'.join(self.reserved_escapes)
-        filter_args = OrderedDict([('qp1', 'bar'), ('qp2', [42, char_str])])
+        filter_args = {'qp1': 'bar', 'qp2': [42, char_str]}
 
         parm_str, cf_args = divide_filter_args(
             self.mgr._query_props, filter_args)

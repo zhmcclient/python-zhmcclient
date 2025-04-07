@@ -16,10 +16,7 @@
 A faked Session class for the zhmcclient package.
 """
 
-
-from collections import OrderedDict
 import yaml
-import yamlloader
 import jsonschema
 import zhmcclient
 
@@ -851,8 +848,7 @@ class FakedSession(zhmcclient.Session):
         """
 
         try:
-            hmc_dict = yaml.load(
-                hmc_yaml, Loader=yamlloader.ordereddict.SafeLoader)
+            hmc_dict = yaml.safe_load(hmc_yaml)
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
             if filepath:
                 file_str = f" in file {filepath}"
@@ -933,7 +929,7 @@ class FakedSession(zhmcclient.Session):
         session = FakedSession(host, hmc_name, hmc_version, api_version,
                                userid=userid, password=password)
 
-        res_dict = OrderedDict()
+        res_dict = {}
         res_dict['consoles'] = consoles
         cpcs = hmc_res_dict.get('cpcs')
         if cpcs:
