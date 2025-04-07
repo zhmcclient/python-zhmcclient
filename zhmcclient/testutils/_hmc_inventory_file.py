@@ -20,10 +20,8 @@ format and define specific additional variables for HMCs.
 """
 
 
-from collections import OrderedDict
 import errno
 import yaml
-import yamlloader
 import jsonschema
 
 __all__ = ['HMCInventoryFileError', 'HMCInventoryFile']
@@ -235,7 +233,7 @@ class HMCInventoryFile:
 
     def __init__(self, filepath):
         self._filepath = filepath
-        self._data = OrderedDict()  # File content
+        self._data = {}  # File content
         self._load_file()
 
     def _load_file(self):
@@ -246,8 +244,7 @@ class HMCInventoryFile:
             # pylint: disable=unspecified-encoding
             with open(self._filepath) as fp:
                 try:
-                    data = yaml.load(
-                        fp, Loader=yamlloader.ordereddict.SafeLoader)
+                    data = yaml.safe_load(fp)
                 except (yaml.parser.ParserError,
                         yaml.scanner.ScannerError) as exc:
                     new_exc = HMCInventoryFileError(
@@ -295,9 +292,7 @@ class HMCInventoryFile:
     @property
     def data(self):
         """
-        :class:`~py:collections.OrderedDict`: Content of the
-        :ref:`HMC inventory file`, as nested
-        :class:`~py:collections.OrderedDict` and
-        :class:`~py:list` objects.
+        :class:`~py:dict`: Content of the :ref:`HMC inventory file`, as nested
+        :class:`~py:dict` and :class:`~py:list` objects.
         """
         return self._data

@@ -22,7 +22,6 @@ Ports only exist in :term:`CPCs <CPC>` that are in DPM mode.
 
 
 import copy
-from collections import OrderedDict
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -270,7 +269,7 @@ class Port(BaseResource):
 
           dict: Resource definition of this Port resource.
         """
-        resource_dict = OrderedDict()
+        resource_dict = {}
         adapter = self.manager.parent
 
         if adapter.prop('type') != 'not-configured':
@@ -278,6 +277,6 @@ class Port(BaseResource):
             # adapter would return HTTP 404,4: "Get for Storage Port Properties
             # is not supported for this card type".
             self.pull_full_properties()
-            resource_dict['properties'] = OrderedDict(self._properties)
+            resource_dict['properties'] = dict(self._properties)
             # No child resources
         return resource_dict

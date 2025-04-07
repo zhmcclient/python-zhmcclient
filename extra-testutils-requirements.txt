@@ -12,5 +12,4 @@ pytest>=6.2.5
 # Packages used by zhmcclient.testutils that are also used by zhmcclient and thus
 # are specified already in requirements.txt:
 # - yaml
-# - yamlloader
 # - jsonschema

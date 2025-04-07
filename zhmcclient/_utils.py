@@ -18,7 +18,6 @@ Utility functions.
 
 
 import re
-from collections import OrderedDict
 from collections.abc import Mapping, MutableSequence, Iterable
 from datetime import datetime
 import warnings
@@ -197,27 +196,20 @@ def repr_list(lst, indent):
 
 
 def repr_dict(dct, indent):
-    """Return a debug representation of a dict or OrderedDict."""
-    # pprint represents OrderedDict objects using the tuple init syntax,
-    # which is not very readable. Therefore, dictionaries are iterated over.
+    """
+    Return a debug representation of a dict, with a specified indentation.
+    """
     if dct is None:
         return 'None'
     if not isinstance(dct, Mapping):
         raise TypeError(f"Object must be a mapping, but is a {type(dct)}")
-    if isinstance(dct, OrderedDict):
-        kind = 'ordered'
-        ret = '%s {\n' % kind  # non standard syntax for the kind indicator
-        for key in dct.keys():
-            value = dct[key]
-            ret += _indent(f'{key!r}: {value!r},\n', 2)
-    else:  # dict
-        kind = 'sorted'
-        ret = '%s {\n' % kind  # non standard syntax for the kind indicator
-        for key in sorted(dct.keys()):
-            value = dct[key]
-            ret += _indent(f'{key!r}: {value!r},\n', 2)
-    ret += '}'
-    ret = repr_text(ret, indent=indent)
+    dct_lines = []
+    dct_lines.append('{')
+    for key in dct.keys():
+        value = dct[key]
+        dct_lines.append(_indent(f'{key!r}: {value!r},', 2))
+    dct_lines.append('}')
+    ret = repr_text('\n'.join(dct_lines), indent=indent)
     return ret.lstrip(' ')
 
 

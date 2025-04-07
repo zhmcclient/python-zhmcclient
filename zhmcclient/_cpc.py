@@ -50,7 +50,6 @@ indicated in the description of the functionality.
 import warnings
 import copy
 import json
-from collections import OrderedDict
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -2790,7 +2789,7 @@ class Cpc(BaseResource):
         cpc_uri = self.get_property('object-uri')
         cpc_uris = [cpc_uri]
 
-        config_dict = OrderedDict()
+        config_dict = {}
 
         config_dict['se-version'] = self.prop('se-version')
         config_dict['available-features-list'] = self.prop(

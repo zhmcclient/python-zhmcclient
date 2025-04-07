@@ -18,8 +18,6 @@ relevant for the `zhmcclient` package. The faked HMC is implemented as a
 local Python object and maintains its resource state across operations.
 """
 
-
-from collections import OrderedDict
 import re
 import copy
 from dateutil import tz
@@ -576,7 +574,7 @@ class FakedBaseManager:
         self._case_insensitive_names = case_insensitive_names
 
         # List of Faked{Resource} objects in this faked manager, by object ID
-        self._resources = OrderedDict()
+        self._resources = {}
 
     def __repr__(self):
         """
@@ -816,8 +814,7 @@ class FakedBaseManager:
             manager.
         """
         res = []
-        for oid in self._resources:
-            resource = self._resources[oid]
+        for resource in self._resources.values():
             if self._matches_filters(resource, filter_args):
                 res.append(resource)
         return res

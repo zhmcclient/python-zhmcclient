@@ -34,9 +34,6 @@ nocasedict>=1.0.2
 #   was released, see issue https://github.com/yaml/pyyaml/issues/724. Fixed in 6.0.1.
 PyYAML>=6.0.2
 
-# yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
-yamlloader>=0.5.5
-
 # jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils
 # jsonschema 4.0.0 was yanked (and does not install), but older pip versions don't recognize that
 # jsonschema is also used by jupyter and requires >=3.0.1

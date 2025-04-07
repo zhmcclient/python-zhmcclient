@@ -27,9 +27,6 @@ nocasedict==1.0.2
 # PyYAML is used by zhmcclient_mock, zhmcclient.testutils and bandit
 PyYAML==6.0.2
 
-# yamlloader pulled in by zhmcclient_mock and zhmcclient.testutils
-yamlloader==0.5.5
-
 # jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils and jupyter
 jsonschema==4.18.0
 

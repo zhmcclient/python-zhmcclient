@@ -18,9 +18,7 @@ Client class: A client to an HMC.
 
 
 import time
-from collections import OrderedDict
 import yaml
-import yamlloader
 
 from ._cpc import CpcManager
 from ._console import ConsoleManager
@@ -275,11 +273,10 @@ class Client:
           string: HMC definition YAML string.
         """
         hmc_dict = self.to_hmc_dict()
-        hmc_yaml = yaml.dump(
+        hmc_yaml = yaml.safe_dump(
             hmc_dict,
             encoding=None, allow_unicode=True,
-            default_flow_style=False, indent=2,
-            Dumper=yamlloader.ordereddict.CSafeDumper)
+            default_flow_style=False, indent=2)
         return hmc_yaml
 
     def to_hmc_dict(self):
@@ -349,7 +346,7 @@ class Client:
           dict: Resource definition of this Client.
         """
 
-        resource_dict = OrderedDict()
+        resource_dict = {}
 
         # Dump internal state
         av = self.query_api_version()
