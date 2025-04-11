@@ -62,6 +62,9 @@ BLANKED_OUT_PROPERTIES = [
     'zaware-master-pw',     # image profile create/update, LPAR update
 ]
 
+# Name of the HMC property indicating internal inconsistencies
+IMPLEMENTATION_ERRORS_PROP = "@@implementation-errors"
+
 
 def _handle_request_exc(exc, retry_timeout_config):
     """
@@ -2113,7 +2116,7 @@ def _result_object(result):
         # This function is only called when there is content expected.
         # Therefore, a response without content will result in a ParseError.
         try:
-            return result.json()
+            result_obj = result.json()
         except ValueError as exc:
             new_exc = ParseError(
                 f"JSON parse error in HTTP response: {exc.args[0]}. "
@@ -2124,6 +2127,17 @@ def _result_object(result):
                 f"{_text_repr(result.text, 1000)}")
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ParseError
+
+        # The property '@@implementation-errors' can be returned to indicate
+        # internal inconsistencies not severe enough to return an error.
+        if IMPLEMENTATION_ERRORS_PROP in result_obj:
+            HMC_LOGGER.warning(
+                "Ignored the %r property returned by the HMC for URI %s: %r",
+                IMPLEMENTATION_ERRORS_PROP, result.url,
+                result_obj[IMPLEMENTATION_ERRORS_PROP])
+            del result_obj[IMPLEMENTATION_ERRORS_PROP]
+
+        return result_obj
 
     if content_type.startswith('text/html'):
         # We are in some error situation. The HMC returns HTML content
