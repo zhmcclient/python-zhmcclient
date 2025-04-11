@@ -3191,8 +3191,12 @@ def _remove_unreferenced_keys(dpm_config, key_to_update, keys_to_ignore):
     object-id within that string representation. Then updates dpm_config
     for key_to_update in place to that list of elements that are actually
     referenced.
-    Returns a list of object-uri fields of all dropped objects.
+    Returns a list of object-uri fields of all dropped objects, empty list if
+    key_to_update doesn't exist in dpm_config.
     """
+    if key_to_update not in dpm_config:
+        return []
+
     config = str(
         {key: dpm_config[key] for key in dpm_config
          if (key != key_to_update and key not in keys_to_ignore)})
