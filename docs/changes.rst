@@ -20,6 +20,17 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.20.2
+^^^^^^^^^^^^^^
+
+Released: 2025-04-11
+
+**Bug fixes:**
+
+* Ensure dpm-export doesn't fail on unknown dict keys during final "reduction"
+  phase. (`#1821 <https://github.com/zhmcclient/python-zhmcclient/issues/1821>`_)
+
+
 Version 1.20.1
 ^^^^^^^^^^^^^^
 
