@@ -32,6 +32,7 @@ mode (or ensemble mode) have :term:`LPAR` resources, instead.
 
 import time
 import copy
+import warnings
 from requests.utils import quote
 
 from ._manager import BaseManager
@@ -42,7 +43,7 @@ from ._hba import HbaManager
 from ._virtual_function import VirtualFunctionManager
 from ._logging import logged_api_call
 from ._utils import RC_PARTITION, make_query_str, datetime_from_timestamp, \
-    timestamp_from_datetime
+    timestamp_from_datetime, get_firmware_features
 
 __all__ = ['PartitionManager', 'Partition']
 
@@ -259,6 +260,7 @@ class Partition(BaseResource):
         self._nics = None
         self._hbas = None
         self._virtual_functions = None
+        self._firmware_feature_set = None
 
     @property
     def nics(self):
@@ -300,17 +302,121 @@ class Partition(BaseResource):
         return self._virtual_functions
 
     @logged_api_call
-    def feature_enabled(self, feature_name):
+    def list_firmware_features(self, force=False):
+        """
+        Returns the :ref:`firmware features` enabled for the CPC of this
+        partition.
+
+        If the CPC or the HMC do not support firmware features yet (i.e.
+        before HMC/SE Version 2.14.0 and HMC API version 2.23), the result
+        will be an empty list.
+
+        The result is cached in this object.
+
+        For a list of possible firmware features, see section
+        "Firmware features" in the :term:`HMC API` book, starting with 2.14.0.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+
+        Parameters:
+
+          force (bool): If True, retrieves the firmware feature data from the
+            HMC, even when it was already cached.
+
+        Returns:
+
+          list of string: The names of the firmware features that are enabled
+          for the CPC of this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self._setup_firmware_feature_set(force)
+        return list(self._firmware_feature_set)
+
+    @logged_api_call
+    def firmware_feature_enabled(self, feature_name, force=False):
         """
         Indicates whether the specified
         :ref:`firmware feature <firmware features>` is enabled for the CPC of
         this partition.
 
+        If the CPC or the HMC do not support firmware features yet (i.e.
+        before HMC/SE Version 2.14.0 and HMC API version 2.23), the feature
+        is considered disabled.
+
+        If the specified firmware feature is not available for the CPC of
+        this partition, the feature is considered disabled.
+
+        For a list of possible firmware features, see section
+        "Firmware Features" in the :term:`HMC API` book.
+
+        The firmware feature data is cached in this object.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements:
+
+        * Object-access permission to this partition.
+
+        Parameters:
+
+          feature_name (:term:`string`): The name of the firmware feature.
+
+          force (bool): If True, retrieves the firmware feature data from the
+            HMC, even when it was already cached.
+
+        Returns:
+
+          bool: Boolean indicating whether the firmware feature is enabled for
+          the CPC of this partition.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self._setup_firmware_feature_set(force)
+        return feature_name in self._firmware_feature_set
+
+    def _setup_firmware_feature_set(self, force=False):
+        """
+        Set up `self._firmware_feature_set` with the names of the enabled
+        firmware features from the 'available-features-list' property of this
+        partition, if it is not yet set up.
+
+        Parameters:
+
+          force (bool): If True, retrieves the partition properties from the HMC
+            before performing the setup, even when it was already set up.
+        """
+        if self._firmware_feature_set is None or force:
+            self._firmware_feature_set = get_firmware_features(self, force)
+
+    @logged_api_call
+    def feature_enabled(self, feature_name):
+        """
+        Deprecated: Indicates whether the specified
+        :ref:`firmware feature <firmware features>` is enabled for the CPC of
+        this partition.
+
+        This method is deprecated; use
+        :meth:`Partition.firmware_feature_enabled` instead.
+
         The specified firmware feature must be available for the CPC.
 
         For a list of available firmware features, see section
-        "Firmware Features" in the :term:`HMC API` book, or use the
-        :meth:`feature_info` method.
+        "Firmware Features" in the :term:`HMC API` book.
 
         HMC/SE version requirements:
 
@@ -339,6 +445,10 @@ class Partition(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        warnings.warn(
+            "The use of feature_enabled() on zhmcclient.Partition objects is "
+            "deprecated; use firmware_feature_enabled() instead",
+            DeprecationWarning, stacklevel=3)
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
             raise ValueError("Firmware features are not supported on the HMC")

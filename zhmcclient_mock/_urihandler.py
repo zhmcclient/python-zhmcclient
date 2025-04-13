@@ -679,6 +679,25 @@ class ConsoleHandler(GenericGetPropertiesHandler):
     valid_query_parms_get = ['properties']
 
 
+class ConsoleListFeaturesHandler:
+    """
+    Handler class for Console operation: List Console API Features.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Console API Features."""
+        console_uri = '/api/console'
+        try:
+            console = hmc.lookup_by_uri(console_uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        return list(console.api_features)
+
+
 class ConsoleRestartHandler:
     """
     Handler class for Console operation: Restart Console.
@@ -1919,6 +1938,25 @@ class CpcHandler(GenericGetPropertiesHandler,
     """
 
     valid_query_parms_get = ['properties', 'cached-acceptable', 'group-uri']
+
+
+class CpcListFeaturesHandler:
+    """
+    Handler class for operation: List CPC API Features.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List CPC API Features."""
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+        return list(cpc.api_features)
 
 
 class CpcSetPowerSaveHandler:
@@ -6211,6 +6249,7 @@ URIS = (
     (r'/api/sessions/this-session', ThisSessionHandler),
 
     (r'/api/console(?:\?(.*))?', ConsoleHandler),
+    (r'/api/console/operations/list-features', ConsoleListFeaturesHandler),
     (r'/api/console/operations/restart', ConsoleRestartHandler),
     (r'/api/console/operations/shutdown', ConsoleShutdownHandler),
     (r'/api/console/operations/make-primary', ConsoleMakePrimaryHandler),
@@ -6265,6 +6304,8 @@ URIS = (
 
     (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
     (r'/api/cpcs/([^?/]+)(?:\?(.*))?', CpcHandler),
+    (r'/api/cpcs/([^/]+)/operations/list-features',
+     CpcListFeaturesHandler),
     (r'/api/cpcs/([^/]+)/operations/set-cpc-power-save',
      CpcSetPowerSaveHandler),
     (r'/api/cpcs/([^/]+)/operations/set-cpc-power-capping',

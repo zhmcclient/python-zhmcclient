@@ -574,11 +574,13 @@ The available firmware features and their enablement state are indicated
 in the "available-features-list" property on the :meth:`zhmcclient.Cpc` and
 :meth:`zhmcclient.Partition` objects.
 
-That information can be retrieved via the following methods:
+Firmware features can be retrieved or tested with the following methods:
 
-* :meth:`zhmcclient.Cpc.feature_enabled`
+* :meth:`zhmcclient.Cpc.list_firmware_features`
+* :meth:`zhmcclient.Cpc.firmware_feature_enabled`
 * :meth:`zhmcclient.Cpc.feature_info`
-* :meth:`zhmcclient.Partition.feature_enabled`
+* :meth:`zhmcclient.Partition.list_firmware_features`
+* :meth:`zhmcclient.Partition.firmware_feature_enabled`
 * :meth:`zhmcclient.Partition.feature_info`
 
 Firmware features have the following :ref:`HMC/SE version requirements`:
@@ -615,10 +617,12 @@ say that they are always enabled). If an API feature applies to both HMC and SE,
 then it must be available on both HMC and SE in order for its functionality
 to become fully available.
 
-Information about API features can be retrieved via the methods:
+API features can be retrieved or tested with the following methods:
 
 * :meth:`zhmcclient.Console.list_api_features`
+* :meth:`zhmcclient.Console.api_feature_enabled`
 * :meth:`zhmcclient.Cpc.list_api_features`
+* :meth:`zhmcclient.Cpc.api_feature_enabled`
 
 API features have the following :ref:`HMC/SE version requirements`:
 

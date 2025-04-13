@@ -1136,6 +1136,7 @@ class FakedConsole(FakedBaseResource):
         super().__init__(
             manager=manager,
             properties=properties)
+        self.api_features = []
         self._storage_groups = FakedStorageGroupManager(
             hmc=manager.hmc, console=self)
         self._storage_group_templates = FakedStorageGroupTemplateManager(
@@ -1166,6 +1167,7 @@ class FakedConsole(FakedBaseResource):
             f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
             f"  _uri = {self._uri!r}\n"
             f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            f"  api_features = {self.api_features!r}\n"
             "  _storage_groups = "
             f"{repr_manager(self.storage_groups, indent=2)}\n"
             f"  _users = {repr_manager(self.users, indent=2)}\n"
@@ -2077,6 +2079,7 @@ class FakedCpc(FakedBaseResource):
         super().__init__(
             manager=manager,
             properties=properties)
+        self.api_features = []
         self._lpars = FakedLparManager(hmc=manager.hmc, cpc=self)
         self._partitions = FakedPartitionManager(hmc=manager.hmc, cpc=self)
         self._adapters = FakedAdapterManager(hmc=manager.hmc, cpc=self)
@@ -2112,6 +2115,7 @@ class FakedCpc(FakedBaseResource):
             f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
             f"  _uri = {self._uri!r}\n"
             f"  _properties = {repr_dict(self._properties, indent=2)}\n"
+            f"  api_features = {self.api_features!r}\n"
             f"  _lpars = {repr_manager(self.lpars, indent=2)}\n"
             f"  _partitions = {repr_manager(self.partitions, indent=2)}\n"
             f"  _adapters = {repr_manager(self.adapters, indent=2)}\n"
