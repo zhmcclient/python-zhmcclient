@@ -534,28 +534,31 @@ def runtest_get_properties(manager, non_list_prop):  # noqa: F811
     assert resource.full_properties is True
 
 
-def validate_list_features(api_version, all_features, regex_reduced_features):
+def validate_api_features(
+        api_version_info, all_features, filtered_features, name_filter):
     """
-    Tests the (already retrieved) results of calls to list_api_calls().
+    Tests the (already retrieved) results of calls to list_api_features().
+
     Can be used for validating the corresponding method results on Console and
     CPC objects.
 
     Parameters:
 
-        api_version: the result of a call to client.query_api_version()
+        api_version_info (tuple(int,int)): HMC API version, as int tuple
 
-        all_features: the result of a call to  list_api_calls()
+        all_features (list(string)): Result of a call to list_api_features()
 
-        regex_reduced_features: the result of a call to  list_api_calls('cpc.*')
+        filtered_features (list(string)): Result of a call to
+          list_api_features(name_filter)
+
+        name_filter (string): The name filter
     """
-    assert len(regex_reduced_features) <= len(all_features)
+    assert len(filtered_features) <= len(all_features)
 
-    wsapi_version = (api_version['api-major-version'],
-                     api_version['api-minor-version'])
-
-    if wsapi_version < (4, 10):
+    if api_version_info < (4, 10):
         # API features aren't supported prior 4.10, list must be empty
         assert len(all_features) == 0
+        assert len(filtered_features) == 0
         return
 
     # Even when API features are supported, the lists can still be empty.
@@ -564,17 +567,55 @@ def validate_list_features(api_version, all_features, regex_reduced_features):
     if len(all_features) > 0:
         # But when there are some available API features, there are a few that
         # are always present.
-        expected_features = ['cpc-install-and-activate']
-        for feature in expected_features:
-            assert feature in all_features, \
-                f'{feature} missing from {all_features}'
-            assert feature in regex_reduced_features, \
-                f'{feature} missing from {regex_reduced_features}'
+        exp_features = [
+            'cpc-install-and-activate',
+            'cpc-delete-retrieved-internal-code',
+            'dpm-smcd-partition-link-management',
+            'report-a-problem',
+        ]
+        exp_filtered_features = []
+        exp_rest_features = []
+        for fn in exp_features:
+            if re.match(name_filter, fn):
+                exp_filtered_features.append(fn)
+            else:
+                exp_rest_features.append(fn)
+        for feature in exp_features:
+            assert feature in all_features
+        for feature in exp_filtered_features:
+            assert feature in filtered_features
+        for feature in exp_rest_features:
+            assert feature not in filtered_features
 
-        # Ensure pattern matching using 'cpc.*' worked
-        assert len(regex_reduced_features) < len(all_features)
-        assert 'report-a-problem' in all_features
-        assert 'report-a-problem' not in regex_reduced_features
+
+def validate_firmware_features(api_version_info, features):
+    """
+    Tests the (already retrieved) results of calls to list_firmware_features().
+
+    Can be used for validating the corresponding method results on CPC and
+    Partition objects.
+
+    Parameters:
+
+        api_version_info (tuple(int,int)): HMC API version, as int tuple
+
+        features (list(string)): Result of a call to list_firmware_features()
+    """
+    if api_version_info < (2, 23):
+        # Firmware features aren't supported prior 2.23, list must be empty
+        assert len(features) == 0
+        return
+
+    # Even when firmware features are supported, the lists can still be empty.
+    # (for example when HMC/SE driver wasn't restarted after features
+    # where enabled)
+    if len(features) > 0:
+        # But when there are some available firmware features, there are a few
+        # that are always present and enabled.
+        exp_features = ['dpm-storage-management']
+        for name in exp_features:
+            assert name in features, (
+                f"HMC did not return firmware feature {name!r} as enabled")
 
 
 def skipif_no_storage_mgmt_feature(cpc):

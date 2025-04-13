@@ -31,6 +31,14 @@ from tests.common.http_mocked_fixtures import http_mocked_session  # noqa: F401
 from tests.common.http_mocked_fixtures import http_mocked_cpc_dpm  # noqa: F401
 # pylint: enable=unused-import
 
+# Names of our faked Consoles:
+# Default console (z13)
+CONSOLE_Z13_NAME = 'console-z13'
+# Last version without API feature support:
+CONSOLE_Z16_NO_AF_NAME = 'console-z16-no-api-features'
+# First version with API feature support:
+CONSOLE_Z16_WITH_AF_NAME = 'console-z16-with-api-features'
+
 # Object IDs and names of our faked CPCs:
 CPC1_NAME = 'cpc 1'  # z13s in DPM mode
 CPC1_OID = 'cpc1-oid'
@@ -41,6 +49,8 @@ CPC3_NAME = 'cpc 3'  # zEC12
 CPC3_OID = 'cpc3-oid'
 CPC4_NAME = 'cpc 4'  # z14-ZR1 in DPM mode
 CPC4_OID = 'cpc4-oid'
+CPC5_NAME = 'cpc 5'  # z16 in DPM mode with API feature support
+CPC5_OID = 'cpc5-oid'
 
 # Additional CPC properties for temporary capacity tests
 CPC1_CAPACITY_PROPS = {
@@ -380,8 +390,45 @@ class TestCpc:
         """
         # pylint: disable=attribute-defined-outside-init
 
-        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        # We set a default z13 console. It can be replaced with a different
+        # console using set_console().
+        self.session = FakedSession(
+            'fake-host', CONSOLE_Z13_NAME, "2.13.1", "1.8")
         self.client = Client(self.session)
+        self.faked_console = self.session.hmc.consoles.add({
+            'object-id': None,
+            # object-uri will be automatically set
+            'parent': None,
+            'class': 'console',
+            'name': CONSOLE_Z13_NAME,
+            'description': 'Console #1',
+            'version': "2.13.1",
+        })
+
+    def set_console(self, console_name):
+        """Set the data for the faked Console (Console and Hmc objects)."""
+
+        faked_hmc = self.session.hmc
+        faked_console = self.faked_console
+
+        if console_name == CONSOLE_Z16_NO_AF_NAME:
+            # Last version with API feature support
+            faked_console.properties['name'] = CONSOLE_Z16_NO_AF_NAME
+            faked_console.properties['version'] = "2.16.0"
+            faked_hmc.hmc_name = CONSOLE_Z16_NO_AF_NAME
+            faked_hmc.hmc_version = "2.16.0"
+            faked_hmc.api_version = "4.2"
+        elif console_name == CONSOLE_Z16_WITH_AF_NAME:
+            # First version with API feature support
+            faked_console.properties['name'] = CONSOLE_Z16_WITH_AF_NAME
+            faked_console.properties['version'] = "2.16.0"
+            faked_hmc.hmc_name = CONSOLE_Z16_WITH_AF_NAME
+            faked_hmc.hmc_version = "2.16.0"
+            faked_hmc.api_version = "4.10"
+        else:
+            raise ValueError(f"Invalid value for console_name: {console_name}")
+
+        return faked_console
 
     def add_cpc(self, cpc_name):
         """Add a faked CPC."""
@@ -445,6 +492,22 @@ class TestCpc:
                 'iml-mode': 'dpm',
                 'machine-type': '3607',
                 'machine-model': 'LR1',
+                'available-features-list': [],
+            })
+        elif cpc_name == CPC5_NAME:
+            faked_cpc = self.session.hmc.cpcs.add({
+                'object-id': CPC5_OID,
+                # object-uri is set up automatically
+                'parent': None,
+                'class': 'cpc',
+                'name': CPC5_NAME,
+                'description': 'CPC #5 (z16 in DPM mode with API features)',
+                'status': 'active',
+                'dpm-enabled': True,
+                'is-ensemble-member': False,
+                'iml-mode': 'dpm',
+                'machine-type': '3931',
+                'machine-model': 'LA2',
                 'available-features-list': [],
             })
         else:
@@ -666,52 +729,237 @@ class TestCpc:
 
     # TODO: Test for Cpc.maximum_active_partitions
 
+    API_FEATURE_ENABLED_TESTCASES = [
+        (
+            "No API feature support on the Console&CPC",
+            CONSOLE_Z16_NO_AF_NAME,
+            CPC4_NAME,
+            None,
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Console&CPC with API feature support but no features",
+            CONSOLE_Z16_WITH_AF_NAME,
+            CPC5_NAME,
+            [],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested API feature not available (one other feature)",
+            CONSOLE_Z16_WITH_AF_NAME,
+            CPC5_NAME,
+            ['fake-feature-foo'],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested API feature available (one other feature)",
+            CONSOLE_Z16_WITH_AF_NAME,
+            CPC5_NAME,
+            ['fake-feature-foo', 'fake-feature1'],
+            'fake-feature1',
+            True,
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, console_name, cpc_name, enabled_features, feature_name, "
+        "exp_feature_enabled, exp_exc_type, exp_exc_msg",
+        API_FEATURE_ENABLED_TESTCASES
+    )
+    def test_cpc_api_feature_enabled(
+            self, desc, console_name, cpc_name, enabled_features, feature_name,
+            exp_feature_enabled, exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Cpc.api_feature_enabled()."""
+
+        # Setup the faked Console
+        self.set_console(console_name)
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set up the API feature list
+        if enabled_features is not None:
+            faked_cpc.api_features = enabled_features
+        else:
+            faked_cpc.api_features = []
+
+        cpc = self.client.cpcs.find(name=cpc_name)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                cpc.api_feature_enabled(feature_name)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+            # Execute the code to be tested
+            act_feature_enabled = cpc.api_feature_enabled(feature_name)
+
+            assert act_feature_enabled == exp_feature_enabled
+
+    LIST_API_FEATURES_TESTCASES = [
+        (
+            "No API feature support on the CPC",
+            CONSOLE_Z16_NO_AF_NAME,
+            CPC4_NAME,
+            None,
+            [],
+            None,
+            None
+        ),
+        (
+            "CPC with API feature support but no features",
+            CONSOLE_Z16_WITH_AF_NAME,
+            CPC5_NAME,
+            [],
+            [],
+            None,
+            None
+        ),
+        (
+            "Console with one API feature",
+            CONSOLE_Z16_WITH_AF_NAME,
+            CPC5_NAME,
+            ['fake-feature-foo'],
+            ['fake-feature-foo'],
+            None,
+            None
+        ),
+        (
+            "Console with two API features",
+            CONSOLE_Z16_WITH_AF_NAME,
+            CPC5_NAME,
+            ['fake-feature-foo', 'fake-feature1'],
+            ['fake-feature-foo', 'fake-feature1'],
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, console_name, cpc_name, enabled_features, exp_feature_names, "
+        "exp_exc_type, exp_exc_msg",
+        LIST_API_FEATURES_TESTCASES
+    )
+    def test_cpc_list_api_features(
+            self, desc, console_name, cpc_name, enabled_features,
+            exp_feature_names, exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Console.list_api_features()."""
+
+        # Setup the faked Console
+        self.set_console(console_name)
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set up the API feature list
+        if enabled_features is not None:
+            faked_cpc.api_features = enabled_features
+        else:
+            faked_cpc.api_features = []
+
+        cpc = self.client.cpcs.find(name=cpc_name)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                cpc.list_api_features()
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+
+            # Execute the code to be tested
+            act_feature_names = cpc.list_api_features()
+
+            assert act_feature_names == exp_feature_names
+
+    FEATURE_ENABLED_TESTCASES = [
+        (
+            "No firmware feature support on the CPC",
+            CPC1_NAME,
+            None,
+            'fake-feature1',
+            None,
+            ValueError,
+            "Firmware features are not supported"
+        ),
+        (
+            "CPC with firmware feature support but no features",
+            CPC4_NAME,
+            [],
+            'fake-feature1',
+            None,
+            ValueError,
+            "Firmware feature fake-feature1 is not available"
+        ),
+        (
+            "Tested firmware feature not available (one other feature avail)",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            'fake-feature1',
+            None,
+            ValueError,
+            "Firmware feature fake-feature1 is not available"
+        ),
+        (
+            "Tested firmware feature available and disabled",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=False),
+            ],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature available and enabled",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=True),
+            ],
+            'fake-feature1',
+            True,
+            None,
+            None
+        ),
+    ]
+
     @pytest.mark.parametrize(
         "desc, cpc_name, available_features, feature_name, "
-        "exp_feature_enabled, exp_exc", [
-            (
-                "No feature support on the CPC",
-                CPC1_NAME,
-                None,
-                'fake-feature1', None, ValueError()
-            ),
-            (
-                "Feature not available on the CPC (empty feature list)",
-                CPC4_NAME,
-                [],
-                'fake-feature1', None, ValueError()
-            ),
-            (
-                "Feature not available on the CPC (one other feature avail)",
-                CPC4_NAME,
-                [
-                    dict(name='fake-feature-foo', state=True),
-                ],
-                'fake-feature1', None, ValueError()
-            ),
-            (
-                "Feature disabled (the only feature available)",
-                CPC4_NAME,
-                [
-                    dict(name='fake-feature1', state=False),
-                ],
-                'fake-feature1', False, None
-            ),
-            (
-                "Feature enabled (the only feature available)",
-                CPC4_NAME,
-                [
-                    dict(name='fake-feature1', state=True),
-                ],
-                'fake-feature1', True, None
-            ),
-        ]
+        "exp_feature_enabled, exp_exc_type, exp_exc_msg",
+        FEATURE_ENABLED_TESTCASES
     )
     def test_cpc_feature_enabled(
             self, desc, cpc_name, available_features, feature_name,
-            exp_feature_enabled, exp_exc):
+            exp_feature_enabled, exp_exc_type, exp_exc_msg):
         # pylint: disable=unused-argument
-        """Test Cpc.feature_enabled()."""
+        """Test Cpc.feature_enabled() (deprecated)."""
 
         # Add a faked CPC
         faked_cpc = self.add_cpc(cpc_name)
@@ -720,15 +968,22 @@ class TestCpc:
         if available_features is not None:
             faked_cpc.properties['available-features-list'] = \
                 available_features
+        else:
+            if 'available-features-list' in faked_cpc.properties:
+                del faked_cpc.properties['available-features-list']
 
         cpc_mgr = self.client.cpcs
         cpc = cpc_mgr.find(name=cpc_name)
 
-        if exp_exc:
-            with pytest.raises(exp_exc.__class__):
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
 
                 # Execute the code to be tested
                 cpc.feature_enabled(feature_name)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
 
         else:
 
@@ -737,48 +992,147 @@ class TestCpc:
 
             assert act_feature_enabled == exp_feature_enabled
 
+    FIRMWARE_FEATURE_ENABLED_TESTCASES = [
+        (
+            "No firmware feature support on the CPC",
+            CPC1_NAME,
+            None,
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "CPC with firmware feature support but no features",
+            CPC4_NAME,
+            [],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature not available (one other feature avail)",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature available and disabled",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=False),
+            ],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature available and enabled",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=True),
+            ],
+            'fake-feature1',
+            True,
+            None,
+            None
+        ),
+    ]
+
     @pytest.mark.parametrize(
-        "desc, cpc_name, available_features, exp_exc", [
-            (
-                "No feature support on the CPC",
-                CPC1_NAME,
-                None,
-                ValueError()
-            ),
-            (
-                "Feature not available on the CPC (empty feature list)",
-                CPC4_NAME,
-                [],
-                None
-            ),
-            (
-                "Feature not available on the CPC (one other feature avail)",
-                CPC4_NAME,
-                [
-                    dict(name='fake-feature-foo', state=True),
-                ],
-                None
-            ),
-            (
-                "Feature disabled (the only feature available)",
-                CPC4_NAME,
-                [
-                    dict(name='fake-feature1', state=False),
-                ],
-                None
-            ),
-            (
-                "Feature enabled (the only feature available)",
-                CPC4_NAME,
-                [
-                    dict(name='fake-feature1', state=True),
-                ],
-                None
-            ),
-        ]
+        "desc, cpc_name, available_features, feature_name, "
+        "exp_feature_enabled, exp_exc_type, exp_exc_msg",
+        FIRMWARE_FEATURE_ENABLED_TESTCASES
+    )
+    def test_cpc_firmware_feature_enabled(
+            self, desc, cpc_name, available_features, feature_name,
+            exp_feature_enabled, exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Cpc.firmware_feature_enabled()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set up the firmware feature list
+        if available_features is not None:
+            faked_cpc.properties['available-features-list'] = \
+                available_features
+        else:
+            if 'available-features-list' in faked_cpc.properties:
+                del faked_cpc.properties['available-features-list']
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                cpc.firmware_feature_enabled(feature_name)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+
+            # Execute the code to be tested
+            act_feature_enabled = cpc.firmware_feature_enabled(feature_name)
+
+            assert act_feature_enabled == exp_feature_enabled
+
+    FEATURE_INFO_TESTCASES = [
+        (
+            "No firmware feature support on the CPC",
+            CPC1_NAME,
+            None,
+            ValueError,
+            "Firmware features are not supported"
+        ),
+        (
+            "CPC with firmware feature support but no features",
+            CPC4_NAME,
+            [],
+            None,
+            None
+        ),
+        (
+            "CPC with one enabled firmware feature",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            None,
+            None
+        ),
+        (
+            "CPC with one enabled and one disabled firmware feature",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature-bar', state=False),
+            ],
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, cpc_name, available_features, exp_exc_type, exp_exc_msg",
+        FEATURE_INFO_TESTCASES
     )
     def test_cpc_feature_info(
-            self, desc, cpc_name, available_features, exp_exc):
+            self, desc, cpc_name, available_features, exp_exc_type,
+            exp_exc_msg):
         # pylint: disable=unused-argument
         """Test Cpc.feature_info()."""
 
@@ -789,22 +1143,113 @@ class TestCpc:
         if available_features is not None:
             faked_cpc.properties['available-features-list'] = \
                 available_features
+        else:
+            if 'available-features-list' in faked_cpc.properties:
+                del faked_cpc.properties['available-features-list']
+
+        exp_features = available_features
 
         cpc_mgr = self.client.cpcs
         cpc = cpc_mgr.find(name=cpc_name)
 
-        if exp_exc:
-            with pytest.raises(exp_exc.__class__):
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
 
                 # Execute the code to be tested
                 cpc.feature_info()
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
 
         else:
 
             # Execute the code to be tested
             act_features = cpc.feature_info()
 
-            assert act_features == available_features
+            assert act_features == exp_features
+
+    LIST_FIRMWARE_FEATURES_TESTCASES = [
+        (
+            "No firmware feature support on the CPC",
+            CPC1_NAME,
+            None,
+            [],
+            None,
+            None
+        ),
+        (
+            "CPC with firmware feature support but no features",
+            CPC4_NAME,
+            [],
+            [],
+            None,
+            None
+        ),
+        (
+            "CPC with one enabled firmware feature",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            ['fake-feature-foo'],
+            None,
+            None
+        ),
+        (
+            "CPC with one enabled and one disabled firmware feature",
+            CPC4_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature-bar', state=False),
+            ],
+            ['fake-feature-foo'],
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, cpc_name, available_features, exp_feature_names, "
+        "exp_exc_type, exp_exc_msg",
+        LIST_FIRMWARE_FEATURES_TESTCASES
+    )
+    def test_cpc_list_firmware_features(
+            self, desc, cpc_name, available_features, exp_feature_names,
+            exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Cpc.list_firmware_features()."""
+
+        # Add a faked CPC
+        faked_cpc = self.add_cpc(cpc_name)
+
+        # Set up the firmware feature list
+        if available_features is not None:
+            faked_cpc.properties['available-features-list'] = \
+                available_features
+        else:
+            if 'available-features-list' in faked_cpc.properties:
+                del faked_cpc.properties['available-features-list']
+
+        cpc_mgr = self.client.cpcs
+        cpc = cpc_mgr.find(name=cpc_name)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                cpc.list_firmware_features()
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+
+            # Execute the code to be tested
+            act_feature_names = cpc.list_firmware_features()
+
+            assert set(act_feature_names) == set(exp_feature_names)
 
     @pytest.mark.parametrize(
         "input_props", [

@@ -27,6 +27,15 @@ from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
 
+# Names of our faked Consoles:
+# Default console (z13)
+CONSOLE_Z13_NAME = 'console-z13'
+# Last version without API feature support:
+CONSOLE_Z16_NO_AF_NAME = 'console-z16-no-api-features'
+# First version with API feature support:
+CONSOLE_Z16_WITH_AF_NAME = 'console-z16-with-api-features'
+
+
 class TestConsole:
     """All tests for the Console and ConsoleManager classes."""
 
@@ -39,17 +48,45 @@ class TestConsole:
         """
         # pylint: disable=attribute-defined-outside-init
 
-        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        # We set a default z13 console. It can be replaced with a different
+        # console using set_console().
+        self.session = FakedSession(
+            'fake-host', CONSOLE_Z13_NAME, "2.13.1", "1.8")
         self.client = Client(self.session)
-
         self.faked_console = self.session.hmc.consoles.add({
             'object-id': None,
             # object-uri will be automatically set
             'parent': None,
             'class': 'console',
-            'name': 'fake-console1',
+            'name': CONSOLE_Z13_NAME,
             'description': 'Console #1',
+            'version': "2.13.1",
         })
+
+    def set_console(self, console_name):
+        """Set the data for the faked Console (Console and Hmc objects)."""
+
+        faked_hmc = self.session.hmc
+        faked_console = self.faked_console
+
+        if console_name == CONSOLE_Z16_NO_AF_NAME:
+            # Last version with API feature support
+            faked_console.properties['name'] = CONSOLE_Z16_NO_AF_NAME
+            faked_console.properties['version'] = "2.16.0"
+            faked_hmc.hmc_name = CONSOLE_Z16_NO_AF_NAME
+            faked_hmc.hmc_version = "2.16.0"
+            faked_hmc.api_version = "4.2"
+        elif console_name == CONSOLE_Z16_WITH_AF_NAME:
+            # First version with API feature support
+            faked_console.properties['name'] = CONSOLE_Z16_WITH_AF_NAME
+            faked_console.properties['version'] = "2.16.0"
+            faked_hmc.hmc_name = CONSOLE_Z16_WITH_AF_NAME
+            faked_hmc.hmc_version = "2.16.0"
+            faked_hmc.api_version = "4.10"
+        else:
+            raise ValueError(f"Invalid value for console_name: {console_name}")
+
+        return faked_console
 
     def test_consolemanager_initial_attrs(self):
         """Test initial attributes of ConsoleManager."""
@@ -127,6 +164,157 @@ class TestConsole:
             rf'^{console.__class__.__name__}\s+at\s+'
             rf'0x{id(console):08x}\s+\(\\n.*',
             repr_str)
+
+    API_FEATURE_ENABLED_TESTCASES = [
+        (
+            "No API feature support on the Console",
+            CONSOLE_Z16_NO_AF_NAME,
+            None,
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Console with API feature support but no features",
+            CONSOLE_Z16_WITH_AF_NAME,
+            [],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested API feature not available (one other feature)",
+            CONSOLE_Z16_WITH_AF_NAME,
+            ['fake-feature-foo'],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested API feature available (one other feature)",
+            CONSOLE_Z16_WITH_AF_NAME,
+            ['fake-feature-foo', 'fake-feature1'],
+            'fake-feature1',
+            True,
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, console_name, enabled_features, feature_name, "
+        "exp_feature_enabled, exp_exc_type, exp_exc_msg",
+        API_FEATURE_ENABLED_TESTCASES
+    )
+    def test_console_api_feature_enabled(
+            self, desc, console_name, enabled_features, feature_name,
+            exp_feature_enabled, exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Console.api_feature_enabled()."""
+
+        # Add a faked Console
+        faked_console = self.set_console(console_name)
+
+        # Set up the API feature list
+        if enabled_features is not None:
+            faked_console.api_features = enabled_features
+        else:
+            faked_console.api_features = []
+
+        console = self.client.consoles.console
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                console.api_feature_enabled(feature_name)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+            # Execute the code to be tested
+            act_feature_enabled = console.api_feature_enabled(feature_name)
+
+            assert act_feature_enabled == exp_feature_enabled
+
+    LIST_API_FEATURES_TESTCASES = [
+        (
+            "No API feature support on the Console",
+            CONSOLE_Z16_NO_AF_NAME,
+            None,
+            [],
+            None,
+            None
+        ),
+        (
+            "Console with API feature support but no features",
+            CONSOLE_Z16_WITH_AF_NAME,
+            [],
+            [],
+            None,
+            None
+        ),
+        (
+            "Console with one API feature",
+            CONSOLE_Z16_WITH_AF_NAME,
+            ['fake-feature-foo'],
+            ['fake-feature-foo'],
+            None,
+            None
+        ),
+        (
+            "Console with two API features",
+            CONSOLE_Z16_WITH_AF_NAME,
+            ['fake-feature-foo', 'fake-feature1'],
+            ['fake-feature-foo', 'fake-feature1'],
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, console_name, enabled_features, exp_feature_names, "
+        "exp_exc_type, exp_exc_msg",
+        LIST_API_FEATURES_TESTCASES
+    )
+    def test_console_list_api_features(
+            self, desc, console_name, enabled_features, exp_feature_names,
+            exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Console.list_api_features()."""
+
+        # Add a faked Console
+        faked_console = self.set_console(console_name)
+
+        # Set up the API feature list
+        if enabled_features is not None:
+            faked_console.api_features = enabled_features
+        else:
+            faked_console.api_features = []
+
+        console = self.client.consoles.console
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                console.list_api_features()
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+
+            # Execute the code to be tested
+            act_feature_names = console.list_api_features()
+
+            assert act_feature_names == exp_feature_names
 
     @pytest.mark.parametrize(
         "wait", [

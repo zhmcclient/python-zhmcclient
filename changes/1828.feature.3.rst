@@ -1,0 +1,5 @@
+Added list_firmware_features() to the Cpc and Partition classes. The firmware
+feature data is cached. The method lists the enabled firmware features
+regardless of the HMC/SE version and regardless of whether the firmware
+feature is available. If the HMC/SE version does not support firmware
+features yet (2.14 and HMC API version 2.23), an empty list is returned.
