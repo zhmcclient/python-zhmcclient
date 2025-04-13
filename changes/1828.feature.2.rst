@@ -1,0 +1,4 @@
+Added api_feature_enabled() to the Cpc and Console classes, in order
+to test for whether a specific API feature is enabled (=available). The
+API feature data is cached, and the cache data structure is optimized for
+fast lookup of the feature name.

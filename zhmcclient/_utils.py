@@ -608,15 +608,27 @@ def datetime_to_isoformat(dt):
     return dt_str
 
 
-def get_features(session, base_uri, name):
+def get_api_features(obj, name=None):
     """
-    Helper method that GETS the given uri via the given session, appending
-    '/operations/list-features' to the uri (and the query parameter if needed).
+    List available (=enabled) API features on the HMC or a CPC.
 
-    404/Not Found is caught and turned into an empty list result.
+    This method performs the "List CPC API Features" or "List Console API
+    Features" operation, depending on the object specified.
+
+    HTTP error 404 (Not Found) is caught and turned into an empty list result.
+
+    Parameters:
+      obj (zhmcclient.Console or zhmcclient.Cpc): The HMC or CPC whose API
+        features are to be listed.
+      name (string): Regex pattern for the names of the API features to be
+        listed. If `None`, all API features are listed.
+
+    Returns:
+      list of string: Names of the available (=enabled) API features.
     """
+    session = obj.manager.session
     try:
-        uri = f'{base_uri}/operations/list-features'
+        uri = f'{obj.uri}/operations/list-features'
         if name is not None:
             uri = f'{uri}?name={name}'
         return session.get(uri)
@@ -627,6 +639,32 @@ def get_features(session, base_uri, name):
         if e.http_status == 404:
             return []
         raise e
+
+
+def get_firmware_features(obj, pull=False):
+    """
+    List enabled firmware features for the object (CPC or Partition).
+
+    This method looks at the 'available-features-list' property of the object
+    and at its 'state' value to determine the enabled firmware features.
+
+    Parameters:
+      obj (zhmcclient.Cpc or zhmcclient.Partition): The object whose firmware
+        features are to be listed.
+      pull (bool): If True, retrieves the 'available-features-list' property
+        from the HMC, even when it was already available.
+
+    Returns:
+      list of string: Names of the enabled firmware features.
+    """
+    if pull:
+        obj.pull_properties(['available-features-list'])
+    feature_items = obj.prop('available-features-list', [])
+    feature_list = []
+    for feature_item in feature_items:
+        if feature_item['state']:
+            feature_list.append(feature_item['name'])
+    return feature_list
 
 
 def warn_deprecated_parameter(cls, method, name, value, default):

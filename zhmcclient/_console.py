@@ -20,6 +20,7 @@ a separate :term:`Console` resource.
 """
 
 
+import warnings
 import time
 
 from ._manager import BaseManager
@@ -38,7 +39,7 @@ from ._ldap_server_definition import LdapServerDefinitionManager
 from ._mfa_server_definition import MfaServerDefinitionManager
 from ._unmanaged_cpc import UnmanagedCpcManager
 from ._group import GroupManager
-from ._utils import get_features
+from ._utils import get_api_features
 from ._certificates import CertificateManager
 from ._partition_link import PartitionLinkManager
 
@@ -218,7 +219,7 @@ class Console(BaseResource):
         self._unmanaged_cpcs = None
         self._groups = None
         self._certificates = None
-        self._api_features = None
+        self._api_feature_set = None
 
     @property
     def storage_groups(self):
@@ -1140,18 +1141,21 @@ class Console(BaseResource):
         return adapter_obj_list
 
     @logged_api_call
-    def list_api_features(self, name=None, force=False):
+    def list_api_features(self, name=None, force=None):
+        # pylint: disable=unused-argument
         """
-        Returns the :ref:`API features` available on this console.
+        Returns the :ref:`API features` enabled (=available) on this console.
 
-        The result is cached in this object.
+        If the HMC does not support API features yet (i.e. before HMC version
+        2.16.0 and HMC API version 4.10), the result will be an empty list.
 
-        The list of API features for the console can be found in section
-        "API features" in the :term:`HMC API` book, starting with 2.16.0.
+        The result is not cached in this object, because different 'name'
+        filters can have different results.
 
-        HMC/SE version requirements:
+        For a list of possible API features, see section "API features" in the
+        :term:`HMC API` book, starting with 2.16.0.
 
-        * HMC version >= 2.16.0 with HMC API version >= 4.10
+        HMC/SE version requirements: None
 
         Authorization requirements: None
 
@@ -1162,19 +1166,75 @@ class Console(BaseResource):
             features. If `None`, no such filtering takes place.
 
           force (bool):
-            Boolean controlling whether to retrieve the API feature list from
-            the console even when cached.
+            Deprecated: This parameter will be ignored; the API feature data
+            is always retrieved from the HMC.
+            This parameter is deprecated.
 
         Returns:
 
-          list of strings: The list of API features that are available on this
-          console. For HMC API versions prior to 4.10, an empty list is
-          returned.
+          list of string: The names of the API features that are enabled
+          (=available) on this console.
         """
-        if self._api_features is None or force:
-            self._api_features = get_features(
-                self.manager.session, '/api/console', name)
-        return self._api_features
+        if force is not None:
+            warnings.warn(
+                "The 'force' parameter of "
+                "zhmcclient.Console.list_api_features() is deprecated",
+                DeprecationWarning, stacklevel=2)
+        return get_api_features(self, name)
+
+    @logged_api_call
+    def api_feature_enabled(self, feature_name, force=False):
+        """
+        Indicates whether the specified
+        :ref:`API feature <API features>` is enabled (= available) for this
+        console.
+
+        If the HMC does not support API features yet (i.e. before HMC version
+        2.16.0 and HMC API version 4.10), the feature is considered disabled.
+
+        For a list of possible API features, see section "API features" in the
+        :term:`HMC API` book.
+
+        The API feature data is cached in this object.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements: None
+
+        Parameters:
+
+          feature_name (:term:`string`): The name of the API feature.
+
+          force (bool): If True, retrieves the API feature data from the
+            HMC, even when it was already cached.
+
+        Returns:
+
+          bool: Boolean indicating whether the API feature is enabled
+          (= available) on this console.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self._setup_api_feature_set(force)
+        return feature_name in self._api_feature_set
+
+    def _setup_api_feature_set(self, force=False):
+        """
+        Set up `self._api_feature_set` with the names of the enabled
+        API features from the result of the "List Console API Features"
+        operation, if it is not yet set up.
+
+        Parameters:
+          force (bool): If True, retrieves the list of API features from the
+            HMC and performs the setup, even when it was already set up.
+        """
+        if self._api_feature_set is None or force:
+            self._api_feature_set = set(get_api_features(self))
 
     @property
     def certificates(self):

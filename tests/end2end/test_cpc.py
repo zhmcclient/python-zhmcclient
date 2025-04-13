@@ -29,7 +29,7 @@ from zhmcclient.testutils import all_cpcs, classic_mode_cpcs, dpm_mode_cpcs  # n
 # pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, assert_res_prop, runtest_find_list, \
-    runtest_get_properties, validate_list_features, \
+    runtest_get_properties, validate_firmware_features, validate_api_features, \
     cleanup_and_import_example_certificate, has_api_feature
 
 urllib3.disable_warnings()
@@ -132,9 +132,15 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     Test certain "features" of a CPC (any mode):
     - dpm_enabled property
     - maximum_active_partitions property
-    - feature_enabled(feature_name)
-    - feature_info()
-    - list_api_features()
+    - For firmware features:
+      - feature_enabled() - deprecated
+      - firmware_feature_enabled()
+      - feature_info()
+      - list_firmware_features()
+    - For API features:
+      - api_feature_enabled()
+      - list_api_features() without name filter
+      - list_api_features() with name filter
     """
     if not all_cpcs:
         pytest.skip("HMC definition does not include any CPCs")
@@ -142,12 +148,16 @@ def test_cpc_features(all_cpcs):  # noqa: F811
     for cpc in all_cpcs:
         print(f"Testing with CPC {cpc.name}")
 
+        client = cpc.manager.client
+
         cpc.pull_full_properties()
         cpc_mach_type = cpc.properties.get('machine-type', None)
         cpc_mach_model = cpc.properties.get('machine-model', None)
-        cpc_features = cpc.properties.get('available-features-list', None)
+        cpc_fw_features = cpc.properties.get('available-features-list', None)
 
         exp_cpc_props = dict(cpc.properties)
+
+        api_version_info = client.version_info()
 
         # The code to be tested: dpm_enabled property
         dpm_enabled = cpc.dpm_enabled
@@ -170,30 +180,40 @@ def test_cpc_features(all_cpcs):  # noqa: F811
         if exp_max_parts is not None:
             assert_res_prop(max_parts, exp_max_parts, 'maximum-partitions', cpc)
 
-        # Test: feature_enabled(feature_name)
-        feature_name = 'storage-management'
-        if cpc_features is None:
-            # The machine does not yet support features
-            with pytest.raises(ValueError):
-                # The code to be tested: feature_enabled(feature_name)
-                cpc.feature_enabled(feature_name)
-        else:
-            features = [f for f in cpc_features if f['name'] == feature_name]
-            if not features:
-                # The machine generally supports features, but not this feature
-                with pytest.raises(ValueError):
-                    # The code to be tested: feature_enabled(feature_name)
-                    cpc.feature_enabled(feature_name)
-            else:
-                # The machine supports this feature
-                # The code to be tested: feature_enabled(feature_name)
-                sm_enabled = cpc.feature_enabled(feature_name)
-                exp_sm_enabled = features[0]['state']
-                assert_res_prop(sm_enabled, exp_sm_enabled,
-                                'available-features-list', cpc)
+        # Test firmware features
 
+        fw_feature_name = 'dpm-storage-management'
+        if cpc_fw_features is None:
+            # The machine does not yet support firmware features
+            with pytest.raises(ValueError):
+                # The code to be tested: feature_enabled()
+                cpc.feature_enabled(fw_feature_name)
+            enabled = cpc.firmware_feature_enabled(fw_feature_name)
+            assert enabled is False
+        else:
+            features = [f for f in cpc_fw_features
+                        if f['name'] == fw_feature_name]
+            if not features:
+                # The machine generally supports firmware features, but this
+                # feature is not available
+                with pytest.raises(ValueError):
+                    # The code to be tested: feature_enabled()
+                    cpc.feature_enabled(fw_feature_name)
+                # The code to be tested: firmware_feature_enabled()
+                enabled = cpc.firmware_feature_enabled(fw_feature_name)
+                assert enabled is False
+            else:
+                # The machine has this feature available
+                # The code to be tested: feature_enabled()
+                enabled = cpc.feature_enabled(fw_feature_name)
+                exp_enabled = features[0]['state']
+                assert_res_prop(enabled, exp_enabled,
+                                'available-features-list', cpc)
+                # The code to be tested: firmware_feature_enabled()
+                enabled = cpc.firmware_feature_enabled(fw_feature_name)
+                assert enabled == exp_enabled
         # Test: feature_info()
-        if cpc_features is None:
+        if cpc_fw_features is None:
             # The machine does not yet support features
             with pytest.raises(ValueError):
                 # The code to be tested: feature_info()
@@ -214,13 +234,35 @@ def test_cpc_features(all_cpcs):  # noqa: F811
                 assert 'state' in feature, (
                     f"Feature #{i} does not have the 'state' attribute "
                     f"in Cpc object for CPC {cpc.name}")
+        # The code to be tested: list_firmware_features()
+        fw_features = cpc.list_firmware_features()
+        validate_firmware_features(api_version_info, fw_features)
 
-        # Test: list_api_features()
-        client = zhmcclient.Client(cpc.manager.session)
+        # Test API features
 
-        validate_list_features(client.query_api_version(),
-                               cpc.list_api_features(),
-                               cpc.list_api_features('cpc.*'))
+        name_filter = 'cpc.*'
+        # The code to be tested: list_api_features()
+        api_features = cpc.list_api_features()
+        # The code to be tested: list_api_features(name)
+        filtered_api_features = cpc.list_api_features(name_filter)
+        validate_api_features(
+            api_version_info, api_features, filtered_api_features, name_filter)
+
+        api_feature_name = 'cpc-install-and-activate'
+        if api_version_info < (4, 10):
+            # The machine does not yet support API features
+            enabled = cpc.api_feature_enabled(api_feature_name)
+            assert enabled is False
+        elif api_feature_name not in api_features:
+            # The machine generally supports API features, but not this feature
+            # The code to be tested: api_feature_enabled()
+            enabled = cpc.api_feature_enabled(api_feature_name)
+            assert enabled is False
+        else:
+            # The machine supports this API feature
+            # The code to be tested: api_feature_enabled()
+            enabled = cpc.api_feature_enabled(api_feature_name)
+            assert enabled is True
 
 
 def test_cpc_export_profiles(classic_mode_cpcs):  # noqa: F811

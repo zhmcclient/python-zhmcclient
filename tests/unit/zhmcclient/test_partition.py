@@ -525,52 +525,72 @@ class TestPartition:
         description = partition3.get_property('description')
         assert description == 'Third partition'
 
+    FEATURE_ENABLED_TESTCASES = [
+        (
+            "No firmware feature support on the Partition",
+            PART1_NAME,
+            None,
+            'fake-feature1',
+            None,
+            ValueError,
+            "Firmware features are not supported"
+        ),
+        (
+            "Partition with firmware feature support but no features",
+            PART3_NAME,
+            [],
+            'fake-feature1',
+            None,
+            ValueError,
+            "Firmware feature fake-feature1 is not available"
+        ),
+        (
+            "Tested firmware feature not available (one other feature avail)",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            'fake-feature1',
+            None,
+            ValueError,
+            "Firmware feature fake-feature1 is not available"
+        ),
+        (
+            "Tested firmware feature available and disabled",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=False),
+            ],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature available and enabled",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=True),
+            ],
+            'fake-feature1',
+            True,
+            None,
+            None
+        ),
+    ]
+
     @pytest.mark.parametrize(
         "desc, partition_name, available_features, feature_name, "
-        "exp_feature_enabled, exp_exc", [
-            (
-                "No feature support on the CPC",
-                PART1_NAME,
-                None,
-                'fake-feature1', None, ValueError()
-            ),
-            (
-                "Feature not available on the partition (empty feature list)",
-                PART3_NAME,
-                [],
-                'fake-feature1', None, ValueError()
-            ),
-            (
-                "Feature not available on the part (one other feature avail)",
-                PART3_NAME,
-                [
-                    dict(name='fake-feature-foo', state=True),
-                ],
-                'fake-feature1', None, ValueError()
-            ),
-            (
-                "Feature disabled (the only feature available)",
-                PART3_NAME,
-                [
-                    dict(name='fake-feature1', state=False),
-                ],
-                'fake-feature1', False, None
-            ),
-            (
-                "Feature enabled (the only feature available)",
-                PART3_NAME,
-                [
-                    dict(name='fake-feature1', state=True),
-                ],
-                'fake-feature1', True, None
-            ),
-        ]
+        "exp_feature_enabled, exp_exc_type, exp_exc_msg",
+        FEATURE_ENABLED_TESTCASES
     )
     def test_partition_feature_enabled(
             self, desc, partition_name, available_features, feature_name,
-            exp_feature_enabled, exp_exc):
+            exp_feature_enabled, exp_exc_type, exp_exc_msg):
         # pylint: disable=unused-argument
-        """Test Partition.feature_enabled()."""
+        """Test Partition.feature_enabled() (deprecated)."""
 
         # Add a faked Partition
         faked_partition = self.add_partition(partition_name)
@@ -579,15 +599,22 @@ class TestPartition:
         if available_features is not None:
             faked_partition.properties['available-features-list'] = \
                 available_features
+        else:
+            if 'available-features-list' in faked_partition.properties:
+                del faked_partition.properties['available-features-list']
 
         partition_mgr = self.cpc.partitions
         partition = partition_mgr.find(name=partition_name)
 
-        if exp_exc:
-            with pytest.raises(exp_exc.__class__):
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
 
                 # Execute the code to be tested
                 partition.feature_enabled(feature_name)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
 
         else:
 
@@ -596,48 +623,148 @@ class TestPartition:
 
             assert act_feature_enabled == exp_feature_enabled
 
+    FIRMWARE_FEATURE_ENABLED_TESTCASES = [
+        (
+            "No firmware feature support on the Partition",
+            PART1_NAME,
+            None,
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Partition with firmware feature support but no features",
+            PART3_NAME,
+            [],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature not available (one other feature avail)",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature available and disabled",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=False),
+            ],
+            'fake-feature1',
+            False,
+            None,
+            None
+        ),
+        (
+            "Tested firmware feature available and enabled",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature1', state=True),
+            ],
+            'fake-feature1',
+            True,
+            None,
+            None
+        ),
+    ]
+
     @pytest.mark.parametrize(
-        "desc, partition_name, available_features, exp_exc", [
-            (
-                "No feature support on the CPC",
-                PART1_NAME,
-                None,
-                ValueError()
-            ),
-            (
-                "Feature not available on the partition (empty feature list)",
-                PART3_NAME,
-                [],
-                None
-            ),
-            (
-                "Feature not available on the part (one other feature avail)",
-                PART3_NAME,
-                [
-                    dict(name='fake-feature-foo', state=True),
-                ],
-                None
-            ),
-            (
-                "Feature disabled (the only feature available)",
-                PART3_NAME,
-                [
-                    dict(name='fake-feature1', state=False),
-                ],
-                None
-            ),
-            (
-                "Feature enabled (the only feature available)",
-                PART3_NAME,
-                [
-                    dict(name='fake-feature1', state=True),
-                ],
-                None
-            ),
-        ]
+        "desc, partition_name, available_features, feature_name, "
+        "exp_feature_enabled, exp_exc_type, exp_exc_msg",
+        FIRMWARE_FEATURE_ENABLED_TESTCASES
+    )
+    def test_partition_firmware_feature_enabled(
+            self, desc, partition_name, available_features, feature_name,
+            exp_feature_enabled, exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Partition.firmware_feature_enabled()."""
+
+        # Add a faked Partition
+        faked_partition = self.add_partition(partition_name)
+
+        # Set up the firmware feature list
+        if available_features is not None:
+            faked_partition.properties['available-features-list'] = \
+                available_features
+        else:
+            if 'available-features-list' in faked_partition.properties:
+                del faked_partition.properties['available-features-list']
+
+        partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=partition_name)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                partition.firmware_feature_enabled(feature_name)
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+
+            # Execute the code to be tested
+            act_feature_enabled = partition.firmware_feature_enabled(
+                feature_name)
+
+            assert act_feature_enabled == exp_feature_enabled
+
+    FEATURE_INFO_TESTCASES = [
+        (
+            "No firmware feature support on the Partition",
+            PART1_NAME,
+            None,
+            ValueError,
+            "Firmware features are not supported"
+        ),
+        (
+            "Partition with firmware feature support but no features",
+            PART3_NAME,
+            [],
+            None,
+            None
+        ),
+        (
+            "Partition with one enabled firmware feature",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            None,
+            None
+        ),
+        (
+            "Partition with one enabled and one disabled firmware feature",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature-bar', state=False),
+            ],
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, partition_name, available_features, exp_exc_type, exp_exc_msg",
+        FEATURE_INFO_TESTCASES
     )
     def test_partition_feature_info(
-            self, desc, partition_name, available_features, exp_exc):
+            self, desc, partition_name, available_features, exp_exc_type,
+            exp_exc_msg):
         # pylint: disable=unused-argument
         """Test Partition.feature_info()."""
 
@@ -648,22 +775,113 @@ class TestPartition:
         if available_features is not None:
             faked_partition.properties['available-features-list'] = \
                 available_features
+        else:
+            if 'available-features-list' in faked_partition.properties:
+                del faked_partition.properties['available-features-list']
+
+        exp_features = available_features
 
         partition_mgr = self.cpc.partitions
         partition = partition_mgr.find(name=partition_name)
 
-        if exp_exc:
-            with pytest.raises(exp_exc.__class__):
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
 
                 # Execute the code to be tested
                 partition.feature_info()
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
 
         else:
 
             # Execute the code to be tested
             act_features = partition.feature_info()
 
-            assert act_features == available_features
+            assert act_features == exp_features
+
+    LIST_FIRMWARE_FEATURES_TESTCASES = [
+        (
+            "No firmware feature support on the Partition",
+            PART1_NAME,
+            None,
+            [],
+            None,
+            None
+        ),
+        (
+            "Partition with firmware feature support but no features",
+            PART3_NAME,
+            [],
+            [],
+            None,
+            None
+        ),
+        (
+            "Partition with one enabled firmware feature",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+            ],
+            ['fake-feature-foo'],
+            None,
+            None
+        ),
+        (
+            "Partition with one enabled and one disabled firmware feature",
+            PART3_NAME,
+            [
+                dict(name='fake-feature-foo', state=True),
+                dict(name='fake-feature-bar', state=False),
+            ],
+            ['fake-feature-foo'],
+            None,
+            None
+        ),
+    ]
+
+    @pytest.mark.parametrize(
+        "desc, partition_name, available_features, exp_feature_names, "
+        "exp_exc_type, exp_exc_msg",
+        LIST_FIRMWARE_FEATURES_TESTCASES
+    )
+    def test_partition_list_firmware_features(
+            self, desc, partition_name, available_features, exp_feature_names,
+            exp_exc_type, exp_exc_msg):
+        # pylint: disable=unused-argument
+        """Test Partition.list_firmware_features()."""
+
+        # Add a faked Partition
+        faked_partition = self.add_partition(partition_name)
+
+        # Set up the firmware feature list
+        if available_features is not None:
+            faked_partition.properties['available-features-list'] = \
+                available_features
+        else:
+            if 'available-features-list' in faked_partition.properties:
+                del faked_partition.properties['available-features-list']
+
+        partition_mgr = self.cpc.partitions
+        partition = partition_mgr.find(name=partition_name)
+
+        if exp_exc_type:
+            with pytest.raises(exp_exc_type) as exc_info:
+
+                # Execute the code to be tested
+                partition.list_firmware_features()
+
+            exc = exc_info.value
+            assert isinstance(exc, exp_exc_type)
+            assert re.search(exp_exc_msg, str(exc))
+
+        else:
+
+            # Execute the code to be tested
+            act_feature_names = partition.list_firmware_features()
+
+            assert set(act_feature_names) == set(exp_feature_names)
 
     @pytest.mark.parametrize(
         "partition_name", [

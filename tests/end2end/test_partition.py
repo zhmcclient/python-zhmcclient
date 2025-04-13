@@ -36,7 +36,7 @@ from .utils import logger  # noqa: F401, E501
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties, \
-    pformat_as_dict
+    pformat_as_dict, assert_res_prop, validate_firmware_features
 
 urllib3.disable_warnings()
 
@@ -235,6 +235,113 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
 
         with pytest.raises(zhmcclient.NotFound):
             cpc.partitions.find(name=part_name_new)
+
+
+def test_partition_features(dpm_mode_cpcs):  # noqa: F811
+    # pylint: disable=redefined-outer-name
+    """
+    Test features of the CPC of a partition:
+    - For firmware features:
+      - feature_enabled() - deprecated
+      - firmware_feature_enabled()
+      - feature_info()
+      - list_firmware_features()
+    """
+    if not dpm_mode_cpcs:
+        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+
+    for cpc in dpm_mode_cpcs:
+        assert cpc.dpm_enabled
+
+        session = cpc.manager.session
+        hd = session.hmc_definition
+
+        # Pick the partition to test with
+        part_list = cpc.partitions.list()
+        if not part_list:
+            skip_warn(
+                f"No partitions on CPC {cpc.name} managed by HMC {hd.host}")
+        part = random.choice(part_list)
+
+        client = cpc.manager.client
+        api_version_info = client.version_info()
+
+        cpc.pull_properties(['available-features-list'])
+        cpc_fw_features = cpc.prop('available-features-list', None)
+
+        part.pull_properties(['available-features-list'])
+        part_fw_features = part.prop('available-features-list', None)
+
+        fw_feature_name = 'dpm-storage-management'
+        if cpc_fw_features is None:
+            # The machine does not yet support firmware features
+            with pytest.raises(ValueError):
+                # The code to be tested: feature_enabled()
+                part.feature_enabled(fw_feature_name)
+            enabled = part.firmware_feature_enabled(fw_feature_name)
+            assert enabled is False
+        else:
+
+            # Verify that the feature lists of Partition and CPC are equal
+            assert len(part_fw_features) == len(cpc_fw_features)
+            part_state_by_name = {f['name']: f['state']
+                                  for f in part_fw_features}
+            for cpc_feature in cpc_fw_features:
+                name = cpc_feature['name']
+                assert name in part_state_by_name, (
+                    f"Firmware feature {name!r} is available for CPC but not "
+                    f"for partition {part.name!r}")
+                part_enabled = part_state_by_name[name]
+                cpc_enabled = cpc_feature['state']
+                assert part_enabled == cpc_enabled, (
+                    f"Firmware feature {name!r} has different enablement state "
+                    f"on CPC {cpc_enabled} than on partition {part.name!r} "
+                    f"({part_enabled})")
+
+            if fw_feature_name not in part_state_by_name:
+                # The machine generally supports firmware features, but this
+                # feature is not available
+                with pytest.raises(ValueError):
+                    # The code to be tested: feature_enabled()
+                    part.feature_enabled(fw_feature_name)
+                # The code to be tested: firmware_feature_enabled()
+                enabled = part.firmware_feature_enabled(fw_feature_name)
+                assert enabled is False
+            else:
+                # The machine has this feature available
+                # The code to be tested: feature_enabled()
+                enabled = part.feature_enabled(fw_feature_name)
+                exp_enabled = part_state_by_name[fw_feature_name]
+                assert_res_prop(enabled, exp_enabled,
+                                'available-features-list', cpc)
+                # The code to be tested: firmware_feature_enabled()
+                enabled = part.firmware_feature_enabled(fw_feature_name)
+                assert enabled == exp_enabled
+        # Test: feature_info()
+        if cpc_fw_features is None:
+            # The machine does not yet support features
+            with pytest.raises(ValueError):
+                # The code to be tested: feature_info()
+                part.feature_info()
+        else:
+            # The machine supports features
+            # The code to be tested: feature_info()
+            features = part.feature_info()
+            # Note: It is possible that the feature list exists but is empty
+            #       (e.g when a z14 HMC manages a z13)
+            for i, feature in enumerate(features):
+                assert 'name' in feature, (
+                    f"Feature #{i} does not have the 'name' attribute "
+                    f"in Partition object for partition {part.name}")
+                assert 'description' in feature, (
+                    f"Feature #{i} does not have the 'description' attribute "
+                    f"in Partition object for partition {part.name}")
+                assert 'state' in feature, (
+                    f"Feature #{i} does not have the 'state' attribute "
+                    f"in Partition object for partition {part.name}")
+        # The code to be tested: list_firmware_features()
+        fw_features = part.list_firmware_features()
+        validate_firmware_features(api_version_info, fw_features)
 
 
 def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
