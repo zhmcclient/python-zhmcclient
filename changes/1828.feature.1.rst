@@ -1,0 +1,4 @@
+Added firmware_feature_enabled() to the Cpc and Partition classes, in order
+to test for whether a specific firmware feature is enabled. The firmware
+feature data is cached, and the cache data structure is optimized for fast
+lookup of the feature name.

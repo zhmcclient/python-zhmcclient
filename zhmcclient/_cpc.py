@@ -61,7 +61,7 @@ from ._virtual_switch import VirtualSwitchManager
 from ._capacity_group import CapacityGroupManager
 from ._logging import logged_api_call
 from ._exceptions import ParseError, ConsistencyError
-from ._utils import get_features, \
+from ._utils import get_api_features, get_firmware_features, \
     datetime_from_timestamp, timestamp_from_datetime, \
     RC_CPC, RC_ADAPTER, RC_HBA, RC_NIC, RC_PARTITION, \
     RC_NETWORK_PORT, RC_STORAGE_PORT, RC_STORAGE_TEMPLATE, RC_STORAGE_GROUP, \
@@ -309,7 +309,8 @@ class Cpc(BaseResource):
         self._reset_activation_profiles = None
         self._image_activation_profiles = None
         self._load_activation_profiles = None
-        self._api_features = None
+        self._api_feature_set = None
+        self._firmware_feature_set = None
 
     @property
     def lpars(self):
@@ -595,16 +596,216 @@ class Cpc(BaseResource):
         return resource_dict
 
     @logged_api_call
-    def feature_enabled(self, feature_name):
+    def list_api_features(self, name=None, force=None):
+        # pylint: disable=unused-argument
+        """
+        Returns the :ref:`API features` enabled (=available) on this CPC.
+
+        If the CPC or the HMC do not support API features yet (i.e.
+        before HMC/SE Version 2.16.0 and HMC API version 4.10), the result
+        will be an empty list.
+
+        The result is not cached in this object, because different 'name'
+        filters can have different results.
+
+        For a list of possible API features, see section "API features" in the
+        :term:`HMC API` book, starting with 2.16.0.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements: None
+
+        Parameters:
+
+          name (string):
+            A regular expression used to limit the result to matching API
+            features. If `None`, no such filtering takes place.
+            This parameter is deprecated and will be ignored.
+
+          force (bool):
+            Deprecated: This parameter will be ignored; the API feature data
+            is always retrieved from the HMC.
+            This parameter is deprecated.
+
+        Returns:
+
+          list of string: The names of the API features that are enabled
+          (=available) on this CPC.
+        """
+        if force is not None:
+            warnings.warn(
+                "The 'force' parameter of "
+                "zhmcclient.Cpc.list_api_features() is deprecated",
+                DeprecationWarning, stacklevel=3)
+        return get_api_features(self, name)
+
+    @logged_api_call
+    def api_feature_enabled(self, feature_name, force=False):
+        """
+        Indicates whether the specified
+        :ref:`API feature <API features>` is enabled (= available) for this CPC.
+
+        If the CPC or the HMC do not support API features yet (i.e.
+        before HMC/SE Version 2.16.0 and HMC API version 4.10), the feature
+        is considered disabled.
+
+        For a list of possible API features, see section "API features" in the
+        :term:`HMC API` book.
+
+        The API feature data is cached in this object.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements: None
+
+        Parameters:
+
+          feature_name (:term:`string`): The name of the API feature.
+
+          force (bool): If True, retrieves the API feature data from the
+            HMC, even when it was already cached.
+
+        Returns:
+
+          bool: Boolean indicating whether the API feature is enabled
+          (= available) on this CPC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self._setup_api_feature_set(force)
+        return feature_name in self._api_feature_set
+
+    def _setup_api_feature_set(self, force=False):
+        """
+        Set up `self._api_feature_set` with the names of the enabled
+        API features from the result of the "List CPC API Features" operation,
+        if it is not yet set up.
+
+        Parameters:
+          force (bool): If True, retrieves the list of API features from the
+            HMC and performs the setup, even when it was already set up.
+        """
+        if self._api_feature_set is None or force:
+            self._api_feature_set = set(get_api_features(self))
+
+    @logged_api_call
+    def list_firmware_features(self, force=False):
+        """
+        Returns the :ref:`firmware features` enabled on this CPC.
+
+        If the CPC or the HMC do not support firmware features yet (i.e.
+        before HMC/SE Version 2.14.0 and HMC API version 2.23), the result
+        will be an empty list.
+
+        The result is cached in this object.
+
+        For a list of possible firmware features, see section
+        "Firmware features" in the :term:`HMC API` book, starting with 2.14.0.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+
+        Parameters:
+
+          force (bool): If True, retrieves the firmware feature data from the
+            HMC, even when it was already cached.
+
+        Returns:
+
+          list of string: The names of the firmware features that are enabled
+          on this CPC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self._setup_firmware_feature_set(force)
+        return list(self._firmware_feature_set)
+
+    @logged_api_call
+    def firmware_feature_enabled(self, feature_name, force=False):
         """
         Indicates whether the specified
         :ref:`firmware feature <firmware features>` is enabled for this CPC.
 
+        If the CPC or the HMC do not support firmware features yet (i.e.
+        before HMC/SE Version 2.14.0 and HMC API version 2.23), the feature
+        is considered disabled.
+
+        If the specified firmware feature is not available on the CPC, the
+        feature is considered disabled.
+
+        For a list of possible firmware features, see section
+        "Firmware Features" in the :term:`HMC API` book.
+
+        The firmware feature information for the CPC is cached in this object.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements:
+
+        * Object-access permission to this CPC.
+
+        Parameters:
+
+          feature_name (:term:`string`): The name of the firmware feature.
+
+          force (bool): If True, retrieves the firmware feature data from the
+            HMC, even when it was already cached.
+
+        Returns:
+
+          bool: Boolean indicating whether the firmware feature is enabled on
+          this CPC.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+        """
+        self._setup_firmware_feature_set(force)
+        return feature_name in self._firmware_feature_set
+
+    def _setup_firmware_feature_set(self, force=False):
+        """
+        Set up `self._firmware_feature_set` with the names of the enabled
+        firmware features from the 'available-features-list' property of this
+        CPC, if it is not yet set up.
+
+        Parameters:
+
+          force (bool): If True, retrieves the CPC properties from the HMC
+            before performing the setup, even when it was already set up.
+        """
+        if self._firmware_feature_set is None or force:
+            self._firmware_feature_set = get_firmware_features(self, force)
+
+    @logged_api_call
+    def feature_enabled(self, feature_name):
+        """
+        Deprecated: Indicates whether the specified
+        :ref:`firmware feature <firmware features>` is enabled for this CPC.
+
+        This method is deprecated; use :meth:`Cpc.firmware_feature_enabled`
+        instead.
+
         The specified firmware feature must be available for the CPC.
 
         For a list of available firmware features, see section
-        "Firmware Features" in the :term:`HMC API` book, or use the
-        :meth:`feature_info` method.
+        "Firmware Features" in the :term:`HMC API` book.
 
         HMC/SE version requirements:
 
@@ -633,6 +834,10 @@ class Cpc(BaseResource):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        warnings.warn(
+            "The use of feature_enabled() on zhmcclient.Cpc objects is "
+            "deprecated; use firmware_feature_enabled() instead",
+            DeprecationWarning, stacklevel=3)
         feature_list = self.prop('available-features-list', None)
         if feature_list is None:
             raise ValueError("Firmware features are not supported on the HMC")
@@ -650,6 +855,11 @@ class Cpc(BaseResource):
         """
         Returns information about the :ref:`firmware features` available for
         this CPC.
+
+        Note that a firmware feature that is available is not necessarily
+        enabled. Its state indicates whether it is enabled. The functionality
+        provided by a firmware feature is only useable when the feature is
+        enabled.
 
         HMC/SE version requirements:
 
@@ -2113,44 +2323,6 @@ class Cpc(BaseResource):
         if len(features) > 0:
             config_dict['available-api-features-list'] = features
         return config_dict
-
-    @logged_api_call
-    def list_api_features(self, name=None, force=False):
-        """
-        Returns the :ref:`API features` available on this CPC.
-
-        The result is cached in this object.
-
-        The list of API features for the CPC can be found in section
-        "API features" in the :term:`HMC API` book, starting with 2.16.0.
-
-        HMC/SE version requirements:
-
-        * HMC version >= 2.16.0 with HMC API version >= 4.10
-
-        Authorization requirements:
-
-        * None
-
-        Parameters:
-
-          name (string):
-            A regular expression used to limit the result to matching API
-            features. If `None`, no such filtering takes place.
-
-          force (bool):
-            Boolean controlling whether to retrieve the API feature list from
-            the console even when cached.
-
-        Returns:
-
-          list of strings: The list of API features that are available on this
-          CPC. For HMC API versions prior to 4.10, an empty list is returned.
-        """
-        if self._api_features is None or force:
-            self._api_features = get_features(
-                self.manager.session, self.uri, name)
-        return self._api_features
 
     @logged_api_call
     def single_step_install(

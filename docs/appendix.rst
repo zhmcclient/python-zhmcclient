@@ -470,8 +470,8 @@ Resources scoped to CPCs in DPM mode
 
      For details, see section :ref:`HBAs`.
 
-     HBA resource objects only exist when the "dpm-storage-management" feature
-     is not enabled. See section :ref:`Storage Groups` for details.
+     HBA resource objects only exist when the "dpm-storage-management" firmware
+     feature is not enabled. See section :ref:`Storage Groups` for details.
 
   Network Adapter
      Short term for an :term:`Adapter` for attaching networks (e.g. OSA-Express
@@ -513,7 +513,7 @@ Resources scoped to CPCs in DPM mode
      to the partition.
 
      Storage Group objects exist only when the "dpm-storage-management"
-     feature is enabled on the CPC.
+     firmware feature is enabled on the CPC.
      For details, see section :ref:`Storage Groups`.
 
   Storage Group Template
@@ -529,7 +529,7 @@ Resources scoped to CPCs in DPM mode
      attached, and finally being attached to a :term:`partition`.
 
      Storage Volume objects exist only when the "dpm-storage-management"
-     feature is enabled on the CPC.
+     firmware feature is enabled on the CPC.
      For details, see section :ref:`Storage Groups`.
 
   Storage Volume Template
@@ -555,7 +555,7 @@ Resources scoped to CPCs in DPM mode
      itself.
 
      Virtual Storage Resource objects exist only when the
-     "dpm-storage-management" feature is enabled on the CPC.
+     "dpm-storage-management" firmware feature is enabled on the CPC.
      For details, see section :ref:`Storage Groups`.
 
   Virtual Switch
