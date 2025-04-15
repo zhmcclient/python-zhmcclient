@@ -1,0 +1,3 @@
+Docs: Clarified that 'Cpc.get_wwpns()' is only supported for SE version 2.13.1,
+because the underlying HMC operation "Export WWPN List" was no longer supported
+since z14.
