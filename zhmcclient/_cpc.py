@@ -1098,14 +1098,16 @@ class Cpc(BaseResource):
         Return the WWPNs of the host ports (of the :term:`HBAs <HBA>`) of the
         specified :term:`Partitions <Partition>` of this CPC.
 
-        This method performs the HMC operation "Export WWPN List".
+        This method performs the HMC operation "Export WWPN List". That
+        operation is no longer supported since the introduction of the
+        'dpm-storage-management' firmware feature with z14.
 
         The CPC must be set for DPM operational mode (i.e. its 'dpm-enabled'
         property is True) and must currently be active.
 
         HMC/SE version requirements:
 
-        * SE version >= 2.13.1
+        * SE version == 2.13.1
 
         Authorization requirements:
 
