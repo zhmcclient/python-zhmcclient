@@ -1,0 +1,7 @@
+Added a resource class 'zhmcclient.HwMessage' and corresponding manager
+class 'zhmcclient.HwMessageManager' to support hardware messages. The
+hardware messages are accessible for CPC and Console via a new property
+'hw_messages'. A HwMessage object supports list() and find..() methods,
+property retrieval, 'delete()', 'request_service()',
+'get_service_information()' and 'decline_service()'. Added end2end and unit
+tests.

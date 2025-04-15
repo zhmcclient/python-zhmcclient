@@ -80,6 +80,7 @@ RC_USER = 'user'
 RC_GROUP = 'group'
 RC_LDAP_SERVER_DEFINITION = 'ldap-server-definition'
 RC_MFA_SERVER_DEFINITION = 'mfa-server-definition'
+RC_HW_MESSAGE = 'hardware-message'
 
 # Resource classes that are children of zhmcclient.Cpc
 RC_CHILDREN_CPC = (

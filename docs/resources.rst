@@ -616,3 +616,23 @@ Certificates
    :autosummary:
    :autosummary-inherited-members:
    :special-members: __str__
+
+
+.. _`Hardware Message`:
+
+Hardware Message
+----------------
+
+.. automodule:: zhmcclient._hw_message
+
+.. autoclass:: zhmcclient.HwMessageManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.HwMessage
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__

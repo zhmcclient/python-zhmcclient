@@ -382,9 +382,10 @@ Resources scoped to the HMC
      A user-defined group of resources.
 
   Hardware Message
-     TBD - Not yet supported.
+     A message describing a problem with the hardware that the system has
+     detected.
 
-     Also scoped to CPCs in any mode.
+     Hardware messages can exist for the Console and for CPCs in any mode.
 
   Job
      The execution of an asynchronous HMC operation.

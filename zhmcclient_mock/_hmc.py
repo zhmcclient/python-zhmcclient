@@ -57,6 +57,7 @@ __all__ = ['InputError',
            'FakedMetricsContextManager', 'FakedMetricsContext',
            'FakedMetricGroupDefinition', 'FakedMetricObjectValues',
            'FakedCapacityGroupManager', 'FakedCapacityGroup',
+           'FakedHwMessageManager', 'FakedHwMessage',
            ]
 
 # All currently defined metric groups with their metrics.
@@ -1152,6 +1153,8 @@ class FakedConsole(FakedBaseResource):
         self._unmanaged_cpcs = FakedUnmanagedCpcManager(
             hmc=manager.hmc, console=self)
         self._groups = FakedGroupManager(hmc=manager.hmc, console=self)
+        self._hw_messages = FakedHwMessageManager(
+            hmc=manager.hmc, parent=self)
 
     def __repr__(self):
         """
@@ -1271,6 +1274,14 @@ class FakedConsole(FakedBaseResource):
         group resources of this Console.
         """
         return self._groups
+
+    @property
+    def hw_messages(self):
+        """
+        :class:`~zhmcclient_mock.HwMessageManager`: Access to the
+        faked Hardware Message resources of this Console.
+        """
+        return self._hw_messages
 
 
 class FakedUserManager(FakedBaseManager):
@@ -2090,6 +2101,8 @@ class FakedCpc(FakedBaseResource):
             hmc=manager.hmc, cpc=self, profile_type='image')
         self._load_activation_profiles = FakedActivationProfileManager(
             hmc=manager.hmc, cpc=self, profile_type='load')
+        self._hw_messages = FakedHwMessageManager(
+            hmc=manager.hmc, parent=self)
 
         if 'dpm-enabled' not in self._properties:
             self._properties['dpm-enabled'] = False
@@ -2201,6 +2214,14 @@ class FakedCpc(FakedBaseResource):
         faked Load Activation Profile resources of this CPC.
         """
         return self._load_activation_profiles
+
+    @property
+    def hw_messages(self):
+        """
+        :class:`~zhmcclient_mock.HwMessageManager`: Access to the
+        faked Hardware Message resources of this CPC.
+        """
+        return self._hw_messages
 
 
 class FakedUnmanagedCpcManager(FakedBaseManager):
@@ -4089,5 +4110,83 @@ class FakedMetricObjectValues:
             f"  resource_uri = {self.resource_uri!r}\n"
             f"  timestamp = {self.timestamp!r}\n"
             f"  values = {self.values!r}\n"
+            ")")
+        return ret
+
+
+class FakedHwMessageManager(FakedBaseManager):
+    """
+    A manager for faked HwMessage resources within a faked Console (see
+    :class:`zhmcclient_mock.FakedConsole`) or Cpc (see
+    :class:`zhmcclient_mock.FakedCpc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, parent):
+        super().__init__(
+            hmc=hmc,
+            parent=parent,
+            resource_class=FakedHwMessage,
+            base_uri=parent.uri + '/hardware-messages',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='hardware-message',
+            name_prop='element-uri')
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked HwMessage resource.
+
+        Parameters:
+
+          properties (dict):
+            Resource properties.
+
+            Special handling and requirements for certain properties:
+
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'hardware-message',
+              if not specified.
+
+        Returns:
+
+          :class:`~zhmcclient_mock.FakedHwMessage`: The faked HwMessage
+            resource.
+        """
+        return super().add(properties)
+
+
+class FakedHwMessage(FakedBaseResource):
+    """
+    A faked HwMessage resource within a faked Console (see
+    :class:`zhmcclient_mock.FakedConsole`) or Cpc (see
+    :class:`zhmcclient_mock.FakedCpc`).
+
+    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this faked HwMessage resource, for
+        debug purposes.
+        """
+        ret = (
+            f"{repr_obj_id(self)} (\n"
+            f"  _manager = {repr_obj_id(self._manager)}\n"
+            f"  _manager._parent._uri = {self._manager.parent.uri!r}\n"
+            f"  _uri = {self._uri!r}\n"
+            f"  _properties = {repr_dict(self._properties, indent=2)}\n"
             ")")
         return ret
