@@ -687,8 +687,8 @@ class BaseManager:
         return self._supports_properties
 
     def _list_with_operation(
-            self, list_uri, result_prop, full_properties, filter_args,
-            additional_properties):
+            self, list_uri, result_prop, full_properties, filter_args=None,
+            additional_properties=None, query_parms=None):
         """
         List resource objects by using a List operation.
 
@@ -736,6 +736,10 @@ class BaseManager:
             Must be `None` for resource types whose List operation does not
             support the 'additional-properties' query parameter.
 
+          query_parms (list of str): Additional query parameters. Each list
+            item must be a string (e.g. "key=value") ready to be appended to
+            the URI as a query parameter.
+
         Returns:
 
           : A list of zhmcclient resource objects.
@@ -753,13 +757,15 @@ class BaseManager:
                 if matches_filters(resource_obj, filter_args):
                     resource_obj_list.append(resource_obj)
         else:
-            query_parms, client_filters = divide_filter_args(
+            _query_parms, client_filters = divide_filter_args(
                 self._query_props, filter_args)
             if additional_properties:
                 ap_parm = \
                     f"additional-properties={','.join(additional_properties)}"
-                query_parms.append(ap_parm)
-            query_parms_str = make_query_str(query_parms)
+                _query_parms.append(ap_parm)
+            if query_parms:
+                _query_parms.extend(query_parms)
+            query_parms_str = make_query_str(_query_parms)
             uri = f'{list_uri}{query_parms_str}'
 
             try:

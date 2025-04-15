@@ -219,6 +219,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/StorageGroup"
                     },
                 },
+                "hw_messages": {
+                    "description": "The hardware mesages for this Console",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/HwMessage"
+                    },
+                },
             },
         },
         "User": {
@@ -366,6 +373,19 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                 },
             },
         },
+        "HwMessage": {
+            "description": "A hardware message (for Console or CPC)",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "properties",
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/Properties"
+                },
+            },
+        },
         "Cpc": {
             "description": "A CPC managed by an HMC",
             "type": "object",
@@ -435,6 +455,13 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/LoadActivationProfile"
+                    },
+                },
+                "hw_messages": {
+                    "description": "The hardware mesages for this CPC",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/HwMessage"
                     },
                 },
             },

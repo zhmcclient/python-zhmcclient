@@ -356,6 +356,16 @@ hmc_definition:
                 adapter-port-uri: /api/adapters/fcp1
                 partition-uri: /api/partitions/part1
 
+      hw_messages:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # element-uri: created automatically
+            element-id: a
+            text: foo
+            timestamp: 1744826146533
+            service-supported: true
+
   cpcs:
     - properties:
         # class: created automatically
@@ -602,6 +612,15 @@ hmc_definition:
             name: "LPAR2"
             description: "Image activation profile LPAR2"
             # TODO: Add more properties
+      hw_messages:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # element-uri: created automatically
+            element-id: a
+            text: foo
+            timestamp: 1744826146533
+            service-supported: true
     - properties:
         # class: created automatically
         # parent: created automatically
@@ -1062,3 +1081,13 @@ hmc_definition:
                 type: osd
                 device-number: '0010'
                 virtual-switch-uri: /api/virtual-switches/vs-osa1
+
+      hw_messages:
+        - properties:
+            # class: created automatically
+            # parent: created automatically
+            # element-uri: created automatically
+            element-id: a
+            text: foo
+            timestamp: 1744826146533
+            service-supported: true
