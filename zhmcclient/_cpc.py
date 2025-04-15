@@ -59,6 +59,7 @@ from ._activation_profile import ActivationProfileManager
 from ._adapter import AdapterManager
 from ._virtual_switch import VirtualSwitchManager
 from ._capacity_group import CapacityGroupManager
+from ._hw_message import HwMessageManager
 from ._logging import logged_api_call
 from ._exceptions import ParseError, ConsistencyError
 from ._utils import get_api_features, get_firmware_features, \
@@ -311,6 +312,7 @@ class Cpc(BaseResource):
         self._load_activation_profiles = None
         self._api_feature_set = None
         self._firmware_feature_set = None
+        self._hw_messages = None
 
     @property
     def lpars(self):
@@ -421,6 +423,17 @@ class Cpc(BaseResource):
             self._load_activation_profiles = ActivationProfileManager(
                 self, profile_type='load')
         return self._load_activation_profiles
+
+    @property
+    def hw_messages(self):
+        """
+        :class:`~zhmcclient.HwMessageManager`: Access to
+        :term:`Hardware Messages <Hardware Message>` for this CPC.
+        """
+        # We do here some lazy loading.
+        if not self._hw_messages:
+            self._hw_messages = HwMessageManager(self)
+        return self._hw_messages
 
     @property
     @logged_api_call

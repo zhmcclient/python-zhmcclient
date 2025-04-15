@@ -1900,6 +1900,164 @@ class MfaServerDefinitionHandler(GenericGetPropertiesHandler,
         mfa.update(body)
 
 
+class ConsoleHwMessagesHandler:
+    """
+    Handler class for HTTP methods on set of Console HwMessage resources.
+    """
+
+    valid_query_parms_get = []
+
+    returned_props = ['element-uri', 'text', 'timestamp']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List Console Hardware Messages."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        result_hw_messages = []
+        for hw_message in console.hw_messages.list(filter_args):
+            result_hw_message = {}
+            for prop in cls.returned_props:
+                result_hw_message[prop] = \
+                    hw_message.properties.get(prop)
+            result_hw_messages.append(result_hw_message)
+        return {'hardware-messages': result_hw_messages}
+
+
+class ConsoleHwMessageHandler(GenericGetPropertiesHandler,
+                              GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single Console HwMessage resource.
+    """
+    pass
+
+
+class ConsoleHwMessageRequestServiceHandler:
+    """
+    Handler class for operation: Request Console Service.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Request Console Service (any CPC mode)."""
+        assert wait_for_completion is True  # async not supported yet
+
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        msg_oid = uri_parms[0]
+        try:
+            msg = console.hw_messages.find(**{'element-id': msg_oid})
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        element_id = msg.get_property('element-id')
+        service_supported = msg.get_property('service-supported')
+        if not service_supported:
+            raise BadRequestError(
+                method, uri, reason=340,
+                message=(f"Hardware message with element-id {element_id} "
+                         "does not support service."))
+
+        # The sending of the service request is not modeled.
+
+
+class ConsoleHwMessageGetServiceInfoHandler:
+    """
+    Handler class for operation: Get Console Service Request Information.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Console Service Request Information (any CPC mode)."""
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        msg_oid = uri_parms[0]
+        try:
+            console.hw_messages.find(**{'element-id': msg_oid})
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        result = {
+            "service-phone": "tbd",
+            "machine-model": "tbd",
+            "machine-type": "tbd",
+            "machine-serial-number": "tbd",
+            "problem-type": "tbd",
+            "problem-number": 4711,
+            "problem-data": "tbd",
+            "reference-code": "tbd",
+            "customer-name": "tbd",
+            "customer-phone": "tbd",
+        }
+        return result
+
+
+class ConsoleHwMessageDeclineServiceHandler:
+    """
+    Handler class for operation: Decline Console Service.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Decline Console Service (any CPC mode)."""
+        assert wait_for_completion is True  # async not supported yet
+
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        msg_oid = uri_parms[0]
+        try:
+            msg = console.hw_messages.find(**{'element-id': msg_oid})
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        element_id = msg.get_property('element-id')
+        service_supported = msg.get_property('service-supported')
+        if not service_supported:
+            raise BadRequestError(
+                method, uri, reason=340,
+                message=(f"Hardware message with element-id {element_id} "
+                         "does not support service."))
+
+        # The sending of the service decline is not modeled.
+
+
 class CpcsHandler:
     """
     Handler class for HTTP methods on set of Cpc resources.
@@ -2117,6 +2275,168 @@ class CpcGetEnergyManagementDataHandler:
         result = {'objects': [cpc_data]}
 
         return result
+
+
+class CpcHwMessagesHandler:
+    """
+    Handler class for HTTP methods on set of CPC HwMessage resources.
+    """
+
+    valid_query_parms_get = []
+
+    returned_props = ['element-uri', 'timestamp', 'text']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List CPC Hardware Messages."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        result_hw_messages = []
+        for hw_message in cpc.hw_messages.list(filter_args):
+            result_hw_message = {}
+            for prop in cls.returned_props:
+                result_hw_message[prop] = \
+                    hw_message.properties.get(prop)
+            result_hw_messages.append(result_hw_message)
+        return {'hardware-messages': result_hw_messages}
+
+
+class CpcHwMessageHandler(GenericGetPropertiesHandler,
+                          GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single CPC HwMessage resource.
+    """
+    pass
+
+
+class CpcHwMessageRequestServiceHandler:
+    """
+    Handler class for operation: Request Console Service.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Request Console Service (any CPC mode)."""
+        assert wait_for_completion is True  # async not supported yet
+
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        msg_oid = uri_parms[1]
+        try:
+            msg = cpc.hw_messages.find(**{'element-id': msg_oid})
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        element_id = msg.get_property('element-id')
+        service_supported = msg.get_property('service-supported')
+        if not service_supported:
+            raise BadRequestError(
+                method, uri, reason=340,
+                message=(f"Hardware message with element-id {element_id} "
+                         "does not support service."))
+
+        # The sending of the service request is not modeled.
+
+
+class CpcHwMessageGetServiceInfoHandler:
+    """
+    Handler class for operation: Get Console Service Request Information.
+    """
+
+    @staticmethod
+    def get(method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: Get Console Service Request Information (any CPC mode)."""
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        msg_oid = uri_parms[0]
+        try:
+            cpc.hw_messages.find(**{'element-id': msg_oid})
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        result = {
+            "service-phone": "tbd",
+            "machine-model": "tbd",
+            "machine-type": "tbd",
+            "machine-serial-number": "tbd",
+            "problem-type": "tbd",
+            "problem-number": 4711,
+            "problem-data": "tbd",
+            "reference-code": "tbd",
+            "customer-name": "tbd",
+            "customer-phone": "tbd",
+        }
+        return result
+
+
+class CpcHwMessageDeclineServiceHandler:
+    """
+    Handler class for operation: Decline Console Service.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Decline Console Service (any CPC mode)."""
+        assert wait_for_completion is True  # async not supported yet
+
+        cpc_oid = uri_parms[0]
+        try:
+            cpc = hmc.cpcs.lookup_by_oid(cpc_oid)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        msg_oid = uri_parms[0]
+        try:
+            msg = cpc.hw_messages.find(**{'element-id': msg_oid})
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient_mock.InvalidResourceError
+
+        element_id = msg.get_property('element-id')
+        service_supported = msg.get_property('service-supported')
+        if not service_supported:
+            raise BadRequestError(
+                method, uri, reason=340,
+                message=(f"Hardware message with element-id {element_id} "
+                         "does not support service."))
+
+        # The sending of the service decline is not modeled.
 
 
 class CpcStartHandler:
@@ -6302,6 +6622,18 @@ URIS = (
     (r'/api/console/mfa-server-definitions/([^?/]+)(?:\?(.*))?',
      MfaServerDefinitionHandler),
 
+    (r'/api/console/hardware-messages(?:\?(.*))?',
+     ConsoleHwMessagesHandler),
+    (r'/api/console/hardware-messages/([^?/]+)(?:\?(.*))?',
+     ConsoleHwMessageHandler),
+    (r'/api/console/hardware-messages/([^/]+)/operations/request-service',
+     ConsoleHwMessageRequestServiceHandler),
+    (r'/api/console/hardware-messages/([^/]+)/operations/'
+     r'get-service-information',
+     ConsoleHwMessageGetServiceInfoHandler),
+    (r'/api/console/hardware-messages/([^/]+)/operations/decline-service',
+     ConsoleHwMessageDeclineServiceHandler),
+
     (r'/api/cpcs(?:\?(.*))?', CpcsHandler),
     (r'/api/cpcs/([^?/]+)(?:\?(.*))?', CpcHandler),
     (r'/api/cpcs/([^/]+)/operations/list-features',
@@ -6312,6 +6644,18 @@ URIS = (
      CpcSetPowerCappingHandler),
     (r'/api/cpcs/([^/]+)/energy-management-data',
      CpcGetEnergyManagementDataHandler),
+
+    (r'/api/cpcs/([^/]+)/hardware-messages(?:\?(.*))?',
+     CpcHwMessagesHandler),
+    (r'/api/cpcs/([^/]+)/hardware-messages/([^?/]+)(?:\?(.*))?',
+     CpcHwMessageHandler),
+    (r'/api/cpcs/([^/]+)/hardware-messages/([^/]+)/operations/request-service',
+     CpcHwMessageRequestServiceHandler),
+    (r'/api/cpcs/([^/]+)/hardware-messages/([^/]+)/operations/'
+     r'get-service-information',
+     CpcHwMessageGetServiceInfoHandler),
+    (r'/api/cpcs/([^/]+)/hardware-messages/([^/]+)/operations/decline-service',
+     CpcHwMessageDeclineServiceHandler),
 
     (r'/api/groups(?:\?(.*))?', GroupsHandler),
     (r'/api/groups/([^?/]+)(?:\?(.*))?', GroupHandler),

@@ -42,6 +42,7 @@ from ._group import GroupManager
 from ._utils import get_api_features
 from ._certificates import CertificateManager
 from ._partition_link import PartitionLinkManager
+from ._hw_message import HwMessageManager
 
 __all__ = ['ConsoleManager', 'Console']
 
@@ -220,6 +221,7 @@ class Console(BaseResource):
         self._groups = None
         self._certificates = None
         self._api_feature_set = None
+        self._hw_messages = None
 
     @property
     def storage_groups(self):
@@ -355,6 +357,17 @@ class Console(BaseResource):
         if not self._groups:
             self._groups = GroupManager(self)
         return self._groups
+
+    @property
+    def hw_messages(self):
+        """
+        :class:`~zhmcclient.HwMessageManager`: Access to
+        :term:`Hardware Messages <Hardware Message>` for this Console.
+        """
+        # We do here some lazy loading.
+        if not self._hw_messages:
+            self._hw_messages = HwMessageManager(self)
+        return self._hw_messages
 
     @logged_api_call
     def restart(self, force=False, wait_for_available=True,
