@@ -43,6 +43,16 @@ __all__ = ['BaseManager']
 
 REGEXP_SPECIAL_CHAR = re.compile(r'[\^\$\.\+\*\?\(\)\[\]\{\}\|\\]')
 
+# Maximum size of request body for "Submit Requests" bulk operation
+BULK_MAX_SIZE = 256000
+
+# Maximum number of threads for "Submit Requests" bulk operation
+BULK_MAX_THREADS = 10
+
+# Constant overheads in request body for "Submit Requests" bulk operation
+BULK_OVHD = len("{'requests': [], 'threads': 10}")
+BULK_OVHD_PER_REQ = len("{'method': 'GET', 'uri': '', 'id': '9999'}, ")
+
 
 class _NameUriCache:
     """
@@ -787,7 +797,14 @@ class BaseManager:
 
     def _get_properties_bulk(self, props_list, client_filters):
         """
-        Get resource properties using a bulk operation.
+        Get resource properties using the bulk operation "Submit Requests"
+
+        The maximum for the request content is checked and exceeding it results
+        in multiple bulk operations that are performed one after another. This
+        happens when the number of resources in the list exceeds around
+        1500..3000, dependent on the length of the resource URI. This can
+        happen only for a small fraction of the resource types (e.g. for
+        hardware messages).
 
         Parameters:
 
@@ -815,10 +832,19 @@ class BaseManager:
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        resource_obj_list = []
 
-        bulk_reqs = []
-        req_by_id = {}
+        if not props_list:
+            return []
+
+        # Max number of requests for a single "Submit Requests" operation
+        req_len = BULK_OVHD_PER_REQ + len(props_list[0][self._uri_prop])
+        max_req_id = int((BULK_MAX_SIZE - BULK_OVHD) / req_len) - 1
+
+        # Prepare the bulk operation request and split if needed
+
+        bulk_ops = []  # item: tuple(bulk_reqs, bulk_reqs_by_id)
+        bulk_reqs = []  # requests for one "Submit Requests" operation
+        bulk_props_by_id = {}  # key: req_id; value: list result props
         req_id = 0
         for props in props_list:
             req_id += 1
@@ -829,12 +855,21 @@ class BaseManager:
                 'id': req_id_str,
             }
             bulk_reqs.append(req)
-            req_by_id[req_id_str] = (req, props)
-
+            bulk_props_by_id[req_id_str] = props
+            if req_id > max_req_id:
+                bulk_ops.append((bulk_reqs, bulk_props_by_id))
+                bulk_reqs = []
+                bulk_props_by_id = {}
+                req_id = 0
         if bulk_reqs:
-            uri = '/api/services/aggregation/submit'
-            # 10 threads is the supported maximum
-            threads = min(10, round(len(props_list) / 2 + 0.51))
+            bulk_ops.append((bulk_reqs, bulk_props_by_id))
+
+        # Run the bulk operations and collect the result
+
+        uri = '/api/services/aggregation/submit'
+        threads = min(BULK_MAX_THREADS, round(len(props_list) / 2 + 0.51))
+        resource_obj_list = []
+        for bulk_reqs, bulk_props_by_id in bulk_ops:
             body = {
                 'requests': bulk_reqs,
                 'threads': threads,
@@ -842,7 +877,7 @@ class BaseManager:
             result = self.session.post(uri, body=body)
             for res in result:
                 req_id = res['id']
-                req, props = req_by_id[req_id]
+                props = bulk_props_by_id[req_id]
 
                 # We first use the properties from the props_list parameter,
                 # and then update that with the properties returned from the
@@ -857,7 +892,7 @@ class BaseManager:
 
                 resource_obj = self.resource_class(
                     manager=self,
-                    uri=req['uri'],
+                    uri=props[self._uri_prop],
                     name=resource_props.get(self._name_prop, None),
                     properties=resource_props)
 
