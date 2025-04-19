@@ -62,4 +62,5 @@ from ._partition_link import *         # noqa: F401
 from ._capacity_group import *         # noqa: F401
 from ._certificates import *         # noqa: F401
 from ._os_console import *         # noqa: F401
+from ._hw_message import *         # noqa: F401
 from ._debug_info import *         # noqa: F401
