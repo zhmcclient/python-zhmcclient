@@ -554,6 +554,40 @@ encapsulate access to the :ref:`HMC vault file`, e.g. by test functions:
    :members:
    :autosummary:
 
+Helper functions for HMC session management
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :mod:`zhmcclient.testutils` module provides the following functions and
+attributes for managing HMC sessions. These functions are used by the
+``testutils`` classes and can also be used for tests of other projects that
+use zhmcclient:
+
+.. autofunction:: zhmcclient.testutils.setup_hmc_session
+
+.. autofunction:: zhmcclient.testutils.teardown_hmc_session
+
+.. autofunction:: zhmcclient.testutils.teardown_hmc_session_id
+
+.. autofunction:: zhmcclient.testutils.is_valid_hmc_session_id
+
+The following attributes are used when test logging is enabled. For details,
+see :ref:`Enabling logging during end2end tests`:
+
+.. # Note: These attributes are documented using py:data because autodata
+.. # does not work well.
+
+.. py:data:: zhmcclient.testutils.LOG_FORMAT_STRING
+
+   Log format for test logging.
+
+.. py:data:: zhmcclient.testutils.LOG_DATETIME_FORMAT
+
+   Datetime format for test logging.
+
+.. py:data:: zhmcclient.testutils.LOG_DATETIME_TIMEZONE
+
+   Timezone used for datetime values in test logging.
+
 Exceptions
 ^^^^^^^^^^
 

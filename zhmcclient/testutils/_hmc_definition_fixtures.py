@@ -17,23 +17,13 @@ Pytest fixtures for mocked HMCs.
 """
 
 
-import os
-import logging
-import time
 import pytest
-import zhmcclient
-import zhmcclient_mock
 
 from ._hmc_definition import HMCDefinition
 from ._hmc_definitions import hmc_definitions
+from ._hmc_session_functions import setup_hmc_session, teardown_hmc_session
 
-__all__ = ['hmc_definition', 'hmc_session', 'LOG_FORMAT_STRING',
-           'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE']
-
-# Log parameters when logging is enabled via TESTLOGFILE
-LOG_FORMAT_STRING = '%(asctime)s %(levelname)s %(name)s: %(message)s'
-LOG_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
-LOG_DATETIME_TIMEZONE = time.gmtime  # Used as formatter converter function
+__all__ = ['hmc_definition', 'hmc_session']
 
 
 def fixtureid_hmc_definition(fixture_value):
@@ -105,93 +95,3 @@ def hmc_session(request, hmc_definition):
     session = setup_hmc_session(hmc_definition)
     yield session
     teardown_hmc_session(session)
-
-
-def setup_hmc_session(hd):
-    """
-    Setup an HMC session and return a new session object for it.
-
-    If the HMC definition represents a real HMC, log on to an HMC and return
-    a new :class:`zhmcclient.Session` object.
-
-    If the HMC definition represents a mocked HMC, create a new mock environment
-    from that and return a :class:`zhmcclient_mock.FakedSession` object.
-    """
-    # We use the cached skip reason from previous attempts
-    skip_msg = getattr(hd, 'skip_msg', None)
-    if skip_msg:
-        pytest.skip(f"Skip reason from earlier attempt: {skip_msg}")
-
-    if hd.mock_file:
-        # A mocked HMC
-
-        # Create a mocked session using the mock file from the inventory file
-        session = zhmcclient_mock.FakedSession.from_hmc_yaml_file(
-            hd.mock_file, userid=hd.userid, password=hd.password)
-
-        # Set the HMC definition host to the host found in the mock file.
-        hd.host = session.host
-
-    else:
-        # A real HMC
-
-        # Enable debug logging if specified
-        log_file = os.getenv('TESTLOGFILE', None)
-        if log_file:
-
-            logging.Formatter.converter = LOG_DATETIME_TIMEZONE
-            log_formatter = logging.Formatter(
-                LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
-            log_handler = logging.FileHandler(log_file, encoding='utf-8')
-            log_handler.setFormatter(log_formatter)
-
-            logger = logging.getLogger('zhmcclient.hmc')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
-
-            logger = logging.getLogger('zhmcclient.api')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
-
-            logger = logging.getLogger('zhmcclient.jms')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
-
-            logger = logging.getLogger('zhmcclient.os')
-            if log_handler not in logger.handlers:
-                logger.addHandler(log_handler)
-            logger.setLevel(logging.DEBUG)
-
-        rt_config = zhmcclient.RetryTimeoutConfig(
-            read_timeout=1800,
-        )
-
-        # Creating a session does not interact with the HMC (logon is deferred)
-        session = zhmcclient.Session(
-            hd.host, hd.userid, hd.password, verify_cert=hd.verify_cert,
-            retry_timeout_config=rt_config)
-
-        # Check access to the HMC
-        try:
-            session.logon()
-        except zhmcclient.Error as exc:
-            msg = (
-                f"Cannot log on to HMC {hd.nickname} at {hd.host} "
-                f"due to {exc.__class__.__name__}: {exc}")
-            hd.skip_msg = msg
-            pytest.skip(msg)
-
-    hd.skip_msg = None
-    session.hmc_definition = hd
-
-    return session
-
-
-def teardown_hmc_session(session):
-    """
-    Log off from an HMC session.
-    """
-    session.logoff()
