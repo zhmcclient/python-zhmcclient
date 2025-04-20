@@ -21,5 +21,6 @@ from ._hmc_inventory_file import *         # noqa: F401
 from ._hmc_vault_file import *             # noqa: F401
 from ._hmc_definition import *             # noqa: F401
 from ._hmc_definitions import *            # noqa: F401
+from ._hmc_session_functions import *      # noqa: F401
 from ._hmc_definition_fixtures import *    # noqa: F401
 from ._cpc_fixtures import *               # noqa: F401
