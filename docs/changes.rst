@@ -20,6 +20,52 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.20.3
+^^^^^^^^^^^^^^
+
+Released: 2025-04-24
+
+**Deprecations:**
+
+* Deprecated the feature_enabled() method of the Cpc and Partition classes,
+  because it is too complex to use. Use the new firmware_feature_enabled()
+  method instead. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+**Bug fixes:**
+
+* Fixed safety issues up to 2025-04-21.
+
+* Docs: Clarified that 'Cpc.get_wwpns()' is only supported for SE version 2.13.1,
+  because the underlying HMC operation "Export WWPN List" was no longer supported
+  since z14. (`#1713 <https://github.com/zhmcclient/python-zhmcclient/issues/1713>`_)
+
+* The list_api_features() method of the Cpc and Console classes had cached the
+  API feature data. This was a problem because the use of the 'name' filter
+  can create different results. The method no longer caches the API feature
+  data. (`#1827 <https://github.com/zhmcclient/python-zhmcclient/issues/1827>`_)
+
+**Enhancements:**
+
+* Added list_firmware_features() to the Cpc and Partition classes. The firmware
+  feature data is cached. The method lists the enabled firmware features
+  regardless of the HMC/SE version and regardless of whether the firmware
+  feature is available. If the HMC/SE version does not support firmware
+  features yet (2.14 and HMC API version 2.23), an empty list is returned. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+* Added api_feature_enabled() to the Cpc and Console classes, in order
+  to test for whether a specific API feature is enabled (=available). The
+  API feature data is cached, and the cache data structure is optimized for
+  fast lookup of the feature name. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+* Added firmware_feature_enabled() to the Cpc and Partition classes, in order
+  to test for whether a specific firmware feature is enabled. The firmware
+  feature data is cached, and the cache data structure is optimized for fast
+  lookup of the feature name. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+* Added zhmcclient_mock support for the "List CPC API Features" and
+  "List Console API Features" operations. (`#1830 <https://github.com/zhmcclient/python-zhmcclient/issues/1830>`_)
+
+
 Version 1.20.2
 ^^^^^^^^^^^^^^
 
