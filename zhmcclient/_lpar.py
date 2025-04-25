@@ -52,7 +52,7 @@ class LparManager(BaseManager):
 
     Objects of this class are not directly created by the user; they are
     accessible via the following instance variable of a
-    :class:`~zhmcclient.Cpc` object (in DPM mode):
+    :class:`~zhmcclient.Cpc` object (in classic mode):
 
     * :attr:`~zhmcclient.Cpc.lpars`
 
