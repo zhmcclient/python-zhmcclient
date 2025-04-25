@@ -1,0 +1,2 @@
+Docs: Fixed incorrect statement about DPM in description of
+zhmcclient.LparManager class.
