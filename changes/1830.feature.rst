@@ -1,2 +1,0 @@
-Added zhmcclient_mock support for the "List CPC API Features" and
-"List Console API Features" operations.

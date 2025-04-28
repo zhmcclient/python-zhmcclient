@@ -1,3 +1,0 @@
-Deprecated the feature_enabled() method of the Cpc and Partition classes,
-because it is too complex to use. Use the new firmware_feature_enabled()
-method instead.

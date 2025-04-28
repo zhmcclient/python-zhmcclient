@@ -1,5 +1,0 @@
-The property '@@implementation-errors' can be returned by the HMC to indicate
-internal inconsistencies not severe enough to return an error. Such cases
-should be considered HMC defects.
-When that property is in an HMC result, a warning is now logged and the
-property is removed.

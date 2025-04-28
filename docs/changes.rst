@@ -20,6 +20,108 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.21.0
+^^^^^^^^^^^^^^
+
+Released: 2025-04-28
+
+**Deprecations:**
+
+* Deprecated the feature_enabled() method of the Cpc and Partition classes,
+  because it is too complex to use. Use the new firmware_feature_enabled()
+  method instead. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+**Bug fixes:**
+
+* Fixed safety issues up to 2025-04-21.
+
+* Dev: Fixed permissions for creating GitHub release when releasing a version
+
+* Docs: Clarified that 'Cpc.get_wwpns()' is only supported for SE version 2.13.1,
+  because the underlying HMC operation "Export WWPN List" was no longer supported
+  since z14. (`#1713 <https://github.com/zhmcclient/python-zhmcclient/issues/1713>`_)
+
+* Fixed a datetime conversion error by excluding pytz 2025.2 (`#1800 <https://github.com/zhmcclient/python-zhmcclient/issues/1800>`_)
+
+* Fixed that 'Console.list_permitted_adapters()' was used in the metrics support
+  by incorrectly checking for the API version 4.1. The code now checks for
+  availability of the API feature 'adapter-network-information', instead. (`#1803 <https://github.com/zhmcclient/python-zhmcclient/issues/1803>`_)
+
+* Ensure dpm-export doesn't fail on unknown dict keys during final "reduction"
+  phase. (`#1821 <https://github.com/zhmcclient/python-zhmcclient/issues/1821>`_)
+
+* The list_api_features() method of the Cpc and Console classes had cached the
+  API feature data. This was a problem because the use of the 'name' filter
+  can create different results. The method no longer caches the API feature
+  data. (`#1827 <https://github.com/zhmcclient/python-zhmcclient/issues/1827>`_)
+
+* Docs: Fixed incorrect statement about DPM in description of
+  zhmcclient.LparManager class. (`#1844 <https://github.com/zhmcclient/python-zhmcclient/issues/1844>`_)
+
+**Enhancements:**
+
+* Added new public functions to and documented existing functions and attributes
+  in the zhmcclient.testutils module in support of end2end tests for projects
+  using zhmcclient: 'setup_hmc_session()', 'teardown_hmc_session()',
+  'teardown_hmc_session_id()', 'is_valid_hmc_session_id()', 'LOG_FORMAT_STRING',
+  'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE'.
+
+* Added zhmcclient mock support for all operations related to hardware
+  messages for Console and CPC. (`#1672 <https://github.com/zhmcclient/python-zhmcclient/issues/1672>`_)
+
+* Added a resource class 'zhmcclient.HwMessage' and corresponding manager
+  class 'zhmcclient.HwMessageManager' to support hardware messages. The
+  hardware messages are accessible for CPC and Console via a new property
+  'hw_messages'. A HwMessage object supports list() and find..() methods,
+  property retrieval, 'delete()', 'request_service()',
+  'get_service_information()' and 'decline_service()'. Added end2end and unit
+  tests. (`#1672 <https://github.com/zhmcclient/python-zhmcclient/issues/1672>`_)
+
+* Added support for caching the API features returned by
+  'Console.list_api_features()' and 'Cpc.list_api_features()'. (`#1803 <https://github.com/zhmcclient/python-zhmcclient/issues/1803>`_)
+
+* The property '@@implementation-errors' can be returned by the HMC to indicate
+  internal inconsistencies not severe enough to return an error. Such cases
+  should be considered HMC defects.
+  When that property is in an HMC result, a warning is now logged and the
+  property is removed. (`#1820 <https://github.com/zhmcclient/python-zhmcclient/issues/1820>`_)
+
+* Added list_firmware_features() to the Cpc and Partition classes. The firmware
+  feature data is cached. The method lists the enabled firmware features
+  regardless of the HMC/SE version and regardless of whether the firmware
+  feature is available. If the HMC/SE version does not support firmware
+  features yet (2.14 and HMC API version 2.23), an empty list is returned. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+* Added api_feature_enabled() to the Cpc and Console classes, in order
+  to test for whether a specific API feature is enabled (=available). The
+  API feature data is cached, and the cache data structure is optimized for
+  fast lookup of the feature name. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+* Added firmware_feature_enabled() to the Cpc and Partition classes, in order
+  to test for whether a specific firmware feature is enabled. The firmware
+  feature data is cached, and the cache data structure is optimized for fast
+  lookup of the feature name. (`#1828 <https://github.com/zhmcclient/python-zhmcclient/issues/1828>`_)
+
+* Added zhmcclient_mock support for the "List CPC API Features" and
+  "List Console API Features" operations. (`#1830 <https://github.com/zhmcclient/python-zhmcclient/issues/1830>`_)
+
+* When a 'list()' method specific full_properties=True, the retrieval of the
+  resource properties in the list result is implemented using the bulk operation
+  "Submit Requests". That operation has a limit for the request size of 256 kB.
+  So far, that limit could not possibly be reached. The support for hardware
+  messages made it necessary to improve that implementation by splitting the
+  bulk operation into multiple operations when the request size limit is
+  exceeded. (`#1836 <https://github.com/zhmcclient/python-zhmcclient/issues/1836>`_)
+
+**Cleanup:**
+
+* Replaced any use of 'OrderedDict' with the standard Python 'dict', since they
+  are ordered since Python 3.6. As a result, the representation of resource
+  properties in 'repr()' methods of zhmcclient resources now uses the standard
+  dict representation and its properties are no longer sorted. This allowed to
+  eliminate the dependency to the 'yamlloader' package.
+
+
 Version 1.20.0
 ^^^^^^^^^^^^^^
 

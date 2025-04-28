@@ -1,7 +1,0 @@
-When a 'list()' method specific full_properties=True, the retrieval of the
-resource properties in the list result is implemented using the bulk operation
-"Submit Requests". That operation has a limit for the request size of 256 kB.
-So far, that limit could not possibly be reached. The support for hardware
-messages made it necessary to improve that implementation by splitting the
-bulk operation into multiple operations when the request size limit is
-exceeded.
