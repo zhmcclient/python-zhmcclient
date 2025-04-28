@@ -1,4 +1,0 @@
-The list_api_features() method of the Cpc and Console classes had cached the
-API feature data. This was a problem because the use of the 'name' filter
-can create different results. The method no longer caches the API feature
-data.

@@ -1,2 +1,0 @@
-Added zhmcclient mock support for all operations related to hardware
-messages for Console and CPC.
