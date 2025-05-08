@@ -58,3 +58,6 @@ pyrsistent>=0.20.0
 websocket-client>=1.8.0
 
 certifi>=2024.07.04
+
+# idna is used by requests. idna 3.7 resolves security issues
+idna>=3.7
