@@ -19,7 +19,7 @@ towncrier>=22.8.0
 # Unit test (imports into testcases):
 # pytest is covered in extra-testutils-requirements.txt
 testfixtures>=6.9.0
-importlib-metadata>=4.8.3
+importlib-metadata>=8.5.0
 # requests: covered in direct deps for installation
 colorama>=0.4.6
 requests-mock>=1.6.0

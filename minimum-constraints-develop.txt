@@ -26,7 +26,7 @@ click-default-group==1.2.4
 # Note: pytest is covered in minimum-constraints-install.txt
 testfixtures==6.9.0
 colorama==0.4.6
-importlib-metadata==4.8.3
+importlib-metadata==8.5.0
 more-itertools==4.0.0
 # pytz: covered in direct deps for installation
 # requests: covered in direct deps for installation
@@ -175,7 +175,7 @@ gitdb2==2.0.0
 html5lib==1.1
 httpx==0.28.1
 imagesize==1.3.0
-importlib-resources==1.4.0
+importlib-resources==6.4.0
 jedi==0.17.2
 Jinja2==3.1.6
 keyring==18.0.0
@@ -219,3 +219,4 @@ typing==3.6.1
 typing-extensions==4.12.2
 webencodings==0.5.1
 widgetsnbextension==4.0.0
+zipp==3.20.0
