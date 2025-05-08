@@ -89,6 +89,9 @@ sphinxcontrib-serializinghtml>=1.1.9; python_version >= '3.9'
 sphinxcontrib-websupport>=1.2.4
 autodocsumm>=0.2.12
 Babel>=2.11.0
+# snowballstemmer 3.0.0 does not include algorithms used by Sphinx.
+# For details, see https://github.com/snowballstem/snowball/issues/229
+snowballstemmer>=2.0.0,!=3.0.0
 
 # PyLint (no imports, invoked via pylint script)
 pylint>=3.0.1; python_version == '3.8'
