@@ -72,7 +72,7 @@ tox>=4.15.0
 Sphinx>=7.1.0; python_version == '3.8'
 Sphinx>=7.2.0; python_version >= '3.9'
 # Sphinx 7.1.0 pins docutils to <0.21
-docutils>=0.18.1,<0.21; python_version == '3.8'
+docutils>=0.21.2,<0.22; python_version == '3.8'
 docutils>=0.18.1; python_version >= '3.9'
 sphinx-git>=10.1.1
 GitPython>=3.1.41
