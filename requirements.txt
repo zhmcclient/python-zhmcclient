@@ -1,63 +1,13 @@
-# Pip requirements file for packages needed for installation.
+# Pip requirements file for a minimal example that reproduces the fact
+# that Mend Renovate does not consider python_version constraints.
+#
+# This project requires Python>=3.8 as per its pyproject.toml file.
+#
+# Here are the Python versions required by docutils, as per its package
+# metadata:
+# docutils 0.18.1 requires Python >=2.7 or >=3.5
+# docutils 0.20.1 (last before 0.21) requires Python >=3.7
+# docutils 0.21.2 requires Python >=3.9
 
-# Note: The dependencies in this file will become the dependencies stated
-# in the Pypi package metadata.
-
-
-# Direct dependencies for install (must be consistent with minimum-constraints-install.txt)
-
-decorator>=4.0.11
-
-# pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
-# pytz 2024.2 introduced an issue that causes our tests to fail.
-# pytz 2025.1 introduced an issue that causes our tests to fail (https://github.com/stub42/pytz/issues/133)
-# pytz 2025.2 introduced an issue that causes our tests to fail.
-pytz>=2019.1,!=2024.2,!=2025.1,!=2025.2
-
-# requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
-#   remove ImportWarning in six
-requests>=2.32.2
-
-stomp-py>=8.1.1
-
-python-dateutil>=2.8.2
-immutable-views>=0.6.0
-nocasedict>=1.0.2
-
-# PyYAML is used by zhmcclient_mock, zhmcclient.testutils and bandit
-# PyYAML 5.3 has wheel archives for Python 2.7, 3.5 - 3.9
-# PyYAML 5.4 has wheel archives for Python 2.7, 3.6 - 3.9
-# PyYAML 6.0.0 has wheel archives for Python 3.6 - 3.11
-# PyYAML 6.0.1 has wheel archives for Python 3.6 - 3.12
-# PyYAML 6.0.2 has wheel archives for Python 3.8 - 3.13
-# PyYAML 5.4.x and 6.0.0 fail to install when no wheel archives are available since Cython 3
-#   was released, see issue https://github.com/yaml/pyyaml/issues/724. Fixed in 6.0.1.
-PyYAML>=6.0.2
-
-# jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils
-# jsonschema 4.0.0 was yanked (and does not install), but older pip versions don't recognize that
-# jsonschema is also used by jupyter and requires >=3.0.1
-# jsonschema 3.0.1 and 3.0.2 may cause pkg_resources.DistributionNotFound; fixed in 3.1.0.
-# jsonschema >=3.2.0 is required for Python 3.13 to get rid of the use of js-regex
-# jupyterlab-server 2.25.3 depends on jsonschema>=4.18.0
-jsonschema>=4.18.0
-
-
-# Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
-
-# Since we changed to use the allowed_methods attribute introduced in urllib3
-# 1.26.0, and our minimum version of requests (2.25.0) only requires
-# urllib3>=1.21.0, we need to require a minimum version of urllib3.
-urllib3>=1.26.19
-
-# pyrsistent is used by jsonschema>=3.0
-# pyrsistent 0.20.0 has official support for Python 3.12
-pyrsistent>=0.20.0
-
-# websocket-client is also used by stomp-py 8.0 and notebook(?) 6.4
-websocket-client>=1.8.0
-
-certifi>=2024.07.04
-
-# idna is used by requests. idna 3.7 resolves security issues
-idna>=3.7
+docutils>=0.18.1,<0.21; python_version == '3.8'
+docutils>=0.18.1; python_version >= '3.9'
