@@ -4,5 +4,6 @@
     "config:recommended"
   ],
   "commitBody": "Signed-off-by: {{{gitAuthor}}}",
-  "constraintsFiltering": "strict"
+  "constraintsFiltering": "strict",
+  "dependencyDashboard": true
 }
