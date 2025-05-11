@@ -165,6 +165,7 @@ cachetools==5.3.2
 Click==8.0.2
 clint==0.5.1
 configparser==4.0.2
+cryptography==44.0.1  # used by Authlib, which is used by safety
 dataclasses==0.8
 defusedxml==0.7.1
 distlib==0.3.7
