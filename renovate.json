@@ -3,5 +3,6 @@
   "extends": [
     "config:recommended"
   ],
-  "commitBody": "Signed-off-by: {{{gitAuthor}}}"
+  "commitBody": "Signed-off-by: {{{gitAuthor}}}",
+  "constraintsFiltering": "strict"
 }
