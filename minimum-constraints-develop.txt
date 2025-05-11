@@ -37,9 +37,12 @@ requests-toolbelt==0.8.0
 # decorator: covered in direct deps for installation
 
 # Coverage reporting (no imports, invoked via coveralls script):
-coverage==5.0
+coverage==7.6.1; python_version == '3.8'
+coverage==7.8.0; python_version >= '3.9' and python_version <= '3.12'
+coverage==6.5.0; python_version >= '3.13'
 pytest-cov==2.7.0
-coveralls==3.3.0
+coveralls==4.0.1; python_version <= '3.12'
+coveralls==3.3.0; python_version >= '3.13'
 
 # Safety CI by pyup.io
 safety==3.4.0
