@@ -129,7 +129,7 @@ jobs:
         # fetch-depth 0 checks out all history for all branches and tags.
         # This is needed to get the authors from git.
         fetch-depth: 0
-    - name: Set up Python 3.10
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.13"
