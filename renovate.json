@@ -3,5 +3,5 @@
   "extends": [
     "config:recommended"
   ],
-  "commitBody": "Signed-off-by: renovate[bot] <support@mend.io>"
+  "commitBody": "Signed-off-by: {{{gitAuthor}}}"
 }
