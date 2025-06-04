@@ -26,6 +26,8 @@ security:
     #     reason: {text}    # optional: Reason for ignoring it. Will be reported in the Safety reports
     #     expires: {date}   # optional: Date when this ignore will expire
     ignore-vulnerabilities:
+        76752:
+            reason: Fixed setuptools version 78.1.1 requires Python>=3.9 and pyproject.toml does not support python_version markers
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
