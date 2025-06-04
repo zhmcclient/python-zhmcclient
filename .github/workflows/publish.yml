@@ -175,11 +175,12 @@ jobs:
         INPUT_BODY: "Change log https://python-zhmcclient.readthedocs.io/en/${{ steps.set-tag.outputs.result }}/changes.html"
 
     #-------- Creation of stable branch
-    # Note: This requires that in the branch protection rules for stable_*,
-    #       the "Restrict pushes that create matching branches" checkmark is
-    #       not set.
+    # Note: This does not seem to depend on the disablement of the "Restrict pushes
+    # that create matching branches" setting in the branch protection rules for stable_*.
+    # It is possible that this fails with HTTP 422, for unknown reasons.
     - name: Create new stable branch when releasing master branch
       if: steps.set-is-master-branch.outputs.result == 'true'
+      id: create-stable-branch
       uses: actions/github-script@v7
       with:
         script: |
@@ -191,3 +192,32 @@ jobs:
           })
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
+    - name: Wait some time if HTTP error 422
+      if: steps.set-is-master-branch.outputs.result == 'true' && steps.create-stable-branch.outputs.status == 422
+      run: |
+        sleep 10
+    - name: Retry create new stable branch when releasing master branch if HTTP error 422
+      if: steps.set-is-master-branch.outputs.result == 'true' && steps.create-stable-branch.outputs.status == 422
+      id: create-stable-branch-2
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: "refs/heads/${{ steps.set-stable-branch.outputs.result }}",
+            sha: "${{ github.sha }}",
+          })
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
+    - name: Handle HTTP error 422 from creating the new stable branch
+      if: steps.set-is-master-branch.outputs.result == 'true' && steps.create-stable-branch-2.outputs.status == 422
+      run: |
+        echo "Error: Creating the new stable branch ${{ steps.set-stable-branch.outputs.result }} failed twice, but the publish still succeeded. Create the new stable branch manually:"
+        echo "git checkout master"
+        echo "git pull"
+        echo "git checkout -b ${{ steps.set-stable-branch.outputs.result }}"
+        echo "git push --set-upstream origin ${{ steps.set-stable-branch.outputs.result }}"
+        false
