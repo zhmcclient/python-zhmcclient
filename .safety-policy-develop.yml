@@ -28,6 +28,8 @@ security:
     ignore-vulnerabilities:
         70612:
             reason: Disputed issue in jinja2 version 3.1.3 - No known fix
+        77319:
+            reason: Fixed tornado version 6.5.0 requires Python>=3.9 and is used there
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
