@@ -159,6 +159,7 @@ class ConsoleManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         uri = self._base_uri  # There is only one console object.
         if full_properties:

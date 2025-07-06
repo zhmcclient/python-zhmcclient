@@ -117,6 +117,7 @@ class HwMessageManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'hardware-messages'
         if filter_args and 'element-id' in filter_args:

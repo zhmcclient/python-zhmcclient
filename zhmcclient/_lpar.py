@@ -150,6 +150,7 @@ class LparManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'logical-partitions'
         list_uri = f'{self.cpc.uri}/logical-partitions'

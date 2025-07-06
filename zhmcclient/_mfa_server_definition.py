@@ -145,6 +145,7 @@ class MfaServerDefinitionManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'mfa-server-definitions'
         list_uri = f'{self.console.uri}/mfa-server-definitions'

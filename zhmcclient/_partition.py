@@ -170,6 +170,7 @@ class PartitionManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'partitions'
         list_uri = f'{self.cpc.uri}/partitions'

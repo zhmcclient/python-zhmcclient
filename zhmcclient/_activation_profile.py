@@ -213,6 +213,7 @@ class ActivationProfileManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = self._profile_type + '-activation-profiles'
         list_uri = f'{self.cpc.uri}/{result_prop}'

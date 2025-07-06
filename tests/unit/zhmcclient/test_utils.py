@@ -21,11 +21,14 @@ import os
 import sys
 from datetime import datetime, MAXYEAR
 import time
+import re
 import pytz
 import pytest
-
+from zhmcclient_mock import FakedSession
+from zhmcclient import Client, FilterConversionError
 from zhmcclient._utils import datetime_from_timestamp, \
-    timestamp_from_datetime, datetime_to_isoformat, datetime_from_isoformat
+    timestamp_from_datetime, datetime_to_isoformat, datetime_from_isoformat, \
+    matches_filters, divide_filter_args
 
 
 # The Unix epoch
@@ -407,3 +410,764 @@ def test_datetime_from_isoformat(dt_str, exp_dt):
     dt = datetime_from_isoformat(dt_str)
 
     assert dt == exp_dt
+
+
+def cpc_for_filtering():
+    """
+    Return a mocked zhmcclient.Cpc object for testing filter matching.
+
+    Returns:
+      zhmcclient.Cpc: Mocked CPC.
+    """
+    session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+    client = Client(session)
+    session.hmc.cpcs.add({
+        'object-id': 'fake-cpc1-oid',
+        # object-uri is set up automatically
+        'parent': None,
+        'class': 'cpc',
+        'name': 'fake-cpc1-name',
+        'description': 'CPC #1 (DPM mode)',
+        'status': 'active',
+        'dpm-enabled': True,
+
+        # Artificial properties for filter matching. The zhmcclient mock support
+        # does not care about the actual properties, so we can add artificial
+        # properties for the purpose of testing.
+        'filter_none': None,
+        'filter_bool_true': True,
+        'filter_bool_false': False,
+        'filter_int_0': 0,
+        'filter_int_42': 42,
+        'filter_float_0_0': 0.0,
+        'filter_float_42_0': 42.0,
+        'filter_str_empty': '',
+        'filter_str_abc': 'abc',
+    })
+    cpc = client.cpcs.find(name='fake-cpc1-name')
+    return cpc
+
+
+CPC_FOR_FILTERING = cpc_for_filtering()
+
+TESTCASES_MATCHES_FILTERS = [
+    # Test cases for test_matches_filters().
+    # Each list item is a tuple defining a testcase in the following format:
+    # - desc (str): Testcase description
+    # - obj (zhmcclient.BaseResource): Input object
+    # - filter_args (dict): Input filter args
+    # - exp_result (bool): Expected method return value
+    # - exp_exc_type: Expected exception type raised from method to be tested,
+    #   or None for success.
+    # - exp_exc_pattern: Regex pattern to check exception message,
+    #   or None for success.
+    (
+        "Filter args with non-existing property",
+        CPC_FOR_FILTERING,
+        {'filter_non_existing': 'x'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "Filter args None",
+        CPC_FOR_FILTERING,
+        None,
+        True,
+        None,
+        None,
+    ),
+    (
+        "Filter args empty dict",
+        CPC_FOR_FILTERING,
+        {},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_none with matching value",
+        CPC_FOR_FILTERING,
+        {'filter_none': None},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_none with non-matching int value",
+        CPC_FOR_FILTERING,
+        {'filter_none': 0},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_none with non-matching empty str value",
+        CPC_FOR_FILTERING,
+        {'filter_none': ''},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_true with non-convertible str",
+        CPC_FOR_FILTERING,
+        {'filter_bool_true': 'x'},
+        None,
+        FilterConversionError,
+        "Cannot convert match value .* to bool",
+    ),
+    (
+        "filter_bool_true with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_true': True},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_true with matching value of int type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_true': 1},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_true with matching value of str type, mixed case",
+        CPC_FOR_FILTERING,
+        {'filter_bool_true': 'tRuE'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_true with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_true': False},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_true with non-matching value of int type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_true': 0},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_true with non-matching value of str type, mixed case",
+        CPC_FOR_FILTERING,
+        {'filter_bool_true': 'fAlSe'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_false with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_false': False},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_false with matching value of int type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_false': 0},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_false with matching value of str type, mixed case",
+        CPC_FOR_FILTERING,
+        {'filter_bool_false': 'fAlSe'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_false with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_false': True},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_false with non-matching value of int type",
+        CPC_FOR_FILTERING,
+        {'filter_bool_false': 1},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_bool_false with non-matching value of str type, mixed case",
+        CPC_FOR_FILTERING,
+        {'filter_bool_false': 'tRuE'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_int_0 with non-convertible str",
+        CPC_FOR_FILTERING,
+        {'filter_int_0': 'x'},
+        None,
+        FilterConversionError,
+        "Cannot convert match value .* to int",
+    ),
+    (
+        "filter_int_0 with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_int_0': 0},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_int_0 with matching value of bool type",
+        CPC_FOR_FILTERING,
+        {'filter_int_0': False},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_int_0 with matching value of str type",
+        CPC_FOR_FILTERING,
+        {'filter_int_0': '0'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_int_0 with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_int_0': 1},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_int_0 with non-matching value of bool type",
+        CPC_FOR_FILTERING,
+        {'filter_int_0': True},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_int_0 with non-matching value of str type",
+        CPC_FOR_FILTERING,
+        {'filter_int_0': '1'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_int_42 with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_int_42': 42},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_int_42 with matching value of str type",
+        CPC_FOR_FILTERING,
+        {'filter_int_42': '42'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_int_42 with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_int_42': 7},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_int_42 with non-matching value of str type",
+        CPC_FOR_FILTERING,
+        {'filter_int_42': '7'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_float_0_0 with non-convertible str",
+        CPC_FOR_FILTERING,
+        {'filter_float_0_0': 'x'},
+        None,
+        FilterConversionError,
+        "Cannot convert match value .* to float",
+    ),
+    (
+        "filter_float_0_0 with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_float_0_0': 0.0},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_float_0_0 with matching value of str type",
+        CPC_FOR_FILTERING,
+        {'filter_float_0_0': '0.0'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_float_0_0 with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_float_0_0': 7.0},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_float_0_0 with non-matching value of str type",
+        CPC_FOR_FILTERING,
+        {'filter_float_0_0': '7.0'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_float_42_0 with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_float_42_0': 42.0},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_float_42_0 with matching value of int type",
+        CPC_FOR_FILTERING,
+        {'filter_float_42_0': 42},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_float_42_0 with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_float_42_0': 7.0},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_float_42_0 with non-matching value of str type",
+        CPC_FOR_FILTERING,
+        {'filter_float_42_0': '7.0'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_str_empty with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_str_empty': ''},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_empty with matching regexp pattern",
+        CPC_FOR_FILTERING,
+        {'filter_str_empty': 'a?'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_empty with matching list of values",
+        CPC_FOR_FILTERING,
+        {'filter_str_empty': ['a', '']},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_empty with matching list of regexp patterns",
+        CPC_FOR_FILTERING,
+        {'filter_str_empty': ['a', 'a?']},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_empty with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_str_empty': 'a'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_str_empty with non-matching regexp pattern",
+        CPC_FOR_FILTERING,
+        {'filter_str_empty': 'ab?'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_str_empty with non-matching list of values",
+        CPC_FOR_FILTERING,
+        {'filter_str_empty': ['a', 'b']},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': 'abc'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with matching regexp pattern",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': 'ab?[c]'},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with matching list of values",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': ['a', 'abc']},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with matching list of regexp patterns",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': ['a?', 'ab?[c]']},
+        True,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with non-matching value of same type",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': 'a'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with non-matching regexp pattern",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': 'ab?'},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with non-matching list of values",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': ['a', 'b']},
+        False,
+        None,
+        None,
+    ),
+    (
+        "filter_str_abc with non-matching list of regexp patterns",
+        CPC_FOR_FILTERING,
+        {'filter_str_abc': ['a?', 'ab?']},
+        False,
+        None,
+        None,
+    ),
+    (
+        "Two filter args, both matching",
+        CPC_FOR_FILTERING,
+        {
+            'filter_str_abc': 'abc',
+            'filter_int_42': 42,
+        },
+        True,
+        None,
+        None,
+    ),
+    (
+        "Two filter args, only one first one matching",
+        CPC_FOR_FILTERING,
+        {
+            'filter_str_abc': 'abc',
+            'filter_int_42': 0,
+        },
+        False,
+        None,
+        None,
+    ),
+    (
+        "Two filter args, only one second one matching",
+        CPC_FOR_FILTERING,
+        {
+            'filter_str_abc': 'x',
+            'filter_int_42': 42,
+        },
+        False,
+        None,
+        None,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, obj, filter_args, exp_result, exp_exc_type, exp_exc_pattern",
+    TESTCASES_MATCHES_FILTERS)
+def test_matches_filters(
+        desc, obj, filter_args, exp_result, exp_exc_type, exp_exc_pattern):
+    # pylint: disable=unused-argument
+    """
+    Test function for matches_filters().
+    """
+
+    if exp_exc_type:
+        with pytest.raises(exp_exc_type) as exc_info:
+
+            # Execute the code to be tested
+            matches_filters(obj, filter_args)
+
+        exc = exc_info.value
+        assert re.search(exp_exc_pattern, str(exc))
+    else:
+
+        # The function to be tested
+        result = matches_filters(obj, filter_args)
+
+        assert result == exp_result
+
+
+TESTCASES_DIVIDE_FILTER_ARGS = [
+    # Test cases for test_divide_filter_args().
+    # Each list item is a tuple defining a testcase in the following format:
+    # - desc (str): Testcase description
+    # - query_props (list of str): Names of properties for server-side filtering
+    # - filter_args (dict): Input filter args
+    # - exp_result (tuple (query_parms, client_filter_args): Expected method
+    #   return value
+    # - exp_exc_type: Expected exception type raised from method to be tested,
+    #   or None for success.
+    # - exp_exc_pattern: Regex pattern to check exception message,
+    #   or None for success.
+    (
+        "Filter args None, with empty query props",
+        [],
+        None,
+        (
+            [],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args None, with query props",
+        ['prop1'],
+        None,
+        (
+            [],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for client-side with value None",
+        ['prop2'],
+        {'prop1': None},
+        (
+            [],
+            {'prop1': None},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for client-side with bool True",
+        ['prop2'],
+        {'prop1': True},
+        (
+            [],
+            {'prop1': True},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for client-side with bool False",
+        ['prop2'],
+        {'prop1': False},
+        (
+            [],
+            {'prop1': False},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for client-side with int",
+        ['prop2'],
+        {'prop1': 42},
+        (
+            [],
+            {'prop1': 42},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for client-side with float",
+        ['prop2'],
+        {'prop1': 42.0},
+        (
+            [],
+            {'prop1': 42.0},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for client-side with empty str",
+        ['prop2'],
+        {'prop1': ''},
+        (
+            [],
+            {'prop1': ''},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for client-side with non-empty str",
+        ['prop2'],
+        {'prop1': 'x'},
+        (
+            [],
+            {'prop1': 'x'},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for server-side with value None",
+        ['prop1'],
+        {'prop1': None},
+        (
+            ['prop1=None'],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for server-side with bool True",
+        ['prop1'],
+        {'prop1': True},
+        (
+            ['prop1=True'],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for server-side with bool False",
+        ['prop1'],
+        {'prop1': False},
+        (
+            ['prop1=False'],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for server-side with int",
+        ['prop1'],
+        {'prop1': 42},
+        (
+            ['prop1=42'],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for server-side with float",
+        ['prop1'],
+        {'prop1': 42.0},
+        (
+            ['prop1=42.0'],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for server-side with empty str",
+        ['prop1'],
+        {'prop1': ''},
+        (
+            ['prop1='],
+            {},
+        ),
+        None,
+        None,
+    ),
+    (
+        "Filter args for server-side with non-empty str",
+        ['prop1'],
+        {'prop1': 'x'},
+        (
+            ['prop1=x'],
+            {},
+        ),
+        None,
+        None,
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, query_props, filter_args, exp_result, exp_exc_type, exp_exc_pattern",
+    TESTCASES_DIVIDE_FILTER_ARGS)
+def test_divide_filter_args(
+        desc, query_props, filter_args, exp_result, exp_exc_type,
+        exp_exc_pattern):
+    # pylint: disable=unused-argument
+    """
+    Test function for divide_filter_args().
+    """
+
+    if exp_exc_type:
+        with pytest.raises(exp_exc_type) as exc_info:
+
+            # Execute the code to be tested
+            divide_filter_args(query_props, filter_args)
+
+        exc = exc_info.value
+        assert re.search(exp_exc_pattern, str(exc))
+    else:
+
+        # The function to be tested
+        result = divide_filter_args(query_props, filter_args)
+
+        assert result == exp_result

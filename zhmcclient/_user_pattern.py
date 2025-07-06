@@ -156,6 +156,7 @@ class UserPatternManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'user-patterns'
         list_uri = f'{self.console.uri}/user-patterns'

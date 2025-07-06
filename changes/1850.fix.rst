@@ -1,0 +1,12 @@
+Fixed that incorrect type in filter arguments of 'list()', etc. no longer
+results in TypeError. For client-side filtering, the filter arguments are now
+converted to the type of the property value, before matching the filter, for
+property types bool, int, float, and str. For bool, the string values 'TRUE' and
+'FALSE' are interpreted (case insensitively) as the corresponding boolean values.
+This provides more flexibility in environments such as the command line or
+Ansible. Match values that cannot be converted cause a new exception
+'zhmcclient.FilterConversionError' to be raised, in order to provide the user
+with a way to catch such situations. Note that for server-side filtering,
+the provided filter arguments were already converted to string because they
+are passed as URI query parameters, so a type tolerance already existed for
+such filter arguments.

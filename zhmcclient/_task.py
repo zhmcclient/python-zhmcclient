@@ -137,6 +137,7 @@ class TaskManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'tasks'
         list_uri = f'{self.console.uri}/tasks'

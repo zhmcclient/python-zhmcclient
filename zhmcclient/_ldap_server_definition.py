@@ -145,6 +145,7 @@ class LdapServerDefinitionManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'ldap-server-definitions'
         list_uri = f'{self.console.uri}/ldap-server-definitions'

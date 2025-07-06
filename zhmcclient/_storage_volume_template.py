@@ -157,6 +157,7 @@ class StorageVolumeTemplateManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'storage-template-volumes'
         list_uri = f'{self.storage_group_template.uri}/storage-template-volumes'

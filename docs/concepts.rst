@@ -303,12 +303,10 @@ object.
 
 The match value specifies how the corresponding resource property matches:
 
-* For resource properties of type String (as per the resource's data model in
-  the :term:`HMC API`), the match value is interpreted as a regular
-  expression that must match the actual resource property value. The regular
-  expression syntax used is the same as that used by the Java programming
-  language, as specified for the ``java.util.regex.Pattern`` class (see
-  http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html).
+* For resource properties of type String, the match value is interpreted as a
+  case sensitive regular expression that must match the actual resource property
+  value with exact begin and end matching. For resource types that have a case
+  insensitive name, matching of the name is performed case insensitively.
 
 * For resource properties of type String Enum, the match value is interpreted
   as an exact string that must be equal to the actual resource property value.
@@ -318,6 +316,31 @@ The match value specifies how the corresponding resource property matches:
 
 * If the match value is a list or a tuple, a resource matches if any item in
   the list or tuple matches (i.e. this is a logical OR between the list items).
+
+There are some subtle differences between matching on the HMC and matching
+on the client side:
+
+* For properties that are matched on the HMC, the type is determined by the
+  resource's data model as defined in the :term:`HMC API`. The regular
+  expression syntax used for string matching is the one used by the Java
+  programming language, as specified for the ``java.util.regex.Pattern`` class
+  (see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html).
+
+* For properties that are matched on the client side, the type is determined by
+  the actual property value. For property values of type bool, int, float and
+  str, the match value is converted to that type before matching the value.
+  The regular expression syntax used for string matching is from
+  `Python's 're' module <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_.
+
+* For resource properties of type String Enum, the matching actually depends on
+  whether the property is matched in the HMC or on the client side: When
+  matching on the HMC, the match value is interpreted as an exact string that
+  must be equal to the actual resource property value. When matching on the
+  client side, regular expression matching is used, because the client side only
+  sees the type of the property value, and not the type definition on the HMC.
+  However, in order to tolerate future improvements where more properties could
+  be matched on the HMC, you should not rely on regular expression matching for
+  properties of type String Enum.
 
 If a property that is specified in filter arguments does not exist on all
 resources that are subject to be searched, those resources that do not have the

@@ -157,6 +157,7 @@ class VirtualSwitchManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'virtual-switches'
         list_uri = f'{self.cpc.uri}/virtual-switches'

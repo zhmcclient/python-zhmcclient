@@ -138,6 +138,7 @@ class NicManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         return self._list_with_parent_array(
             self.partition, 'nic-uris', full_properties, filter_args)

@@ -152,6 +152,7 @@ class StorageGroupTemplateManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'storage-templates'
         list_uri = self._base_uri
