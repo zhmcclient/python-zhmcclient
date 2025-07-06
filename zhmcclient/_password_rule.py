@@ -146,6 +146,7 @@ class PasswordRuleManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'password-rules'
         list_uri = f'{self.console.uri}/password-rules'

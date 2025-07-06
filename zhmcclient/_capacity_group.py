@@ -137,6 +137,7 @@ class CapacityGroupManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'capacity-groups'
         list_uri = f'{self.cpc.uri}/capacity-groups'

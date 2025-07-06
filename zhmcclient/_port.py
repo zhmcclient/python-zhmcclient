@@ -166,6 +166,7 @@ class PortManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         uris_prop = self.adapter.port_uris_prop
         if not uris_prop:

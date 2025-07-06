@@ -264,6 +264,7 @@ class CpcManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'cpcs'
         list_uri = '/api/cpcs'

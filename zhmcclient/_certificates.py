@@ -134,6 +134,7 @@ class CertificateManager(BaseManager):
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         result_prop = 'certificates'
         list_uri = '/api/certificates'

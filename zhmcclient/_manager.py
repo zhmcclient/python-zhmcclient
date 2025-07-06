@@ -750,6 +750,7 @@ class BaseManager:
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         resource_obj_list = []
         if self.auto_update_enabled() and not self.auto_update_needs_pull():
@@ -837,6 +838,7 @@ class BaseManager:
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
 
         if not props_list:
@@ -964,6 +966,7 @@ class BaseManager:
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.FilterConversionError`
         """
         resource_obj_list = []
         if self.auto_update_enabled() and not self.auto_update_needs_pull():

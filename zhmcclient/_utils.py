@@ -26,7 +26,7 @@ from dateutil import parser
 import pytz
 from requests.utils import quote
 
-from ._exceptions import HTTPError
+from ._exceptions import HTTPError, FilterConversionError
 
 __all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
 
@@ -388,8 +388,7 @@ def divide_filter_args(query_props, filter_args):
       query_props (iterable of strings):
         Names of resource properties that are supported as filter query
         parameters in the WS API operation (i.e. server-side filtering).
-
-        May be `None`.
+        Must not be `None`.
 
         If the support for a resource property changes within the set of
         HMC versions that support this type of resource, this list must
@@ -405,7 +404,11 @@ def divide_filter_args(query_props, filter_args):
 
     Returns:
 
-      : tuple (query_parms, client_filter_args)
+      : tuple (query_parms, client_filter_args), with:
+      * query_parms (list of strings):
+        Qery parameters for server-side filtering, each being a string
+        "name=value", where the value is URI-escaped if needed.
+      * client_filter_args (dict): Client-side filters as name: value.
     """
     query_parms = []  # query parameter strings
     client_filter_args = {}
@@ -417,9 +420,6 @@ def divide_filter_args(query_props, filter_args):
                 append_query_parms(query_parms, prop_name, prop_match)
             else:
                 client_filter_args[prop_name] = prop_match
-    # query_parms_str = '&'.join(query_parms)
-    # if query_parms_str:
-    #     query_parms_str = f'?{query_parms_str}'
 
     return query_parms, client_filter_args
 
@@ -469,6 +469,9 @@ def matches_filters(obj, filter_args):
 
       bool: Boolean indicating whether the resource object matches the
         filter arguments.
+
+    Raises:
+      ~zhmcclient.FilterConversionError: Cannot convert match value
     """
     if filter_args is not None:
         for prop_name in filter_args:
@@ -497,19 +500,23 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
       obj (BaseResource):
         Resource object.
 
+      prop_name (str):
+        Name of the property to match.
+
       prop_match:
         Property match value that is used to match the actual value of
         the specified property against, as follows:
 
         - If the match value is a list or tuple, this method is invoked
-          recursively to find whether one or more match values inthe list
+          recursively to find whether one or more match values in the list
           match.
 
         - Else if the property is of string type, its value is matched by
-          interpreting the match value as a regular expression.
+          converting the match value to string and then interpreting it as a
+          regular expression, matching begin and end.
 
-        - Else the property value is matched by exact value comparison
-          with the match value.
+        - Else the property value is matched by exact value comparison with the
+          match value, after converting the match value to the property type.
 
       case_insensitive (bool):
         Controls whether the values of string typed properties are matched
@@ -519,6 +526,9 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
 
       bool: Boolean indicating whether the resource object matches w.r.t.
         the specified property and the match value.
+
+    Raises:
+      ~zhmcclient.FilterConversionError: Cannot convert match value
     """
     if isinstance(prop_match, (list, tuple)):
         # List items are logically ORed, so one matching item suffices.
@@ -547,15 +557,58 @@ def matches_prop(obj, prop_name, prop_match, case_insensitive):
             # here is consistent with that: We add end matching to the
             # pattern, and begin matching is done by re.match()
             # automatically.
-            re_match = prop_match + '$'
+            re_match = f'{prop_match}$'
             re_flags = re.IGNORECASE if case_insensitive else 0
             m = re.match(re_match, prop_value, flags=re_flags)
             if m:
                 return True
         else:
+            prop_match = convert_match_value(prop_match, prop_value, prop_name)
             if prop_value == prop_match:
                 return True
     return False
+
+
+def convert_match_value(match_value, prop_value, prop_name):
+    """
+    Convert a match value to the type of the property value, if the property
+    value type is int, float, or bool.
+
+    Parameters:
+      match_value: The match value.
+      prop_value: The property value.
+      prop_name: The property name (for exceptions).
+
+    Returns:
+      : match_value, converted to the type of the property value.
+
+    Raises:
+      ~zhmcclient.FilterConversionError: Cannot convert match value
+    """
+    if isinstance(prop_value, bool):
+        # We need to check for bool first, because it is a subclass of int
+        if isinstance(match_value, str):
+            match_value_upper = match_value.upper()
+            if match_value_upper == 'TRUE':
+                match_value = True
+            elif match_value_upper == 'FALSE':
+                match_value = False
+            else:
+                raise FilterConversionError(
+                    f"Cannot convert match value {match_value!r} to bool",
+                    prop_name, match_value)
+        else:
+            match_value = bool(match_value)
+    elif isinstance(prop_value, (int, float)):
+        prop_type = type(prop_value)
+        try:
+            match_value = prop_type(match_value)
+        except ValueError as exc:
+            raise FilterConversionError(
+                f"Cannot convert match value {match_value!r} to "
+                f"{prop_value.__class__.__name__}: {exc}",
+                prop_name, match_value)
+    return match_value
 
 
 def datetime_from_isoformat(dt_str):
