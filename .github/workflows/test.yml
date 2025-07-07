@@ -153,6 +153,26 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - name: Check commit messages - Signed-off-by
+      uses: gsactions/commit-message-checker@v2
+      with:
+        pattern: '^Signed-off-by: [^<>]+ <[^<>]+>$'
+        flags: 'gm'
+        excludeDescription: true
+        excludeTitle: true
+        checkAllCommitMessages: true
+        accessToken: ${{ secrets.GITHUB_TOKEN }}
+        error: Commit message has no or incorrectly formatted signed-off-by line
+    - name: Check commit messages - Line length
+      uses: gsactions/commit-message-checker@v2
+      with:
+        pattern: '^.{1,80}\n\n(.{0,80}\n)*.{0,80}$'
+        flags: ''
+        excludeDescription: true
+        excludeTitle: true
+        checkAllCommitMessages: true
+        accessToken: ${{ secrets.GITHUB_TOKEN }}
+        error: Commit message title or body exceeds maximum line length of 80
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
