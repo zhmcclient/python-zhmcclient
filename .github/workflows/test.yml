@@ -284,6 +284,13 @@ jobs:
         RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make bandit
+    - name: Run doclinkcheck
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+      run: |
+        make doclinkcheck
+      continue-on-error: true
 
   test_finish:
     needs: test
