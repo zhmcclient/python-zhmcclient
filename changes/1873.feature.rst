@@ -1,0 +1,1 @@
+Dev: Added commit message checker to test workflow.
