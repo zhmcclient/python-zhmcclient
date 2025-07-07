@@ -1,1 +1,2 @@
 Dev: Added doclinkcheck to GitHub Actions test workflow, ignoring errors.
+Test: No empty line between commit title and body.
