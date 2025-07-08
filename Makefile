@@ -352,7 +352,7 @@ env:
 	@echo "Makefile: Environment variables as seen by make:"
 	$(ENV)
 
-$(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done: base-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
+$(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done: Makefile base-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
 	@echo "Installing/upgrading pip, setuptools and wheel with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) -r base-requirements.txt
@@ -362,9 +362,9 @@ $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done: base-requirements.txt minimum-co
 develop: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
+$(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done dev-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt
 	-$(call RM_FUNC,$@)
-	@echo 'Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)'
+	@echo "Installing development requirements with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) -r dev-requirements.txt
 	echo "done" >$@
 
@@ -380,7 +380,7 @@ builddoc: html
 html: $(doc_build_dir)/html/docs/index.html
 	@echo "Makefile: $@ done."
 
-$(doc_build_dir)/html/docs/index.html: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
+$(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	@echo "Running Sphinx to create HTML pages"
 	-$(call RM_FUNC,$@)
 	$(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
@@ -456,7 +456,7 @@ check_reqs: $(done_dir)/check_reqs_$(pymn)_$(PACKAGE_LEVEL).done
 install: $(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done
 	@echo "Makefile: $@ done."
 
-$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt $(package_py_files) pyproject.toml
+$(done_dir)/install_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/base_$(pymn)_$(PACKAGE_LEVEL).done requirements.txt extra-testutils-requirements.txt minimum-constraints-develop.txt minimum-constraints-install.txt $(dist_dependent_files)
 	-$(call RM_FUNC,$@)
 	@echo "Installing $(package_name) (non-editable) and runtime reqs with PACKAGE_LEVEL=$(PACKAGE_LEVEL)"
 	$(PYTHON_CMD) -m pip install $(pip_level_opts) $(pip_level_opts_new) .
@@ -586,52 +586,52 @@ start_tag:
 	@echo "Makefile: $@ done."
 
 # Distribution archives.
-$(sdist_file): pyproject.toml $(dist_dependent_files)
+$(sdist_file): Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(dist_dependent_files)
 	@echo "Makefile: Building the source distribution archive: $(sdist_file)"
 	$(PYTHON_CMD) -m build --sdist --outdir $(dist_dir) .
 	@echo "Makefile: Done building the source distribution archive: $(sdist_file)"
 
-$(bdist_file) $(version_file): pyproject.toml $(dist_dependent_files)
+$(bdist_file) $(version_file): Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(dist_dependent_files)
 	@echo "Makefile: Building the wheel distribution archive: $(bdist_file)"
 	$(PYTHON_CMD) -m build --wheel --outdir $(dist_dir) -C--universal .
 	@echo "Makefile: Done building the wheel distribution archive: $(bdist_file)"
 
-$(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(pylint_rc_file) $(check_py_files)
+$(done_dir)/pylint_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(pylint_rc_file) $(check_py_files)
 	@echo "Makefile: Running Pylint"
 	-$(call RM_FUNC,$@)
 	pylint $(pylint_opts) --rcfile=$(pylint_rc_file) --output-format=text $(check_py_files)
 	echo "done" >$@
 	@echo "Makefile: Done running Pylint"
 
-$(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(safety_develop_policy_file) minimum-constraints-develop.txt minimum-constraints-install.txt
+$(done_dir)/safety_develop_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(safety_develop_policy_file) minimum-constraints-develop.txt minimum-constraints-install.txt
 	@echo "Makefile: Running Safety for development packages (and tolerate safety issues when RUN_TYPE is normal or scheduled)"
 	-$(call RM_FUNC,$@)
 	bash -c "safety check --policy-file $(safety_develop_policy_file) -r minimum-constraints-develop.txt --full-report || test '$(RUN_TYPE)' == 'normal' || test '$(RUN_TYPE)' == 'scheduled' || exit 1"
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for development packages"
 
-$(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(safety_install_policy_file) minimum-constraints-install.txt
+$(done_dir)/safety_install_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(safety_install_policy_file) minimum-constraints-install.txt
 	@echo "Makefile: Running Safety for install packages (and tolerate safety issues when RUN_TYPE is normal)"
 	-$(call RM_FUNC,$@)
 	bash -c "safety check --policy-file $(safety_install_policy_file) -r minimum-constraints-install.txt --full-report || test '$(RUN_TYPE)' == 'normal' || exit 1"
 	echo "done" >$@
 	@echo "Makefile: Done running Safety for install packages"
 
-$(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(bandit_rc_file) $(check_py_files)
+$(done_dir)/bandit_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(bandit_rc_file) $(check_py_files)
 	@echo "Makefile: Running Bandit"
 	-$(call RM_FUNC,$@)
 	bandit -c $(bandit_rc_file) -l -r $(package_name) $(mock_package_name)
 	echo "done" >$@
 	@echo "Makefile: Done running Bandit"
 
-$(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(flake8_rc_file) $(check_py_files)
+$(done_dir)/flake8_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(flake8_rc_file) $(check_py_files)
 	@echo "Makefile: Running Flake8"
 	-$(call RM_FUNC,$@)
 	flake8 $(check_py_files)
 	echo "done" >$@
 	@echo "Makefile: Done running Flake8"
 
-$(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(ruff_rc_file) $(check_py_files)
+$(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(ruff_rc_file) $(check_py_files)
 	@echo "Makefile: Running Ruff"
 	-$(call RM_FUNC,$@)
 	ruff --version
@@ -639,7 +639,7 @@ $(done_dir)/ruff_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PA
 	echo "done" >$@
 	@echo "Makefile: Done running Ruff"
 
-$(done_dir)/check_reqs_$(pymn)_$(PACKAGE_LEVEL).done: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-develop.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
+$(done_dir)/check_reqs_$(pymn)_$(PACKAGE_LEVEL).done: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done minimum-constraints-develop.txt minimum-constraints-install.txt requirements.txt extra-testutils-requirements.txt
 	-$(call RM_FUNC,$@)
 	@echo "Makefile: Checking missing dependencies of this package"
 	cat requirements.txt extra-testutils-requirements.txt >tmp_requirements.txt
