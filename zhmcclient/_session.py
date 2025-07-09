@@ -91,7 +91,10 @@ def _handle_request_exc(exc, retry_timeout_config):
         new_exc.__cause__ = None
         raise new_exc  # RetriesExceeded
 
-    new_exc = ConnectionError(_request_exc_message(exc), exc)
+    msg = "{} (exception received by zhmcclient: {}.{})".format(
+        _request_exc_message(exc), exc.__class__.__module__,
+        exc.__class__.__name__)
+    new_exc = ConnectionError(msg, exc)
     new_exc.__cause__ = None
     raise new_exc  # ConnectionError
 
@@ -127,10 +130,10 @@ def _request_exc_message(exc):
         else:
             message = str(arg)
 
-        # Eliminate useless object repr at begin of the message
-        m = re.match(r'^(\(<[^>]+>, \'(.*)\'\)|<[^>]+>: (.*))$', message)
-        if m:
-            message = m.group(2) or m.group(3)
+        # Eliminate useless object representations
+        # e.g. "<urllib3.connection.HTTPSConnection object at 0x1077de710>, "
+        message = re.sub(r'<[a-zA-Z_0-9.]+ object at 0x[0-9a-f]+>(, )?', '',
+                         message)
 
         messages.append(message)
 
