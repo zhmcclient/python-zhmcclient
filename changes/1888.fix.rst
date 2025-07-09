@@ -1,0 +1,2 @@
+Changed the default for HTTP read retries from 0 to 3. This applies only to
+the HTTP "GET" method. This should help when using unstable networks.
