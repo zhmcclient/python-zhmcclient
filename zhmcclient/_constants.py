@@ -85,12 +85,10 @@ DEFAULT_STOMP_PORT = 61612
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 #:
-#: Note: The default value for this parameter has been set to 0 in order to
-#: mitigate the behavior of the 'requests' module to retry HTTP methods even if
-#: they are not idempotent (e.g. DELETE).
-#: See zhmcclient `issue #249
+#: Note: The HTTP methods for which retries are performed are restricted to
+#: only "GET". For more background, see zhmcclient `issue #249
 #: <https://github.com/zhmcclient/python-zhmcclient/issues/249>`_.
-DEFAULT_READ_RETRIES = 0
+DEFAULT_READ_RETRIES = 3
 
 #: Default max. number of HTTP redirects,
 #: if not specified in the ``retry_timeout_config`` init argument to
