@@ -699,7 +699,7 @@ AUTHORS.md: _always
 	echo "" >>AUTHORS.md.tmp
 	echo "Sorted list of authors derived from git commit history:" >>AUTHORS.md.tmp
 	echo '```' >>AUTHORS.md.tmp
-	sh -c "git shortlog --summary --email HEAD | cut -f 2 | sort >>AUTHORS.md.tmp"
+	sh -c "git shortlog --summary --email HEAD | cut -f 2 | LC_ALL=C.UTF-8 sort >>AUTHORS.md.tmp"
 	echo '```' >>AUTHORS.md.tmp
 	sh -c "if ! diff -q AUTHORS.md.tmp AUTHORS.md; then echo 'Updating AUTHORS.md as follows:'; diff AUTHORS.md.tmp AUTHORS.md; mv AUTHORS.md.tmp AUTHORS.md; else echo 'AUTHORS.md was already up to date'; rm AUTHORS.md.tmp; fi"
 
