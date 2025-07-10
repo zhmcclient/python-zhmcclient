@@ -20,6 +20,32 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.21.1
+^^^^^^^^^^^^^^
+
+Released: 2025-07-10
+
+**Bug fixes:**
+
+* Fixed safety issues up to 2025-06-04.
+
+* Increased minimum version of "urllib3" to 2.2.3 in order to pick up changes
+  that help when using unstable networks. Specifically, enabling
+  enforce_content_length by default and distinguishing too much from not enough
+  response data. (`#1888.2 <https://github.com/zhmcclient/python-zhmcclient/issues/1888.2>`_)
+
+* Dev: Fixed Sphinx build issue by excluding snowballstemmer 3.0.0.
+
+* Changed the default for HTTP read retries from 0 to 3. This applies only to
+  the HTTP "GET" method. This should help when using unstable networks. (`#1888 <https://github.com/zhmcclient/python-zhmcclient/issues/1888>`_)
+
+**Enhancements:**
+
+* Improved the error message in connection related exceptions by eliminating
+  useless object representations. In zhmcclient.ConnectionError, added the
+  qualified type of the original exception received by zhmcclient.
+
+
 Version 1.21.0
 ^^^^^^^^^^^^^^
 
