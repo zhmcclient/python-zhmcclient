@@ -21,4 +21,5 @@ Simon Spinner <sspinner@de.ibm.com>
 Sreeram Venkateswaran <sree@192.168.1.100>
 Viktor Mihajlovski <mihajlov@linux.vnet.ibm.com>
 dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
+renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>
 ```
