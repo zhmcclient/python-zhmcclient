@@ -1,0 +1,4 @@
+Increased minimum version of "urllib3" to 2.2.3 in order to pick up changes
+that help when using unstable networks. Specifically, enabling
+enforce_content_length by default and distinguishing too much from not enough
+response data.
