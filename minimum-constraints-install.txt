@@ -45,7 +45,7 @@ pytest==6.2.5
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with requirements.txt)
 
-urllib3==1.26.19
+urllib3==2.2.3
 
 pyrsistent==0.20.0
 
