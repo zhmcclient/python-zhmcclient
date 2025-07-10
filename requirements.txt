@@ -45,10 +45,12 @@ jsonschema>=4.18.0
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
 
-# Since we changed to use the allowed_methods attribute introduced in urllib3
-# 1.26.0, and our minimum version of requests (2.25.0) only requires
-# urllib3>=1.21.0, we need to require a minimum version of urllib3.
-urllib3>=1.26.19
+# Functional dependencies on urllib3 versions:
+# - Use of the 'allowed_methods' attribute requires >=1.26.0
+# - Enabling enforce_content_length by default requires >=2.0.0
+# - IncompleteRead fix: Distinguishing too much from not enough response data
+#   requires >=2.2.1
+urllib3>=2.2.3
 
 # pyrsistent is used by jsonschema>=3.0
 # pyrsistent 0.20.0 has official support for Python 3.12
