@@ -8,7 +8,6 @@ Andreas Maier <maiera@de.ibm.com>
 Andreas Scheuring <andreas.scheuring@de.ibm.com>
 Andrew Brezovsky <abrezov@us.ibm.com>
 Anil Kumar Dakarapu <anil.kumar.dakarapu@ibm.com>
-dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
 Edwin Guenthner <edwin.guenthner@de.ibm.com>
 Edwin Günthner <edwin.guenthner@de.ibm.com>
 Juergen Leopold <leopoldj@de.ibm.com>
@@ -21,4 +20,5 @@ Shreejit Nair <shreejitnair18@gmail.com>
 Simon Spinner <sspinner@de.ibm.com>
 Sreeram Venkateswaran <sree@192.168.1.100>
 Viktor Mihajlovski <mihajlov@linux.vnet.ibm.com>
+dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>
 ```
