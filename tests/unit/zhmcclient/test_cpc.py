@@ -15,14 +15,15 @@
 """
 Unit tests for _cpc module.
 """
-
-
+import json
+import os
 import re
 import copy
 import pytest
 import requests_mock
 
 from zhmcclient import Client, Cpc, HTTPError, STPNode, Job
+from zhmcclient._cpc import _drop_unused_adapters_and_resources
 from zhmcclient_mock import FakedSession
 from tests.common.utils import assert_resources
 
@@ -2605,3 +2606,94 @@ def test_delete_retrieved_internal_code(
             else:
                 raise AssertionError(
                     f"Unexpected HTTP status: {response_status}")
+
+
+#
+# tests for "internal" code that can't be reasonably tested by calling
+# toplevel tests.
+#
+TESTCASES_CPC_DPM_EXPORT_REDUCTION = [
+    #
+    # Testcases for _cpc._drop_unused_adapters_and_resources()
+    #
+    # Each list item is a tuple defining a testcase in the following format:
+    # - desc (str): Testcase description
+    # - JSON file name
+    # - table with information for asserts, layout:
+    # dict key name | exp #items before | exp #items after "drop"
+    (
+        'Drops all adapters and other resources',
+        'dpm-export-noconfig.json',
+        [
+            ('adapters', 110, 0),
+            ('network-ports', 94, 0),
+            ('storage-ports', 44, 0),
+            ('virtual-switches', 62, 0)
+        ]
+    ),
+    (
+        'Preserves adapter referenced by p2p ctc connection',
+        'dpm-export-1-ctc-p2p.json',
+        [
+            ('adapters', 110, 2),
+            ('network-ports', 94, 0),
+            ('storage-ports', 44, 2),
+            ('virtual-switches', 62, 0)
+        ]
+    ),
+    (
+        'Preserves crypto/network adapters referenced by partition',
+        'dpm-export-1p-crypto-net.json',
+        [
+            ('adapters', 110, 2),
+            ('network-ports', 94, 2),
+            ('storage-ports', 44, 0),
+            ('virtual-switches', 62, 1)
+        ]
+    ),
+    (
+        'Preserves ficon adapters referenced by storage group',
+        'dpm-export-1p-1sg.json',
+        [
+            ('adapters', 100, 6),
+            ('network-ports', 39, 0),
+            ('storage-ports', 64, 6),
+        ]
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, json_file, counts",
+    TESTCASES_CPC_DPM_EXPORT_REDUCTION
+)
+def test_dpm_export_resource_dropping(desc, json_file, counts):
+    """
+    Test function for _cpc._drop_unused_adapters_and_resources()
+    """
+    # pylint: disable=unused-argument
+    abs_file = os.path.join(os.path.dirname(__file__), json_file)
+    with open(abs_file, 'r', encoding='ascii') as JSON:
+        json_dict = json.load(JSON)
+
+    for (key, before, _) in counts:
+        assert len(json_dict[key]) == before
+
+    _drop_unused_adapters_and_resources(json_dict)
+
+    for (key, _, after) in counts:
+        assert len(json_dict[key]) == after
+        if after > 0:
+            # description field for items that are in had "PRESERVED!"
+            # added, either on the exporting system, or after the fact
+            # in the JSON data
+            for item in json_dict[key]:
+                assert item['description'] == 'PRESERVED!', _identify(item)
+
+
+def _identify(item):
+    for key in ['object-uri', 'element-uri', 'name']:
+        if key in item:
+            return f'unpreserved item: {item[key]}'
+    # no idea, return full string representation
+    return f'unpreserved item: {item}'
