@@ -170,6 +170,7 @@ doc_dependent_files := \
     $(doc_conf_dir)/conf.py \
     $(wildcard $(doc_conf_dir)/*.rst) \
     $(wildcard $(doc_conf_dir)/notebooks/*.ipynb) \
+		$(wildcard $(doc_conf_dir)/images/*.svg) \
     $(package_py_files) \
     $(version_file) \
     examples/example_hmc_inventory.yaml \
