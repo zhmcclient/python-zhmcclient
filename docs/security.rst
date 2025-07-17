@@ -18,16 +18,49 @@
 Security
 ========
 
-This section contains information about the security of the communication
-between the 'zhmcclient' client and the HMC.
+.. _`Handling of HMC credentials in zhmcclient`:
 
+Handling of HMC credentials in zhmcclient
+-----------------------------------------
+
+The following figure shows a node that runs a user-written Python application
+"my-hmc-app" using the zhmcclient package that drives operations against the
+HMC and subscribes for notifications from the HMC.
+
+.. image:: images/security1.svg
+
+The figure shows which security relevant init arguments are passed to the
+two zhmcclient objects, and which of those are subsequently available as
+properties of those objects. It is the responsibility of the application
+using the zhmcclient package to make sure that the HMC userid and password, and
+the resulting HMC session ID are handled in a secure manner.
+
+The :class:`zhmcclient.Session` object uses the Python
+`requests <https://pypi.org/project/requests/>`_ package for the HTTPS
+communication with the HMC. There are further Python libraries, OS-level
+libraries and network drivers in the OS involved that are not shown in the
+figure. The ``Session`` object at some point creates a session
+with the HMC and then stores the session ID as one of its properties. The
+password is not available as a property on that object, but it is stored as an
+internal attribute in order to perform automatic re-logon if the HMC session
+expires.
+
+The :class:`zhmcclient.NotificationReceiver` object uses the Python
+`stomp.py <https://pypi.org/project/stomp.py/>`_ package for the STOMP
+communication with the HMC. There are further Python libraries, OS-level
+libraries and network drivers in the OS involved that are not shown in the
+figure. The userid and password are stored as internal attributes in the
+``NotificationReceiver`` object, and are passed on to the ``stomp.Connection``
+object when connecting to the HMC for the purpose of establishing the STOMP
+session.
 
 .. _`HMC Web Services API`:
+.. _`HMC Web Services API operations`:
 
-HMC Web Services API
---------------------
+HMC Web Services API operations
+-------------------------------
 
-This section covers the communication between the 'zhmcclient' package
+This section covers the HTTPS communication between the 'zhmcclient' package
 and the HMC Web Services API on port 6794. The 'zhmcclient' package uses the
 `Python 'requests' package <https://pypi.org/project/requests/>`_
 for this purpose.
@@ -36,10 +69,9 @@ SSL/TLS protocol version
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 The HMC supports HTTPS at its Web Services API port, i.e. it requires the use
-of SSL/TLS-based sockets. The HMC can be configured to require TLS 1.2, or to
-tolerate the older SSLv3 protocol in addition. Since SSLv3 is considered
-insecure, it is highly recommended to configure the HMC to require TLS 1.2 and
-to disable SSLv3 and RC4. This can be configured in the HMC task
+of SSL/TLS-based sockets. The HMC can be configured to require particular
+TLS versions. It is recommended to use the highest TLS version, but at least
+TLS 1.2. This can be configured in the HMC task
 "Customize Console Services". See also the :term:`HMC Security` book and
 Chapter 3 "Invoking API operations" in the :term:`HMC API` book.
 
@@ -179,15 +211,35 @@ HMC Web Services API notifications
 ----------------------------------
 
 The HMC Web Services API supports notifications that are sent from the HMC to
-a client. The HMC supports two protocols for this purpose:
+a client. The HMC supports a choice of protocols for this purpose:
 
-* STOMP (Streaming Text Oriented Messaging Protocol) on port 61612.
-* OpenWire on port 61617.
+* Protocols following the JMS (Java Message Service) architecture:
+
+  - STOMP (Streaming Text Oriented Messaging Protocol) over SSL connections, on
+    port 61612.
+  - OpenWire over SSL connections, on port 61617.
+
+* SSE (Server-Sent Events), using a long-lived HTTPS connection on port 6794.
+  Support for this protocol has been added in HMC version 2.16.
 
 These protocols can be enabled on the HMC task "Customize API Settings".
 See also the :term:`HMC Security` book for details.
 
 The 'zhmcclient' package supports the STOMP protocol for HMC notifications and
 uses the
-`Python 'stomp-py' package <https://pypi.org/project/stomp-py/>`_
+`Python 'stomp.py' package <https://pypi.org/project/stomp.py/>`_
 for this purpose.
+
+The STOMP protocol uses SSL/TLS sockets, so there is a TLS handshake that
+happens. The HMC uses the same TLS related settings for STOMP that it uses
+for the HTTPS operations. The zhmcclient package configures the stomp.py
+package to negotiate the highest possible TLS version for the STOMP protocol
+with the HMC.
+
+The zhmcclient package version 1.22.0 has added support for enabling CA
+certificate validation for the STOMP protocol by adding a `verify_cert`
+init parameter to :class:`zhmcclient.NotificationReceiver`. For backwards
+compatibility reasons, the validation is disabled by default. As a result, no
+detection of invalid HMC certificates, hostname mismatches, etc. is performed
+by default. Therefore, it is recommended to enable CA certificate validation by
+specifying the `verify_cert` init parameter with a value other than `False`.
