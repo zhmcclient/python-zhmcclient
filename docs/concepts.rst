@@ -31,56 +31,34 @@ The following figure shows the topology of Python applications using the
 zhmcclient package with an :term:`HMC` and the :term:`CPCs <CPC>` managed by
 that HMC:
 
-.. code-block:: text
+.. image:: images/topology.svg
 
-  +----------------------------------------+  +--------------------+
-  |                  Node 1                |  |       Node 2       |
-  |                                        |  |                    |
-  |  +----------------+  +--------------+  |  |  +--------------+  |
-  |  |  Python app 1  |  | Python app 2 |  |  |  | Python app 3 |  |
-  |  +----------------+  +--------------+  |  |  +--------------+  |
-  |  |   zhmcclient   |  |  zhmcclient  |  |  |  |  zhmcclient  |  |
-  |  | S      S   NR  |  |    S  NR     |  |  |  |     S        |  |
-  |  +-v------v---^---+  +----v--^------+  |  |  +-----v--------+  |
-  +----|------|---|-----------|--|---------+  +--------|-----------+
-       |      |   |           |  |                     |
-   REST|  REST|   |JMS    REST|  |JMS              REST|
-       |      |   |           |  |                     |
-  +----v------v---^-----------v--^---------------------v-----------+
-  |                                                                |
-  |                             HMC                                |
-  |                                                                |
-  |                      ... resources ...                         |
-  |                                                                |
-  +-------------+------------------------------------+-------------+
-                |                                    |
-                |                                    |
-  +-------------+------------+         +-------------+-------------+
-  |                          |         |                           |
-  |           CPC 1          |         |          CPC 2            |
-  |                          |         |                           |
-  |     ... resources ...    |         |    ... resources ...      |
-  |                          |         |                           |
-  +--------------------------+         +---------------------------+
+In this figure, the green boxes are Python processes running on a node. There
+can be multiple nodes and multiple Python processes on each node, talking to the
+same HMC. The figure shows some example Python applications that use the
+zhmcclient package:
 
-The Python applications can be for example the
-``zhmc`` CLI (provided in the :term:`zhmccli project`), your own Python
-scripts using the zhmcclient API, or long-lived services that perform some
-function. In any case, each Python application in the figure runs in the
-runtime of exactly one Python process.
+* "my-zhmc-app" as an example of a user-written Python application
+* `zhmc-prometheus-exporter <https://zhmc-prometheus-exporter.readthedocs.io>`_ - A
+  Prometheus exporter for the HMC
+* `zhmc <https://zhmccli.readthedocs.io>`_ - A CLI for the HMC
 
-In that Python process, exactly one instance of the zhmcclient Python package
-is loaded. Performing HMC operations on a particular HMC requires a
-:class:`~zhmcclient.Session` object (shown as ``S`` in the figure). Receiving
-notifications from a particular HMC requires a
-:class:`~zhmcclient.NotificationReceiver` object (shown as ``NR`` in the
-figure).
+The zhmcclient package provides two main Python classes to interact with the
+HMC, that are shown in the figure:
 
-For example, Python app 1 in the figure has two sessions and one notification
-receiver. For simplicity, the two sessions go to the same HMC in this example,
-but they could also go to different HMCs. Similarly, a Python app could
-receive notifications from more than one HMC.
+* :class:`zhmcclient.Session` - represents a session with the HMC Web Services
+  API, over which operations can be executed on the HMC using the HTTPS
+  protocol.
 
+* :class:`zhmcclient.NotificationReceiver` - represents a session with the
+  HMC Web Services API, over which notifications can be received from the HMC
+  using the STOMP protocol.
+
+There are HMC resources on the HMC and CPC resources for each managed CPC that
+are also available through the HMC. Unmanaged CPCs are discovered by the HMC
+but do not expose CPC resources other than the CPC itself. All these resources
+are represented by the zhmcclient as Python objects. For details on that, see
+:ref:`Resources`.
 
 .. _`Multi-threading considerations`:
 
@@ -109,7 +87,7 @@ Specifying multiple redundant HMCs
 The zhmcclient package supports the specification of one or more HMCs through
 the `host` init parameter of :class:`zhmcclient.Session`.
 
-That paranmeter can be specified as a single HMC, for example:
+That parameter can be specified as a single HMC, for example:
 
 .. code-block:: python
 
