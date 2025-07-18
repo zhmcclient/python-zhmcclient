@@ -3362,39 +3362,66 @@ def _drop_unused_adapters_and_resources(dpm_config):
     dpm_config in place that aren't referenced by actual DPM configuration
     elements.
     """
-    _remove_unreferenced_keys(dpm_config, 'virtual-switches', ['adapters'])
-    removed_adapters = _remove_unreferenced_keys(dpm_config, 'adapters',
-                                                 ['network-ports',
-                                                  'storage-ports'])
+    _drop_unused_virtual_switches(dpm_config)
+    removed_adapters = _drop_unused_adapters(dpm_config)
+
     _remove_child_elements(dpm_config, 'network-ports', removed_adapters)
     _remove_child_elements(dpm_config, 'storage-ports', removed_adapters)
 
 
-def _remove_unreferenced_keys(dpm_config, key_to_update, keys_to_ignore):
+def _drop_unused_virtual_switches(dpm_config):
+    if 'virtual-switches' not in dpm_config:
+        return
+
+    str_config = str(
+        {key: dpm_config[key] for key in dpm_config
+         if key not in ['virtual-switches', 'adapters']})
+
+    _drop_elements('virtual-switches', str_config, dpm_config)
+
+
+def _drop_unused_adapters(dpm_config):
+    # preserve original content & make sure we don't stumble over unknown fields
+    adapters = dpm_config.get('adapters', [])
+    dpm_config['adapters'] = []
+
+    network_ports = dpm_config.get('network-ports', [])
+    dpm_config['network-ports'] = []
+
+    storage_ports = dpm_config.get('storage-ports', [])
+    required_storage_ports = []
+    for port in storage_ports:
+        if 'ficon-usage' in port and len(port['ficon-usage']) > 0:
+            required_storage_ports.append(port)
+    dpm_config['storage-ports'] = required_storage_ports
+
+    config = str(dpm_config)
+
+    # restore original content
+    dpm_config['adapters'] = adapters
+    dpm_config['network-ports'] = network_ports
+    dpm_config['storage-ports'] = storage_ports
+
+    return _drop_elements('adapters', config, dpm_config)
+
+
+def _drop_elements(key_to_update, str_config, dict_config):
     """
-    Creates a string representation of dpm_config, EXCLUDING keys key_to_update
-    and keys_to_ignore. Then iterates the list of key_to_update
-    entries within dpm_config to collect those that are referenced by their
-    object-id within that string representation. Then updates dpm_config
+    Receives a field name to update, a "reduced" string representation of
+    a dpm config, and the dpm config as dict. Iterates the to key_to_update
+    entries within the dict to collect those that are referenced by their
+    object-id within the string config. Finally updates the dict config
     for key_to_update in place to that list of elements that are actually
     referenced.
-    Returns a list of object-uri fields of all dropped objects, empty list if
-    key_to_update doesn't exist in dpm_config.
     """
-    if key_to_update not in dpm_config:
-        return []
-
-    config = str(
-        {key: dpm_config[key] for key in dpm_config
-         if (key != key_to_update and key not in keys_to_ignore)})
     referenced_keys = []
     dropped_uris = []
-    for elem in dpm_config[key_to_update]:
-        if elem['object-id'] in config:
+    for elem in dict_config[key_to_update]:
+        if elem['object-id'] in str_config:
             referenced_keys.append(elem)
         else:
             dropped_uris.append(elem['object-uri'])
-    dpm_config[key_to_update] = referenced_keys
+    dict_config[key_to_update] = referenced_keys
     return dropped_uris
 
 

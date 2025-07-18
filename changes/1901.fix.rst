@@ -1,0 +1,2 @@
+Fix a bug in dpm-export that wrongly drops FICON adapters referenced by ctc p2p
+connections from the export data.
