@@ -58,17 +58,21 @@ try:
     if not cpcs:
         print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
         sys.exit(1)
-    cpc = cpcs[0]
-    print(f"Using CPC {cpc.name}")
 
-    print(f"Finding an active partition on CPC {cpc.name} ...")
-    parts = cpc.partitions.list(filter_args={'status': 'active'})
-    if not parts:
-        print(f"Error: CPC {cpc.name} does not have any active partitions")
+    for cpc_ in cpcs:
+        print(f"Finding an active partition on CPC {cpc_.name} ...")
+        parts = cpc_.partitions.list(filter_args={'status': 'active'})
+        if not parts:
+            print(f"CPC {cpc_.name} does not have any active partitions")
+            continue
+        cpc = cpc_
+        part = parts[0]
+        print(f"Using partition {part.name} with status "
+              f"{part.get_property('status')}")
+        break
+    else:
+        print(f"Error: No CPC in DPM mode has any active partitions")
         sys.exit(1)
-    part = parts[0]
-    print(f"Using partition {part.name} with status "
-          f"{part.get_property('status')}")
 
     print(f"Opening OS message channel for partition {part.name} on CPC "
           f"{cpc.name} (including refresh messages) ...")
@@ -83,7 +87,7 @@ try:
     print(f"Creating a notification receiver for topic {msg_topic} ...")
     try:
         receiver = zhmcclient.NotificationReceiver(
-            msg_topic, host, userid, password)
+            msg_topic, host, userid, password, verify_cert=verify_cert)
     except Exception as exc:
         print(f"Error: Cannot create notification receiver: {exc}")
         sys.exit(1)
