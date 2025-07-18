@@ -92,7 +92,9 @@ def main(config_filepath):
     print("Load from FTP issued. Will connect to OS messages in 10 sec.")
     time.sleep(10)
     topic = lpar.open_os_message_channel()
-    receiver = zhmcclient.NotificationReceiver(topic, config['host'], session.session_id, session.session_credential)
+    receiver = zhmcclient.NotificationReceiver(
+        topic, config['host'], session.session_id, session.session_credential,
+        verify_cert=verify_cert)
     receive_until_KeyboardInterrupt(receiver)
 
 

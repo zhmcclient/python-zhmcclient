@@ -39,7 +39,8 @@ for a DPM partition::
           "notifications..." % (partition.name, cpc.name))
 
     receiver = zhmcclient.NotificationReceiver(
-        topic, hmc, session.session_id, session.session_credential)
+        topic, hmc, session.session_id, session.session_credential,
+        verify_cert=True)
 
     while True:
         try:
@@ -83,6 +84,7 @@ import queue
 from collections import namedtuple
 import logging
 import uuid
+import certifi
 
 from ._logging import logged_api_call
 from ._constants import DEFAULT_STOMP_PORT, DEFAULT_STOMP_CONNECT_TIMEOUT, \
@@ -96,6 +98,7 @@ from ._exceptions import NotificationJMSError, NotificationParseError, \
     SubscriptionNotFound, NotificationConnectionError, \
     NotificationSubscriptionError
 from ._utils import get_stomp_rt_kwargs, get_headers_message
+from ._vendor.python.ssl import match_hostname, CertificateError
 
 __all__ = ['NotificationReceiver', 'StompRetryTimeoutConfig']
 
@@ -267,7 +270,8 @@ class NotificationReceiver:
     )
 
     def __init__(self, topic_names, host, userid, password,
-                 port=DEFAULT_STOMP_PORT, stomp_rt_config=None):
+                 port=DEFAULT_STOMP_PORT, stomp_rt_config=None,
+                 verify_cert=False):
         """
         Parameters:
 
@@ -313,6 +317,32 @@ class NotificationReceiver:
             of its attributes.
 
             See :ref:`Constants` for the default values.
+
+          verify_cert (bool or :term:`string`):
+            Controls whether and how the client verifies the server certificate
+            presented by the HMC during SSL/TLS handshake:
+
+            * `False`: Do not verify the HMC certificate. Not verifying the HMC
+              certificate means the zhmcclient will not detect hostname
+              mismatches, expired certificates, revoked certificates, or
+              otherwise invalid certificates. Since this mode makes the
+              connection vulnerable to man-in-the-middle attacks, it is insecure
+              and should not be used in production environments.
+
+            * `True`: Verify the HMC certificate using the CA certificates from
+              the first of these locations:
+
+              - The Python 'certifi' package (which contains the
+                `Mozilla Included CA Certificate List
+                <https://wiki.mozilla.org/CA/Included_Certificates>`_).
+
+            * :term:`string`: Path name of a certificate file or directory.
+              Verify the HMC certificate using the CA certificates in that file
+              or directory.
+
+            For details, see the :ref:`HMC certificate` section.
+
+            *Added in version 1.22.0*
         """
         if not isinstance(topic_names, (list, tuple)):
             topic_names = [topic_names]
@@ -324,6 +354,7 @@ class NotificationReceiver:
         self._rt_config = stomp_rt_config
         self._rt_config = self.default_stomp_rt_config.override_with(
             stomp_rt_config)
+        self._verify_cert = verify_cert
 
         # Subscription ID numbers that are in use.
         # Each subscription for a topic gets its own unique ID.
@@ -388,6 +419,24 @@ class NotificationReceiver:
             [(self._host, self._port)], **rt_kwargs)
         set_kwargs = dict()
         set_kwargs['ssl_version'] = ssl.PROTOCOL_TLS_CLIENT
+        if self._verify_cert is True:
+            ca_cert = certifi.where()
+        elif isinstance(self._verify_cert, str):
+            ca_cert = self._verify_cert
+        else:
+            ca_cert = None
+        if ca_cert:
+            JMS_LOGGER.info(
+                "Enabling certificate validation with CA path: %s", ca_cert)
+            set_kwargs['ca_certs'] = ca_cert
+            # Note: According to https://docs.python.org/3/library/ssl.html#
+            # ssl.SSLSocket.do_handshake, hostname validation is performed by
+            # OpenSSL since Python 3.7. However, this does not work with
+            # stomp.py for some reason. Therefore, we perform hostname
+            # validation ourselves.
+            set_kwargs['cert_validator'] = validate_cert_hostname
+        else:
+            JMS_LOGGER.warning("Certificate validation is disabled")
         self._conn.set_ssl(for_hosts=[(self._host, self._port)], **set_kwargs)
         listener = _NotificationListener(self._handover_queue)
         self._conn.set_listener('', listener)
@@ -708,6 +757,39 @@ class NotificationReceiver:
         """
         self._closed = True
         self._conn.disconnect()
+
+
+def validate_cert_hostname(cert, hostname):
+    """
+    Validate the common name in the subject of a certificate against the
+    specified hostname.
+
+    This function is called by the stomp.py package when validating the server
+    certificate presented by the HMC.
+
+    This function uses a vendorized copy of Python's ssl.match_hostname()
+    function which was removed in Python 3.7. That function skips the
+    validation when the hostname is specified as an IP address, and performs
+    validation only when it is specified as a short or long DNS name.
+
+    Parameters:
+
+      cert (dict): The HMC server certificate, using the data format returned
+        by ssl.SSLSocket.getpeercert() (see
+        https://docs.python.org/3/library/ssl.html#ssl.SSLSocket.getpeercert).
+
+      hostname (str): Hostname to be verified against.
+
+    Returns:
+      tuple(ok, msg), where:
+        ok (bool): Boolean indicating that the validating passed.
+        msg (str): Error message in case the validation did not pass.
+    """
+    try:
+        match_hostname(cert, hostname)
+    except CertificateError as exc:
+        return (False, f"Certificate hostname validation failed: {exc}")
+    return (True, None)
 
 
 _NotificationItem = namedtuple(

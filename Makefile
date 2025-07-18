@@ -148,10 +148,17 @@ sdist_file := $(dist_dir)/$(package_name)-$(package_version).tar.gz
 
 dist_files := $(bdist_file) $(sdist_file)
 
+# Vendorized files
+vendor_dir := $(package_name)/_vendor
+vendor_py_files := \
+    $(wildcard $(vendor_dir)/*.py) \
+    $(wildcard $(vendor_dir)/*/*.py) \
+
 # Source files in the packages, excluding the $(version_file)
 package_py_files := \
     $(filter-out $(version_file), $(wildcard $(package_name)/*.py)) \
     $(wildcard $(package_name)/*/*.py) \
+    $(wildcard $(package_name)/*/*/*.py) \
     $(wildcard $(mock_package_name)/*.py) \
     $(wildcard $(mock_package_name)/*/*.py) \
 
@@ -222,7 +229,7 @@ bandit_rc_file := .bandit.toml
 
 # Source files for check (with PyLint and Flake8)
 check_py_files := \
-    $(package_py_files) \
+    $(filter-out $(vendor_py_files), $(package_py_files)) \
     $(test_unit_py_files) \
     $(test_end2end_py_files) \
     $(test_common_py_files) \

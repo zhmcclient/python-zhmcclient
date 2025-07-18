@@ -98,7 +98,8 @@ try:
               f"{job_topic_name} ...")
         try:
             receiver = zhmcclient.NotificationReceiver(
-                job_topic_name, host, userid, password)
+                job_topic_name, host, userid, password,
+                verify_cert=verify_cert)
         except Exception as exc:
             print(f"Error: Cannot create notification receiver: {exc}")
             sys.exit(1)
