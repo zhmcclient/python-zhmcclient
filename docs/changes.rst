@@ -20,6 +20,93 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.22.0
+^^^^^^^^^^^^^^
+
+Released: 2025-07-23
+
+**Incompatible changes:**
+
+* The fix that incorrect types of match values in filter arguments of 'list()',
+  'findall()' and 'find()' no longer result in 'TypeError' has the implication
+  that providing such incorrect types is now treated differently, resulting
+  in an incompatibility: If possible the match value gets its type converted to
+  the type of the property value. Otherwise, a new exception
+  'zhmcclient.FilterConversionError' is raised.
+  Note that this incompatibility only applies when the types of match values in
+  filter arguments are incorrect for the property values. If they are correct,
+  there is no incompatibility. (`#1850 <https://github.com/zhmcclient/python-zhmcclient/issues/1850>`_)
+
+**Bug fixes:**
+
+* Addressed Mend Renovate issues up to 2025-05-11.
+
+* Fixed safety issues up to 2025-07-23.
+
+* Increased minimum version of "urllib3" to 2.2.3 in order to pick up changes
+  that help when using unstable networks. Specifically, enabling
+  enforce_content_length by default and distinguishing too much from not enough
+  response data. (`#1888.2 <https://github.com/zhmcclient/python-zhmcclient/issues/1888.2>`_)
+
+* Dev: Fixed Sphinx build issue by excluding snowballstemmer 3.0.0.
+
+* Added a dependency to the 'idna' package even though that is used only by the
+  requests package, to ensure that users of zhmcclient use idna>=3.7 to fix an
+  issue.
+
+* Dev: Fixed the dependencies in the Makefile: Because the package is no longer
+  installed in edit mode, the Python source files now needed to be added to
+  the dependency list of the 'install' target. Also, 'install' is no longer
+  a dependency of 'develop', because none of the targets that need 'develop'
+  need the package to be installed. Added Makefile as a dependent on rules
+  that produce files.
+
+* Dev: Added handling of HTTP error 422 when creating a new stable branch in
+  the GitHub Actions publish workflow.
+
+* Fixed that incorrect type in filter arguments of 'list()', etc. no longer
+  results in TypeError. For client-side filtering, the filter arguments are now
+  converted to the type of the property value, before matching the filter, for
+  property types bool, int, float, and str. For bool, the string values 'TRUE' and
+  'FALSE' are interpreted (case insensitively) as the corresponding boolean values.
+  This provides more flexibility in environments such as the command line or
+  Ansible. Match values that cannot be converted cause a new exception
+  'zhmcclient.FilterConversionError' to be raised, in order to provide the user
+  with a way to catch such situations. Note that for server-side filtering,
+  the provided filter arguments were already converted to string because they
+  are passed as URI query parameters, so a type tolerance already existed for
+  such filter arguments. (`#1850 <https://github.com/zhmcclient/python-zhmcclient/issues/1850>`_)
+
+* Changed the default for HTTP read retries from 0 to 3. This applies only to
+  the HTTP "GET" method. This should help when using unstable networks. (`#1888 <https://github.com/zhmcclient/python-zhmcclient/issues/1888>`_)
+
+* Dev: Made order of names in AUTHORS.md reliable. (`#1897 <https://github.com/zhmcclient/python-zhmcclient/issues/1897>`_)
+
+* Fix a bug in dpm-export that wrongly drops FICON adapters referenced by ctc p2p
+  connections from the export data. (`#1901 <https://github.com/zhmcclient/python-zhmcclient/issues/1901>`_)
+
+**Enhancements:**
+
+* Improved the error message in connection related exceptions by eliminating
+  useless object representations. In zhmcclient.ConnectionError, added the
+  qualified type of the original exception received by zhmcclient.
+
+* Support for certificate validation for STOMP notifications, by adding a new
+  'verify_cert' parameter to zhmcclient.NotificationReceiver(). It works in
+  the same way as the 'verify_cert' parameter of zhmcclient.Session(), but its
+  default is False to maintain backwards compatibility. Therefore, it is
+  recommended to specify the 'verify_cert' parameter with a value other than
+  `False`.
+
+* Dev: Added commit message checker to test workflow. (`#1873 <https://github.com/zhmcclient/python-zhmcclient/issues/1873>`_)
+
+* Dev: Added doclinkcheck to GitHub Actions test workflow, ignoring errors. (`#1877 <https://github.com/zhmcclient/python-zhmcclient/issues/1877>`_)
+
+**Cleanup:**
+
+* Removed Travis control file (was used in IBM internal fork).
+
+
 Version 1.21.0
 ^^^^^^^^^^^^^^
 

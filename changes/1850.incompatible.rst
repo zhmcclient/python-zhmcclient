@@ -1,9 +1,0 @@
-The fix that incorrect types of match values in filter arguments of 'list()',
-'findall()' and 'find()' no longer result in 'TypeError' has the implication
-that providing such incorrect types is now treated differently, resulting
-in an incompatibility: If possible the match value gets its type converted to
-the type of the property value. Otherwise, a new exception
-'zhmcclient.FilterConversionError' is raised.
-Note that this incompatibility only applies when the types of match values in
-filter arguments are incorrect for the property values. If they are correct,
-there is no incompatibility.
