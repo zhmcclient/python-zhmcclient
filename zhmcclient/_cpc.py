@@ -70,7 +70,7 @@ from ._utils import get_api_features, get_firmware_features, \
     RC_VIRTUAL_STORAGE_RESOURCE, RC_VIRTUAL_SWITCH, RC_STORAGE_SITE, \
     RC_STORAGE_FABRIC, RC_STORAGE_SWITCH, RC_STORAGE_SUBSYSTEM, \
     RC_STORAGE_PATH, RC_STORAGE_CONTROL_UNIT, RC_VIRTUAL_TAPE_RESOURCE, \
-    RC_TAPE_LINK, RC_TAPE_LIBRARY, RC_CERTIFICATE
+    RC_TAPE_LINK, RC_TAPE_LIBRARY, RC_CERTIFICATE, RC_AI_FUNCTION
 
 __all__ = ['STPNode', 'CpcManager', 'Cpc']
 
@@ -3127,6 +3127,11 @@ class Cpc(BaseResource):
         if certificates:
             _add_encoded(self.manager.console, certificates)
             config_dict['certificates'] = certificates
+
+        ai_resources = extractByPropertyInListValue(
+            RC_AI_FUNCTION, 'parent', partition_uris, inventory_list)
+        if ai_resources:
+            config_dict['ai-accelerator-functions'] = ai_resources
 
         if not include_unused_adapters:
             _drop_unused_adapters_and_resources(config_dict)

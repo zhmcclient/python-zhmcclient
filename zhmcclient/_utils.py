@@ -60,6 +60,7 @@ RC_TAPE_LINK = 'tape-link'
 RC_TAPE_LIBRARY = 'tape-library'
 RC_PARTITION_LINK = 'partition-link'
 RC_CERTIFICATE = 'certificate'
+RC_AI_FUNCTION = 'ai-accelerator-function'
 #
 # For CPCs in classic mode:
 RC_RESET_ACTIVATION_PROFILE = 'reset-activation-profile'
