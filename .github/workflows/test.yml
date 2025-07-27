@@ -154,7 +154,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Check commit messages - Signed-off-by
-      if: github.event_name != '"schedule'
+      if: github.event_name != 'schedule'
       uses: gsactions/commit-message-checker@v2
       with:
         pattern: '^Signed-off-by: [^<>]+ <[^<>]+>$'
