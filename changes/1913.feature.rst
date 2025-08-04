@@ -1,0 +1,2 @@
+Docs: Added a section 'Checks when making a release' to the 'Development' chapter
+that describes which tests and checks are run when making a release.

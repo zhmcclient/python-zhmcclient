@@ -1064,3 +1064,30 @@ local clone of the python-zhmcclient Git repo.
     * checkout and pull the branch that was started (``master`` or ``stable_M.N``)
     * delete the start branch (``start_M.N.U``) locally and remotely
     * create and push the start tag (``M.N.Ua0``)
+
+
+.. _`Checks when making a release`:
+
+Checks when making a release
+----------------------------
+
+This section describes which tests and checks are run when the zhmcclient package
+is released to Pypi. All these checks must pass in order to make the release.
+
+The following tests are run automatically by GitHub Actions on all supported combinations
+of operating system, Python version and minimum/latest package levels:
+
+* `Unit <https://github.com/zhmcclient/python-zhmcclient/tree/master/tests/unit>`_ tests
+* `End2end <https://github.com/zhmcclient/python-zhmcclient/tree/master/tests/end2end>`_ tests with mocked HMCs
+* `Install <https://github.com/zhmcclient/python-zhmcclient/tree/master/tests/installtest>`_ tests
+* `flake8 <https://flake8.pycqa.org>`_ linter
+* `ruff <https://docs.astral.sh/ruff/linter/>`_ linter
+* `pylint <https://pylint.readthedocs.io/en/stable/>`_ linter
+* `safety <https://docs.safetycli.com/safety-docs>`_ vulnerability checker
+* `bandit <https://bandit.readthedocs.io/>`_ vulnerability checker
+* `pip-missing-reqs <https://github.com/adamtheturtle/pip-check-reqs/blob/master/README.rst>`_ checks for missing dependencies
+* `Sphinx linkcheck <https://sphinx-themed.readthedocs.io/en/latest/usage/builders/index.html#sphinx.builders.linkcheck.CheckExternalLinksBuilder>`_ checks external links in documentation
+
+In addition, the following tests are run manually:
+
+* `End2end <https://github.com/zhmcclient/python-zhmcclient/tree/master/tests/end2end>`_ tests with real HMCs
