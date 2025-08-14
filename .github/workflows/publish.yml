@@ -124,7 +124,7 @@ jobs:
 
     #-------- Setup of work environment
     - name: Checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         # fetch-depth 0 checks out all history for all branches and tags.
         # This is needed to get the authors from git.
