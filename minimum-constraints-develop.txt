@@ -90,7 +90,7 @@ snowballstemmer==2.0.0
 pylint==3.0.1; python_version == '3.8'
 pylint==3.3.1; python_version >= '3.9'
 astroid==3.0.1; python_version == '3.8'
-astroid==3.3.5; python_version >= '3.9'
+astroid==3.3.7; python_version >= '3.9'
 lazy-object-proxy==1.4.3
 wrapt==1.14
 platformdirs==4.1.0
