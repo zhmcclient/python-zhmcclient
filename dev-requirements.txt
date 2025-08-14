@@ -19,7 +19,10 @@ towncrier>=22.8.0
 # Unit test (imports into testcases):
 # pytest is covered in extra-testutils-requirements.txt
 testfixtures>=6.9.0
-importlib-metadata>=8.5.0
+# For versions of importlib-metadata that are in Python, see https://pypi.org/project/importlib-metadata/
+# importlib-metadata 8.5.0 is the last version supporting Python 3.8
+importlib-metadata>=8.5.0; python_version == '3.8'
+importlib-metadata>=8.7.0; python_version >= '3.9'
 # requests: covered in direct deps for installation
 colorama>=0.4.6
 requests-mock>=1.6.0
@@ -127,10 +130,6 @@ ruff>=0.3.5
 # Note: The packages for Jupyter Notebook are prone to causing endless pip backtracking when
 #       installed with minimum versions. This was addressed by pinning the package versions
 #       to a maximum in order to reduce the search space for pip.
-# Note: nbconvert 7.0.0 started using importlib-metadata and requires importlib-metadata>=3.6
-#       which conflicts with flake8 (which still uses the deprecated interfaces importlib-metadata
-#       removed). Therefore, we cannot currently use the latest versions of Jupyter Notebook
-#       packages.
 # Note: notebook 6.5.1 starts using nbclassic which seems to introduce some challenges for pip
 #       dependency resolution, so for now we pin notebook to <6.5.
 # TODO: Re-enable for Python 3.13 on Windows once pywin32 install issue is solved, see
