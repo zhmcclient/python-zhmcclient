@@ -26,7 +26,8 @@ click-default-group==1.2.4
 # Note: pytest is covered in minimum-constraints-install.txt
 testfixtures==6.9.0
 colorama==0.4.6
-importlib-metadata==8.5.0
+importlib-metadata==8.5.0; python_version == '3.8'
+importlib-metadata==8.7.0; python_version >= '3.9'
 more-itertools==4.0.0
 # pytz: covered in direct deps for installation
 # requests: covered in direct deps for installation
