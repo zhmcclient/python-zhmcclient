@@ -154,7 +154,28 @@ class NicManager(BaseManager):
         The way the backing adapter port is specified in the "properties"
         parameter of this method depends on the adapter type, as follows:
 
-        * For OSA and Hipersockets adapters, the "virtual-switch-uri"
+        * Since z17 for all adapters, and before z17 for RoCE and CNA adapters,
+          the "network-adapter-port-uri" property is used to specify the URI of
+          the backing adapter port.
+
+          The value for the "network-adapter-port-uri" property can be
+          determined from a given adapter name and port index as shown in the
+          following example code (omitting any error handling):
+
+          .. code-block:: python
+
+              partition = ...  # Partition object for the new NIC
+
+              adapter_name = 'ROCE #1'  # name of adapter with backing port
+              adapter_port_index = 0   # port index of backing port
+
+              adapter = partition.manager.cpc.adapters.find(name=adapter_name)
+
+              port = adapter.ports.find(index=adapter_port_index)
+
+              properties['network-adapter-port-uri'] = port.uri
+
+        * Before z17 for OSA and Hipersockets adapters, the "virtual-switch-uri"
           property is used to specify the URI of the virtual switch that is
           associated with the backing adapter port.
 
@@ -163,6 +184,10 @@ class NicManager(BaseManager):
           not show up in the HMC GUI; but they do show up at the HMC REST API
           and thus also at the zhmcclient API as the
           :class:`~zhmcclient.VirtualSwitch` class.
+
+          With the introduction of the "network-express-support" feature in
+          z17 CPCs, virtual switch objects have been removed in order to
+          simplify the resource model.
 
           The value for the "virtual-switch-uri" property can be determined
           from a given adapter name and port index as shown in the following
@@ -187,26 +212,6 @@ class NicManager(BaseManager):
                       break
 
               properties['virtual-switch-uri'] = vswitch.uri
-
-        * For RoCE adapters, the "network-adapter-port-uri" property is used to
-          specify the URI of the backing adapter port, directly.
-
-          The value for the "network-adapter-port-uri" property can be
-          determined from a given adapter name and port index as shown in the
-          following example code (omitting any error handling):
-
-          .. code-block:: python
-
-              partition = ...  # Partition object for the new NIC
-
-              adapter_name = 'ROCE #1'  # name of adapter with backing port
-              adapter_port_index = 0   # port index of backing port
-
-              adapter = partition.manager.cpc.adapters.find(name=adapter_name)
-
-              port = adapter.ports.find(index=adapter_port_index)
-
-              properties['network-adapter-port-uri'] = port.uri
 
         HMC/SE version requirements:
 
@@ -372,15 +377,22 @@ class Nic(BaseResource):
         """
         Return the backing adapter port of the NIC.
 
-        For vswitch-based NICs (e.g. OSA, HiperSocket), the NIC references the
-        backing vswitch which references its backing adapter and port index.
+        For port-based NICs (i.e. all adapters on z17 and RoCE and CNA
+        adapters up to z16), the NIC references directly the backing port.
+        In this case, 'Retrieve ... Properties' operations are performed for
+        the adapter and the port.
+
+        For vswitch-based NICs (i.e. OSA and HiperSocket adapters up to z16),
+        the NIC references the backing virtual switch which references its
+        backing adapter and port index.
+        In this case, 'Retrieve ... Properties' operations are performed for
+        the virtual switch, the adapter and the port.
+
+        For vswitch-based NICs (i.e. OSA and HiperSocket adapters before z17),
+        the NIC references the backing vswitch which references its backing
+        adapter and port index.
         In this case, 'Retrieve ... Properties' operations are performed for
         the vswitch, the adapter and the port.
-
-        For port-based NICs (e.g. RoCE, CNA), the NIC references directly the
-        backing port.
-        In this case, 'Retrieve ... Properties' operations are performed for
-        the port and the adapter.
 
         HMC/SE version requirements:
 
@@ -401,7 +413,19 @@ class Nic(BaseResource):
         cpc = partition.manager.parent
         client = cpc.manager.client
 
-        # Handle vswitch-based NICs (OSA, HS)
+        # Handle port-based NICs
+        try:
+            port_uri = self.get_property('network-adapter-port-uri')
+        except KeyError:
+            pass
+        else:
+            port_props = client.session.get(port_uri)
+            adapter_uri = port_props['parent']
+            adapter = cpc.adapters.resource_object(adapter_uri)
+            port = adapter.ports.resource_object(port_uri)
+            return port
+
+        # Handle vswitch-based NICs
         try:
             vswitch_uri = self.get_property('virtual-switch-uri')
         except KeyError:
@@ -424,18 +448,6 @@ class Nic(BaseResource):
                     f"{cpc.name}.{adapter.name} (URI {adapter.uri}) that does "
                     f"not have a port with the required port index "
                     f"{port_index}")
-            return port
-
-        # Handle port-based NICs (RoCE, CNA)
-        try:
-            port_uri = self.get_property('network-adapter-port-uri')
-        except KeyError:
-            pass
-        else:
-            port_props = client.session.get(port_uri)
-            adapter_uri = port_props['parent']
-            adapter = cpc.adapters.resource_object(adapter_uri)
-            port = adapter.ports.resource_object(port_uri)
             return port
 
         raise ConsistencyError(
