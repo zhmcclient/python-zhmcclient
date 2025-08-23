@@ -21,7 +21,9 @@ Virtual Switches are generated automatically every time a new
 
 Virtual Switch resources are contained in :term:`CPC` resources.
 
-Virtual Switches only exist in CPCs that are in DPM mode.
+Virtual Switches only exist in CPCs up to z16.
+Support for them has been removed with the introduction of the
+"network-express-support" feature in z17 CPCs.
 """
 
 
@@ -95,6 +97,10 @@ class VirtualSwitchManager(BaseManager):
              additional_properties=None):
         """
         List the Virtual Switches in this CPC.
+
+        With the introduction of the "network-express-support" feature in z17
+        CPCs, support for virtual switches has been removed. This method will
+        succeed but return no objects on such systems.
 
         Any resource property may be specified in a filter argument. For
         details about filter arguments, see :ref:`Filtering`.
@@ -179,6 +185,10 @@ class VirtualSwitch(BaseResource):
     Objects of this class are not directly created by the user; they are
     returned from creation or list functions on their manager object
     (in this case, :class:`~zhmcclient.VirtualSwitchManager`).
+
+    With the introduction of the "network-express-support" feature in z17
+    CPCs, support for virtual switches has been removed. VirtualSwitch objects
+    will not be obtainable on such systems.
 
     HMC/SE version requirements:
 
