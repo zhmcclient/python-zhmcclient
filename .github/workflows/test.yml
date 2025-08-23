@@ -236,7 +236,14 @@ jobs:
         RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
         # TESTCASES: test_cim_obj.py
       run: |
-        make test
+        make unittest
+    - name: Run function test
+      env:
+        PACKAGE_LEVEL: ${{ matrix.package_level }}
+        RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
+        # TESTCASES: test_cim_obj.py
+      run: |
+        make functiontest
     - name: Run end2end_mocked test
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
