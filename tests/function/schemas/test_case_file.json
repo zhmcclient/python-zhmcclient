@@ -1,0 +1,225 @@
+{
+  "title": "JSON schema for a zhmcclient function test case file",
+  "definitions": {
+    "component_version": {
+      "description": "A component version",
+      "type": "object",
+      "required": ["name", "generations"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Name of the component",
+          "type": "string"
+        },
+        "generations": {
+          "description": "List of generations for which versions are defined",
+          "type": "array",
+          "items": {
+            "description": "A version definition for a specific Z pod generation",
+            "type": "object",
+            "required": ["generation", "version"],
+            "additionalProperties": false,
+            "properties": {
+              "generation": {
+                "description": "Z pod generation to which this version applies. If 'any' it applies to all generations",
+                "type": "string"
+              },
+              "hmc_version": {
+                "description": "HMC M.N version in the Z pod. The default is the HMC version associated with the DC generation of the pod. For example, a DC 3.0 pod has a default HMC version of 2.15. The default HMC versions are defined in hmc_versions in the static.yml file",
+                "type": "string",
+                "enum": ["2.15", "2.16"]
+              },
+              "version": {
+                "description": "Version of the component",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "description": "List of test cases",
+  "type": "array",
+  "items": {
+    "description": "A single test case",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "description",
+    ],
+    "properties": {
+      "name": {
+        "description": "Name of the test case as recognized by pytest. Must be unique within the test case file.",
+        "type": "string"
+      },
+      "description": {
+        "description": "Short description of the test case",
+        "type": "string"
+      },
+      "skip": {
+        "description": "Skip this test case",
+        "type": "boolean",
+        "default": false
+      },
+      "skip": {
+        "description": "Skip this test case",
+        "type": "boolean",
+        "default": false
+      },
+      "no_debug_details": {
+        "description": "If test case debugging is enabled, do not debug details of the testcase",
+        "type": "boolean",
+        "default": false
+      },
+      "zhmcclient_api_call": {
+        "description": "Definition of the zhmcclient API function to call for the test case, and its input parameters",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "method"
+        ],
+        "properties": {
+          "target": {
+            "description": "Target resource object against which the API method is called. The first item in the list is the actual target object, and the subsequent items are its chain of parent objects, up to the top level resource object.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "description": "One resource object with data for creating it as a zhmcclient object",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "class"
+              ],
+              "properties": {
+                "class": {
+                  "description": "Python class name in the zhmcclient namespace of the resource object",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name of the resource object. Required for non-top-level objects.",
+                  "type": "string"
+                },
+                "properties": {
+                  "description": "Properties of the resource object that should be used to create it (as a zhmcclient object)",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^[a-zA-Z0-9\\-]+$": {
+                      "description": "Property name and value",
+                      "type": ["string", "float", "integer", "boolean", "null", "object", "array"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "attribute": {
+            "description": "Name of the attribute on the target object that has the API method to be called. If null or omitted, the target resource object has the method to be called.",
+            "type": "string",
+            "default": null
+          },
+          "method": {
+            "description": "Name of the Python method to be called",
+            "type": "string"
+          },
+          "parameters": {
+            "description": "Parameters to be passed to the Python method",
+            "type": "object",
+            "default": [],
+            "additionalProperties": false,
+            "patternProperties": {
+              "^[a-zA-Z0-9_]+$": {
+                "description": "Parameter name and value",
+                "type": ["string", "float", "integer", "boolean", "null", "object", "array"]
+              }
+            }
+          }
+        }
+      },
+      "zhmcclient_api_result": {
+        "description": "Definition of the expected zhmcclient API function result for the test case, and its exceptions and output parameters",
+        "type": "object",
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": ["return"]
+          },
+          {
+            "required": ["exception"]
+          }
+        ],
+        "properties": {
+          "return": {
+            "description": "Expected return value, if the method does not raise an exception",
+            "type": ["string", "float", "integer", "boolean", "null", "object", "array"]
+          },
+          "exception": {
+            "description": "Expected exception data, if the method raises an exception",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "class"
+            ],
+            "properties": {
+              "class": {
+                "description": "Python class name of the expected exception, without Python module path",
+                "type": "string"
+              },
+              "message_pattern": {
+                "description": "Regexp pattern for the expected exception message. Begin and end markers must be specified, if they should be considered.",
+                "type": "string",
+                "default": null
+              },
+              "properties": {
+                "description": "Expected properties of the exception",
+                "type": "object",
+                "default": [],
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^[a-zA-Z0-9_]+$": {
+                    "description": "Property name and value",
+                    "type": ["string", "float", "integer", "boolean", "null", "object", "array"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "hmc_interactions": {
+        "description": "List of HMC interactions for the test case",
+        "type": "array",
+        "items": {
+          "description": "A single HMC interaction with expected HTTP request and HTTP response to be returned",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+          ],
+          "properties": {
+            "http_request": {
+              "description": "The expected HTTP request, for being checked in the test function",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+              ],
+              "properties": {
+              }
+            },
+            "http_response": {
+              "description": "The HTTP response to be returned to the zhmcclient code",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+              ],
+              "properties": {
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
