@@ -1,0 +1,2 @@
+Test: Enabled some of the end2end tests for adapter related operations also
+for CPCs in classic mode since z16.

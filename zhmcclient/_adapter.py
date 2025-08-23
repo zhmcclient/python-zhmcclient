@@ -18,46 +18,17 @@ Crypto adapter) or a logical adapter (e.g. HiperSockets switch).
 
 Adapter resources are contained in :term:`CPC` resources.
 
-Adapters only exist in CPCs that are in DPM mode.
+Adapter resources originally were supported only for CPCs in DPM mode. Since
+z16, Adapter resources are in addition supported for CPCs in classic mode, but
+in a quite limited fashion: The only HMC operations supported with classic mode
+CPCs are "List Permitted Adapters" and "Update Adapter Firmware".
 
-There are four types of Adapters:
+Each method description of adapter related zhmcclient classes details on which
+types of CPCs it is supported.
 
-1. Network Adapters:
-   Network adapters enable communication through different networking
-   transport protocols. These network adapters are OSA-Express,
-   HiperSockets and RoCE-Express.
-   DPM automatically discovers OSA-Express and RoCE-Express adapters
-   because they are physical cards that are installed on the CPC.
-   In contrast, HiperSockets are logical adapters and must be
-   created and configured by an administrator using the 'Create Hipersocket'
-   operation (see create_hipersocket()).
-   Network Interface Cards (NICs) provide a partition with access to networks.
-   Each NIC represents a unique connection between the partition
-   and a specific network adapter.
-
-2. Storage Adapters:
-   Fibre Channel connections provide high-speed connections between CPCs
-   and storage devices.
-   DPM automatically discovers any storage adapters installed on the CPC.
-   Host bus adapters (HBAs) provide a partition with access to external
-   storage area networks (SANs) and devices that are connected to a CPC.
-   Each HBA represents a unique connection between the partition
-   and a specific storage adapter.
-
-3. Accelerator Adapters:
-   Accelerator adapters provide specialized functions to
-   improve performance or use of computer resource like the IBM System z
-   Enterprise Data Compression (zEDC) feature.
-   DPM automatically discovers accelerators that are installed on the CPC.
-   An accelerator virtual function provides a partition with access
-   to zEDC features that are installed on a CPC.
-   Each virtual function represents a unique connection between
-   the partition and a physical feature card.
-
-4. Crypto Adapters:
-   Crypto adapters provide cryptographic processing functions.
-   DPM automatically discovers cryptographic features that are installed
-   on the CPC.
+A CPC in DPM mode automatically discovers the physical adapter cards that are
+plugged into the system. A CPC in classic mode shows only the adapters that
+have been defined in the active IOCDS.
 """
 
 
@@ -85,7 +56,7 @@ class AdapterManager(BaseManager):
 
     Objects of this class are not directly created by the user; they are
     accessible via the following instance variable of a
-    :class:`~zhmcclient.Cpc` object (in DPM mode):
+    :class:`~zhmcclient.Cpc` object:
 
     * :attr:`~zhmcclient.Cpc.adapters`
 
@@ -170,6 +141,7 @@ class AdapterManager(BaseManager):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The CPC must be in DPM mode.
 
         Authorization requirements:
 
@@ -229,6 +201,7 @@ class AdapterManager(BaseManager):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The CPC must be in DPM mode.
 
         Authorization requirements:
 
@@ -320,6 +293,24 @@ class AdapterManager(BaseManager):
 class Adapter(BaseResource):
     """
     Representation of an :term:`Adapter`.
+
+    Note that adapter objects do not correspond 1:1 with the physical adapter
+    cards. Adapter objects do correspond 1:1 with PCHIDs, though.
+    On classic mode CPCs, there are additional adapter objects that correspond
+    1:1 with the VCHIDs of Network Express adapters.
+
+    Some examples:
+
+    * OSA Express cards with 2 ports have a single PCHID for the physical card
+      and thus a single Adapter object.
+    * Network Express cards with 2 ports have one PCHID for each port, and thus
+      2 Adapter objects. On classic mode CPCs, each port has two additional
+      VCHIDs for the 'osh' and 'neth' support of the adapter, so a 2-port card
+      has 4 additional Adapter objects.
+    * FICON Express cards with 2 ports have one PCHID for each port, and thus
+      2 Adapter objects.
+    * Crypto Express cards with 2 HSMs (= "ports") have one PCHID for each HSM,
+      and thus 2 Adapter objects.
 
     Derived from :class:`~zhmcclient.BaseResource`; see there for common
     methods and attributes.
@@ -447,37 +438,19 @@ class Adapter(BaseResource):
         """
         Integer: The maximum number of crypto domains on this crypto adapter.
 
-        The following table shows the maximum number of crypto domains for
-        crypto adapters supported on IBM Z machine generations in DPM mode. The
-        corresponding LinuxONE machine generations are listed in the notes
-        below the table:
+        HMC/SE version requirements:
 
-        =================  ================================  ===============
-        Adapter type       Machine generations               Maximum domains
-        =================  ================================  ===============
-        Crypto Express 5S  z15 (5) / z14 (3) / z13 (1)             85
-        Crypto Express 5S  z15 (6) / z14-ZR1 (4) / z13s (2)        40
-        Crypto Express 6S  z16 (7) / z15 (5) / z14 (3)             85
-        Crypto Express 6S  z15 (6) / z14-ZR1 (4)                   40
-        Crypto Express 7S  z16 (7) / z15 (5)                       85
-        Crypto Express 7S  z15 (6)                                 40
-        Crypto Express 8S  z16 (7)                                 85
-        =================  ================================  ===============
+        * The parent CPC of the adapter must be in DPM mode.
 
-        Notes:
+        The maximum number of crypto domains on any crypto adapter (= HSM)
+        is always equal to the maximum number of active partitions / LPARs
+        on the CPC.
 
-        (1) Supported for z13 and LinuxONE Emperor
-        (2) Supported for z13s and LinuxONE Rockhopper
-        (3) Supported for z14 and LinuxONE Emperor II
-        (4) Supported for z14-ZR1 and LinuxONE Rockhopper II
-        (5) Supported for z15-T01 and LinuxONE III LT1
-        (6) Supported for z15-T02 and LinuxONE III LT2
-        (7) Supported for z16-A01 and LinuxONE 4
+        For example, high-end systems support a maximum number of 85 crypto
+        domains per HSM, and mid-range systems support a maximum number of 40
+        crypto domains per HSM.
 
         If this adapter is not a crypto adapter, `None` is returned.
-
-        If the crypto adapter card type is not known, :exc:`ValueError` is
-        raised.
 
         Raises:
 
@@ -513,6 +486,7 @@ class Adapter(BaseResource):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The parent CPC of the adapter must be in DPM mode.
 
         Authorization requirements:
 
@@ -578,6 +552,7 @@ class Adapter(BaseResource):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The parent CPC of the adapter must be in DPM mode.
 
         Authorization requirements:
 
@@ -638,6 +613,7 @@ class Adapter(BaseResource):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The parent CPC of the adapter must be in DPM mode.
 
         Authorization requirements:
 
@@ -696,6 +672,7 @@ class Adapter(BaseResource):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The parent CPC of the adapter must be in DPM mode.
 
         Authorization requirements:
 
@@ -762,6 +739,7 @@ class Adapter(BaseResource):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The parent CPC of the adapter must be in DPM mode.
 
         Authorization requirements:
 
@@ -836,6 +814,7 @@ class Adapter(BaseResource):
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
+        * The parent CPC of the adapter must be in DPM mode.
 
         Authorization requirements:
 
