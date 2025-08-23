@@ -3633,6 +3633,9 @@ class AdapterGetAssignedPartitionsHandler:
         if not cpc.dpm_enabled:
             raise CpcNotInDpmError(method, uri, cpc)
 
+        se_version_info = list(map(
+            int, cpc.properties.get('se-version').split('.')))
+
         adapter_family = adapter.properties['adapter-family']
         filter_args = query_parms
         assigned_partitions = []
@@ -3641,7 +3644,8 @@ class AdapterGetAssignedPartitionsHandler:
             if adapter_family in ('hipersockets', 'osa', 'roce', 'cna'):
                 # Check if partition has a NIC backed by this adapter
                 for nic in partition.nics.list():
-                    if nic.properties['type'] in ('iqd', 'osd'):
+                    if nic.properties['type'] in ('iqd', 'osd') \
+                            and se_version_info < [2, 17]:
                         vswitch_uri = nic.properties['virtual-switch-uri']
                         try:
                             vswitch = hmc.lookup_by_uri(vswitch_uri)
@@ -3655,7 +3659,7 @@ class AdapterGetAssignedPartitionsHandler:
                             assigned_partitions.append(partition)
                             break  # Finding one NIC is sufficient
                     else:
-                        # roce, cna
+                        # roce, cna before z17, or z17
                         backing_port_uri = nic.properties[
                             'network-adapter-port-uri']
                         try:
