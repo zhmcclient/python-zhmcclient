@@ -199,6 +199,14 @@ test_unit_py_files := \
     $(wildcard $(test_dir)/unit/*/*.py) \
     $(wildcard $(test_dir)/unit/*/*/*.py) \
 
+test_function_py_files := \
+    $(wildcard $(test_dir)/function/*.py) \
+    $(wildcard $(test_dir)/function/*/*.py) \
+
+test_function_yaml_files := \
+    $(wildcard $(test_dir)/function/*.yaml) \
+    $(wildcard $(test_dir)/function/*/*.yaml) \
+
 test_end2end_py_files := \
     $(wildcard $(test_dir)/end2end/*.py) \
     $(wildcard $(test_dir)/end2end/*/*.py) \
@@ -238,6 +246,7 @@ bandit_rc_file := .bandit.toml
 check_py_files := \
     $(filter-out $(vendor_py_files), $(package_py_files)) \
     $(test_unit_py_files) \
+    $(test_function_py_files) \
     $(test_end2end_py_files) \
     $(test_common_py_files) \
     $(example_py_files) \
@@ -277,55 +286,57 @@ help:
 	@echo "Package version will be: $(package_version)"
 	@echo ""
 	@echo "Make targets:"
-	@echo "  install    - Install package in active Python environment (non-editable)"
-	@echo "  develop    - Prepare the development environment by installing prerequisites"
-	@echo "  check_reqs - Perform missing dependency checks"
-	@echo "  check      - Run Flake8 on sources"
-	@echo "  ruff       - Run Ruff (an alternate lint tool) on sources"
-	@echo "  pylint     - Run PyLint on sources"
-	@echo "  safety     - Run safety for install and all"
-	@echo "  bandit     - Run bandit checker"
-	@echo "  test       - Run unit tests (adds to coverage results)"
-	@echo "  end2end_mocked - Run end2end tests against example mock environments (adds to coverage results)"
-	@echo "  installtest - Run install tests"
-	@echo "  build      - Build the distribution files in: $(dist_dir)"
-	@echo "  builddoc   - Build documentation in: $(doc_build_dir)"
-	@echo "  all        - Do all of the above"
-	@echo "  end2end    - Run end2end tests (adds to coverage results)"
-	@echo "  end2end_show - Show HMCs defined for end2end tests"
-	@echo "  end2end_check - Check access to all HMCs defined in your HMC inventory file for end2end tests"
-	@echo "  authors    - Generate AUTHORS.md file from git log"
-	@echo "  uninstall  - Uninstall package from active Python environment"
-	@echo "  release_branch - Create a release branch when releasing a version (requires VERSION and optionally BRANCH to be set)"
-	@echo "  release_publish - Publish to PyPI when releasing a version (requires VERSION and optionally BRANCH to be set)"
-	@echo "  start_branch - Create a start branch when starting a new version (requires VERSION and optionally BRANCH to be set)"
-	@echo "  start_tag - Create a start tag when starting a new version (requires VERSION and optionally BRANCH to be set)"
-	@echo "  clean      - Remove any temporary files"
-	@echo "  clobber    - Remove any build products"
-	@echo "  platform   - Display the information about the platform as seen by make"
-	@echo "  debuginfo  - Display the debug information for the package"
-	@echo "  env        - Display the environment as seen by make"
+	@echo "  install           - Install package in active Python environment (non-editable)"
+	@echo "  develop           - Prepare the development environment by installing prerequisites"
+	@echo "  check_reqs        - Perform missing dependency checks"
+	@echo "  check             - Run Flake8 on sources"
+	@echo "  ruff              - Run Ruff (an alternate lint tool) on sources"
+	@echo "  pylint            - Run PyLint on sources"
+	@echo "  safety            - Run safety for install and all"
+	@echo "  bandit            - Run bandit checker"
+	@echo "  unittest          - Run unit tests (adds to coverage results)"
+	@echo "  functiontest      - Run function tests (adds to coverage results)"
+	@echo "  test              - Run unit and function tests (adds to coverage results)"
+	@echo "  end2end_mocked    - Run end2end tests against example mock environments (adds to coverage results)"
+	@echo "  installtest       - Run install tests"
+	@echo "  build             - Build the distribution files in: $(dist_dir)"
+	@echo "  builddoc          - Build documentation in: $(doc_build_dir)"
+	@echo "  all               - Do all of the above"
+	@echo "  end2end           - Run end2end tests (adds to coverage results)"
+	@echo "  end2end_show      - Show HMCs defined for end2end tests"
+	@echo "  end2end_check     - Check access to all HMCs defined in your HMC inventory file for end2end tests"
+	@echo "  authors           - Generate AUTHORS.md file from git log"
+	@echo "  uninstall         - Uninstall package from active Python environment"
+	@echo "  release_branch    - Create a release branch when releasing a version (requires VERSION and optionally BRANCH to be set)"
+	@echo "  release_publish   - Publish to PyPI when releasing a version (requires VERSION and optionally BRANCH to be set)"
+	@echo "  start_branch      - Create a start branch when starting a new version (requires VERSION and optionally BRANCH to be set)"
+	@echo "  start_tag         - Create a start tag when starting a new version (requires VERSION and optionally BRANCH to be set)"
+	@echo "  clean             - Remove any temporary files"
+	@echo "  clobber           - Remove any build products"
+	@echo "  platform          - Display the information about the platform as seen by make"
+	@echo "  debuginfo         - Display the debug information for the package"
+	@echo "  env               - Display the environment as seen by make"
 	@echo ""
 	@echo "Environment variables:"
-	@echo "  TESTCASES=... - Testcase filter for pytest -k"
-	@echo "  TESTOPTS=... - Options for pytest"
-	@echo "  TESTHMC=... - HMC group or host name in HMC inventory file to be used in end2end tests. Default: $(default_testhmc)"
+	@echo "  TESTCASES=...     - Testcase filter for pytest -k"
+	@echo "  TESTOPTS=...      - Options for pytest"
+	@echo "  TESTHMC=...       - HMC group or host name in HMC inventory file to be used in end2end tests. Default: $(default_testhmc)"
 	@echo "  TESTINVENTORY=... - Path name of HMC inventory file used in end2end tests. Default: $(default_testinventory)"
-	@echo "  TESTVAULT=... - Path name of HMC vault file used in end2end tests. Default: $(default_testvault)"
+	@echo "  TESTVAULT=...     - Path name of HMC vault file used in end2end tests. Default: $(default_testvault)"
 	@echo "  TESTRESOURCES=... - The resources to test with in end2end tests, as follows:"
-	@echo "      random - one random choice from the complete list of resources (default)"
-	@echo "      all - the complete list of resources"
-	@echo "      <pattern> - the resources with names matching the regexp pattern"
-	@echo "  TESTLOGFILE=... - Enable logging in end2end tests to that file. Default: no logging"
-	@echo "  PACKAGE_LEVEL - Package level to be used for installing dependent Python"
+	@echo "      random          - one random choice from the complete list of resources (default)"
+	@echo "      all             - the complete list of resources"
+	@echo "      <pattern>       - the resources with names matching the regexp pattern"
+	@echo "  TESTLOGFILE=...   - Enable logging in end2end tests to that file. Default: no logging"
+	@echo "  PACKAGE_LEVEL     - Package level to be used for installing dependent Python"
 	@echo "      packages in 'install' and 'develop' targets:"
-	@echo "        latest - Latest package versions available on Pypi"
-	@echo "        minimum - Minimum versions as defined in minimum-constraints*.txt"
+	@echo "        latest        - Latest package versions available on Pypi"
+	@echo "        minimum       - Minimum versions as defined in minimum-constraints*.txt"
 	@echo "      Optional, defaults to 'latest'."
-	@echo "  PYTHON_CMD=... - Name of python command. Default: python"
-	@echo "  PIP_CMD=... - Name of pip command. Default: pip"
-	@echo "  VERSION=... - M.N.U version to be released or started"
-	@echo "  BRANCH=... - Name of branch to be released or started (default is derived from VERSION)"
+	@echo "  PYTHON_CMD=...    - Name of python command. Default: python"
+	@echo "  PIP_CMD=...       - Name of pip command. Default: pip"
+	@echo "  VERSION=...       - M.N.U version to be released or started"
+	@echo "  BRANCH=...        - Name of branch to be released or started (default is derived from VERSION)"
 
 .PHONY: platform
 platform:
@@ -679,11 +690,20 @@ else
 endif
 	echo "done" >$@
 
-.PHONY: test
-test: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(coverage_config_file)
+.PHONY: unittest
+unittest: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(coverage_config_file)
 	bash -c "PYTHONPATH=. coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -s $(pytest_opts) $(test_dir)/unit"
 	coverage html
 	@echo "Makefile: $@ done."
+
+.PHONY: functiontest
+functiontest: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_function_py_files) $(test_function_yaml_files) $(test_common_py_files) $(coverage_config_file)
+	bash -c "PYTHONPATH=. coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -s $(pytest_opts) $(test_dir)/function"
+	coverage html
+	@echo "Makefile: $@ done."
+
+.PHONY: test
+test: unittest functiontest
 
 .PHONY: installtest
 installtest: $(bdist_file) $(sdist_file) $(test_dir)/installtest/test_install.sh

@@ -1,0 +1,118 @@
+# Function tests for zhmcclient.User
+
+- name: test_user_name
+  description: Test User.name from local object
+  zhmcclient_call:
+    target:
+      manager_attribute: users
+      uri: /api/users/oid-user1
+      name: user1
+      parent:
+        manager_attribute: consoles
+        uri: /api/console
+        name: Console
+    property: name
+  zhmcclient_result:
+    return: user1
+
+- name: test_user_get_property_local
+  description: Test User.get_property(object-uri) from local object
+  zhmcclient_call:
+    target:
+      manager_attribute: users
+      uri: /api/users/oid-user1
+      name: user1
+      parent:
+        manager_attribute: consoles
+        uri: /api/console
+        name: Console
+    method: get_property
+    parameters:
+      name: object-uri
+  zhmcclient_result:
+    return: /api/users/oid-user1
+
+- name: test_user_get_property_hmc
+  description: Test User.get_property(hmc_version) from HMC
+  zhmcclient_call:
+    target:
+      manager_attribute: users
+      uri: /api/users/oid-user1
+      name: user1
+      parent:
+        manager_attribute: consoles
+        uri: /api/console
+        name: Console
+    method: get_property
+    parameters:
+      name: hmc_version
+  zhmcclient_result:
+    return: "2.17"
+  hmc_interactions:
+    - http_request:
+        method: GET
+        uri: /api/users/oid-user1
+      http_response:
+        status: 200
+        body:
+          parent: "/api/console"
+          class: "user"
+          object-uri: "/api/users/oid-user1"
+          object-id: "oid-user1"
+          name: "user1"
+          hmc_version: "2.17"
+
+- name: test_user_get_invalid_property_hmc
+  description: Test User.get_property(invalid) from HMC
+  zhmcclient_call:
+    target:
+      manager_attribute: users
+      uri: /api/users/oid-user1
+      name: user1
+      parent:
+        manager_attribute: consoles
+        uri: /api/console
+        name: Console
+    method: get_property
+    parameters:
+      name: invalid
+  zhmcclient_result:
+    exception:
+      class: KeyError
+  hmc_interactions:
+    - http_request:
+        method: GET
+        uri: /api/users/oid-user1
+      http_response:
+        status: 200
+        body:
+          parent: "/api/console"
+          class: "user"
+          object-uri: "/api/users/oid-user1"
+          object-id: "oid-user1"
+          name: "user1"
+          hmc_version: "2.17"
+
+- name: test_user_get_property_connection_error
+  description: Test User.get_property(name) with connection error
+  zhmcclient_call:
+    target:
+      manager_attribute: users
+      uri: /api/users/oid-user1
+      name: user1
+      parent:
+        manager_attribute: consoles
+        uri: /api/console
+        name: Console
+    method: get_property
+    parameters:
+      name: user1
+  zhmcclient_result:
+    exception:
+      class: ConnectionError
+  hmc_interactions:
+    - http_request:
+        method: GET
+        uri: /api/users/oid-user1
+      http_response:
+        callback: raise_requests_connection_error
