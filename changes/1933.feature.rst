@@ -1,0 +1,4 @@
+Docs: Documented that the 'zhmcclient.Console.list_permitted_adapters()' method
+is in addition supported for CPCs in classic mode since z16; clarified for
+the methods of 'zhmcclient.Adapter/Manager' that they require DPM; other
+clarifications in the description of the 'zhmcclient.Adapter/Manager' classes.

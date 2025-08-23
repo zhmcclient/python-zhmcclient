@@ -996,7 +996,7 @@ class Console(BaseResource):
         """
         List the permitted adapters of all CPCs managed by this HMC.
 
-        The result will include all adapters of any DPM CPCs and z15 or later
+        The result will include all adapters of any DPM CPCs and z16 or later
         classic-mode CPCs that are managed by the targeted HMC and to which the
         user has object-access permission.
 
@@ -1019,6 +1019,9 @@ class Console(BaseResource):
             Controls whether the full set of resource properties for the
             returned Adapter objects should be retrieved, vs. only a short
             set.
+
+            Using this parameter requires that the managed CPCs do not include
+            any CPCs in classic mode.
 
           filter_args (dict):
             Filter arguments for limiting the adapters in the result.
@@ -1061,7 +1064,8 @@ class Console(BaseResource):
             default properties.
 
             Using this parameter requires :ref:`API feature <API features>`
-            "adapter-network-information".
+            "adapter-network-information" on the HMC and on all managed CPCs.
+            (i.e. SE version must be >= 2.16.0).
 
         Returns:
 
