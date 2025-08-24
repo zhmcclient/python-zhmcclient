@@ -1,0 +1,2 @@
+Docs: Documented that the 'zhmcclient.Adapter' class is in addition supported
+for CPCs in classic mode since z16.

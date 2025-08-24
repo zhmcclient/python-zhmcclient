@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-End2end tests for adapters (on CPCs in DPM mode).
+End2end tests for adapters (on CPCs in both DPM and classic mode).
 
 These tests do not change any existing adapters, but create, modify
 and delete Hipersocket adapters.
@@ -51,19 +51,30 @@ ADAPTER_ADDITIONAL_PROPS = ['description', 'detected-card-type']
 ADAPTER_VOLATILE_PROPS = []
 
 
-def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
+def se_version_info(cpc):
+    """
+    Return the SE version of the CPC as a list of int.
+    """
+    return list(map(int, cpc.prop('se-version').split('.')))
+
+
+def test_adapter_find_list(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test list(), find(), findall().
     """
-    if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+    if not all_cpcs:
+        pytest.skip("HMC definition does not include any CPCs")
 
-    for cpc in dpm_mode_cpcs:
-        assert cpc.dpm_enabled
+    for cpc in all_cpcs:
+        if not cpc.dpm_enabled and se_version_info(cpc) < [2, 16]:
+            pytest.skip(f"CPC with SE {cpc.prop('se-version')} in classic "
+                        "mode does not support Adapter objects")
 
         session = cpc.manager.session
         hd = session.hmc_definition
+
+        cpc_mode_str = "DPM" if cpc.dpm_enabled else "classic"
 
         # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
@@ -72,23 +83,27 @@ def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:
-            print(f"Testing on CPC {cpc.name} with adapter {adapter.name!r}")
+            print(f"Testing on CPC {cpc.name} ({cpc_mode_str} mode) "
+                  f"with adapter {adapter.name!r}")
             runtest_find_list(
                 session, cpc.adapters, adapter.name, 'name', 'object-uri',
                 ADAPTER_VOLATILE_PROPS, ADAPTER_MINIMAL_PROPS,
                 ADAPTER_LIST_PROPS, ADAPTER_ADDITIONAL_PROPS)
 
 
-def test_adapter_property(dpm_mode_cpcs):  # noqa: F811
+def test_adapter_property(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test property related methods
     """
-    if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+    if not all_cpcs:
+        pytest.skip("HMC definition does not include any CPCs")
 
-    for cpc in dpm_mode_cpcs:
-        assert cpc.dpm_enabled
+    for cpc in all_cpcs:
+        if not cpc.dpm_enabled and se_version_info(cpc) < [2, 16]:
+            pytest.skip(f"CPC with SE {cpc.prop('se-version')} in classic "
+                        "mode does not support Adapter objects")
+        cpc_mode_str = "DPM" if cpc.dpm_enabled else "classic"
 
         session = cpc.manager.session
         hd = session.hmc_definition
@@ -96,11 +111,13 @@ def test_adapter_property(dpm_mode_cpcs):  # noqa: F811
         # Pick the adapters to test with
         adapter_list = cpc.adapters.list()
         if not adapter_list:
-            skip_warn(f"No adapters on CPC {cpc.name} managed by HMC {hd.host}")
+            skip_warn(f"No adapters on CPC {cpc.name} ({cpc_mode_str} mode) "
+                      f"managed by HMC {hd.host}")
         adapter_list = pick_test_resources(adapter_list)
 
         for adapter in adapter_list:
-            print(f"Testing on CPC {cpc.name} with adapter {adapter.name!r}")
+            print(f"Testing on CPC {cpc.name} ({cpc_mode_str} mode) "
+                  f"with adapter {adapter.name!r}")
 
             # Select a property that is not returned by list()
             non_list_prop = 'description'
@@ -118,8 +135,14 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
+        cpc_mode_str = "DPM"
 
-        print(f"Testing on CPC {cpc.name}")
+        if se_version_info(cpc) >= [2, 17]:
+            # TODO: Enable this case again once create_hipersocket() has been
+            #       reimplemented using partition links.
+            pytest.skip("create_hipersocket() is not supported on z17 CPCs")
+
+        print(f"Testing on CPC {cpc.name} ({cpc_mode_str} mode)")
 
         adapter_name = TEST_PREFIX + ' test_adapter_crud adapter1'
         adapter_name_new = adapter_name + ' new'
@@ -208,6 +231,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
+        cpc_mode_str = "DPM"
+
+        nes_feature = cpc.api_feature_enabled('network-express-support')
 
         required_families = [
             'hipersockets',
@@ -221,6 +247,8 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
             'coupling',
             'ism',
             'zhyperlink',
+            'network-express',
+            'networking',
         ]
         family_adapters = {}
         for family in required_families:
@@ -255,12 +283,13 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         UserWarning)
                     continue
 
-                if family in ('hipersockets', 'osa'):
+                if family in ('hipersockets', 'osa') and not nes_feature:
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                        print(f"Testing on CPC {cpc.name} ({cpc_mode_str} "
+                              f"mode) with adapter {test_adapter.name!r} "
+                              f"(family '{family}')")
 
                         # The method to be tested
                         before_parts = test_adapter.list_assigned_partitions()
@@ -293,12 +322,15 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         new_part = new_parts[0]
                         assert new_part.uri == tmp_part.uri
 
-                elif family in ('roce', 'cna'):
+                elif family in ('hipersockets', 'osa') and nes_feature or \
+                        family in ('roce', 'cna', 'network-express',
+                                   'networking'):
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                        print(f"Testing on CPC {cpc.name} ({cpc_mode_str} "
+                              f"mode) with adapter {test_adapter.name!r} "
+                              f"(family '{family}')")
 
                         # The method to be tested
                         before_parts = test_adapter.list_assigned_partitions()
@@ -346,8 +378,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                             continue
 
                         found_test_adapter = True
-                        print(f"Testing on CPC {cpc.name} with FCP adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                        print(f"Testing on CPC {cpc.name} ({cpc_mode_str} "
+                              f"mode) with FCP adapter {test_adapter.name!r} "
+                              f"(family '{family}')")
 
                         found_adapters = []
                         for part in before_parts:
@@ -376,8 +409,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                        print(f"Testing on CPC {cpc.name} ({cpc_mode_str} "
+                              f"mode) with adapter {test_adapter.name!r} "
+                              f"(family '{family}')")
 
                         # The method to be tested
                         before_parts = test_adapter.list_assigned_partitions()
@@ -419,8 +453,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                             continue
 
                         found_test_adapter = True
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                        print(f"Testing on CPC {cpc.name} ({cpc_mode_str} "
+                              f"mode) with adapter {test_adapter.name!r} "
+                              f"(family '{family}')")
 
                         found_adapter_uris = []
                         for part in before_parts:
@@ -497,16 +532,18 @@ def base_adapter_id(adapter_id, family):
     return f'{base_pchid:03x}'
 
 
-def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
+def test_adapter_list_sibling_adapters(all_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test Adapter.list_sibling_adapters().
     """
-    if not dpm_mode_cpcs:
-        pytest.skip("HMC definition does not include any CPCs in DPM mode")
+    if not all_cpcs:
+        pytest.skip("HMC definition does not include any CPCs")
 
-    for cpc in dpm_mode_cpcs:
-        assert cpc.dpm_enabled
+    for cpc in all_cpcs:
+        if not cpc.dpm_enabled and se_version_info(cpc) < [2, 16]:
+            pytest.skip(f"CPC with SE {cpc.prop('se-version')} in classic "
+                        "mode does not support Adapter objects")
 
         # Adapter families that have more than one Adapter object (=PCHID) on a
         # physical adapter card
