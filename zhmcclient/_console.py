@@ -1499,6 +1499,96 @@ class Console(BaseResource):
 
         return result
 
+    @logged_api_call
+    def report_console_problem(self, customer_name, customer_phone_number,
+                               problem_description, problem_type,
+                               wait_for_completion=True,
+                               operation_timeout=None):
+        """
+        Report a console problem on this HMC.
+
+        This is done by performing the "Report a Console Problem"
+        operation.
+
+        HMC/SE version requirements: None
+
+        Authorization requirements:
+
+        * Task permission to the "Report a Console Problem" task.
+        * Automatic service call reporting must be enabled
+
+        Parameters:
+
+          customer_name (string): The name of the customer
+            reporting the console problem.
+
+          customer_phone_number (string): The phone number of
+            the customer reporting the console problem.
+
+          problem_description (string): A description of the
+            problem.
+
+          problem_type (string): The problem type (i.e. "health",
+            "hmc", "test").
+
+          wait_for_completion (bool):
+            Boolean controlling whether this method should wait for completion
+            of the requested asynchronous HMC operation including any HMC
+            restarts, as follows:
+
+            * If `True`, this method will wait for completion of the
+              asynchronous job performing the operation including any HMC
+              restarts.
+
+            * If `False`, this method will return immediately once the HMC has
+              accepted the request to perform the operation.
+
+          operation_timeout (:term:`number`):
+            Timeout in seconds, for waiting for completion of the asynchronous
+            job performing the operation including any HMC restarts. The
+            special value 0 means that no timeout is set. `None` means that
+            the default async operation timeout of the session is used. If the
+            timeout expires when `wait_for_completion=True`, a
+            :exc:`~zhmcclient.OperationTimeout` is raised.
+
+        Returns:
+
+          string or :class:`~zhmcclient.Job`:
+
+            If `wait_for_completion` is `True`, returns a string with the
+            message text describing the detailed error that occurred when the
+            operation was not successful.
+
+            If `wait_for_completion` is `False`, returns a
+            :class:`~zhmcclient.Job` object representing the asynchronously
+            executing job on the HMC. The Job object will be valid across
+            any HMC restarts that occur during the upgrade operation.
+            This job does not support cancellation.
+
+        Raises:
+
+          :exc:`~zhmcclient.HTTPError`
+          :exc:`~zhmcclient.ParseError`
+          :exc:`~zhmcclient.AuthError`
+          :exc:`~zhmcclient.ConnectionError`
+          :exc:`~zhmcclient.OperationTimeout`: The timeout expired while
+            waiting for completion of the operation.
+        """
+        body = {
+            'customer-name': customer_name,
+            'customer-phone-number': customer_phone_number,
+            'problem-description': problem_description,
+            'problem-type': problem_type
+        }
+
+        result = self.manager.session.post(
+            self.uri + '/operations/report-problem',
+            resource=self,
+            body=body, wait_for_completion=wait_for_completion,
+            operation_timeout=operation_timeout)
+
+        return result
+
     def dump(self):
         """
         Dump this Console resource with its properties and child resources
