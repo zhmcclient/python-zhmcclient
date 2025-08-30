@@ -3,6 +3,7 @@
 Sorted list of authors derived from git commit history:
 ```
 Abhiram Santhosh <abhiram.santhosh1@ibm.com>
+Adam Barson <adam.tyler.barson@ibm.com>
 Alexander Egorenkov <egorenar@linux.ibm.com>
 Andreas Maier <maiera@de.ibm.com>
 Andreas Scheuring <andreas.scheuring@de.ibm.com>
