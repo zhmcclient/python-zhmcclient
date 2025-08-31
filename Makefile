@@ -240,7 +240,7 @@ check_py_files := \
 check_reqs_packages := pip_check_reqs virtualenv tox pipdeptree build pytest coverage coveralls flake8 ruff pylint jupyter notebook safety bandit towncrier sphinx
 
 ifdef TESTCASES
-  pytest_opts := $(TESTOPTS) -k "$(TESTCASES)"
+  pytest_opts := $(TESTOPTS) -k '$(TESTCASES)'
 else
   pytest_opts := $(TESTOPTS)
 endif
