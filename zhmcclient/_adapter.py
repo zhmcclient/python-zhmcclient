@@ -67,6 +67,8 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._port import PortManager
 from ._logging import logged_api_call
+from ._exceptions import NotFound, NoUniqueMatch
+
 from ._utils import repr_dict, repr_manager, repr_timestamp, matches_filters, \
     divide_filter_args, make_query_str, RC_ADAPTER, repr_obj_id
 
@@ -218,6 +220,12 @@ class AdapterManager(BaseManager):
         """
         Create and configure a HiperSockets Adapter in this CPC.
 
+        z17 CPCs removed the "Create Hipersocket" operation. This method uses
+        the "Create Hipersocket" operation z15 and earlier CPCs, and the
+        "Create Partition Link" operation on z16 and later CPCs. The distinction
+        is made based on the "dpm-hipersockets-partition-link-management"
+        API feature on the CPC.
+
         HMC/SE version requirements:
 
         * SE version >= 2.13.1
@@ -225,13 +233,31 @@ class AdapterManager(BaseManager):
         Authorization requirements:
 
         * Object-access permission to the scoping CPC.
-        * Task permission to the "Create HiperSockets Adapter" task.
+        * On CPCs of z15 and earlier: Task permission to the
+          "Create HiperSockets Adapter" task.
+        * On CPCs of z16 and later: Task permission to the
+          "Create Partition Link" task.
 
         Parameters:
 
           properties (dict): Initial property values.
-            Allowable properties are defined in section 'Request body contents'
-            in section 'Create Hipersocket' in the :term:`HMC API` book.
+            Allowable properties are the following:
+
+            "name" (str): Required: The adapter's 'name' property.
+
+            "description" (str): Optional: The adapter's 'description' property.
+              Default: An empty string.
+
+            "maximum-transmission-unit-size" (int): Optional: The adapter's
+              'maximum-transmission-unit-size' property. Default: 8
+
+            "port-description" (str): Optional: The adapter port's 'description'
+              property. Default: An empty string. This property is ignored
+              on CPCs of z16 and later.
+
+          These properties are defined in section 'Request body contents'
+          in section 'Create Hipersocket' in the :term:`HMC API` book, but
+          they are valid for both approaches.
 
         Returns:
 
@@ -247,14 +273,46 @@ class AdapterManager(BaseManager):
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
-        result = self.session.post(self.cpc.uri + '/adapters', body=properties)
-        # There should not be overlaps, but just in case there are, the
-        # returned props should overwrite the input props:
-        props = copy.deepcopy(properties)
-        props.update(result)
-        name = props.get(self._name_prop, None)
-        uri = props[self._uri_prop]
-        adapter = Adapter(self, uri, name, props)
+        cpc = self.cpc
+        pl_feature = cpc.api_feature_enabled(
+            "dpm-hipersockets-partition-link-management")
+        if pl_feature:
+            name = properties['name']
+            console = cpc.manager.console
+            pl_name = f"Hipersocket {name}"
+            if len(pl_name) > 64:
+                pl_name = f"HS {name}"
+                if len(pl_name) > 64:
+                    pl_name = pl_name[0:64]
+            part_link = console.partition_links.create({
+                "name": f"HS {properties['name']}",
+                "type": "hipersockets",
+                "cpc-uri": cpc.uri,
+            })
+            props = {
+                "name": name
+            }
+            description = properties.get("description")
+            if description:
+                props["description"] = description
+            mtu_size = properties.get("maximum-transmission-unit-size")
+            if mtu_size:
+                props["maximum-transmission-unit-size"] = mtu_size
+            # TODO: Use "port-description" to set port description
+            uri = part_link.get_property('adapter-uri')
+            adapter = Adapter(self, uri, name, props)
+            adapter.update_properties(props)
+        else:
+            result = self.session.post(self.cpc.uri + '/adapters',
+                                       body=properties)
+            # There should not be overlaps, but just in case there are, the
+            # returned props should overwrite the input props:
+            props = copy.deepcopy(properties)
+            props.update(result)
+            name = props.get(self._name_prop, None)
+            uri = props[self._uri_prop]
+            adapter = Adapter(self, uri, name, props)
+
         self._name_uri_cache.update(name, uri)
         return adapter
 
@@ -443,7 +501,14 @@ class Adapter(BaseResource):
         """
         Delete this Adapter.
 
-        The Adapter must be a HiperSockets Adapter.
+        The Adapter must be a HiperSockets Adapter and must not currently be
+        the backing adapter of any partition NICs.
+
+        z17 CPCs removed the "Delete Hipersocket" operation. This method uses
+        the "Delete Hipersocket" operation z15 and earlier CPCs, and the
+        "Delete Partition Link" operation on z16 and later CPCs. The distinction
+        is made based on the "dpm-hipersockets-partition-link-management"
+        API feature on the CPC.
 
         HMC/SE version requirements:
 
@@ -452,17 +517,52 @@ class Adapter(BaseResource):
         Authorization requirements:
 
         * Object-access permission to the HiperSockets Adapter to be deleted.
-        * Task permission to the "Delete HiperSockets Adapter" task.
+        * On CPCs of z15 and earlier: Task permission to the
+          "Delete HiperSockets Adapter" task.
+        * On CPCs of z16 and later: Task permission to the
+          "Delete Partition Link" task.
 
         Raises:
 
+          :exc:`~zhmcclient.NotFound`: Cannot find a Partition Link for the
+            adapter (on CPCs of z16 and later)
+          :exc:`~zhmcclient.NoUniqueMatch`: Found more than one Partition Link
+            for the adapter (on CPCs of z16 and later)
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
           :exc:`~zhmcclient.ConnectionError`
         """
+        cpc = self.manager.cpc
+        pl_feature = cpc.api_feature_enabled(
+            "dpm-hipersockets-partition-link-management")
+        if pl_feature:
+            console = cpc.manager.console
+            filter_args = {"cpc-uri": cpc.uri}
+            part_links = console.partition_links.list(
+                filter_args=filter_args,
+                additional_properties=['adapter-uri'],
+            )
+            part_links_for_adapter = []
+            for part_link in part_links:
+                if part_link.get_property('adapter-uri') == self.uri:
+                    part_links_for_adapter.append(part_link)
+            num_pl = len(part_links_for_adapter)
+            if num_pl == 0:
+                raise NotFound(
+                    message=f"Cannot find a partition link for CPC {cpc.name} "
+                    f"and adapter {self.name}")
+            if num_pl > 1:
+                raise NoUniqueMatch(
+                    message=f"Found more than one ({num_pl}) partition links "
+                    f"for CPC {cpc.name} and adapter {self.name}")
+            part_link = part_links_for_adapter[0]
+            part_link.delete()
+            # That also deletes the Hipersocket adapter
+        else:
+            self.manager.session.delete(self.uri, resource=self)
+
         # pylint: disable=protected-access
-        self.manager.session.delete(self.uri, resource=self)
         self.manager._name_uri_cache.delete(
             self.get_properties_local(self.manager._name_prop, None))
         self.cease_existence_local()

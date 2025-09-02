@@ -973,7 +973,8 @@ class NoUniqueMatch(Error):
     Derived from :exc:`~zhmcclient.Error`.
     """
 
-    def __init__(self, filter_args, manager, resources):
+    def __init__(self, filter_args=None, manager=None, resources=None,
+                 message=None):
         """
         Parameters:
 
@@ -982,30 +983,50 @@ class NoUniqueMatch(Error):
             to be found. Keys are the resource property names, values are
             the match values for that property.
 
+            May be `None` if the `message` parameter is `None`.
+            Will be ignored if the `message` parameter is not `None`.
+
           manager (:class:`~zhmcclient.BaseManager`):
             The manager of the resource, in whose scope the resource was
             attempted to be found.
 
-            Must not be `None`.
+            Must not be `None` if the `message` parameter is `None`.
+            Will be ignored if the `message` parameter is not `None`.
 
           resources (:term:`iterable` of :class:`~zhmcclient.BaseResource`):
             The resources that did match the filter.
 
-            Must not be `None`.
+            Must not be `None` if the `message` parameter is `None`.
+            Will be ignored if the `message` parameter is not `None`.
+
+          message (string):
+            The exception message.
+
+            If `None`, the message will be automatically created from the
+            `filter_args`, `manager` and `resources` parameters.
 
         ``args[0]`` will be set to an exception message that is automatically
         constructed from the input parameters.
         """
-        parent = manager.parent
-        if parent:
-            in_str = f" in {parent.__class__.__name__} {parent.name!r}"
+        if message is not None:
+            msg = message
+            filter_args = None
+            manager = None
+            resources = []
+            resource_uris = []
         else:
-            in_str = ""
-        resource_uris = [r.uri for r in resources]
-        msg = (
-            f"Found more than one {manager.resource_class.__name__} using "
-            f"filter arguments {filter_args!r}{in_str}, with "
-            f"URIs: {resource_uris!r}")
+            assert manager is not None
+            assert resources is not None
+            parent = manager.parent
+            if parent:
+                in_str = f" in {parent.__class__.__name__} {parent.name!r}"
+            else:
+                in_str = ""
+            resource_uris = [r.uri for r in resources]
+            msg = (
+                f"Found more than one {manager.resource_class.__name__} using "
+                f"filter arguments {filter_args!r}{in_str}, with "
+                f"URIs: {resource_uris!r}")
         super().__init__(msg)
         self._filter_args = filter_args
         self._manager = manager

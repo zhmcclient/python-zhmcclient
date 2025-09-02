@@ -1,0 +1,2 @@
+Extended the 'zhmcclient.NoUniqueMatch' exception to now also accept a
+user-provided exception message.
