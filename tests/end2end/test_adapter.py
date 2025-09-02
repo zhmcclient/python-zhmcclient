@@ -168,46 +168,48 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
         # The code to be tested
         adapter = cpc.adapters.create_hipersocket(adapter_input_props)
 
-        for pn, exp_value in adapter_input_props.items():
-            assert adapter.properties[pn] == exp_value, \
-                f"Unexpected value for property {pn!r}"
-        adapter.pull_full_properties()
-        for pn, exp_value in adapter_input_props.items():
-            assert adapter.properties[pn] == exp_value, \
-                f"Unexpected value for property {pn!r}"
-        for pn, exp_value in adapter_auto_props.items():
-            assert adapter.properties[pn] == exp_value, \
-                f"Unexpected value for property {pn!r}"
+        try:
+            for pn, exp_value in adapter_input_props.items():
+                assert adapter.properties[pn] == exp_value, \
+                    f"Unexpected value for property {pn!r}"
+            adapter.pull_full_properties()
+            for pn, exp_value in adapter_input_props.items():
+                assert adapter.properties[pn] == exp_value, \
+                    f"Unexpected value for property {pn!r}"
+            for pn, exp_value in adapter_auto_props.items():
+                assert adapter.properties[pn] == exp_value, \
+                    f"Unexpected value for property {pn!r}"
 
-        # Test updating a property of the adapter
+            # Test updating a property of the adapter
 
-        new_desc = "Updated adapter description."
+            new_desc = "Updated adapter description."
 
-        # The code to be tested
-        adapter.update_properties(dict(description=new_desc))
+            # The code to be tested
+            adapter.update_properties(dict(description=new_desc))
 
-        assert adapter.properties['description'] == new_desc
-        adapter.pull_full_properties()
-        assert adapter.properties['description'] == new_desc
+            assert adapter.properties['description'] == new_desc
+            adapter.pull_full_properties()
+            assert adapter.properties['description'] == new_desc
 
-        # Test renaming the adapter
+            # Test renaming the adapter
 
-        # The code to be tested
-        adapter.update_properties(dict(name=adapter_name_new))
+            # The code to be tested
+            adapter.update_properties(dict(name=adapter_name_new))
 
-        assert adapter.properties['name'] == adapter_name_new
-        adapter.pull_full_properties()
-        assert adapter.properties['name'] == adapter_name_new
-        with pytest.raises(zhmcclient.NotFound):
-            cpc.adapters.find(name=adapter_name)
+            assert adapter.properties['name'] == adapter_name_new
+            adapter.pull_full_properties()
+            assert adapter.properties['name'] == adapter_name_new
+            with pytest.raises(zhmcclient.NotFound):
+                cpc.adapters.find(name=adapter_name)
 
-        # Test deleting the adapter
+        finally:
+            # Test deleting the adapter
 
-        # The code to be tested
-        adapter.delete()
+            # The code to be tested
+            adapter.delete()
 
-        with pytest.raises(zhmcclient.NotFound):
-            cpc.adapters.find(name=adapter_name_new)
+            with pytest.raises(zhmcclient.NotFound):
+                cpc.adapters.find(name=adapter_name_new)
 
 
 def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
