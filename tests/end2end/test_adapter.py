@@ -210,7 +210,27 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
             cpc.adapters.find(name=adapter_name_new)
 
 
-def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
+ADAPTER_FAMILIES = [
+    'hipersockets',
+    'osa',
+    'roce',
+    'cna',
+    'ficon',
+    'accelerator',
+    'crypto',
+    'nvme',
+    'coupling',
+    'ism',
+    'zhyperlink',
+    'network-express',
+    'networking',
+]
+
+
+@pytest.mark.parametrize(
+    "test_family",
+    ADAPTER_FAMILIES)
+def test_adapter_list_assigned_part(dpm_mode_cpcs, test_family):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
     Test Adapter.list_assigned_partitions().
@@ -223,254 +243,270 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
 
         nes_feature = cpc.api_feature_enabled('network-express-support')
 
-        required_families = [
-            'hipersockets',
-            'osa',
-            'roce',
-            'cna',
-            'ficon',
-            'accelerator',
-            'crypto',
-            'nvme',
-            'coupling',
-            'ism',
-            'zhyperlink',
-            'network-express',
-            'networking',
-        ]
-        family_adapters = {}
-        for family in required_families:
-            family_adapters[family] = []
-
-        # List all adapters on the CPC and group by family
+        # Determine the list of adapters on the CPC with the test family
+        family_adapters = []
         adapter_list = cpc.adapters.list()
         for adapter in adapter_list:
             family = adapter.get_property('adapter-family')
-            if family not in family_adapters:
+            if family not in ADAPTER_FAMILIES:
                 warnings.warn(
                     f"Ignoring adapter {adapter.name!r} on CPC {cpc.name} with "
                     f"an unknown family: '{family}'", UserWarning)
                 continue
-            if adapter.get_property('type') == 'osm':
-                # Skip OSM adapters since they cannot be assigned to partitions
+            if family != test_family:
                 continue
-            family_adapters[family].append(adapter)
+            family_adapters.append(adapter)
+
+        if not family_adapters:
+            pytest.skip(f"CPC {cpc.name} does not have any adapters with "
+                        f"family: {test_family} ")
 
         tmp_part = None
         try:
 
-            # Create a temporary partition for test purposes
-            part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
-            part_props = standard_partition_props(cpc, part_name)
-            tmp_part = cpc.partitions.create(part_props)
+            if test_family in ('hipersockets', 'osa') and not nes_feature:
+                # Vswitch-based adapter
 
-            for family, all_adapters in family_adapters.items():
-                if not all_adapters:
-                    warnings.warn(
-                        f"CPC {cpc.name} has no adapters of family '{family}'",
-                        UserWarning)
-                    continue
+                # Skip OSM adapters since they cannot be assigned to partitions
+                # and the "Get Partitions Assigned to Adapter" operation is not
+                # supported for OSM adapters.
+                eligible_adapters = []
+                for adapter in family_adapters:
+                    if adapter.get_property('type') == 'osm':
+                        continue
+                    eligible_adapters.append(adapter)
 
-                if family in ('hipersockets', 'osa') and not nes_feature:
+                # Create a temporary partition for test purposes
+                part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+                part_props = standard_partition_props(cpc, part_name)
+                tmp_part = cpc.partitions.create(part_props)
 
-                    test_adapters = pick_test_resources(all_adapters)
-                    for test_adapter in test_adapters:
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                test_adapters = pick_test_resources(eligible_adapters)
+                for test_adapter in test_adapters:
 
-                        # The method to be tested
-                        before_parts = test_adapter.list_assigned_partitions()
+                    print(f"Testing on CPC {cpc.name} with vswitch-based "
+                          f"network adapter {test_adapter.name!r} "
+                          f"(family '{test_family}')")
 
-                        # Find the virtual switch for the test adapter
-                        filter_args = {'backing-adapter-uri': test_adapter.uri}
-                        vswitches = cpc.virtual_switches.list(
-                            filter_args=filter_args)
-                        assert len(vswitches) >= 1
-                        vswitch = vswitches[0]
+                    # The method to be tested
+                    before_parts = test_adapter.list_assigned_partitions()
 
-                        # Create a NIC in the temporary partition
-                        nic_name = f"{family}_{uuid.uuid4().hex}"
-                        nic_props = {
-                            'name': nic_name,
-                            'virtual-switch-uri': vswitch.uri,
-                        }
-                        tmp_part.nics.create(nic_props)
+                    # Find the virtual switch for the test adapter
+                    filter_args = {'backing-adapter-uri': test_adapter.uri}
+                    vswitches = cpc.virtual_switches.list(
+                        filter_args=filter_args)
+                    assert len(vswitches) >= 1
+                    vswitch = vswitches[0]
 
-                        # The method to be tested
-                        after_parts = test_adapter.list_assigned_partitions()
+                    # Create a NIC in the temporary partition
+                    nic_name = f"{family}_{uuid.uuid4().hex}"
+                    nic_props = {
+                        'name': nic_name,
+                        'virtual-switch-uri': vswitch.uri,
+                    }
+                    tmp_part.nics.create(nic_props)
 
-                        before_uris = [p.uri for p in before_parts]
-                        new_parts = []
-                        for part in after_parts:
-                            if part.uri not in before_uris:
-                                new_parts.append(part)
+                    # The method to be tested
+                    after_parts = test_adapter.list_assigned_partitions()
 
-                        assert len(new_parts) == 1
-                        new_part = new_parts[0]
-                        assert new_part.uri == tmp_part.uri
+                    before_uris = [p.uri for p in before_parts]
+                    new_parts = []
+                    for part in after_parts:
+                        if part.uri not in before_uris:
+                            new_parts.append(part)
 
-                elif family in ('hipersockets', 'osa') and nes_feature or \
-                        family in ('roce', 'cna', 'network-express',
-                                   'networking'):
+                    assert len(new_parts) == 1
+                    new_part = new_parts[0]
+                    assert new_part.uri == tmp_part.uri
 
-                    test_adapters = pick_test_resources(all_adapters)
-                    for test_adapter in test_adapters:
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+            elif test_family in ('hipersockets', 'osa') and nes_feature or \
+                    test_family in ('roce', 'cna', 'network-express',
+                                    'networking'):
+                # Port-based adapter
 
-                        # The method to be tested
-                        before_parts = test_adapter.list_assigned_partitions()
+                # Create a temporary partition for test purposes
+                part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+                part_props = standard_partition_props(cpc, part_name)
+                tmp_part = cpc.partitions.create(part_props)
 
-                        test_port = test_adapter.ports.list()[0]
+                test_adapters = pick_test_resources(family_adapters)
+                for test_adapter in test_adapters:
 
-                        # Create a NIC in the temporary partition
-                        nic_name = f"{family}_{uuid.uuid4().hex}"
-                        nic_props = {
-                            'name': nic_name,
-                            'network-adapter-port-uri': test_port.uri,
-                        }
-                        tmp_part.nics.create(nic_props)
+                    print(f"Testing on CPC {cpc.name} with port-based "
+                          f"network adapter {test_adapter.name!r} "
+                          f"(family '{test_family}')")
 
-                        # The method to be tested
-                        after_parts = test_adapter.list_assigned_partitions()
+                    # The method to be tested
+                    before_parts = test_adapter.list_assigned_partitions()
 
-                        before_uris = [p.uri for p in before_parts]
-                        new_parts = []
-                        for part in after_parts:
-                            if part.uri not in before_uris:
-                                new_parts.append(part)
+                    test_port = test_adapter.ports.list()[0]
 
-                        assert len(new_parts) == 1
-                        new_part = new_parts[0]
-                        assert new_part.uri == tmp_part.uri
+                    # Create a NIC in the temporary partition
+                    nic_name = f"{family}_{uuid.uuid4().hex}"
+                    nic_props = {
+                        'name': nic_name,
+                        'network-adapter-port-uri': test_port.uri,
+                    }
+                    if test_family == 'network-express':
+                        nic_props['type'] = "neth"
+                    tmp_part.nics.create(nic_props)
 
-                elif family == 'ficon':
+                    # The method to be tested
+                    after_parts = test_adapter.list_assigned_partitions()
 
-                    # Assigning storage adapters to partitions is complex,
-                    # so we search for a storage adapter that is already
-                    # assigned to a partition.
+                    before_uris = [p.uri for p in before_parts]
+                    new_parts = []
+                    for part in after_parts:
+                        if part.uri not in before_uris:
+                            new_parts.append(part)
 
-                    found_test_adapter = False
-                    for test_adapter in all_adapters:
+                    assert len(new_parts) == 1
+                    new_part = new_parts[0]
+                    assert new_part.uri == tmp_part.uri
 
-                        if test_adapter.get_property('type') != 'fcp':
-                            # This test works only for FCP adapters
-                            continue
+            elif test_family == 'ficon':
 
-                        # The method to be tested
-                        before_parts = test_adapter.list_assigned_partitions()
+                # This test works only for FCP adapters.
+                fcp_adapters = []
+                for adapter in family_adapters:
+                    if adapter.get_property('type') != 'fcp':
+                        continue
+                    fcp_adapters.append(adapter)
 
-                        if len(before_parts) == 0:
-                            continue
+                # Assigning storage adapters to partitions is complex,
+                # so we search for a storage adapter that is already
+                # assigned to a partition.
+                assigned_fcp_adapters = []
+                for adapter in fcp_adapters:
 
-                        found_test_adapter = True
-                        print(f"Testing on CPC {cpc.name} with FCP adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                    # The method to be tested
+                    assigned_parts = adapter.list_assigned_partitions()
 
-                        found_adapters = []
-                        for part in before_parts:
-                            sgroups = part.list_attached_storage_groups()
-                            for sg in sgroups:
-                                if sg.get_property('type') != 'fcp':
-                                    # This test works only for FCP stogrps
-                                    continue
-                                vsrs = sg.virtual_storage_resources.list()
-                                for vsr in vsrs:
-                                    port = vsr.adapter_port
-                                    adapter = port.manager.parent
-                                    if adapter.uri == test_adapter.uri:
-                                        found_adapters.append(adapter)
+                    if len(assigned_parts) == 0:
+                        continue
+                    assigned_fcp_adapters.append(adapter)
 
-                        assert len(found_adapters) >= 1
-                        break
+                if not assigned_fcp_adapters:
+                    pytest.skip(f"CPC {cpc.name} does not have FCP adapters "
+                                "assigned to partitions")
 
-                    if not found_test_adapter:
-                        warnings.warn(
-                            f"CPC {cpc.name} has no FCP adapter with that is "
-                            "assigned to any partition - cannot test FCP "
-                            "adapters", UserWarning)
+                test_adapters = pick_test_resources(assigned_fcp_adapters)
+                for test_adapter in test_adapters:
 
-                elif family == 'accelerator':
+                    print(f"Testing on CPC {cpc.name} with FCP adapter "
+                          f"{test_adapter.name!r} (family '{test_family}')")
 
-                    test_adapters = pick_test_resources(all_adapters)
-                    for test_adapter in test_adapters:
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
+                    # The method to be tested
+                    before_parts = test_adapter.list_assigned_partitions()
 
-                        # The method to be tested
-                        before_parts = test_adapter.list_assigned_partitions()
-
-                        # Create a VF in the temporary partition
-                        vf_name = f"{family}_{uuid.uuid4().hex}"
-                        vf_props = {
-                            'name': vf_name,
-                            'adapter-uri': test_adapter.uri,
-                        }
-                        tmp_part.virtual_functions.create(vf_props)
-
-                        # The method to be tested
-                        after_parts = test_adapter.list_assigned_partitions()
-
-                        before_uris = [p.uri for p in before_parts]
-                        new_parts = []
-                        for part in after_parts:
-                            if part.uri not in before_uris:
-                                new_parts.append(part)
-
-                        assert len(new_parts) == 1
-                        new_part = new_parts[0]
-                        assert new_part.uri == tmp_part.uri
-
-                elif family == 'crypto':
-
-                    # Assigning crypto adapters to partitions is complex,
-                    # so we search for a crypto adapter that is already
-                    # assigned to a partition.
-
-                    found_test_adapter = False
-                    for test_adapter in all_adapters:
-
-                        # The method to be tested
-                        before_parts = test_adapter.list_assigned_partitions()
-
-                        if len(before_parts) == 0:
-                            continue
-
-                        found_test_adapter = True
-                        print(f"Testing on CPC {cpc.name} with adapter "
-                              f"{test_adapter.name!r} (family '{family}')")
-
-                        found_adapter_uris = []
-                        for part in before_parts:
-                            crypto_config = part.get_property(
-                                'crypto-configuration')
-                            if crypto_config is None:
+                    found_adapters = []
+                    for part in before_parts:
+                        sgroups = part.list_attached_storage_groups()
+                        for sg in sgroups:
+                            if sg.get_property('type') != 'fcp':
+                                # This test works only for FCP stogrps
                                 continue
-                            adapter_uris = crypto_config['crypto-adapter-uris']
-                            for adapter_uri in adapter_uris:
-                                if adapter_uri == test_adapter.uri:
-                                    found_adapter_uris.append(adapter_uri)
+                            vsrs = sg.virtual_storage_resources.list()
+                            for vsr in vsrs:
+                                port = vsr.adapter_port
+                                adapter = port.manager.parent
+                                if adapter.uri == test_adapter.uri:
+                                    found_adapters.append(adapter)
 
-                        assert len(found_adapter_uris) >= 1
-                        break
+                    assert len(found_adapters) >= 1
 
-                    if not found_test_adapter:
-                        warnings.warn(
-                            f"CPC {cpc.name} has no Crypto adapter that is "
-                            "assigned to any partition - cannot test Crypto "
-                            "adapters", UserWarning)
+            elif test_family == 'accelerator':
 
-                elif family == 'nvme':
-                    print(f"TODO: Implement test for family {family}")
+                # Create a temporary partition for test purposes
+                part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
+                part_props = standard_partition_props(cpc, part_name)
+                tmp_part = cpc.partitions.create(part_props)
 
-                elif family == 'coupling':
-                    print(f"TODO: Implement test for family {family}")
+                test_adapters = pick_test_resources(family_adapters)
+                for test_adapter in test_adapters:
 
-                elif family == 'ism':
-                    print(f"TODO: Implement test for family {family}")
+                    print(f"Testing on CPC {cpc.name} with acc. adapter "
+                          f"{test_adapter.name!r} (family '{test_family}')")
 
-                elif family == 'zhyperlink':
-                    print(f"TODO: Implement test for family {family}")
+                    # The method to be tested
+                    before_parts = test_adapter.list_assigned_partitions()
+
+                    # Create a VF in the temporary partition
+                    vf_name = f"{family}_{uuid.uuid4().hex}"
+                    vf_props = {
+                        'name': vf_name,
+                        'adapter-uri': test_adapter.uri,
+                    }
+                    tmp_part.virtual_functions.create(vf_props)
+
+                    # The method to be tested
+                    after_parts = test_adapter.list_assigned_partitions()
+
+                    before_uris = [p.uri for p in before_parts]
+                    new_parts = []
+                    for part in after_parts:
+                        if part.uri not in before_uris:
+                            new_parts.append(part)
+
+                    assert len(new_parts) == 1
+                    new_part = new_parts[0]
+                    assert new_part.uri == tmp_part.uri
+
+            elif test_family == 'crypto':
+
+                # Assigning crypto adapters to partitions is complex,
+                # so we search for a crypto adapter that is already
+                # assigned to a partition.
+                assigned_crypto_adapters = []
+                for adapter in family_adapters:
+
+                    # The method to be tested
+                    assigned_parts = adapter.list_assigned_partitions()
+
+                    if len(assigned_parts) == 0:
+                        continue
+                    assigned_crypto_adapters.append(adapter)
+
+                if not assigned_crypto_adapters:
+                    pytest.skip(f"CPC {cpc.name} does not have crypto adapters "
+                                "assigned to partitions")
+
+                test_adapters = pick_test_resources(assigned_crypto_adapters)
+                for test_adapter in test_adapters:
+
+                    print(f"Testing on CPC {cpc.name} with crypto adapter "
+                          f"{test_adapter.name!r} (family '{test_family}')")
+
+                    # The method to be tested
+                    before_parts = test_adapter.list_assigned_partitions()
+
+                    found_adapter_uris = []
+                    for part in before_parts:
+                        crypto_config = part.get_property(
+                            'crypto-configuration')
+                        if crypto_config is None:
+                            continue
+                        adapter_uris = crypto_config['crypto-adapter-uris']
+                        for adapter_uri in adapter_uris:
+                            if adapter_uri == test_adapter.uri:
+                                found_adapter_uris.append(adapter_uri)
+
+                    assert len(found_adapter_uris) >= 1
+
+            elif test_family == 'nvme':
+                print(f"TODO: Implement test for family {test_family}")
+
+            elif test_family == 'coupling':
+                print(f"TODO: Implement test for family {test_family}")
+
+            elif test_family == 'ism':
+                print(f"TODO: Implement test for family {test_family}")
+
+            elif test_family == 'zhyperlink':
+                print(f"TODO: Implement test for family {test_family}")
+
+            else:
+                assert False, f"Unexpected family {test_family}"
 
         finally:
             # Cleanup
