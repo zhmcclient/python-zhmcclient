@@ -20,6 +20,28 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.22.1
+^^^^^^^^^^^^^^
+
+Released: 2025-09-03
+
+**Bug fixes:**
+
+* Dev: Fixed issue where the package version used for distribution archive file
+  names were generated inconsistently between setuptools_scm (used in Makefile)
+  and the 'build' module, by using no build isolation ('--no-isolation' option
+  of the 'build' module) and increasing the minimum version of 'setuptools-scm'
+  to 9.2.0, which fixes a number of version related issues.
+
+* Dev: Fixed quoting for TESTCASES env var in Makefile.
+
+* Dev: Circumvented safety issue with import of typer module by pinning typer
+  to <0.17.0.
+
+* Documented that virtual switch objects have been removed in z17 CPCs.
+  Adjusted code in the zhmcclient mock support for that. (`#1929 <https://github.com/zhmcclient/python-zhmcclient/issues/1929>`_)
+
+
 Version 1.22.0
 ^^^^^^^^^^^^^^
 
