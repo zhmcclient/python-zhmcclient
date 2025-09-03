@@ -1,6 +1,0 @@
-Reimplemented direct Hipersocket creation and deletion (i.e. the
-methods 'AdapterManager.create_hipersocket()' and 'Adapter.delete()') using
-partition links when the CPC is z16 or later. The interface of the methods
-remains the same for z16 and later CPCs, except that the 'port-description'
-input property is ignored, and additional exceptions 'zhmcclient.NotFound'
-and 'zhmcclient.NoUniqueMatch' can be raised.
