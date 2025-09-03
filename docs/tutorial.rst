@@ -22,11 +22,11 @@ Tutorials
 This section contains tutorials explaining the use of the zhmcclient package.
 
 Each tutorial is a
-`Jupyter Notebook <http://jupyter-notebook-beginner-guide.readthedocs.io/>`_
+`Jupyter Notebook <https://jupyter-notebook-beginner-guide.readthedocs.io/>`_
 (formerly known as IPython Notebook).
 In order to view a tutorial, just click on a link in the table below.
 This will show the tutorial in the online
-`Jupyter Notebook Viewer <http://nbviewer.jupyter.org/>`_.
+`Jupyter Notebook Viewer <https://nbviewer.org/>`_.
 
 ==================================  ===========================================
 Tutorial                            Short description
@@ -42,7 +42,7 @@ Executing code in the tutorials
 
 In order to execute and also modify the code in the tutorials, Jupyter Notebook
 needs to be installed in a Python environment, preferrably in a
-`virtual Python environment <http://docs.python-guide.org/en/latest/dev/virtualenvs/>`_,
+`virtual Python environment <https://docs.python-guide.org/dev/virtualenvs/>`_,
 and you need to have the notebook files locally.
 
 There are two options on how to do that:

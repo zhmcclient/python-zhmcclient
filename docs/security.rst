@@ -148,7 +148,7 @@ Since the zhmcclient package uses the 'requests' package for the communication
 with the Web Services API of the HMC, the behavior described above actually
 comes from the 'requests' package. Unfortunately, its documentation about
 certificate verification is somewhat brief, see
-`SSL Cert Verification <https://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_.
+`SSL Cert Verification <https://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification>`_.
 
 Note that setting the ``REQUESTS_CA_BUNDLE`` or ``CURL_CA_BUNDLE`` environment
 variables influences other programs that use these variables, too.
@@ -169,7 +169,7 @@ See also the :term:`HMC Security` book for details.
 The 'zhmcclient' package uses the default cipher suites of the 'requests'
 package, which are the default cipher suites used by the standard Python 'ssl'
 module. By default, the CPython implementation uses OpenSSL.
-`Python PEP 644 <https://www.python.org/dev/peps/pep-0644/>`_ targeted for
+`Python PEP 644 <https://peps.python.org/pep-0644/>`_ targeted for
 Python 3.10 contains information about which versions of Python support which
 versions of OpenSSL.
 

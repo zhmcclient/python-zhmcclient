@@ -30,8 +30,8 @@ Management Console (HMC) of `IBM Z`_ or `LinuxONE`_ machines. The goal of
 this package is to make the HMC Web Services API easily consumable for Python
 programmers.
 
-.. _IBM Z: http://www.ibm.com/systems/z/
-.. _LinuxONE: http://www.ibm.com/systems/linuxone/
+.. _IBM Z: https://www.ibm.com/products/z?lnk=flatitem
+.. _LinuxONE: https://www.ibm.com/products/linuxone/
 
 The HMC Web Services API is the access point for any external tools to
 manage the IBM Z or LinuxONE platform. It supports management of the
@@ -113,8 +113,8 @@ Notes:
 Installation
 ------------
 
-.. _virtual Python environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
-.. _Pypi: http://pypi.python.org/
+.. _virtual Python environment: https://docs.python-guide.org/dev/virtualenvs/
+.. _Pypi: https://pypi.org/
 
 The easiest way to install the zhmcclient package is by using Pip. Pip ensures
 that any dependent Python packages also get installed.
@@ -546,7 +546,7 @@ can also see that version in the top left corner of this page.
 The zhmcclient package uses the rules of `Semantic Versioning 2.0.0`_ for its
 version.
 
-.. _Semantic Versioning 2.0.0: http://semver.org/spec/v2.0.0.html
+.. _Semantic Versioning 2.0.0: https://semver.org/spec/v2.0.0.html
 
 The package version can be accessed by programs using the
 ``zhmcclient.__version__`` variable [#]_:

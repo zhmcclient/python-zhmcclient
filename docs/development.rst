@@ -56,7 +56,7 @@ Besides having a supported operating system with a supported Python version
 (see :ref:`Supported environments`), it is recommended that you set up a
 `virtual Python environment`_.
 
-.. _virtual Python environment: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+.. _virtual Python environment: https://docs.python-guide.org/dev/virtualenvs/
 
 Then, with a virtual Python environment active, clone the Git repo of this
 project and prepare the development environment with ``make develop``:
@@ -81,7 +81,7 @@ Building the documentation
 --------------------------
 
 The ReadTheDocs (RTD) site is used to publish the documentation for the
-zhmcclient package at http://python-zhmcclient.readthedocs.io/
+zhmcclient package at https://python-zhmcclient.readthedocs.io/
 
 This page automatically gets updated whenever the ``master`` branch of the
 Git repo for this package changes.
@@ -414,7 +414,7 @@ and the following limitations:
   are not supported.
 
 For more details on the format of Ansible inventory files, see
-`Ansible: How to build your inventory <https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html>`_.
+`Ansible: How to build your inventory <https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html>`_.
 
 
 .. _`HMC vault file`:
@@ -619,7 +619,7 @@ Third party contributions to this project are welcome!
 
 In order to contribute, create a `Git pull request`_, considering this:
 
-.. _Git pull request: https://help.github.com/articles/using-pull-requests/
+.. _Git pull request: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests
 
 * Test is required.
 * Each commit should only contain one "logical" change.
@@ -760,12 +760,11 @@ the right to pass it on as an open-source patch.
 
 .. _DCO 1.1: https://raw.githubusercontent.com/zhmcclient/python-zhmcclient/master/DCO1.1.txt
 
-We use `GitCop`_ during creation of a pull request to check whether the commit
-messages in the pull request comply to this format.
-If the commit messages do not comply, GitCop will add a comment to the pull
-request with a description of what was wrong.
+All lines in the commit messages must not be longer than 80 characters.
 
-.. _GitCop: http://gitcop.com/
+We check in the test workflow whether the commit messages in the pull request
+comply to this format. If the commit messages do not comply, the test workflow
+will fail.
 
 Example commit message:
 
@@ -811,7 +810,7 @@ Releasing a version
 -------------------
 
 This section shows the steps for releasing a version to `PyPI
-<https://pypi.python.org/>`_.
+<https://pypi.org/>`_.
 
 It covers all variants of versions that can be released:
 
@@ -942,7 +941,7 @@ local clone of the python-zhmcclient Git repo.
     Then, perform the following verifications:
 
     * Verify that the new version is available on PyPI at
-      https://pypi.python.org/pypi/zhmcclient/
+      https://pypi.org/project/zhmcclient/
 
     * Verify that the new version has a release on GitHub at
       https://github.com/zhmcclient/python-zhmcclient/releases
@@ -958,7 +957,7 @@ local clone of the python-zhmcclient Git repo.
       the new version was built, and if so, whether there was a build problem.
 
       If the new version was not built at all, log on to
-      https://readthedocs.org/ and go to
+      https://readthedocs.org/accounts/login/ and go to
       https://readthedocs.org/projects/python-zhmcclient/versions/
       and edit the new version and set it to "active" (normally, that is done
       automatically by ReadTheDocs for new tags).
@@ -966,7 +965,7 @@ local clone of the python-zhmcclient Git repo.
 10. Hide previous fix version on ReadTheDocs
 
     When releasing a fix version != 0 (e.g. M.N.1), log on to
-    https://readthedocs.org/ and go to
+    https://readthedocs.org/accounts/login/ and go to
     https://readthedocs.org/projects/python-zhmcclient/versions/ and
     edit the previous fix version (i.e. ``M.N.U-1``) and set it to "hidden"
     (it remains active). Hiding it causes it to be removed from the version
@@ -1080,9 +1079,9 @@ of operating system, Python version and minimum/latest package levels:
 * `Unit <https://github.com/zhmcclient/python-zhmcclient/tree/master/tests/unit>`_ tests
 * `End2end <https://github.com/zhmcclient/python-zhmcclient/tree/master/tests/end2end>`_ tests with mocked HMCs
 * `Install <https://github.com/zhmcclient/python-zhmcclient/tree/master/tests/installtest>`_ tests
-* `flake8 <https://flake8.pycqa.org>`_ linter
+* `flake8 <https://flake8.pycqa.org/>`_ linter
 * `ruff <https://docs.astral.sh/ruff/linter/>`_ linter
-* `pylint <https://pylint.readthedocs.io/en/stable/>`_ linter
+* `pylint <https://pylint.readthedocs.io/>`_ linter
 * `safety <https://docs.safetycli.com/safety-docs>`_ vulnerability checker
 * `bandit <https://bandit.readthedocs.io/>`_ vulnerability checker
 * `pip-missing-reqs <https://github.com/adamtheturtle/pip-check-reqs/blob/master/README.rst>`_ checks for missing dependencies
