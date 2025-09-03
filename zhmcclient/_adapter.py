@@ -286,6 +286,8 @@ class Adapter(BaseResource):
         'hipersockets': 'network-port-uris',
         'cna': 'network-port-uris',
         'cloud-network': 'network-port-uris',  # for preliminary driver
+        'network-express': 'network-port-uris',
+        'networking': 'network-port-uris',
     }
 
     # URI segment for port URIs, dependent on adapter family
@@ -296,6 +298,8 @@ class Adapter(BaseResource):
         'hipersockets': 'network-ports',
         'cna': 'network-ports',
         'cloud-network': 'network-ports',  # for preliminary driver
+        'network-express': 'network-ports',
+        'networking': 'network-ports',
     }
 
     # Port type, dependent on adapter family
@@ -306,6 +310,8 @@ class Adapter(BaseResource):
         'hipersockets': 'network',
         'cna': 'network',
         'cloud-network': 'network',  # for preliminary driver
+        'network-express': 'network',
+        'networking': 'network',
     }
 
     def __init__(self, manager, uri, name=None, properties=None):
