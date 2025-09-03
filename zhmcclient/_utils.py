@@ -257,7 +257,7 @@ def datetime_from_timestamp(ts, tzinfo=pytz.utc):
         OS-X.
       * 3001-01-01 07:59:59 UTC, for 32-bit and 64-bit CPython on Windows, due
         to a limitation in `gmtime() in Visual C++
-        <https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/gmtime-gmtime32-gmtime64>`_.
+        <https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/gmtime-gmtime32-gmtime64>`_.
       * 2038-01-19 03:14:07 UTC, for some 32-bit Python implementations,
         due to the `Year 2038 problem
         <https://en.wikipedia.org/wiki/Year_2038_problem>`_.

@@ -39,9 +39,9 @@ same HMC. The figure shows some example Python applications that use the
 zhmcclient package:
 
 * "my-zhmc-app" as an example of a user-written Python application
-* `zhmc-prometheus-exporter <https://zhmc-prometheus-exporter.readthedocs.io>`_ - A
+* `zhmc-prometheus-exporter <https://zhmc-prometheus-exporter.readthedocs.io/>`_ - A
   Prometheus exporter for the HMC
-* `zhmc <https://zhmccli.readthedocs.io>`_ - A CLI for the HMC
+* `zhmc <https://zhmccli.readthedocs.io/>`_ - A CLI for the HMC
 
 The zhmcclient package provides two main Python classes to interact with the
 HMC, that are shown in the figure:
@@ -302,7 +302,7 @@ on the client side:
   resource's data model as defined in the :term:`HMC API`. The regular
   expression syntax used for string matching is the one used by the Java
   programming language, as specified for the ``java.util.regex.Pattern`` class
-  (see http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html).
+  (see https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html).
 
 * For properties that are matched on the client side, the type is determined by
   the actual property value. For property values of type bool, int, float and

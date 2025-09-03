@@ -219,7 +219,7 @@ There are basically two options on how this issue can be addressed:
       urllib3>=1.26.5,<2.0; python_version >= '3.7'
 
   The minimum version of urllib3 should be at least what the
-  `minimum-constraints.txt <https://github.com/zhmcclient/python-zhmcclient/blob/master/minimum-constraints.txt>`_
+  `minimum-constraints-install.txt <https://github.com/zhmcclient/python-zhmcclient/blob/master/minimum-constraints-install.txt>`_
   file of the zhmcclient project specifies as a minimum, for the zhmcclient
   version you are using.
 
@@ -613,19 +613,19 @@ Bibliography
 .. glossary::
 
    X.509
-      `ITU-T X.509, Information technology - Open Systems Interconnection - The Directory: Public-key and attribute certificate frameworks <http://www.itu.int/rec/T-REC-X.509/en>`_
+      `ITU-T X.509, Information technology - Open Systems Interconnection - The Directory: Public-key and attribute certificate frameworks <https://www.itu.int/rec/T-REC-X.509/en>`_
 
    RFC2616
-      `IETF RFC2616, Hypertext Transfer Protocol - HTTP/1.1, June 1999 <https://tools.ietf.org/html/rfc2616>`_
+      `IETF RFC2616, Hypertext Transfer Protocol - HTTP/1.1, June 1999 <https://datatracker.ietf.org/doc/html/rfc2616>`_
 
    RFC2617
-      `IETF RFC2617, HTTP Authentication: Basic and Digest Access Authentication, June 1999 <https://tools.ietf.org/html/rfc2617>`_
+      `IETF RFC2617, HTTP Authentication: Basic and Digest Access Authentication, June 1999 <https://datatracker.ietf.org/doc/html/rfc2617>`_
 
    RFC3986
-      `IETF RFC3986, Uniform Resource Identifier (URI): Generic Syntax, January 2005 <https://tools.ietf.org/html/rfc3986>`_
+      `IETF RFC3986, Uniform Resource Identifier (URI): Generic Syntax, January 2005 <https://datatracker.ietf.org/doc/html/rfc3986>`_
 
    RFC6874
-      `IETF RFC6874, Representing IPv6 Zone Identifiers in Address Literals and Uniform Resource Identifiers, February 2013 <https://tools.ietf.org/html/rfc6874>`_
+      `IETF RFC6874, Representing IPv6 Zone Identifiers in Address Literals and Uniform Resource Identifiers, February 2013 <https://datatracker.ietf.org/doc/html/rfc6874>`_
 
    HMC API
        The Web Services API of the z Systems Hardware Management Console, described in the following books:
@@ -653,14 +653,18 @@ Bibliography
 
    HMC API 2.15.0
        `IBM SC27-2638-04c, IBM Z Hardware Management Console Web Services API (Version 2.15.0) <https://www.ibm.com/docs/en/module_1687296212988/pdf/SC27-2638-04c.pdf>`_
-       (covers both GA1 and GA2)
 
    HMC API 2.16.0
        `IBM SC27-2642-02, IBM Z Hardware Management Console Web Services API (Version 2.16.0) <https://www.ibm.com/docs/en/module_1675371155154/pdf/SC27-2642-02.pdf>`_
-       (covers both GA1 and GA2)
+
+   HMC API 2.17.0
+       `IBM SC27-2646-00, IBM Z Hardware Management Console Web Services API (Version 2.17.0) <https://www.ibm.com/docs/ko/module_1721331501652/pdf/SC27-2646-00.pdf>`_
 
    HMC Security
-       `IBM SC28-6987-01, Hardware Management Console Security <https://www.ibm.com/docs/en/module_1687361734185/pdf/SC28-6987-01.pdf>`_
+       `IBM SC28-7061-00, IBM Z Hardware Management Console Security (Version 2.17.0) <https://www.ibm.com/docs/ko/module_1721331501652/pdf/SC28-7061-00.pdf>`_
+
+   HMC Help
+       `IBM Z Hardware Management Console Help (Version 2.17.0) <https://www.ibm.com/docs/en/help-ibm-hmc-z17>`
 
 
 .. _`Related projects`:
@@ -671,7 +675,7 @@ Related projects
 .. glossary::
 
    zhmccli project
-      `zhmccli project at GitHub <https://github.com/zhmcclient/zhmccli>`_
+      `zhmccli project at GitHub <https://github.com/zhmcclient/zhmccli/>`_
 
    zhmccli package
-      `zhmccli package on Pypi <https://pypi.python.org/pypi/zhmccli>`_
+      `zhmccli package on Pypi <https://pypi.org/project/zhmccli/>`_

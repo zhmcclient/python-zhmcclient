@@ -198,12 +198,7 @@ napoleon_use_rtype = True
 
 # -- Options for viewcode extension ---------------------------------------
 
-# Follow alias objects that are imported from another module such as functions,
-# classes and attributes. As side effects, this option ... ???
-# If false, ... ???.
-# The default is True.
-viewcode_import = True
-
+# TBD, see https://www.sphinx-doc.org/en/master/usage/extensions/viewcode.html
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -432,6 +427,55 @@ autodoc_docstring_signature = True
 autodoc_mock_imports = []
 
 
+# -- Options for linkcheck ------------------------------------------------
+
+linkcheck_request_headers = {
+    r'https://.*/': {
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:24.0) '
+        'Gecko/20100101 Firefox/24.0',
+    },
+}
+
+# All HTTP redirections from a matching source URI to the matching target URI
+# will be treated as "working".
+linkcheck_allowed_redirects = {
+    r'https://serverfault.com/a/':
+        r'https://serverfault.com/questions/',
+    r'https://readthedocs.org/projects/':
+        r'https://app.readthedocs.org/projects/',
+    r'https://readthedocs.org/accounts/':
+        r'https://app.readthedocs.org/accounts/',
+    r'https://jupyter-notebook-beginner-guide.readthedocs.io/':
+        r'https://jupyter-notebook-beginner-guide.readthedocs.io/en/latest/',
+    r'https://flake8.pycqa.org/':
+        r'https://flake8.pycqa.org/en/latest/',
+    r'https://bandit.readthedocs.io/':
+        r'https://bandit.readthedocs.io/en/latest/',
+    r'https://pylint.readthedocs.io/':
+        r'https://pylint.readthedocs.io/en/stable/',
+    r'https://python-zhmcclient.readthedocs.io/':
+        r'https://python-zhmcclient.readthedocs.io/en/master/',
+    r'https://zhmccli.readthedocs.io/':
+        r'https://zhmccli.readthedocs.io/en/stable/',
+    r'https://zhmc-prometheus-exporter.readthedocs.io/':
+        r'https://zhmc-prometheus-exporter.readthedocs.io/en/stable/',
+}
+
+linkcheck_ignore = [
+
+    # Ignored in order not to run into rate-limit of github.com
+    r'https://github.com/zhmcclient/python-zhmcclient/issues/\d+',
+
+    # Page exists, but linkcheck sometimes gets HTTP 404 "Not Found"
+    r'https://github.com/zhmcclient/python-zhmcclient/security/dependabot',
+
+    # Linkcheck gets HTTP 503 "Service Unavailable"
+    r'https://nbviewer.org/github/zhmcclient/python-zhmcclient/',
+
+    # Page exists, but linkcheck sometimes gets HTTP 403 "Forbidden"
+    r'https://wiki.mozilla.org/CA/Included_Certificates',
+]
+
 # -- Options for intersphinx extension ------------------------------------
 # For documentation, see
 # http://www.sphinx-doc.org/en/stable/ext/intersphinx.html
@@ -500,7 +544,7 @@ intersphinx_cache_limit = 5
 # results in the link caption "this issue".
 
 extlinks = {
-    'nbview': ('http://nbviewer.jupyter.org/github/zhmcclient/'
+    'nbview': ('https://nbviewer.org/github/zhmcclient/'
                'python-zhmcclient/blob/master/docs/notebooks/%s', None),
     'nbdown': ('https://github.com/zhmcclient/python-zhmcclient/'
                'raw/master/docs/notebooks/%s', None)

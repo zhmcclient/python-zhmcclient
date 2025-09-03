@@ -216,21 +216,21 @@ class AdapterManager(BaseManager):
           properties (dict): Initial property values.
             Allowable properties are the following:
 
-            "name" (str): Required: The adapter's 'name' property.
+            * "name" (str): Required: The adapter's 'name' property.
 
-            "description" (str): Optional: The adapter's 'description' property.
-              Default: An empty string.
+            * "description" (str): Optional: The adapter's 'description'
+              property. Default: An empty string.
 
-            "maximum-transmission-unit-size" (int): Optional: The adapter's
+            * "maximum-transmission-unit-size" (int): Optional: The adapter's
               'maximum-transmission-unit-size' property. Default: 8
 
-            "port-description" (str): Optional: The adapter port's 'description'
-              property. Default: An empty string. This property is ignored
-              on CPCs of z16 and later.
+            * "port-description" (str): Optional: The adapter port's
+              'description' property. Default: An empty string. This property
+              is ignored on CPCs of z16 and later.
 
-          These properties are defined in section 'Request body contents'
-          in section 'Create Hipersocket' in the :term:`HMC API` book, but
-          they are valid for both approaches.
+            These properties are defined in section 'Request body contents'
+            in section 'Create Hipersocket' in the :term:`HMC API` book, but
+            they are valid for both approaches.
 
         Returns:
 

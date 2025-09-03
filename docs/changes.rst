@@ -46,7 +46,7 @@ Released: 2025-07-23
 * Increased minimum version of "urllib3" to 2.2.3 in order to pick up changes
   that help when using unstable networks. Specifically, enabling
   enforce_content_length by default and distinguishing too much from not enough
-  response data. (`#1888.2 <https://github.com/zhmcclient/python-zhmcclient/issues/1888.2>`_)
+  response data. (`#1888 <https://github.com/zhmcclient/python-zhmcclient/issues/1888>`_)
 
 * Dev: Fixed Sphinx build issue by excluding snowballstemmer 3.0.0.
 
@@ -582,6 +582,7 @@ Released: 2024-07-11
 
   Increased minimum version of the following Python packages the installation
   depends upon:
+
   - pytz to 2019.1 (only on Python 3.8/3.9 - was already there on Python >= 3.10)
   - pytest (extra: test) to 6.2.5 (only on Python 3.8/3.9 - was already there
     on Python >= 3.10) (`#1489 <https://github.com/zhmcclient/python-zhmcclient/issues/1489>`_)
