@@ -51,6 +51,13 @@ ADAPTER_ADDITIONAL_PROPS = ['description', 'detected-card-type']
 ADAPTER_VOLATILE_PROPS = []
 
 
+def se_version_info(cpc):
+    """
+    Return the SE version of the CPC as a list of int.
+    """
+    return list(map(int, cpc.prop('se-version').split('.')))
+
+
 def test_adapter_find_list(dpm_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
@@ -118,6 +125,11 @@ def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
+
+        if se_version_info(cpc) >= [2, 17]:
+            # TODO: Enable this case again once create_hipersocket() has been
+            #       reimplemented using partition links.
+            pytest.skip("create_hipersocket() is not supported on z17 CPCs")
 
         print(f"Testing on CPC {cpc.name}")
 
@@ -209,6 +221,8 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
+        nes_feature = cpc.api_feature_enabled('network-express-support')
+
         required_families = [
             'hipersockets',
             'osa',
@@ -221,6 +235,8 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
             'coupling',
             'ism',
             'zhyperlink',
+            'network-express',
+            'networking',
         ]
         family_adapters = {}
         for family in required_families:
@@ -255,7 +271,7 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         UserWarning)
                     continue
 
-                if family in ('hipersockets', 'osa'):
+                if family in ('hipersockets', 'osa') and not nes_feature:
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
@@ -293,7 +309,9 @@ def test_adapter_list_assigned_part(dpm_mode_cpcs):  # noqa: F811
                         new_part = new_parts[0]
                         assert new_part.uri == tmp_part.uri
 
-                elif family in ('roce', 'cna'):
+                elif family in ('hipersockets', 'osa') and nes_feature or \
+                        family in ('roce', 'cna', 'network-express',
+                                   'networking'):
 
                     test_adapters = pick_test_resources(all_adapters)
                     for test_adapter in test_adapters:
@@ -508,25 +526,17 @@ def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        # Adapter families that have more than one Adapter object (=PCHID) on a
-        # physical adapter card
-        sibling_families = [
-            'ficon',
-            'crypto',
-        ]
-
         adapters = cpc.adapters.list()
 
-        # Determine the sibling adapters on the CPC, grouped by base PCHID
-        adapters_by_base = {}  # key: base PCHID
+        # Group the adapters by their base PCHID
+        adapters_by_base = {}  # key: base PCHID, value: list of Adapter
         for adapter in adapters:
             adapter_id = adapter.get_property('adapter-id')
             family = adapter.get_property('adapter-family')
-            if family in sibling_families:
-                base_id = base_adapter_id(adapter_id, family)
-                if base_id not in adapters_by_base:
-                    adapters_by_base[base_id] = []
-                adapters_by_base[base_id].append(adapter)
+            base_id = base_adapter_id(adapter_id, family)
+            if base_id not in adapters_by_base:
+                adapters_by_base[base_id] = []
+            adapters_by_base[base_id].append(adapter)
 
         # Test all adapters for their siblings
         for adapter in adapters:
@@ -542,15 +552,11 @@ def test_adapter_list_sibling_adapters(dpm_mode_cpcs):  # noqa: F811
             sibling_ids = {a.get_property('adapter-id')
                            for a in sibling_adapters}
             sibling_names = [a.name for a in sibling_adapters]
-            if base_id not in adapters_by_base:
-                exp_ids = set()
-                exp_names = []
-            else:
-                exp_ids = {a.get_property('adapter-id')
-                           for a in adapters_by_base[base_id]}
-                exp_ids.remove(adapter_id)
-                exp_names = [a.name for a in adapters_by_base[base_id]]
-                exp_names.remove(adapter.name)
+            exp_ids = {a.get_property('adapter-id')
+                       for a in adapters_by_base[base_id]}
+            exp_ids.remove(adapter_id)
+            exp_names = [a.name for a in adapters_by_base[base_id]]
+            exp_names.remove(adapter.name)
 
             assert sibling_ids == exp_ids, (
                 f"Adapter '{adapter.name}' has unexpected siblings: got: "

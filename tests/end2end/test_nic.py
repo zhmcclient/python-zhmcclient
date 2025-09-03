@@ -47,6 +47,13 @@ NIC_LIST_PROPS = ['element-uri', 'name', 'description', 'type']
 NIC_VOLATILE_PROPS = []
 
 
+def se_version_info(cpc):
+    """
+    Return the SE version of the CPC as a list of int.
+    """
+    return list(map(int, cpc.prop('se-version').split('.')))
+
+
 def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
     # pylint: disable=redefined-outer-name
     """
@@ -128,6 +135,11 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
 
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
+
+        if se_version_info(cpc) >= [2, 17]:
+            # TODO: Enable this case again once create_hipersocket() has been
+            #       reimplemented using partition links.
+            pytest.skip("create_hipersocket() is not supported on z17 CPCs")
 
         print(f"Testing on CPC {cpc.name}")
 
@@ -261,14 +273,14 @@ def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
     for partition in random.sample(partitions, k=len(partitions)):
         for nic in partition.nics.list():
             try:
-                _ = nic.get_property('virtual-switch-uri')
+                _ = nic.get_property('network-adapter-port-uri')
             except KeyError:
-                # port-based NIC (e.g. RoCE, CNA)
+                # vswitch-based NIC (e.g. OSA, HS before z17)
+                pass
+            else:
+                # port-based NIC (e.g. RoCE, CNA before z17, or z17)
                 logger.debug("Found port-based NIC %s", nic.name)
                 port_nics.append(nic)
-            else:
-                # vswitch-based NIC (e.g. OSA, HS)
-                pass
         if len(port_nics) >= 5:
             break
 
@@ -324,10 +336,10 @@ def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
             try:
                 _ = nic.get_property('virtual-switch-uri')
             except KeyError:
-                # port-based NIC (e.g. RoCE, CNA)
+                # port-based NIC (e.g. RoCE, CNA before z17, or z17)
                 pass
             else:
-                # vswitch-based NIC (e.g. OSA, HS)
+                # vswitch-based NIC (e.g. OSA, HS before z17)
                 logger.debug("Found vswitch-based NIC %s", nic.name)
                 vswitch_nics.append(nic)
         if len(vswitch_nics) >= 5:
@@ -337,7 +349,7 @@ def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
         pytest.skip(f"CPC {cpc.name} does not have any partitions with "
                     "vswitch-based NICs")
 
-    # Pick the port-based NIC to test with
+    # Pick the vswitch-based NIC to test with
     nic = random.choice(vswitch_nics)
     partition = nic.manager.parent
     logger.debug("Testing with NIC %r in partition %r",
