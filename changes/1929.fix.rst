@@ -1,2 +1,0 @@
-Documented that virtual switch objects have been removed in z17 CPCs.
-Adjusted code in the zhmcclient mock support for that.

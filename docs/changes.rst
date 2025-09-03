@@ -20,6 +20,64 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.23.0
+^^^^^^^^^^^^^^
+
+Released: 2025-09-03
+
+**Bug fixes:**
+
+* Dev: Fixed issue where the package version used for distribution archive file
+  names were generated inconsistently between setuptools_scm (used in Makefile)
+  and the 'build' module, by using no build isolation ('--no-isolation' option
+  of the 'build' module) and increasing the minimum version of 'setuptools-scm'
+  to 9.2.0, which fixes a number of version related issues.
+
+* Dev: Fixed quoting for TESTCASES env var in Makefile.
+
+* Dev: Circumvented safety issue with import of typer module by pinning typer
+  to <0.17.0.
+
+* Docs: Fixed broken links in the documentation. Fixed the description of
+  commit message checking in the development section of the documentation to
+  remove the mentioning of the GitCop service which is no longer used.
+
+* Docs: Updates in Bibliography section: Added HMC WS-API book for 2.17, Added
+  link to HMC Help, Updated HMC Security book to 2.17, Removed the HMC Operations
+  Guide which no longer exists.
+
+* Documented that virtual switch objects have been removed in z17 CPCs.
+  Adjusted code in the zhmcclient mock support for that. (`#1929 <https://github.com/zhmcclient/python-zhmcclient/issues/1929>`_)
+
+**Enhancements:**
+
+* Test: Enabled some of the end2end tests for adapter related operations also
+  for CPCs in classic mode since z16. (`#1933.2 <https://github.com/zhmcclient/python-zhmcclient/issues/1933.2>`_)
+
+* Extended the 'zhmcclient.NoUniqueMatch' exception to now also accept a
+  user-provided exception message. (`#1934.2 <https://github.com/zhmcclient/python-zhmcclient/issues/1934.2>`_)
+
+* Test: Improved end2end test function test_adapter_list_assigned_part() to use
+  parametrization by adapter family, for better test reporting.
+
+* Add support for the console "Report a Console Problem" operation as defined in the wsapi book
+
+* Docs: Added a section 'Checks when making a release' to the 'Development' chapter
+  that describes which tests and checks are run when making a release. (`#1913 <https://github.com/zhmcclient/python-zhmcclient/issues/1913>`_)
+
+* Docs: Documented that the 'zhmcclient.Console.list_permitted_adapters()' method
+  is in addition supported for CPCs in classic mode since z16; clarified for
+  the methods of 'zhmcclient.Adapter/Manager' that they require DPM; other
+  clarifications in the description of the 'zhmcclient.Adapter/Manager' classes. (`#1933 <https://github.com/zhmcclient/python-zhmcclient/issues/1933>`_)
+
+* Reimplemented direct Hipersocket creation and deletion (i.e. the
+  methods 'AdapterManager.create_hipersocket()' and 'Adapter.delete()') using
+  partition links when the CPC is z16 or later. The interface of the methods
+  remains the same for z16 and later CPCs, except that the 'port-description'
+  input property is ignored, and additional exceptions 'zhmcclient.NotFound'
+  and 'zhmcclient.NoUniqueMatch' can be raised. (`#1934 <https://github.com/zhmcclient/python-zhmcclient/issues/1934>`_)
+
+
 Version 1.22.0
 ^^^^^^^^^^^^^^
 
