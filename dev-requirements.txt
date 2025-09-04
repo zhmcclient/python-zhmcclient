@@ -53,10 +53,9 @@ coveralls>=3.3.0; python_version >= '3.13'
 # PyYAML: covered in direct deps for development
 
 # Safety CI by pyup.io
-# safety 3.4.0 supports marshmallow>=4.0.0, see https://github.com/pyupio/safety/issues/715
-# safety 3.4.0 started using httpx and tenacity
+# safety 3.6.1 fixes the issue with typer >=0.17.0, see https://github.com/pyupio/safety/issues/778
 # pydantic 2.8.0 fixes an install issue on Python 3.13.
-safety>=3.4.0
+safety>=3.6.1
 safety-schemas>=0.0.14
 dparse>=0.6.4
 ruamel.yaml>=0.17.21
@@ -64,10 +63,10 @@ click>=8.0.2
 Authlib>=1.3.1
 marshmallow>=3.15.0
 pydantic>=2.8.0
-# typer >=0.17.0 causes import issue for safety, see https://github.com/pyupio/safety/issues/778
-typer>=0.12.1,<0.17.0
-typer-cli>=0.12.1,<0.17.0
-typer-slim>=0.12.1,<0.17.0
+#safety 3.6.1 depends on typer>=0.16.0
+typer>=0.16.0
+typer-cli>=0.16.0
+typer-slim>=0.16.0
 # safety 3.4.0 depends on psutil~=6.1.0
 psutil~=6.1.0
 
