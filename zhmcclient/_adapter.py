@@ -38,7 +38,7 @@ from ._manager import BaseManager
 from ._resource import BaseResource
 from ._port import PortManager
 from ._logging import logged_api_call
-from ._exceptions import NotFound, NoUniqueMatch
+from ._exceptions import CeasedExistence, ConsistencyError
 
 from ._utils import repr_dict, repr_manager, repr_timestamp, matches_filters, \
     divide_filter_args, make_query_str, RC_ADAPTER, repr_obj_id
@@ -498,10 +498,10 @@ class Adapter(BaseResource):
 
         Raises:
 
-          :exc:`~zhmcclient.NotFound`: Cannot find a Partition Link for the
-            adapter (on CPCs of z16 and later)
-          :exc:`~zhmcclient.NoUniqueMatch`: Found more than one Partition Link
-            for the adapter (on CPCs of z16 and later)
+          :exc:`~zhmcclient.CeasedExistence`: The Partition Link for the
+            adapter no longer exists (on CPCs of z16 and later)
+          :exc:`~zhmcclient.ConsistencyError`: Found more than one Partition
+            Link for the adapter (on CPCs of z16 and later)
           :exc:`~zhmcclient.HTTPError`
           :exc:`~zhmcclient.ParseError`
           :exc:`~zhmcclient.AuthError`
@@ -522,14 +522,22 @@ class Adapter(BaseResource):
                 if part_link.get_property('adapter-uri') == self.uri:
                     part_links_for_adapter.append(part_link)
             num_pl = len(part_links_for_adapter)
+            # On z16 or later CPCs, the HMC ensures that Hipersocket Adapter
+            # object and its Partition Link object always exist either both
+            # or none, and that each HiperSocket Adapter can have only one
+            # Partition Link.
             if num_pl == 0:
-                raise NotFound(
-                    message=f"Cannot find a partition link for CPC {cpc.name} "
-                    f"and adapter {self.name}")
+                # The Partition Link is gone, so the HS Adapter is also gone.
+                self.cease_existence_local()
+                raise CeasedExistence(self._uri)
             if num_pl > 1:
-                raise NoUniqueMatch(
-                    message=f"Found more than one ({num_pl}) partition links "
-                    f"for CPC {cpc.name} and adapter {self.name}")
+                # The HMC ensures that this does not happen, so if it happens
+                # it is an inconsistency.
+                pl_names = [pl.name for pl in part_links_for_adapter]
+                raise ConsistencyError(
+                    message=f"Found {num_pl} partition links "
+                    f"({', '.join(pl_names)}) for adapter {self.name} on CPC "
+                    f"{cpc.name} - please report this as a zhmcclient issue")
             part_link = part_links_for_adapter[0]
             part_link.delete()
             # That also deletes the Hipersocket adapter
