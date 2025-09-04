@@ -29,7 +29,7 @@ jobs:
     #-------- Info gathering and checks
     - name: Set pushed tag
       id: set-tag
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         result-encoding: string
         script: |
@@ -46,7 +46,7 @@ jobs:
         fi
     - name: Determine whether releasing the master branch
       id: set-is-master-branch
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         result-encoding: string
         script: |
@@ -62,7 +62,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Determine name of stable branch for pushed tag
       id: set-stable-branch
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         result-encoding: string
         script: |
@@ -71,7 +71,7 @@ jobs:
           return result
     - name: Determine whether releasing stable branch for pushed tag
       id: set-is-stable-branch
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         result-encoding: string
         script: |
@@ -100,7 +100,7 @@ jobs:
         fi
     - name: Set update version
       id: set-update-version
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         result-encoding: string
         script: |
@@ -181,7 +181,7 @@ jobs:
     - name: Create new stable branch when releasing master branch
       if: steps.set-is-master-branch.outputs.result == 'true'
       id: create-stable-branch
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         script: |
           github.rest.git.createRef({
@@ -200,7 +200,7 @@ jobs:
     - name: Retry create new stable branch when releasing master branch if HTTP error 422
       if: steps.set-is-master-branch.outputs.result == 'true' && steps.create-stable-branch.outputs.status == 422
       id: create-stable-branch-2
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         script: |
           github.rest.git.createRef({
