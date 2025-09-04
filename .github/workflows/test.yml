@@ -173,7 +173,7 @@ jobs:
         accessToken: ${{ secrets.GITHUB_TOKEN }}
         error: Commit message title or body exceeds maximum line length of 80
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Display environment
