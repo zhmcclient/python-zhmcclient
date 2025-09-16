@@ -66,8 +66,7 @@ The basic usage of the metrics API is shown in this example:
 
 from collections import namedtuple
 import re
-from datetime import datetime
-import pytz
+from datetime import datetime, timezone
 
 from ._manager import BaseManager
 from ._resource import BaseResource
@@ -693,7 +692,7 @@ class MetricsResponse:
                     # up to the year 9999. We circumvent this issue by
                     # simply using the current date&time.
                     # TODO: Remove the circumvention for too large timestamps.
-                    dt_timestamp = datetime.now(pytz.utc)
+                    dt_timestamp = datetime.now(timezone.utc)
                 state = 3
             elif state == 3:
                 if mr_line != '':

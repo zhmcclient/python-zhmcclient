@@ -19,11 +19,14 @@ Unit tests for _urihandler module of the zhmcclient_mock package.
 """
 
 
-from datetime import datetime
+from datetime import datetime, timezone
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
 # TODO: Migrate mock to zhmcclient_mock
 from unittest.mock import MagicMock
 from dateutil import tz
-import pytz
 from requests.packages import urllib3
 import pytest
 
@@ -4354,6 +4357,9 @@ class TestMetricsContextHandlers:
         Test POST metrics context (create), followed by get and delete.
         """
 
+        if ZoneInfo is None:
+            pytest.skip("ZoneInfo is not supported on this Python version")
+
         faked_hmc = self.hmc
 
         # Prepare faked metric group definitions
@@ -4380,7 +4386,7 @@ class TestMetricsContextHandlers:
 
         # Prepare faked metric values
 
-        ts1_input = datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
+        ts1_input = datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc)
         ts1_exp = 1504613590000
         mo_val1_input = FakedMetricObjectValues(
             group_name=mg_name,
@@ -4392,7 +4398,7 @@ class TestMetricsContextHandlers:
             ])
         faked_hmc.add_metric_values(mo_val1_input)
 
-        ts2_tz = pytz.timezone('CET')
+        ts2_tz = ZoneInfo('Europe/Berlin')
         ts2_input = datetime(2017, 9, 5, 12, 13, 20, 0, ts2_tz)
         ts2_offset = int(ts2_tz.utcoffset(ts2_input).total_seconds())
         ts2_exp = 1504613600000 - 1000 * ts2_offset
