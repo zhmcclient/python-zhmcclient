@@ -28,7 +28,13 @@ colorama>=0.4.6
 requests-mock>=1.6.0
 requests-toolbelt>=0.8.0
 more-itertools>=4.0.0
-# pytz: covered in requirements.txt
+# pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
+# pytz 2024.2 introduced an issue that causes our tests to fail.
+# pytz 2025.1 introduced an issue that causes our tests to fail (https://github.com/stub42/pytz/issues/133)
+# pytz 2025.2 introduced an issue that causes our tests to fail.
+pytz>=2019.1,!=2024.2,!=2025.1,!=2025.2
+# Python's built-in zoneinfo module needs the tzdata package on Windows.
+tzdata>=2023.4; sys_platform == 'win32'
 
 # packaging is used by pytest, pip-check-reqs, sphinx
 packaging>=24.1
@@ -189,11 +195,3 @@ pip-check-reqs>=2.5.1; python_version >= '3.9'
 pywinpty>=2.0.12,!=2.0.14; os_name == "nt" and python_version == '3.8'
 pywinpty>=2.0.12; os_name == "nt" and python_version >= '3.9' and python_version <= '3.12'
 pywinpty>=2.0.14; os_name == "nt" and python_version >= '3.13'
-
-# pytz is actually covered in requirements.txt, but we need to repeat it here
-# because development packages pull it in, so the exclusion of 2024.2 is active
-# for development as well.
-# pytz 2024.2 introduced an issue that causes our tests to fail.
-# pytz 2025.1 introduced an issue that causes our tests to fail (https://github.com/stub42/pytz/issues/133)
-# pytz 2025.2 introduced an issue that causes our tests to fail.
-pytz>=2019.1,!=2024.2,!=2025.1,!=2025.2

@@ -19,10 +19,13 @@ Unit tests for _utils module.
 
 import os
 import sys
-from datetime import datetime, MAXYEAR
+from datetime import datetime, timezone, MAXYEAR
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
 import time
 import re
-import pytz
 import pytest
 from zhmcclient_mock import FakedSession
 from zhmcclient import Client, FilterConversionError
@@ -32,7 +35,7 @@ from zhmcclient._utils import datetime_from_timestamp, \
 
 
 # The Unix epoch
-EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc)
+EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, timezone.utc)
 
 # HMC timestamp numbers (milliseconds since the Unix epoch)
 TS_2000_02_29 = 951782400000  # last day in february in leap year
@@ -71,14 +74,7 @@ DATETIME_TIMESTAMP_TESTCASES = [
     ((MAXYEAR, 12, 30, 0, 0, 0, 0), TS_MAX + 1 - 2 * DAY_MS),
     ((MAXYEAR, 12, 30, 23, 59, 59, 0),
      TS_MAX + 1 - 2 * DAY_MS + 23 * HOUR_MS + 59 * MIN_MS + 59 * SEC_MS),
-
-    # The following testcases would be in range but are too close to the max
-    # for pytz due to an implementation limitation: pytz.localize() checks the
-    # input +/- 1 day.
-    # ((MAXYEAR, 12, 31, 0, 0, 0, 0), TS_MAX + 1 - 1 * DAY_MS),
-    # ((MAXYEAR, 12, 31, 23, 59, 59, 0), TS_MAX - 999),
-    # ((MAXYEAR, 12, 31, 23, 59, 59, 998000), TS_MAX - 1),
-    # ((MAXYEAR, 12, 31, 23, 59, 59, 999000), TS_MAX),
+    ((MAXYEAR, 12, 31, 0, 0, 0, 0), TS_MAX + 1 - 1 * DAY_MS),
 ]
 
 
@@ -184,7 +180,7 @@ def x_test_print_fromtimestamp_max():
     """Print the maximum for datetime.fromtimestamp(utc)."""
 
     def datetime_fromtimestamp_utc(ts):
-        return datetime.fromtimestamp(ts, pytz.utc)
+        return datetime.fromtimestamp(ts, timezone.utc)
 
     max_ts = find_max_value(datetime_fromtimestamp_utc, 1)
     max_dt = datetime_fromtimestamp_utc(max_ts)
@@ -219,7 +215,7 @@ def test_success_datetime_from_timestamp(
     exp_dt_unaware = datetime(*datetime_tuple)
 
     # Expected result, as timezone-aware
-    exp_dt = pytz.utc.localize(exp_dt_unaware)
+    exp_dt = exp_dt_unaware.replace(tzinfo=timezone.utc)
 
     if tz_name is None:
 
@@ -227,7 +223,10 @@ def test_success_datetime_from_timestamp(
         act_dt = datetime_from_timestamp(timestamp)
 
     else:
-        tz = pytz.timezone(tz_name)
+        if ZoneInfo is None:
+            pytest.skip("ZoneInfo is not supported on this Python version")
+
+        tz = ZoneInfo(tz_name)
 
         # Execute the code to be tested
         act_dt = datetime_from_timestamp(timestamp, tz)
@@ -283,9 +282,11 @@ def test_success(datetime_tuple, timestamp, tz_name):
 
     if tz_name is not None:
         # Make the datetime object timezone-aware
-        tz = pytz.timezone(tz_name)
+        if ZoneInfo is None:
+            pytest.skip("ZoneInfo is not supported on this Python version")
+        tz = ZoneInfo(tz_name)
         offset = tz.utcoffset(dt).total_seconds()
-        dt = tz.localize(dt)
+        dt = dt.replace(tzinfo=tz)
 
     exp_ts = timestamp - offset * 1000
 
@@ -332,18 +333,24 @@ TESTCASES_DATETIME_TO_ISOFORMAT = [
         '2017-09-05 12:13:10.123456'
     ),
     (
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc),
+        datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc),
         '2017-09-05 12:13:10+00:00'
     ),
-    (
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('CET')),
-        '2017-09-05 12:13:10+01:00'
-    ),
-    (
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('EST')),
-        '2017-09-05 12:13:10-05:00'
-    ),
 ]
+if ZoneInfo is not None:
+    TESTCASES_DATETIME_TO_ISOFORMAT.extend(
+        [
+            (
+                datetime(2017, 9, 5, 12, 13, 10, 0, ZoneInfo('Europe/Berlin')),
+                '2017-09-05 12:13:10+02:00'  # DST
+            ),
+            (
+                datetime(2017, 9, 5, 12, 13, 10, 0,
+                         ZoneInfo('America/New_York')),
+                '2017-09-05 12:13:10-04:00'  # DST
+            ),
+        ]
+    )
 
 
 @pytest.mark.parametrize(
@@ -377,25 +384,31 @@ TESTCASES_DATETIME_FROM_ISOFORMAT = [
     ),
     (
         '2017-09-05 12:13:10+00:00',
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
+        datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc)
     ),
     (
         '2017-09-05 12:13:10+0000',
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
-    ),
-    (
-        '2017-09-05 12:13:10+01:00',
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('CET'))
-    ),
-    (
-        '2017-09-05 12:13:10+0100',
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('CET'))
-    ),
-    (
-        '2017-09-05 12:13:10-05:00',
-        datetime(2017, 9, 5, 12, 13, 10, 0, pytz.timezone('EST'))
+        datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc)
     ),
 ]
+if ZoneInfo is not None:
+    TESTCASES_DATETIME_FROM_ISOFORMAT.extend(
+        [
+            (
+                '2017-09-05 12:13:10+02:00',  # DST
+                datetime(2017, 9, 5, 12, 13, 10, 0, ZoneInfo('Europe/Berlin'))
+            ),
+            (
+                '2017-09-05 12:13:10+0200',  # DST
+                datetime(2017, 9, 5, 12, 13, 10, 0, ZoneInfo('Europe/Berlin'))
+            ),
+            (
+                '2017-09-05 12:13:10-04:00',  # DST
+                datetime(2017, 9, 5, 12, 13, 10, 0,
+                         ZoneInfo('America/New_York'))
+            ),
+        ]
+    )
 
 
 @pytest.mark.parametrize(
@@ -409,7 +422,11 @@ def test_datetime_from_isoformat(dt_str, exp_dt):
     # The function to be tested
     dt = datetime_from_isoformat(dt_str)
 
-    assert dt == exp_dt
+    # We need to compare the UTC times, because dateutil.parse() uses a
+    # different tzinfo implementation than ZoneInfo.
+    dt_utc = dt.astimezone(timezone.utc)
+    exp_dt_utc = exp_dt.astimezone(timezone.utc)
+    assert dt_utc == exp_dt_utc
 
 
 def cpc_for_filtering():
