@@ -53,10 +53,6 @@ jsonschema>=4.18.0
 urllib3>=2.2.3; python_version == '3.8'
 urllib3>=2.5.0; python_version >= '3.9'
 
-# pyrsistent is used by jsonschema>=3.0
-# pyrsistent 0.20.0 has official support for Python 3.12
-pyrsistent>=0.20.0
-
 # websocket-client is also used by stomp-py 8.0 and notebook(?) 6.4
 websocket-client>=1.8.0
 
