@@ -29,10 +29,11 @@ colorama==0.4.6
 importlib-metadata==8.5.0; python_version == '3.8'
 importlib-metadata==8.7.0; python_version >= '3.9'
 more-itertools==4.0.0
-# pytz: covered in direct deps for installation
+pytz==2019.1
 # requests: covered in direct deps for installation
 requests-mock==1.6.0
 requests-toolbelt==0.8.0
+tzdata==2023.4; sys_platform == 'win32'
 
 # Unit test (indirect dependencies):
 # decorator: covered in direct deps for installation
