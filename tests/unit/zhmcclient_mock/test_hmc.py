@@ -20,9 +20,12 @@ Unit tests for _hmc module of the zhmcclient_mock package.
 
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
 from dateutil import tz
-import pytz
 import pytest
 
 from zhmcclient_mock._session import FakedSession
@@ -2103,12 +2106,15 @@ class TestFakedMetricsContext:
     def test_mc_get_m_values_response(self):
         """Test get_metric_values_response() of FakedMetricsContext."""
 
+        if ZoneInfo is None:
+            pytest.skip("ZoneInfo is not supported on this Python version")
+
         faked_hmc = self.hmc
         mc_mgr = faked_hmc.metrics_contexts
 
         mg_name = 'partition-usage'
 
-        ts1_input = datetime(2017, 9, 5, 12, 13, 10, 0, pytz.utc)
+        ts1_input = datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc)
         ts1_exp = 1504613590000
         mo_val_input = FakedMetricObjectValues(
             group_name=mg_name,
@@ -2120,7 +2126,7 @@ class TestFakedMetricsContext:
             ])
         faked_hmc.add_metric_values(mo_val_input)
 
-        ts2_tz = pytz.timezone('CET')
+        ts2_tz = ZoneInfo('Europe/Berlin')
         ts2_input = datetime(2017, 9, 5, 12, 13, 20, 0, ts2_tz)
         ts2_offset = int(ts2_tz.utcoffset(ts2_input).total_seconds())
         ts2_exp = 1504613600000 - 1000 * ts2_offset

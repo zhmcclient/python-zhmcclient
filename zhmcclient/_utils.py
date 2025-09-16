@@ -19,11 +19,10 @@ Utility functions.
 
 import re
 from collections.abc import Mapping, MutableSequence, Iterable
-from datetime import datetime
+from datetime import datetime, timezone
 import warnings
 
 from dateutil import parser
-import pytz
 from requests.utils import quote
 
 from ._exceptions import HTTPError, FilterConversionError
@@ -31,7 +30,7 @@ from ._exceptions import HTTPError, FilterConversionError
 __all__ = ['datetime_from_timestamp', 'timestamp_from_datetime']
 
 
-_EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, pytz.utc)
+_EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, timezone.utc)
 
 # Resource class names.
 # These are the values of the 'class' property on the resource objects.
@@ -236,7 +235,7 @@ def repr_obj_id(obj):
     return f"{obj.__class__.__name__} at 0x{id(obj):08x}"
 
 
-def datetime_from_timestamp(ts, tzinfo=pytz.utc):
+def datetime_from_timestamp(ts, tzinfo=timezone.utc):
     """
     Convert an :term:`HMC timestamp number <timestamp>` into a
     :class:`~py:datetime.datetime` object. The resulting object will be
@@ -273,9 +272,7 @@ def datetime_from_timestamp(ts, tzinfo=pytz.utc):
 
       tzinfo (:class:`py:datetime.tzinfo`):
         Timezone in which the returned object will be represented.
-        This may be any object derived from :class:`py:datetime.tzinfo`,
-        including but not limited to objects returned by
-        :func:`pytz.timezone`.
+        This may be any object derived from :class:`py:datetime.tzinfo`.
 
         Note that this parameter does not affect how the HMC timestamp value is
         interpreted; i.e. the effective point in time represented by the
@@ -357,7 +354,7 @@ def timestamp_from_datetime(dt):
         raise ValueError("datetime value must not be None.")
     if dt.tzinfo is None:
         # Apply default timezone to the timezone-naive input
-        dt = pytz.utc.localize(dt)
+        dt = dt.replace(tzinfo=timezone.utc)
     epoch_seconds = (dt - _EPOCH_DT).total_seconds()
     ts = int(epoch_seconds * 1000)
     return ts

@@ -8,12 +8,6 @@
 
 decorator>=4.0.11
 
-# pytz 2019.1 fixes an ImportError for collections.Mapping on Python 3.10
-# pytz 2024.2 introduced an issue that causes our tests to fail.
-# pytz 2025.1 introduced an issue that causes our tests to fail (https://github.com/stub42/pytz/issues/133)
-# pytz 2025.2 introduced an issue that causes our tests to fail.
-pytz>=2019.1,!=2024.2,!=2025.1,!=2025.2
-
 # requests 2.25.0 tolerates urllib3 1.26.5 which is needed on Python 3.10 to
 #   remove ImportWarning in six
 requests>=2.32.4
@@ -42,8 +36,10 @@ PyYAML>=6.0.2
 # jupyterlab-server 2.25.3 depends on jsonschema>=4.18.0
 jsonschema>=4.18.0
 
+# websocket-client is also used by stomp-py 8.0 and notebook(?) 6.4
+websocket-client>=1.8.0
 
-# Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
+certifi>=2024.07.04
 
 # Functional dependencies on urllib3 versions:
 # - Use of the 'allowed_methods' attribute requires >=1.26.0
@@ -53,10 +49,8 @@ jsonschema>=4.18.0
 urllib3>=2.2.3; python_version == '3.8'
 urllib3>=2.5.0; python_version >= '3.9'
 
-# websocket-client is also used by stomp-py 8.0 and notebook(?) 6.4
-websocket-client>=1.8.0
 
-certifi>=2024.07.04
+# Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
 
 # idna is used by requests. idna 3.7 resolves security issues
 idna>=3.7
