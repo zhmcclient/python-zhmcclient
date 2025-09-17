@@ -1,0 +1,2 @@
+Increased the max size of the internal handover queue for notifications
+from 10 to 1000, in order to better handle spikes of notifications.
