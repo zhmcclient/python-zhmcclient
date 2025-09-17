@@ -18,7 +18,6 @@
 Unit tests for _urihandler module of the zhmcclient_mock package.
 """
 
-
 from datetime import datetime, timezone
 try:
     from zoneinfo import ZoneInfo
@@ -26,10 +25,10 @@ except ImportError:
     ZoneInfo = None
 # TODO: Migrate mock to zhmcclient_mock
 from unittest.mock import MagicMock
-from dateutil import tz
 from requests.packages import urllib3
 import pytest
 
+from zhmcclient._utils import tzlocal
 from zhmcclient_mock._session import FakedSession
 from zhmcclient_mock._hmc import FakedMetricObjectValues
 from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
@@ -4413,7 +4412,7 @@ class TestMetricsContextHandlers:
         faked_hmc.add_metric_values(mo_val2_input)
 
         ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # timezone-naive
-        ts3_offset = int(tz.tzlocal().utcoffset(ts3_input).total_seconds())
+        ts3_offset = int(tzlocal().utcoffset(ts3_input).total_seconds())
         ts3_exp = 1504613610000 - 1000 * ts3_offset
         mo_val3_input = FakedMetricObjectValues(
             group_name=mg_name2,

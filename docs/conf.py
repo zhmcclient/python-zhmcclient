@@ -499,7 +499,6 @@ intersphinx_mapping = {
     'py2': ('https://docs.python.org/2', None), # specific to Python 2
     'py3': ('https://docs.python.org/3', None), # specific to Python 3
     'iv': ('https://immutable-views.readthedocs.io/en/latest/', None),
-    'dateutil': ('https://dateutil.readthedocs.io/en/stable/', None),
 }
 
 intersphinx_cache_limit = 5

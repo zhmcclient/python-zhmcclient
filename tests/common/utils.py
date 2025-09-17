@@ -19,9 +19,9 @@ Utility functions for tests.
 import sys
 import os
 import logging
-from dateutil import tz
 
 import zhmcclient
+from zhmcclient._utils import tzlocal
 from zhmcclient_mock._hmc import FakedBaseResource, \
     FakedMetricGroupDefinition, FakedMetricObjectValues
 
@@ -500,7 +500,7 @@ def timestamp_aware(dt):
     added to a copy of the input object and that copy is returned.
     """
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=tz.tzlocal())  # new object
+        dt = dt.replace(tzinfo=tzlocal())  # new object
     return dt
 
 

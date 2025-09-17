@@ -1,0 +1,2 @@
+Install: Removed dependency to the Python package "python-dateutil" and
+replaced its use with the "datetime" module of standard Python.

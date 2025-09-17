@@ -18,16 +18,15 @@
 Unit tests for _hmc module of the zhmcclient_mock package.
 """
 
-
 import re
 from datetime import datetime, timezone
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
     ZoneInfo = None
-from dateutil import tz
 import pytest
 
+from zhmcclient._utils import tzlocal
 from zhmcclient_mock._session import FakedSession
 from zhmcclient_mock._hmc import \
     FakedBaseManager, FakedBaseResource, \
@@ -2143,7 +2142,7 @@ class TestFakedMetricsContext:
         mg_name2 = 'dpm-system-usage-overview'
 
         ts3_input = datetime(2017, 9, 5, 12, 13, 30, 0)  # timezone-naive
-        ts3_offset = int(tz.tzlocal().utcoffset(ts3_input).total_seconds())
+        ts3_offset = int(tzlocal().utcoffset(ts3_input).total_seconds())
         ts3_exp = 1504613610000 - 1000 * ts3_offset
         mo_val3_input = FakedMetricObjectValues(
             group_name=mg_name2,
