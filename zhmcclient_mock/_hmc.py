@@ -20,11 +20,10 @@ local Python object and maintains its resource state across operations.
 
 import re
 import copy
-from dateutil import tz
 from immutable_views import DictView
 
 from zhmcclient._utils import repr_dict, repr_manager, repr_list, \
-    timestamp_from_datetime, repr_obj_id
+    timestamp_from_datetime, repr_obj_id, tzlocal
 
 from ._idpool import IdPool
 
@@ -4083,8 +4082,7 @@ class FakedMetricObjectValues:
 
           timestamp (datetime): Point in time to which these metric values
             apply. Timezone-naive values are converted to timezone-aware values
-            using the local timezone as determined by
-            :class:`dateutil:dateutil.tz.tzlocal`.
+            using the local timezone.
 
           values (list of tuple(name, value)): The metric values, as follows:
 
@@ -4094,7 +4092,7 @@ class FakedMetricObjectValues:
               :class:`~zhmcclient_mock.FakedMetricGroupDefinition`).
         """
         if timestamp.tzinfo is None:
-            timestamp = timestamp.replace(tzinfo=tz.tzlocal())  # new object
+            timestamp = timestamp.replace(tzinfo=tzlocal())  # new object
         self.group_name = group_name
         self.resource_uri = resource_uri
         self.timestamp = timestamp
