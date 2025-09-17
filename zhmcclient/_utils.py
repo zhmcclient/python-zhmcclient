@@ -22,7 +22,6 @@ from collections.abc import Mapping, MutableSequence, Iterable
 from datetime import datetime, timezone
 import warnings
 
-from dateutil import parser
 from requests.utils import quote
 
 from ._exceptions import HTTPError, FilterConversionError
@@ -616,15 +615,16 @@ def datetime_from_isoformat(dt_str):
     This function is used to parse timestamp strings from the externalized
     HMC definition.
 
-    The date time strings are parsed using dateutil.parse.isoparse(), which
-    supports the ISO8601 formats. The separator between the date portion and
-    the time portion can be ' ' or 'T', and the optional timezone portion can
-    be specified as 'shhmm' or 'shh:mm'.
+    The date time strings are parsed using datetime.fromisoformat() (see
+    https://docs.python.org/3/library/datetime.html#datetime.datetime.fromisoformat),
+    which supports the ISO8601 formats. The separator between the date portion
+    and the time portion can be ' ' or 'T', and the optional timezone portion
+    must be specified as 'shh:mm'.
 
     If the date time string specifies a timezone, the returned datetime object
     is timezone-aware. Otherwise, it is timezone-naive.
     """
-    dt = parser.isoparse(dt_str)
+    dt = datetime.fromisoformat(dt_str)
     return dt
 
 
@@ -649,6 +649,15 @@ def datetime_to_isoformat(dt):
     """
     dt_str = dt.isoformat(sep=' ')
     return dt_str
+
+
+def tzlocal():
+    """
+    Return a datetime.tzinfo object for the local timezone.
+    """
+    dt_now = datetime.now()
+    tz = dt_now.astimezone().tzinfo
+    return tz
 
 
 def get_api_features(obj, name=None):
