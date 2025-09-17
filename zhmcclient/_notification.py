@@ -372,7 +372,7 @@ class NotificationReceiver:
 
         # Thread-safe handover queue between listener thread and receiver
         # thread
-        self._handover_queue = queue.Queue(10)
+        self._handover_queue = queue.Queue(1000)
 
         # STOMP connection
         self._conn = None
