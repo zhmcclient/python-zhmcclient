@@ -23,7 +23,7 @@ import time
 import re
 import random
 import threading
-from immutable_views import DictView
+from immutabledict import immutabledict
 import pytest
 
 from zhmcclient import BaseResource, BaseManager, Session, Client, \
@@ -98,7 +98,7 @@ class ResourceTestCase:
         """
 
         # Check the properties member type
-        assert isinstance(resource.properties, DictView)
+        assert isinstance(resource.properties, immutabledict)
 
         # Verify that the resource properties are as expected
         assert len(resource.properties) == len(exp_props), (
@@ -252,8 +252,8 @@ class TestPropertySet(ResourceTestCase):
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key, value in set_props.items():
-            # Since zhmcclient 0.31.0, the 'properties' attribute has type
-            # DictView which prevents modifications to the dictionary.
+            # The 'properties' attribute has type immutabledict which prevents
+            # modifications to the dictionary.
             with pytest.raises(TypeError):
                 res.properties[key] = value
 
@@ -276,8 +276,8 @@ class TestPropertySet(ResourceTestCase):
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key, value in set_props.items():
-            # Since zhmcclient 0.31.0, the 'properties' attribute has type
-            # DictView which prevents modifications to the dictionary.
+            # The 'properties' attribute has type immutabledict which prevents
+            # modifications to the dictionary.
             with pytest.raises(TypeError):
                 res.properties[key] = value
 
@@ -303,8 +303,8 @@ class TestPropertyDel(ResourceTestCase):
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key in del_keys:
-            # Since zhmcclient 0.31.0, the 'properties' attribute has type
-            # DictView which prevents modifications to the dictionary.
+            # The 'properties' attribute has type immutabledict which prevents
+            # modifications to the dictionary.
             with pytest.raises(TypeError):
                 del res.properties[key]
 
@@ -326,8 +326,8 @@ class TestPropertyDel(ResourceTestCase):
         res = MyResource(self.mgr, self.uri, None, init_props)
 
         for key in del_keys:
-            # Since zhmcclient 0.31.0, the 'properties' attribute has type
-            # DictView which prevents modifications to the dictionary.
+            # The 'properties' attribute has type immutabledict which prevents
+            # modifications to the dictionary.
             with pytest.raises(TypeError):
                 del res.properties[key]
 
@@ -368,8 +368,8 @@ class TestPropertyDel(ResourceTestCase):
 
         res = MyResource(self.mgr, self.uri, None, init_props)
 
-        # Since zhmcclient 0.31.0, the 'properties' attribute has type
-        # DictView which prevents modifications to the dictionary.
+        # The 'properties' attribute has type immutabledict which prevents
+        # modifications to the dictionary.
         with pytest.raises(AttributeError):
             res.properties.clear()
 

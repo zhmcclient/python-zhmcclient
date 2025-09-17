@@ -20,7 +20,7 @@ local Python object and maintains its resource state across operations.
 
 import re
 import copy
-from immutable_views import DictView
+from immutabledict import immutabledict
 
 from zhmcclient._utils import repr_dict, repr_manager, repr_list, \
     timestamp_from_datetime, repr_obj_id, tzlocal
@@ -923,8 +923,8 @@ class FakedHmc(FakedBaseResource):
     @property
     def metric_values(self):
         """
-        :class:`iv:immutable_views.DictView`: The metric values in this HMC that
-        have been prepared for later retrieval, with:
+        :class:`~id:immutabledict.immutabledict`: The metric values in this HMC
+        that have been prepared for later retrieval, with:
 
         - key(string):
           Metric group name, e.g. 'partition-usage'.
@@ -932,12 +932,12 @@ class FakedHmc(FakedBaseResource):
         - value(list of :class:`~zhmcclient_mock.FakedMetricObjectValues`):
           The metric values of this metric group.
         """
-        return DictView(self._metric_values)
+        return immutabledict(self._metric_values)
 
     @property
     def metric_groups(self):
         """
-        :class:`iv:immutable_views.DictView`: The metric groups supported by
+        :class:`~id:immutabledict.immutabledict`: The metric groups supported by
         this HMC, with:
 
         - key(string):
@@ -946,7 +946,7 @@ class FakedHmc(FakedBaseResource):
         - value(list of :class:`~zhmcclient_mock.FakedMetricGroupDefinition`):
           The metric groups including their metric values and their types.
         """
-        return DictView(self._metric_groups)
+        return immutabledict(self._metric_groups)
 
     @property
     def enabled(self):

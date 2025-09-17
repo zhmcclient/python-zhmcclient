@@ -12,7 +12,7 @@ requests>=2.32.4
 
 stomp-py>=8.1.1
 
-immutable-views>=0.6.0
+immutabledict>=4.2.0
 nocasedict>=1.0.2
 
 # PyYAML is used by zhmcclient_mock, zhmcclient.testutils and bandit
