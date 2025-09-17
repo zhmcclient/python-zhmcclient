@@ -16,7 +16,6 @@ wheel==0.41.3
 
 # Direct dependencies for install (must be consistent with requirements.txt)
 
-decorator==4.0.11
 requests==2.32.4
 stomp-py==8.1.1
 python-dateutil==2.8.2
