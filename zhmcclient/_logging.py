@@ -252,7 +252,7 @@ def logged_api_call(
             according to the 'blanked_properties' and 'properties_pos'
             arguments of the 'logged_api_call' decorator.
             """
-            # properties may also be a DictView (subclass of Mapping)
+            # properties may also be of type immutabledict (subclass of Mapping)
             assert isinstance(properties, Mapping)
             copied_properties = dict(properties)
             for pname in blanked_properties:

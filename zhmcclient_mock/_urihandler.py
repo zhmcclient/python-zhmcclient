@@ -449,7 +449,7 @@ def properties_copy(properties):
     Return a deep copy of the properties that is independent of the input.
 
     Parameters:
-        properties (DictView or dict): Input properties
+        properties (immutabledict or dict): Input properties
     """
     return copy.deepcopy(dict(properties))
 

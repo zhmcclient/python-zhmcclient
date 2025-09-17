@@ -498,7 +498,7 @@ intersphinx_mapping = {
     'py': ('https://docs.python.org/3/', None), # agnostic to Python version
     'py2': ('https://docs.python.org/2', None), # specific to Python 2
     'py3': ('https://docs.python.org/3', None), # specific to Python 3
-    'iv': ('https://immutable-views.readthedocs.io/en/latest/', None),
+    'id': ('https://immutabledict.corenting.fr', None),
 }
 
 intersphinx_cache_limit = 5

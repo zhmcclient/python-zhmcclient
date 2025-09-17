@@ -22,7 +22,7 @@ by the HMC.
 import time
 import threading
 # import contextlib
-from immutable_views import DictView
+from immutabledict import immutabledict
 
 from ._logging import logged_api_call
 from ._utils import repr_dict, repr_timestamp, repr_obj_id
@@ -102,15 +102,17 @@ class BaseResource:
     @property
     def properties(self):
         """
-        :class:`iv:immutable_views.DictView`: The properties of this resource
-        that are currently present in this Python object, as a dictionary.
+        :class:`~id:immutabledict.immutabledict`: The properties of this
+        resource that are currently present in this Python object, as a
+        dictionary.
 
           * Key: Name of the property.
           * Value: Value of the property.
 
-        The returned :class:`iv:immutable_views.DictView` object is an immutable
-        dictionary view that behaves like a standard Python :class:`dict`
-        except that it prevents any modifications to the dictionary.
+        The returned :class:`~id:immutabledict.immutabledict` object is an
+        immutable dictionary view that behaves like a standard Python
+        :class:`dict` except that it prevents any modifications to the
+        dictionary.
 
         See the respective 'Data model' sections in the :term:`HMC API` book
         for a description of the resources along with their properties.
@@ -139,14 +141,15 @@ class BaseResource:
 
         If :ref:`auto-updating` is enabled for the
         resource object and the session is enabled for auto-updating as well,
-        the property values in the returned :class:`iv:immutable_views.DictView`
-        object will change as they change on the HMC.
+        the property values in the returned
+        :class:`~id:immutabledict.immutabledict` object will change as they
+        change on the HMC.
 
         If the resource object on the HMC no longer exists, the properties
         show the values that were last updated from the HMC when the object
         still existed.
         """
-        return DictView(self._properties)
+        return immutabledict(self._properties)
 
     @property
     def uri(self):
