@@ -18,7 +18,6 @@ wheel==0.41.3
 
 requests==2.32.4
 stomp-py==8.1.1
-python-dateutil==2.8.2
 immutable-views==0.6.0
 nocasedict==1.0.2
 

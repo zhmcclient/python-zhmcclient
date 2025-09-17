@@ -19,7 +19,7 @@ Unit tests for _utils module.
 
 import os
 import sys
-from datetime import datetime, timezone, MAXYEAR
+from datetime import datetime, timezone, tzinfo, MAXYEAR
 try:
     from zoneinfo import ZoneInfo
 except ImportError:
@@ -31,8 +31,10 @@ from zhmcclient_mock import FakedSession
 from zhmcclient import Client, FilterConversionError
 from zhmcclient._utils import datetime_from_timestamp, \
     timestamp_from_datetime, datetime_to_isoformat, datetime_from_isoformat, \
-    matches_filters, divide_filter_args
+    matches_filters, divide_filter_args, tzlocal
 
+# datetime.fromisoformnat() supports 'hhmm' without colon as timezone offset
+ISOFORMAT_SUPPORTS_HHMM = tuple(map(int, sys.version_info[:2])) >= (3, 11)
 
 # The Unix epoch
 EPOCH_DT = datetime(1970, 1, 1, 0, 0, 0, 0, timezone.utc)
@@ -386,20 +388,21 @@ TESTCASES_DATETIME_FROM_ISOFORMAT = [
         '2017-09-05 12:13:10+00:00',
         datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc)
     ),
-    (
-        '2017-09-05 12:13:10+0000',
-        datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc)
-    ),
 ]
+if ISOFORMAT_SUPPORTS_HHMM:
+    TESTCASES_DATETIME_FROM_ISOFORMAT.extend(
+        [
+            (
+                '2017-09-05 12:13:10+0000',
+                datetime(2017, 9, 5, 12, 13, 10, 0, timezone.utc)
+            ),
+        ]
+    )
 if ZoneInfo is not None:
     TESTCASES_DATETIME_FROM_ISOFORMAT.extend(
         [
             (
                 '2017-09-05 12:13:10+02:00',  # DST
-                datetime(2017, 9, 5, 12, 13, 10, 0, ZoneInfo('Europe/Berlin'))
-            ),
-            (
-                '2017-09-05 12:13:10+0200',  # DST
                 datetime(2017, 9, 5, 12, 13, 10, 0, ZoneInfo('Europe/Berlin'))
             ),
             (
@@ -409,6 +412,16 @@ if ZoneInfo is not None:
             ),
         ]
     )
+    if ISOFORMAT_SUPPORTS_HHMM:
+        TESTCASES_DATETIME_FROM_ISOFORMAT.extend(
+            [
+                (
+                    '2017-09-05 12:13:10+02:00',  # DST
+                    datetime(2017, 9, 5, 12, 13, 10, 0,
+                             ZoneInfo('Europe/Berlin'))
+                ),
+            ]
+        )
 
 
 @pytest.mark.parametrize(
@@ -427,6 +440,18 @@ def test_datetime_from_isoformat(dt_str, exp_dt):
     dt_utc = dt.astimezone(timezone.utc)
     exp_dt_utc = exp_dt.astimezone(timezone.utc)
     assert dt_utc == exp_dt_utc
+
+
+def test_tzlocal():
+    """
+    Test function for tzlocal().
+    """
+
+    # The function to be tested
+    tz = tzlocal()
+
+    assert isinstance(tz, tzinfo)
+    assert hasattr(tz, 'utcoffset')
 
 
 def cpc_for_filtering():
