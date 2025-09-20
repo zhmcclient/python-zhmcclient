@@ -206,6 +206,7 @@ python-dateutil==2.8.2
 prometheus-client==0.13.1
 ptyprocess==0.5.1
 pyparsing==3.0.7
+pytokens==0.1.10
 pywin32-ctypes==0.2.0; sys_platform=="win32"  # used by keyring
 rfc3986==1.4.0
 rich==12.0.0
