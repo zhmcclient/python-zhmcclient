@@ -20,6 +20,37 @@ Change log
 ----------
 
 .. towncrier start
+Version 1.23.2
+^^^^^^^^^^^^^^
+
+Released: 2025-09-20
+
+**Bug fixes:**
+
+* Increased the max size of the internal handover queue for notifications
+  from 10 to 1000, in order to better handle spikes of notifications. (`#1982 <https://github.com/zhmcclient/python-zhmcclient/issues/1982>`_)
+
+**Cleanup:**
+
+* Install: Removed dependency to the Python package "decorator", which was not
+  used anymore.
+
+* Install: Removed dependency to the Python package "pytz", which was used
+  by the zhmcclient package, and replaced that with standard Python's
+  "datetime.timezone" module. Testcases were converted to use standard
+  Python's "zoneinfo" module (which requires installing the 'tzdata' package on
+  Windows). Since the "zoneinfo" module was added in Python 3.9, test functions
+  that need this module are skipped on Python 3.8. (`#1969 <https://github.com/zhmcclient/python-zhmcclient/issues/1969>`_)
+
+* Install: Removed dependency to the Python package "pyrsistent", which was used
+  indirectly by the zhmcclient package via the "jsonschema" package, in order
+  to get security issues addressed. The minimum version of jsonschema 4.18 that
+  we now use, no longer uses "pyrsistent". (`#1970 <https://github.com/zhmcclient/python-zhmcclient/issues/1970>`_)
+
+* Install: Removed dependency to the Python package "python-dateutil" and
+  replaced its use with the "datetime" module of standard Python. (`#1975 <https://github.com/zhmcclient/python-zhmcclient/issues/1975>`_)
+
+
 Version 1.23.1
 ^^^^^^^^^^^^^^
 

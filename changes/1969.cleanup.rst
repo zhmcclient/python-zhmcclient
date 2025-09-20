@@ -1,6 +1,0 @@
-Install: Removed dependency to the Python package "pytz", which was used
-by the zhmcclient package, and replaced that with standard Python's
-"datetime.timezone" module. Testcases were converted to use standard
-Python's "zoneinfo" module (which requires installing the 'tzdata' package on
-Windows). Since the "zoneinfo" module was added in Python 3.9, test functions
-that need this module are skipped on Python 3.8.
