@@ -36,8 +36,8 @@ from ._logging import get_logger, logged_api_call
 from ._constants import DEFAULT_CONNECT_TIMEOUT, DEFAULT_CONNECT_RETRIES, \
     DEFAULT_READ_TIMEOUT, DEFAULT_READ_RETRIES, DEFAULT_MAX_REDIRECTS, \
     DEFAULT_OPERATION_TIMEOUT, DEFAULT_STATUS_TIMEOUT, \
-    DEFAULT_NAME_URI_CACHE_TIMETOLIVE, HMC_LOGGER_NAME, \
-    HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER, \
+    DEFAULT_NAME_URI_CACHE_TIMETOLIVE, DEFAULT_LOG_CONTENT_TRUNCATE, \
+    HMC_LOGGER_NAME, HTML_REASON_WEB_SERVICES_DISABLED, HTML_REASON_OTHER, \
     DEFAULT_HMC_PORT, BLANKED_OUT_STRING
 from ._utils import repr_obj_id
 from ._version import __version__
@@ -152,7 +152,7 @@ class RetryTimeoutConfig:
     def __init__(self, connect_timeout=None, connect_retries=None,
                  read_timeout=None, read_retries=None, max_redirects=None,
                  operation_timeout=None, status_timeout=None,
-                 name_uri_cache_timetolive=None):
+                 name_uri_cache_timetolive=None, log_content_truncate=None):
         """
         For all parameters, `None` means that this object does not specify a
         value for the parameter, and that a default value should be used
@@ -202,6 +202,10 @@ class RetryTimeoutConfig:
             seconds since the last invalidation. The special value 0 means
             that no Name-URI cache is maintained (i.e. the caching is
             disabled).
+
+          log_content_truncate (:term:`integer`): Content length in HMC requests
+            and responses after which the data in the log entry is truncated.
+            The special value 0 means that no truncation happens.
         """
         self.connect_timeout = connect_timeout
         self.connect_retries = connect_retries
@@ -211,6 +215,7 @@ class RetryTimeoutConfig:
         self.operation_timeout = operation_timeout
         self.status_timeout = status_timeout
         self.name_uri_cache_timetolive = name_uri_cache_timetolive
+        self.log_content_truncate = log_content_truncate
 
         # Read retries only for these HTTP methods:
         self.allowed_methods = {'GET'}
@@ -218,7 +223,7 @@ class RetryTimeoutConfig:
     _attrs = ('connect_timeout', 'connect_retries', 'read_timeout',
               'read_retries', 'max_redirects', 'operation_timeout',
               'status_timeout', 'name_uri_cache_timetolive',
-              'allowed_methods')
+              'allowed_methods', 'log_content_truncate')
 
     def override_with(self, override_config):
         """
@@ -303,6 +308,7 @@ class Session:
         operation_timeout=DEFAULT_OPERATION_TIMEOUT,
         status_timeout=DEFAULT_STATUS_TIMEOUT,
         name_uri_cache_timetolive=DEFAULT_NAME_URI_CACHE_TIMETOLIVE,
+        log_content_truncate=DEFAULT_LOG_CONTENT_TRUNCATE,
     )
 
     def __init__(self, host, userid=None, password=None, session_id=None,
@@ -949,9 +955,8 @@ class Session:
         self._object_topic = None
         self._job_topic = None
 
-    @staticmethod
     def _log_http_request(
-            method, url, resource, headers=None, content=None,
+            self, method, url, resource, headers=None, content=None,
             content_len=None):
         """
         Log the HTTP request of an HMC REST API call, at the debug level.
@@ -989,8 +994,8 @@ class Session:
                     if pname in content_dict:
                         content_dict[pname] = BLANKED_OUT_STRING
                 content = dict2json(content_dict)
-            trunc = 30000
-            if content_len > trunc:
+            trunc = self._retry_timeout_config.log_content_truncate
+            if content_len > trunc > 0:
                 content_label = f"content(first {trunc} B of {content_len} B)"
                 content_msg = content[0:trunc] + '...(truncated)'
             else:
@@ -1019,9 +1024,8 @@ class Session:
                          method, url, res_str, _headers_for_logging(headers),
                          content_label, content_msg)
 
-    @staticmethod
     def _log_http_response(
-            method, url, resource, status, headers=None, content=None):
+            self, method, url, resource, status, headers=None, content=None):
         """
         Log the HTTP response of an HMC REST API call, at the debug level.
 
@@ -1065,8 +1069,8 @@ class Session:
                 content_label = 'content'
                 content_msg = content
             else:
-                trunc = 30000
-                if content_len > trunc:
+                trunc = self._retry_timeout_config.log_content_truncate
+                if content_len > trunc > 0:
                     content_label = \
                         f"content(first {trunc} B of {content_len} B)"
                     content_msg = content[0:trunc] + '...(truncated)'

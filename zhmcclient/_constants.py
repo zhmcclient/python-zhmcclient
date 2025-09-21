@@ -33,6 +33,7 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'DEFAULT_OPERATION_TIMEOUT',
            'DEFAULT_STATUS_TIMEOUT',
            'DEFAULT_NAME_URI_CACHE_TIMETOLIVE',
+           'DEFAULT_LOG_CONTENT_TRUNCATE',
            'DEFAULT_STOMP_CONNECT_TIMEOUT',
            'DEFAULT_STOMP_CONNECT_RETRIES',
            'DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL',
@@ -113,6 +114,12 @@ DEFAULT_STATUS_TIMEOUT = 60
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 DEFAULT_NAME_URI_CACHE_TIMETOLIVE = 300
+
+#: Default value for the ``log_content_truncate``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
+#: if not specified in the ``retry_timeout_config`` init argument to
+#: :class:`~zhmcclient.Session`.
+DEFAULT_LOG_CONTENT_TRUNCATE = 500000
 
 #: Default value for the ``connect_timeout``
 #: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
