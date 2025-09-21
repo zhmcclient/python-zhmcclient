@@ -1,6 +1,7 @@
 Changed the type of :attr:`zhmcclient.BaseResource.properties` from
 ``immutable_views.DictView`` to :class:`id:immutabledict.immutabledict`.
-Both classes inherit from ``Mapping`` and are compatible with ``dict``.
+Both classes inherit from :class:`py:collections.abc.Mapping` and are compatible
+with :class:`py:dict`.
 This change may be incompatible if you perform type comparisons or inheritance
 checks using the ``immutable_views.DictView`` class. Apart from that, this
 change should be compatible.
