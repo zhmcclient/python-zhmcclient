@@ -19,6 +19,10 @@
 Change log
 ----------
 
+.. only:: dev
+
+   .. include:: tmp_changes.rst
+
 .. towncrier start
 Version 1.23.0
 ^^^^^^^^^^^^^^

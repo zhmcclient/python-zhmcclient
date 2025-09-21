@@ -28,8 +28,9 @@
 {{ top_underline * ((versiondata.version + versiondata.date)|length + 3)}}
 {%   endif %}
 {% endif %}
+{% set dev_version = "dev" in versiondata.version %}
 
-Released: {{ versiondata.date }}
+Released: {{ 'not yet' if dev_version else versiondata.date }}
 
 {% for section, _ in sections.items() %}
 {%   set underline = underlines[0] %}
