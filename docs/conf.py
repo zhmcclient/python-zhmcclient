@@ -99,6 +99,16 @@ release = setuptools_scm.get_version(root='..', relative_to=__file__)
 # We also use the full version for that.
 version = release
 
+if "dev" in release:
+    print("conf.py: Generating change log entries using towncrier")
+    sys.stdout.flush()
+    os.system('towncrier build --draft >tmp_changes.rst')
+    print("conf.py: Building development version")
+    # The following "tags" object is injected by Sphinx at runtime.
+    tags.add("dev")  # noqa: F821 pylint: disable=undefined-variable
+else:
+    print("conf.py: Building release version")
+
 # Some prints, for extra information
 print(f"conf.py: pwd: {os.getcwd()}")
 print(f"conf.py: zhmcclient version: {version}")
