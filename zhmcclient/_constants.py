@@ -54,20 +54,26 @@ __all__ = ['DEFAULT_CONNECT_TIMEOUT',
            'BLANKED_OUT_STRING']
 
 
-#: Default HTTP connect timeout in seconds,
+#: Default HMC port number
+DEFAULT_HMC_PORT = 6794
+
+#: Default port on which the HMC issues JMS over STOMP messages.
+DEFAULT_STOMP_PORT = 61612
+
+#: Default value for the ``connect_timeout``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 DEFAULT_CONNECT_TIMEOUT = 30
 
-#: Default number of HTTP connect retries,
+#: Default value for the ``connect_retries``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 DEFAULT_CONNECT_RETRIES = 3
 
-#: Default HMC port number
-DEFAULT_HMC_PORT = 6794
-
-#: Default HTTP read timeout in seconds,
+#: Default value for the ``read_timeout``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 #:
@@ -78,87 +84,94 @@ DEFAULT_HMC_PORT = 6794
 #: <https://github.com/zhmcclient/python-zhmcclient/issues/249>`_.
 DEFAULT_READ_TIMEOUT = 3600
 
-#: Default port on which the HMC issues JMS over STOMP messages.
-DEFAULT_STOMP_PORT = 61612
-
-#: Default number of HTTP read retries,
+#: Default value for the ``read_retries``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
-#:
-#: Note: The HTTP methods for which retries are performed are restricted to
-#: only "GET". For more background, see zhmcclient `issue #249
-#: <https://github.com/zhmcclient/python-zhmcclient/issues/249>`_.
 DEFAULT_READ_RETRIES = 3
 
-#: Default max. number of HTTP redirects,
+#: Default value for the ``max_redirects``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 DEFAULT_MAX_REDIRECTS = 30
 
-#: Default timeout in seconds for waiting for completion of an asynchronous
-#: HMC operation,
+#: Default value for the ``operation_timeout``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
-#:
-#: This is used as a default value in asynchronous methods on
-#: resource objects (e.g. :meth:`zhmcclient.Partition.start`), in the
-#: :meth:`zhmcclient.Job.wait_for_completion` method, and in the
-#: low level method :meth:`zhmcclient.Session.post`.
 DEFAULT_OPERATION_TIMEOUT = 3600
 
-#: Default timeout in seconds for waiting for completion of deferred status
-#: changes for LPARs and Partitions,
+#: Default value for the ``status_timeout``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
 DEFAULT_STATUS_TIMEOUT = 60
 
-#: Default time to the next automatic invalidation of the Name-URI cache of
-#: manager objects, in seconds since the last invalidation,
+#: Default value for the ``name_uri_cache_timetolive``
+#: property of the :class:`~zhmcclient.RetryTimeoutConfig` configuration,
 #: if not specified in the ``retry_timeout_config`` init argument to
 #: :class:`~zhmcclient.Session`.
-#:
-#: The special value 0 means that no Name-URI cache is maintained (i.e. the
-#: caching is disabled).
 DEFAULT_NAME_URI_CACHE_TIMETOLIVE = 300
 
-#: Default value for the `connect_timeout` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``connect_timeout``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_CONNECT_TIMEOUT = 30
 
-#: Default value for the `connect_retries` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``connect_retries``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_CONNECT_RETRIES = 3
 
-#: Default value for the `reconnect_sleep_initial` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``reconnect_sleep_initial``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_RECONNECT_SLEEP_INITIAL = 0.1
 
-#: Default value for the `reconnect_sleep_increase` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``reconnect_sleep_increase``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_RECONNECT_SLEEP_INCREASE = 0.5
 
-#: Default value for the `reconnect_sleep_max` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``reconnect_sleep_max``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_RECONNECT_SLEEP_MAX = 60
 
-#: Default value for the `reconnect_sleep_jitter` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``reconnect_sleep_jitter``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_RECONNECT_SLEEP_JITTER = 0.1
 
-#: Default value for the `keepalive` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``keepalive``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_KEEPALIVE = True
 
-#: Default value for the `heartbeat_send_cycle` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``heartbeat_send_cycle``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_HEARTBEAT_SEND_CYCLE = 5.0
 
-#: Default value for the `heartbeat_receive_cycle` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``heartbeat_receive_cycle``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_HEARTBEAT_RECEIVE_CYCLE = 5.0
 
-#: Default value for the `heartbeat_receive_check` property of the
-#: :class:`~zhmcclient.StompRetryTimeoutConfig` configuration.
+#: Default value for the ``heartbeat_receive_check``
+#: property of the :class:`~zhmcclient.StompRetryTimeoutConfig` configuration,
+#: if not specified in the ``stomp_rt_config`` init argument to
+#: :class:`~zhmcclient.NotificationReceiver`.
 DEFAULT_STOMP_HEARTBEAT_RECEIVE_CHECK = 1.0
 
 #: Name of the Python logger that logs HMC operations.
