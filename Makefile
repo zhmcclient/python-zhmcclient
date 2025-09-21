@@ -177,7 +177,8 @@ doc_dependent_files := \
     $(doc_conf_dir)/conf.py \
     $(wildcard $(doc_conf_dir)/*.rst) \
     $(wildcard $(doc_conf_dir)/notebooks/*.ipynb) \
-		$(wildcard $(doc_conf_dir)/images/*.svg) \
+    $(wildcard $(doc_conf_dir)/images/*.svg) \
+    $(wildcard changes/*) \
     $(package_py_files) \
     $(version_file) \
     examples/example_hmc_inventory.yaml \
@@ -388,7 +389,7 @@ builddoc: html
 html: $(doc_build_dir)/html/docs/index.html
 	@echo "Makefile: $@ done."
 
-$(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files) changes/*
+$(doc_build_dir)/html/docs/index.html: Makefile $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(doc_dependent_files)
 	@echo "Running Sphinx to create HTML pages"
 	-$(call RM_FUNC,$@)
 	$(doc_cmd) -b html $(doc_opts) $(doc_build_dir)/html
