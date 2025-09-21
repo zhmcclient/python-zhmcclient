@@ -19,6 +19,12 @@
 Change log
 ----------
 
+.. ============================================================================
+..
+.. Do not add change records here directly, but create fragment files instead!
+..
+.. ============================================================================
+
 .. only:: dev
 
    .. include:: tmp_changes.rst
