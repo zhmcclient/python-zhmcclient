@@ -102,7 +102,7 @@ version = release
 if "dev" in release:
     print("conf.py: Generating change log entries using towncrier")
     sys.stdout.flush()
-    os.system('towncrier build --draft >tmp_changes.rst')
+    os.system(f'towncrier build --draft --version {version} >tmp_changes.rst')
     print("conf.py: Building development version")
     # The following "tags" object is injected by Sphinx at runtime.
     tags.add("dev")  # noqa: F821 pylint: disable=undefined-variable
