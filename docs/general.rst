@@ -244,13 +244,73 @@ Exceptions
    :autosummary-inherited-members:
    :special-members: __str__
 
+.. autoclass:: zhmcclient.NoUniqueMatch
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
 .. autoclass:: zhmcclient.NotFound
    :members:
    :autosummary:
    :autosummary-inherited-members:
    :special-members: __str__
 
-.. autoclass:: zhmcclient.NoUniqueMatch
+.. autoclass:: zhmcclient.MetricsResourceNotFound
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.NotificationError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.NotificationJMSError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.NotificationParseError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.NotificationConnectionError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.NotificationSubscriptionError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.SubscriptionNotFound
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.ConsistencyError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.PartitionLinkError
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.FilterConversionError
    :members:
    :autosummary:
    :autosummary-inherited-members:
