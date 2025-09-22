@@ -1,5 +1,0 @@
-The content length after which truncation of data happens in log entries for
-HMC requests and responses is now configurable via a new parameter
-``log_content_truncate`` of the :class:`~zhmcclient.RetryTimeoutConfig`
-configuration, and its default value has been increased to 500000 Bytes (from
-the hard coded 30000 Bytes).
