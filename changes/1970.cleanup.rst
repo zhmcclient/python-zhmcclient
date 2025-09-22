@@ -1,4 +1,0 @@
-Install: Removed dependency to the Python package "pyrsistent", which was used
-indirectly by the zhmcclient package via the "jsonschema" package, in order
-to get security issues addressed. The minimum version of jsonschema 4.18 that
-we now use, no longer uses "pyrsistent".

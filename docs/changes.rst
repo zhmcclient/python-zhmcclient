@@ -30,6 +30,86 @@ Change log
    .. include:: tmp_changes.rst
 
 .. towncrier start
+Version 1.24.0
+^^^^^^^^^^^^^^
+
+Released: 2025-09-22
+
+**Incompatible changes:**
+
+* Changed the type of :attr:`zhmcclient.BaseResource.properties` from
+  ``immutable_views.DictView`` to :class:`id:immutabledict.immutabledict`.
+  Both classes inherit from :class:`py:collections.abc.Mapping` and are compatible
+  with :class:`py:dict`.
+  This change may be incompatible if you perform type comparisons or inheritance
+  checks using the ``immutable_views.DictView`` class. Apart from that, this
+  change should be compatible. (`#1980 <https://github.com/zhmcclient/python-zhmcclient/issues/1980>`_)
+
+**Bug fixes:**
+
+* Docs: Added missing zhmcclient exceptions to the documentation.
+
+* Fixed the exception handling of the :meth:`zhmcclient.Adapter.delete()` method
+  on z16 or later CPCs where the deletion is implemented by deleting the Partition
+  Link of the Adapter: If no Partition Link is found for the Adapter, the
+  exception that is raised is changed from :exc:`zhmcclient.NotFound` to
+  :exc:`zhmcclient.CeasedExistence`, because that means the adapter itself also
+  no longer exists. If more than one Partition Link is found for the Adapter, the
+  exception that is raised is changed from :exc:`zhmcclient.NoUniqueMatch` to
+  :exc:`zhmcclient.ConsistencyError`, because that should never happen and would
+  be an inconsistency in zhmcclient or HMC.
+
+* Removed the pinning of the "typer" package version to <0.17.0 with the new
+  release of the "safety" package version 3.6.1 and also upgraded minimum version
+  of the "safety" package to be 3.6.1 to fix the issue with typer>=0.17.0,
+  see https://github.com/pyupio/safety/issues/778.
+
+* Upgraded the "nltk" package version to 3.9.1 to fix the wordnet error, see
+  https://github.com/nltk/nltk/issues/3416.
+
+* Increased the max size of the internal handover queue for notifications
+  from 10 to 1000, in order to better handle spikes of notifications. (`#1982 <https://github.com/zhmcclient/python-zhmcclient/issues/1982>`_)
+
+**Enhancements:**
+
+* Docs: The change log of the documentation on ReadTheDocs now shows the changes
+  of the next functional release in the version for the 'master' branch.
+
+* Docs: Changed the version setup on ReadTheDocs to only show released versions
+  and no longer branches such as 'latest' or 'stable'. Adjusted the verification
+  steps in the release instructions accordingly.
+
+* The content length after which truncation of data happens in log entries for
+  HMC requests and responses is now configurable via a new parameter
+  ``log_content_truncate`` of the :class:`~zhmcclient.RetryTimeoutConfig`
+  configuration, and its default value has been increased to 500000 Bytes (from
+  the hard coded 30000 Bytes). (`#1991 <https://github.com/zhmcclient/python-zhmcclient/issues/1991>`_)
+
+**Cleanup:**
+
+* Install: Removed dependency to the Python package "decorator", which was not
+  used anymore.
+
+* Docs: Improved the documentation of constants for the default values for
+  retry/timeout configurations. They now reference the corresponding
+  config input parameter descriptions and no longer duplicate the text.
+
+* Install: Removed dependency to the Python package "pytz", which was used
+  by the zhmcclient package, and replaced that with standard Python's
+  :class:`py:datetime.timezone` class. Testcases were converted to use standard
+  Python's :mod:`py:zoneinfo` module (which requires installing the 'tzdata'
+  package on Windows). Since the :mod:`py:zoneinfo` module was added in
+  Python 3.9, test functions that need this module are skipped on Python 3.8. (`#1969 <https://github.com/zhmcclient/python-zhmcclient/issues/1969>`_)
+
+* Install: Removed dependency to the Python package "pyrsistent", which was used
+  indirectly by the zhmcclient package via the "jsonschema" package, in order
+  to get security issues addressed. The minimum version of jsonschema 4.18 that
+  we now use, no longer uses "pyrsistent". (`#1970 <https://github.com/zhmcclient/python-zhmcclient/issues/1970>`_)
+
+* Install: Removed dependency to the Python package "python-dateutil" and
+  replaced its use with the :class:`py:datetime.datetime` class of standard Python. (`#1975 <https://github.com/zhmcclient/python-zhmcclient/issues/1975>`_)
+
+
 Version 1.23.0
 ^^^^^^^^^^^^^^
 

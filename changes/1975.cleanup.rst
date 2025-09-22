@@ -1,2 +1,0 @@
-Install: Removed dependency to the Python package "python-dateutil" and
-replaced its use with the :class:`py:datetime.datetime` class of standard Python.
