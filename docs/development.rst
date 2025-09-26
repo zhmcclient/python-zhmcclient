@@ -445,16 +445,52 @@ The following describes the structure of the HMC vault file:
 
       <hmc_nick>:                     # Nickname of an HMC defined in the inventory file
 
-        userid: <string>              # HMC userid
+        userid: <string>              # HMC userid. Required.
 
-        password: <string>            # HMC password
+        password: <string>            # HMC password.
+                                      # Exactly one of 'password', 'password_command' must be specified.
+
+        password_command: <string>    # Command that retrieves the HMC password.
+
+        password_timeout: <int>       # Timeout for password command, in seconds. Optional, default: 30
 
         verify: <bool>                # Indicates whether the server certificate returned
                                       #   by the HMC should be validated.
+                                      # Optional, default: true
 
-        ca_certs: <ca_certs>          # Used for verify_cert init parm of zhmcclient.Session
+        ca_certs: <ca_certs>          # Used for verify_cert init parm of zhmcclient.Session.
+                                      # Optional, default: none
 
     <var_name>: <var_value>           # Any other variables are allowed but will be ignored
+
+The password can either be specified directly in the file by using the
+``password`` property, or by specifying a password command string using the
+``password_command`` property. This allows lookup of passwords from some
+other password store (e.g. a vault) or the use of one-time passwords.
+
+The password command string is executed in a shell child process, using
+the following shell:
+
+* ``bin/sh`` on Linux and MacOS (that cannot be overridden using the ``SHELL``
+  variable).
+* ``cmd.exe`` on Windows.
+
+This means, the password command string may specify any constructs supported
+by the shell language.
+
+If the password command has an exit code of 0 and has printed nothing on its
+standard error, it is considered to have succeeded, and its standard output is
+taken as the password after stripping leading and trailing whitespace.
+
+Otherwise, the password command is considered to have failed, and its exit code
+and standard error are captured in an exception.
+
+The password command string specified in the vault file may contain variables
+using a ``{var}`` syntax. These variables are expanded to the actual values
+before executing the command. The following variables are supported:
+
+* ``{host}`` - HMC host, i.e. IP address or DNS hostname
+* ``{userid}`` - HMC userid
 
 For details about ``<ca_certs>``, see the description of the ``verify_cert``
 init parameter of the :class:`zhmcclient.Session` class.

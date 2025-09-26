@@ -15,6 +15,18 @@ hmc_auth:
     password: password
     verify: false
 
+  HMC2:
+    userid: ensadmin
+    password_command: "my-get-otp {host}"
+    password_timeout: 10
+    verify: false
+
+  HMC3:
+    userid: ensadmin
+    password_command: "my-get-vault -u {userid} -h {host}"
+    password_timeout: 10
+    verify: false
+
   MOCKED_Z16_CLASSIC:
     userid: dummy
     password: dummy

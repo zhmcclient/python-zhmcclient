@@ -39,12 +39,38 @@ hmc_auth:
         None
     ),
     (
-        "One HMC with all variables",
+        "One HMC with all variables (password)",
         """
 hmc_auth:
   east1:
     userid: my_userid
     password: my_password
+    verify: true
+    ca_certs: my_cert.pem
+        """,
+        None
+    ),
+    (
+        "One HMC with all variables (password_command/timeout)",
+        """
+hmc_auth:
+  east1:
+    userid: my_userid
+    password_command: "getpw {host}"
+    password_timeout: 10
+    verify: true
+    ca_certs: my_cert.pem
+        """,
+        None
+    ),
+    (
+        "Both password and password_command - error is detected later",
+        """
+hmc_auth:
+  east1:
+    userid: my_userid
+    password: my_password
+    password_command: "getpw {host}"
     verify: true
     ca_certs: my_cert.pem
         """,

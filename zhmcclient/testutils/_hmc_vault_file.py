@@ -48,6 +48,9 @@ ANSIBLE_VARTYPES = [
 # Note: Host name ranges like in Ansible are not supported.
 ANSIBLE_HOST_PATTERN = r"^[a-zA-Z_0-9:\.\-]+$"
 
+# Default password command timeout
+DEFAULT_PASSWORD_TIMEOUT = 30
+
 # JSON schema for content of an HMC vault file in YAML format
 HMC_VAULT_FILE_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -71,7 +74,6 @@ HMC_VAULT_FILE_SCHEMA = {
                     "additionalProperties": False,
                     "required": [
                         "userid",
-                        "password",
                     ],
                     "properties": {
                         "userid": {
@@ -83,8 +85,25 @@ HMC_VAULT_FILE_SCHEMA = {
                         "password": {
                             "description":
                                 "Password for authenticating with the HMC. "
-                                "Required.",
+                                "Mutually exclusive with 'password_command'. "
+                                "One of the two is required.",
                             "type": "string",
+                        },
+                        "password_command": {
+                            "description":
+                                "Command string that returns a password for "
+                                "authenticating with the HMC. The string may "
+                                "contain variables that will be expanded (see "
+                                "run_password_command()). "
+                                "Mutually exclusive with 'password'. "
+                                "One of the two is required.",
+                            "type": "string",
+                        },
+                        "password_timeout": {
+                            "description":
+                                "Timeout for the password command, in seconds. "
+                                "Default: See DEFAULT_PASSWORD_TIMEOUT",
+                            "type": "integer",
                         },
                         "verify": {
                             "description":
@@ -135,6 +154,13 @@ class HMCVaultFile:
     """
 
     def __init__(self, filepath):
+        """
+        Parameters:
+            filepath (str): Path name of HMC vault file.
+
+        Raises:
+            HMCVaultFileError: An error in the HMC vault file
+        """
         self._filepath = filepath
         self._data = {}  # file content
         self._load_file()
