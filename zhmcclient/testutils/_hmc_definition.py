@@ -32,8 +32,8 @@ class HMCDefinition:
 
     def __init__(self, nickname, description='', contact='', access_via='',
                  mock_file=None, host=None, userid=None,
-                 password=None, verify=True, ca_certs=None,
-                 cpcs=None, add_vars=None):
+                 password=None, password_command=None, password_timeout=None,
+                 verify=True, ca_certs=None, cpcs=None, add_vars=None):
         """
         Parameters:
 
@@ -60,7 +60,15 @@ class HMCDefinition:
             Required, must not be `None`.
 
           password (string): Password for authenticating with the HMC.
-            Required, must not be `None`.
+            Mutually exclusive with 'password_command'; One of them is required
+            and must not be `None`.
+
+          password_command (string): Password command that obtains a password
+            for authenticating with the HMC.
+            Mutually exclusive with 'password'; One of them is required
+            and must not be `None`.
+
+          password_timeout (int): Timeout for the password command, in seconds.
 
           verify (bool): Verify the HMC certificate as specified in
             `ca_certs`. Optional, defaults to `True`.
@@ -99,12 +107,15 @@ class HMCDefinition:
             assert len(self._hosts) >= 1
         self._userid = userid
         self._password = password
+        self._password_command = password_command
+        self._password_timeout = password_timeout
         self._verify = verify
         self._ca_certs = ca_certs
         self._cpcs = cpcs
         self._add_vars = add_vars or {}
 
     def __repr__(self):
+        pw_str = "..." if self.password else "None"
         return (
             "HMCDefinition("
             f"nickname={self.nickname!r}, "
@@ -114,7 +125,9 @@ class HMCDefinition:
             f"mock_file={self.mock_file!r}, "
             f"host={self.host!r}, "
             f"userid={self.userid!r}, "
-            f"password=..., "
+            f"password={pw_str}, "
+            f"password_command={self.password_command!r}, "
+            f"password_timeout={self.password_timeout!r}, "
             f"verify={self.verify!r}, "
             f"ca_certs={self.ca_certs!r}, "
             f"verify_cert={self.verify_cert!r}, "
@@ -206,6 +219,21 @@ class HMCDefinition:
         string: Password for authenticating with the HMC.
         """
         return self._password
+
+    @property
+    def password_command(self):
+        """
+        string: Command for obtaining a password for authenticating with the
+        HMC.
+        """
+        return self._password_command
+
+    @property
+    def password_timeout(self):
+        """
+        string: Timeout for the password command, in seconds.
+        """
+        return self._password_timeout
 
     @property
     def verify(self):

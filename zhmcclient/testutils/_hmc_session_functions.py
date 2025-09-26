@@ -21,19 +21,72 @@ import os
 import re
 import time
 import logging
+import subprocess  # nosec: B404
 import pytest
 import zhmcclient
 import zhmcclient_mock
 
 __all__ = ['setup_hmc_session', 'teardown_hmc_session',
            'teardown_hmc_session_id', 'is_valid_hmc_session_id',
-           'LOG_FORMAT_STRING', 'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE']
+           'LOG_FORMAT_STRING', 'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE',
+           'PasswordCommandFailure']
 
 LOG_FORMAT_STRING = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 
 LOG_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
 
 LOG_DATETIME_TIMEZONE = time.gmtime
+
+
+class PasswordCommandFailure(Exception):
+    """
+    Exception indicating that the password command failed.
+    """
+    pass
+
+
+def run_password_command(password_command, host, userid, password_timeout):
+    """
+    Run the password command and return the password.
+
+    Parameters:
+        password_command (str): Password command string, where the following
+          variables will be expanded:
+          * `{host}` - IP address or DNS name of HMC
+          * `{userid}` - Userid on the HMC
+        host (str): IP address or DNS name of HMC.
+        userid (str): Userid on the HMC.
+        password_timeout (int): Timeout for the password command, in seconds.
+
+    Returns:
+        str: The password
+
+    Raises:
+        PasswordCommandFailure
+    """
+    WS = " \n\r\t"  # Whitespace characters to strip from begin and end
+    WS_RE = r"[ \n\r\t]"  # Regexp for one whitespace character
+    NON_WS_RE = r"[^ \n\r\t]"  # Regexp for one non-whitespace character
+
+    cmd = password_command.format(host=host, userid=userid)
+    cp = subprocess.run(
+        cmd, capture_output=True, text=True, timeout=password_timeout,
+        shell=True, check=False)  # nosec: B602
+
+    if cp.returncode != 0 or cp.stderr.strip(WS) != "":
+        raise PasswordCommandFailure(
+            f"Password command {password_command!r} failed with "
+            f"exit code {cp.returncode}: {cp.stderr}")
+
+    password = cp.stdout.strip(WS)
+    if re.search(WS_RE, password):
+        pw_masked = re.sub(NON_WS_RE, "*", password)
+        raise PasswordCommandFailure(
+            f"Password command {password_command!r} succeeded but "
+            "its standard output contains whitespace characters. "
+            f"Masked standard output: {pw_masked!r}")
+
+    return password
 
 
 def setup_hmc_session(hd):
@@ -53,8 +106,11 @@ def setup_hmc_session(hd):
 
     Returns:
 
-      :class:`~zhmcclient.Session`): Sesson object for the logged-on real or
+      :class:`~zhmcclient.Session`): Session object for the logged-on real or
       mocked session with the HMC.
+
+    Raises:
+      PasswordCommandFailure: Password command failed
     """
     # We use the cached skip reason from previous attempts
     skip_msg = getattr(hd, 'skip_msg', None)
@@ -104,13 +160,20 @@ def setup_hmc_session(hd):
                 logger.addHandler(log_handler)
             logger.setLevel(logging.DEBUG)
 
+        if hd.password_command is not None:
+            password = run_password_command(
+                hd.password_command, hd.host, hd.userid, hd.password_timeout)
+        else:
+            assert hd.password is not None
+            password = hd.password
+
         rt_config = zhmcclient.RetryTimeoutConfig(
             read_timeout=1800,
         )
 
         # Creating a session does not interact with the HMC (logon is deferred)
         session = zhmcclient.Session(
-            hd.host, hd.userid, hd.password, verify_cert=hd.verify_cert,
+            hd.host, hd.userid, password, verify_cert=hd.verify_cert,
             retry_timeout_config=rt_config)
 
         # Check access to the HMC
