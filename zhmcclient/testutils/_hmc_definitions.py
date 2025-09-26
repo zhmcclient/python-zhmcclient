@@ -20,7 +20,8 @@ HMC definitions for zhmcclient end2end tests.
 import os
 
 from ._hmc_inventory_file import HMCInventoryFile
-from ._hmc_vault_file import HMCVaultFile
+from ._hmc_vault_file import HMCVaultFile, HMCVaultFileError, \
+    DEFAULT_PASSWORD_TIMEOUT
 from ._hmc_definition import HMCDefinition
 
 __all__ = ['print_hmc_definitions', 'hmc_definitions', 'HMCDefinitions',
@@ -349,7 +350,7 @@ class HMCDefinitions:
 
           hmc_vault (HMCVault): Content of HMC vault file.
 
-          inv_file (string): Path name of HMV inventory file (for messages).
+          inv_file (string): Path name of HMC inventory file (for messages).
 
         Raises:
 
@@ -369,9 +370,24 @@ class HMCDefinitions:
                     new_exc.__cause__ = None
                     raise new_exc  # HMCNoVaultError
 
-                # userid and password are required by the JSON schema
+                # userid is required by the JSON schema
                 host_vars['userid'] = auth_vars['userid']
-                host_vars['password'] = auth_vars['password']
+
+                password = auth_vars.get('password', None)
+                password_command = auth_vars.get('password_command', None)
+                if not (bool(password) ^ bool(password_command)):
+                    new_exc = HMCVaultFileError(
+                        f"HMC {nickname!r} in HMC vault file "
+                        f"{hmc_vault.filepath} does not specify exactly one "
+                        "of 'password' and 'password_command'")
+                    new_exc.__cause__ = None
+                    raise new_exc  # HMCVaultFileError
+                host_vars['password'] = password
+                host_vars['password_command'] = password_command
+
+                host_vars['password_timeout'] = \
+                    auth_vars.get('password_timeout', DEFAULT_PASSWORD_TIMEOUT)
+
                 host_vars['verify'] = auth_vars.get('verify', True)
                 host_vars['ca_certs'] = auth_vars.get('ca_certs', None)
 
@@ -468,6 +484,8 @@ class HMCDefinitions:
             mock_file = host_vars.get('mock_file', None)
             userid = host_vars.get('userid', None)
             password = host_vars.get('password', None)
+            password_command = host_vars.get('password_command', None)
+            password_timeout = host_vars.get('password_timeout', None)
             verify = host_vars.get('verify', None)
             ca_certs = host_vars.get('ca_certs', None)
             cpcs = host_vars.get('cpcs', None)
@@ -493,7 +511,9 @@ class HMCDefinitions:
             hd = HMCDefinition(
                 nickname=nickname, description=description,
                 contact=contact, access_via=access_via, mock_file=mock_file,
-                host=host, userid=userid, password=password, verify=verify,
+                host=host, userid=userid, password=password,
+                password_command=password_command,
+                password_timeout=password_timeout, verify=verify,
                 ca_certs=ca_certs, cpcs=cpcs, add_vars=add_vars)
 
             hd_list.append(hd)
