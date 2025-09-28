@@ -14,7 +14,7 @@ branch = False
 relative_files = True
 
 # The following files are omitted in the coverage.
-omit =
+omit = zhmcclient/_vendor/*
 
 [report]
 
