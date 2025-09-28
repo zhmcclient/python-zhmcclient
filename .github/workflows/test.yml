@@ -271,8 +271,12 @@ jobs:
         COVERALLS_SERVICE_NAME: github
         COVERALLS_SERVICE_JOB_ID: "${{ github.run_id }}"
         COVERALLS_SERVICE_NUMBER: "${{ github.workflow }}-${{ github.run_number }}"
-      run: |
-        coveralls
+      uses: nick-fields/retry@v3
+      with:
+        timeout_seconds: 30
+        max_attempts: 3
+        retry_wait_seconds: 15
+        command: coveralls
     - name: Run installtest
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
@@ -323,5 +327,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NUMBER: "${{ github.workflow }}-${{ github.run_number }}"
-      run: |
-        coveralls --finish
+      uses: nick-fields/retry@v3
+      with:
+        timeout_seconds: 30
+        max_attempts: 3
+        retry_wait_seconds: 15
+        command: coveralls --finish
