@@ -28,21 +28,13 @@ import zhmcclient_mock
 
 __all__ = ['setup_hmc_session', 'teardown_hmc_session',
            'teardown_hmc_session_id', 'is_valid_hmc_session_id',
-           'LOG_FORMAT_STRING', 'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE',
-           'PasswordCommandFailure']
+           'LOG_FORMAT_STRING', 'LOG_DATETIME_FORMAT', 'LOG_DATETIME_TIMEZONE']
 
 LOG_FORMAT_STRING = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 
 LOG_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S %Z'
 
 LOG_DATETIME_TIMEZONE = time.gmtime
-
-
-class PasswordCommandFailure(Exception):
-    """
-    Exception indicating that the password command failed.
-    """
-    pass
 
 
 def run_password_command(command, variables, timeout):
@@ -71,18 +63,18 @@ def run_password_command(command, variables, timeout):
             cmd, capture_output=True, text=True, timeout=timeout,
             shell=True, check=False)  # nosec: B602
     except subprocess.TimeoutExpired:
-        raise PasswordCommandFailure(
+        raise zhmcclient.PasswordCommandFailure(
             f"Password command {command!r} timed out after {timeout} s")
 
     if cp.returncode != 0 or cp.stderr.strip(WS) != "":
-        raise PasswordCommandFailure(
+        raise zhmcclient.PasswordCommandFailure(
             f"Password command {command!r} failed with exit code "
             f"{cp.returncode}: {cp.stderr}")
 
     password = cp.stdout.strip(WS)
     if re.search(WS_RE, password):
         pw_masked = re.sub(NON_WS_RE, "*", password)
-        raise PasswordCommandFailure(
+        raise zhmcclient.PasswordCommandFailure(
             f"Password command {command!r} succeeded but its standard output "
             "contains whitespace characters. "
             f"Masked standard output: {pw_masked!r}")

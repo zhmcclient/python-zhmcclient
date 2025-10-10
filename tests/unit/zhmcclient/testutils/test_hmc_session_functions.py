@@ -21,8 +21,8 @@ import os
 import re
 import pytest
 
-from zhmcclient.testutils._hmc_session_functions import run_password_command, \
-    PasswordCommandFailure
+from zhmcclient.testutils._hmc_session_functions import run_password_command
+from zhmcclient import PasswordCommandFailure
 
 # Command delimiter in the shell
 DELIM = "&" if os.name == 'nt' else ";"

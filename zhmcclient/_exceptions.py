@@ -29,7 +29,8 @@ __all__ = ['Error', 'ConnectionError', 'ConnectTimeout', 'ReadTimeout',
            'SubscriptionNotFound', 'ConsistencyError', 'CeasedExistence',
            'OSConsoleError', 'OSConsoleConnectedError',
            'OSConsoleNotConnectedError', 'OSConsoleWebSocketError',
-           'OSConsoleAuthError', 'PartitionLinkError', 'FilterConversionError']
+           'OSConsoleAuthError', 'PartitionLinkError', 'FilterConversionError',
+           'PasswordCommandFailure']
 
 
 class Error(Exception):
@@ -1806,3 +1807,44 @@ class FilterConversionError(Error):
             f"message={self.args[0]!r}; "
             f"property_name={self.property_name}; "
             f"match_value={self.match_value})")
+
+
+class PasswordCommandFailure(Error):
+    """
+    This exception indicates that the password command specified in the
+    HMC vault file has failed.
+
+    Derived from :exc:`~zhmcclient.Error`.
+    """
+
+    def __init__(self, msg):
+        # pylint: disable=useless-super-delegation
+        """
+        Parameters:
+
+          msg (:term:`string`):
+            A human readable message describing the problem.
+
+        ``args[0]`` will be set to the ``msg`` parameter.
+        """
+        super().__init__(msg)
+
+    def __repr__(self):
+        """
+        Return a string with the state of this exception object, for debug
+        purposes.
+        """
+        return f"{self.__class__.__name__}(message={self.args[0]!r})"
+
+    def str_def(self):
+        """
+        :term:`string`: The exception as a string in a Python definition-style
+        format, e.g. for parsing by scripts:
+
+        .. code-block:: text
+
+            classname={}; message={};
+        """
+        return (
+            f"classname={self.__class__.__name__!r}; "
+            f"message={self.args[0]!r};")
