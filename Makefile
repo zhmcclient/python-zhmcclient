@@ -287,6 +287,7 @@ help:
 	@echo "  all        - Do all of the above"
 	@echo "  end2end    - Run end2end tests (adds to coverage results)"
 	@echo "  end2end_show - Show HMCs defined for end2end tests"
+	@echo "  end2end_check - Check access to all HMCs defined in your HMC inventory file for end2end tests"
 	@echo "  authors    - Generate AUTHORS.md file from git log"
 	@echo "  uninstall  - Uninstall package from active Python environment"
 	@echo "  release_branch - Create a release branch when releasing a version (requires VERSION and optionally BRANCH to be set)"
@@ -687,13 +688,13 @@ endif
 
 .PHONY:	end2end
 end2end: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 # TODO: Enable rc checking again once the remaining issues are resolved
 .PHONY:	end2end_mocked
 end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 .PHONY: authors
@@ -714,3 +715,9 @@ AUTHORS.md: _always
 .PHONY:	end2end_show
 end2end_show:
 	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true $(PYTHON_CMD) -c 'from zhmcclient.testutils import print_hmc_definitions; print_hmc_definitions()'"
+
+.PHONY:	end2end_check
+end2end_check: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
+	-$(call RMDIR_R_FUNC,htmlcov.end2end)
+	bash -c "TESTEND2END_LOAD=true TESTCASES=test_hmcdef_check_all_hmcs pytest --color=yes $(pytest_no_log_opt) -v -m check_hmcs -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	@echo "Makefile: $@ done."

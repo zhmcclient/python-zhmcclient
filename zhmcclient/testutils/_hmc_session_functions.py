@@ -53,7 +53,7 @@ def run_password_command(command, variables, timeout):
         str: The password
 
     Raises:
-        PasswordCommandFailure
+        zhmcclient.PasswordCommandFailure
     """
     WS = " \n\r\t"  # Whitespace characters to strip from begin and end
     WS_RE = r"[ \n\r\t]"  # Regexp for one whitespace character
@@ -84,7 +84,7 @@ def run_password_command(command, variables, timeout):
     return password
 
 
-def setup_hmc_session(hd):
+def setup_hmc_session(hd, rt_config=None, skip_on_failure=True):
     """
     Setup an HMC session and return a new session object for it.
 
@@ -99,18 +99,31 @@ def setup_hmc_session(hd):
       hd (:class:`~zhmcclient.testutils.HMCDefinition`): The HMC definition of
         the HMC the test runs against.
 
+      rt_config (:class:`~zhmcclient.RetryTimeoutConfig`): Retry / timeout
+        configuration. If `None`, a default is used.
+
+      skip_on_failure (bool): If the HMC logon fails, invoke pytest.skip()
+        instead of raising exceptions.
+
     Returns:
 
       :class:`~zhmcclient.Session`): Session object for the logged-on real or
       mocked session with the HMC.
 
     Raises:
-      PasswordCommandFailure: Password command failed
+      zhmcclient.PasswordCommandFailure: Password command failed
+      zhmcclient.ConnectionError: Cannot connect to the HMC
+        (only for skip_on_failure=False)
+      zhmcclient.AuthError: Cannot authenticate with the HMC
+        (only for skip_on_failure=False)
+      zhmcclient.HTTPError: Other HTTP error with the HMC
+        (only for skip_on_failure=False)
     """
     # We use the cached skip reason from previous attempts
-    skip_msg = getattr(hd, 'skip_msg', None)
-    if skip_msg:
-        pytest.skip(f"Skip reason from earlier attempt: {skip_msg}")
+    if skip_on_failure:
+        skip_msg = getattr(hd, 'skip_msg', None)
+        if skip_msg:
+            pytest.skip(f"Skip reason from earlier attempt: {skip_msg}")
 
     if hd.mock_file:
         # A mocked HMC
@@ -157,15 +170,19 @@ def setup_hmc_session(hd):
 
         if hd.password_command is not None:
             variables = dict(host=hd.host, userid=hd.userid)
+            # May raise PasswordCommandFailure:
             password = run_password_command(
                 hd.password_command, variables, hd.password_timeout)
         else:
             assert hd.password is not None
             password = hd.password
 
-        rt_config = RetryTimeoutConfig(
-            read_timeout=1800,
-        )
+        if not rt_config:
+            rt_config = RetryTimeoutConfig(
+                connect_timeout=10,
+                connect_retries=1,
+                read_timeout=1800,
+            )
 
         # Creating a session does not interact with the HMC (logon is deferred)
         session = Session(
@@ -174,13 +191,17 @@ def setup_hmc_session(hd):
 
         # Check access to the HMC
         try:
+            # May raise ConnectionError, AuthError, HTTPError:
             session.logon()
         except Error as exc:
             msg = (
                 f"Cannot log on to HMC {hd.nickname} at {hd.host} "
-                f"due to {exc.__class__.__name__}: {exc}")
-            hd.skip_msg = msg
-            pytest.skip(msg)
+                f"due to {exc.__class__.__name__}")
+            if skip_on_failure:
+                hd.skip_msg = msg
+                pytest.skip(msg)
+            else:
+                raise
 
     hd.skip_msg = None
     session.hmc_definition = hd
@@ -244,6 +265,10 @@ def is_valid_hmc_session_id(hd, session_id):
 
       session_id (str): HMC session ID to be tested for validity.
     """
+    skip_msg = getattr(hd, 'skip_msg', None)
+    if skip_msg:
+        pytest.skip(f"Skip reason from earlier attempt: {skip_msg}")
+
     if hd.mock_file is not None:
         return session_id is None
 
