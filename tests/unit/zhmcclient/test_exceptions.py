@@ -40,6 +40,7 @@ from zhmcclient import (
     OSConsoleNotConnectedError, OSConsoleWebSocketError,
     OSConsoleAuthError,
     FilterConversionError,
+    PasswordCommandFailure,
 )
 from zhmcclient import ConnectionError  # pylint: disable=redefined-builtin
 from zhmcclient_mock import FakedSession
@@ -104,6 +105,7 @@ def func_args(arg_values, arg_names):
         OSConsoleNotConnectedError,
         OSConsoleWebSocketError,
         OSConsoleAuthError,
+        PasswordCommandFailure,
     ]
 )
 def test_simple_exc(exc_class):
