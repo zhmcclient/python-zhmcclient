@@ -29,6 +29,7 @@ from zhmcclient.testutils import all_cpcs  # noqa: F401, E501
 from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
 from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=unused-import
+from zhmcclient.testutils import setup_hmc_session
 
 from .utils import is_cpc_property_hmc_inventory
 
@@ -119,7 +120,7 @@ def test_hmcdef_cpcs(hmc_session):  # noqa: F811
                 f"{cpc_value!r}")
 
 
-@pytest.mark.skip   # Disabled by default
+@pytest.mark.check_hmcs  # zhmcclient specific marker, see pytest.ini
 def test_hmcdef_check_all_hmcs():
     """
     Check out the HMCs specified in the HMC inventory file.
@@ -135,39 +136,44 @@ def test_hmcdef_check_all_hmcs():
     )
 
     # Check real HMCs and their CPCs
+    failed_hmcs = []
     for hd in hd_list:
 
         if hd.mock_file:
-            print(f"Skipping mocked HMC {hd.nickname!r}")
+            print(f"Skipping mocked HMC {hd.nickname}")
             continue
 
-        for cpc_name in hd.cpcs:
+        print(f"Checking HMC {hd.nickname} at {hd.host}")
 
-            print(f"Checking CPC {cpc_name} defined for HMC {hd.nickname!r} at "
-                  f"{hd.host}")
-
-            session = zhmcclient.Session(
-                hd.host, hd.userid, hd.password,
-                verify_cert=hd.verify_cert,
-                retry_timeout_config=rt_config)
+        session = None
+        try:
 
             try:
-                client = zhmcclient.Client(session)
+                session = setup_hmc_session(
+                    hd, rt_config, skip_on_failure=False)
+            except zhmcclient.Error as exc:
+                print(f"Error: Cannot setup session with HMC {hd.nickname} "
+                      f"at {hd.host} due to {exc.__class__.__name__}: {exc}")
+                failed_hmcs.append(hd.nickname)
+                continue
 
-                try:
-                    session.logon()
-                except zhmcclient.ConnectionError as exc:
-                    print(f"Cannot logon to HMC at {hd.host} (skipping it): "
-                          f"{exc.__class__.__name__}: {exc}")
-                    continue
-
+            client = zhmcclient.Client(session)
+            for cpc_name in hd.cpcs:
                 cpcs = client.cpcs.list()
                 cpc_names = [cpc.name for cpc in cpcs]
 
-                assert cpc_name in cpc_names, (
-                    f"CPC {cpc_name} defined in inventory file for HMC "
-                    f"{hd.nickname!r} at {hd.host} is not managed by that "
-                    f"HMC. Actually managed CPCs: {', '.join(cpc_names)}")
+                if cpc_name not in cpc_names:
+                    cpc_names_str = ', '.join(cpc_names)
+                    print(f"Error: CPC {cpc_name} defined in inventory file "
+                          f"for HMC {hd.nickname} at {hd.host} is not "
+                          "managed by that HMC. Actually managed CPCs: "
+                          f"{cpc_names_str}")
+                    failed_hmcs.append(hd.nickname)
 
-            finally:
+        finally:
+            if session:
                 session.logoff()
+
+    if failed_hmcs:
+        pytest.fail("The following HMCs failed the check: "
+                    f"{', '.join(failed_hmcs)}", pytrace=False)
