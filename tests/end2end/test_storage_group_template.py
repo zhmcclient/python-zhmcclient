@@ -25,10 +25,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
@@ -47,8 +43,7 @@ STOGRPTPL_LIST_PROPS = ['object-uri', 'cpc-uri', 'name', 'type']
 STOGRPTPL_VOLATILE_PROPS = []
 
 
-def test_stogrptpl_find_list(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_stogrptpl_find_list(dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -80,8 +75,7 @@ def test_stogrptpl_find_list(dpm_mode_cpcs):  # noqa: F811
                 STOGRPTPL_MINIMAL_PROPS, STOGRPTPL_LIST_PROPS)
 
 
-def test_stogrptpl_property(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_stogrptpl_property(dpm_mode_cpcs):
     """
     Test property related methods
     """
@@ -114,8 +108,7 @@ def test_stogrptpl_property(dpm_mode_cpcs):  # noqa: F811
             runtest_get_properties(stogrptpl.manager, non_list_prop)
 
 
-def test_stogrptpl_crud(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_stogrptpl_crud(dpm_mode_cpcs):
     """
     Test create, read, update and delete a storage group template.
     """

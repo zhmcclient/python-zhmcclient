@@ -25,10 +25,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, skipif_storage_mgmt_feature, \
@@ -46,8 +42,7 @@ HBA_LIST_PROPS = ['element-uri', 'name', 'description', 'wwpn']
 HBA_VOLATILE_PROPS = []
 
 
-def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hba_find_list(dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -82,8 +77,7 @@ def test_hba_find_list(dpm_mode_cpcs):  # noqa: F811
                 HBA_VOLATILE_PROPS, HBA_MINIMAL_PROPS, HBA_LIST_PROPS)
 
 
-def test_hba_property(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hba_property(dpm_mode_cpcs):
     """
     Test property related methods
     """
@@ -119,8 +113,7 @@ def test_hba_property(dpm_mode_cpcs):  # noqa: F811
             runtest_get_properties(hba.manager, non_list_prop)
 
 
-def test_hba_crud(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hba_crud(dpm_mode_cpcs):
     """
     Test create, read, update and delete a HBA (and a partition).
     """

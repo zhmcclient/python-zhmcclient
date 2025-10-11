@@ -26,11 +26,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-from .utils import logger  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties
@@ -54,8 +49,7 @@ def se_version_info(cpc):
     return list(map(int, cpc.prop('se-version').split('.')))
 
 
-def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_nic_find_list(dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -89,8 +83,7 @@ def test_nic_find_list(dpm_mode_cpcs):  # noqa: F811
                 NIC_VOLATILE_PROPS, NIC_MINIMAL_PROPS, NIC_LIST_PROPS)
 
 
-def test_nic_property(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_nic_property(dpm_mode_cpcs):
     """
     Test property related methods
     """
@@ -125,8 +118,7 @@ def test_nic_property(dpm_mode_cpcs):  # noqa: F811
             runtest_get_properties(nic.manager, non_list_prop)
 
 
-def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_nic_crud(dpm_mode_cpcs):
     """
     Test create, read, update and delete a NIC (and a partition).
     """
@@ -256,8 +248,7 @@ def test_nic_crud(dpm_mode_cpcs):  # noqa: F811
                 adapter.delete()
 
 
-def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_nic_backing_port_port_based(zhmc_logger, dpm_mode_cpcs):
     """
     Test Nic.backing_port() for port-based NICs (e.g. RoCE, CNA).
     """
@@ -265,7 +256,7 @@ def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     cpc = random.choice(dpm_mode_cpcs)
-    logger.debug("Testing with CPC %s", cpc.name)
+    zhmc_logger.debug("Testing with CPC %s", cpc.name)
     client = cpc.manager.client
 
     port_nics = []
@@ -279,7 +270,7 @@ def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
                 pass
             else:
                 # port-based NIC (e.g. RoCE, CNA before z17, or z17)
-                logger.debug("Found port-based NIC %s", nic.name)
+                zhmc_logger.debug("Found port-based NIC %s", nic.name)
                 port_nics.append(nic)
         if len(port_nics) >= 5:
             break
@@ -291,8 +282,8 @@ def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
     # Pick the port-based NIC to test with
     nic = random.choice(port_nics)
     partition = nic.manager.parent
-    logger.debug("Testing with NIC %r in partition %r",
-                 nic.name, partition.name)
+    zhmc_logger.debug(
+        "Testing with NIC %r in partition %r", nic.name, partition.name)
 
     port_uri = nic.get_property('network-adapter-port-uri')
     port_props = client.session.get(port_uri)
@@ -300,12 +291,12 @@ def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
     adapter = cpc.adapters.resource_object(adapter_uri)
     port = adapter.ports.resource_object(port_uri)
 
-    logger.debug("Calling Nic.backing_port()")
+    zhmc_logger.debug("Calling Nic.backing_port()")
 
     # The code to be tested
     result_port = nic.backing_port()
 
-    logger.debug("Returned from Nic.backing_port()")
+    zhmc_logger.debug("Returned from Nic.backing_port()")
 
     assert isinstance(result_port, zhmcclient.Port)
     assert result_port.uri == port.uri
@@ -317,8 +308,7 @@ def test_nic_backing_port_port_based(logger, dpm_mode_cpcs):  # noqa: F811
     assert result_cpc.uri == cpc.uri
 
 
-def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_nic_backing_port_vswitch_based(zhmc_logger, dpm_mode_cpcs):
     """
     Test Nic.backing_port() for vswitch-based NICs (e.g. OSA, HS).
     """
@@ -326,7 +316,7 @@ def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
         pytest.skip("HMC definition does not include any CPCs in DPM mode")
 
     cpc = random.choice(dpm_mode_cpcs)
-    logger.debug("Testing with CPC %s", cpc.name)
+    zhmc_logger.debug("Testing with CPC %s", cpc.name)
     client = cpc.manager.client
 
     vswitch_nics = []
@@ -340,7 +330,7 @@ def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
                 pass
             else:
                 # vswitch-based NIC (e.g. OSA, HS before z17)
-                logger.debug("Found vswitch-based NIC %s", nic.name)
+                zhmc_logger.debug("Found vswitch-based NIC %s", nic.name)
                 vswitch_nics.append(nic)
         if len(vswitch_nics) >= 5:
             break
@@ -352,8 +342,8 @@ def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
     # Pick the vswitch-based NIC to test with
     nic = random.choice(vswitch_nics)
     partition = nic.manager.parent
-    logger.debug("Testing with NIC %r in partition %r",
-                 nic.name, partition.name)
+    zhmc_logger.debug(
+        "Testing with NIC %r in partition %r", nic.name, partition.name)
 
     vswitch_uri = nic.get_property('virtual-switch-uri')
     vswitch_props = client.session.get(vswitch_uri)
@@ -369,12 +359,12 @@ def test_nic_backing_port_vswitch_based(logger, dpm_mode_cpcs):  # noqa: F811
     else:
         raise AssertionError  # Would be an HMC inconsistency
 
-    logger.debug("Calling Nic.backing_port()")
+    zhmc_logger.debug("Calling Nic.backing_port()")
 
     # The code to be tested
     result_port = nic.backing_port()
 
-    logger.debug("Returned from Nic.backing_port()")
+    zhmc_logger.debug("Returned from Nic.backing_port()")
 
     assert isinstance(result_port, zhmcclient.Port)
     assert result_port.uri == port.uri

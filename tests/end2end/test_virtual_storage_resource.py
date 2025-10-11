@@ -22,11 +22,6 @@ These tests do not change any existing VSRs.
 import pytest
 from requests.packages import urllib3
 
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
-
 from .utils import skip_warn, pick_test_resources, \
     skipif_no_storage_mgmt_feature, runtest_find_list, runtest_get_properties
 
@@ -46,8 +41,7 @@ VSR_LIST_PROPS = ['element-uri', 'name', 'device-number', 'adapter-port-uri',
 VSR_VOLATILE_PROPS = []
 
 
-def test_vsr_find_list(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_vsr_find_list(dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -84,8 +78,7 @@ def test_vsr_find_list(dpm_mode_cpcs):  # noqa: F811
                 unique_name=True)
 
 
-def test_vsr_property(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_vsr_property(dpm_mode_cpcs):
     """
     Test property related methods
     """

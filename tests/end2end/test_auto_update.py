@@ -26,10 +26,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 from zhmcclient.mock import FakedSession
 
 from .utils import TEST_PREFIX, standard_partition_props, skip_warn
@@ -37,8 +33,7 @@ from .utils import TEST_PREFIX, standard_partition_props, skip_warn
 urllib3.disable_warnings()
 
 
-def test_autoupdate_prop(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_autoupdate_prop(dpm_mode_cpcs):
     """
     Test auto-updated partitions when updating a property.
     """
@@ -207,8 +202,7 @@ def test_autoupdate_prop(dpm_mode_cpcs):  # noqa: F811
                     raise
 
 
-def test_autoupdate_list(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_autoupdate_list(dpm_mode_cpcs):
     """
     Test list() with auto-updated Partition manager.
     """

@@ -22,9 +22,6 @@ These tests do not change the console object.
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list, runtest_get_properties, \
     validate_api_features
@@ -41,8 +38,7 @@ CONSOLE_LIST_PROPS = ['object-uri']
 CONSOLE_VOLATILE_PROPS = []
 
 
-def test_console_find_list(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_console_find_list(hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -57,8 +53,7 @@ def test_console_find_list(hmc_session):  # noqa: F811
         CONSOLE_LIST_PROPS)
 
 
-def test_console_property(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_console_property(hmc_session):
     """
     Test property related methods
     """
@@ -70,8 +65,7 @@ def test_console_property(hmc_session):  # noqa: F811
     runtest_get_properties(client.consoles, non_list_prop)
 
 
-def test_console_features(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_console_features(hmc_session):
     """
     Tests Console feature methods:
     - For API features:

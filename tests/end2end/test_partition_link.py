@@ -28,10 +28,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     skipif_no_partition_link_feature, runtest_find_list, \
@@ -96,8 +92,7 @@ def replace_expressions(obj, replacements):
         'smc-d',
         'ctc'
     ])
-def test_partlink_find_list(dpm_mode_cpcs, pl_type):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_partlink_find_list(dpm_mode_cpcs, pl_type):
     """
     Test list(), find(), findall().
     """
@@ -138,8 +133,7 @@ def test_partlink_find_list(dpm_mode_cpcs, pl_type):  # noqa: F811
         'smc-d',
         'ctc'
     ])
-def test_partlink_property(dpm_mode_cpcs, pl_type):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_partlink_property(dpm_mode_cpcs, pl_type):
     """
     Test property related methods
     """
@@ -181,8 +175,7 @@ def test_partlink_property(dpm_mode_cpcs, pl_type):  # noqa: F811
         'smc-d',
         'ctc'
     ])
-def test_partlink_crud(dpm_mode_cpcs, pl_type):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_partlink_crud(dpm_mode_cpcs, pl_type):
     """
     Test create, read, update and delete a partition link.
     """
@@ -386,9 +379,9 @@ PARTLINK_CREATE_DELETE_TESTCASES = [
     "desc, pl_type, input_props, exp_props, exp_exc_type",
     PARTLINK_CREATE_DELETE_TESTCASES)
 def test_partlink_create_delete(
-        dpm_mode_cpcs,  # noqa: F811
+        dpm_mode_cpcs,
         desc, pl_type, input_props, exp_props, exp_exc_type):
-    # pylint: disable=redefined-outer-name, exec-used, unused-argument
+    # pylint: disable=unused-argument
     """
     Test creation of a partition link (and deletion, for cleanup)
     """
@@ -500,8 +493,7 @@ def test_partlink_create_delete(
                 console.partition_links.find(name=partlink_name)
 
 
-def test_partlink_zzz_cleanup(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name, exec-used, unused-argument
+def test_partlink_zzz_cleanup(dpm_mode_cpcs):
     """
     Cleanup any created partitions and partition links that may have not been
     cleaned up by the other testcase functions.

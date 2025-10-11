@@ -21,9 +21,6 @@ from requests.packages import urllib3
 import zhmcclient
 import zhmcclient.mock
 
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 from zhmcclient.testutils import setup_hmc_session, teardown_hmc_session_id, \
     teardown_hmc_session, is_valid_hmc_session_id
 
@@ -33,8 +30,7 @@ urllib3.disable_warnings()
 @pytest.mark.parametrize(
     "teardown", ['session', 'session_id']
 )
-def test_session_setup(hmc_definition, teardown):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_session_setup(hmc_definition, teardown):
     """
     Test setup_hmc_session().
     """
@@ -59,8 +55,7 @@ def test_session_setup(hmc_definition, teardown):  # noqa: F811
 @pytest.mark.parametrize(
     "teardown", ['session', 'session_id']
 )
-def test_session_valid_session(hmc_definition, teardown):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_session_valid_session(hmc_definition, teardown):
     """
     Test is_valid_hmc_session_id() with a valid session.
     """
@@ -80,8 +75,7 @@ def test_session_valid_session(hmc_definition, teardown):  # noqa: F811
             teardown_hmc_session_id(hmc_definition, session.session_id)
 
 
-def test_session_invalid_session(hmc_definition):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_session_invalid_session(hmc_definition):
     """
     Test is_valid_hmc_session_id() with an invalid session.
     """

@@ -1,0 +1,11 @@
+Simplified the way users can write pytest based test programs using the
+pytest fixtures in zhmcclient.testutils: These pytest fixtures no longer need
+to be imported before using them, because they are now delivered as a pytest
+plugin and are thus globally known by pytest. In addition, the scope of these
+pytest fixtures was widened from 'module' to 'session'. This reduces the
+number of HMC sessions that pytest based test programs use, because they now
+are reused across test modules. User-written test programs that import these
+fixtures will still run unchanged, but in order to take advantage of the
+reduced number of HMC sessions, these test programs need to remove the import
+statements for the fixtures, because importing them causes pytest to reduce
+their scope to 'module' again.

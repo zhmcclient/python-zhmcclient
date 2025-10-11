@@ -246,8 +246,7 @@ else
   pytest_opts := $(TESTOPTS)
 endif
 
-pytest_cov_opts := --cov $(package_name) --cov $(mock_package_name) --cov-config .coveragerc --cov-append --cov-report=html
-pytest_cov_files := .coveragerc
+coverage_config_file := .coveragerc
 
 # Files to be built
 build_files := $(bdist_file) $(sdist_file)
@@ -672,8 +671,9 @@ endif
 	echo "done" >$@
 
 .PHONY: test
-test: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
-	bash -c "PYTHONPATH=. pytest --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)"
+test: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(coverage_config_file)
+	bash -c "PYTHONPATH=. coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -s $(pytest_opts) $(test_dir)/unit"
+	coverage html
 	@echo "Makefile: $@ done."
 
 .PHONY: installtest
@@ -687,14 +687,16 @@ else
 endif
 
 .PHONY:	end2end
-end2end: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+end2end: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file)
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(pytest_opts) $(test_dir)/end2end"
+	coverage html
 	@echo "Makefile: $@ done."
 
 # TODO: Enable rc checking again once the remaining issues are resolved
 .PHONY:	end2end_mocked
-end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
-	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -v -s -m 'not check_hmcs' $(pytest_opts) $(test_dir)/end2end"
+	coverage html
 	@echo "Makefile: $@ done."
 
 .PHONY: authors
@@ -717,7 +719,7 @@ end2end_show:
 	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true $(PYTHON_CMD) -c 'from zhmcclient.testutils import print_hmc_definitions; print_hmc_definitions()'"
 
 .PHONY:	end2end_check
-end2end_check: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
+end2end_check: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(coverage_config_file)
 	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	bash -c "TESTEND2END_LOAD=true TESTCASES=test_hmcdef_check_all_hmcs pytest --color=yes $(pytest_no_log_opt) -v -m check_hmcs -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	bash -c "TESTEND2END_LOAD=true TESTCASES=test_hmcdef_check_all_hmcs coverage run --append -m pytest --color=yes $(pytest_no_log_opt) -v -s -m check_hmcs $(pytest_opts) $(test_dir)/end2end"
 	@echo "Makefile: $@ done."

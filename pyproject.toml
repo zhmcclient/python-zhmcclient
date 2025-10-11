@@ -77,3 +77,7 @@ testutils = {file = ['extra-testutils-requirements.txt']}
 [tool.setuptools_scm]
 # Get the version from the Git tag, and write a version file:
 version_file = "zhmcclient/_version_scm.py"
+
+[project.entry-points.pytest11]
+# Pytest plugin with zhmcclient fixtures (required for fixtures with session scope).
+zhmcclient-testutils = "zhmcclient.testutils"

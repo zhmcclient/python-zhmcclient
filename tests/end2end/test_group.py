@@ -25,9 +25,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import pick_test_resources, runtest_find_list, TEST_PREFIX, \
     skip_warn, skipif_no_group_support
@@ -44,8 +41,7 @@ GROUP_LIST_PROPS = ['object-uri', 'name']
 GROUP_VOLATILE_PROPS = []
 
 
-def test_group_find_list(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_group_find_list(hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -69,8 +65,7 @@ def test_group_find_list(hmc_session):  # noqa: F811
             GROUP_LIST_PROPS)
 
 
-def test_group_crud(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_group_crud(hmc_session):
     """
     Test create, read, update and delete a group.
     """

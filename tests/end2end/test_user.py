@@ -25,9 +25,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     runtest_find_list, runtest_get_properties
@@ -44,8 +41,7 @@ USER_LIST_PROPS = ['object-uri', 'name', 'type']
 USER_VOLATILE_PROPS = []
 
 
-def test_user_find_list(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_user_find_list(hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -75,8 +71,7 @@ def test_user_find_list(hmc_session):  # noqa: F811
             USER_LIST_PROPS)
 
 
-def test_user_property(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_user_property(hmc_session):
     """
     Test property related methods
     """
@@ -107,8 +102,7 @@ def test_user_property(hmc_session):  # noqa: F811
         runtest_get_properties(user.manager, non_list_prop)
 
 
-def test_user_crud(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_user_crud(hmc_session):
     """
     Test create, read, update and delete a user.
     """

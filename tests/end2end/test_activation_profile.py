@@ -25,11 +25,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
-from .utils import logger  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, runtest_find_list, \
     runtest_get_properties, End2endTestWarning, skip_missing_api_feature
@@ -81,8 +76,7 @@ def standard_activation_profile_props(cpc, profile_name, profile_type):
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_crud(logger, classic_mode_cpcs, profile_type):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_actprof_crud(zhmc_logger, classic_mode_cpcs, profile_type):
     """
     Test create, read, update and delete an activation profile.
     """
@@ -101,7 +95,7 @@ def test_actprof_crud(logger, classic_mode_cpcs, profile_type):  # noqa: F811
 
         msg = f"Testing on CPC {cpc.name}"
         print(msg)
-        logger.debug(msg)
+        zhmc_logger.debug(msg)
 
         actprof_name = f'ZHMC{profile_type[0].upper()}1'
 
@@ -115,15 +109,16 @@ def test_actprof_crud(logger, classic_mode_cpcs, profile_type):  # noqa: F811
                 f"Preparation: Delete {profile_type} activation profile "
                 f"{actprof_name!r} on CPC {cpc.name} from previous run")
             warnings.warn(msg, UserWarning)
-            logger.debug(msg)
+            zhmc_logger.debug(msg)
             _actprof.delete()
 
         # Test creating the activation profile
         actprof_input_props = standard_activation_profile_props(
             cpc, actprof_name, profile_type)
 
-        logger.debug("Create %s activation profile %r on CPC %s",
-                     profile_type, actprof_name, cpc.name)
+        zhmc_logger.debug(
+            "Create %s activation profile %r on CPC %s",
+            profile_type, actprof_name, cpc.name)
 
         # The code to be tested
         actprof = actprof_mgr.create(actprof_input_props)
@@ -143,8 +138,9 @@ def test_actprof_crud(logger, classic_mode_cpcs, profile_type):  # noqa: F811
 
             new_desc = "Updated activation profile description."
 
-            logger.debug("Update a property of %s activation profile "
-                         "%r on CPC %s", profile_type, actprof_name, cpc.name)
+            zhmc_logger.debug(
+                "Update a property of %s activation profile %r on CPC %s",
+                profile_type, actprof_name, cpc.name)
 
             # The code to be tested
             actprof.update_properties(dict(description=new_desc))
@@ -156,8 +152,9 @@ def test_actprof_crud(logger, classic_mode_cpcs, profile_type):  # noqa: F811
         finally:
             # Test deleting the activation profile (also cleanup)
 
-            logger.debug("Delete %s activation profile %r on CPC %s",
-                         profile_type, actprof_name, cpc.name)
+            zhmc_logger.debug(
+                "Delete %s activation profile %r on CPC %s",
+                profile_type, actprof_name, cpc.name)
 
             # The code to be tested
             actprof.delete()
@@ -166,8 +163,7 @@ def test_actprof_crud(logger, classic_mode_cpcs, profile_type):  # noqa: F811
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_actprof_find_list(classic_mode_cpcs, profile_type):
     """
     Test list(), find(), findall().
     """
@@ -205,8 +201,7 @@ def test_actprof_find_list(classic_mode_cpcs, profile_type):  # noqa: F811
 @pytest.mark.parametrize(
     "profile_type", ['reset', 'image', 'load']
 )
-def test_actprof_property(classic_mode_cpcs, profile_type):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_actprof_property(classic_mode_cpcs, profile_type):
     """
     Test property related methods
     """
