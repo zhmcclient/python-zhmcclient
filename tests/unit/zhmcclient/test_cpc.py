@@ -74,11 +74,11 @@ CPC1_CAPACITY_PROPS = {
     'processor-count-cbp2': 1,
 }
 
-HTTPError_400_7 = HTTPError({'http-status': 400, 'reason': 7})
-HTTPError_404_1 = HTTPError({'http-status': 404, 'reason': 1})
-HTTPError_409_1 = HTTPError({'http-status': 409, 'reason': 1})
-HTTPError_409_4 = HTTPError({'http-status': 409, 'reason': 4})
-HTTPError_409_5 = HTTPError({'http-status': 409, 'reason': 5})
+HTTPERROR_400_7 = HTTPError({'http-status': 400, 'reason': 7})
+HTTPERROR_404_1 = HTTPError({'http-status': 404, 'reason': 1})
+HTTPERROR_409_1 = HTTPError({'http-status': 409, 'reason': 1})
+HTTPERROR_409_4 = HTTPError({'http-status': 409, 'reason': 4})
+HTTPERROR_409_5 = HTTPError({'http-status': 409, 'reason': 5})
 
 # Names of our faked crypto adapters:
 CRYPTO1_NAME = 'crypto 1'
@@ -1304,8 +1304,8 @@ class TestCpc:
     @pytest.mark.parametrize(
         "cpc_name, initial_status, exp_status, exp_error", [
             (CPC1_NAME, 'not-operating', 'active', None),
-            (CPC2_NAME, 'not-operating', None, HTTPError_409_5),
-            (CPC3_NAME, 'not-operating', None, HTTPError_409_5),
+            (CPC2_NAME, 'not-operating', None, HTTPERROR_409_5),
+            (CPC3_NAME, 'not-operating', None, HTTPERROR_409_5),
         ]
     )
     def test_cpc_start(self, cpc_name, initial_status, exp_status, exp_error,
@@ -1353,8 +1353,8 @@ class TestCpc:
     @pytest.mark.parametrize(
         "cpc_name, initial_status, exp_status, exp_error", [
             (CPC1_NAME, 'active', 'not-operating', None),
-            (CPC2_NAME, 'operating', None, HTTPError_409_5),
-            (CPC3_NAME, 'operating', None, HTTPError_409_5),
+            (CPC2_NAME, 'operating', None, HTTPERROR_409_5),
+            (CPC3_NAME, 'operating', None, HTTPERROR_409_5),
         ]
     )
     def test_cpc_stop(self, cpc_name, initial_status, exp_status, exp_error,
@@ -1402,7 +1402,7 @@ class TestCpc:
     @pytest.mark.parametrize(
         "cpc_name, initial_status, force, exp_status, exp_error", [
             # Different operational modes
-            (CPC1_NAME, 'not-operating', False, None, HTTPError_409_4),
+            (CPC1_NAME, 'not-operating', False, None, HTTPERROR_409_4),
             (CPC2_NAME, 'not-operating', False, 'operating', None),
             # Different initial inactive statuses
             (CPC3_NAME, 'not-operating', False, 'operating', None),
@@ -1410,21 +1410,21 @@ class TestCpc:
             (CPC3_NAME, 'no-power', False, 'operating', None),
             (CPC3_NAME, 'no-power', True, 'operating', None),
             # Different initial active statuses
-            (CPC3_NAME, 'operating', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'operating', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'operating', True, 'operating', None),
-            (CPC3_NAME, 'degraded', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'degraded', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'degraded', True, 'operating', None),
-            (CPC3_NAME, 'acceptable', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'acceptable', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'acceptable', True, 'operating', None),
-            (CPC3_NAME, 'exceptions', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'exceptions', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'exceptions', True, 'operating', None),
-            (CPC3_NAME, 'service-required', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'service-required', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'service-required', True, 'operating', None),
             # Different initial bad statuses
-            (CPC3_NAME, 'not-communicating', False, None, HTTPError_409_1),
-            (CPC3_NAME, 'not-communicating', True, None, HTTPError_409_1),
-            (CPC3_NAME, 'status-check', False, None, HTTPError_409_1),
-            (CPC3_NAME, 'status-check', True, None, HTTPError_409_1),
+            (CPC3_NAME, 'not-communicating', False, None, HTTPERROR_409_1),
+            (CPC3_NAME, 'not-communicating', True, None, HTTPERROR_409_1),
+            (CPC3_NAME, 'status-check', False, None, HTTPERROR_409_1),
+            (CPC3_NAME, 'status-check', True, None, HTTPERROR_409_1),
         ]
     )
     def test_cpc_activate(
@@ -1479,7 +1479,7 @@ class TestCpc:
     @pytest.mark.parametrize(
         "cpc_name, initial_status, force, exp_status, exp_error", [
             # Different operational modes
-            (CPC1_NAME, 'active', True, None, HTTPError_409_4),
+            (CPC1_NAME, 'active', True, None, HTTPERROR_409_4),
             (CPC2_NAME, 'operating', True, 'no-power', None),
             # Different initial inactive statuses
             (CPC3_NAME, 'not-operating', False, 'no-power', None),
@@ -1487,21 +1487,21 @@ class TestCpc:
             (CPC3_NAME, 'no-power', False, 'no-power', None),
             (CPC3_NAME, 'no-power', True, 'no-power', None),
             # Different initial active statuses
-            (CPC3_NAME, 'operating', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'operating', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'operating', True, 'no-power', None),
-            (CPC3_NAME, 'degraded', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'degraded', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'degraded', True, 'no-power', None),
-            (CPC3_NAME, 'acceptable', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'acceptable', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'acceptable', True, 'no-power', None),
-            (CPC3_NAME, 'exceptions', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'exceptions', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'exceptions', True, 'no-power', None),
-            (CPC3_NAME, 'service-required', False, None, HTTPError_409_1),
+            (CPC3_NAME, 'service-required', False, None, HTTPERROR_409_1),
             (CPC3_NAME, 'service-required', True, 'no-power', None),
             # Different initial bad statuses
-            (CPC3_NAME, 'not-communicating', False, None, HTTPError_409_1),
-            (CPC3_NAME, 'not-communicating', True, None, HTTPError_409_1),
-            (CPC3_NAME, 'status-check', False, None, HTTPError_409_1),
-            (CPC3_NAME, 'status-check', True, None, HTTPError_409_1),
+            (CPC3_NAME, 'not-communicating', False, None, HTTPERROR_409_1),
+            (CPC3_NAME, 'not-communicating', True, None, HTTPERROR_409_1),
+            (CPC3_NAME, 'status-check', False, None, HTTPERROR_409_1),
+            (CPC3_NAME, 'status-check', True, None, HTTPERROR_409_1),
         ]
     )
     def test_cpc_deactivate(
@@ -1550,7 +1550,7 @@ class TestCpc:
 
     @pytest.mark.parametrize(
         "cpc_name, exp_error", [
-            (CPC1_NAME, HTTPError_409_4),
+            (CPC1_NAME, HTTPERROR_409_4),
             (CPC2_NAME, None),
             (CPC3_NAME, None),
         ]
@@ -1583,7 +1583,7 @@ class TestCpc:
 
     @pytest.mark.parametrize(
         "cpc_name, exp_error", [
-            (CPC1_NAME, HTTPError_409_4),
+            (CPC1_NAME, HTTPERROR_409_4),
             (CPC2_NAME, None),
             (CPC3_NAME, None),
         ]
@@ -1617,8 +1617,8 @@ class TestCpc:
     @pytest.mark.parametrize(
         "cpc_name, exp_error", [
             (CPC1_NAME, None),
-            (CPC2_NAME, HTTPError_409_5),
-            (CPC3_NAME, HTTPError_409_5),
+            (CPC2_NAME, HTTPERROR_409_5),
+            (CPC3_NAME, HTTPERROR_409_5),
         ]
     )
     def test_cpc_get_wwpns(self, cpc_name, exp_error):
@@ -1780,8 +1780,8 @@ class TestCpc:
             (CPC1_NAME, 'high-performance', None),
             (CPC1_NAME, 'low-power', None),
             (CPC1_NAME, 'custom', None),
-            (CPC1_NAME, None, HTTPError_400_7),
-            (CPC1_NAME, 'invalid', HTTPError_400_7),
+            (CPC1_NAME, None, HTTPERROR_400_7),
+            (CPC1_NAME, 'invalid', HTTPERROR_400_7),
         ]
     )
     def test_cpc_set_power_save(self, cpc_name, power_saving, exp_error,
@@ -1832,9 +1832,9 @@ class TestCpc:
         "cpc_name, power_capping_state, power_cap, exp_error", [
             (CPC1_NAME, 'disabled', None, None),
             (CPC1_NAME, 'enabled', 20000, None),
-            (CPC1_NAME, 'enabled', None, HTTPError_400_7),
-            (CPC1_NAME, None, None, HTTPError_400_7),
-            (CPC1_NAME, 'invalid', None, HTTPError_400_7),
+            (CPC1_NAME, 'enabled', None, HTTPERROR_400_7),
+            (CPC1_NAME, None, None, HTTPERROR_400_7),
+            (CPC1_NAME, 'invalid', None, HTTPERROR_400_7),
         ]
     )
     def test_cpc_set_power_capping(self, cpc_name, power_capping_state,
