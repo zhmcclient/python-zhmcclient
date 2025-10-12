@@ -201,4 +201,4 @@ pip-check-reqs>=2.5.1; python_version >= '3.9'
 # pywinpty 2.0.12/13 has the above issue on Python 3.13
 pywinpty>=2.0.12,!=2.0.14; os_name == "nt" and python_version == '3.8'
 pywinpty>=2.0.12; os_name == "nt" and python_version >= '3.9' and python_version <= '3.12'
-pywinpty>=2.0.14; os_name == "nt" and python_version >= '3.13'
+pywinpty>=3.0.0; os_name == "nt" and python_version >= '3.13'
