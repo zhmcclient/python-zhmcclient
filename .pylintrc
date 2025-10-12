@@ -171,7 +171,7 @@ confidence=
 #       breaking compatibility. We could move the message control statements
 #       into the source code, though.
 # Note: messages are described here: http://pylint-messages.wikidot.com/all-messages
-disable=I0011,
+disable=I0011, unrecognized-option,
         too-many-locals, too-many-branches, too-many-statements,
         too-many-lines, too-many-public-methods,
         too-many-nested-blocks, too-many-return-statements, too-many-arguments,
@@ -585,7 +585,7 @@ class-rgx=_{0,1}[A-Z][a-zA-Z0-9]{1,39}$
 # Note: The expression below allows "UPPER_CASE_WITH_UNDERSCORES"; leading
 #       underscores for privacy are allowed.
 #       Names matching this expression are compatible with PEP-8.
-const-rgx=(_{0,1}[A-Z][A-Z0-9_]{0,38}[A-Z0-9]|__[a-z_]+__)$
+const-rgx=(_{0,1}[A-Z][A-Z0-9_]{0,48}[A-Z0-9]|__[a-z_]+__)$
 
 # Minimum line length for functions/classes that require docstrings, shorter
 # ones are exempt.
