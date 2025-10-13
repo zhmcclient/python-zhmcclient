@@ -13,14 +13,14 @@
 # limitations under the License.
 
 """
-Unit tests for _idpool module of the zhmcclient_mock package.
+Unit tests for _idpool module of the zhmcclient.mock package.
 """
 
 
 from requests.packages import urllib3
 import pytest
 
-from zhmcclient_mock._idpool import IdPool
+from zhmcclient.mock._idpool import IdPool
 
 urllib3.disable_warnings()
 

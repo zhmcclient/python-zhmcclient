@@ -25,7 +25,7 @@ import pytest
 import requests_mock
 
 from zhmcclient import Client, Lpar, HTTPError, StatusTimeout, Job
-from zhmcclient_mock import FakedSession, LparActivateHandler, \
+from zhmcclient.mock import FakedSession, LparActivateHandler, \
     LparDeactivateHandler, LparLoadHandler
 from tests.common.utils import assert_resources, assert_blanked_in_message
 
@@ -54,7 +54,7 @@ CPC_NAME = 'fake-cpc1-name'
 LIST_PERMITTED_LPARS_PROPS = [
     'name', 'object-uri', 'activation-mode', 'status',
     'has-unacceptable-status', 'cpc-name', 'cpc-object-uri',
-    # The zhmcclient_mock support always returns 'se-version'
+    # The zhmcclient.mock support always returns 'se-version'
     'se-version'
 ]
 

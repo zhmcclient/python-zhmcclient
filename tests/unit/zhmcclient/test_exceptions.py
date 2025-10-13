@@ -42,7 +42,7 @@ from zhmcclient import (
     FilterConversionError,
 )
 from zhmcclient import ConnectionError  # pylint: disable=redefined-builtin
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 
 
 # Some HTTPError response bodies, used by multiple testcases:

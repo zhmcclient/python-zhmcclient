@@ -15,7 +15,7 @@
 # pylint: disable=attribute-defined-outside-init
 
 """
-Unit tests for _urihandler module of the zhmcclient_mock package.
+Unit tests for _urihandler module of the zhmcclient.mock package.
 """
 
 from datetime import datetime, timezone
@@ -23,17 +23,17 @@ try:
     from zoneinfo import ZoneInfo
 except ImportError:
     ZoneInfo = None
-# TODO: Migrate mock to zhmcclient_mock
+# TODO: Migrate mock to zhmcclient.mock
 from unittest.mock import MagicMock
 from requests.packages import urllib3
 import pytest
 
 from zhmcclient._utils import tzlocal
-from zhmcclient_mock._session import FakedSession
-from zhmcclient_mock._hmc import FakedMetricObjectValues
-from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
+from zhmcclient.mock._session import FakedSession
+from zhmcclient.mock._hmc import FakedMetricObjectValues
+from zhmcclient.mock._urihandler import FakedHTTPError, InvalidResourceError, \
     InvalidMethodError, CpcNotInDpmError, CpcInDpmError, BadRequestError, \
-    ConflictError, \
+    ConflictError, FakedConnectionError, \
     parse_query_parms, UriHandler, \
     GenericGetPropertiesHandler, GenericUpdatePropertiesHandler, \
     GenericDeleteHandler, \
@@ -87,15 +87,13 @@ from zhmcclient_mock._urihandler import HTTPError, InvalidResourceError, \
     ImageActProfilesHandler, ImageActProfileHandler, \
     LoadActProfilesHandler, LoadActProfileHandler, \
     SubmitRequestsHandler
-# pylint: disable=redefined-builtin
-from zhmcclient_mock._urihandler import ConnectionError
 
 urllib3.disable_warnings()
 
 
 def test_httperror_attrs():
     """
-    Test HTTPError initialization and attributes.
+    Test FakedHTTPError initialization and attributes.
     """
     method = 'GET'
     uri = '/api/cpcs'
@@ -103,7 +101,7 @@ def test_httperror_attrs():
     reason = 42
     message = "fake message"
 
-    exc = HTTPError(method, uri, http_status, reason, message)
+    exc = FakedHTTPError(method, uri, http_status, reason, message)
 
     assert exc.method == method
     assert exc.uri == uri
@@ -114,7 +112,7 @@ def test_httperror_attrs():
 
 def test_httperror_response():
     """
-    Test HTTPError.response().
+    Test FakedHTTPError.response().
     """
     method = 'GET'
     uri = '/api/cpcs'
@@ -128,7 +126,7 @@ def test_httperror_response():
         'reason': reason,
         'message': message,
     }
-    exc = HTTPError(method, uri, http_status, reason, message)
+    exc = FakedHTTPError(method, uri, http_status, reason, message)
 
     response = exc.response()
 
@@ -137,11 +135,11 @@ def test_httperror_response():
 
 def test_connectionerror_attrs():
     """
-    Test ConnectionError initialization and attributes.
+    Test FakedConnectionError initialization and attributes.
     """
     msg = "fake error message"
 
-    exc = ConnectionError(msg)
+    exc = FakedConnectionError(msg)
 
     assert exc.message == msg
 
@@ -406,17 +404,17 @@ TESTCASES_PARSE_QUERY_PARMS = [
     (
         "two equal signs (invalid format)",
         'fake-uri?a==b',
-        HTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
+        FakedHTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
     ),
     (
         "two assignments (invalid format)",
         'fake-uri?a=b=c',
-        HTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
+        FakedHTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
     ),
     (
         "missing assignment (invalid format)",
         'fake-uri?a',
-        HTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
+        FakedHTTPError('fake-meth', 'fake-uri', 400, 1, "invalid format")
     ),
 ]
 
@@ -438,7 +436,7 @@ def test_parse_query_parms(desc, uri, exp_result):
             # The code to be tested
             parse_query_parms('fake-meth', uri)
 
-        if isinstance(exp_result, HTTPError):
+        if isinstance(exp_result, FakedHTTPError):
             exc = exc_info.value
             assert exc.http_status == 400
             assert exc.reason == 1
@@ -1174,7 +1172,7 @@ class TestGenericGetPropertiesHandler:
 
         self.hmc.disable()
 
-        with pytest.raises(ConnectionError):
+        with pytest.raises(FakedConnectionError):
             # the function to be tested:
             self.urihandler.get(self.hmc, '/api/cpcs/1', True)
 
@@ -1233,7 +1231,7 @@ class TestGenericUpdatePropertiesHandler:
             'description': 'CPC #1 (updated)',
         }
 
-        with pytest.raises(ConnectionError):
+        with pytest.raises(FakedConnectionError):
             # the function to be tested:
             self.urihandler.post(self.hmc, '/api/cpcs/1', update_cpc1, True,
                                  True)
@@ -1284,7 +1282,7 @@ class TestGenericDeleteHandler:
 
         uri = '/api/console/ldap-server-definitions/fake-ldap-srv-def-oid-1'
 
-        with pytest.raises(ConnectionError):
+        with pytest.raises(FakedConnectionError):
             # the function to be tested:
             self.urihandler.delete(self.hmc, uri, True)
 
@@ -2016,7 +2014,7 @@ class TestUserHandlers:
 
         if exp_exc_tuple is not None:
 
-            with pytest.raises(HTTPError) as exc_info:
+            with pytest.raises(FakedHTTPError) as exc_info:
 
                 # Execute the code to be tested
                 self.urihandler.delete(self.hmc, user_uri, True)
@@ -3801,7 +3799,7 @@ class TestCpcSetPowerSaveHandler:
 
         if exp_error:
 
-            with pytest.raises(HTTPError) as exc_info:
+            with pytest.raises(FakedHTTPError) as exc_info:
                 # the function to be tested:
                 resp = self.urihandler.post(
                     self.hmc, '/api/cpcs/1/operations/set-cpc-power-save',
@@ -3870,7 +3868,7 @@ class TestCpcSetPowerCappingHandler:
 
         if exp_error:
 
-            with pytest.raises(HTTPError) as exc_info:
+            with pytest.raises(FakedHTTPError) as exc_info:
                 # the function to be tested:
                 resp = self.urihandler.post(
                     self.hmc, '/api/cpcs/1/operations/set-cpc-power-capping',
@@ -4160,7 +4158,7 @@ class TestCpcExportPortNamesListHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/cpcs/2/operations/export-port-names-list',
                 None, True, True)
@@ -4217,7 +4215,7 @@ class TestCpcImportProfilesHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/cpcs/1/operations/import-profiles',
                 None, True, True)
@@ -4266,7 +4264,7 @@ class TestCpcExportProfilesHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/cpcs/1/operations/export-profiles',
                 None, True, True)
@@ -4619,7 +4617,7 @@ class TestAdapterChangeCryptoTypeHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/adapters/4/operations/change-crypto-type',
@@ -4636,7 +4634,7 @@ class TestAdapterChangeCryptoTypeHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/adapters/4/operations/change-crypto-type',
@@ -4687,7 +4685,7 @@ class TestAdapterChangeAdapterTypeHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/adapters/2/operations/change-adapter-type',
@@ -4704,7 +4702,7 @@ class TestAdapterChangeAdapterTypeHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/adapters/2/operations/change-adapter-type',
@@ -5223,7 +5221,7 @@ class TestPartitionStartStopHandler:
         assert partition1['status'] == 'active'
 
         # the start() function to be tested, with an invalid initial status:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(self.hmc,
                                  '/api/partitions/1/operations/start',
                                  None, True, True)
@@ -5236,7 +5234,7 @@ class TestPartitionStartStopHandler:
         assert partition1['status'] == 'stopped'
 
         # the stop() function to be tested, with an invalid initial status:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(self.hmc,
                                  '/api/partitions/1/operations/stop',
                                  None, True, True)
@@ -5268,7 +5266,7 @@ class TestPartitionScsiDumpHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 None, True, True)
@@ -5286,7 +5284,7 @@ class TestPartitionScsiDumpHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -5304,7 +5302,7 @@ class TestPartitionScsiDumpHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -5322,7 +5320,7 @@ class TestPartitionScsiDumpHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -5345,7 +5343,7 @@ class TestPartitionScsiDumpHandler:
         partition1.properties['status'] = 'stopped'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/scsi-dump',
                 operation_body, True, True)
@@ -5399,7 +5397,7 @@ class TestPartitionStartDumpProgramHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/start-dump-program',
                 None, True, True)
@@ -5416,7 +5414,7 @@ class TestPartitionStartDumpProgramHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/start-dump-program',
                 operation_body, True, True)
@@ -5439,7 +5437,7 @@ class TestPartitionStartDumpProgramHandler:
         partition1.properties['status'] = 'stopped'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/start-dump-program',
                 operation_body, True, True)
@@ -5499,7 +5497,7 @@ class TestPartitionPswRestartHandler:
         partition1.properties['status'] = 'stopped'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/psw-restart',
                 None, True, True)
@@ -5548,7 +5546,7 @@ class TestPartitionMountIsoImageHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/mount-iso-image?'
                 'image-namex=fake-image&ins-file-name=fake-ins',
@@ -5561,7 +5559,7 @@ class TestPartitionMountIsoImageHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/mount-iso-image?'
                 'image-name=fake-image&ins-file-namex=fake-ins',
@@ -5577,7 +5575,7 @@ class TestPartitionMountIsoImageHandler:
         partition1.properties['status'] = 'starting'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/mount-iso-image?'
                 'image-name=fake-image&ins-file-name=fake-ins',
@@ -5637,7 +5635,7 @@ class TestPartitionUnmountIsoImageHandler:
         partition1.properties['status'] = 'starting'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc, '/api/partitions/1/operations/unmount-iso-image',
                 None, True, True)
@@ -5693,7 +5691,7 @@ class TestPartitionIncreaseCryptoConfigHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/increase-crypto-configuration',
@@ -5710,7 +5708,7 @@ class TestPartitionIncreaseCryptoConfigHandler:
         partition1.properties['status'] = 'starting'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/increase-crypto-configuration',
@@ -5814,7 +5812,7 @@ class TestPartitionDecreaseCryptoConfigHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/decrease-crypto-configuration',
@@ -5831,7 +5829,7 @@ class TestPartitionDecreaseCryptoConfigHandler:
         partition1.properties['status'] = 'starting'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/decrease-crypto-configuration',
@@ -5935,7 +5933,7 @@ class TestPartitionChangeCryptoConfigHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -5954,7 +5952,7 @@ class TestPartitionChangeCryptoConfigHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -5973,7 +5971,7 @@ class TestPartitionChangeCryptoConfigHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -5991,7 +5989,7 @@ class TestPartitionChangeCryptoConfigHandler:
         partition1.properties['status'] = 'starting'
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/operations/'
@@ -6208,7 +6206,7 @@ class TestHbaReassignPortHandler:
         """
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/hbas/1/operations/'
@@ -6226,7 +6224,7 @@ class TestHbaReassignPortHandler:
         }
 
         # the function to be tested:
-        with pytest.raises(HTTPError):
+        with pytest.raises(FakedHTTPError):
             self.urihandler.post(
                 self.hmc,
                 '/api/partitions/1/hbas/1/operations/'

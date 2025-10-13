@@ -15,16 +15,16 @@
 # pylint: disable=protected-access,attribute-defined-outside-init
 
 """
-Unit tests for _session module of the zhmcclient_mock package.
+Unit tests for _session module of the zhmcclient.mock package.
 """
 
 
 from datetime import datetime
 
 from zhmcclient import Client
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 
-from zhmcclient_mock._hmc import \
+from zhmcclient.mock._hmc import \
     FakedMetricGroupDefinition, FakedMetricObjectValues
 
 from tests.common.utils import assert_equal_hmc

@@ -19,7 +19,7 @@ End2end tests for testutils._hmc_session_functions module.
 import pytest
 from requests.packages import urllib3
 import zhmcclient
-import zhmcclient_mock
+import zhmcclient.mock
 
 # pylint: disable=line-too-long,unused-import
 from zhmcclient.testutils import hmc_definition  # noqa: F401, E501
@@ -44,10 +44,10 @@ def test_session_setup(hmc_definition, teardown):  # noqa: F811
 
     try:
         if hmc_definition.mock_file:
-            assert isinstance(session, zhmcclient_mock.FakedSession)
+            assert isinstance(session, zhmcclient.mock.FakedSession)
         else:
             assert isinstance(session, zhmcclient.Session)
-            assert not isinstance(session, zhmcclient_mock.FakedSession)
+            assert not isinstance(session, zhmcclient.mock.FakedSession)
 
     finally:
         if teardown == 'session':

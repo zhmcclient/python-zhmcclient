@@ -21,7 +21,7 @@ import re
 import pytest
 
 from zhmcclient import Client, Task
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 from tests.common.utils import assert_resources
 
 

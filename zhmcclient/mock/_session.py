@@ -1,4 +1,4 @@
-# Copyright 2016,2021 IBM Corp. All Rights Reserved.
+# Copyright 2016,2021,2025 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,13 +18,12 @@ A faked Session class for the zhmcclient package.
 
 import yaml
 import jsonschema
-import zhmcclient
 
-from zhmcclient._utils import datetime_from_isoformat, repr_obj_id
-
+from .._utils import datetime_from_isoformat, repr_obj_id
+from .._session import Session, HTTPError
+from .._session import ConnectionError  # pylint: disable=redefined-builtin
 from ._hmc import FakedHmc, FakedMetricObjectValues
-from ._urihandler import UriHandler, HTTPError, URIS
-from ._urihandler import ConnectionError  # pylint: disable=redefined-builtin
+from ._urihandler import UriHandler, FakedHTTPError, FakedConnectionError, URIS
 
 __all__ = ['FakedSession', 'HmcDefinitionYamlError', 'HmcDefinitionSchemaError']
 
@@ -705,7 +704,7 @@ class HmcDefinitionSchemaError(Exception):
         super().__init__(message)
 
 
-class FakedSession(zhmcclient.Session):
+class FakedSession(Session):
     """
     A faked Session class for the zhmcclient package, that can be used as a
     replacement for the :class:`zhmcclient.Session` class.
@@ -725,7 +724,7 @@ class FakedSession(zhmcclient.Session):
     zhmcclient package in a successful manner.
 
     It is possible to populate the faked HMC with an initial resource state
-    (see :meth:`~zhmcclient_mock.FakedHmc.add_resources`).
+    (see :meth:`~zhmcclient.mock.FakedHmc.add_resources`).
     """
 
     def __init__(self, host, hmc_name, hmc_version, api_version,
@@ -785,16 +784,16 @@ class FakedSession(zhmcclient.Session):
     @property
     def hmc(self):
         """
-        :class:`~zhmcclient_mock.FakedHmc`: The faked HMC provided by this
+        :class:`~zhmcclient.mock.FakedHmc`: The faked HMC provided by this
         faked session.
 
         The faked HMC supports being populated with initial resource state,
-        for example using its :meth:`zhmcclient_mock.FakedHmc.add_resources`
+        for example using its :meth:`zhmcclient.mock.FakedHmc.add_resources`
         method.
 
         As an alternative to providing an entire resource tree, the resources
         can also be added one by one, from top to bottom, using the
-        :meth:`zhmcclient_mock.FakedBaseManager.add` methods of the
+        :meth:`zhmcclient.mock.FakedBaseManager.add` methods of the
         respective managers (the top-level manager for CPCs can be accessed
         via ``hmc.cpcs``).
         """
@@ -1025,12 +1024,12 @@ class FakedSession(zhmcclient.Session):
         """
         try:
             return self._urihandler.get(self._hmc, uri, logon_required)
-        except HTTPError as exc:
-            new_exc = zhmcclient.HTTPError(exc.response())
+        except FakedHTTPError as exc:
+            new_exc = HTTPError(exc.response())
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.HTTPError
-        except ConnectionError as exc:
-            new_exc = zhmcclient.ConnectionError(exc.message, None)
+        except FakedConnectionError as exc:
+            new_exc = ConnectionError(exc.message, None)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ConnectionError
 
@@ -1161,12 +1160,12 @@ class FakedSession(zhmcclient.Session):
         try:
             return self._urihandler.post(self._hmc, uri, body, logon_required,
                                          wait_for_completion)
-        except HTTPError as exc:
-            new_exc = zhmcclient.HTTPError(exc.response())
+        except FakedHTTPError as exc:
+            new_exc = HTTPError(exc.response())
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.HTTPError
-        except ConnectionError as exc:
-            new_exc = zhmcclient.ConnectionError(exc.message, None)
+        except FakedConnectionError as exc:
+            new_exc = ConnectionError(exc.message, None)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ConnectionError
 
@@ -1221,11 +1220,11 @@ class FakedSession(zhmcclient.Session):
         """
         try:
             self._urihandler.delete(self._hmc, uri, logon_required)
-        except HTTPError as exc:
-            new_exc = zhmcclient.HTTPError(exc.response())
+        except FakedHTTPError as exc:
+            new_exc = HTTPError(exc.response())
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.HTTPError
-        except ConnectionError as exc:
-            new_exc = zhmcclient.ConnectionError(exc.message, None)
+        except FakedConnectionError as exc:
+            new_exc = ConnectionError(exc.message, None)
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.ConnectionError

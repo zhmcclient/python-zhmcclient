@@ -1,4 +1,4 @@
-# Copyright 2016,2021 IBM Corp. All Rights Reserved.
+# Copyright 2016,2021,2025 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-The :class:`~zhmcclient_mock.IdPool` class provides a pool of integer ID values
+The :class:`~zhmcclient.mock.IdPool` class provides a pool of integer ID values
 from a defined value range. This is used for example to manage automatically
 allocated device numbers.
 """

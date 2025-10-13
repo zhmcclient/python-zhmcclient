@@ -170,7 +170,7 @@ class HMCDefinition:
         """
         string: Path name of HMC mock file, or `None`.
 
-        An HMC mock file defines a mocked HMC based on the zhmcclient_mock
+        An HMC mock file defines a mocked HMC based on the zhmcclient.mock
         support.
 
         This property indicates whether the HMC is a real or mocked HMC:

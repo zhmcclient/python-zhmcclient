@@ -23,7 +23,7 @@ import logging
 import pytest
 
 from zhmcclient import Client, HTTPError, NotFound, LdapServerDefinition
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 from tests.common.utils import assert_resources, assert_blanked_in_message
 
 

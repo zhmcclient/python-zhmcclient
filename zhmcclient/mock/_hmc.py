@@ -1,4 +1,4 @@
-# Copyright 2016,2021 IBM Corp. All Rights Reserved.
+# Copyright 2016,2021,2025 IBM Corp. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-The `zhmcclient_mock` package provides a faked HMC with all resources that are
+The `zhmcclient.mock` package provides a faked HMC with all resources that are
 relevant for the `zhmcclient` package. The faked HMC is implemented as a
 local Python object and maintains its resource state across operations.
 """
@@ -22,7 +22,7 @@ import re
 import copy
 from immutabledict import immutabledict
 
-from zhmcclient._utils import repr_dict, repr_manager, repr_list, \
+from .._utils import repr_dict, repr_manager, repr_list, \
     timestamp_from_datetime, repr_obj_id, tzlocal
 
 from ._idpool import IdPool
@@ -373,7 +373,7 @@ class FakedBaseResource:
     def manager(self):
         """
         The manager for this resource (a derived class of
-        :class:`~zhmcclient_mock.FakedBaseManager`).
+        :class:`~zhmcclient.mock.FakedBaseManager`).
         """
         return self._manager
 
@@ -443,7 +443,7 @@ class FakedBaseResource:
 
             For requirements on and auto-generation of certain resource
             properties, see the ``add()`` methods of the various faked resource
-            managers (e.g. :meth:`zhmcclient_mock.FakedCpcManager.add`). For
+            managers (e.g. :meth:`zhmcclient.mock.FakedCpcManager.add`). For
             example, the object-id or element-id properties and the
             corresponding uri properties are always auto-generated.
 
@@ -461,11 +461,11 @@ class FakedBaseResource:
             For example, the ``adapters`` key is named after the
             :attr:`zhmcclient.Cpc.adapters` attribute (which has the same name
             as in its corresponding faked CPC resource:
-            :attr:`zhmcclient_mock.FakedCpc.adapters`).
+            :attr:`zhmcclient.mock.FakedCpc.adapters`).
 
         Raises:
 
-          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+          :exc:`zhmcclient.mock.InputError`: Some issue with the input
             resources.
 
         Examples:
@@ -702,7 +702,7 @@ class FakedBaseManager:
     def hmc(self):
         """
         The faked HMC this manager is part of (an object of
-        :class:`~zhmcclient_mock.FakedHmc`).
+        :class:`~zhmcclient.mock.FakedHmc`).
         """
         return self._hmc
 
@@ -710,7 +710,7 @@ class FakedBaseManager:
     def parent(self):
         """
         The parent (scoping resource) for this manager (an object of a derived
-        class of :class:`~zhmcclient_mock.FakedBaseResource`).
+        class of :class:`~zhmcclient.mock.FakedBaseResource`).
         """
         return self._parent
 
@@ -718,7 +718,7 @@ class FakedBaseManager:
     def resource_class(self):
         """
         The resource class managed by this manager (a derived class of
-        :class:`~zhmcclient_mock.FakedBaseResource`).
+        :class:`~zhmcclient.mock.FakedBaseResource`).
         """
         return self._resource_class
 
@@ -845,7 +845,7 @@ class FakedHmc(FakedBaseResource):
     """
     A faked HMC.
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
 
     An object of this class represents a faked HMC that can have all faked
@@ -854,11 +854,11 @@ class FakedHmc(FakedBaseResource):
     The Python API to this class and its child resource classes is not
     compatible with the zhmcclient API. Instead, these classes serve as an
     in-memory backend for a faked session class (see
-    :class:`zhmcclient_mock.FakedSession`) that replaces the
+    :class:`zhmcclient.mock.FakedSession`) that replaces the
     normal :class:`zhmcclient.Session` class.
 
     Objects of this class should not be created by the user. Instead,
-    access the :attr:`zhmcclient_mock.FakedSession.hmc` attribute.
+    access the :attr:`zhmcclient.mock.FakedSession.hmc` attribute.
     """
 
     def __init__(self, session, hmc_name, hmc_version, api_version):
@@ -929,7 +929,7 @@ class FakedHmc(FakedBaseResource):
         - key(string):
           Metric group name, e.g. 'partition-usage'.
 
-        - value(list of :class:`~zhmcclient_mock.FakedMetricObjectValues`):
+        - value(list of :class:`~zhmcclient.mock.FakedMetricObjectValues`):
           The metric values of this metric group.
         """
         return immutabledict(self._metric_values)
@@ -943,7 +943,7 @@ class FakedHmc(FakedBaseResource):
         - key(string):
           Metric group name, e.g. 'partition-usage'.
 
-        - value(list of :class:`~zhmcclient_mock.FakedMetricGroupDefinition`):
+        - value(list of :class:`~zhmcclient.mock.FakedMetricGroupDefinition`):
           The metric groups including their metric values and their types.
         """
         return immutabledict(self._metric_groups)
@@ -1036,7 +1036,7 @@ class FakedHmc(FakedBaseResource):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedBaseResource`: The faked resource.
+          :class:`~zhmcclient.mock.FakedBaseResource`: The faked resource.
 
         Raises:
 
@@ -1054,7 +1054,7 @@ class FakedHmc(FakedBaseResource):
 
         Parameters:
 
-          values (:class:`~zhmcclient_mock.FakedMetricObjectValues`):
+          values (:class:`~zhmcclient.mock.FakedMetricObjectValues`):
             The set of metric values to be added. It specifies the resource URI
             and the targeted metric group name.
         """
@@ -1068,9 +1068,9 @@ class FakedHmc(FakedBaseResource):
 class FakedConsoleManager(FakedBaseManager):
     """
     A manager for faked Console resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1090,7 +1090,7 @@ class FakedConsoleManager(FakedBaseManager):
     def console(self):
         """
         The faked Console representing the faked HMC (an object of
-        :class:`~zhmcclient_mock.FakedConsole`). The object is cached.
+        :class:`~zhmcclient.mock.FakedConsole`). The object is cached.
         """
         if self._console is None:
             self._console = self.list()[0]
@@ -1115,7 +1115,7 @@ class FakedConsoleManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedConsole`: The faked Console resource.
+          :class:`~zhmcclient.mock.FakedConsole`: The faked Console resource.
         """
         return super().add(properties)
 
@@ -1123,9 +1123,9 @@ class FakedConsoleManager(FakedBaseManager):
 class FakedConsole(FakedBaseResource):
     """
     A faked Console resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1189,7 +1189,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def storage_groups(self):
         """
-        :class:`~zhmcclient_mock.FakedStorageGroupManager`: Access to the faked
+        :class:`~zhmcclient.mock.FakedStorageGroupManager`: Access to the faked
         Storage Group resources of this Console.
         """
         return self._storage_groups
@@ -1197,7 +1197,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def storage_group_templates(self):
         """
-        :class:`~zhmcclient_mock.FakedStorageGroupTemplateManager`: Access to
+        :class:`~zhmcclient.mock.FakedStorageGroupTemplateManager`: Access to
         the faked Storage Group Template resources of this Console.
         """
         return self._storage_group_templates
@@ -1205,7 +1205,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def users(self):
         """
-        :class:`~zhmcclient_mock.FakedUserManager`: Access to the faked User
+        :class:`~zhmcclient.mock.FakedUserManager`: Access to the faked User
         resources of this Console.
         """
         return self._users
@@ -1213,7 +1213,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def user_roles(self):
         """
-        :class:`~zhmcclient_mock.FakedUserRoleManager`: Access to the faked
+        :class:`~zhmcclient.mock.FakedUserRoleManager`: Access to the faked
         User Role resources of this Console.
         """
         return self._user_roles
@@ -1221,7 +1221,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def user_patterns(self):
         """
-        :class:`~zhmcclient_mock.FakedUserPatternManager`: Access to the faked
+        :class:`~zhmcclient.mock.FakedUserPatternManager`: Access to the faked
         User Pattern resources of this Console.
         """
         return self._user_patterns
@@ -1229,7 +1229,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def password_rules(self):
         """
-        :class:`~zhmcclient_mock.FakedPasswordRulesManager`: Access to the
+        :class:`~zhmcclient.mock.FakedPasswordRulesManager`: Access to the
         faked Password Rule resources of this Console.
         """
         return self._password_rules
@@ -1237,7 +1237,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def tasks(self):
         """
-        :class:`~zhmcclient_mock.FakedTaskManager`: Access to the faked Task
+        :class:`~zhmcclient.mock.FakedTaskManager`: Access to the faked Task
         resources of this Console.
         """
         return self._tasks
@@ -1245,7 +1245,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def ldap_server_definitions(self):
         """
-        :class:`~zhmcclient_mock.FakedLdapServerDefinitionManager`: Access to
+        :class:`~zhmcclient.mock.FakedLdapServerDefinitionManager`: Access to
         the faked LDAP Server Definition resources of this Console.
         """
         return self._ldap_server_definitions
@@ -1253,7 +1253,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def mfa_server_definitions(self):
         """
-        :class:`~zhmcclient_mock.FakedMfaServerDefinitionManager`: Access to
+        :class:`~zhmcclient.mock.FakedMfaServerDefinitionManager`: Access to
         the faked MFA Server Definition resources of this Console.
         """
         return self._mfa_server_definitions
@@ -1261,7 +1261,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def unmanaged_cpcs(self):
         """
-        :class:`~zhmcclient_mock.FakedUnmanagedCpcManager`: Access to the faked
+        :class:`~zhmcclient.mock.FakedUnmanagedCpcManager`: Access to the faked
         unmanaged CPC resources of this Console.
         """
         return self._unmanaged_cpcs
@@ -1269,7 +1269,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def groups(self):
         """
-        :class:`~zhmcclient_mock.FakedGroupManager`: Access to the faked
+        :class:`~zhmcclient.mock.FakedGroupManager`: Access to the faked
         group resources of this Console.
         """
         return self._groups
@@ -1277,7 +1277,7 @@ class FakedConsole(FakedBaseResource):
     @property
     def hw_messages(self):
         """
-        :class:`~zhmcclient_mock.HwMessageManager`: Access to the
+        :class:`~zhmcclient.mock.HwMessageManager`: Access to the
         faked Hardware Message resources of this Console.
         """
         return self._hw_messages
@@ -1286,9 +1286,9 @@ class FakedConsole(FakedBaseResource):
 class FakedUserManager(FakedBaseManager):
     """
     A manager for faked User resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1327,7 +1327,7 @@ class FakedUserManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedUser`: The faked User resource.
+          :class:`~zhmcclient.mock.FakedUser`: The faked User resource.
         """
         new_user = super().add(properties)
 
@@ -1341,9 +1341,9 @@ class FakedUserManager(FakedBaseManager):
 class FakedUser(FakedBaseResource):
     """
     A faked User resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1356,9 +1356,9 @@ class FakedUser(FakedBaseResource):
 class FakedUserRoleManager(FakedBaseManager):
     """
     A manager for faked User Role resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1399,7 +1399,7 @@ class FakedUserRoleManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedUserRole`: The faked User Role
+          :class:`~zhmcclient.mock.FakedUserRole`: The faked User Role
           resource.
         """
         new_user_role = super().add(properties)
@@ -1416,9 +1416,9 @@ class FakedUserRoleManager(FakedBaseManager):
 class FakedUserRole(FakedBaseResource):
     """
     A faked User Role resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1431,9 +1431,9 @@ class FakedUserRole(FakedBaseResource):
 class FakedUserPatternManager(FakedBaseManager):
     """
     A manager for faked User Pattern resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1470,7 +1470,7 @@ class FakedUserPatternManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedUserPattern`: The faked User Pattern
+          :class:`~zhmcclient.mock.FakedUserPattern`: The faked User Pattern
           resource.
         """
         return super().add(properties)
@@ -1479,9 +1479,9 @@ class FakedUserPatternManager(FakedBaseManager):
 class FakedUserPattern(FakedBaseResource):
     """
     A faked User Pattern resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1494,9 +1494,9 @@ class FakedUserPattern(FakedBaseResource):
 class FakedPasswordRuleManager(FakedBaseManager):
     """
     A manager for faked Password Rule resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1537,7 +1537,7 @@ class FakedPasswordRuleManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedPasswordRule`: The faked Password Rule
+          :class:`~zhmcclient.mock.FakedPasswordRule`: The faked Password Rule
           resource.
         """
         new_pwrule = super().add(properties)
@@ -1554,9 +1554,9 @@ class FakedPasswordRuleManager(FakedBaseManager):
 class FakedPasswordRule(FakedBaseResource):
     """
     A faked Password Rule resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1569,9 +1569,9 @@ class FakedPasswordRule(FakedBaseResource):
 class FakedTaskManager(FakedBaseManager):
     """
     A manager for faked Task resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1607,7 +1607,7 @@ class FakedTaskManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedTask`: The faked Task resource.
+          :class:`~zhmcclient.mock.FakedTask`: The faked Task resource.
         """
         return super().add(properties)
 
@@ -1615,9 +1615,9 @@ class FakedTaskManager(FakedBaseManager):
 class FakedTask(FakedBaseResource):
     """
     A faked Task resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1630,9 +1630,9 @@ class FakedTask(FakedBaseResource):
 class FakedLdapServerDefinitionManager(FakedBaseManager):
     """
     A manager for faked LDAP Server Definition resources within a faked HMC
-    (see :class:`zhmcclient_mock.FakedHmc`).
+    (see :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1671,7 +1671,7 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedLdapServerDefinition`: The faked
+          :class:`~zhmcclient.mock.FakedLdapServerDefinition`: The faked
           LdapServerDefinition resource.
         """
         new_lsd = super().add(properties)
@@ -1696,9 +1696,9 @@ class FakedLdapServerDefinitionManager(FakedBaseManager):
 class FakedLdapServerDefinition(FakedBaseResource):
     """
     A faked LDAP Server Definition resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1711,9 +1711,9 @@ class FakedLdapServerDefinition(FakedBaseResource):
 class FakedMfaServerDefinitionManager(FakedBaseManager):
     """
     A manager for faked MFA Server Definition resources within a faked HMC
-    (see :class:`zhmcclient_mock.FakedHmc`).
+    (see :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1752,7 +1752,7 @@ class FakedMfaServerDefinitionManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedMfaServerDefinition`: The faked
+          :class:`~zhmcclient.mock.FakedMfaServerDefinition`: The faked
           MfaServerDefinition resource.
         """
         new_mfa = super().add(properties)
@@ -1770,9 +1770,9 @@ class FakedMfaServerDefinitionManager(FakedBaseManager):
 class FakedMfaServerDefinition(FakedBaseResource):
     """
     A faked MFA Server Definition resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1785,9 +1785,9 @@ class FakedMfaServerDefinition(FakedBaseResource):
 class FakedActivationProfileManager(FakedBaseManager):
     """
     A manager for faked Activation Profile resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1827,7 +1827,7 @@ class FakedActivationProfileManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedActivationProfile`: The faked
+          :class:`~zhmcclient.mock.FakedActivationProfile`: The faked
             Activation Profile resource.
         """
         return super().add(properties)
@@ -1843,9 +1843,9 @@ class FakedActivationProfileManager(FakedBaseManager):
 class FakedActivationProfile(FakedBaseResource):
     """
     A faked Activation Profile resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1858,9 +1858,9 @@ class FakedActivationProfile(FakedBaseResource):
 class FakedAdapterManager(FakedBaseManager):
     """
     A manager for faked Adapter resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -1904,11 +1904,11 @@ class FakedAdapterManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedAdapter`: The faked Adapter resource.
+          :class:`~zhmcclient.mock.FakedAdapter`: The faked Adapter resource.
 
         Raises:
 
-          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+          :exc:`zhmcclient.mock.InputError`: Some issue with the input
             properties.
         """
         return super().add(properties)
@@ -1917,9 +1917,9 @@ class FakedAdapterManager(FakedBaseManager):
 class FakedAdapter(FakedBaseResource):
     """
     A faked Adapter resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -1999,7 +1999,7 @@ class FakedAdapter(FakedBaseResource):
     @property
     def ports(self):
         """
-        :class:`~zhmcclient_mock.FakedPort`: The Port resources of this
+        :class:`~zhmcclient.mock.FakedPort`: The Port resources of this
         Adapter.
 
         If the kind of adapter does not have ports, this is `None`.
@@ -2025,9 +2025,9 @@ class FakedAdapter(FakedBaseResource):
 class FakedCpcManager(FakedBaseManager):
     """
     A manager for faked managed CPC resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2068,7 +2068,7 @@ class FakedCpcManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedCpc`: The faked CPC resource.
+          :class:`~zhmcclient.mock.FakedCpc`: The faked CPC resource.
         """
         return super().add(properties)
 
@@ -2076,9 +2076,9 @@ class FakedCpcManager(FakedBaseManager):
 class FakedCpc(FakedBaseResource):
     """
     A faked managed CPC resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -2153,7 +2153,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def lpars(self):
         """
-        :class:`~zhmcclient_mock.FakedLparManager`: Access to the faked LPAR
+        :class:`~zhmcclient.mock.FakedLparManager`: Access to the faked LPAR
         resources of this CPC.
         """
         return self._lpars
@@ -2161,7 +2161,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def partitions(self):
         """
-        :class:`~zhmcclient_mock.FakedPartitionManager`: Access to the faked
+        :class:`~zhmcclient.mock.FakedPartitionManager`: Access to the faked
         Partition resources of this CPC.
         """
         return self._partitions
@@ -2169,7 +2169,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def adapters(self):
         """
-        :class:`~zhmcclient_mock.FakedAdapterManager`: Access to the faked
+        :class:`~zhmcclient.mock.FakedAdapterManager`: Access to the faked
         Adapter resources of this CPC.
         """
         return self._adapters
@@ -2177,7 +2177,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def virtual_switches(self):
         """
-        :class:`~zhmcclient_mock.FakedVirtualSwitchManager`: Access to the
+        :class:`~zhmcclient.mock.FakedVirtualSwitchManager`: Access to the
         faked Virtual Switch resources of this CPC.
         """
         return self._virtual_switches
@@ -2185,7 +2185,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def capacity_groups(self):
         """
-        :class:`~zhmcclient_mock.FakedCapacityGroupManager`: Access to the
+        :class:`~zhmcclient.mock.FakedCapacityGroupManager`: Access to the
         faked Capacity Group resources of this CPC.
         """
         return self._capacity_groups
@@ -2193,7 +2193,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def reset_activation_profiles(self):
         """
-        :class:`~zhmcclient_mock.FakedActivationProfileManager`: Access to the
+        :class:`~zhmcclient.mock.FakedActivationProfileManager`: Access to the
         faked Reset Activation Profile resources of this CPC.
         """
         return self._reset_activation_profiles
@@ -2201,7 +2201,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def image_activation_profiles(self):
         """
-        :class:`~zhmcclient_mock.FakedActivationProfileManager`: Access to the
+        :class:`~zhmcclient.mock.FakedActivationProfileManager`: Access to the
         faked Image Activation Profile resources of this CPC.
         """
         return self._image_activation_profiles
@@ -2209,7 +2209,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def load_activation_profiles(self):
         """
-        :class:`~zhmcclient_mock.FakedActivationProfileManager`: Access to the
+        :class:`~zhmcclient.mock.FakedActivationProfileManager`: Access to the
         faked Load Activation Profile resources of this CPC.
         """
         return self._load_activation_profiles
@@ -2217,7 +2217,7 @@ class FakedCpc(FakedBaseResource):
     @property
     def hw_messages(self):
         """
-        :class:`~zhmcclient_mock.HwMessageManager`: Access to the
+        :class:`~zhmcclient.mock.HwMessageManager`: Access to the
         faked Hardware Message resources of this CPC.
         """
         return self._hw_messages
@@ -2226,9 +2226,9 @@ class FakedCpc(FakedBaseResource):
 class FakedUnmanagedCpcManager(FakedBaseManager):
     """
     A manager for faked unmanaged CPC resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2262,7 +2262,7 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedUnmanagedCpc`: The faked unmanaged CPC
+          :class:`~zhmcclient.mock.FakedUnmanagedCpc`: The faked unmanaged CPC
           resource.
         """
         return super().add(properties)
@@ -2271,9 +2271,9 @@ class FakedUnmanagedCpcManager(FakedBaseManager):
 class FakedUnmanagedCpc(FakedBaseResource):
     """
     A faked unmanaged CPC resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -2300,9 +2300,9 @@ class FakedUnmanagedCpc(FakedBaseResource):
 class FakedGroupManager(FakedBaseManager):
     """
     A manager for faked managed Group resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2338,7 +2338,7 @@ class FakedGroupManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedGroup`: The faked Group resource.
+          :class:`~zhmcclient.mock.FakedGroup`: The faked Group resource.
         """
         new_group = super().add(properties)
 
@@ -2352,9 +2352,9 @@ class FakedGroupManager(FakedBaseManager):
 class FakedGroup(FakedBaseResource):
     """
     A faked managed Group resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -2381,9 +2381,9 @@ class FakedGroup(FakedBaseResource):
 class FakedHbaManager(FakedBaseManager):
     """
     A manager for faked HBA resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2427,11 +2427,11 @@ class FakedHbaManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedHba`: The faked HBA resource.
+          :class:`~zhmcclient.mock.FakedHba`: The faked HBA resource.
 
         Raises:
 
-          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+          :exc:`zhmcclient.mock.InputError`: Some issue with the input
             properties.
         """
         new_hba = super().add(properties)
@@ -2483,9 +2483,9 @@ class FakedHbaManager(FakedBaseManager):
 class FakedHba(FakedBaseResource):
     """
     A faked HBA resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -2498,9 +2498,9 @@ class FakedHba(FakedBaseResource):
 class FakedLparManager(FakedBaseManager):
     """
     A manager for faked LPAR resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2537,7 +2537,7 @@ class FakedLparManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedLpar`: The faked LPAR resource.
+          :class:`~zhmcclient.mock.FakedLpar`: The faked LPAR resource.
         """
         return super().add(properties)
 
@@ -2545,9 +2545,9 @@ class FakedLparManager(FakedBaseManager):
 class FakedLpar(FakedBaseResource):
     """
     A faked LPAR resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -2562,9 +2562,9 @@ class FakedLpar(FakedBaseResource):
 class FakedNicManager(FakedBaseManager):
     """
     A manager for faked NIC resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2616,11 +2616,11 @@ class FakedNicManager(FakedBaseManager):
 
         Returns:
 
-          :class:`zhmcclient_mock.FakedNic`: The faked NIC resource.
+          :class:`zhmcclient.mock.FakedNic`: The faked NIC resource.
 
         Raises:
 
-          :exc:`zhmcclient_mock.InputError`: Some issue with the input
+          :exc:`zhmcclient.mock.InputError`: Some issue with the input
             properties.
         """
         new_nic = super().add(properties)
@@ -2689,9 +2689,9 @@ class FakedNicManager(FakedBaseManager):
 class FakedNic(FakedBaseResource):
     """
     A faked NIC resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -2704,9 +2704,9 @@ class FakedNic(FakedBaseResource):
 class FakedPartitionManager(FakedBaseManager):
     """
     A manager for faked Partition resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2755,7 +2755,7 @@ class FakedPartitionManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedPartition`: The faked Partition
+          :class:`~zhmcclient.mock.FakedPartition`: The faked Partition
             resource.
         """
         return super().add(properties)
@@ -2764,9 +2764,9 @@ class FakedPartitionManager(FakedBaseManager):
 class FakedPartition(FakedBaseResource):
     """
     A faked Partition resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
 
     Each partition uses the device number range of 0x8000 to 0xFFFF for
@@ -2821,7 +2821,7 @@ class FakedPartition(FakedBaseResource):
     @property
     def nics(self):
         """
-        :class:`~zhmcclient_mock.FakedNicManager`: Access to the faked NIC
+        :class:`~zhmcclient.mock.FakedNicManager`: Access to the faked NIC
         resources of this Partition.
         """
         return self._nics
@@ -2829,7 +2829,7 @@ class FakedPartition(FakedBaseResource):
     @property
     def hbas(self):
         """
-        :class:`~zhmcclient_mock.FakedHbaManager`: Access to the faked HBA
+        :class:`~zhmcclient.mock.FakedHbaManager`: Access to the faked HBA
         resources of this Partition.
         """
         return self._hbas
@@ -2837,7 +2837,7 @@ class FakedPartition(FakedBaseResource):
     @property
     def virtual_functions(self):
         """
-        :class:`~zhmcclient_mock.FakedVirtualFunctionManager`: Access to the
+        :class:`~zhmcclient.mock.FakedVirtualFunctionManager`: Access to the
         faked Virtual Function resources of this Partition.
         """
         return self._virtual_functions
@@ -2945,9 +2945,9 @@ class FakedPartition(FakedBaseResource):
 class FakedPortManager(FakedBaseManager):
     """
     A manager for faked Adapter Port resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -2996,7 +2996,7 @@ class FakedPortManager(FakedBaseManager):
 
         Returns:
 
-          :class:`zhmcclient_mock.FakedPort`: The faked Port resource.
+          :class:`zhmcclient.mock.FakedPort`: The faked Port resource.
         """
         new_port = super().add(properties)
         adapter = self.parent
@@ -3033,9 +3033,9 @@ class FakedPortManager(FakedBaseManager):
 class FakedPort(FakedBaseResource):
     """
     A faked Adapter Port resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3048,9 +3048,9 @@ class FakedPort(FakedBaseResource):
 class FakedVirtualFunctionManager(FakedBaseManager):
     """
     A manager for faked Virtual Function resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3092,7 +3092,7 @@ class FakedVirtualFunctionManager(FakedBaseManager):
 
         Returns:
 
-          :class:`zhmcclient_mock.FakedVirtualFunction`: The faked Virtual
+          :class:`zhmcclient.mock.FakedVirtualFunction`: The faked Virtual
             Function resource.
         """
         new_vf = super().add(properties)
@@ -3131,9 +3131,9 @@ class FakedVirtualFunctionManager(FakedBaseManager):
 class FakedVirtualFunction(FakedBaseResource):
     """
     A faked Virtual Function resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3146,9 +3146,9 @@ class FakedVirtualFunction(FakedBaseResource):
 class FakedVirtualSwitchManager(FakedBaseManager):
     """
     A manager for faked Virtual Switch resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3186,7 +3186,7 @@ class FakedVirtualSwitchManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedVirtualSwitch`: The faked Virtual
+          :class:`~zhmcclient.mock.FakedVirtualSwitch`: The faked Virtual
             Switch resource.
         """
         return super().add(properties)
@@ -3195,9 +3195,9 @@ class FakedVirtualSwitchManager(FakedBaseManager):
 class FakedVirtualSwitch(FakedBaseResource):
     """
     A faked Virtual Switch resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3212,9 +3212,9 @@ class FakedVirtualSwitch(FakedBaseResource):
 class FakedStorageGroupManager(FakedBaseManager):
     """
     A manager for faked StorageGroup resources within a faked Console (see
-    :class:`zhmcclient_mock.FakedConsole`).
+    :class:`zhmcclient.mock.FakedConsole`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3253,7 +3253,7 @@ class FakedStorageGroupManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedStorageGroup`: The faked StorageGroup
+          :class:`~zhmcclient.mock.FakedStorageGroup`: The faked StorageGroup
             resource.
         """
         return super().add(properties)
@@ -3262,9 +3262,9 @@ class FakedStorageGroupManager(FakedBaseManager):
 class FakedStorageGroup(FakedBaseResource):
     """
     A faked StorageGroup resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3304,7 +3304,7 @@ class FakedStorageGroup(FakedBaseResource):
     @property
     def storage_volumes(self):
         """
-        :class:`~zhmcclient_mock.FakedStorageVolumeManager`: Access to the
+        :class:`~zhmcclient.mock.FakedStorageVolumeManager`: Access to the
         faked StorageVolume resources of this StorageGroup.
         """
         return self._storage_volumes
@@ -3312,7 +3312,7 @@ class FakedStorageGroup(FakedBaseResource):
     @property
     def virtual_storage_resources(self):
         """
-        :class:`~zhmcclient_mock.FakedVirtualStorageResourceManager`: Access to
+        :class:`~zhmcclient.mock.FakedVirtualStorageResourceManager`: Access to
         the faked VirtualStorageResource resources of this StorageGroup.
         """
         return self._virtual_storage_resources
@@ -3321,9 +3321,9 @@ class FakedStorageGroup(FakedBaseResource):
 class FakedStorageVolumeManager(FakedBaseManager):
     """
     A manager for faked StorageVolume resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3361,7 +3361,7 @@ class FakedStorageVolumeManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedStorageVolume`: The faked StorageVolume
+          :class:`~zhmcclient.mock.FakedStorageVolume`: The faked StorageVolume
             resource.
         """
         stovol = super().add(properties)
@@ -3374,9 +3374,9 @@ class FakedStorageVolumeManager(FakedBaseManager):
 class FakedStorageVolume(FakedBaseResource):
     """
     A faked StorageVolume resource within a faked StorageGroup (see
-    :class:`zhmcclient_mock.FakedStorageGroup`).
+    :class:`zhmcclient.mock.FakedStorageGroup`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3403,9 +3403,9 @@ class FakedStorageVolume(FakedBaseResource):
 class FakedVirtualStorageResourceManager(FakedBaseManager):
     """
     A manager for faked VirtualStorageResource resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3444,7 +3444,7 @@ class FakedVirtualStorageResourceManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedVirtualStorageResource`: The faked
+          :class:`~zhmcclient.mock.FakedVirtualStorageResource`: The faked
             VirtualStorageResource resource.
         """
         vsr = super().add(properties)
@@ -3457,9 +3457,9 @@ class FakedVirtualStorageResourceManager(FakedBaseManager):
 class FakedVirtualStorageResource(FakedBaseResource):
     """
     A faked VirtualStorageResource resource within a faked StorageGroup (see
-    :class:`zhmcclient_mock.FakedStorageGroup`).
+    :class:`zhmcclient.mock.FakedStorageGroup`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3486,9 +3486,9 @@ class FakedVirtualStorageResource(FakedBaseResource):
 class FakedStorageGroupTemplateManager(FakedBaseManager):
     """
     A manager for faked StorageGroupTemplate resources within a faked Console
-    (see :class:`zhmcclient_mock.FakedConsole`).
+    (see :class:`zhmcclient.mock.FakedConsole`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3527,7 +3527,7 @@ class FakedStorageGroupTemplateManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedStorageGroupTemplate`: The faked
+          :class:`~zhmcclient.mock.FakedStorageGroupTemplate`: The faked
           StorageGroupTemplate resource.
         """
         return super().add(properties)
@@ -3536,9 +3536,9 @@ class FakedStorageGroupTemplateManager(FakedBaseManager):
 class FakedStorageGroupTemplate(FakedBaseResource):
     """
     A faked StorageGroupTemplate resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3572,7 +3572,7 @@ class FakedStorageGroupTemplate(FakedBaseResource):
     @property
     def storage_volume_templates(self):
         """
-        :class:`~zhmcclient_mock.FakedStorageVolumeTemplateManager`: Access to
+        :class:`~zhmcclient.mock.FakedStorageVolumeTemplateManager`: Access to
         the faked StorageVolumeTemplate resources of this StorageGroupTemplate.
         """
         return self._storage_volume_templates
@@ -3581,9 +3581,9 @@ class FakedStorageGroupTemplate(FakedBaseResource):
 class FakedStorageVolumeTemplateManager(FakedBaseManager):
     """
     A manager for faked StorageVolumeTemplate resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3622,7 +3622,7 @@ class FakedStorageVolumeTemplateManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedStorageVolumeTemplate`: The faked
+          :class:`~zhmcclient.mock.FakedStorageVolumeTemplate`: The faked
           StorageVolumeTemplate resource.
         """
         stovol = super().add(properties)
@@ -3635,9 +3635,9 @@ class FakedStorageVolumeTemplateManager(FakedBaseManager):
 class FakedStorageVolumeTemplate(FakedBaseResource):
     """
     A faked StorageVolumeTemplate resource within a faked StorageGroupTemplate
-    (see :class:`zhmcclient_mock.FakedStorageGroupTemplate`).
+    (see :class:`zhmcclient.mock.FakedStorageGroupTemplate`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3664,9 +3664,9 @@ class FakedStorageVolumeTemplate(FakedBaseResource):
 class FakedCapacityGroupManager(FakedBaseManager):
     """
     A manager for faked CapacityGroup resources within a faked Cpc (see
-    :class:`zhmcclient_mock.FakedCpc`).
+    :class:`zhmcclient.mock.FakedCpc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -3704,7 +3704,7 @@ class FakedCapacityGroupManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedCapacityGroup`: The faked CapacityGroup
+          :class:`~zhmcclient.mock.FakedCapacityGroup`: The faked CapacityGroup
             resource.
         """
         return super().add(properties)
@@ -3713,9 +3713,9 @@ class FakedCapacityGroupManager(FakedBaseManager):
 class FakedCapacityGroup(FakedBaseResource):
     """
     A faked CapacityGroup resource within a faked Cpc (see
-    :class:`zhmcclient_mock.FakedCpc`).
+    :class:`zhmcclient.mock.FakedCpc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 
@@ -3746,9 +3746,9 @@ class FakedCapacityGroup(FakedBaseResource):
 class FakedMetricsContextManager(FakedBaseManager):
     """
     A manager for faked Metrics Context resources within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
 
     Example:
@@ -3822,7 +3822,7 @@ class FakedMetricsContextManager(FakedBaseManager):
 
           properties (dict):
             Resource properties, as defined in the description of the
-            :class:`~zhmcclient_mock.FakedMetricsContext` class.
+            :class:`~zhmcclient.mock.FakedMetricsContext` class.
 
             Special handling and requirements for certain properties:
 
@@ -3833,7 +3833,7 @@ class FakedMetricsContextManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedMetricsContext`: The faked Metrics
+          :class:`~zhmcclient.mock.FakedMetricsContext`: The faked Metrics
           Context resource.
         """
         return super().add(properties)
@@ -3842,9 +3842,9 @@ class FakedMetricsContextManager(FakedBaseManager):
 class FakedMetricsContext(FakedBaseResource):
     """
     A faked Metrics Context resource within a faked HMC (see
-    :class:`zhmcclient_mock.FakedHmc`).
+    :class:`zhmcclient.mock.FakedHmc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
 
     The Metrics Context "resource" is really a service and therefore does not
@@ -3899,7 +3899,7 @@ class FakedMetricsContext(FakedBaseResource):
 
         Returns:
 
-          iterable of :class:`~zhmcclient_mock.FakedMetricGroupDefinition`: The
+          iterable of :class:`~zhmcclient.mock.FakedMetricGroupDefinition`: The
           faked metric group definitions, in the order they had been added.
         """
         hmc = self.manager.parent
@@ -3953,7 +3953,7 @@ class FakedMetricsContext(FakedBaseResource):
 
             group_name (string): Metric group name.
 
-            values (:class:`~zhmcclient_mock.FakedMetricObjectValues`):
+            values (:class:`~zhmcclient.mock.FakedMetricObjectValues`):
               The metric values for one resource at one point in time.
         """
         hmc = self.manager.parent
@@ -4089,7 +4089,7 @@ class FakedMetricObjectValues:
             * name (string): The metric name.
             * value: The metric value as an object of the Python type listed
               in the table in the description of
-              :class:`~zhmcclient_mock.FakedMetricGroupDefinition`).
+              :class:`~zhmcclient.mock.FakedMetricGroupDefinition`).
         """
         if timestamp.tzinfo is None:
             timestamp = timestamp.replace(tzinfo=tzlocal())  # new object
@@ -4115,10 +4115,10 @@ class FakedMetricObjectValues:
 class FakedHwMessageManager(FakedBaseManager):
     """
     A manager for faked HwMessage resources within a faked Console (see
-    :class:`zhmcclient_mock.FakedConsole`) or Cpc (see
-    :class:`zhmcclient_mock.FakedCpc`).
+    :class:`zhmcclient.mock.FakedConsole`) or Cpc (see
+    :class:`zhmcclient.mock.FakedCpc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseManager`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
     common methods and attributes.
     """
 
@@ -4154,7 +4154,7 @@ class FakedHwMessageManager(FakedBaseManager):
 
         Returns:
 
-          :class:`~zhmcclient_mock.FakedHwMessage`: The faked HwMessage
+          :class:`~zhmcclient.mock.FakedHwMessage`: The faked HwMessage
             resource.
         """
         return super().add(properties)
@@ -4163,10 +4163,10 @@ class FakedHwMessageManager(FakedBaseManager):
 class FakedHwMessage(FakedBaseResource):
     """
     A faked HwMessage resource within a faked Console (see
-    :class:`zhmcclient_mock.FakedConsole`) or Cpc (see
-    :class:`zhmcclient_mock.FakedCpc`).
+    :class:`zhmcclient.mock.FakedConsole`) or Cpc (see
+    :class:`zhmcclient.mock.FakedCpc`).
 
-    Derived from :class:`zhmcclient_mock.FakedBaseResource`, see there for
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """
 

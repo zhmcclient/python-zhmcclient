@@ -15,7 +15,7 @@ stomp-py>=8.1.1
 immutabledict>=4.2.0
 nocasedict>=1.0.2
 
-# PyYAML is used by zhmcclient_mock, zhmcclient.testutils and bandit
+# PyYAML is used by zhmcclient.mock, zhmcclient.testutils and bandit
 # PyYAML 5.3 has wheel archives for Python 2.7, 3.5 - 3.9
 # PyYAML 5.4 has wheel archives for Python 2.7, 3.6 - 3.9
 # PyYAML 6.0.0 has wheel archives for Python 3.6 - 3.11
@@ -25,7 +25,7 @@ nocasedict>=1.0.2
 #   was released, see issue https://github.com/yaml/pyyaml/issues/724. Fixed in 6.0.1.
 PyYAML>=6.0.2
 
-# jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils
+# jsonschema pulled in by zhmcclient.mock and zhmcclient.testutils
 # jsonschema 4.0.0 was yanked (and does not install), but older pip versions don't recognize that
 # jsonschema is also used by jupyter and requires >=3.0.1
 # jsonschema 3.0.1 and 3.0.2 may cause pkg_resources.DistributionNotFound; fixed in 3.1.0.

@@ -29,7 +29,7 @@ import pytest
 from zhmcclient import BaseResource, BaseManager, Session, Client, \
     CeasedExistence
 from zhmcclient._utils import divide_filter_args
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 
 
 class MyResource(BaseResource):

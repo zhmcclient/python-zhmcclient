@@ -18,7 +18,7 @@ Unit tests for _virtual_switch module.
 
 
 import re
-# FIXME: Migrate requests_mock to zhmcclient_mock.
+# FIXME: Migrate requests_mock to zhmcclient.mock.
 import requests_mock
 
 from zhmcclient import Session, Client, Nic

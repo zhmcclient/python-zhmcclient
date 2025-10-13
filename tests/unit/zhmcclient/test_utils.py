@@ -27,7 +27,7 @@ except ImportError:
 import time
 import re
 import pytest
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 from zhmcclient import Client, FilterConversionError
 from zhmcclient._utils import datetime_from_timestamp, \
     timestamp_from_datetime, datetime_to_isoformat, datetime_from_isoformat, \

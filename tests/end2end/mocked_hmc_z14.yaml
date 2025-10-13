@@ -1,6 +1,6 @@
 # Definition of a mocked HMC for end2end tests run by GitHub Actions.
 # The file must have the format defined in FAKED_HMC_DEFINITION_SCHEMA in
-# zhmcclient_mock/_session.py of the python-zhmcclient project.
+# zhmcclient.mock/_session.py of the python-zhmcclient project.
 #
 # This mocked HMC manages two CPCs:
 # - CPC_CLA: A z14 in classic mode
