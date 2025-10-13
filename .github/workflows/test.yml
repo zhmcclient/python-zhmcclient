@@ -312,7 +312,8 @@ jobs:
         RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
       run: |
         make bandit
-    - name: Run doclinkcheck
+    - name: Run doclinkcheck (only on ubuntu-latest, 3.14, latest)
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' && matrix.package_level == 'latest'
       env:
         PACKAGE_LEVEL: ${{ matrix.package_level }}
         RUN_TYPE: ${{ steps.set-run-type.outputs.result }}
