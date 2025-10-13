@@ -484,7 +484,7 @@ uninstall:
 clobber: clean
 	-$(call RM_FUNC,$(dist_files))
 	-$(call RM_R_FUNC,*.done)
-	-$(call RMDIR_FUNC,$(doc_build_dir) htmlcov htmlcov.end2end .tox)
+	-$(call RMDIR_FUNC,$(doc_build_dir) htmlcov .tox)
 	@echo "Makefile: $@ done."
 
 .PHONY: clean
@@ -672,8 +672,7 @@ endif
 
 .PHONY: test
 test: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_unit_py_files) $(test_common_py_files) $(pytest_cov_files)
-	-$(call RMDIR_R_FUNC,htmlcov)
-	pytest --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)
+	bash -c "PYTHONPATH=. pytest --color=yes $(pytest_no_log_opt) -s $(test_dir)/unit $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 .PHONY: installtest
@@ -688,15 +687,13 @@ endif
 
 .PHONY:	end2end
 end2end: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files)
-	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	bash -c "TESTEND2END_LOAD=true pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 # TODO: Enable rc checking again once the remaining issues are resolved
 .PHONY:	end2end_mocked
 end2end_mocked: $(done_dir)/develop_$(pymn)_$(PACKAGE_LEVEL).done $(package_py_files) $(test_end2end_py_files) $(test_common_py_files) $(pytest_cov_files) tests/end2end/mocked_inventory.yaml tests/end2end/mocked_vault.yaml tests/end2end/mocked_hmc_z16.yaml
-	-$(call RMDIR_R_FUNC,htmlcov.end2end)
-	bash -c "TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true TESTINVENTORY=tests/end2end/mocked_inventory.yaml TESTVAULT=tests/end2end/mocked_vault.yaml pytest --color=yes $(pytest_no_log_opt) -v -s $(test_dir)/end2end $(pytest_cov_opts) $(pytest_opts)"
 	@echo "Makefile: $@ done."
 
 .PHONY: authors
@@ -716,4 +713,4 @@ AUTHORS.md: _always
 
 .PHONY:	end2end_show
 end2end_show:
-	bash -c "TESTEND2END_LOAD=true $(PYTHON_CMD) -c 'from zhmcclient.testutils import print_hmc_definitions; print_hmc_definitions()'"
+	bash -c "PYTHONPATH=. TESTEND2END_LOAD=true $(PYTHON_CMD) -c 'from zhmcclient.testutils import print_hmc_definitions; print_hmc_definitions()'"
