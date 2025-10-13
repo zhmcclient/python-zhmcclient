@@ -24,7 +24,8 @@ import logging
 import subprocess  # nosec: B404
 import pytest
 
-from .. import RetryTimeoutConfig, Session, Error, ServerAuthError
+from .. import RetryTimeoutConfig, Session, Error, ServerAuthError, \
+    PasswordCommandFailure
 from ..mock import FakedSession
 
 __all__ = ['setup_hmc_session', 'teardown_hmc_session',
@@ -64,18 +65,18 @@ def run_password_command(command, variables, timeout):
             cmd, capture_output=True, text=True, timeout=timeout,
             shell=True, check=False)  # nosec: B602
     except subprocess.TimeoutExpired:
-        raise zhmcclient.PasswordCommandFailure(
+        raise PasswordCommandFailure(
             f"Password command {command!r} timed out after {timeout} s")
 
     if cp.returncode != 0 or cp.stderr.strip(WS) != "":
-        raise zhmcclient.PasswordCommandFailure(
+        raise PasswordCommandFailure(
             f"Password command {command!r} failed with exit code "
             f"{cp.returncode}: {cp.stderr}")
 
     password = cp.stdout.strip(WS)
     if re.search(WS_RE, password):
         pw_masked = re.sub(NON_WS_RE, "*", password)
-        raise zhmcclient.PasswordCommandFailure(
+        raise PasswordCommandFailure(
             f"Password command {command!r} succeeded but its standard output "
             "contains whitespace characters. "
             f"Masked standard output: {pw_masked!r}")
