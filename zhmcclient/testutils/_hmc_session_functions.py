@@ -23,8 +23,9 @@ import time
 import logging
 import subprocess  # nosec: B404
 import pytest
-import zhmcclient
-import zhmcclient_mock
+
+from .. import RetryTimeoutConfig, Session, Error, ServerAuthError
+from ..mock import FakedSession
 
 __all__ = ['setup_hmc_session', 'teardown_hmc_session',
            'teardown_hmc_session_id', 'is_valid_hmc_session_id',
@@ -90,7 +91,7 @@ def setup_hmc_session(hd):
     a new :class:`zhmcclient.Session` object.
 
     If the HMC definition represents a mocked HMC, create a new mock environment
-    from that and return a :class:`zhmcclient_mock.FakedSession` object.
+    from that and return a :class:`zhmcclient.mock.FakedSession` object.
 
     Parameters:
 
@@ -114,7 +115,7 @@ def setup_hmc_session(hd):
         # A mocked HMC
 
         # Create a mocked session using the mock file from the inventory file
-        session = zhmcclient_mock.FakedSession.from_hmc_yaml_file(
+        session = FakedSession.from_hmc_yaml_file(
             hd.mock_file, userid=hd.userid, password=hd.password)
 
         # Set the HMC definition host to the host found in the mock file.
@@ -161,19 +162,19 @@ def setup_hmc_session(hd):
             assert hd.password is not None
             password = hd.password
 
-        rt_config = zhmcclient.RetryTimeoutConfig(
+        rt_config = RetryTimeoutConfig(
             read_timeout=1800,
         )
 
         # Creating a session does not interact with the HMC (logon is deferred)
-        session = zhmcclient.Session(
+        session = Session(
             hd.host, hd.userid, password, verify_cert=hd.verify_cert,
             retry_timeout_config=rt_config)
 
         # Check access to the HMC
         try:
             session.logon()
-        except zhmcclient.Error as exc:
+        except Error as exc:
             msg = (
                 f"Cannot log on to HMC {hd.nickname} at {hd.host} "
                 f"due to {exc.__class__.__name__}: {exc}")
@@ -197,7 +198,7 @@ def teardown_hmc_session(session):
 
       session (:class:`~zhmcclient.Session`): Session with a real or mocked HMC.
     """
-    if not isinstance(session, zhmcclient_mock.FakedSession):
+    if not isinstance(session, FakedSession):
         session.logoff()
 
 
@@ -217,7 +218,7 @@ def teardown_hmc_session_id(hd, session_id):
       session_id (str): HMC session ID.
     """
     if hd.mock_file is None:
-        session = zhmcclient.Session(
+        session = Session(
             hd.host, hd.userid, session_id=session_id,
             verify_cert=hd.verify_cert)
         session.logoff()
@@ -245,13 +246,13 @@ def is_valid_hmc_session_id(hd, session_id):
     if hd.mock_file is not None:
         return session_id is None
 
-    session = zhmcclient.Session(
+    session = Session(
         hd.host, hd.userid, session_id=session_id, verify_cert=hd.verify_cert)
     try:
         # This simply performs the GET with the session header set to the
         # session_id.
         session.get('/api/cpcs', logon_required=False, renew_session=False)
-    except zhmcclient.ServerAuthError as exc:
+    except ServerAuthError as exc:
         if re.search(r'x-api-session header did not map to a known session',
                      str(exc)):
             return False

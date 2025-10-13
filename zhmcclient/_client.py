@@ -242,7 +242,7 @@ class Client:
         faked sessions.
 
         The returned YAML string can be used to instantiate a faked session
-        using :meth:`zhmcclient_mock.FakedSession.from_hmc_yaml`.
+        using :meth:`zhmcclient.mock.FakedSession.from_hmc_yaml`.
 
         The returned HMC definition YAML string has the following format::
 
@@ -292,7 +292,7 @@ class Client:
         such as JSON or YAML, so it can be externalized (e.g. persisted).
 
         The returned dictionary can be used to instantiate a faked session
-        using :meth:`zhmcclient_mock.FakedSession.from_hmc_dict`.
+        using :meth:`zhmcclient.mock.FakedSession.from_hmc_dict`.
 
         The returned HMC definition dictionary has the following format::
 

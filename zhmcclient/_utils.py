@@ -750,6 +750,24 @@ def warn_deprecated_parameter(cls, method, name, value, default):
         # * +2 to get over the @logged_api_call decorator of method
 
 
+def warn_deprecated_module(module_path):
+    """
+    Issue a DeprecationWarning for a zhmcclient module.
+
+    Parameters:
+
+      module_path (str): The module path of the module.
+    """
+    warnings.warn(
+        f"Use of the '{module_path}' module is deprecated",
+        DeprecationWarning, stacklevel=5)
+    # Note on stacklevel=5:
+    # * base value 1 (get out of warnings.warn)
+    # * +1 to get out of this function
+    # * +1 to get out of method
+    # * +2 to get over the @logged_api_call decorator of method
+
+
 def stomp_uses_frames(stomp_version):
     """
     Returns whether stomp-py uses Frame objects for the event listener methods.

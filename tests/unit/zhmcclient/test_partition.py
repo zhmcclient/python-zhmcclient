@@ -23,7 +23,7 @@ import logging
 import pytest
 
 from zhmcclient import Client, Partition, HTTPError, NotFound
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 from tests.common.utils import assert_resources, assert_blanked_in_message
 
 # Object IDs and names of our faked partitions:
@@ -40,7 +40,7 @@ CPC_NAME = 'fake-cpc1-name'
 LIST_PERMITTED_PARTITIONS_PROPS = [
     'name', 'object-uri', 'type', 'status', 'has-unacceptable-status',
     'cpc-name', 'cpc-object-uri',
-    # The zhmcclient_mock support always returns 'se-version'
+    # The zhmcclient.mock support always returns 'se-version'
     'se-version'
 ]
 

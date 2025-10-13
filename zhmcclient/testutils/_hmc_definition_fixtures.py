@@ -77,7 +77,7 @@ def hmc_session(request, hmc_definition):
     Pytest fixture representing the set of HMC sessions to run a test against.
 
     A test function parameter with the name of this fixture resolves to the
-    :class:`zhmcclient.Session` or :class:`zhmcclient_mock.FakedSession` object
+    :class:`zhmcclient.Session` or :class:`zhmcclient.mock.FakedSession` object
     for each HMC to test against.
 
     The session is already logged on to the HMC.

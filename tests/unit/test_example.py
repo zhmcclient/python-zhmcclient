@@ -20,7 +20,7 @@ Example unit test for a user of the zhmcclient package.
 from requests.packages import urllib3
 
 import zhmcclient
-import zhmcclient_mock
+import zhmcclient.mock
 
 urllib3.disable_warnings()
 
@@ -30,7 +30,7 @@ def create_session_1():
     Demonstrate how to populate a faked session with resources defined
     in a resource dictionary.
     """
-    session = zhmcclient_mock.FakedSession('fake-host', 'fake-hmc',
+    session = zhmcclient.mock.FakedSession('fake-host', 'fake-hmc',
                                            '2.13.1', '1.8')
     session.hmc.add_resources({
         'cpcs': [
@@ -102,7 +102,7 @@ def create_session_2():
     """
     Demonstrate how to populate a faked session with resources one by one.
     """
-    session = zhmcclient_mock.FakedSession('fake-host', 'fake-hmc',
+    session = zhmcclient.mock.FakedSession('fake-host', 'fake-hmc',
                                            '2.13.1', '1.8')
     cpc1 = session.hmc.cpcs.add({
         # object-id is auto-generated

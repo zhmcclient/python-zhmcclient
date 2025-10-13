@@ -19,20 +19,24 @@ Mock support
 ============
 
 The zhmcclient PyPI package provides unit testing support for its users via its
-``zhmcclient_mock`` Python package. That package allows users of zhmcclient to
+``zhmcclient.mock`` Python package. That package allows users of zhmcclient to
 easily define a faked HMC that is populated with resources as needed by the
 test case.
 
+Note: Up to zhmcclient version 1.24, the ``zhmcclient.mock`` Python package
+was named ``zhmcclient_mock``. It is still available under that name, but
+is deprecated. Using it causes an according DeprecationWarning to be issued.
+
 The faked HMC environment is set up by creating an instance of the
-:class:`zhmcclient_mock.FakedSession` class instead of the
+:class:`zhmcclient.mock.FakedSession` class instead of the
 :class:`zhmcclient.Session` class:
 
 .. code-block:: python
 
     import zhmcclient
-    import zhmcclient_mock
+    import zhmcclient.mock
 
-    session = zhmcclient_mock.FakedSession('fake-host', 'fake-hmc', '2.13.1',
+    session = zhmcclient.mock.FakedSession('fake-host', 'fake-hmc', '2.13.1',
                                            '1.8')
     client = zhmcclient.Client(session)
     cpcs = client.cpcs.list()
@@ -48,25 +52,25 @@ The difference is that the faked session object contains a faked HMC and
 does not communicate at all with an actual HMC.
 
 The faked HMC of the faked session object can be accessed via the
-:attr:`~zhmcclient_mock.FakedSession.hmc` attribute of the faked session object
+:attr:`~zhmcclient.mock.FakedSession.hmc` attribute of the faked session object
 in order to populate it with resources, for example to build up an initial
 resource environment for a test case.
 
 The following example of a unit test case shows how an initial set of resources
 that is defined as a dictionary and loaded into the faked HMC using the
-:meth:`~zhmcclient_mock.FakedHmc.add_resources` method:
+:meth:`~zhmcclient.mock.FakedHmc.add_resources` method:
 
 .. code-block:: python
 
     import unittest
     import zhmcclient
-    import zhmcclient_mock
+    import zhmcclient.mock
 
     class MyTests(unittest.TestCase):
 
         def setUp(self):
 
-            self.session = zhmcclient_mock.FakedSession(
+            self.session = zhmcclient.mock.FakedSession(
                 'fake-host', 'fake-hmc', '2.13.1', '1.8')
             self.session.hmc.add_resources({
                 'cpcs': [
@@ -116,7 +120,7 @@ faked resource manager classes, as shown in the following example:
 
         def setUp(self):
 
-            self.session = zhmcclient_mock.FakedSession(
+            self.session = zhmcclient.mock.FakedSession(
                 'fake-host', 'fake-hmc', '2.13.1', '1.8')
 
             cpc1 = self.session.hmc.cpcs.add({
@@ -136,7 +140,7 @@ faked resource manager classes, as shown in the following example:
             self.client = zhmcclient.Client(self.session)
 
 As you can see, the resources need to be added from top to bottom in the
-resource tree, starting at the :attr:`~zhmcclient_mock.FakedSession.hmc`
+resource tree, starting at the :attr:`~zhmcclient.mock.FakedSession.hmc`
 attribute of the faked session object.
 
 Section :ref:`Faked HMC` describes all faked resource and manager classes
@@ -150,15 +154,15 @@ Section :ref:`Faked session` describes the faked session class.
 Faked session
 -------------
 
-.. automodule:: zhmcclient_mock._session
+.. automodule:: zhmcclient.mock._session
 
-.. autoclass:: zhmcclient_mock.FakedSession
+.. autoclass:: zhmcclient.mock.FakedSession
    :members:
 
-.. autoclass:: zhmcclient_mock.HmcDefinitionYamlError
+.. autoclass:: zhmcclient.mock.HmcDefinitionYamlError
    :members:
 
-.. autoclass:: zhmcclient_mock.HmcDefinitionSchemaError
+.. autoclass:: zhmcclient.mock.HmcDefinitionSchemaError
    :members:
 
 
@@ -167,144 +171,144 @@ Faked session
 Faked HMC
 ---------
 
-.. automodule:: zhmcclient_mock._hmc
+.. automodule:: zhmcclient.mock._hmc
 
-.. autoclass:: zhmcclient_mock.InputError
+.. autoclass:: zhmcclient.mock.InputError
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedHmc
+.. autoclass:: zhmcclient.mock.FakedHmc
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedActivationProfileManager
+.. autoclass:: zhmcclient.mock.FakedActivationProfileManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedActivationProfile
+.. autoclass:: zhmcclient.mock.FakedActivationProfile
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedAdapterManager
+.. autoclass:: zhmcclient.mock.FakedAdapterManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedAdapter
+.. autoclass:: zhmcclient.mock.FakedAdapter
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedCapacityGroupManager
+.. autoclass:: zhmcclient.mock.FakedCapacityGroupManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedCapacityGroup
+.. autoclass:: zhmcclient.mock.FakedCapacityGroup
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedConsoleManager
+.. autoclass:: zhmcclient.mock.FakedConsoleManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedConsole
+.. autoclass:: zhmcclient.mock.FakedConsole
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedCpcManager
+.. autoclass:: zhmcclient.mock.FakedCpcManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedCpc
+.. autoclass:: zhmcclient.mock.FakedCpc
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedHbaManager
+.. autoclass:: zhmcclient.mock.FakedHbaManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedHba
+.. autoclass:: zhmcclient.mock.FakedHba
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedLdapServerDefinitionManager
+.. autoclass:: zhmcclient.mock.FakedLdapServerDefinitionManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedLdapServerDefinition
+.. autoclass:: zhmcclient.mock.FakedLdapServerDefinition
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedLparManager
+.. autoclass:: zhmcclient.mock.FakedLparManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedLpar
+.. autoclass:: zhmcclient.mock.FakedLpar
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedNicManager
+.. autoclass:: zhmcclient.mock.FakedNicManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedNic
+.. autoclass:: zhmcclient.mock.FakedNic
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedPartitionManager
+.. autoclass:: zhmcclient.mock.FakedPartitionManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedPartition
+.. autoclass:: zhmcclient.mock.FakedPartition
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedPasswordRuleManager
+.. autoclass:: zhmcclient.mock.FakedPasswordRuleManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedPasswordRule
+.. autoclass:: zhmcclient.mock.FakedPasswordRule
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedPortManager
+.. autoclass:: zhmcclient.mock.FakedPortManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedPort
+.. autoclass:: zhmcclient.mock.FakedPort
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedTaskManager
+.. autoclass:: zhmcclient.mock.FakedTaskManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedTask
+.. autoclass:: zhmcclient.mock.FakedTask
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUnmanagedCpcManager
+.. autoclass:: zhmcclient.mock.FakedUnmanagedCpcManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUnmanagedCpc
+.. autoclass:: zhmcclient.mock.FakedUnmanagedCpc
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUserManager
+.. autoclass:: zhmcclient.mock.FakedUserManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUser
+.. autoclass:: zhmcclient.mock.FakedUser
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUserPatternManager
+.. autoclass:: zhmcclient.mock.FakedUserPatternManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUserPattern
+.. autoclass:: zhmcclient.mock.FakedUserPattern
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUserRoleManager
+.. autoclass:: zhmcclient.mock.FakedUserRoleManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedUserRole
+.. autoclass:: zhmcclient.mock.FakedUserRole
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedVirtualFunctionManager
+.. autoclass:: zhmcclient.mock.FakedVirtualFunctionManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedVirtualFunction
+.. autoclass:: zhmcclient.mock.FakedVirtualFunction
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedVirtualSwitchManager
+.. autoclass:: zhmcclient.mock.FakedVirtualSwitchManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedVirtualSwitch
+.. autoclass:: zhmcclient.mock.FakedVirtualSwitch
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedMetricsContextManager
+.. autoclass:: zhmcclient.mock.FakedMetricsContextManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedMetricsContext
+.. autoclass:: zhmcclient.mock.FakedMetricsContext
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedMetricGroupDefinition
+.. autoclass:: zhmcclient.mock.FakedMetricGroupDefinition
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedMetricObjectValues
+.. autoclass:: zhmcclient.mock.FakedMetricObjectValues
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedBaseManager
+.. autoclass:: zhmcclient.mock.FakedBaseManager
    :members:
 
-.. autoclass:: zhmcclient_mock.FakedBaseResource
+.. autoclass:: zhmcclient.mock.FakedBaseResource
    :members:
 
 
@@ -313,13 +317,13 @@ Faked HMC
 URI handler
 -----------
 
-.. automodule:: zhmcclient_mock._urihandler
+.. automodule:: zhmcclient.mock._urihandler
 
-.. autoclass:: zhmcclient_mock.LparActivateHandler
+.. autoclass:: zhmcclient.mock.LparActivateHandler
    :members: get_status, post
 
-.. autoclass:: zhmcclient_mock.LparDeactivateHandler
+.. autoclass:: zhmcclient.mock.LparDeactivateHandler
    :members: get_status, post
 
-.. autoclass:: zhmcclient_mock.LparLoadHandler
+.. autoclass:: zhmcclient.mock.LparLoadHandler
    :members: get_status, post

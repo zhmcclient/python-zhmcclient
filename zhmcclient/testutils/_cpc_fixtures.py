@@ -18,7 +18,8 @@ Pytest fixtures for CPCs.
 
 
 import pytest
-import zhmcclient
+
+from .. import Client
 
 # pylint: disable=unused-import
 from ._hmc_definition_fixtures import hmc_session  # noqa: F401
@@ -147,7 +148,7 @@ def defined_cpcs(session, mode):
 
       list of :class:`zhmcclient.Cpc`: The CPCs in the desired mode.
     """
-    client = zhmcclient.Client(session)
+    client = Client(session)
     managed_cpcs = client.cpcs.list()
     managed_cpc_names = [cpc.name for cpc in managed_cpcs]
     hd = session.hmc_definition

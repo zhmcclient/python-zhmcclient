@@ -24,7 +24,7 @@ import requests_mock
 
 from zhmcclient import Client, Cpc, HTTPError, STPNode, Job
 from zhmcclient._cpc import _drop_unused_adapters_and_resources
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 from tests.common.utils import assert_resources
 
 # pylint: disable=unused-import

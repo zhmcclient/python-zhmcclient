@@ -17,7 +17,7 @@ Unit tests for _port module.
 """
 
 
-# FIXME: Migrate requests_mock to zhmcclient_mock.
+# FIXME: Migrate requests_mock to zhmcclient.mock.
 import requests_mock
 
 from zhmcclient import Session, Client

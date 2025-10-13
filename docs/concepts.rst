@@ -135,7 +135,7 @@ to be created by the user:
 * a :class:`~zhmcclient.Client` object. A client object is the top of the
   resource tree and is initialized with a :class:`~zhmcclient.Session` object
   (if connecting to a real HMC) or with a
-  :class:`~zhmcclient_mock.FakedSession` object (in unit tests that work
+  :class:`~zhmcclient.mock.FakedSession` object (in unit tests that work
   against a mocked HMC). Despite its classname, a client object really
   represents the HMC (real or mocked).
 

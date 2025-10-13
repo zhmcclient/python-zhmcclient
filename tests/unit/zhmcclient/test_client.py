@@ -20,7 +20,7 @@ Unit tests for _client module.
 import pytest
 
 from zhmcclient import Client, CpcManager, MetricsContextManager
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 
 
 @pytest.mark.parametrize(

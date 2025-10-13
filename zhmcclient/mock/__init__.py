@@ -13,16 +13,11 @@
 # limitations under the License.
 
 """
-zhmcclient_mock - Unit test support for users of the zhmcclient package.
-
-The zhmcclient_mock module is deprecated, use zhmcclient.mock instead.
+zhmcclient.mock - Unit test support for users of the zhmcclient package.
 """
 
-import warnings
 
-from zhmcclient.mock import *  # noqa: F401 pylint: disable=redefined-builtin
-
-
-warnings.warn(
-    "The zhmcclient_mock module is deprecated, use zhmcclient.mock instead",
-    DeprecationWarning, stacklevel=3)
+from ._session import *       # noqa: F401 pylint: disable=redefined-builtin
+from ._urihandler import *    # noqa: F401
+from ._hmc import *           # noqa: F401
+from ._idpool import *        # noqa: F401

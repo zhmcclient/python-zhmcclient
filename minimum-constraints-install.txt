@@ -21,10 +21,10 @@ stomp-py==8.1.1
 immutabledict==4.2.0
 nocasedict==1.0.2
 
-# PyYAML is used by zhmcclient_mock, zhmcclient.testutils and bandit
+# PyYAML is used by zhmcclient.mock, zhmcclient.testutils and bandit
 PyYAML==6.0.2
 
-# jsonschema pulled in by zhmcclient_mock and zhmcclient.testutils and jupyter
+# jsonschema pulled in by zhmcclient.mock and zhmcclient.testutils and jupyter
 jsonschema==4.18.0
 
 # websocket-client is also used by stomp-py 8.0 and notebook(?) 6.4

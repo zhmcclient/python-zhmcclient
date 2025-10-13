@@ -15,7 +15,7 @@
 # pylint: disable=protected-access,attribute-defined-outside-init
 
 """
-Unit tests for _hmc module of the zhmcclient_mock package.
+Unit tests for _hmc module of the zhmcclient.mock package.
 """
 
 import re
@@ -27,8 +27,8 @@ except ImportError:
 import pytest
 
 from zhmcclient._utils import tzlocal
-from zhmcclient_mock._session import FakedSession
-from zhmcclient_mock._hmc import \
+from zhmcclient.mock._session import FakedSession
+from zhmcclient.mock._hmc import \
     FakedBaseManager, FakedBaseResource, \
     FakedActivationProfileManager, FakedActivationProfile, \
     FakedAdapterManager, FakedAdapter, \
@@ -48,7 +48,7 @@ from tests.common.utils import timestamp_aware
 
 
 class TestFakedHmc:
-    """All tests for the zhmcclient_mock.FakedHmc class."""
+    """All tests for the zhmcclient.mock.FakedHmc class."""
 
     def setup_method(self):
         """

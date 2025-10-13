@@ -22,7 +22,7 @@ import logging
 
 import zhmcclient
 from zhmcclient._utils import tzlocal
-from zhmcclient_mock._hmc import FakedBaseResource, \
+from zhmcclient.mock._hmc import FakedBaseResource, \
     FakedMetricGroupDefinition, FakedMetricObjectValues
 
 # Logger names by log component

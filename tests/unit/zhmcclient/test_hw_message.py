@@ -22,7 +22,7 @@ from datetime import datetime
 import pytest
 
 from zhmcclient import Client, NotFound, HwMessage, timestamp_from_datetime
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 from tests.common.utils import assert_resources
 
 

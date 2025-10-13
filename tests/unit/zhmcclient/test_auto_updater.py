@@ -24,7 +24,7 @@ from unittest.mock import patch
 import pytest
 
 from zhmcclient import Client
-from zhmcclient_mock import FakedSession
+from zhmcclient.mock import FakedSession
 
 from .test_notification import MockedStompConnection
 
