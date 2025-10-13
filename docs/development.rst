@@ -119,6 +119,9 @@ To run the unit tests in the currently active Python environment, issue:
 
     $ make test
 
+The unit tests import the zhmcclient modules from the local directory, even
+when the zhmcclient package is installed in the Python environment.
+
 By default, all unit tests are run. The ``TESTCASES`` environment variable can
 be used to limit the testcases that are run. Its value is passed to the ``-k``
 option of the ``pytest`` command.
@@ -179,6 +182,9 @@ To run the end2end tests in the currently active Python environment, issue:
 
     $ make end2end
 
+The end2end tests import the zhmcclient modules from the local directory, even
+when the zhmcclient package is installed in the Python environment.
+
 By default, the HMC inventory file named ``.zhmc_inventory.yaml`` in
 the home directory of the current user is used. A different path name can
 be specified with the ``TESTINVENTORY`` environment variable.
@@ -231,6 +237,9 @@ These mock environments can be used to run the end2end tests against, by executi
 
     $ make end2end_mocked
 
+The end2end tests import the zhmcclient modules from the local directory, even
+when the zhmcclient package is installed in the Python environment.
+
 
 .. _`Enabling logging during end2end tests`:
 
@@ -270,6 +279,27 @@ or, shorter:
 .. code-block:: text
 
     $ export ZHMC_LOG=all=debug
+
+
+.. _`Test coverage`:
+
+Test coverage
+^^^^^^^^^^^^^
+
+When unit or end2end tests are run locally, the pytest-cov plugin of pytest
+traces coverage data and adds that to the local ``.coverage`` file. Each test
+run adds data to that file.
+
+At the end of a test run, pytest creates a HMTL formatted coverage report in
+the ``htmlcov`` directory. That report contains the data from the ``.coverage``
+file, and thus represents all prior test runs since that file was created.
+If you want to see just the coverage caused by a single test run, remove
+the ``.coverage`` file manually, or run ``make clean``.
+
+When the tests are run in GitHub Actions, the same mechanism is used, and in
+addition the coverage data is reported to
+https://coveralls.io/github/zhmcclient/python-zhmcclient. The PR is updated
+with a comment linking to the coveralls.io data for the PR.
 
 
 .. _`HMC inventory file`:
