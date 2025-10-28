@@ -32,6 +32,9 @@ security:
             reason: Fixed urllib3 version 2.5.0 requires Python>=3.9 and is used there
         77745:
             reason: Fixed urllib3 version 2.5.0 requires Python>=3.9 and is used there
+        79883:
+            reason: Fixed pip version 25.2 requires Python>=3.9 and is used there
+
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
