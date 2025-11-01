@@ -3471,6 +3471,7 @@ class AdaptersHandler:
         # Create the VirtualSwitch for the new adapter
         vs_props = {
             'name': new_adapter.name,
+            'description': f"vswitch for {new_adapter.name}",
             'type': 'hipersockets',
             'backing-adapter-uri': new_adapter.uri,
             'port': 0,

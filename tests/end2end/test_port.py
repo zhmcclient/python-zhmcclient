@@ -25,10 +25,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     runtest_find_list, runtest_get_properties
@@ -45,8 +41,7 @@ PORT_LIST_PROPS = ['element-uri', 'name', 'description']
 PORT_VOLATILE_PROPS = []
 
 
-def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_port_find_list(dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -80,8 +75,7 @@ def test_port_find_list(dpm_mode_cpcs):  # noqa: F811
                 PORT_VOLATILE_PROPS, PORT_MINIMAL_PROPS, PORT_LIST_PROPS)
 
 
-def test_port_property(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_port_property(dpm_mode_cpcs):
     """
     Test property related methods
     """
@@ -117,8 +111,7 @@ def test_port_property(dpm_mode_cpcs):  # noqa: F811
             runtest_get_properties(port.manager, non_list_prop)
 
 
-def test_port_update(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_port_update(dpm_mode_cpcs):
     """
     Test updating the port of a Hipersocket adapter.
     """
@@ -130,7 +123,7 @@ def test_port_update(dpm_mode_cpcs):  # noqa: F811
 
         print(f"Testing on CPC {cpc.name}")
 
-        adapter_name = TEST_PREFIX + ' test_adapter_crud adapter1'
+        adapter_name = TEST_PREFIX + ' test_port_update adapter1'
 
         # Ensure a clean starting point for this test
         try:

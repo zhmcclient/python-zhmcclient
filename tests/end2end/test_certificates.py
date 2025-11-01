@@ -22,10 +22,6 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-# pylint: disable=unused-import
-from zhmcclient.testutils import all_cpcs  # noqa: F401, E501
-# pylint: disable=unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
 from .utils import pick_test_resources, runtest_find_list, skip_warn, \
     skipif_no_secure_boot_feature, standard_partition_props, \
     cleanup_and_import_example_certificate
@@ -45,8 +41,7 @@ CERT_ADDITIONAL_PROPS = ['description', 'assigned']
 CERT_VOLATILE_PROPS = []
 
 
-def test_certificates_find_list(all_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_certificates_find_list(all_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -76,8 +71,7 @@ def test_certificates_find_list(all_cpcs):  # noqa: F811
                 CERT_ADDITIONAL_PROPS)
 
 
-def test_cert_crud(all_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_cert_crud(all_cpcs):
     """
     Test create, read, update and delete a certificate.
     For DPM cpcs, also create a partition and assign/unassign certificates.

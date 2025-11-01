@@ -20,7 +20,6 @@ Unit tests for _logging module.
 import re
 import logging
 import pytest
-from testfixtures import LogCapture
 
 from zhmcclient._logging import logged_api_call, get_logger
 from zhmcclient._constants import BLANKED_OUT_STRING
@@ -148,17 +147,6 @@ _EXP_LOG_MSG_ENTER_PATTERN = "Called: (.*), args: (.*), kwargs: (.*)"
 _EXP_LOG_MSG_LEAVE_PATTERN = "Return: (.*), result: (.*)"
 
 
-@pytest.fixture()
-def capture():
-    """
-    This way of defining a fixture works around the issue that when
-    using the decorator testfixtures.log_capture() instead, pytest
-    fails with "fixture 'capture' not found".
-    """
-    with LogCapture(level=logging.DEBUG) as log:
-        yield log
-
-
 #
 # Test cases
 #
@@ -194,7 +182,7 @@ def assert_log_capture(
         assert re.search(return_pattern, return_str)
 
 
-def test_1a_global_from_global(capture):
+def test_1a_global_from_global(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated global function from a global
     function."""
@@ -202,20 +190,20 @@ def test_1a_global_from_global(capture):
     call_from_global(decorated_global_function)
 
     assert_log_capture(
-        capture, func_pattern='decorated_global_function')
+        zhmc_capture, func_pattern='decorated_global_function')
 
 
-def test_1b_global_from_method(capture):
+def test_1b_global_from_method(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated global function from a method."""
 
     CallerClass().call_from_method(decorated_global_function)
 
     assert_log_capture(
-        capture, func_pattern='decorated_global_function')
+        zhmc_capture, func_pattern='decorated_global_function')
 
 
-def test_1c_global_props_args_from_global(capture):
+def test_1c_global_props_args_from_global(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated global function with properties as args,
     from a global function."""
@@ -230,12 +218,12 @@ def test_1c_global_props_args_from_global(capture):
     call_from_global(decorated_global_props_function, props)
 
     assert_log_capture(
-        capture, func_pattern='decorated_global_props_function',
+        zhmc_capture, func_pattern='decorated_global_props_function',
         args_pattern=re.escape(str(blanked_props)),
         return_pattern=re.escape(str(props)))
 
 
-def test_1c_global_props_kwargs_from_global(capture):
+def test_1c_global_props_kwargs_from_global(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated global function with properties as
     kwargs, from a global function."""
@@ -244,10 +232,10 @@ def test_1c_global_props_kwargs_from_global(capture):
                      properties={'prop1': 'value1'})
 
     assert_log_capture(
-        capture, func_pattern='decorated_global_props_function')
+        zhmc_capture, func_pattern='decorated_global_props_function')
 
 
-def test_2a_global_inner1_from_global(capture):
+def test_2a_global_inner1_from_global(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated inner function defined in a global
     function from a global function."""
@@ -257,10 +245,10 @@ def test_2a_global_inner1_from_global(capture):
     call_from_global(decorated_inner1_function)
 
     assert_log_capture(
-        capture, func_pattern='global1_function.decorated_inner1_function')
+        zhmc_capture, func_pattern='global1_function.decorated_inner1_function')
 
 
-def test_2b_global_inner1_from_method(capture):
+def test_2b_global_inner1_from_method(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated inner function defined in a global
     function from a method."""
@@ -270,10 +258,10 @@ def test_2b_global_inner1_from_method(capture):
     CallerClass().call_from_method(decorated_inner1_function)
 
     assert_log_capture(
-        capture, func_pattern='global1_function.decorated_inner1_function')
+        zhmc_capture, func_pattern='global1_function.decorated_inner1_function')
 
 
-def test_3a_global_inner2_from_global(capture):
+def test_3a_global_inner2_from_global(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated inner function defined in an inner
     function defined in a global function from a global function."""
@@ -283,10 +271,10 @@ def test_3a_global_inner2_from_global(capture):
     call_from_global(decorated_inner2_function)
 
     assert_log_capture(
-        capture, func_pattern='inner1_function.decorated_inner2_function')
+        zhmc_capture, func_pattern='inner1_function.decorated_inner2_function')
 
 
-def test_3b_global_inner1_from_method(capture):
+def test_3b_global_inner1_from_method(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated inner function defined in an inner
     function defined in a global function from a method."""
@@ -296,10 +284,10 @@ def test_3b_global_inner1_from_method(capture):
     CallerClass().call_from_method(decorated_inner2_function)
 
     assert_log_capture(
-        capture, func_pattern='inner1_function.decorated_inner2_function')
+        zhmc_capture, func_pattern='inner1_function.decorated_inner2_function')
 
 
-def test_4a_method_from_global(capture):
+def test_4a_method_from_global(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated method from a global function."""
 
@@ -309,10 +297,10 @@ def test_4a_method_from_global(capture):
     call_from_global(decorated_method, d)
 
     assert_log_capture(
-        capture, func_pattern='Decorator1Class.decorated_method')
+        zhmc_capture, func_pattern='Decorator1Class.decorated_method')
 
 
-def test_4b_method_from_method(capture):
+def test_4b_method_from_method(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated method from a method."""
 
@@ -322,10 +310,10 @@ def test_4b_method_from_method(capture):
     CallerClass().call_from_method(decorated_method, d)
 
     assert_log_capture(
-        capture, func_pattern='Decorator1Class.decorated_method')
+        zhmc_capture, func_pattern='Decorator1Class.decorated_method')
 
 
-def test_5a_method_from_global(capture):
+def test_5a_method_from_global(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated inner function defined in a method
     from a global function."""
@@ -336,10 +324,10 @@ def test_5a_method_from_global(capture):
     call_from_global(decorated_inner_function)
 
     assert_log_capture(
-        capture, func_pattern='method.decorated_inner_function')
+        zhmc_capture, func_pattern='method.decorated_inner_function')
 
 
-def test_5b_method_from_method(capture):
+def test_5b_method_from_method(zhmc_capture):
     # pylint: disable=redefined-outer-name
     """Simple test calling a decorated inner function defined in a method
     from a method."""
@@ -350,7 +338,7 @@ def test_5b_method_from_method(capture):
     CallerClass().call_from_method(decorated_inner_function)
 
     assert_log_capture(
-        capture, func_pattern='method.decorated_inner_function')
+        zhmc_capture, func_pattern='method.decorated_inner_function')
 
 
 def test_decorated_class():

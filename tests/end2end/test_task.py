@@ -22,9 +22,6 @@ These tests do not change any existing tasks.
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, runtest_find_list, \
     runtest_get_properties
@@ -41,8 +38,7 @@ TASK_LIST_PROPS = ['element-uri', 'name']
 TASK_VOLATILE_PROPS = []
 
 
-def test_task_find_list(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_task_find_list(hmc_session):
     """
     Test list(), find(), findall().
     """
@@ -70,8 +66,7 @@ def test_task_find_list(hmc_session):  # noqa: F811
             TASK_VOLATILE_PROPS, TASK_MINIMAL_PROPS, TASK_LIST_PROPS)
 
 
-def test_task_property(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_task_property(hmc_session):
     """
     Test property related methods
     """

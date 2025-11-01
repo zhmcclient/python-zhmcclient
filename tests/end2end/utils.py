@@ -22,68 +22,15 @@ import re
 import random
 import time
 import warnings
-import logging
 from copy import deepcopy
 import pprint
 from collections.abc import Mapping, MappingView
 import pytest
 
 import zhmcclient
-from zhmcclient.testutils import LOG_FORMAT_STRING, LOG_DATETIME_FORMAT, \
-    LOG_DATETIME_TIMEZONE
 
 # Prefix used for names of resources that are created during tests
 TEST_PREFIX = 'zhmcclient_tests_end2end'
-
-
-@pytest.fixture(scope='function')
-def logger(request):
-    """
-    Pytest fixture that provides a logger for an end2end test function.
-
-    This functionm creates a logger named after the test function.
-    Using this fixture as an argument in a test function resolves to that
-    logger.
-
-    Logging is enabled by setting the env var TESTLOGFILE. If logging is
-    enabled, the logger is set to debug level, otherwise the logger is disabled.
-
-    During setup of the fixture, a log entry for entering the test function
-    is written, and during teardown of the fixture, a log entry for leaving
-    the test function is written.
-
-    Because this fixture is called for each invocation of a test
-    function, it ends up being called multiple times within the same Python
-    process. Therefore, the logger is created only when it does not exist yet.
-
-    Returns:
-        logging.Logger: Logger for the test function
-    """
-
-    log_file = os.getenv('TESTLOGFILE', None)
-    if log_file:
-        logging.Formatter.converter = LOG_DATETIME_TIMEZONE
-        log_formatter = logging.Formatter(
-            LOG_FORMAT_STRING, datefmt=LOG_DATETIME_FORMAT)
-        log_handler = logging.FileHandler(log_file, encoding='utf-8')
-        log_handler.setFormatter(log_formatter)
-
-    testfunc_name = request.function.__name__
-    testfunc_logger = logging.getLogger(testfunc_name)
-
-    if log_file and log_handler not in testfunc_logger.handlers:
-        testfunc_logger.addHandler(log_handler)
-
-    if log_file:
-        testfunc_logger.setLevel(logging.DEBUG)
-    else:
-        testfunc_logger.setLevel(logging.NOTSET)
-
-    testfunc_logger.debug("Entered test function")
-    try:
-        yield testfunc_logger
-    finally:
-        testfunc_logger.debug("Leaving test function")
 
 
 class End2endTestWarning(UserWarning):
@@ -210,8 +157,7 @@ def pick_test_resources(res_list):
 
 def runtest_find_list(session, manager, name, server_prop, client_prop,
                       volatile_props, minimal_props, list_props, add_props=None,
-                      unique_name=True):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+                      unique_name=True):
     """
     Run tests for find/list methods for a resource type:
     - find_by_name(name) (only if not unique_name)
@@ -302,7 +248,9 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             # The code to be tested: findall() with server-side filter
             found_res_list = manager.findall(**{server_prop: server_value})
 
-            assert len(found_res_list) == 1
+            assert len(found_res_list) == 1, (
+                f"Unexpected number of resources: {found_res_list!r}"
+            )
             found_res = found_res_list[0]
             assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                              prop_names=minimal_props)
@@ -328,7 +276,9 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             found_res_list = manager.list(
                 full_properties=True, filter_args={server_prop: server_value})
 
-            assert len(found_res_list) == 1
+            assert len(found_res_list) == 1, (
+                f"Unexpected number of resources: {found_res_list!r}"
+            )
             found_res = found_res_list[0]
             assert_res_props(found_res, exp_props, ignore_values=volatile_props)
 
@@ -337,7 +287,9 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
             found_res_list = manager.list(
                 filter_args={server_prop: server_value})
 
-            assert len(found_res_list) == 1
+            assert len(found_res_list) == 1, (
+                f"Unexpected number of resources: {found_res_list!r}"
+            )
             found_res = found_res_list[0]
             assert_res_props(found_res, exp_props, ignore_values=volatile_props,
                              prop_names=minimal_props)
@@ -406,8 +358,7 @@ def runtest_find_list(session, manager, name, server_prop, client_prop,
                          prop_names=list_props + add_props)
 
 
-def runtest_get_properties(manager, non_list_prop):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def runtest_get_properties(manager, non_list_prop):
     """
     Run tests for pull_full_properties/pull_properties/get_property/prop
     methods for a resource type.

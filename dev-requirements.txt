@@ -55,7 +55,6 @@ pluggy>=1.5.0
 coverage>=7.6.1,<8.0; python_version == '3.8'
 coverage>=7.8.0,<8.0; python_version >= '3.9' and python_version <= '3.12'
 coverage>=6.5.0,<7.0; python_version >= '3.13'
-pytest-cov>=2.7.0
 coveralls>=4.0.1; python_version <= '3.12'
 coveralls>=3.3.0; python_version >= '3.13'
 # PyYAML: covered in direct deps for development

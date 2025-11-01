@@ -20,11 +20,7 @@ Pytest fixtures for CPCs.
 import pytest
 
 from .. import Client
-
-# pylint: disable=unused-import
-from ._hmc_definition_fixtures import hmc_session  # noqa: F401
 from ._hmc_inventory_file import HMCInventoryFileError
-
 
 __all__ = ['all_cpcs', 'dpm_mode_cpcs', 'classic_mode_cpcs']
 
@@ -46,89 +42,117 @@ def fixtureid_cpcs(fixture_value):
 
 
 @pytest.fixture(
-    scope='module',
+    scope='session',
     ids=fixtureid_cpcs
 )
-def all_cpcs(request, hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def all_cpcs(request, hmc_session):
+    # pylint: disable=unused-argument
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
-    Pytest fixture representing the set of all CPCs to test against, regardless
+    Pytest fixture that provides access to the CPCs to test against, regardless
     of their operational mode.
 
-    The set of CPCs to test against is defined in the ``cpcs`` variable in the
+    The CPCs to test against is defined in the ``cpcs`` variable in the
     HMC entry in the :ref:`HMC inventory file`; if that variable is omitted, it
     is the set of all managed CPCs.
-
-    A test function parameter with the name of this fixture resolves to a list
-    of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
-    objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
 
     The test function is invoked just once with the list of CPCs, and the
     test function needs to loop through the CPCs (or a subset).
 
-    Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_session`
-    function needs to be imported as well when this fixture is used.
+    The HMC is selected via the ``TESTHMC`` environment variable when running
+    pytest. If the selected HMC is a group in the HMC inventory file, the test
+    function is called once for each HMC. For details, see
+    :ref:`Running end2end tests`.
+
+    This fixture has a scope of "session", so the same HMC session is reused
+    across all test modules for the complete pytest run.
+
+    This fixture is provided in the 'zhmcclient' Python package as a pytest
+    plugin, so it is globally known to pytest and can be used without importing
+    it.
+
+    Returns:
+
+      list of :class:`zhmcclient.Cpc`: The CPCs to test against.
+      These objects have the "short" set of properties from
+      :meth:`zhmcclient.Cpc.list`.
     """
     return defined_cpcs(hmc_session, 'any')
 
 
 @pytest.fixture(
-    scope='module',
+    scope='session',
     ids=fixtureid_cpcs
 )
-def dpm_mode_cpcs(request, hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def dpm_mode_cpcs(request, hmc_session):
+    # pylint: disable=unused-argument
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
-    Pytest fixture representing the set of CPCs in DPM mode to test against.
+    Pytest fixture that provides access to the CPCs in DPM mode to test against.
 
-    The set of CPCs to test against is the subset of all CPCs to be tested that
-    is in DPM mode.
-
-    The set of all CPCs to be tested is defined in the ``cpcs`` variable in the
-    HMC entry in the :ref:`HMC inventory file`; if that variable is omitted, it
-    is the set of all managed CPCs.
-
-    A test function parameter with the name of this fixture resolves to a list
-    of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
-    objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
+    The CPCs in DPM mode to test against is defined as list items in the
+    ``cpcs`` variable in the HMC entry in the :ref:`HMC inventory file`, where
+    the ``dpm_enabled`` property of the item is set to true.
 
     The test function is invoked just once with the list of CPCs, and the
     test function needs to loop through the CPCs (or a subset).
 
-    Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_session`
-    function needs to be imported as well when this fixture is used.
+    The HMC is selected via the ``TESTHMC`` environment variable when running
+    pytest. If the selected HMC is a group in the HMC inventory file, the test
+    function is called once for each HMC. For details, see
+    :ref:`Running end2end tests`.
+
+    This fixture has a scope of "session", so the same HMC session is reused
+    across all test modules for the complete pytest run.
+
+    This fixture is provided in the 'zhmcclient' Python package as a pytest
+    plugin, so it is globally known to pytest and can be used without importing
+    it.
+
+    Returns:
+
+      list of :class:`zhmcclient.Cpc`: The CPCs in DPM mode to test against.
+      These objects have the "short" set of properties from
+      :meth:`zhmcclient.Cpc.list`.
     """
     return defined_cpcs(hmc_session, 'dpm')
 
 
 @pytest.fixture(
-    scope='module',
+    scope='session',
     ids=fixtureid_cpcs
 )
-def classic_mode_cpcs(request, hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def classic_mode_cpcs(request, hmc_session):
+    # pylint: disable=unused-argument
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
-    Pytest fixture representing the set of CPCs in classic mode to test against.
+    Pytest fixture that provides access to the CPCs in classic mode to test
+    against.
 
-    The set of CPCs to test against is the subset of all CPCs to be tested that
-    is in classic mode.
-
-    The set of all CPCs to be tested is defined in the ``cpcs`` variable in the
-    HMC entry in the :ref:`HMC inventory file`; if that variable is omitted, it
-    is the set of all managed CPCs.
-
-    A test function parameter with the name of this fixture resolves to a list
-    of :class:`zhmcclient.Cpc` objects representing that set of CPCs. These
-    objects have the "short" set of properties from :meth:`zhmcclient.Cpc.list`.
+    The CPCs in classic mode to test against is defined as list items in
+    the ``cpcs`` variable in the HMC entry in the :ref:`HMC inventory file`,
+    where the ``dpm_enabled`` property of the item is omitted or set to false.
 
     The test function is invoked just once with the list of CPCs, and the
     test function needs to loop through the CPCs (or a subset).
 
-    Because the `hmc_session` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_session`
-    function needs to be imported as well when this fixture is used.
+    The HMC is selected via the ``TESTHMC`` environment variable when running
+    pytest. If the selected HMC is a group in the HMC inventory file, the test
+    function is called once for each HMC. For details, see
+    :ref:`Running end2end tests`.
+
+    This fixture has a scope of "session", so the same HMC session is reused
+    across all test modules for the complete pytest run.
+
+    This fixture is provided in the 'zhmcclient' Python package as a pytest
+    plugin, so it is globally known to pytest and can be used without importing
+    it.
+
+    Returns:
+
+      list of :class:`zhmcclient.Cpc`: The CPCs in classic mode to test against.
+      These objects have the "short" set of properties from
+      :meth:`zhmcclient.Cpc.list`.
     """
     return defined_cpcs(hmc_session, 'classic')
 

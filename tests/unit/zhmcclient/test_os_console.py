@@ -23,15 +23,8 @@ import websocket
 from zhmcclient import OSConsole, Partition, OSConsoleConnectedError, \
     OSConsoleNotConnectedError
 
-# pylint: disable=unused-import,line-too-long
-from tests.common.http_mocked_fixtures import http_mocked_session  # noqa: F401
-from tests.common.http_mocked_fixtures import http_mocked_cpc_dpm  # noqa: F401
-from tests.common.http_mocked_fixtures import http_mocked_partition  # noqa: F401,E501
-# pylint: enable=unused-import,line-too-long
 
-
-def test_osc_initial_attrs(http_mocked_partition):  # noqa: F811
-    # pylint: disable=redefined-outer-name, unused-argument
+def test_osc_initial_attrs(http_mocked_partition):
     """Test initial attributes of OSConsole."""
 
     ws_timeout = 42
@@ -54,8 +47,8 @@ def test_osc_initial_attrs(http_mocked_partition):  # noqa: F811
 @mock.patch('websocket.WebSocket')
 def test_osc_connect(
         websocket_mock, create_os_websocket_mock,
-        http_mocked_partition):  # noqa: F811
-    # pylint: disable=redefined-outer-name, unused-argument
+        http_mocked_partition):
+    # pylint: disable=unused-argument
     """All tests for OSConsole.connect/disconnect/is_connected()."""
 
     create_os_websocket_mock.return_value = '/api/websocket/fake-ws1'
@@ -149,9 +142,9 @@ LPAR_OSC_RECV_ALL_TESTCASES = [
 @mock.patch('websocket.WebSocket')
 def test_osc_recv_all(
         websocket_mock, create_os_websocket_mock,
-        http_mocked_partition,  # noqa: F811
+        http_mocked_partition,
         desc, connected, recv_chunks, exp_data, exp_exc_type):
-    # pylint: disable=redefined-outer-name, unused-argument
+    # pylint: disable=unused-argument
     """All tests for OSConsole.recv_all()."""
 
     create_os_websocket_mock.return_value = '/api/websocket/fake-ws1'
@@ -276,9 +269,9 @@ LPAR_OSC_RECV_LINE_TESTCASES = [
 @mock.patch('websocket.WebSocket')
 def test_osc_recv_line(
         websocket_mock, create_os_websocket_mock,
-        http_mocked_partition,  # noqa: F811
+        http_mocked_partition,
         desc, connected, recv_chunks, exp_call_count, exp_data, exp_exc_type):
-    # pylint: disable=redefined-outer-name, unused-argument
+    # pylint: disable=unused-argument
     """All tests for OSConsole.recv_line()."""
 
     create_os_websocket_mock.return_value = '/api/websocket/fake-ws1'
@@ -359,9 +352,9 @@ LPAR_OSC_SEND_TESTCASES = [
 @mock.patch('websocket.WebSocket')
 def test_osc_send(
         websocket_mock, create_os_websocket_mock,
-        http_mocked_partition,  # noqa: F811
+        http_mocked_partition,
         desc, connected, send_data, exp_exc_type):
-    # pylint: disable=redefined-outer-name, unused-argument
+    # pylint: disable=unused-argument
     """All tests for OSConsole.send()."""
 
     create_os_websocket_mock.return_value = '/api/websocket/fake-ws1'
@@ -438,9 +431,9 @@ LPAR_OSC_EXEC_CMD_TESTCASES = [
 @mock.patch('websocket.WebSocket')
 def test_osc_exec_cmd(
         websocket_mock, create_os_websocket_mock,
-        http_mocked_partition,  # noqa: F811
+        http_mocked_partition,
         desc, connected, command, output, exp_exc_type):
-    # pylint: disable=redefined-outer-name, unused-argument
+    # pylint: disable=unused-argument
     """All tests for OSConsole.execute_command()."""
 
     create_os_websocket_mock.return_value = '/api/websocket/fake-ws1'

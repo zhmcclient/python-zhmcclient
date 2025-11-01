@@ -24,9 +24,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import runtest_find_list, skip_warn, pick_test_resources
 
@@ -46,8 +43,7 @@ HW_MESSAGE_VOLATILE_PROPS = []
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_find_list(hmc_session, parent):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hw_message_find_list(hmc_session, parent):
     """
     Test list(), find(), findall().
     """
@@ -100,8 +96,7 @@ def test_hw_message_find_list(hmc_session, parent):  # noqa: F811
 @pytest.mark.parametrize(
     "parent", ['cpc', 'console']
 )
-def test_hw_message_list_filtered(hmc_session, parent):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hw_message_list_filtered(hmc_session, parent):
     """
     Test list() with timestamp filtering.
     """

@@ -574,7 +574,16 @@ functions to its known fixtures, based upon the parameter name.
 For more details on pytest fixtures in general, see
 `pytest fixtures <https://docs.pytest.org/en/latest/explanation/fixtures.html>`_.
 
-The :mod:`zhmcclient.testutils` module provides the following pytest fixtures:
+The 'zhmcclient' Python package provides a number of pytest fixtures that are
+useful for user-written test programs. They are also used by the end2end tests
+of the zhmcclient project itself.  These fixtures are included in the
+'zhmcclient' package as a pytest plugin, which enables them to be used by test
+programs without first having to import them. The ``pytest --fixtures`` command
+will display them along with a brief description.
+
+The following pytest fixtures are provided. In their descriptions, the return
+value indicates what the fixture resolves to when used as a test function
+parameter:
 
 .. autofunction:: zhmcclient.testutils.hmc_definition
 

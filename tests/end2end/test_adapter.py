@@ -27,10 +27,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs, all_cpcs  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties
@@ -58,8 +54,7 @@ def se_version_info(cpc):
     return list(map(int, cpc.prop('se-version').split('.')))
 
 
-def test_adapter_find_list(all_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_adapter_find_list(all_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -91,8 +86,7 @@ def test_adapter_find_list(all_cpcs):  # noqa: F811
                 ADAPTER_LIST_PROPS, ADAPTER_ADDITIONAL_PROPS)
 
 
-def test_adapter_property(all_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_adapter_property(all_cpcs):
     """
     Test property related methods
     """
@@ -125,8 +119,7 @@ def test_adapter_property(all_cpcs):  # noqa: F811
             runtest_get_properties(adapter.manager, non_list_prop)
 
 
-def test_adapter_hs_crud(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_adapter_hs_crud(dpm_mode_cpcs):
     """
     Test create, read, update and delete a Hipersocket adapter.
     """
@@ -243,8 +236,7 @@ ADAPTER_FAMILIES = [
 @pytest.mark.parametrize(
     "test_family",
     ADAPTER_FAMILIES)
-def test_adapter_list_assigned_part(dpm_mode_cpcs, test_family):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_adapter_list_assigned_part(dpm_mode_cpcs, test_family):
     """
     Test Adapter.list_assigned_partitions().
     """
@@ -568,8 +560,7 @@ def base_adapter_id(adapter_id, family):
     return f'{base_pchid:03x}'
 
 
-def test_adapter_list_sibling_adapters(all_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_adapter_list_sibling_adapters(all_cpcs):
     """
     Test Adapter.list_sibling_adapters().
     """
@@ -692,9 +683,8 @@ LIST_PERMITTED_ADAPTERS_TESTCASES = [
     "desc, input_kwargs, exp_props, exp_exc_type, run",
     LIST_PERMITTED_ADAPTERS_TESTCASES)
 def test_adapter_list_permitted(
-        desc, input_kwargs, exp_props, exp_exc_type, run,
-        all_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name, unused-argument
+        desc, input_kwargs, exp_props, exp_exc_type, run, all_cpcs):
+    # pylint: disable=unused-argument
     """
     Test Console.list_permitted_adapters() without filtering, but with
     different variations of returned properties.

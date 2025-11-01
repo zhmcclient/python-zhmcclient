@@ -51,46 +51,59 @@ def fixtureid_hmc_definition(fixture_value):
 
 @pytest.fixture(
     params=hmc_definitions(load=None),
-    scope='module',
+    scope='session',
     ids=fixtureid_hmc_definition
 )
 def hmc_definition(request):
+    # pylint: disable=unused-argument
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
-    Pytest fixture representing the set of HMC definitions to use for a test.
+    Pytest fixture that provides an HMC definition from the HMC inventory file.
 
-    A test function parameter with the name of this fixture resolves to the
-    :class:`~zhmcclient.testutils.HMCDefinition`
-    object of each HMC to test against.
+    The HMC is selected via the ``TESTHMC`` environment variable when running
+    pytest. If the selected HMC is a group in the HMC inventory file, the test
+    function is called once for each HMC. For details, see
+    :ref:`Running end2end tests`.
 
-    The test function is called once for each HMC, if the targeted HMC is a
-    group.
+    Returns:
+
+      :class:`~zhmcclient.testutils.HMCDefinition`: The HMC definition from the
+      HMC inventory file for the HMC to test against.
     """
     return request.param
 
 
 @pytest.fixture(
-    scope='module'
+    scope='session'
 )
 def hmc_session(request, hmc_definition):
     # pylint: disable=redefined-outer-name,unused-argument
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
-    Pytest fixture representing the set of HMC sessions to run a test against.
+    Pytest fixture that provides a logged-on HMC session to an HMC defined in
+    the HMC inventory file.
 
-    A test function parameter with the name of this fixture resolves to the
-    :class:`zhmcclient.Session` or :class:`zhmcclient.mock.FakedSession` object
-    for each HMC to test against.
+    The HMC is selected via the ``TESTHMC`` environment variable when running
+    pytest. If the selected HMC is a group in the HMC inventory file, the test
+    function is called once for each HMC. For details, see
+    :ref:`Running end2end tests`.
 
-    The session is already logged on to the HMC.
+    Upon fixture teardown, the session is logged off from the HMC.
 
-    The session object has an additional property named ``hmc_definition``
-    that is the :class:`~zhmcclient.testutils.HMCDefinition` object for the
-    corresponding HMC definition in the :ref:`HMC inventory file`.
+    This fixture has a scope of "session", so the same HMC session is reused
+    across all test modules for the complete pytest run.
 
-    Because the `hmc_definition` parameter of this fixture is again a fixture,
-    the :func:`zhmcclient.testutils.hmc_definition` function needs to be
-    imported as well when this fixture is used.
+    This fixture is provided in the 'zhmcclient' Python package as a pytest
+    plugin, so it is globally known to pytest and can be used without importing
+    it.
 
-    Upon fixture teardown, the session is automatically logged off from the HMC.
+    Returns:
+
+      :class:`zhmcclient.Session` or :class:`zhmcclient.mock.FakedSession`:
+      A logged-on session to the HMC to test against.
+      The session object has an additional property named ``hmc_definition``
+      that is the :class:`~zhmcclient.testutils.HMCDefinition` object for the
+      corresponding HMC definition in the :ref:`HMC inventory file`.
     """
     session = setup_hmc_session(hmc_definition)
     yield session

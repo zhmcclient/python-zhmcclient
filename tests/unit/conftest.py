@@ -24,10 +24,6 @@ Example use in a pytest test function that invokes a (hypothetical) method
 
 .. code-block:: python
 
-    from tests.common.http_mocked_fixtures import http_mocked_session
-    from tests.common.http_mocked_fixtures import http_mocked_cpc_dpm
-
-
     def test_cpc_xyz(http_mocked_cpc_dpm):
 
         uri = http_mocked_cpc_dpm.uri + '/operations/xyz'
@@ -45,16 +41,21 @@ Example use in a pytest test function that invokes a (hypothetical) method
             assert result == ...
 """
 
+import logging
+
 import pytest
 import requests_mock
+from testfixtures import LogCapture
+
 import zhmcclient
 
 
 @pytest.fixture(
     scope='module'
 )
-def http_mocked_session(request):  # noqa: F811
+def http_mocked_session(request):
     # pylint: disable=unused-argument
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
     Pytest fixture representing a HTTP-mocked zhmcclient session that is logged
     on.
@@ -97,8 +98,9 @@ def http_mocked_session(request):  # noqa: F811
 @pytest.fixture(
     scope='module'
 )
-def http_mocked_cpc_dpm(request, http_mocked_session):  # noqa: F811
+def http_mocked_cpc_dpm(request, http_mocked_session):
     # pylint: disable=unused-argument,redefined-outer-name
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
     Pytest fixture representing a HTTP-mocked CPC in DPM mode.
 
@@ -132,8 +134,9 @@ def http_mocked_cpc_dpm(request, http_mocked_session):  # noqa: F811
 @pytest.fixture(
     scope='module'
 )
-def http_mocked_cpc_classic(request, http_mocked_session):  # noqa: F811
+def http_mocked_cpc_classic(request, http_mocked_session):
     # pylint: disable=unused-argument,redefined-outer-name
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
     Pytest fixture representing a HTTP-mocked CPC in classic mode.
 
@@ -167,8 +170,9 @@ def http_mocked_cpc_classic(request, http_mocked_session):  # noqa: F811
 @pytest.fixture(
     scope='module'
 )
-def http_mocked_lpar(request, http_mocked_cpc_classic):  # noqa: F811
+def http_mocked_lpar(request, http_mocked_cpc_classic):
     # pylint: disable=unused-argument,redefined-outer-name
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
     Pytest fixture representing a HTTP-mocked LPAR on a CPC in classic mode.
 
@@ -200,8 +204,9 @@ def http_mocked_lpar(request, http_mocked_cpc_classic):  # noqa: F811
 @pytest.fixture(
     scope='module'
 )
-def http_mocked_partition(request, http_mocked_cpc_dpm):  # noqa: F811
+def http_mocked_partition(request, http_mocked_cpc_dpm):
     # pylint: disable=unused-argument,redefined-outer-name
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
     Pytest fixture representing a HTTP-mocked Partition on a CPC in DPM mode.
 
@@ -233,8 +238,9 @@ def http_mocked_partition(request, http_mocked_cpc_dpm):  # noqa: F811
 @pytest.fixture(
     scope='module'
 )
-def http_mocked_console(request, http_mocked_session):  # noqa: F811
+def http_mocked_console(request, http_mocked_session):
     # pylint: disable=unused-argument,redefined-outer-name
+    # Note: The first paragraph is shown by 'pytest --fixtures'
     """
     Pytest fixture representing a HTTP-mocked HMC console.
 
@@ -274,3 +280,17 @@ def http_mocked_console(request, http_mocked_session):  # noqa: F811
         console = consoles[0]
 
     return console
+
+
+@pytest.fixture()
+def zhmc_capture():
+    # Note: The first paragraph is shown by 'pytest --fixtures'
+    """
+    Pytest fixture that wraps testfixtures.LogCapture.
+
+    This way of defining a fixture works around the issue that when
+    using the decorator testfixtures.log_capture() instead, pytest
+    fails with "fixture 'capture' not found".
+    """
+    with LogCapture(level=logging.DEBUG) as log:
+        yield log

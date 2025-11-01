@@ -23,11 +23,7 @@ import pytest
 
 import zhmcclient
 # pylint: disable=unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401
 from zhmcclient.testutils import HMCDefinitions
-from zhmcclient.testutils import all_cpcs  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
 # pylint: enable=unused-import
 from zhmcclient.testutils import setup_hmc_session
 
@@ -41,8 +37,7 @@ def _print_cpc(cpc):
     print(f"Found test CPC {cpc.name} ({mode_str} mode)")
 
 
-def test_hmcdef_all_cpcs(all_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hmcdef_all_cpcs(all_cpcs):
     """
     Display all CPCs to be tested.
     """
@@ -50,8 +45,7 @@ def test_hmcdef_all_cpcs(all_cpcs):  # noqa: F811
         _print_cpc(cpc)
 
 
-def test_hmcdef_dpm_cpcs(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hmcdef_dpm_cpcs(dpm_mode_cpcs):
     """
     Display DPM mode CPCs to be tested.
     """
@@ -59,8 +53,7 @@ def test_hmcdef_dpm_cpcs(dpm_mode_cpcs):  # noqa: F811
         _print_cpc(cpc)
 
 
-def test_hmcdef_classic_cpcs(classic_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hmcdef_classic_cpcs(classic_mode_cpcs):
     """
     Display classic mode CPCs to be tested.
     """
@@ -68,8 +61,7 @@ def test_hmcdef_classic_cpcs(classic_mode_cpcs):  # noqa: F811
         _print_cpc(cpc)
 
 
-def test_hmcdef_cpcs(hmc_session):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_hmcdef_cpcs(hmc_session):
     """
     Test that the HMC actually manages the CPCs defined in its inventory file
     and that these CPCs actually have the properties defined there.

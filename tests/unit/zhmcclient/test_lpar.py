@@ -29,12 +29,6 @@ from zhmcclient.mock import FakedSession, LparActivateHandler, \
     LparDeactivateHandler, LparLoadHandler
 from tests.common.utils import assert_resources, assert_blanked_in_message
 
-# pylint: disable=unused-import,line-too-long
-from tests.common.http_mocked_fixtures import http_mocked_session  # noqa: F401
-from tests.common.http_mocked_fixtures import http_mocked_cpc_classic  # noqa: F401,E501
-from tests.common.http_mocked_fixtures import http_mocked_lpar  # noqa: F401
-# pylint: enable=unused-import,line-too-long
-
 
 # Object IDs and names of our faked LPARs:
 LPAR1_OID = 'lpar1-oid'
@@ -1536,8 +1530,7 @@ class TestLpar:
         assert_resources(lpars, exp_faked_lpars, prop_names)
 
 
-def test_lpar_start(http_mocked_lpar):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_lpar_start(http_mocked_lpar):
     """
     Test function for Lpar.start()
     """
@@ -1568,8 +1561,7 @@ def test_lpar_start(http_mocked_lpar):  # noqa: F811
         assert result_job.op_uri == exp_result_job.op_uri
 
 
-def test_lpar_stop(http_mocked_lpar):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_lpar_stop(http_mocked_lpar):
     """
     Test function for Lpar.stop()
     """
@@ -1604,8 +1596,7 @@ def test_lpar_stop(http_mocked_lpar):  # noqa: F811
     # TODO: Test for Lpar.reset_normal()
 
 
-def test_lpar_load_from_ftp(http_mocked_lpar):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_lpar_load_from_ftp(http_mocked_lpar):
     """
     Test function for Lpar.load_from_ftp()
     """

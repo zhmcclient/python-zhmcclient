@@ -27,11 +27,6 @@ from zhmcclient._cpc import _drop_unused_adapters_and_resources
 from zhmcclient.mock import FakedSession
 from tests.common.utils import assert_resources
 
-# pylint: disable=unused-import
-from tests.common.http_mocked_fixtures import http_mocked_session  # noqa: F401
-from tests.common.http_mocked_fixtures import http_mocked_cpc_dpm  # noqa: F401
-# pylint: enable=unused-import
-
 # Names of our faked Consoles:
 # Default console (z13)
 CONSOLE_Z13_NAME = 'console-z13'
@@ -2194,8 +2189,7 @@ class TestCpc:
     # TODO: Test for Cpc.validate_lun_path()
 
 
-def test_cpc_swap_cts(http_mocked_cpc_dpm):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_cpc_swap_cts(http_mocked_cpc_dpm):
     """
     Test function for Cpc.swap_current_time_server()
     """
@@ -2222,8 +2216,7 @@ def test_cpc_swap_cts(http_mocked_cpc_dpm):  # noqa: F811
         assert result is None
 
 
-def test_cpc_set_stp_config(http_mocked_cpc_dpm):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_cpc_set_stp_config(http_mocked_cpc_dpm):
     """
     Test function for Cpc.set_stp_config()
     """
@@ -2271,8 +2264,7 @@ def test_cpc_set_stp_config(http_mocked_cpc_dpm):  # noqa: F811
         assert result is None
 
 
-def test_cpc_change_stp_id(http_mocked_cpc_dpm):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_cpc_change_stp_id(http_mocked_cpc_dpm):
     """
     Test function for Cpc.change_stp_id()
     """
@@ -2299,8 +2291,7 @@ def test_cpc_change_stp_id(http_mocked_cpc_dpm):  # noqa: F811
         assert result is None
 
 
-def test_cpc_join_ctn(http_mocked_cpc_dpm):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_cpc_join_ctn(http_mocked_cpc_dpm):
     """
     Test function for Cpc.join_ctn()
     """
@@ -2327,8 +2318,7 @@ def test_cpc_join_ctn(http_mocked_cpc_dpm):  # noqa: F811
         assert result is None
 
 
-def test_cpc_leave_ctn(http_mocked_cpc_dpm):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+def test_cpc_leave_ctn(http_mocked_cpc_dpm):
     """
     Test function for Cpc.leave_ctn()
     """
@@ -2458,10 +2448,10 @@ TESTCASES_CPC_INSTALL_AND_ACTIVATE = [
     "exp_exc_type",
     TESTCASES_CPC_INSTALL_AND_ACTIVATE)
 def test_cpc_install_and_activate(
-        http_mocked_cpc_dpm,  # noqa: F811
+        http_mocked_cpc_dpm,
         desc, input_kwargs, exp_request_body, response_status, response_body,
         exp_exc_type):
-    # pylint: disable=redefined-outer-name,unused-argument
+    # pylint: disable=unused-argument
     """
     Test function for Cpc.install_and_activate()
     """
@@ -2555,10 +2545,10 @@ TESTCASES_CPC_DELETE_RETRIEVED_INTERNAL_CODE = [
     "exp_exc_type",
     TESTCASES_CPC_DELETE_RETRIEVED_INTERNAL_CODE)
 def test_delete_retrieved_internal_code(
-        http_mocked_cpc_dpm,  # noqa: F811
+        http_mocked_cpc_dpm,
         desc, input_kwargs, exp_request_body, response_status, response_body,
         exp_exc_type):
-    # pylint: disable=redefined-outer-name,unused-argument
+    # pylint: disable=unused-argument
     """
     Test function for Cpc.delete_retrieved_internal_code()
     """

@@ -27,11 +27,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import classic_mode_cpcs  # noqa: F401, E501
-from .utils import logger  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, runtest_find_list, \
     runtest_get_properties, ensure_lpar_inactive, set_resource_property
@@ -56,8 +51,7 @@ LPAR_LIST_PERMITTED_PROPS = [
 LPAR_VOLATILE_PROPS = []
 
 
-def test_lpar_find_list(classic_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_lpar_find_list(classic_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -83,8 +77,7 @@ def test_lpar_find_list(classic_mode_cpcs):  # noqa: F811
                 LPAR_VOLATILE_PROPS, LPAR_MINIMAL_PROPS, LPAR_LIST_PROPS)
 
 
-def test_lpar_property(classic_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_lpar_property(classic_mode_cpcs):
     """
     Test property related methods
     """
@@ -175,33 +168,34 @@ TESTCASES_CONSOLE_LIST_PERMITTED_LPARS = [
     "desc, input_kwargs, exp_prop_names",
     TESTCASES_CONSOLE_LIST_PERMITTED_LPARS)
 def test_console_list_permitted_lpars(
-        logger, classic_mode_cpcs,  # noqa: F811
-        desc, input_kwargs, exp_prop_names):
-    # pylint: disable=redefined-outer-name
+        zhmc_logger, classic_mode_cpcs, desc, input_kwargs,
+        exp_prop_names):
     """
     Test Console.list_permitted_lpars() method
     """
     if not classic_mode_cpcs:
         pytest.skip("HMC definition does not include any CPCs in classic mode")
 
-    logger.debug("Arguments: desc=%r, input_kwargs=%r, exp_prop_names=%r",
-                 desc, input_kwargs, exp_prop_names)
+    zhmc_logger.debug(
+        "Arguments: desc=%r, input_kwargs=%r, exp_prop_names=%r",
+        desc, input_kwargs, exp_prop_names)
 
     for cpc in classic_mode_cpcs:
         assert not cpc.dpm_enabled
 
-        logger.debug("Testing with CPC %s", cpc.name)
+        zhmc_logger.debug("Testing with CPC %s", cpc.name)
 
         client = cpc.manager.client
         console = client.consoles.console
 
-        logger.debug("Calling list_permitted_lpars() with kwargs: %r",
-                     input_kwargs)
+        zhmc_logger.debug(
+            "Calling list_permitted_lpars() with kwargs: %r", input_kwargs)
 
         # Execute the code to be tested
         lpars = console.list_permitted_lpars(**input_kwargs)
 
-        logger.debug("list_permitted_lpars() returned %d LPARs", len(lpars))
+        zhmc_logger.debug(
+            "list_permitted_lpars() returned %d LPARs", len(lpars))
 
         for lpar in lpars:
             lpar_props = dict(lpar.properties)
@@ -211,8 +205,8 @@ def test_console_list_permitted_lpars(
                     f"properties, got: {lpar_props!r}")
 
 
-def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_lpar_list_os_messages(
+        zhmc_logger, classic_mode_cpcs):
     """
     Test "List OS Messages" operation on LPARs
     """
@@ -239,7 +233,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
 
             # Test: List all messages (without begin or end)
             try:
-                logger.debug(
+                zhmc_logger.debug(
                     "Listing OS messages of LPAR %s with no begin/end",
                     lpar.name)
                 result = lpar.list_os_messages()
@@ -247,7 +241,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the LPAR is not
                     # available
-                    logger.debug(
+                    zhmc_logger.debug(
                         "LPAR %s cannot list OS messages", lpar.name)
                     continue
                 raise
@@ -257,7 +251,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
                 test_lpar = lpar
                 break
 
-            logger.debug(
+            zhmc_logger.debug(
                 "LPAR %s has only %d OS messages",
                 lpar.name, len(all_messages))
 
@@ -268,7 +262,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
-        logger.debug(
+        zhmc_logger.debug(
             "Listing OS messages of LPAR %s with begin=%s, end=%s",
             test_lpar.name, all_begin, all_end)
         result = test_lpar.list_os_messages(begin=all_begin, end=all_end)
@@ -287,7 +281,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
                 break
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
-        logger.debug(
+        zhmc_logger.debug(
             "Listing OS messages of LPAR %s with begin=%s, end=%s",
             test_lpar.name, begin, end)
         result = test_lpar.list_os_messages(begin=begin, end=end)
@@ -298,7 +292,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
 
         # Test with begin/end and maximum messages
         max_messages = random.randint(0, end - begin + 1)
-        logger.debug(
+        zhmc_logger.debug(
             "Listing OS messages of LPAR %s with begin=%s, end=%s, "
             "max_messages=%d", test_lpar.name, begin, end, max_messages)
         result = test_lpar.list_os_messages(
@@ -310,7 +304,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
 
         # Test with is_held
         for is_held in (False, True):
-            logger.debug(
+            zhmc_logger.debug(
                 "Listing OS messages of LPAR %s with is_held=%s",
                 test_lpar.name, is_held)
             result = test_lpar.list_os_messages(is_held=is_held)
@@ -320,7 +314,7 @@ def test_lpar_list_os_messages(logger, classic_mode_cpcs):  # noqa: F811
 
         # Test with is_priority
         for is_priority in (False, True):
-            logger.debug(
+            zhmc_logger.debug(
                 "Listing OS messages of LPAR %s with is_priority=%s",
                 test_lpar.name, is_priority)
             result = test_lpar.list_os_messages(is_priority=is_priority)
@@ -513,10 +507,10 @@ LPAR_ACTIVATE_TESTCASES = [
     "exp_props, exp_exc_type, run",
     LPAR_ACTIVATE_TESTCASES)
 def test_lpar_activate(
-        logger, classic_mode_cpcs,  # noqa: F811
+        zhmc_logger, classic_mode_cpcs,
         desc, lpar_mode, ap_type, nap_type, auto_load, input_kwargs,
         exp_props, exp_exc_type, run):
-    # pylint: disable=redefined-outer-name, unused-argument
+    # pylint: disable=unused-argument
     """
     Test Lpar.activate().
 
@@ -656,29 +650,32 @@ def test_lpar_activate(
 
         msg = f"Testing on CPC {cpc.name} with LPAR {lpar.name!r}"
         print(msg)
-        logger.debug(msg)
+        zhmc_logger.debug(msg)
 
         if run == 'pdb':
             # pylint: disable=forgotten-debug-statement
             pdb.set_trace()
 
-        logger.debug("Preparation: Ensuring that LPAR %r is inactive",
-                     lpar.name)
+        zhmc_logger.debug(
+            "Preparation: Ensuring that LPAR %r is inactive", lpar.name)
         ensure_lpar_inactive(lpar)
 
-        logger.debug("Preparation: Setting 'next-activation-profile-name' = %r "
-                     "in LPAR %r", nap_name, lpar.name)
+        zhmc_logger.debug(
+            "Preparation: Setting 'next-activation-profile-name' = %r "
+            "in LPAR %r", nap_name, lpar.name)
         saved_nap_name = set_resource_property(
             lpar, 'next-activation-profile-name', nap_name)
 
-        logger.debug("Preparation: Setting 'load-at-activation' = %r in image "
-                     "profile %r", auto_load, iap.name)
+        zhmc_logger.debug(
+            "Preparation: Setting 'load-at-activation' = %r in image "
+            "profile %r", auto_load, iap.name)
         saved_auto_load = set_resource_property(
             iap, 'load-at-activation', auto_load)
 
         try:
-            logger.debug("Activating LPAR %r (profile arg: %r, add. args: %r)",
-                         lpar.name, ap_name, input_kwargs)
+            zhmc_logger.debug(
+                "Activating LPAR %r (profile arg: %r, add. args: %r)",
+                lpar.name, ap_name, input_kwargs)
 
             if exp_exc_type:
 
@@ -701,8 +698,9 @@ def test_lpar_activate(
                 # Check the expected properties
                 lpar.pull_full_properties()
                 lpar_props = dict(lpar.properties)
-                logger.debug("Status of LPAR %r is %r after test",
-                             lpar.name, lpar_props['status'])
+                zhmc_logger.debug(
+                    "Status of LPAR %r is %r after test",
+                    lpar.name, lpar_props['status'])
                 for pname, exp_value in exp_props.items():
                     assert pname in lpar_props, (
                         f"Expected property {pname!r} does not exist in "
@@ -712,17 +710,20 @@ def test_lpar_activate(
                         f"Property {pname!r} has unexpected value "
                         f"{act_value!r}; expected value: {exp_value!r}")
         finally:
-            logger.debug("Cleanup: Ensuring that LPAR %r is inactive",
-                         lpar.name)
+            zhmc_logger.debug(
+                "Cleanup: Ensuring that LPAR %r is inactive",
+                lpar.name)
             ensure_lpar_inactive(lpar)
 
-            logger.debug("Cleanup: Setting 'next-activation-profile-name' = %r "
-                         "in LPAR %r", saved_nap_name, lpar.name)
+            zhmc_logger.debug(
+                "Cleanup: Setting 'next-activation-profile-name' = %r "
+                "in LPAR %r", saved_nap_name, lpar.name)
             set_resource_property(
                 lpar, 'next-activation-profile-name', saved_nap_name)
 
-            logger.debug("Cleanup: Setting 'load-at-activation' = %r in image "
-                         "profile %r", saved_auto_load, iap.name)
+            zhmc_logger.debug(
+                "Cleanup: Setting 'load-at-activation' = %r in image "
+                "profile %r", saved_auto_load, iap.name)
             set_resource_property(iap, 'load-at-activation', saved_auto_load)
 
 
@@ -774,9 +775,8 @@ LPAR_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_LPAR_GET_SUSTAINABILITY_DATA)
 def test_lpar_get_sustainability_data(
-        tc, input_kwargs, exp_oldest, exp_delta,
-        classic_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+        tc, input_kwargs, exp_oldest, exp_delta, classic_mode_cpcs):
+    # pylint: disable=unused-argument
     """
     Test for Lpar.get_sustainability_data(...)
     """

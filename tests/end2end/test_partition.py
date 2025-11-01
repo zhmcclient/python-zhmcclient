@@ -28,11 +28,6 @@ import pytest
 from requests.packages import urllib3
 
 import zhmcclient
-# pylint: disable=line-too-long,unused-import
-from zhmcclient.testutils import hmc_definition, hmc_session  # noqa: F401, E501
-from zhmcclient.testutils import dpm_mode_cpcs  # noqa: F401, E501
-from .utils import logger  # noqa: F401, E501
-# pylint: enable=line-too-long,unused-import
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties, \
@@ -84,8 +79,7 @@ def assert_ctc_partition_link(partlink, num_paths, num_partitions):
             f"{pformat_as_dict(partlink.properties)}")
 
 
-def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_part_find_list(dpm_mode_cpcs):
     """
     Test list(), find(), findall().
     """
@@ -113,8 +107,7 @@ def test_part_find_list(dpm_mode_cpcs):  # noqa: F811
                 PART_ADDITIONAL_PROPS)
 
 
-def test_part_property(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_part_property(dpm_mode_cpcs):
     """
     Test property related methods
     """
@@ -143,8 +136,7 @@ def test_part_property(dpm_mode_cpcs):  # noqa: F811
             runtest_get_properties(part.manager, non_list_prop)
 
 
-def test_part_crud(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_part_crud(dpm_mode_cpcs):
     """
     Test create, read, update and delete a partition.
     """
@@ -237,8 +229,7 @@ def test_part_crud(dpm_mode_cpcs):  # noqa: F811
             cpc.partitions.find(name=part_name_new)
 
 
-def test_partition_features(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_partition_features(dpm_mode_cpcs):
     """
     Test features of the CPC of a partition:
     - For firmware features:
@@ -344,8 +335,7 @@ def test_partition_features(dpm_mode_cpcs):  # noqa: F811
         validate_firmware_features(api_version_info, fw_features)
 
 
-def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_part_list_os_messages(zhmc_logger, dpm_mode_cpcs):
     """
     Test "List OS Messages" operation on partitions
     """
@@ -373,7 +363,7 @@ def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
 
             # Test: List all messages (without begin or end)
             try:
-                logger.debug(
+                zhmc_logger.debug(
                     "Listing OS messages of partition %s with no begin/end",
                     part.name)
                 result = part.list_os_messages()
@@ -381,7 +371,7 @@ def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
                 if exc.http_status == 409 and exc.reason == 332:
                     # Meaning: The messages interface for the partition is not
                     # available
-                    logger.debug(
+                    zhmc_logger.debug(
                         "Partition %s cannot list OS messages", part.name)
                     continue
                 raise
@@ -391,7 +381,7 @@ def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
                 test_part = part
                 break
 
-            logger.debug(
+            zhmc_logger.debug(
                 "Partition %s has only %d OS messages",
                 part.name, len(all_messages))
 
@@ -402,7 +392,7 @@ def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
         # Test with begin/end selecting the full set of messages
         all_begin = all_messages[0]['sequence-number']
         all_end = all_messages[-1]['sequence-number']
-        logger.debug(
+        zhmc_logger.debug(
             "Listing OS messages of partition %s with begin=%s, end=%s",
             test_part.name, all_begin, all_end)
         result = test_part.list_os_messages(begin=all_begin, end=all_end)
@@ -421,7 +411,7 @@ def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
                 break
         begin = min(seq1, seq2)
         end = max(seq1, seq2)
-        logger.debug(
+        zhmc_logger.debug(
             "Listing OS messages of partition %s with begin=%s, end=%s",
             test_part.name, begin, end)
         result = test_part.list_os_messages(begin=begin, end=end)
@@ -431,8 +421,7 @@ def test_part_list_os_messages(logger, dpm_mode_cpcs):  # noqa: F811
             assert message in all_messages
 
 
-def test_part_create_os_websocket(dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name
+def test_part_create_os_websocket(dpm_mode_cpcs):
     """
     Test "Get ASCII Console WebSocket URI" operation on partitions
     """
@@ -519,9 +508,9 @@ LIST_PERMITTED_PARTITION_TESTCASES = [
 @pytest.mark.parametrize(
     "desc, input_kwargs, exp_props",
     LIST_PERMITTED_PARTITION_TESTCASES)
-def test_console_list_permitted_partitions(desc, input_kwargs, exp_props,
-                                           dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name, unused-argument
+def test_console_list_permitted_partitions(
+        desc, input_kwargs, exp_props, dpm_mode_cpcs):
+    # pylint: disable=unused-argument
     """
     Test list permitted partitions on a cpc
     """
@@ -616,9 +605,8 @@ PART_METRICS = {
     "tc, input_kwargs, exp_oldest, exp_delta",
     TESTCASES_PART_GET_SUSTAINABILITY_DATA)
 def test_part_get_sustainability_data(
-        tc, input_kwargs, exp_oldest, exp_delta,
-        dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument
+        tc, input_kwargs, exp_oldest, exp_delta, dpm_mode_cpcs):
+    # pylint: disable=unused-argument
     """
     Test for Partition.get_sustainability_data(...)
     """
@@ -805,9 +793,8 @@ TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK = [
     "desc, type, number_of_nics, nic_property_list",
     TESTCASES_PART_ATTACH_DETACH_NETWORK_LINK)
 def test_part_attach_detach_network_link(
-        desc, type, number_of_nics, nic_property_list,
-        dpm_mode_cpcs):  # noqa: F811
-    # pylint: disable=redefined-outer-name,unused-argument,redefined-builtin
+        desc, type, number_of_nics, nic_property_list, dpm_mode_cpcs):
+    # pylint: disable=unused-argument,redefined-builtin
     """
     Test for Partition.attach/detach_network_link()
     """
@@ -927,9 +914,8 @@ TESTCASES_PART_ATTACH_DETACH_CTC_LINK = [
     "desc, num_partitions, num_paths",
     TESTCASES_PART_ATTACH_DETACH_CTC_LINK)
 def test_part_attach_detach_ctc_link(
-        logger, dpm_mode_cpcs,  # noqa: F811
-        desc, num_partitions, num_paths):
-    # pylint: disable=redefined-outer-name,unused-argument,redefined-builtin
+        zhmc_logger, dpm_mode_cpcs, desc, num_partitions, num_paths):
+    # pylint: disable=unused-argument
     """
     Test for Partition.attach/detach_ctc_link()
     """
@@ -939,7 +925,7 @@ def test_part_attach_detach_ctc_link(
     for cpc in dpm_mode_cpcs:
         assert cpc.dpm_enabled
 
-        logger.debug("Testing with CPC %s", cpc.name)
+        zhmc_logger.debug("Testing with CPC %s", cpc.name)
 
         console = cpc.manager.client.consoles.console
         session = cpc.manager.session
@@ -969,10 +955,12 @@ def test_part_attach_detach_ctc_link(
             # Create the initial partitions for the partition link
             for i in range(0, num_partitions):
                 part_name = f"{TEST_PREFIX}_{i}_{uuid.uuid4().hex}"
-                logger.debug("Preparing properties for creation of initial "
-                             "PL partition %s", part_name)
+                zhmc_logger.debug(
+                    "Preparing properties for creation of initial "
+                    "PL partition %s", part_name)
                 part_props = standard_partition_props(cpc, part_name)
-                logger.debug("Creating initial PL partition %s", part_name)
+                zhmc_logger.debug(
+                    "Creating initial PL partition %s", part_name)
                 part = cpc.partitions.create(part_props)
                 pl_parts.append(part)
 
@@ -992,22 +980,27 @@ def test_part_attach_detach_ctc_link(
                 "partitions": [p.uri for p in pl_parts],
                 "paths": paths,
             }
-            logger.debug("Creating partition link %s", partlink_name)
+            zhmc_logger.debug(
+                "Creating partition link %s", partlink_name)
             partlink = console.partition_links.create(partlink_input_props)
 
-            logger.debug("Partition link after creation (default properties):\n"
-                         "%s", pformat_as_dict(partlink.properties))
+            zhmc_logger.debug(
+                "Partition link after creation (default properties):\n%s",
+                pformat_as_dict(partlink.properties))
             partlink.pull_full_properties()
-            logger.debug("Partition link after creation (full properties):\n"
-                         "%s", pformat_as_dict(partlink.properties))
+            zhmc_logger.debug(
+                "Partition link after creation (full properties):\n%s",
+                pformat_as_dict(partlink.properties))
             assert_ctc_partition_link(partlink, num_paths, num_partitions)
 
             # Create the test partition (to which the PL is attached)
             test_part_name = f"{TEST_PREFIX}_{uuid.uuid4().hex}"
-            logger.debug("Preparing properties for creation of "
-                         "test partition %s", test_part_name)
+            zhmc_logger.debug(
+                "Preparing properties for creation of test partition %s",
+                test_part_name)
             test_part_props = standard_partition_props(cpc, test_part_name)
-            logger.debug("Creating test partition %s", test_part_name)
+            zhmc_logger.debug(
+                "Creating test partition %s", test_part_name)
             test_part = cpc.partitions.create(test_part_props)
 
             # Verify the partition link is not attached.
@@ -1015,15 +1008,17 @@ def test_part_attach_detach_ctc_link(
             attached_pls = test_part.list_attached_partition_links()
             assert len(attached_pls) == 0
 
-            logger.debug("Attaching partition link to test partition")
+            zhmc_logger.debug(
+                "Attaching partition link to test partition")
 
             # The code to be tested
             test_part.attach_ctc_link(partlink)
             num_partitions += 1
 
             partlink.pull_full_properties()
-            logger.debug("Partition link after attach (full properties):\n"
-                         "%s", pformat_as_dict(partlink.properties))
+            zhmc_logger.debug(
+                "Partition link after attach (full properties):\n%s",
+                pformat_as_dict(partlink.properties))
             assert_ctc_partition_link(partlink, num_paths, num_partitions)
 
             # Verify the partition link is now attached.
@@ -1033,15 +1028,17 @@ def test_part_attach_detach_ctc_link(
             attached_pl = attached_pls[0]
             assert attached_pl.uri == partlink.uri
 
-            logger.debug("Detaching partition link from test partition")
+            zhmc_logger.debug(
+                "Detaching partition link from test partition")
 
             # The code to be tested
             test_part.detach_ctc_link(partlink)
             num_partitions -= 1
 
             partlink.pull_full_properties()
-            logger.debug("Partition link after detach (full properties):\n"
-                         "%s", pformat_as_dict(partlink.properties))
+            zhmc_logger.debug(
+                "Partition link after detach (full properties):\n%s",
+                pformat_as_dict(partlink.properties))
             assert_ctc_partition_link(partlink, num_paths, num_partitions)
 
             # Verify the partition link is no longer attached.
@@ -1051,11 +1048,14 @@ def test_part_attach_detach_ctc_link(
 
         finally:
             if partlink:
-                logger.debug("Deleting partition link %s", partlink.name)
+                zhmc_logger.debug(
+                    "Deleting partition link %s", partlink.name)
                 partlink.delete()
             if test_part:
-                logger.debug("Deleting test partition %s", test_part.name)
+                zhmc_logger.debug(
+                    "Deleting test partition %s", test_part.name)
                 test_part.delete()
             for part in pl_parts:
-                logger.debug("Deleting initial PL partition %s", part.name)
+                zhmc_logger.debug(
+                    "Deleting initial PL partition %s", part.name)
                 part.delete()
