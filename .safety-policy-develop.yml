@@ -32,6 +32,8 @@ security:
             reason: Fixed tornado version 6.5.0 requires Python>=3.9 and is used there
         79756:
            reason: Fixed authlib version 1.6.4 requires Python>=3.9 and is used there
+        79993:
+            reason: Fixed jupyterlab version 4.4.8 requires Python>=3.9 and other upgrades
 
     # Continue with exit code 0 when vulnerabilities are found.
     continue-on-vulnerability-error: False
