@@ -52,6 +52,7 @@ from ._password_rule import *          # noqa: F401
 from ._task import *          # noqa: F401
 from ._ldap_server_definition import *         # noqa: F401
 from ._mfa_server_definition import *          # noqa: F401
+from ._sso_server_definition import *         # noqa: F401
 from ._unmanaged_cpc import *          # noqa: F401
 from ._storage_group import *          # noqa: F401
 from ._storage_volume import *         # noqa: F401
