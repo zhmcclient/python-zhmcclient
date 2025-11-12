@@ -30,6 +30,24 @@ Change log
    .. include:: tmp_changes.rst
 
 .. towncrier start
+Version 1.24.1
+^^^^^^^^^^^^^^
+
+Released: 2025-11-12
+
+**Bug fixes:**
+
+* Addressed safety issues up to 2025-11-03.
+
+* Dev: Fixed that squash merges of the release PR or start PR caused the
+  checks in the subsequent make targets to fail.
+
+* Test: Fixed new issues raised by pylint 4.0.0.
+
+* Test: Fixed the issue with partition link name exceeding a length of 64
+  in the end2end test function test_partlink_create_delete(). (`#2014 <https://github.com/zhmcclient/python-zhmcclient/issues/2014>`_)
+
+
 Version 1.24.0
 ^^^^^^^^^^^^^^
 
