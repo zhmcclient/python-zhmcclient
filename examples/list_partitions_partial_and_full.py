@@ -19,67 +19,72 @@ difference.
 """
 
 import sys
-import requests.packages.urllib3
 from datetime import datetime
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    print(__doc__)
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
-
-try:
-    client = zhmcclient.Client(session)
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
     try:
-        cpc_name = sys.argv[1]
-    except IndexError:
-        cpc_name = None
-    if cpc_name:
-        cpc = client.cpcs.find(name=cpc_name)
-        print(f"Using specified CPC {cpc.name}")
-    else:
-        cpcs = client.cpcs.list()
-        cpc = cpcs[0]
-        print(f"Using first CPC {cpc.name}")
+        client = zhmcclient.Client(session)
 
-    for full_properties in (False, True):
-        print(f"\nListing partitions with full_properties={full_properties} ...")
-        start_dt = datetime.now()
-        partitions = cpc.partitions.list(full_properties)
-        end_dt = datetime.now()
-        duration = end_dt - start_dt
-        non_stopped_partitions = [p for p in partitions
-                                  if p.properties['status'] != 'stopped']
-        num_props = 0
-        for partition in partitions:
-            num_props += len(partition.properties)
-        print(f"Duration: {duration.total_seconds():.2f} s")
-        print(f"Number of partitions: {len(partitions)}")
-        print(f"Number of non-stopped partitions: {len(non_stopped_partitions)}")
-        avg_props = num_props / len(partitions)
-        print(f"Average number of properties per partition: {avg_props:.1f}")
+        try:
+            cpc_name = sys.argv[1]
+        except IndexError:
+            cpc_name = None
+        if cpc_name:
+            cpc = client.cpcs.find(name=cpc_name)
+            print(f"Using specified CPC {cpc.name}")
+        else:
+            cpcs = client.cpcs.list()
+            cpc = cpcs[0]
+            print(f"Using first CPC {cpc.name}")
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        for full_properties in (False, True):
+            print("\nListing partitions with "
+                  f"full_properties={full_properties} ...")
+            start_dt = datetime.now()
+            partitions = cpc.partitions.list(full_properties)
+            end_dt = datetime.now()
+            duration = end_dt - start_dt
+            non_stopped_partitions = [p for p in partitions
+                                      if p.properties['status'] != 'stopped']
+            num_props = 0
+            for partition in partitions:
+                num_props += len(partition.properties)
+            print(f"Duration: {duration.total_seconds():.2f} s")
+            print(f"Number of partitions: {len(partitions)}")
+            print("Number of non-stopped partitions: "
+                  f"{len(non_stopped_partitions)}")
+            avg_props = num_props / len(partitions)
+            print("Average number of properties per partition: "
+                  f"{avg_props:.1f}")
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

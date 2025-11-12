@@ -162,6 +162,12 @@ package_py_files := \
     $(wildcard $(mock_package_name)/*.py) \
     $(wildcard $(mock_package_name)/*/*.py) \
 
+# Directory with example scripts
+example_dir := examples
+
+example_py_files := \
+    $(wildcard $(example_dir)/*.py) \
+
 # Directory for generated API documentation
 doc_build_dir := build_doc
 
@@ -181,8 +187,8 @@ doc_dependent_files := \
     $(wildcard changes/*) \
     $(package_py_files) \
     $(version_file) \
-    examples/example_hmc_inventory.yaml \
-    examples/example_hmc_vault.yaml \
+    $(example_dir)/example_hmc_inventory.yaml \
+    $(example_dir)/example_hmc_vault.yaml \
 
 # Directory with test source files
 test_dir := tests
@@ -234,6 +240,7 @@ check_py_files := \
     $(test_unit_py_files) \
     $(test_end2end_py_files) \
     $(test_common_py_files) \
+    $(example_py_files) \
     $(doc_conf_dir)/conf.py \
     $(wildcard docs/notebooks/*.py) \
 

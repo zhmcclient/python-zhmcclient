@@ -19,78 +19,81 @@ mode.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    print(__doc__)
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
-
-try:
-    client = zhmcclient.Client(session)
-
-    print("Finding a CPC in classic mode ...")
-    cpcs = client.cpcs.list(filter_args={'dpm-enabled': False})
-    if not cpcs:
-        print(f"Error: HMC at {host} does not manage any CPCs in classic mode")
-        sys.exit(1)
-    cpc = cpcs[0]
-    print(f"Using CPC {cpc.name}")
-
-    # Reset activation profiles
-    print(f"Listing reset activation profiles for CPC {cpc.name} ...")
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
     try:
-        profiles = cpc.reset_activation_profiles.list()
+        session = setup_hmc_session(hmc_def)
     except zhmcclient.Error as exc:
-        print("Error: Cannot list reset activation profiles for CPC "
-              f"{cpc.name}: {exc.__class__.__name__}: {exc}")
-        sys.exit(1)
-    for profile in profiles:
-        print(profile.name, profile.get_property('element-uri'))
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-    # Image activation profiles
-    print(f"Listing image activation profiles for CPC {cpc.name} ...")
     try:
-        profiles = cpc.image_activation_profiles.list()
-    except zhmcclient.Error as exc:
-        print("Error: Cannot list image activation profiles for CPC "
-              f"{cpc.name}: {exc.__class__.__name__}: {exc}")
-        sys.exit(1)
-    for profile in profiles:
-        print(profile.name, profile.get_property('element-uri'))
+        client = zhmcclient.Client(session)
 
-    # Load activation profiles
-    print(f"Listing load activation profiles for CPC {cpc.name} ...")
-    try:
-        profiles = cpc.load_activation_profiles.list()
-    except zhmcclient.Error as exc:
-        print("Error: Cannot list load activation profiles for CPC "
-              f"{cpc.name}: {exc.__class__.__name__}: {exc}")
-        sys.exit(1)
-    for profile in profiles:
-        print(profile.name, profile.get_property('element-uri'))
+        print("Finding a CPC in classic mode ...")
+        cpcs = client.cpcs.list(filter_args={'dpm-enabled': False})
+        if not cpcs:
+            print(f"Error: HMC at {host} does not manage any CPCs in classic "
+                  "mode")
+            return 1
+        cpc = cpcs[0]
+        print(f"Using CPC {cpc.name}")
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        # Reset activation profiles
+        print(f"Listing reset activation profiles for CPC {cpc.name} ...")
+        try:
+            profiles = cpc.reset_activation_profiles.list()
+        except zhmcclient.Error as exc:
+            print("Error: Cannot list reset activation profiles for CPC "
+                  f"{cpc.name}: {exc.__class__.__name__}: {exc}")
+            return 1
+        for profile in profiles:
+            print(profile.name, profile.get_property('element-uri'))
+
+        # Image activation profiles
+        print(f"Listing image activation profiles for CPC {cpc.name} ...")
+        try:
+            profiles = cpc.image_activation_profiles.list()
+        except zhmcclient.Error as exc:
+            print("Error: Cannot list image activation profiles for CPC "
+                  f"{cpc.name}: {exc.__class__.__name__}: {exc}")
+            return 1
+        for profile in profiles:
+            print(profile.name, profile.get_property('element-uri'))
+
+        # Load activation profiles
+        print(f"Listing load activation profiles for CPC {cpc.name} ...")
+        try:
+            profiles = cpc.load_activation_profiles.list()
+        except zhmcclient.Error as exc:
+            print("Error: Cannot list load activation profiles for CPC "
+                  f"{cpc.name}: {exc.__class__.__name__}: {exc}")
+            return 1
+        for profile in profiles:
+            print(profile.name, profile.get_property('element-uri'))
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

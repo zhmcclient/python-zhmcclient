@@ -3309,7 +3309,7 @@ def containsItemsWithSubstring(substr, excluded_classes, inventory_list):
     """
     find_list = [x for x in inventory_list
                  if x['class'] not in excluded_classes
-                 and str(x).find(substr) != -1]  # noqa: W503
+                 and str(x).find(substr) != -1]
     found = len(find_list) > 0
     return found
 

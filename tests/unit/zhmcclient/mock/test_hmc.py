@@ -498,7 +498,7 @@ class TestFakedActivationProfile:
         assert len(resetprofiles) == 2
 
         resetprofile2 = [p for p in resetprofiles
-                         if p.properties['name'] ==  # noqa: W504
+                         if p.properties['name'] ==
                          resetprofile2_in_props['name']][0]
 
         assert new_resetprofile.properties == resetprofile2.properties
@@ -1334,7 +1334,7 @@ class TestFakedPartition:
         assert len(partitions) == 2
 
         partition2 = [p for p in partitions
-                      if p.properties['name'] ==  # noqa: W504
+                      if p.properties['name'] ==
                       partition2_in_props['name']][0]
 
         assert new_partition.properties == partition2.properties
@@ -1592,7 +1592,7 @@ class TestFakedVirtualFunction:
         assert len(virtual_functions) == 2
 
         virtual_function2 = [vf for vf in virtual_functions
-                             if vf.properties['name'] ==  # noqa: W504
+                             if vf.properties['name'] ==
                              virtual_function2_in_props['name']][0]
 
         assert new_virtual_function.properties == virtual_function2.properties
@@ -1708,7 +1708,7 @@ class TestFakedVirtualSwitch:
         assert len(virtual_switches) == 2
 
         virtual_switch2 = [p for p in virtual_switches
-                           if p.properties['name'] ==  # noqa: W504
+                           if p.properties['name'] ==
                            virtual_switch2_in_props['name']][0]
 
         assert new_virtual_switch.properties == virtual_switch2.properties
@@ -1821,7 +1821,7 @@ class TestFakedCapacityGroup:
         assert len(capacity_groups) == 2
 
         capacity_group2 = [p for p in capacity_groups
-                           if p.properties['name'] ==  # noqa: W504
+                           if p.properties['name'] ==
                            capacity_group2_in_props['name']][0]
 
         assert new_capacity_group.properties == capacity_group2.properties

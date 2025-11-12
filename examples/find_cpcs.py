@@ -18,55 +18,58 @@ Example that finds CPCs in different ways.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    print(__doc__)
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
-
-try:
-    client = zhmcclient.Client(session)
-
-    print("Finding CPCs in classic mode by filtering on properties ...")
-    cpcs = client.cpcs.list(filter_args={'dpm-enabled': False})
-    if not cpcs:
-        print(f"Error: HMC at {host} does not manage any CPCs in classic mode")
-        sys.exit(1)
-    cpc_names = [cpc.name for cpc in cpcs]
-    cpc_str = ', '.join(cpc_names)
-    print(f"Found CPCs: {cpc_str}")
-
-    cpc_name = cpc_names[0]
-    print(f"Finding CPC by name={cpc_name} ...")
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
     try:
-        cpc = client.cpcs.find(name=cpc_name)
-    except zhmcclient.NotFound:
-        print(f"Error: Could not find CPC {cpc_name}")
-        sys.exit(1)
-    print(f"Found CPC: {cpc.name}")
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+    try:
+        client = zhmcclient.Client(session)
+
+        print("Finding CPCs in classic mode by filtering on properties ...")
+        cpcs = client.cpcs.list(filter_args={'dpm-enabled': False})
+        if not cpcs:
+            print(f"Error: HMC at {host} does not manage any CPCs in classic "
+                  "mode")
+            return 1
+        cpc_names = [cpc.name for cpc in cpcs]
+        cpc_str = ', '.join(cpc_names)
+        print(f"Found CPCs: {cpc_str}")
+
+        cpc_name = cpc_names[0]
+        print(f"Finding CPC by name={cpc_name} ...")
+        try:
+            cpc = client.cpcs.find(name=cpc_name)
+        except zhmcclient.NotFound:
+            print(f"Error: Could not find CPC {cpc_name}")
+            return 1
+        print(f"Found CPC: {cpc.name}")
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

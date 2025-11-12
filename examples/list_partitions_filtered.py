@@ -18,68 +18,67 @@ Example that lists partitions with name filtering.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-FILTERS_LIST = [
-    dict(name=r'olo'),
-]
+    urllib3.disable_warnings()
 
-print(__doc__)
+    print(__doc__)
 
-if len(sys.argv) <= 1:
-    print(f"Usage: {sys.argv[0]} CPC [PARTITION]")
-    print("Where:")
-    print("  CPC        Name of the CPC")
-    print("  PARTITION  Optional: Filter string for matching the partition name")
-    sys.exit(1)
+    if len(sys.argv) not in (2, 3):
+        print(f"Usage: {sys.argv[0]} CPC [PARTITION]")
+        print("Where:")
+        print("  CPC        Name of the CPC")
+        print("  PARTITION  Optional: Filter string for matching the "
+              "partition name")
+        return 2
 
-cpc_name = sys.argv[1]
-try:
-    partition_name_filter = sys.argv[2]
-except IndexError:
-    partition_name_filter = None
+    cpc_name = sys.argv[1]
+    try:
+        partition_name_filter = sys.argv[2]
+    except IndexError:
+        partition_name_filter = None
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    try:
+        client = zhmcclient.Client(session)
 
-try:
-    client = zhmcclient.Client(session)
+        cpc = client.cpcs.find(name=cpc_name)
+        print(f"Using CPC {cpc.name}")
 
-    cpc = client.cpcs.find(name=cpc_name)
-    print(f"Using CPC {cpc.name}")
+        if partition_name_filter:
+            filter_args = {'name': partition_name_filter}
+        else:
+            filter_args = None
 
-    if partition_name_filter:
-        filter_args = {'name': partition_name_filter}
-    else:
-        filter_args = None
+        print(f"\nListing partitions with filter_args={filter_args!r} ...")
+        partitions = cpc.partitions.list(filter_args=filter_args)
+        print("Resulting partitions (sorted):")
+        for part in sorted(partitions, key=lambda p: p.name):
+            print(f"  name={part.name}")
 
-    print(f"\nListing partitions with filter_args={filter_args!r} ...")
-    partitions = cpc.partitions.list(filter_args=filter_args)
-    print("Resulting partitions (sorted):")
-    for part in sorted(partitions, key=lambda p: p.name):
-        print(f"  name={part.name}")
+        return 0
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

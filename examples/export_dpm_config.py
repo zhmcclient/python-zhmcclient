@@ -19,20 +19,10 @@ consistency with the inventory data.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
-
-requests.packages.urllib3.disable_warnings()
-
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
 
 def check(config_items, inventory_data, classname, uri_prop, prop, value):
@@ -54,82 +44,94 @@ def check(config_items, inventory_data, classname, uri_prop, prop, value):
           f"Check status: {status}")
 
 
-print(__doc__)
+def main():
+    "Main function of the script"
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    urllib3.disable_warnings()
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    print(__doc__)
 
-try:
-    client = zhmcclient.Client(session)
-
-    print("Finding a CPC in DPM mode ...")
-    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
-    if not cpcs:
-        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
-        sys.exit(1)
-    cpc = cpcs[0]
-    print(f"Using CPC {cpc.name}")
-
-    print(f"Exporting DPM configuration of CPC {cpc.name} ...")
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
     try:
-        dpm_config = cpc.export_dpm_configuration()
-    except zhmcclient.ConsistencyError as exc:
-        print(f"Error: Cannot export DPM configuration: {exc}")
-        sys.exit(1)
-    fields_str = ', '.join(dpm_config.keys())
-    print(f"Fields in exported DPM configuration: {fields_str}")
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-    print("Checking some items in the exported DPM configuration for "
-          "consistency with the inventory data ...")
+    try:
+        client = zhmcclient.Client(session)
 
-    print("Retrieving inventory data ...")
-    inventory_data = client.get_inventory(['dpm-resources', 'cpc'])
+        print("Finding a CPC in DPM mode ...")
+        cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+        if not cpcs:
+            print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
+            return 1
+        cpc = cpcs[0]
+        print(f"Using CPC {cpc.name}")
 
-    adapter_uris = [x['object-uri'] for x in inventory_data
-                    if x['class'] == 'adapter' and x['parent'] == cpc.uri]
-    partition_uris = [x['object-uri'] for x in inventory_data
-                      if x['class'] == 'partition' and x['parent'] == cpc.uri]
-    storage_group_uris = [x['object-uri'] for x in inventory_data
-                          if x['class'] == 'storage-group'
-                          and x['cpc-uri'] == cpc.uri]
+        print(f"Exporting DPM configuration of CPC {cpc.name} ...")
+        try:
+            dpm_config = cpc.export_dpm_configuration()
+        except zhmcclient.ConsistencyError as exc:
+            print(f"Error: Cannot export DPM configuration: {exc}")
+            return 1
+        fields_str = ', '.join(dpm_config.keys())
+        print(f"Fields in exported DPM configuration: {fields_str}")
 
-    check(dpm_config.get('adapters'), inventory_data,
-          'adapter', 'object-uri', 'parent', cpc.uri)
-    check(dpm_config.get('network-ports'), inventory_data,
-          'network-port', 'element-uri', 'parent', adapter_uris)
-    check(dpm_config.get('storage-ports'), inventory_data,
-          'storage-port', 'element-uri', 'parent', adapter_uris)
+        print("Checking some items in the exported DPM configuration for "
+              "consistency with the inventory data ...")
 
-    check(dpm_config.get('partitions'), inventory_data,
-          'partition', 'object-uri', 'parent', cpc.uri)
-    check(dpm_config.get('nics'), inventory_data,
-          'nic', 'element-uri', 'parent', partition_uris)
-    check(dpm_config.get('hbas'), inventory_data,
-          'hba', 'element-uri', 'parent', partition_uris)
-    check(dpm_config.get('virtual-functions'), inventory_data,
-          'virtual-function', 'element-uri', 'parent', partition_uris)
+        print("Retrieving inventory data ...")
+        inventory_data = client.get_inventory(['dpm-resources', 'cpc'])
 
-    check(dpm_config.get('virtual-switches'), inventory_data,
-          'virtual-switch', 'object-uri', 'parent', cpc.uri)
-    check(dpm_config.get('capacity-groups'), inventory_data,
-          'capacity-group', 'element-uri', 'parent', cpc.uri)
+        adapter_uris = [x['object-uri'] for x in inventory_data
+                        if x['class'] == 'adapter' and x['parent'] == cpc.uri]
+        partition_uris = [x['object-uri'] for x in inventory_data
+                          if x['class'] == 'partition'
+                          and x['parent'] == cpc.uri]
+        storage_group_uris = [x['object-uri'] for x in inventory_data
+                              if x['class'] == 'storage-group'
+                              and x['cpc-uri'] == cpc.uri]
 
-    check(dpm_config.get('storage-sites'), inventory_data,
-          'storage-site', 'object-uri', None, None)
+        check(dpm_config.get('adapters'), inventory_data,
+              'adapter', 'object-uri', 'parent', cpc.uri)
+        check(dpm_config.get('network-ports'), inventory_data,
+              'network-port', 'element-uri', 'parent', adapter_uris)
+        check(dpm_config.get('storage-ports'), inventory_data,
+              'storage-port', 'element-uri', 'parent', adapter_uris)
 
-    check(dpm_config.get('storage-groups'), inventory_data,
-          'storage-group', 'object-uri', 'cpc-uri', cpc.uri)
-    check(dpm_config.get('storage-volumes'), inventory_data,
-          'storage-volume', 'element-uri', 'parent', storage_group_uris)
+        check(dpm_config.get('partitions'), inventory_data,
+              'partition', 'object-uri', 'parent', cpc.uri)
+        check(dpm_config.get('nics'), inventory_data,
+              'nic', 'element-uri', 'parent', partition_uris)
+        check(dpm_config.get('hbas'), inventory_data,
+              'hba', 'element-uri', 'parent', partition_uris)
+        check(dpm_config.get('virtual-functions'), inventory_data,
+              'virtual-function', 'element-uri', 'parent', partition_uris)
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        check(dpm_config.get('virtual-switches'), inventory_data,
+              'virtual-switch', 'object-uri', 'parent', cpc.uri)
+        check(dpm_config.get('capacity-groups'), inventory_data,
+              'capacity-group', 'element-uri', 'parent', cpc.uri)
+
+        check(dpm_config.get('storage-sites'), inventory_data,
+              'storage-site', 'object-uri', None, None)
+
+        check(dpm_config.get('storage-groups'), inventory_data,
+              'storage-group', 'object-uri', 'cpc-uri', cpc.uri)
+        check(dpm_config.get('storage-volumes'), inventory_data,
+              'storage-volume', 'element-uri', 'parent', storage_group_uris)
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

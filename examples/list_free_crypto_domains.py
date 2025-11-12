@@ -19,82 +19,83 @@ of a CPC in DPM mode.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    print(__doc__)
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-try:
-    client = zhmcclient.Client(session)
+    try:
+        client = zhmcclient.Client(session)
 
-    print("Finding a CPC in DPM mode ...")
-    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
-    if not cpcs:
-        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
-        sys.exit(1)
-    cpc = cpcs[0]
-    print(f"Using CPC {cpc.name}")
+        print("Finding a CPC in DPM mode ...")
+        cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+        if not cpcs:
+            print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
+            return 1
+        cpc = cpcs[0]
+        print(f"Using CPC {cpc.name}")
 
-    print(f"Finding all crypto adapters of CPC {cpc.name} ...")
-    crypto_adapters = cpc.adapters.findall(type='crypto')
-    crypto_adapter_names = [ca.name for ca in crypto_adapters]
-    print("Found crypto adapters:")
-    for ca in crypto_adapters:
-        print(f"  {ca.name} (type: {ca.get_property('crypto-type')})")
+        print(f"Finding all crypto adapters of CPC {cpc.name} ...")
+        crypto_adapters = cpc.adapters.findall(type='crypto')
+        print("Found crypto adapters:")
+        for ca in crypto_adapters:
+            print(f"  {ca.name} (type: {ca.get_property('crypto-type')})")
 
-    print("Determining crypto domains that are free on all crypto adapters of "
-          f"CPC {cpc.name} ...")
-    free_domains = cpc.get_free_crypto_domains(crypto_adapters)
-    # print(f"Free domains (as list): {free_domains}")
+        print("Determining crypto domains that are free on all crypto "
+              f"adapters of CPC {cpc.name} ...")
+        free_domains = cpc.get_free_crypto_domains(crypto_adapters)
+        # print(f"Free domains (as list): {free_domains}")
 
-    # Convert this list of numbers into better readable number ranges:
-    ranges = []
-    range_start = -1
-    last_d = -1
-    for d in sorted(free_domains):
-        if range_start == -1:
-            range_start = d
-        elif d == last_d + 1:
-            pass
-        else:
+        # Convert this list of numbers into better readable number ranges:
+        ranges = []
+        range_start = -1
+        last_d = -1
+        for d in sorted(free_domains):
+            if range_start == -1:
+                range_start = d
+            elif d == last_d + 1:
+                pass
+            else:
+                if range_start == last_d:
+                    ranges.append(f"{last_d}")
+                else:
+                    ranges.append(f"{range_start}-{last_d}")
+                range_start = d
+            last_d = d
+            continue
+        if range_start != -1:  # Process the last range, if any
             if range_start == last_d:
                 ranges.append(f"{last_d}")
             else:
                 ranges.append(f"{range_start}-{last_d}")
-            range_start = d
-        last_d = d
-        continue
-    if range_start != -1:  # Process the last range, if any
-        if range_start == last_d:
-            ranges.append(f"{last_d}")
-        else:
-            ranges.append(f"{range_start}-{last_d}")
-    free_domains_str = ', '.join(ranges)
-    print(f"Free domains (as ranges): {free_domains_str}")
+        free_domains_str = ', '.join(ranges)
+        print(f"Free domains (as ranges): {free_domains_str}")
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
