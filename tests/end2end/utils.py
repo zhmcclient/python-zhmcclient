@@ -30,7 +30,7 @@ import pytest
 import zhmcclient
 
 # Prefix used for names of resources that are created during tests
-TEST_PREFIX = 'zhmcclient_tests_end2end'
+TEST_PREFIX = 'zhmcclient_e2e'
 
 
 class End2endTestWarning(UserWarning):
