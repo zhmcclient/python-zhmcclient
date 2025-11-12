@@ -33,7 +33,7 @@ from zhmcclient.testutils import LOG_FORMAT_STRING, LOG_DATETIME_FORMAT, \
     LOG_DATETIME_TIMEZONE
 
 # Prefix used for names of resources that are created during tests
-TEST_PREFIX = 'zhmcclient_tests_end2end'
+TEST_PREFIX = 'zhmcclient_e2e'
 
 
 @pytest.fixture(scope='function')
