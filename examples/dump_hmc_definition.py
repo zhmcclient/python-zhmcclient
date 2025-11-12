@@ -18,46 +18,49 @@ Example that inspects an HMC and dumps it as a HMC definition file.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+HMC_YAML_FILE = "hmc_definition.yaml"
 
-hmc_yaml_file = 'hmc_definition.yaml'
 
-print(__doc__)
+def main():
+    "Main function of the script"
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    urllib3.disable_warnings()
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    print(__doc__)
 
-try:
-    client = zhmcclient.Client(session)
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-    print("Dumping HMC resources as an HMC definition ...")
-    hmc_yaml_str = client.to_hmc_yaml()
+    try:
+        client = zhmcclient.Client(session)
 
-    print(f"Writing HMC definition to file: {hmc_yaml_file}")
-    with open(hmc_yaml_file, 'w') as fp:
-        fp.write(hmc_yaml_str)
+        print("Dumping HMC resources as an HMC definition ...")
+        hmc_yaml_str = client.to_hmc_yaml()
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        print(f"Writing HMC definition to file: {HMC_YAML_FILE}")
+        with open(HMC_YAML_FILE, "w", encoding="utf-8") as fp:
+            fp.write(hmc_yaml_str)
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

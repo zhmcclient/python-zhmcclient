@@ -18,52 +18,54 @@ Example that retrieves certain resource classes from the inventory.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    print(__doc__)
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-try:
-    client = zhmcclient.Client(session)
+    try:
+        client = zhmcclient.Client(session)
 
-    resource_classes = ['cpc', 'partition', 'adapter']
-    rc_str = ', '.join(resource_classes)
-    print(f"Retrieving inventory for resource classes: {rc_str} ...")
-    resources = client.get_inventory(resource_classes)
+        resource_classes = ['cpc', 'partition', 'adapter']
+        rc_str = ', '.join(resource_classes)
+        print(f"Retrieving inventory for resource classes: {rc_str} ...")
+        resources = client.get_inventory(resource_classes)
 
-    print("Returned resources with a subset of properties in the returned "
-          "order:")
-    format_str = "{:<24s} {:<24s} {}"
-    print(format_str.format("Class", "Name", "URI"))
-    for res in resources:
-        name = res.get('name', '<no name>')
-        uri = res.get('object-uri') or res.get('element-uri')
-        line = format_str.format(res['class'], name, uri)
-        print(line)
+        print("Returned resources with a subset of properties in the returned "
+              "order:")
+        format_str = "{:<24s} {:<24s} {}"
+        print(format_str.format("Class", "Name", "URI"))
+        for res in resources:
+            name = res.get('name', '<no name>')
+            uri = res.get('object-uri') or res.get('element-uri')
+            line = format_str.format(res['class'], name, uri)
+            print(line)
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -19,110 +19,117 @@ in DPM mode.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 import stomp
+
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
-
-requests.packages.urllib3.disable_warnings()
-
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
 # Print metadata for each OS message, before each message
 PRINT_METADATA = False
 
-print(__doc__)
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+def main():
+    "Main function of the script"
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    urllib3.disable_warnings()
 
-try:
-    client = zhmcclient.Client(session)
+    print(__doc__)
 
-    print("Finding a CPC in DPM mode ...")
-    cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
-    if not cpcs:
-        print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
-        sys.exit(1)
-
-    for cpc_ in cpcs:
-        print(f"Finding an active partition on CPC {cpc_.name} ...")
-        parts = cpc_.partitions.list(filter_args={'status': 'active'})
-        if not parts:
-            print(f"CPC {cpc_.name} does not have any active partitions")
-            continue
-        cpc = cpc_
-        part = parts[0]
-        print(f"Using partition {part.name} with status "
-              f"{part.get_property('status')}")
-        break
-    else:
-        print(f"Error: No CPC in DPM mode has any active partitions")
-        sys.exit(1)
-
-    print(f"Opening OS message channel for partition {part.name} on CPC "
-          f"{cpc.name} (including refresh messages) ...")
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
     try:
-        msg_topic = part.open_os_message_channel(include_refresh_messages=True)
+        session = setup_hmc_session(hmc_def)
     except zhmcclient.Error as exc:
-        print("Error: Cannot open OS message channel for partition "
-              f"{part.name}: {exc.__class__.__name__}: {exc}")
-        sys.exit(1)
-    print(f"OS message channel notification topic: {msg_topic}")
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-    print(f"Creating a notification receiver for topic {msg_topic} ...")
     try:
-        receiver = zhmcclient.NotificationReceiver(
-            msg_topic, host, userid, password, verify_cert=verify_cert)
-    except Exception as exc:
-        print(f"Error: Cannot create notification receiver: {exc}")
-        sys.exit(1)
+        client = zhmcclient.Client(session)
 
-    print(f"Debug: STOMP retry/timeout config: {receiver._rt_config}")
+        print("Finding a CPC in DPM mode ...")
+        cpcs = client.cpcs.list(filter_args={'dpm-enabled': True})
+        if not cpcs:
+            print(f"Error: HMC at {host} does not manage any CPCs in DPM mode")
+            return 1
 
-    print("Showing OS messages ...")
-    print("-----------------------")
-    while True:
-        try:
-            for headers, message in receiver.notifications():
-                os_msg_list = message['os-messages']
-                for os_msg in os_msg_list:
-                    if PRINT_METADATA:
-                        msg_id = os_msg['message-id']
-                        held = os_msg['is-held']
-                        priority = os_msg['is-priority']
-                        prompt = os_msg.get('prompt-text', None)
-                        print(f"# OS message {msg_id} (held: {held}, "
-                              f"priority: {priority}, prompt: {prompt}):")
-                    msg_txt = os_msg['message-text'].strip('\n')
-                    print(msg_txt)
-        except zhmcclient.NotificationError as exc:
-            print(f"Notification Error: {exc} - reconnecting")
-            continue
-        except stomp.exception.StompException as exc:
-            print(f"STOMP Error: {exc} - reconnecting")
-            continue
-        except KeyboardInterrupt:
-            print("Keyboard interrupt - leaving receiver loop")
-            receiver.close()
+        for cpc_ in cpcs:
+            print(f"Finding an active partition on CPC {cpc_.name} ...")
+            parts = cpc_.partitions.list(filter_args={'status': 'active'})
+            if not parts:
+                print(f"CPC {cpc_.name} does not have any active partitions")
+                continue
+            cpc = cpc_
+            part = parts[0]
+            print(f"Using partition {part.name} with status "
+                  f"{part.get_property('status')}")
             break
         else:
-            raise AssertionError("Receiver was closed - should not happen")
+            print("Error: No CPC in DPM mode has any active partitions")
+            return 1
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        print(f"Opening OS message channel for partition {part.name} on CPC "
+              f"{cpc.name} (including refresh messages) ...")
+        try:
+            msg_topic = part.open_os_message_channel(
+                include_refresh_messages=True)
+        except zhmcclient.Error as exc:
+            print("Error: Cannot open OS message channel for partition "
+                  f"{part.name}: {exc.__class__.__name__}: {exc}")
+            return 1
+        print(f"OS message channel notification topic: {msg_topic}")
+
+        print(f"Creating a notification receiver for topic {msg_topic} ...")
+        try:
+            # pylint: disable=protected-access
+            receiver = zhmcclient.NotificationReceiver(
+                msg_topic, host, session.userid, session._password,
+                verify_cert=session.verify_cert)
+        except zhmcclient.Error as exc:
+            print(f"Error: Cannot create notification receiver: {exc}")
+            return 1
+
+        # pylint: disable=protected-access
+        print(f"Debug: STOMP retry/timeout config: {receiver._rt_config}")
+
+        print("Showing OS messages ...")
+        print("-----------------------")
+        while True:
+            try:
+                for _, message in receiver.notifications():
+                    os_msg_list = message['os-messages']
+                    for os_msg in os_msg_list:
+                        if PRINT_METADATA:
+                            msg_id = os_msg['message-id']
+                            held = os_msg['is-held']
+                            priority = os_msg['is-priority']
+                            prompt = os_msg.get('prompt-text', None)
+                            print(f"# OS message {msg_id} (held: {held}, "
+                                  f"priority: {priority}, prompt: {prompt}):")
+                        msg_txt = os_msg['message-text'].strip('\n')
+                        print(msg_txt)
+            except zhmcclient.NotificationError as exc:
+                print(f"Notification Error: {exc} - reconnecting")
+                continue
+            except stomp.exception.StompException as exc:
+                print(f"STOMP Error: {exc} - reconnecting")
+                continue
+            except KeyboardInterrupt:
+                print("Keyboard interrupt - leaving receiver loop")
+                receiver.close()
+                break
+            else:
+                raise AssertionError("Receiver was closed - should not happen")
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

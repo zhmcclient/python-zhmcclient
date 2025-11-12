@@ -158,7 +158,7 @@ def logged_api_call(
             "'properties_pos', 'blanked_properties' must also be specified.")
 
     if blanked_properties is not None and (
-            not isinstance(blanked_properties, Sequence) or  # noqa: W504
+            not isinstance(blanked_properties, Sequence) or
             isinstance(blanked_properties, str)):
         raise TypeError(
             "The 'blanked_properties' parameter of the @logged_api_call "

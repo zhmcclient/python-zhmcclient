@@ -19,52 +19,54 @@ Example that cleans up zhmc test partitions left over by the other examples.
 
 import sys
 import re
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    print(__doc__)
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
-
-try:
-    client = zhmcclient.Client(session)
-
-    print("Deleting leftover zhmc test partitions created by the other "
-          "examples ...")
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
     try:
-        parts = client.consoles.console.list_permitted_partitions()
-        for part in parts:
-            if re.match(r'^zhmc_test_[a-z0-9\-]{8,}$', part.name):
-                if part.get_property('status') != 'stopped':
-                    print(f"Stopping test partition: {part.name} ...")
-                    part.stop()
-                print(f"Deleting test partition: {part.name} ...")
-                part.delete()
+        session = setup_hmc_session(hmc_def)
     except zhmcclient.Error as exc:
-        print(f"Error: {exc.__class__.__name__}: {exc}")
-        sys.exit(1)
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+    try:
+        client = zhmcclient.Client(session)
+
+        print("Deleting leftover zhmc test partitions created by the other "
+              "examples ...")
+        try:
+            parts = client.consoles.console.list_permitted_partitions()
+            for part in parts:
+                if re.match(r'^zhmc_test_[a-z0-9\-]{8,}$', part.name):
+                    if part.get_property('status') != 'stopped':
+                        print(f"Stopping test partition: {part.name} ...")
+                        part.stop()
+                    print(f"Deleting test partition: {part.name} ...")
+                    part.delete()
+        except zhmcclient.Error as exc:
+            print(f"Error: {exc.__class__.__name__}: {exc}")
+            return 1
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

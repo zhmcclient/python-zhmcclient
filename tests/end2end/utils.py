@@ -646,12 +646,9 @@ def skipif_no_partition_link_feature(cpc):
     Hipersockets and CTC.
     """
     has_all_features = (
-        has_api_feature(
-            "dpm-smcd-partition-link-management", cpc) and  # noqa: W504
-        has_api_feature(
-            "dpm-hipersockets-partition-link-management", cpc) and  # noqa: W504
-        has_api_feature(
-            "dpm-ctc-partition-link-management", cpc))
+        has_api_feature("dpm-smcd-partition-link-management", cpc) and
+        has_api_feature("dpm-hipersockets-partition-link-management", cpc) and
+        has_api_feature("dpm-ctc-partition-link-management", cpc))
     if not has_all_features:
         skip_warn("The partition link related API features are not all enabled "
                   f"or not all supported on CPC {cpc.name}")

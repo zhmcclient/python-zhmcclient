@@ -20,98 +20,100 @@ metrics context.
 
 import sys
 import time
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    print(__doc__)
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
-
-try:
-    client = zhmcclient.Client(session)
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
     try:
-        metric_groups = [
+        client = zhmcclient.Client(session)
 
-            # Please edit this section so it contains only the metric groups
-            # that mnatch the operational mode of the targeted CPC.
+        try:
+            metric_groups = [
 
-            'cpc-usage-overview',  # Only in classic mode
-            'logical-partition-usage',  # Only in classic mode
-            'channel-usage',  # Only in classic mode
+                # Please edit this section so it contains only the metric groups
+                # that mnatch the operational mode of the targeted CPC.
 
-            'dpm-system-usage-overview',  # Only in DPM mode
-            'partition-usage',  # Only in DPM mode
-            'adapter-usage',  # Only in DPM mode
-            'crypto-usage',  # Only in DPM mode
-            'flash-memory-usage',  # Only in DPM mode
-            'roce-usage',  # Only in DPM mode
+                'cpc-usage-overview',  # Only in classic mode
+                'logical-partition-usage',  # Only in classic mode
+                'channel-usage',  # Only in classic mode
 
-            # 'environmental-power-status',  # In any mode, starting with z15
+                'dpm-system-usage-overview',  # Only in DPM mode
+                'partition-usage',  # Only in DPM mode
+                'adapter-usage',  # Only in DPM mode
+                'crypto-usage',  # Only in DPM mode
+                'flash-memory-usage',  # Only in DPM mode
+                'roce-usage',  # Only in DPM mode
 
-            # 'virtualization-host-cpu-memory-usage',  # Only in ensemble mode
+                # 'environmental-power-status',  # In any mode starting with z15
 
-        ]
+                # 'virtualization-host-cpu-memory-usage',  # Only  ensemble mode
 
-        print("Creating Metrics Context ...")
-        mc = client.metrics_contexts.create(
-            {'anticipated-frequency-seconds': 15,
-             'metric-groups': metric_groups})
+            ]
 
-        sleep_time = 15  # seconds
+            print("Creating Metrics Context ...")
+            mc = client.metrics_contexts.create(
+                {'anticipated-frequency-seconds': 15,
+                 'metric-groups': metric_groups})
 
-        print(f"Sleeping for {sleep_time} seconds ...")
-        time.sleep(sleep_time)
+            sleep_time = 15  # seconds
 
-        print("Retrieving the current metric values ...")
-        mr_str = mc.get_metrics()
+            print(f"Sleeping for {sleep_time} seconds ...")
+            time.sleep(sleep_time)
 
-        print("Current metric values:")
-        mr = zhmcclient.MetricsResponse(mc, mr_str)
-        for mg in mr.metric_group_values:
-            mg_name = mg.name
-            mg_def = mc.metric_group_definitions[mg_name]
-            print(f"  Metric group: {mg_name}")
-            for ov in mg.object_values:
-                print(f"    Resource: {ov.resource_uri}")
-                print(f"    Timestamp: {ov.timestamp}")
-                print("    Metric values:")
-                for m_name in ov.metrics:
-                    m_value = ov.metrics[m_name]
-                    m_def = mg_def.metric_definitions[m_name]
-                    m_unit = m_def.unit or ''
-                    print(f"      {m_name:30}  {m_value} {m_unit}")
-            if not mg.object_values:
-                print("    No resources")
+            print("Retrieving the current metric values ...")
+            mr_str = mc.get_metrics()
 
-        print("Deleting Metrics Context ...")
-        mc.delete()
+            print("Current metric values:")
+            mr = zhmcclient.MetricsResponse(mc, mr_str)
+            for mg in mr.metric_group_values:
+                mg_name = mg.name
+                mg_def = mc.metric_group_definitions[mg_name]
+                print(f"  Metric group: {mg_name}")
+                for ov in mg.object_values:
+                    print(f"    Resource: {ov.resource_uri}")
+                    print(f"    Timestamp: {ov.timestamp}")
+                    print("    Metric values:")
+                    for m_name in ov.metrics:
+                        m_value = ov.metrics[m_name]
+                        m_def = mg_def.metric_definitions[m_name]
+                        m_unit = m_def.unit or ''
+                        print(f"      {m_name:30}  {m_value} {m_unit}")
+                if not mg.object_values:
+                    print("    No resources")
 
-    except zhmcclient.Error as exc:
-        print(f"{exc.__class__.__name__}: {exc}")
-        sys.exit(1)
+            print("Deleting Metrics Context ...")
+            mc.delete()
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        except zhmcclient.Error as exc:
+            print(f"{exc.__class__.__name__}: {exc}")
+            return 1
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

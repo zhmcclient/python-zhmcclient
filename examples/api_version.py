@@ -18,32 +18,42 @@ Example that gets the API version of an HMC using an unauthenticated session.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
 from zhmcclient.testutils import hmc_definitions
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-print(__doc__)
+    urllib3.disable_warnings()
 
-print(f"Using HMC {nickname} at {host} ...")
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    nickname = hmc_def.nickname
+    host = hmc_def.host
+    verify_cert = hmc_def.verify_cert
 
-print("Creating an unauthenticated session with the HMC ...")
-try:
-    session = zhmcclient.Session(host, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    print(__doc__)
 
-client = zhmcclient.Client(session)
+    print(f"Using HMC {nickname} at {host} ...")
 
-vi = client.version_info()
-print(f"HMC API version: {vi[0]}.{vi[1]}")
+    print("Creating an unauthenticated session with the HMC ...")
+    try:
+        session = zhmcclient.Session(host, verify_cert=verify_cert)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
+
+    client = zhmcclient.Client(session)
+
+    vi = client.version_info()
+    print(f"HMC API version: {vi[0]}.{vi[1]}")
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

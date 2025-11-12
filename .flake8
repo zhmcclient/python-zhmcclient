@@ -5,8 +5,12 @@ max_line_length = 80
 
 # Keep in sync with ruff
 ignore =
-    # unable to detect undefined names (when using wildcard import)
+    # unable to detect undefined names (when using wildcard import):
     F403
+    # line break before binary operator:
+    W503
+    # line break after binary operator:
+    W504
 
 exclude =
     .git,

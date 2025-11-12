@@ -18,64 +18,70 @@ Example that lists partition links attached to a partition.
 """
 
 import sys
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-from zhmcclient.testutils import hmc_definitions
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
-requests.packages.urllib3.disable_warnings()
 
-# Get HMC info from HMC inventory and vault files
-hmc_def = hmc_definitions()[0]
-nickname = hmc_def.nickname
-host = hmc_def.host
-userid = hmc_def.userid
-password = hmc_def.password
-verify_cert = hmc_def.verify_cert
+def main():
+    "Main function of the script"
 
-if len(sys.argv) != 3:
-    print(f"Usage: {sys.argv[0]} CPC PARTITION")
-    sys.exit(2)
+    urllib3.disable_warnings()
 
-cpc_name = sys.argv[1]
-part_name = sys.argv[2]
+    print(__doc__)
 
-print(__doc__)
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} CPC PARTITION")
+        print("Where:")
+        print("  CPC         Name of the CPC")
+        print("  PARTITION   Name of the partition")
+        return 2
 
-print(f"Using HMC {nickname} at {host} with userid {userid} ...")
+    cpc_name = sys.argv[1]
+    part_name = sys.argv[2]
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
-try:
-    client = zhmcclient.Client(session)
-    console = client.consoles.console
+    try:
+        client = zhmcclient.Client(session)
 
-    print(f"Finding partition {part_name} on CPC {cpc_name} ...")
-    cpc = client.cpcs.find(name=cpc_name)
-    part = cpc.partitions.find(name=part_name)
+        print(f"Finding partition {part_name} on CPC {cpc_name} ...")
+        cpc = client.cpcs.find(name=cpc_name)
+        part = cpc.partitions.find(name=part_name)
 
-    print(f"Listing partition links attached to partition {part_name} ...")
-    partition_links = part.list_attached_partition_links()
+        print(f"Listing partition links attached to partition {part_name} ...")
+        partition_links = part.list_attached_partition_links()
 
-    print()
-    print("Partition Link        Type          State       Attached partitions")
-    print("---------------------------------------------------------------------------------------")
-    for pl in partition_links:
-        name = pl.get_property('name')
-        type = pl.get_property('type')
-        state = pl.get_property('state')
-        attached_parts = pl.list_attached_partitions()
-        attached_part_names = [p.name for p in attached_parts]
-        print(f"{name:20s}  {type:12s}  {state:10}  {', '.join(attached_part_names)}")
-    print()
+        print()
+        print("Partition Link        Type          State       "
+              "Attached partitions")
+        print(87 * "-")
+        for pl in partition_links:
+            name = pl.get_property('name')
+            pl_type = pl.get_property('type')
+            state = pl.get_property('state')
+            attached_parts = pl.list_attached_partitions()
+            attached_part_names = [p.name for p in attached_parts]
+            print(f"{name:20s}  {pl_type:12s}  {state:10}  "
+                  f"{', '.join(attached_part_names)}")
+        print()
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -19,78 +19,84 @@ on a CPC in DPM mode.
 """
 
 import sys
-import getpass
-import requests.packages.urllib3
+import urllib3
 
 import zhmcclient
-
-requests.packages.urllib3.disable_warnings()
-
-# HMC and user (password is prompted)
-host = '10.11.12.13'
-userid = 'myuser'
-verify_cert = False
-
-# CPC and partition to be updated
-cpc_name = 'MYCPC'
-partition_name = 'my_partition'
-
-# Crypto adapters to be assigned to the partition
-crypto_adapter_names = ['CRYP00']
-
-# Crypto domains to be assigned to the partition and ther access mode
-crypto_domains = range(2, 39)
-access_mode = 'control'
+from zhmcclient.testutils import hmc_definitions, setup_hmc_session
 
 
-def get_password(host, userid):
-    prompt = f"Enter password for userid {userid} on HMC at {host}: "
-    return getpass.getpass(prompt)
+def main():
+    "Main function of the script"
 
+    urllib3.disable_warnings()
 
-print(__doc__)
+    print(__doc__)
 
-print(f"Using HMC at {host} with userid {userid} ...")
+    if len(sys.argv) != 6:
+        print(f"Usage: {sys.argv[0]} CPC PARTITION ADAPTER DOMAIN_FROM "
+              "DOMAIN_TO")
+        print("Where:")
+        print("  CPC         Name of the CPC")
+        print("  PARTITION   Name of the partition")
+        print("  ADAPTER     Name of the crypto adapter to attach")
+        print("  DOMAIN_FROM Low end of control domain range to attach")
+        print("  DOMAIN_TO   High end of control domain range to attach")
+        return 2
 
-print("Creating a session with the HMC ...")
-try:
-    session = zhmcclient.Session(
-        host, userid, get_password=get_password, verify_cert=verify_cert)
-except zhmcclient.Error as exc:
-    print(f"Error: Cannot establish session with HMC {host}: "
-          f"{exc.__class__.__name__}: {exc}")
-    sys.exit(1)
+    cpc_name = sys.argv[1]
+    partition_name = sys.argv[2]
+    crypto_adapter_names = [sys.argv[3]]
+    crypto_domains = range(int(sys.argv[4]), int(sys.argv[5]))
+    access_mode = 'control'
 
-try:
-    client = zhmcclient.Client(session)
+    # Get HMC info from HMC inventory and vault files
+    hmc_def = hmc_definitions()[0]
+    host = hmc_def.host
+    print(f"Creating a session with the HMC at {host} ...")
+    try:
+        session = setup_hmc_session(hmc_def)
+    except zhmcclient.Error as exc:
+        print(f"Error: Cannot establish session with HMC {host}: "
+              f"{exc.__class__.__name__}: {exc}")
+        return 1
 
     try:
-        print(f"Finding CPC {cpc_name} ...")
-        cpc = client.cpcs.find(name=cpc_name)
+        client = zhmcclient.Client(session)
 
-        print(f"Finding partition {partition_name} ...")
-        partition = cpc.partitions.find(name=partition_name)
+        try:
+            print(f"Finding CPC {cpc_name} ...")
+            cpc = client.cpcs.find(name=cpc_name)
 
-        crypto_adapters = []
-        for aname in crypto_adapter_names:
-            print(f"Finding crypto adapter {aname} ...")
-            adapter = cpc.adapters.find(name=aname)
-            crypto_adapters.append(adapter)
+            print(f"Finding partition {partition_name} ...")
+            partition = cpc.partitions.find(name=partition_name)
 
-        crypto_domain_config = []
-        for domain in crypto_domains:
-            domain_config = {
-                "domain-index": domain,
-                "access-mode": access_mode,
-            }
-            crypto_domain_config.append(domain_config)
+            crypto_adapters = []
+            for aname in crypto_adapter_names:
+                print(f"Finding crypto adapter {aname} ...")
+                adapter = cpc.adapters.find(name=aname)
+                crypto_adapters.append(adapter)
 
-        partition.increase_crypto_config(crypto_adapters, crypto_domain_config)
+            crypto_domain_config = []
+            for domain in crypto_domains:
+                domain_config = {
+                    "domain-index": domain,
+                    "access-mode": access_mode,
+                }
+                crypto_domain_config.append(domain_config)
 
-    except zhmcclient.Error as exc:
-        print(f"Error: {exc}")
-        sys.exit(1)
+            partition.increase_crypto_config(
+                crypto_adapters, crypto_domain_config)
 
-finally:
-    print("Logging off ...")
-    session.logoff()
+        except zhmcclient.Error as exc:
+            print(f"Error: {exc}")
+            return 1
+
+        return 0
+
+    finally:
+        print("Logging off ...")
+        session.logoff()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

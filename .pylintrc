@@ -517,7 +517,7 @@ argument-naming-style=snake_case
 #       but one trailing underscore is allowed to avoid conflists with built-in
 #       names.
 #       Names matching this expression are compatible with PEP-8.
-argument-rgx=([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})_{0,1}$
+argument-rgx=([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})_{0,1}$
 
 # Naming style matching correct attribute names.
 #attr-naming-style=snake_case
@@ -528,7 +528,7 @@ argument-rgx=([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})_{0,1}$
 # Note: The expression below allows "lower_case_with_underscores" and
 #       "mixedCaseWithoutUnderscores"; leading underscores for privacy are allowed.
 #       Names matching this expression are compatible with PEP-8.
-attr-rgx=(_{0,1}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{1,29})|__[a-z_]+__)$
+attr-rgx=(_{0,1}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})|__[a-z_]+__)$
 
 # Bad variable names which should always be refused, separated by a comma.
 bad-names=foo,
@@ -622,7 +622,7 @@ include-naming-hint=no
 # with the set naming style.
 # Note: The expression below allows "lower_case_with_underscores" and
 #       "mixedCaseWithoutUnderscores"; leading underscores for privacy are allowed.
-inlinevar-rgx=_{0,1}([a-z][a-z0-9_]{0,28}[a-z0-9]|[a-z][a-zA-Z0-9]{0,29})$
+inlinevar-rgx=_{0,1}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{0,39})$
 
 # Naming style matching correct method names.
 #method-naming-style=snake_case
@@ -641,7 +641,7 @@ method-rgx=(_{0,1}([a-z][a-z0-9_]{0,38}[a-z0-9]|[a-z][a-zA-Z0-9]{1,39})|__[a-z_]
 # Regular expression matching correct module names. Overrides module-naming-
 # style. If left empty, module names will be checked with the set naming style.
 # Note: Names matching this expression are compatible with PEP-8.
-module-rgx=(_{0,1}[a-z][a-z0-9_]{0,28}[a-z0-9]|__[a-z_]+__)$
+module-rgx=(_{0,1}[a-z][a-z0-9_]{0,38}[a-z0-9]|__[a-z_]+__)$
 
 # Colon-delimited sets of names that determine each other's naming style when
 # the name regexes allow several styles.
