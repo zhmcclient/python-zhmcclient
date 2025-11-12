@@ -1,0 +1,2 @@
+Test: Fixed the issue with partition link name exceeding a length of 64
+in the end2end test function test_partlink_create_delete().
