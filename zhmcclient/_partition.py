@@ -1680,6 +1680,20 @@ class Partition(BaseResource):
 
         By default, this method waits for completion of its asynchronous job.
 
+        SSC management NICs backed by a Hipersocket adapter can be created
+        by first attaching a Hipersocket-typed Partition Link to this
+        partition, and then updating the created NIC with the
+        :meth:`zhmcclient.Nic.update_properties` method to become an SSC
+        management NIC.
+
+        Limitations:
+
+          * When the API feature "dpm-hipersockets-partition-link-management"
+            is enabled on a z16 CPC (and only there), SSC management NICs
+            cannot be backed by Hipersocket adapters. This limitation can be
+            lifted by installing the firmware feature "DPM IQD Links - Disable",
+            which can be requested by customers from IBM support.
+
         HMC/SE version requirements:
 
         * SE version >= 2.16.0
