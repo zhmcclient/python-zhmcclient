@@ -213,6 +213,14 @@ class NicManager(BaseManager):
 
               properties['virtual-switch-uri'] = vswitch.uri
 
+        Limitations:
+
+          * When the API feature "dpm-hipersockets-partition-link-management"
+            is enabled on a z16 CPC (and only there), SSC management NICs
+            cannot be backed by Hipersocket adapters. This limitation can be
+            lifted by installing the firmware feature "DPM IQD Links - Disable",
+            which can be requested by customers from IBM support.
+
         HMC/SE version requirements:
 
         * SE version 2.13.1

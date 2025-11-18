@@ -193,10 +193,10 @@ class AdapterManager(BaseManager):
         Create and configure a HiperSockets Adapter in this CPC.
 
         z17 CPCs removed the "Create Hipersocket" operation. This method uses
-        the "Create Hipersocket" operation z15 and earlier CPCs, and the
-        "Create Partition Link" operation on z16 and later CPCs. The distinction
-        is made based on the "dpm-hipersockets-partition-link-management"
-        API feature on the CPC.
+        the "Create Partition Link" operation when the API feature
+        "dpm-hipersockets-partition-link-management" is enabled, and otherwise
+        the earlier "Create Hipersocket" operation. As a result, this method
+        supports all generations of CPCs.
 
         HMC/SE version requirements:
 
@@ -206,17 +206,18 @@ class AdapterManager(BaseManager):
         Authorization requirements:
 
         * Object-access permission to the scoping CPC.
-        * On CPCs of z15 and earlier: Task permission to the
-          "Create HiperSockets Adapter" task.
-        * On CPCs of z16 and later: Task permission to the
-          "Create Partition Link" task.
+        * When the "dpm-hipersockets-partition-link-management" API feature is
+          enabled, task permission to the "Create Partition Link" task;
+          otherwise task permission to the "Create HiperSockets Adapter" task.
 
         Parameters:
 
           properties (dict): Initial property values.
             Allowable properties are the following:
 
-            * "name" (str): Required: The adapter's 'name' property.
+            * "name" (str): Required: The adapter's 'name' property. When
+              the Hipersocket adapter is created via a Partition Link, this
+              also becomes the name of the Partition Link.
 
             * "description" (str): Optional: The adapter's 'description'
               property. Default: An empty string.
@@ -230,7 +231,8 @@ class AdapterManager(BaseManager):
 
             These properties are defined in section 'Request body contents'
             in section 'Create Hipersocket' in the :term:`HMC API` book, but
-            they are valid for both approaches.
+            they are valid also when the Hipersocket adapter is created via
+            a Partition Link.
 
         Returns:
 
@@ -252,13 +254,8 @@ class AdapterManager(BaseManager):
         if pl_feature:
             name = properties['name']
             console = cpc.manager.console
-            pl_name = f"Hipersocket {name}"
-            if len(pl_name) > 64:
-                pl_name = f"HS {name}"
-                if len(pl_name) > 64:
-                    pl_name = pl_name[0:64]
             part_link = console.partition_links.create({
-                "name": f"HS {properties['name']}",
+                "name": name,
                 "type": "hipersockets",
                 "cpc-uri": cpc.uri,
             })
@@ -472,16 +469,16 @@ class Adapter(BaseResource):
     @logged_api_call
     def delete(self):
         """
-        Delete this Adapter.
+        Delete this Hipersocket Adapter.
 
         The Adapter must be a HiperSockets Adapter and must not currently be
         the backing adapter of any partition NICs.
 
         z17 CPCs removed the "Delete Hipersocket" operation. This method uses
-        the "Delete Hipersocket" operation z15 and earlier CPCs, and the
-        "Delete Partition Link" operation on z16 and later CPCs. The distinction
-        is made based on the "dpm-hipersockets-partition-link-management"
-        API feature on the CPC.
+        the "Delete Partition Link" operation when the API feature
+        "dpm-hipersockets-partition-link-management" is enabled, and otherwise
+        the earlier "Delete Hipersocket" operation. As a result, this method
+        supports all generations of CPCs.
 
         HMC/SE version requirements:
 
@@ -491,10 +488,9 @@ class Adapter(BaseResource):
         Authorization requirements:
 
         * Object-access permission to the HiperSockets Adapter to be deleted.
-        * On CPCs of z15 and earlier: Task permission to the
-          "Delete HiperSockets Adapter" task.
-        * On CPCs of z16 and later: Task permission to the
-          "Delete Partition Link" task.
+        * When the "dpm-hipersockets-partition-link-management" API feature is
+          enabled, task permission to the "Delete Partition Link" task;
+          otherwise task permission to the "Delete HiperSockets Adapter" task.
 
         Raises:
 
