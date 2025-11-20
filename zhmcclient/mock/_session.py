@@ -204,13 +204,6 @@ FAKED_HMC_DEFINITION_SCHEMA = {
                         "$ref": "#/definitions/LdapServerDefinition"
                     },
                 },
-                "sso_server_definitions": {
-                    "description": "The SSO server definitions on this HMC",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/SSOServerDefinition"
-                    },
-                },
                 "unmanaged_cpcs": {
                     "description": "The unmanaged CPCs discovered by this HMC",
                     "type": "array",
@@ -301,19 +294,6 @@ FAKED_HMC_DEFINITION_SCHEMA = {
         },
         "LdapServerDefinition": {
             "description": "An LDAP server definition on an HMC",
-            "type": "object",
-            "additionalProperties": False,
-            "required": [
-                "properties",
-            ],
-            "properties": {
-                "properties": {
-                    "$ref": "#/definitions/Properties"
-                },
-            },
-        },
-        "SSOServerDefinition": {
-            "description": "An SSO server definition on an HMC",
             "type": "object",
             "additionalProperties": False,
             "required": [

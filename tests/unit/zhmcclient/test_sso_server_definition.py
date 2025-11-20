@@ -39,7 +39,7 @@ class TestSSOServerDefinition:
         """
         # pylint: disable=attribute-defined-outside-init
 
-        self.session = FakedSession('fake-host', 'fake-hmc', '2.13.1', '1.8')
+        self.session = FakedSession('fake-host', 'fake-hmc', '2.17.1', '1.8')
         self.client = Client(self.session)
 
         self.faked_console = self.session.hmc.consoles.add({
@@ -65,7 +65,25 @@ class TestSSOServerDefinition:
             'class': 'sso-server-definition',
             'name': name,
             'description': f'SSO Server Definition {name}',
-            'primary-hostname-ipaddr': f'host-{name}',
+            "authentication-page-servers":[
+            {
+            "hostname-ipaddr":"images1.example.com",
+            "port":443
+            },
+            {
+            "hostname-ipaddr":"images2.example.com",
+            "port":80
+            }
+            ],
+            "authentication-url":"https://sso1.example.com/auth",
+            "client-id":"sso1-123456",
+            "element-uri":"/api/console/sso-server-definitions/c6a464c2-a211-11ef-bbc4-fa163e7cf285",
+            "issuer-url":"https://sso1.example.com/issuer",
+           "jwks-url":"https://sso1.example.com/jwks",
+           "logout-sso-session-on-reauthentication-failure":true,
+          "logout-url":"https://sso1.example.com/logoff",
+          "token-url":"https://sso1.example.com/token",
+          "type":"oidc"
         })
         return faked_sso_srv_def
 
@@ -99,11 +117,11 @@ class TestSSOServerDefinition:
     @pytest.mark.parametrize(
         "full_properties_kwargs, prop_names", [
             (dict(full_properties=False),
-             ['element-uri', 'name']),
+             ['element-uri', 'name','type']),
             (dict(full_properties=True),
-             ['element-uri', 'name', 'description']),
+             ['element-uri', 'name', 'type']),
             ({},  # test default for full_properties (False)
-             ['element-uri', 'name']),
+             ['element-uri', 'name','type']),
         ]
     )
     @pytest.mark.parametrize(
@@ -145,15 +163,25 @@ class TestSSOServerDefinition:
              HTTPError({'http-status': 400, 'reason': 5})),
             ({'description': 'fake description X',
               'name': 'a',
-              'primary-hostname-ipaddr': '10.11.12.13',
-              'search-distinguished-name': 'test{0}'},
+              'type': 'oidc',
+              'client-secret': 'sso1-client-secret',
+              "issuer-url":"https://sso1.example.com/issuer",
+               'authentication-url' :'https://sso1.example.com/auth',
+               'token-url':'https://sso1.example.com/token',
+                "jwks-url":"https://sso1.example.com/jwks",
+               'logout-url ':'https://sso1.example.com/logout'},
              ['element-uri', 'name', 'description'],
              None),
-            ({'name': 'a',
-              'primary-hostname-ipaddr': '10.11.12.13',
-              'search-distinguished-name': 'test{0}',
-              'bind-password': 'bla'},
-             ['element-uri', 'name', 'bind-password'],
+            ({'description': 'fake description X',
+              'name': 'a',
+              'type': 'oidc',
+              'client-secret': 'sso1-client-secret',
+              "issuer-url":"https://sso1.example.com/issuer",
+               'authentication-url' :'https://sso1.example.com/auth',
+               'token-url':'https://sso1.example.com/token',
+                "jwks-url":"https://sso1.example.com/jwks",
+               'logout-url ':'https://sso1.example.com/logout'},
+             ['element-uri', 'name', 'client-secret'],
              None),
         ]
     )
@@ -206,7 +234,7 @@ class TestSSOServerDefinition:
             # Verify the API call log record for blanked-out properties.
             assert_blanked_in_message(
                 call_record.message, input_props,
-                ['bind-password'])
+                ['client-secret'])
 
     def test_sso_srv_def_repr(self):
         """Test SSOServerDefinition.__repr__()."""
@@ -304,7 +332,7 @@ class TestSSOServerDefinition:
         "input_props", [
             {},
             {'description': 'New SSO Server Definition description'},
-            {'bind-password': 'bla'},
+            {'client-secret': 'bla'},
         ]
     )
     def test_sso_srv_def_update_properties(self, caplog, input_props):
@@ -357,4 +385,4 @@ class TestSSOServerDefinition:
         # Verify the API call log record for blanked-out properties.
         assert_blanked_in_message(
             call_record.message, input_props,
-            ['bind-password'])
+            ['client-secret'])

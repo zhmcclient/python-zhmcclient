@@ -36,7 +36,7 @@ SSOSRVDEF_MINIMAL_PROPS = ['element-uri', 'name']
 
 # Properties in SSOServerDefinition objects returned by list() without full
 # props
-SSOSRVDEF_LIST_PROPS = ['element-uri', 'name']
+SSOSRVDEF_LIST_PROPS = ['element-uri', 'name','type']
 
 # Properties whose values can change between retrievals of SSOServerDefinition
 # objects
@@ -54,7 +54,7 @@ def test_ssosrvdef_find_list(hmc_session):
     api_version = client.query_api_version()
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
-    if hmc_version_info < (2, 13, 0):
+    if hmc_version_info < (2, 17, 0):
         skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
                   "support SSO server definitions")
 
@@ -83,7 +83,7 @@ def test_ssosrvdef_property(hmc_session):
     api_version = client.query_api_version()
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
-    if hmc_version_info < (2, 13, 0):
+    if hmc_version_info < (2, 17, 0):
         skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
                   "support SSO server definitions")
 
@@ -113,7 +113,7 @@ def test_ssosrvdef_crud(hmc_session):
     api_version = client.query_api_version()
     hmc_version = api_version['hmc-version']
     hmc_version_info = tuple(map(int, hmc_version.split('.')))
-    if hmc_version_info < (2, 13, 0):
+    if hmc_version_info < (2, 17, 0):
         skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
                   "support SSO server definitions")
 
@@ -135,15 +135,31 @@ def test_ssosrvdef_crud(hmc_session):
     # Test creating the SSO server definition
 
     ssosrvdef_input_props = {
-        'name': ssosrvdef_name,
-        'description': 'Test SSO server def for zhmcclient end2end tests',
-        'primary-hostname-ipaddr': '10.11.12.13',
-        'location-method': 'pattern',
-        'search-distinguished-name': 'user {0}',
+        "authentication-page-servers":[
+            {
+            "hostname-ipaddr":"images1.example.com",
+            "port":443
+            },
+            {
+            "hostname-ipaddr":"images2.example.com",
+            "port":80
+            }
+            ],
+        "authentication-url":"https://sso1.example.com/auth",
+        "client-id":"sso1-123456",
+        "client-secret":"sso1-client-secret",
+        "description":"Primary SSO server",
+        "issuer-url":"https://sso1.example.com/issuer",
+        "jwks-url":"https://sso1.example.com/jwks",
+        "logout-sso-session-on-reauthentication-failure":true,
+        "logout-url":"https://sso1.example.com/logout",
+        "name":"SSO Server 1",
+        "token-url":"https://sso1.example.com/token",
+            "type":"oidc"
     }
     ssosrvdef_auto_props = {
-        'connection-port': None,
-        'use-ssl': False,
+        'logout-url': None,
+        'logout-sso-session-on-reauthentication-failure': False,
     }
 
     # The code to be tested
@@ -153,7 +169,7 @@ def test_ssosrvdef_crud(hmc_session):
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
             skip_warn(f"HMC userid {hd.userid!r} is not authorized for task "
-                      f"'Manage SSO Server Definitions' on HMC {hd.host}")
+                      f"'Manage Single Sign-On Servers' on HMC {hd.host}")
         else:
             raise
 
