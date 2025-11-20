@@ -401,6 +401,10 @@ Resources scoped to the HMC
      The information in an HMC about an MFA server that may be used for
      HMC user authorization purposes.
 
+  SSO Server Definition
+     The information in an HMC about an SSO server that may be used for
+     HMC user authorization purposes.
+
   Password Rule
      A rule which HMC users need to follow when creating a HMC logon password.
 
