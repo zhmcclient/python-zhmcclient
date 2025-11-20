@@ -348,7 +348,7 @@ class Console(BaseResource):
         """
         # We do here some lazy loading.
         if not self._sso_server_definitions:
-            self._sso_server_definitions = SSOServerDefinitionManage(self)
+            self._sso_server_definitions = SSOServerDefinitionManager(self)
         return self._sso_server_definitions
 
     @property

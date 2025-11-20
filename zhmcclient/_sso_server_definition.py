@@ -112,7 +112,7 @@ class SSOServerDefinitionManager(BaseManager):
 
         HMC/SE version requirements:
 
-        * HMC version == 2.13.0
+        * HMC version == 2.17.0
 
         Authorization requirements:
 
@@ -152,18 +152,18 @@ class SSOServerDefinitionManager(BaseManager):
         return self._list_with_operation(
             list_uri, result_prop, full_properties, filter_args, None)
 
-    @logged_api_call(blanked_properties=['bind-password'], properties_pos=1)
+    @logged_api_call(blanked_properties=[''], properties_pos=1)
     def create(self, properties):
         """
         Create a new SSO Server Definition in this HMC.
 
         HMC/SE version requirements:
 
-        * HMC version == 2.13.0
+        * HMC version == 2.17.0
 
         Authorization requirements:
 
-        * Task permission to the "Manage SSO Server Definitions" task.
+        * Task permission to the "Manage Single Sign-On Servers" task.
 
         Parameters:
 
@@ -258,7 +258,7 @@ class SSOServerDefinition(BaseResource):
             self.get_properties_local(self.manager._name_prop, None))
         self.cease_existence_local()
 
-    @logged_api_call(blanked_properties=['bind-password'], properties_pos=1)
+    @logged_api_call(blanked_properties=[''], properties_pos=1)
     def update_properties(self, properties):
         """
         Update writeable properties of this SSO Server Definitions.
