@@ -152,7 +152,7 @@ jobs:
           console.log(result)
           return result
     - name: Checkout repo
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
     - name: Check commit messages - Signed-off-by
