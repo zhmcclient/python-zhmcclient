@@ -1845,17 +1845,15 @@ class FakedSSOServerDefinitionManager(FakedBaseManager):
 
         # Resource type specific default values
         new_lsd.properties.setdefault('description', '')
-        new_lsd.properties.setdefault('connection-port', None)
-        new_lsd.properties.setdefault('backup-hostname-ipaddr', None)
-        new_lsd.properties.setdefault('use-ssl', False)
-        use_ssl = new_lsd.properties['use-ssl']
-        new_lsd.properties.setdefault('tolerate-untrusted-certificates',
-                                      False if use_ssl else None)
-        new_lsd.properties.setdefault('bind-distinguished-name', None)
-        new_lsd.properties.setdefault('location-method', 'pattern')
-        new_lsd.properties.setdefault('search-scope', None)
-        new_lsd.properties.setdefault('search-filter', None)
+        new_lsd.properties.setdefault('authentication-url', 'https://sso1.example.com/auth')
+        new_lsd.properties.setdefault('type', 'oidc')
+        new_lsd.properties.setdefault('logout-sso-session-on-reauthentication-failure',
+                                      True)
+        new_lsd.properties.setdefault('logout-url','https://sso1.example.com/logout')
+        new_lsd.properties.setdefault('issuer-url', 'https://sso1.example.com/issuer')
+        new_lsd.properties.setdefault('jwks-url', 'https://sso1.example.com/jwks')
         new_lsd.properties.setdefault('replication-overwrite-possible', False)
+
 
         return new_lsd
 
