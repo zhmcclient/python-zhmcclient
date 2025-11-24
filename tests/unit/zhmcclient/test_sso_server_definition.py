@@ -208,6 +208,7 @@ class TestSSOServerDefinition:
 
         else:
 
+
             # Execute the code to be tested.
             sso_srv_def = sso_srv_def_mgr.create(properties=input_props)
 
