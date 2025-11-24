@@ -1844,7 +1844,7 @@ class FakedSSOServerDefinitionManager(FakedBaseManager):
         new_lsd.properties.setdefault('type', 'oidc')
         new_lsd.properties.setdefault(
           'logout-sso-session-on-reauthentication-failure', True
-          )
+        )
         new_lsd.properties.setdefault('logout-url',
                                       'https://sso1.example.com/logout')
         new_lsd.properties.setdefault('issuer-url',
