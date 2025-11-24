@@ -1900,6 +1900,95 @@ class MfaServerDefinitionHandler(GenericGetPropertiesHandler,
         mfa.update(body)
 
 
+class SSOServerDefinitionsHandler:
+    """
+    Handler class for HTTP methods on set of SSOServerDefinition resources.
+    """
+
+    valid_query_parms_get = ['name']
+
+    returned_props = ['element-uri', 'name', 'type']
+
+    @classmethod
+    def get(cls, method, hmc, uri, uri_parms, logon_required):
+        # pylint: disable=unused-argument
+        """Operation: List SSO Server Definitions."""
+        uri, query_parms = parse_query_parms(method, uri)
+        check_invalid_query_parms(
+            method, uri, query_parms, cls.valid_query_parms_get)
+        filter_args = query_parms
+
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        result_sso_srv_defs = []
+        for sso_srv_def in console.sso_server_definitions.list(filter_args):
+            result_sso_srv_def = {}
+            for prop in cls.returned_props:
+                result_sso_srv_def[prop] = \
+                    sso_srv_def.properties.get(prop)
+            result_sso_srv_defs.append(result_sso_srv_def)
+        return {'sso-server-definitions': result_sso_srv_defs}
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Create SSO Server Definition."""
+        assert wait_for_completion is True  # synchronous operation
+        try:
+            console = hmc.consoles.lookup_by_oid(None)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        check_required_fields(method, uri, body,
+                              ['name', 'type', 'client-id', 'client-secret',
+                               'issuer-url', 'authentication-url', 'token-url',
+                               'jwks-url'])
+        new_sso_srv_def = console.sso_server_definitions.add(body)
+        return {'element-uri': new_sso_srv_def.uri}
+
+
+class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
+                                 GenericDeleteHandler):
+    """
+    Handler class for HTTP methods on single SSOServerDefinition resource.
+    """
+
+    @staticmethod
+    def post(method, hmc, uri, uri_parms, body, logon_required,
+             wait_for_completion):
+        # pylint: disable=unused-argument
+        """Operation: Update SSOServerDefinition Properties."""
+        try:
+            sso = hmc.lookup_by_uri(uri)
+        except KeyError:
+            new_exc = InvalidResourceError(method, uri)
+            new_exc.__cause__ = None
+            raise new_exc  # zhmcclient.mock.InvalidResourceError
+        # Check whether requested properties are modifiable
+        check_writable(
+            method, uri, body,
+            [
+                'name',
+                'description',
+                'client-id',
+                'client-secret',
+                'issuer-url',
+                'authentication-url',
+                'token-url',
+                'jwks-url',
+                'logout-url',
+                'logout-sso-session-on-reauthentication-failure',
+                'authentication-page-servers',
+            ])
+        sso.update(body)
+
+
 class ConsoleHwMessagesHandler:
     """
     Handler class for HTTP methods on set of Console HwMessage resources.
@@ -6626,6 +6715,11 @@ URIS = (
      MfaServerDefinitionsHandler),
     (r'/api/console/mfa-server-definitions/([^?/]+)(?:\?(.*))?',
      MfaServerDefinitionHandler),
+
+    (r'/api/console/sso-server-definitions(?:\?(.*))?',
+     SSOServerDefinitionsHandler),
+    (r'/api/console/sso-server-definitions/([^?/]+)(?:\?(.*))?',
+     SSOServerDefinitionHandler),
 
     (r'/api/console/hardware-messages(?:\?(.*))?',
      ConsoleHwMessagesHandler),
