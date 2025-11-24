@@ -36,6 +36,7 @@ __all__ = ['InputError',
            'FakedPasswordRuleManager', 'FakedPasswordRule',
            'FakedTaskManager', 'FakedTask',
            'FakedLdapServerDefinitionManager', 'FakedLdapServerDefinition',
+           'FakedSSOServerDefinitionManager', 'FakedSSOServerDefinition',
            'FakedMfaServerDefinitionManager', 'FakedMfaServerDefinition',
            'FakedActivationProfileManager', 'FakedActivationProfile',
            'FakedAdapterManager', 'FakedAdapter',
@@ -1149,6 +1150,8 @@ class FakedConsole(FakedBaseResource):
             hmc=manager.hmc, console=self)
         self._mfa_server_definitions = FakedMfaServerDefinitionManager(
             hmc=manager.hmc, console=self)
+        self._sso_server_definitions = FakedSSOServerDefinitionManager(
+            hmc=manager.hmc, console=self)
         self._unmanaged_cpcs = FakedUnmanagedCpcManager(
             hmc=manager.hmc, console=self)
         self._groups = FakedGroupManager(hmc=manager.hmc, console=self)
@@ -1180,6 +1183,8 @@ class FakedConsole(FakedBaseResource):
             f"{repr_manager(self.ldap_server_definitions, indent=2)}\n"
             "  _mfa_server_definitions = "
             f"{repr_manager(self.mfa_server_definitions, indent=2)}\n"
+            "  _sso_server_definitions = "
+            f"{repr_manager(self.sso_server_definitions, indent=2)}\n"
             "  _unmanaged_cpcs = "
             f"{repr_manager(self.unmanaged_cpcs, indent=2)}\n"
             f"  _groups = {repr_manager(self.groups, indent=2)}\n"
@@ -1257,6 +1262,14 @@ class FakedConsole(FakedBaseResource):
         the faked MFA Server Definition resources of this Console.
         """
         return self._mfa_server_definitions
+
+    @property
+    def sso_server_definitions(self):
+        """
+        :class:`~zhmcclient.mock.FakedSSOServerDefinitionManager`: Access to
+        the faked SSO Server Definition resources of this Console.
+        """
+        return self._sso_server_definitions
 
     @property
     def unmanaged_cpcs(self):
@@ -1772,6 +1785,81 @@ class FakedMfaServerDefinition(FakedBaseResource):
     A faked MFA Server Definition resource within a faked HMC (see
     :class:`zhmcclient.mock.FakedHmc`).
 
+    Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, manager, properties):
+        super().__init__(
+            manager=manager,
+            properties=properties)
+
+
+class FakedSSOServerDefinitionManager(FakedBaseManager):
+    """
+    A manager for faked SSO Server Definition resources within a faked HMC
+    (see :class:`zhmcclient.mock.FakedHmc`).
+    Derived from :class:`zhmcclient.mock.FakedBaseManager`, see there for
+    common methods and attributes.
+    """
+
+    def __init__(self, hmc, console):
+        super().__init__(
+            hmc=hmc,
+            parent=console,
+            resource_class=FakedSSOServerDefinition,
+            base_uri=console.uri + '/sso-server-definitions',
+            oid_prop='element-id',
+            uri_prop='element-uri',
+            class_value='sso-server-definition',
+            name_prop='name',
+            case_insensitive_names=True)
+
+    def add(self, properties):
+        # pylint: disable=useless-super-delegation
+        """
+        Add a faked SSO Server Definition resource.
+        Parameters:
+          properties (dict):
+            Resource properties.
+            Special handling and requirements for certain properties:
+            * 'element-id' will be auto-generated with a unique value across
+              all instances of this resource type, if not specified.
+            * 'element-uri' will be auto-generated based upon the element ID,
+              if not specified.
+            * 'class' will be auto-generated to 'sso-server-definition',
+              if not specified.
+            * All of the other class-soecific resource properties will be set
+              to a default value consistent with the HMC data model.
+        Returns:
+          :class:`~zhmcclient.mock.FakedSSOServerDefinition`: The faked
+          SSOServerDefinition resource.
+        """
+        new_lsd = super().add(properties)
+
+        # Resource type specific default values
+        new_lsd.properties.setdefault('description', '')
+        new_lsd.properties.setdefault('authentication-url',
+                                      'https://sso1.example.com/auth')
+        new_lsd.properties.setdefault('type', 'oidc')
+        new_lsd.properties.setdefault(
+            'logout-sso-session-on-reauthentication-failure', True
+        )
+        new_lsd.properties.setdefault('logout-url',
+                                      'https://sso1.example.com/logout')
+        new_lsd.properties.setdefault('issuer-url',
+                                      'https://sso1.example.com/issuer')
+        new_lsd.properties.setdefault('jwks-url',
+                                      'https://sso1.example.com/jwks')
+        new_lsd.properties.setdefault('replication-overwrite-possible', False)
+
+        return new_lsd
+
+
+class FakedSSOServerDefinition(FakedBaseResource):
+    """
+    A faked SSO Server Definition resource within a faked HMC (see
+    :class:`zhmcclient.mock.FakedHmc`).
     Derived from :class:`zhmcclient.mock.FakedBaseResource`, see there for
     common methods and attributes.
     """

@@ -221,6 +221,12 @@ Faked HMC
 .. autoclass:: zhmcclient.mock.FakedLdapServerDefinition
    :members:
 
+.. autoclass:: zhmcclient.mock.FakedSSOServerDefinitionManager
+   :members:
+
+.. autoclass:: zhmcclient.mock.FakedSSOServerDefinition
+   :members:
+
 .. autoclass:: zhmcclient.mock.FakedLparManager
    :members:
 
