@@ -350,7 +350,7 @@ class Console(BaseResource):
         if not self._sso_server_definitions:
             self._sso_server_definitions = SSOServerDefinitionManager(self)
         return self._sso_server_definitions
-    
+
     @property
     def unmanaged_cpcs(self):
         """

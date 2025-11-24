@@ -119,7 +119,8 @@ class SSOServerDefinitionManager(BaseManager):
         Authorization requirements:
 
         * User-related-access permission to the SSO Server Definition objects
-          included in the result, or task permission to the "Manage Single Sign-On Servers" task.
+          included in the result, or task permission to the "Manage Single 
+          Sign-On Servers" task.
 
         Parameters:
 

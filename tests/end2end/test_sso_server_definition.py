@@ -26,17 +26,22 @@ from requests.packages import urllib3
 
 import zhmcclient
 
-from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
-    runtest_find_list, runtest_get_properties
+from .utils import (
+    skip_warn,
+    pick_test_resources,
+    TEST_PREFIX,
+    runtest_find_list,
+    runtest_get_properties,
+)
 
 urllib3.disable_warnings()
 
 # Properties in minimalistic SSOServerDefinition objects (e.g. find_by_name())
-SSOSRVDEF_MINIMAL_PROPS = ['element-uri', 'name']
+SSOSRVDEF_MINIMAL_PROPS = ["element-uri", "name"]
 
 # Properties in SSOServerDefinition objects returned by list() without full
 # props
-SSOSRVDEF_LIST_PROPS = ['element-uri', 'name','type']
+SSOSRVDEF_LIST_PROPS = ["element-uri", "name", "type"]
 
 # Properties whose values can change between retrievals of SSOServerDefinition
 # objects
@@ -52,11 +57,13 @@ def test_ssosrvdef_find_list(hmc_session):
     hd = hmc_session.hmc_definition
 
     api_version = client.query_api_version()
-    hmc_version = api_version['hmc-version']
-    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    hmc_version = api_version["hmc-version"]
+    hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
-                  "support SSO server definitions")
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet "
+            "support SSO server definitions"
+        )
 
     # Pick the SSO server definitions to test with
     ssosrvdef_list = console.sso_server_definitions.list()
@@ -67,9 +74,15 @@ def test_ssosrvdef_find_list(hmc_session):
     for ssosrvdef in ssosrvdef_list:
         print(f"Testing with SSO server definition {ssosrvdef.name!r}")
         runtest_find_list(
-            hmc_session, console.sso_server_definitions, ssosrvdef.name,
-            'name', 'element-uri', SSOSRVDEF_VOLATILE_PROPS,
-            SSOSRVDEF_MINIMAL_PROPS, SSOSRVDEF_LIST_PROPS)
+            hmc_session,
+            console.sso_server_definitions,
+            ssosrvdef.name,
+            "name",
+            "element-uri",
+            SSOSRVDEF_VOLATILE_PROPS,
+            SSOSRVDEF_MINIMAL_PROPS,
+            SSOSRVDEF_LIST_PROPS,
+        )
 
 
 def test_ssosrvdef_property(hmc_session):
@@ -81,11 +94,13 @@ def test_ssosrvdef_property(hmc_session):
     hd = hmc_session.hmc_definition
 
     api_version = client.query_api_version()
-    hmc_version = api_version['hmc-version']
-    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    hmc_version = api_version["hmc-version"]
+    hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
-                  "support SSO server definitions")
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet "
+            "support SSO server definitions"
+        )
 
     # Pick the SSO server definitions to test with
     ssosrvdef_list = console.sso_server_definitions.list()
@@ -97,7 +112,7 @@ def test_ssosrvdef_property(hmc_session):
         print(f"Testing with SSO server definition {ssosrvdef.name!r}")
 
         # Select a property that is not returned by list()
-        non_list_prop = 'description'
+        non_list_prop = "description"
 
         runtest_get_properties(ssosrvdef.manager, non_list_prop)
 
@@ -111,78 +126,79 @@ def test_ssosrvdef_crud(hmc_session):
     hd = hmc_session.hmc_definition
 
     api_version = client.query_api_version()
-    hmc_version = api_version['hmc-version']
-    hmc_version_info = tuple(map(int, hmc_version.split('.')))
+    hmc_version = api_version["hmc-version"]
+    hmc_version_info = tuple(map(int, hmc_version.split(".")))
     if hmc_version_info < (2, 17, 0):
-        skip_warn(f"HMC {hd.host} of version {hmc_version} does not yet "
-                  "support SSO server definitions")
+        skip_warn(
+            f"HMC {hd.host} of version {hmc_version} does not yet "
+            "support SSO server definitions"
+        )
 
-    ssosrvdef_name = TEST_PREFIX + ' test_ssosrvdef_crud ssosrvdef1'
-    ssosrvdef_name_new = ssosrvdef_name + ' new'
+    ssosrvdef_name = TEST_PREFIX + " test_ssosrvdef_crud ssosrvdef1"
+    ssosrvdef_name_new = ssosrvdef_name + " new"
 
     # Ensure a clean starting point for this test
     try:
-        ssosrvdef = console.sso_server_definitions.find(
-            name=ssosrvdef_name)
+        ssosrvdef = console.sso_server_definitions.find(name=ssosrvdef_name)
     except zhmcclient.NotFound:
         pass
     else:
         warnings.warn(
             "Deleting test SSO server definition from previous run: "
-            f"{ssosrvdef_name!r}", UserWarning)
+            f"{ssosrvdef_name!r}",
+            UserWarning,
+        )
         ssosrvdef.delete()
 
     # Test creating the SSO server definition
 
     ssosrvdef_input_props = {
-        "authentication-page-servers":[
-            {
-            "hostname-ipaddr":"images1.example.com",
-            "port":443
-            },
-            {
-            "hostname-ipaddr":"images2.example.com",
-            "port":80
-            }
-            ],
-        "authentication-url":"https://sso1.example.com/auth",
-        "client-id":"sso1-123456",
-        "client-secret":"sso1-client-secret",
-        "description":"Primary SSO server",
-        "issuer-url":"https://sso1.example.com/issuer",
-        "jwks-url":"https://sso1.example.com/jwks",
-        "logout-sso-session-on-reauthentication-failure":true,
-        "logout-url":"https://sso1.example.com/logout",
-        "name":"SSO Server 1",
-        "token-url":"https://sso1.example.com/token",
-            "type":"oidc"
+        "authentication-page-servers": [
+            {"hostname-ipaddr": "images1.example.com", "port": 443},
+            {"hostname-ipaddr": "images2.example.com", "port": 80},
+        ],
+        "authentication-url": "https://sso1.example.com/auth",
+        "client-id": "sso1-123456",
+        "client-secret": "sso1-client-secret",
+        "description": "Primary SSO server",
+        "issuer-url": "https://sso1.example.com/issuer",
+        "jwks-url": "https://sso1.example.com/jwks",
+        "logout-sso-session-on-reauthentication-failure": true,
+        "logout-url": "https://sso1.example.com/logout",
+        "name": "SSO Server 1",
+        "token-url": "https://sso1.example.com/token",
+        "type": "oidc",
     }
     ssosrvdef_auto_props = {
-        'logout-url': None,
-        'logout-sso-session-on-reauthentication-failure': False,
+        "logout-url": None,
+        "logout-sso-session-on-reauthentication-failure": False,
     }
 
     # The code to be tested
     try:
-        ssosrvdef = console.sso_server_definitions.create(
-            ssosrvdef_input_props)
+        ssosrvdef = console.sso_server_definitions.create(ssosrvdef_input_props)
     except zhmcclient.HTTPError as exc:
         if exc.http_status == 403 and exc.reason == 1:
-            skip_warn(f"HMC userid {hd.userid!r} is not authorized for task "
-                      f"'Manage Single Sign-On Servers' on HMC {hd.host}")
+            skip_warn(
+                f"HMC userid {hd.userid!r} is not authorized for task "
+                f"'Manage Single Sign-On Servers' on HMC {hd.host}"
+            )
         else:
             raise
 
     for pn, exp_value in ssosrvdef_input_props.items():
-        assert ssosrvdef.properties[pn] == exp_value, \
-            f"Unexpected value for property {pn!r}"
+        assert (
+            ssosrvdef.properties[pn] == exp_value
+        ), f"Unexpected value for property {pn!r}"
     ssosrvdef.pull_full_properties()
     for pn, exp_value in ssosrvdef_input_props.items():
-        assert ssosrvdef.properties[pn] == exp_value, \
-            f"Unexpected value for property {pn!r}"
+        assert (
+            ssosrvdef.properties[pn] == exp_value
+        ), f"Unexpected value for property {pn!r}"
     for pn, exp_value in ssosrvdef_auto_props.items():
-        assert ssosrvdef.properties[pn] == exp_value, \
-            f"Unexpected value for property {pn!r}"
+        assert (
+            ssosrvdef.properties[pn] == exp_value
+        ), f"Unexpected value for property {pn!r}"
 
     # Test updating a property of the SSO server definition
 
@@ -191,9 +207,9 @@ def test_ssosrvdef_crud(hmc_session):
     # The code to be tested
     ssosrvdef.update_properties(dict(description=new_desc))
 
-    assert ssosrvdef.properties['description'] == new_desc
+    assert ssosrvdef.properties["description"] == new_desc
     ssosrvdef.pull_full_properties()
-    assert ssosrvdef.properties['description'] == new_desc
+    assert ssosrvdef.properties["description"] == new_desc
 
     # Test that SSO server definitions cannot be renamed
 
