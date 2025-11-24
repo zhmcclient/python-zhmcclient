@@ -397,5 +397,5 @@ class TestSSOServerDefinition:
             assert prop_value == exp_prop_value
 
         # Verify the API call log record for blanked-out properties.
-        assert_blanked_in_message(call_record.message, input_props, 
+        assert_blanked_in_message(call_record.message, input_props,
                                   ["client-secret"])
