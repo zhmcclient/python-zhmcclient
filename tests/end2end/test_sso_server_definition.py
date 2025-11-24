@@ -163,7 +163,7 @@ def test_ssosrvdef_crud(hmc_session):
         "description": "Primary SSO server",
         "issuer-url": "https://sso1.example.com/issuer",
         "jwks-url": "https://sso1.example.com/jwks",
-        "logout-sso-session-on-reauthentication-failure": true,
+        "logout-sso-session-on-reauthentication-failure": True,
         "logout-url": "https://sso1.example.com/logout",
         "name": "SSO Server 1",
         "token-url": "https://sso1.example.com/token",

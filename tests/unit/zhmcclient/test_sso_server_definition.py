@@ -74,10 +74,10 @@ class TestSSOServerDefinition:
                 ],
                 "authentication-url": "https://sso1.example.com/auth",
                 "client-id": "sso1-123456",
-                "element-uri": "/api/console/sso-server-definitions/c6a464c2-a211-11ef-bbc4-fa163e7cf285",
+                "element-uri": "/api/console/sso-server-definitions/c42-211",
                 "issuer-url": "https://sso1.example.com/issuer",
                 "jwks-url": "https://sso1.example.com/jwks",
-                "logout-sso-session-on-reauthentication-failure": true,
+                "logout-sso-session-on-reauthentication-failure": True,
                 "logout-url": "https://sso1.example.com/logoff",
                 "token-url": "https://sso1.example.com/token",
                 "type": "oidc",
@@ -130,7 +130,7 @@ class TestSSOServerDefinition:
             (None, ["a", "b"]),
             ({}, ["a", "b"]),
             ({"name": "a"}, ["a"]),
-            ({"name": "A"}, ["a"]),  # SSO user definitions have case-insensitive names
+            ({"name": "A"}, ["a"]),  # SSO user have case-insensitive names
         ],
     )
     def test_sso_srv_def_manager_list(
@@ -141,7 +141,8 @@ class TestSSOServerDefinition:
         faked_sso_srv_def1 = self.add_sso_srv_def(name="a")
         faked_sso_srv_def2 = self.add_sso_srv_def(name="b")
         faked_sso_srv_defs = [faked_sso_srv_def1, faked_sso_srv_def2]
-        exp_faked_sso_srv_defs = [u for u in faked_sso_srv_defs if u.name in exp_names]
+        exp_faked_sso_srv_defs = [u for u in faked_sso_srv_defs
+                                  if u.name in exp_names]
         sso_srv_def_mgr = self.console.sso_server_definitions
 
         # Execute the code to be tested
@@ -154,7 +155,9 @@ class TestSSOServerDefinition:
     @pytest.mark.parametrize(
         "input_props, exp_prop_names, exp_exc",
         [
-            ({}, None, HTTPError({"http-status": 400, "reason": 5})),  # props missing
+            ({},  # props missing
+             None,
+             HTTPError({"http-status": 400, "reason": 5})),
             (
                 {"description": "fake description X"},  # props missing
                 None,
@@ -394,4 +397,5 @@ class TestSSOServerDefinition:
             assert prop_value == exp_prop_value
 
         # Verify the API call log record for blanked-out properties.
-        assert_blanked_in_message(call_record.message, input_props, ["client-secret"])
+        assert_blanked_in_message(call_record.message, input_props, 
+                                  ["client-secret"])
