@@ -293,7 +293,7 @@ FAKED_HMC_DEFINITION_SCHEMA = {
             },
         },
         "LdapServerDefinition": {
-            "description": "An LPAP server definition on an HMC",
+            "description": "An LDAP server definition on an HMC",
             "type": "object",
             "additionalProperties": False,
             "required": [
