@@ -39,7 +39,7 @@ class TestSSOServerDefinition:
         """
         # pylint: disable=attribute-defined-outside-init
 
-        self.session = FakedSession("fake-host", "fake-hmc", "2.17.1", "1.8")
+        self.session = FakedSession("fake-host", "fake-hmc", "2.14.1", "1.8")
         self.client = Client(self.session)
 
         self.faked_console = self.session.hmc.consoles.add(
