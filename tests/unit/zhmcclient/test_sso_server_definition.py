@@ -166,7 +166,7 @@ class TestSSOServerDefinition:
             (
                 {
                     "description": "fake description X",
-                    "name": "t",
+                    "name": "a",
                     "type": "oidc",
                     "client-id": "sso1-123456",
                     "client-secret": "sso1-client-secret",
@@ -181,7 +181,7 @@ class TestSSOServerDefinition:
             ),
             (
                 {
-                    "name": "t",
+                    "name": "a",
                     "type": "oidc",
                     "client-secret": "sso1-client-secret",
                     "client-id": "sso1-123456",
