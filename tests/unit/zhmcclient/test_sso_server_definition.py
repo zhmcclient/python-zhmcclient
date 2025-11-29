@@ -319,8 +319,14 @@ class TestSSOServerDefinition:
         sn_sso_srv_def_props = {
             "name": sso_srv_def_name,
             "description": "SSO Server Definition with same name",
-            "primary-hostname-ipaddr": "10.11.12.13",
-            "search-distinguished-name": "test{0}",
+            "type": "oidc",
+            "client-secret": "sso1-client-secret",
+            "client-id": "sso1-123456",
+            "issuer-url": "https://sso1.example.com/issuer",
+            "authentication-url": "https://sso1.example.com/auth",
+            "token-url": "https://sso1.example.com/token",
+            "jwks-url": "https://sso1.example.com/jwks",
+            "logout-url ": "https://sso1.example.com/logout",
         }
 
         sso_srv_def_mgr = self.console.sso_server_definitions
