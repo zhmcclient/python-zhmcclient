@@ -1907,7 +1907,7 @@ class SSOServerDefinitionsHandler:
 
     valid_query_parms_get = ['name']
 
-    returned_props = ['element-uri', 'name','type']
+    returned_props = ['element-uri', 'name', 'type']
 
     @classmethod
     def get(cls, method, hmc, uri, uri_parms, logon_required):
@@ -1946,8 +1946,8 @@ class SSOServerDefinitionsHandler:
             new_exc.__cause__ = None
             raise new_exc  # zhmcclient.mock.InvalidResourceError
         check_required_fields(method, uri, body,
-                              ['name', 'type','client-id','client-secret',
-                               'issuer-url','authentication-url','token-url',
+                              ['name', 'type', 'client-id', 'client-secret',
+                               'issuer-url', 'authentication-url', 'token-url',
                                'jwks-url'])
         new_sso_srv_def = console.sso_server_definitions.add(body)
         return {'element-uri': new_sso_srv_def.uri}
@@ -1984,12 +1984,11 @@ class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
                 'jwks-url',
                 'logout-url',
                 'logout-sso-session-on-reauthentication-failure',
-                'authentication-page-servers',
-                
+                'authentication-page-servers', 
             ])
-        sso.update(body)
+        sso.update(body)    
         
-        
+           
 class ConsoleHwMessagesHandler:
     """
     Handler class for HTTP methods on set of Console HwMessage resources.
