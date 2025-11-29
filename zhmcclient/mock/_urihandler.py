@@ -1984,11 +1984,11 @@ class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
                 'jwks-url',
                 'logout-url',
                 'logout-sso-session-on-reauthentication-failure',
-                'authentication-page-servers', 
+                'authentication-page-servers',
             ])
-        sso.update(body)    
-        
-           
+        sso.update(body)
+  
+
 class ConsoleHwMessagesHandler:
     """
     Handler class for HTTP methods on set of Console HwMessage resources.
@@ -6720,7 +6720,7 @@ URIS = (
      SSOServerDefinitionsHandler),
     (r'/api/console/sso-server-definitions/([^?/]+)(?:\?(.*))?',
      SSOServerDefinitionHandler),
-    
+
     (r'/api/console/hardware-messages(?:\?(.*))?',
      ConsoleHwMessagesHandler),
     (r'/api/console/hardware-messages/([^?/]+)(?:\?(.*))?',
