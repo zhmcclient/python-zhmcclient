@@ -1987,7 +1987,7 @@ class SSOServerDefinitionHandler(GenericGetPropertiesHandler,
                 'authentication-page-servers',
             ])
         sso.update(body)
-  
+
 
 class ConsoleHwMessagesHandler:
     """
