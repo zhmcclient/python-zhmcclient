@@ -62,8 +62,6 @@ class SSOServerDefinitionManager(BaseManager):
         # contain the name property.
         query_props = [
             'name',
-            'type',
-            'additional-properties',
         ]
 
         super().__init__(
