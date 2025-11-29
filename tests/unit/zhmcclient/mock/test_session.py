@@ -90,6 +90,14 @@ HMC1_RESOURCES = {
                     },
                 },
             ],
+            'sso_server_definitions': [
+                {
+                    'properties': {
+                        'element-id': 'sso1',
+                        'name': 'SSO server definition 1',
+                    },
+                },
+            ],
             'unmanaged_cpcs': [
                 {
                     'properties': {
