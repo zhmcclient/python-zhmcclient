@@ -74,7 +74,7 @@ class TestSSOServerDefinition:
                 ],
                 "authentication-url": "https://sso1.example.com/auth",
                 "client-id": "sso1-123456",
-                "element-uri": "/api/console/sso-server-definitions/{name}",
+                "element-uri": f"/api/console/sso-server-definitions/{name}",
                 "issuer-url": "https://sso1.example.com/issuer",
                 "jwks-url": "https://sso1.example.com/jwks",
                 "logout-sso-session-on-reauthentication-failure": True,
