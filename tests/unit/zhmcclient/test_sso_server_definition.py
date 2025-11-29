@@ -165,9 +165,9 @@ class TestSSOServerDefinition:
             ),
             (
                 {
-                    "description": "fake description X",
-                    "name": "a",
+                    "name": "t",
                     "type": "oidc",
+                    "client-id": "sso1-123456",
                     "client-secret": "sso1-client-secret",
                     "issuer-url": "https://sso1.example.com/issuer",
                     "authentication-url": "https://sso1.example.com/auth",
@@ -184,6 +184,7 @@ class TestSSOServerDefinition:
                     "name": "a",
                     "type": "oidc",
                     "client-secret": "sso1-client-secret",
+                    "client-id": "sso1-123456",
                     "issuer-url": "https://sso1.example.com/issuer",
                     "authentication-url": "https://sso1.example.com/auth",
                     "token-url": "https://sso1.example.com/token",
