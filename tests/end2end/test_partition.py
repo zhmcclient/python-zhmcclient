@@ -31,7 +31,7 @@ import zhmcclient
 
 from .utils import skip_warn, pick_test_resources, TEST_PREFIX, \
     standard_partition_props, runtest_find_list, runtest_get_properties, \
-    pformat_as_dict, assert_res_prop, validate_firmware_features
+    pformat_as_dict, validate_firmware_features
 
 urllib3.disable_warnings()
 
@@ -233,7 +233,6 @@ def test_partition_features(dpm_mode_cpcs):
     """
     Test features of the CPC of a partition:
     - For firmware features:
-      - feature_enabled() - deprecated
       - firmware_feature_enabled()
       - feature_info()
       - list_firmware_features()
@@ -266,9 +265,7 @@ def test_partition_features(dpm_mode_cpcs):
         fw_feature_name = 'dpm-storage-management'
         if cpc_fw_features is None:
             # The machine does not yet support firmware features
-            with pytest.raises(ValueError):
-                # The code to be tested: feature_enabled()
-                part.feature_enabled(fw_feature_name)
+            # The code to be tested
             enabled = part.firmware_feature_enabled(fw_feature_name)
             assert enabled is False
         else:
@@ -292,21 +289,14 @@ def test_partition_features(dpm_mode_cpcs):
             if fw_feature_name not in part_state_by_name:
                 # The machine generally supports firmware features, but this
                 # feature is not available
-                with pytest.raises(ValueError):
-                    # The code to be tested: feature_enabled()
-                    part.feature_enabled(fw_feature_name)
-                # The code to be tested: firmware_feature_enabled()
+                # The code to be tested
                 enabled = part.firmware_feature_enabled(fw_feature_name)
                 assert enabled is False
             else:
                 # The machine has this feature available
-                # The code to be tested: feature_enabled()
-                enabled = part.feature_enabled(fw_feature_name)
-                exp_enabled = part_state_by_name[fw_feature_name]
-                assert_res_prop(enabled, exp_enabled,
-                                'available-features-list', cpc)
-                # The code to be tested: firmware_feature_enabled()
+                # The code to be tested
                 enabled = part.firmware_feature_enabled(fw_feature_name)
+                exp_enabled = part_state_by_name[fw_feature_name]
                 assert enabled == exp_enabled
         # Test: feature_info()
         if cpc_fw_features is None:
