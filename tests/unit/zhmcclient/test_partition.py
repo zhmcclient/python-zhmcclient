@@ -586,6 +586,9 @@ class TestPartition:
         "exp_feature_enabled, exp_exc_type, exp_exc_msg",
         FEATURE_ENABLED_TESTCASES
     )
+    @pytest.mark.filterwarnings(
+        "ignore:.*feature_enabled.*deprecated.*:DeprecationWarning"
+    )
     def test_partition_feature_enabled(
             self, desc, partition_name, available_features, feature_name,
             exp_feature_enabled, exp_exc_type, exp_exc_msg):
