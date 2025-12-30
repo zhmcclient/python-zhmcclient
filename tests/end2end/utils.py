@@ -574,10 +574,7 @@ def skipif_no_storage_mgmt_feature(cpc):
     Skip the test if the "DPM Storage Management" feature is not enabled for
     the specified CPC, or if the CPC does not yet support it.
     """
-    try:
-        smf = cpc.feature_enabled('dpm-storage-management')
-    except ValueError:
-        smf = False
+    smf = cpc.firmware_feature_enabled('dpm-storage-management')
     if not smf:
         skip_warn("DPM Storage Mgmt feature not enabled or not supported "
                   f"on CPC {cpc.name}")
@@ -588,10 +585,7 @@ def skipif_storage_mgmt_feature(cpc):
     Skip the test if the "DPM Storage Management" feature is enabled for
     the specified CPC.
     """
-    try:
-        smf = cpc.feature_enabled('dpm-storage-management')
-    except ValueError:
-        smf = False
+    smf = cpc.firmware_feature_enabled('dpm-storage-management')
     if smf:
         skip_warn(f"DPM Storage Mgmt feature enabled on CPC {cpc.name}")
 
