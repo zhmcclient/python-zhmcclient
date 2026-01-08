@@ -37,6 +37,7 @@ from ._password_rule import PasswordRuleManager
 from ._task import TaskManager
 from ._ldap_server_definition import LdapServerDefinitionManager
 from ._mfa_server_definition import MfaServerDefinitionManager
+from ._sso_server_definition import SSOServerDefinitionManager
 from ._unmanaged_cpc import UnmanagedCpcManager
 from ._group import GroupManager
 from ._utils import get_api_features
@@ -218,6 +219,7 @@ class Console(BaseResource):
         self._tasks = None
         self._ldap_server_definitions = None
         self._mfa_server_definitions = None
+        self._sso_server_definitions = None
         self._unmanaged_cpcs = None
         self._groups = None
         self._certificates = None
@@ -336,6 +338,18 @@ class Console(BaseResource):
         if not self._mfa_server_definitions:
             self._mfa_server_definitions = MfaServerDefinitionManager(self)
         return self._mfa_server_definitions
+
+    @property
+    def sso_server_definitions(self):
+        """
+        :class:`~zhmcclient.SSOServerDefinitionManager`: Access to the
+        :term:`sso Server Definitions <sso Server Definition>` in this
+        Console.
+        """
+        # We do here some lazy loading.
+        if not self._sso_server_definitions:
+            self._sso_server_definitions = SSOServerDefinitionManager(self)
+        return self._sso_server_definitions
 
     @property
     def unmanaged_cpcs(self):
@@ -1612,6 +1626,7 @@ class Console(BaseResource):
                 "tasks": [...],
                 "ldap_server_definitions": [...],
                 "mfa_server_definitions": [...],
+                "sso_server_definitions": [...],
                 "unmanaged_cpcs": [...],
                 "storage_groups": [...],
             }
@@ -1646,6 +1661,9 @@ class Console(BaseResource):
         mfa_server_definitions = self.mfa_server_definitions.dump()
         if mfa_server_definitions:
             resource_dict['mfa_server_definitions'] = mfa_server_definitions
+        sso_server_definitions = self.sso_server_definitions.dump()
+        if sso_server_definitions:
+            resource_dict['sso_server_definitions'] = sso_server_definitions
         storage_groups = self.storage_groups.dump()
         if storage_groups:
             resource_dict['storage_groups'] = storage_groups

@@ -576,6 +576,26 @@ LDAP Server Definition
    :autosummary:
    :autosummary-inherited-members:
    :special-members: __str__
+   
+
+.. _`SSO Server Definition`:
+
+SSO Server Definition
+----------------------
+
+.. automodule:: zhmcclient._sso_server_definition
+
+.. autoclass:: zhmcclient.SSOServerDefinitionManager
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
+
+.. autoclass:: zhmcclient.SSOServerDefinition
+   :members:
+   :autosummary:
+   :autosummary-inherited-members:
+   :special-members: __str__
 
 
 .. _`MFA Server Definition`:
