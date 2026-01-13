@@ -1,0 +1,2 @@
+Used new license format defined in PEP 639 to accommodate upcoming removal
+of support for old format.
