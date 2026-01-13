@@ -7,7 +7,7 @@
 requires = [
     # Keep in sync with base-requirements.txt and the base dependencies in
     # minimum-constraints-install.txt
-    "setuptools>=70.0.0",
+    "setuptools>=78.1.1",
     "setuptools-scm[toml]>=9.2.0",
     "wheel>=0.41.3"
 ]
@@ -50,7 +50,6 @@ classifiers = [
     "Environment :: Console",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -58,7 +57,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dynamic = ["version", "dependencies", "optional-dependencies"]
 
 [project.urls]

@@ -26,8 +26,7 @@ click-default-group==1.2.4
 # Note: pytest is covered in minimum-constraints-install.txt
 testfixtures==6.9.0
 colorama==0.4.6
-importlib-metadata==8.5.0; python_version == '3.8'
-importlib-metadata==8.7.0; python_version >= '3.9'
+importlib-metadata==8.7.0
 more-itertools==4.0.0
 pytz==2019.1
 # requests: covered in direct deps for installation
@@ -39,8 +38,7 @@ tzdata==2023.4; sys_platform == 'win32'
 # decorator: covered in direct deps for installation
 
 # Coverage reporting (no imports, invoked via coveralls script):
-coverage==7.6.1; python_version == '3.8'
-coverage==7.8.0; python_version >= '3.9' and python_version <= '3.12'
+coverage==7.8.0; python_version <= '3.12'
 coverage==6.5.0; python_version >= '3.13'
 coveralls==4.0.1; python_version <= '3.12'
 coveralls==3.3.0; python_version >= '3.13'
@@ -51,13 +49,10 @@ safety-schemas==0.0.16
 dparse==0.6.4
 ruamel.yaml==0.17.21
 click==8.0.2
-Authlib==1.3.2; python_version == '3.8'
-Authlib==1.6.5; python_version >= '3.9'
+Authlib==1.6.5
 marshmallow==3.15.0
-pydantic==2.10.6; python_version == '3.8'
-pydantic==2.12.0; python_version >= '3.9'
-pydantic_core==2.27.2; python_version == '3.8'
-pydantic_core==2.41.1; python_version >= '3.9'
+pydantic==2.12.0
+pydantic_core==2.41.1
 typer==0.16.0
 typer-cli==0.16.0
 typer-slim==0.16.0
@@ -70,8 +65,7 @@ bandit==1.7.8
 tox==4.15.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
-Sphinx==7.1.0; python_version == '3.8'
-Sphinx==7.2.0; python_version >= '3.9'
+Sphinx==7.2.0
 docutils==0.20.1
 sphinx-git==10.1.1
 GitPython==3.1.41
@@ -83,8 +77,7 @@ sphinxcontrib-htmlhelp==2.0.1
 sphinxcontrib-jquery==4.1
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
-sphinxcontrib-serializinghtml==1.1.5; python_version == '3.8'
-sphinxcontrib-serializinghtml==1.1.9; python_version >= '3.9'
+sphinxcontrib-serializinghtml==1.1.9
 sphinxcontrib-websupport==1.2.4
 autodocsumm==0.2.12
 Babel==2.11.0
@@ -94,10 +87,8 @@ roman-numerals-py==4.1.0
 roman-numerals==4.1.0
 
 # PyLint (no imports, invoked via pylint script)
-pylint==3.0.1; python_version == '3.8'
-pylint==3.3.1; python_version >= '3.9'
-astroid==3.0.1; python_version == '3.8'
-astroid==3.3.7; python_version >= '3.9'
+pylint==3.3.1
+astroid==3.3.7
 lazy-object-proxy==1.4.3
 wrapt==1.14
 platformdirs==4.1.0
@@ -152,11 +143,10 @@ progressbar2==3.12.0
 
 # Package dependency management tools (not used by any make rules)
 pipdeptree==2.24.0
-pip-check-reqs==2.4.3; python_version <= '3.8'
-pip-check-reqs==2.5.1; python_version >= '3.9'
+pip-check-reqs==2.5.1
 
 # pywinpty is used by terminado <- notebook <- jupyter
-pywinpty==2.0.12; os_name == "nt" and python_version >= '3.8' and python_version <= '3.12'
+pywinpty==2.0.12; os_name == "nt" and python_version <= '3.12'
 pywinpty==3.0.0; os_name == "nt" and python_version >= '3.13'
 
 # Indirect dependencies for development that are not in dev-requirements.txt
@@ -215,7 +205,7 @@ pyparsing==3.0.7
 pywin32-ctypes==0.2.0; sys_platform=="win32"  # used by keyring
 rfc3986==1.4.0
 rich==12.0.0
-roman-numerals-py==1.0.0; python_version >= '3.9'  # used by Sphinx>=8.2.0
+roman-numerals-py==1.0.0;  # used by Sphinx>=8.2.0
 scandir==1.9.0
 Send2Trash==1.8.2
 simplegeneric==0.8.1
@@ -227,13 +217,11 @@ terminado==0.8.3
 testpath==0.3
 toml==0.10.0
 tomli==2.0.1
-tornado==6.4.2; python_version == '3.8'
-tornado==6.5; python_version >= '3.9'
+tornado==6.5
 tqdm==4.66.3
 traitlets==5.6.0
 typing==3.6.1
-typing-extensions==4.13.2; python_version == '3.8'
-typing-extensions==4.14.1; python_version >= '3.9'
+typing-extensions==4.14.1
 webencodings==0.5.1
 widgetsnbextension==4.0.0
 zipp==3.20.0

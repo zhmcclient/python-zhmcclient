@@ -7,9 +7,8 @@
 
 # Base dependencies
 
-pip==25.0; python_version == '3.8'
-pip==25.2; python_version >= '3.9'
-setuptools==70.0.0
+pip==25.2
+setuptools==78.1.1
 # Note on not specifying 'setuptools-scm[toml]': Extras cannot be in constraints files
 setuptools-scm==9.2.0
 wheel==0.41.3
@@ -33,15 +32,13 @@ websocket-client==1.8.0
 
 certifi==2024.07.04
 
-urllib3==2.2.3; python_version == '3.8'
-urllib3==2.5.0; python_version >= '3.9'
+urllib3==2.5.0
 
 
 # Direct dependencies for install of extra 'testutils' (must be consistent with extra-testutils-requirements)
 
 # Used by zhmcclient.testutils
-pytest==8.3.5; python_version == '3.8'
-pytest==8.4.0; python_version >= '3.9'
+pytest==8.4.0
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with requirements.txt)
 

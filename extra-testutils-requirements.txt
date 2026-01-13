@@ -7,9 +7,7 @@
 # Direct dependencies for install of extra 'testutils' (must be consistent with minimum-constraints-install.txt)
 
 # zhmcclient.testutils defines pytest fixtures:
-# pytest 8.4.0 removed support for Python 3.8 and added support for Python 3.14.
-pytest>=8.3.5; python_version == '3.8'
-pytest>=8.4.0; python_version >= '3.9'
+pytest>=8.4.0
 
 # Packages used by zhmcclient.testutils that are also used by zhmcclient and thus
 # are specified already in requirements.txt:
