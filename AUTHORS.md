@@ -16,6 +16,7 @@ Kavin Raj A M <Kavin.Raj.A.M1@ibm.com>
 Marc Hartmayer <mhartmay@de.ibm.com>
 Marcos Araque Fiallos <marcos.araque.fiallos@ibm.com>
 Markus Zoeller <mzoeller@de.ibm.com>
+Sebastian Mitterle <54858857+smitterl@users.noreply.github.com>
 Sebastian Mitterle <smitterl@redhat.com>
 Shreejit Nair <shreejit.nair1@ibm.com>
 Simon Spinner <sspinner@de.ibm.com>
