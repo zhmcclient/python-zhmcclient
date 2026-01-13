@@ -35,7 +35,7 @@ pytz>=2019.1,!=2024.2,!=2025.1,!=2025.2
 tzdata>=2023.4; sys_platform == 'win32'
 
 # packaging is used by pytest, pip-check-reqs, sphinx
-packaging>=24.1
+packaging>=24.2
 
 # Unit test (indirect dependencies):
 # pluggy is used by pytest, tox
