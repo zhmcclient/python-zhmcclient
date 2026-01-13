@@ -20,9 +20,7 @@ towncrier>=22.8.0
 # pytest is covered in extra-testutils-requirements.txt
 testfixtures>=6.9.0
 # For versions of importlib-metadata that are in Python, see https://pypi.org/project/importlib-metadata/
-# importlib-metadata 8.5.0 is the last version supporting Python 3.8
-importlib-metadata>=8.5.0; python_version == '3.8'
-importlib-metadata>=8.7.0; python_version >= '3.9'
+importlib-metadata>=8.7.0
 # requests: covered in direct deps for installation
 colorama>=0.4.6
 requests-mock>=1.6.0
@@ -52,8 +50,7 @@ pluggy>=1.5.0
 #   Python>=3.13.
 # Note: The earlier repetition of pinnings to avoid pip backtracking no longer
 #       seems to be needed.
-coverage>=7.6.1,<8.0; python_version == '3.8'
-coverage>=7.8.0,<8.0; python_version >= '3.9' and python_version <= '3.12'
+coverage>=7.8.0,<8.0; python_version <= '3.12'
 coverage>=6.5.0,<7.0; python_version >= '3.13'
 coveralls>=4.0.1; python_version <= '3.12'
 coveralls>=3.3.0; python_version >= '3.13'
@@ -69,13 +66,10 @@ safety-schemas>=0.0.16
 dparse>=0.6.4
 ruamel.yaml>=0.17.21
 click>=8.0.2
-Authlib>=1.3.2; python_version == '3.8'
-Authlib>=1.6.5; python_version >= '3.9'
+Authlib>=1.6.5
 marshmallow>=3.15.0
-pydantic>=2.10.6; python_version == '3.8'
-pydantic>=2.12.0; python_version >= '3.9'
-pydantic_core>=2.27.2; python_version == '3.8'
-pydantic_core>=2.41.1; python_version >= '3.9'
+pydantic>=2.12.0
+pydantic_core>=2.41.1
 #safety 3.6.1 depends on typer>=0.16.0
 typer>=0.16.0
 typer-cli>=0.16.0
@@ -90,9 +84,7 @@ bandit>=1.7.8
 tox>=4.15.0
 
 # Sphinx (no imports, invoked via sphinx-build script):
-# Sphinx 7.2.0 started requiring Python>=3.9
-Sphinx>=7.1.0; python_version == '3.8'
-Sphinx>=7.2.0; python_version >= '3.9'
+Sphinx>=7.2.0
 # Sphinx 7.1.0 pins docutils to <0.21
 docutils>=0.20.1
 sphinx-git>=10.1.1
@@ -105,8 +97,7 @@ sphinxcontrib-htmlhelp>=2.0.1
 sphinxcontrib-jquery>=4.1
 sphinxcontrib-jsmath>=1.0.1
 sphinxcontrib-qthelp>=1.0.3
-sphinxcontrib-serializinghtml>=1.1.5; python_version == '3.8'
-sphinxcontrib-serializinghtml>=1.1.9; python_version >= '3.9'
+sphinxcontrib-serializinghtml>=1.1.9
 sphinxcontrib-websupport>=1.2.4
 autodocsumm>=0.2.12
 Babel>=2.11.0
@@ -115,10 +106,8 @@ Babel>=2.11.0
 snowballstemmer>=2.0.0,!=3.0.0
 
 # PyLint (no imports, invoked via pylint script)
-pylint>=3.0.1; python_version == '3.8'
-pylint>=3.3.1; python_version >= '3.9'
-astroid>=3.0.1; python_version == '3.8'
-astroid>=3.3.7; python_version >= '3.9'
+pylint>=3.3.1
+astroid>=3.3.7
 lazy-object-proxy>=1.4.3
 wrapt>=1.14
 # platformdirs is also used by tox
@@ -176,8 +165,7 @@ pywin32>=303; sys_platform == 'win32' and python_version <= '3.11'
 pywin32>=306; sys_platform == 'win32' and python_version == '3.12'
 
 # The tornado package is used by ipykernel which is used by jupyter.
-tornado>=6.4.2; python_version == '3.8'
-tornado>=6.5; python_version >= '3.9'
+tornado>=6.5
 
 # pyzmq 26.1.0 added wheel archives for Python 3.13
 # pyzmq 27.0.1 added wheel archives for Python 3.14
@@ -189,16 +177,10 @@ progressbar2>=3.12.0
 
 # Package dependency management tools (not used by any make rules)
 pipdeptree>=2.24.0
-# pip-check-reqs 2.4.3 fixes a speed issue on Python 3.11 and requires pip>=21.2.4
-# pip-check-reqs 2.5.0 dropped support for py38
-# pip-check-reqs 2.5.0 has issue https://github.com/r1chardj0n3s/pip-check-reqs/issues/143
-pip-check-reqs>=2.4.3,!=2.5.0; python_version == '3.8'
-pip-check-reqs>=2.5.1; python_version >= '3.9'
+pip-check-reqs>=2.5.1
 
 # pywinpty is used by terminado <- notebook <- jupyter
 # pywinpty>=1.0 requires maturin to build. Meanwhile, it works.
-# pywinpty 2.0.14 has an issue with latest maturin on Python 3.8, see https://github.com/andfoy/pywinpty/issues/486
 # pywinpty 2.0.12/13 has the above issue on Python 3.13
-pywinpty>=2.0.12,!=2.0.14; os_name == "nt" and python_version == '3.8'
-pywinpty>=2.0.12; os_name == "nt" and python_version >= '3.9' and python_version <= '3.12'
+pywinpty>=2.0.12; os_name == "nt" and python_version <= '3.12'
 pywinpty>=3.0.0; os_name == "nt" and python_version >= '3.13'

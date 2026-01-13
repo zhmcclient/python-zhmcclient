@@ -78,7 +78,7 @@ The zhmcclient package is supported in these environments:
 .. # - python_requires and classifiers in setup.py
 .. # - Version checking in zhmcclient/_version.py
 
-* Python versions: 3.8 and higher
+* Python versions: 3.9 and higher
 
 * HMC versions: 2.11.1 and higher
 

@@ -49,5 +49,5 @@ __version_tuple__ = version_tuple
 # Keep these Python versions in sync with:
 # - python_requires and classifiers in setup.py
 # - Section "Supported environments" in docs/intro.rst
-if sys.version_info[0:2] < (3, 8):
-    raise RuntimeError('zhmcclient requires Python 3.8 or higher')
+if sys.version_info[0:2] < (3, 9):
+    raise RuntimeError('zhmcclient requires Python 3.9 or higher')

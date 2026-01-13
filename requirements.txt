@@ -16,13 +16,7 @@ immutabledict>=4.2.0
 nocasedict>=1.0.2
 
 # PyYAML is used by zhmcclient.mock, zhmcclient.testutils and bandit
-# PyYAML 5.3 has wheel archives for Python 2.7, 3.5 - 3.9
-# PyYAML 5.4 has wheel archives for Python 2.7, 3.6 - 3.9
-# PyYAML 6.0.0 has wheel archives for Python 3.6 - 3.11
-# PyYAML 6.0.1 has wheel archives for Python 3.6 - 3.12
 # PyYAML 6.0.2 has wheel archives for Python 3.8 - 3.13
-# PyYAML 5.4.x and 6.0.0 fail to install when no wheel archives are available since Cython 3
-#   was released, see issue https://github.com/yaml/pyyaml/issues/724. Fixed in 6.0.1.
 PyYAML>=6.0.2
 
 # jsonschema pulled in by zhmcclient.mock and zhmcclient.testutils
@@ -39,12 +33,9 @@ websocket-client>=1.8.0
 certifi>=2024.07.04
 
 # Functional dependencies on urllib3 versions:
-# - Use of the 'allowed_methods' attribute requires >=1.26.0
-# - Enabling enforce_content_length by default requires >=2.0.0
 # - IncompleteRead fix: Distinguishing too much from not enough response data
 #   requires >=2.2.1
-urllib3>=2.2.3; python_version == '3.8'
-urllib3>=2.5.0; python_version >= '3.9'
+urllib3>=2.5.0
 
 
 # Indirect dependencies for install that are needed for some reason (must be consistent with minimum-constraints-install.txt)
