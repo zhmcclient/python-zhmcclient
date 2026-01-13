@@ -104,6 +104,9 @@ Babel>=2.11.0
 # snowballstemmer 3.0.0 does not include algorithms used by Sphinx.
 # For details, see https://github.com/snowballstem/snowball/issues/229
 snowballstemmer>=2.0.0,!=3.0.0
+# Sphinx 8.2.0 started using roman-numerals-py>=1.0.0
+roman-numerals-py>=3.1.0
+roman-numerals>=3.1.0
 
 # PyLint (no imports, invoked via pylint script)
 pylint>=3.3.1
