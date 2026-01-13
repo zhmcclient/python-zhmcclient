@@ -30,6 +30,131 @@ Change log
    .. include:: tmp_changes.rst
 
 .. towncrier start
+Version 1.25.0
+^^^^^^^^^^^^^^
+
+Released: 2026-01-13
+
+**Incompatible changes:**
+
+* Removed support for Python 3.8, because (1) Python 3.8 is out of service since
+  2024-10-07, and (2) the license definition according to PEP 639 requires
+  setuptools >= 77.0.3 which requires Python >= 3.9, and pyproject.toml does
+  not support environment markers.
+
+**Deprecations:**
+
+* The ``zhmcclient_mock`` Python package has been deprecated. Use the
+  ``zhmcclient.mock`` package instead.
+
+**Bug fixes:**
+
+* Addressed safety issues up to 2026-01-13.
+
+* Dev: Fixed failure to install 'pywinpty' on Windows with Python 3.14 by
+  increasing its minimum version to 3.0.0.
+
+* Dev: Fixed that squash merges of the release PR or start PR caused the
+  checks in the subsequent make targets to fail.
+
+* Dev: Added dependencies for Sphinx.
+
+* Fixes in the example scripts install_from_ftp.py and
+  async_operation_notification.py.
+
+* Test: Fixed new issues raised by pylint 4.0.0.
+
+* Test: Fixed the issue with partition link name exceeding a length of 64
+  in the end2end test function test_partlink_create_delete(). (`#2014 <https://github.com/zhmcclient/python-zhmcclient/issues/2014>`_)
+
+**Enhancements:**
+
+* Test: Reduced the platforms on which 'make doclinkcheck' runs to just
+  Ubuntu, Python 3.14 and latest package levels, to run less often into
+  the rate limiting of some sites that are being checked.
+
+* Support for HMC vault files to specify password commands that retrieve the
+  HMC password, instead of hard coding it there. This allows lookup of passwords
+  from some other password store (e.g. a vault) or the use of one-time passwords.
+
+* Changed the name of the Partition Link created in
+  :meth:`zhmcclient.AdapterManager.create_hipersocket`, by using the name of the
+  Hipersocket adapter unchanged, without the previously used "HS" prefix.
+
+* Improvements in the example scripts: Changed the way the HMC session is created
+  so that the new support for password commands in the HMC inventory files is
+  used. Changed the scripts to now use a main() function. Removed remaining
+  customizations in the scripts and replaced it with command line arguments.
+
+* Added an example script hipersocket_lifecycle.py for creating and deleting
+  Hipersocket adapters.
+
+* Docs: Updated the descriptions of the :meth:`zhmcclient.NicManager.create`,
+  :meth:`zhmcclient.Partition.attach_network_link`,
+  :meth:`zhmcclient.PartitionLinkManager.create` and
+  :meth:`zhmcclient.PartitionLink.update_properties` methods
+  to describe the limitation of not supporting SSC management NICs backed by
+  Hipersocket adapters on z16 CPCs that have the API feature
+  "dpm-hipersockets-partition-link-management" enabled, and how to lift this
+  limitation.
+
+* Test: Added a new make target 'end2end_check' which checks all HMCs defined
+  in the HMC inventory file for whether the logon works and for whether they
+  specify valid CPCs. This is done by using the existing end2end test function
+  'test_hmcdef_check_all_hmcs()'. Improved that test function.
+
+* Added optional parameters to the :func:`zhmcclient.testutils.setup_hmc_session`
+  function: 'rt_config' allows to override the default retry/timeout config for
+  the HMC session; 'skip_on_failure' allows to select between pytest skipping and
+  raising exceptions if the HMC session cannot be established.
+
+* Test: Enabled tests on Python 3.14.
+
+* Test: Added test modules 'test__import_local.py' to the unit and end2end
+  tests which verify that the 'zhmcclient' modules are imported from the local
+  directory. Documented in chapter "Testing" that the zhmcclient modules are
+  imported from the local directory, even when the zhmcclient package is
+  installed in the Python environment.
+
+* Docs: Added a chapter "Test coverage" to the development section, which
+  describes how test coverage is traced and reported.
+
+* Test: Reduced number of HMC sessions that are created in end2end tests. (`#2015 <https://github.com/zhmcclient/python-zhmcclient/issues/2015>`_)
+
+* Simplified the way users can write pytest based test programs using the
+  pytest fixtures in zhmcclient.testutils: These pytest fixtures no longer need
+  to be imported before using them, because they are now delivered as a pytest
+  plugin and are thus globally known by pytest. In addition, the scope of these
+  pytest fixtures was widened from 'module' to 'session'. This reduces the
+  number of HMC sessions that pytest based test programs use, because they now
+  are reused across test modules. User-written test programs that import these
+  fixtures will still run unchanged, but in order to take advantage of the
+  reduced number of HMC sessions, these test programs need to remove the import
+  statements for the fixtures, because importing them causes pytest to reduce
+  their scope to 'module' again. (`#2015 <https://github.com/zhmcclient/python-zhmcclient/issues/2015>`_)
+
+* Enhance export_dpm_configuration() to support AI accelerator functionality. (`#2054 <https://github.com/zhmcclient/python-zhmcclient/issues/2054>`_)
+
+**Cleanup:**
+
+* Test: Added retries for sending coverage data to the coveralls.io site to
+  address issues with the site.
+
+* The ``zhmcclient_mock`` Python package has been renamed to ``zhmcclient.mock``,
+  to be able to get rid of the extra top level module name over time. The
+  ``zhmcclient_mock`` Python package is still available for backwards
+  compatibility, but using it now issues a ``DeprecationWarning``.
+
+* Test: Omitted zhmcclient/_vendor subtree from coverage.
+
+* Test: Changed unit and end2end tests to use the `firmware_feature_enabled()`
+  methods instead of the deprecated `feature_enabled()` methods, on Cpc and
+  Partition objects.
+
+* Used new license format defined in PEP 639 to accommodate upcoming removal
+  of support for old format. (`#2053 <https://github.com/zhmcclient/python-zhmcclient/issues/2053>`_)
+
+
 Version 1.24.0
 ^^^^^^^^^^^^^^
 
