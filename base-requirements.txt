@@ -7,6 +7,6 @@
 
 pip>=25.0; python_version == '3.8'
 pip>=25.2; python_version >= '3.9'
-setuptools>=70.0.0
+setuptools>=77.0.3
 setuptools-scm[toml]>=9.2.0
 wheel>=0.41.3
