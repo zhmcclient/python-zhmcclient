@@ -1,0 +1,951 @@
+# Function tests for zhmcclient.BaseResource.
+#
+# This test file covers all methods and properties that are defined in
+# zhmcclient.BaseResource. Most of the tests use the User class as a target,
+# and some use the Console class.
+
+setup:
+  resources:
+    - uri: /api/console
+      name: Console1
+      parent_uri: null
+      parent_attribute: consoles
+      properties:
+        description: Console 1
+    - uri: /api/users/user1
+      name: User1
+      parent_uri: /api/console
+      parent_attribute: users
+      properties:
+        description: User 1
+
+testcases:
+
+  - name: test_resource_properties_success
+    description: Test BaseResource.properties with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      property: properties
+    zhmcclient_result:
+      return:
+        parent: /api/console
+        class: user
+        object-uri: /api/users/user1
+        object-id: user1
+        name: User1
+        description: User 1
+
+  - name: test_resource_uri_success
+    description: Test BaseResource.uri with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      property: uri
+    zhmcclient_result:
+      return: /api/users/user1
+
+  - name: test_resource_name_success_local
+    description: Test BaseResource.name with success if present locally
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      property: name
+    zhmcclient_result:
+      return: User1
+
+  # Note: The case where name is not present locally cannot be constructed
+
+  - name: test_resource_manager_success
+    description: Test BaseResource.manager with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      property: manager
+    zhmcclient_result:
+      return:
+        _manager:
+          parent_uri: /api/console
+          attribute: users
+
+  - name: test_resource_full_properties_success
+    description: Test BaseResource.full_properties with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      property: full_properties
+    zhmcclient_result:
+      return: false
+
+  # Note: The case where full_properties is True cannot be constructed
+
+  # Note: properties_timestamp varies -> no tescase
+
+  - name: test_resource_ceased_existence_success
+    description: Test BaseResource.ceased_existence with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      property: ceased_existence
+    zhmcclient_result:
+      return: false
+
+  - name: test_resource_pull_full_properties_success
+    description: Test BaseResource.pull_full_properties() with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: pull_full_properties
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: User1
+            description: User 1
+
+  - name: test_resource_pull_full_properties_error_ceased
+    description: Test BaseResource.pull_full_properties() when resource no longer exists
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: pull_full_properties
+    zhmcclient_result:
+      exception:
+        class: CeasedExistence
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 404
+          body:
+            request-method: GET
+            request-uri: /api/users/user1
+            request-body: {}
+            http-status: 404
+            reason: 1
+            message: 'Not found'
+
+  - name: test_resource_pull_properties_noprops_success
+    description: Test BaseResource.pull_properties() for a resource that does not support the properties query parameter with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: pull_properties
+      parameters:
+        properties:
+          - description
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+
+  - name: test_resource_pull_properties_noprops_invalid_success
+    description: Test BaseResource.pull_properties() for a resource that does not support the properties query parameter with an invalid property
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: pull_properties
+      parameters:
+        properties:
+          - invalid
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+
+  - name: test_resource_pull_properties_noprops_error_ceased
+    description: Test BaseResource.pull_properties() for a resource that does not support the properties query parameter when the resource no longer exists
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: pull_properties
+      parameters:
+        properties:
+          - description
+    zhmcclient_result:
+      exception:
+        class: CeasedExistence
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 404
+          body:
+            request-method: GET
+            request-uri: /api/users/user1
+            request-body: {}
+            http-status: 404
+            reason: 1
+            message: 'Not found'
+
+  - name: test_resource_pull_properties_props_success
+    description: Test BaseResource.pull_properties() for a resource that supports the properties query parameter with success at first attempt
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: pull_properties
+      parameters:
+        properties:
+          - description
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=description
+        http_response:
+          status: 200
+          body:
+            description: Console 1
+
+  - name: test_resource_pull_properties_props_invalid_success
+    description: Test BaseResource.pull_properties() for a resource that supports the properties query parameter with an invalid property
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: pull_properties
+      parameters:
+        properties:
+          - invalid
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=invalid
+        http_response:
+          status: 400
+          body:
+            request-method: GET
+            request-uri: /api/console?properties=invalid
+            request-body: {}
+            http-status: 400
+            reason: 14
+            message: 'Invalid property'
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          status: 200
+          body:
+            class: console
+            object-uri: /api/console
+            object-id: console
+            name: Console1
+            description: Console 1
+
+  - name: test_resource_pull_properties_props_oldhmc_success
+    description: Test BaseResource.pull_properties() for a resource that today supports the properties query parameter but HMC does not support it yet, with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: pull_properties
+      parameters:
+        properties:
+          - description
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=description
+        http_response:
+          status: 400
+          body:
+            request-method: GET
+            request-uri: /api/console?properties=description
+            request-body: {}
+            http-status: 400
+            reason: 1
+            message: 'Console does not support properties query parameter'
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          status: 200
+          body:
+            class: console
+            object-uri: /api/console
+            object-id: console
+            name: Console1
+            description: Console 1
+
+  - name: test_resource_pull_properties_props_error_ceased
+    description: Test BaseResource.pull_properties() for a resource that supports the properties query parameter when the resource no longer exists
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: pull_properties
+      parameters:
+        properties:
+          - description
+    zhmcclient_result:
+      exception:
+        class: CeasedExistence
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=description
+        http_response:
+          status: 404
+          body:
+            request-method: GET
+            request-uri: /api/console?properties=description
+            request-body: {}
+            http-status: 404
+            reason: 1
+            message: 'Not found'
+
+  - name: test_resource_get_property_local_success
+    description: Test BaseResource.get_property() from local object
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_property
+      parameters:
+        name: description
+    zhmcclient_result:
+      return: User 1
+
+  - name: test_resource_get_property_hmc_success
+    description: Test BaseResource.get_property() from HMC
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_property
+      parameters:
+        name: type  # a property that is not in the setup object ...
+    zhmcclient_result:
+      return: standard
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+            type: standard  # ... but that is returned from the HMC
+
+  - name: test_resource_get_property_hmc_error_invalid
+    description: Test BaseResource.get_property() from HMC for invalid property
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_property
+      parameters:
+        name: invalid  # a property that is not in the setup object ...
+    zhmcclient_result:
+      exception:
+        class: KeyError
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+            # ... and that is not returned from the HMC
+
+  - name: test_resource_prop_local_success
+    description: Test BaseResource.prop() from local object
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: prop
+      parameters:
+        name: description
+    zhmcclient_result:
+      return: User 1
+
+  - name: test_resource_prop_hmc_success
+    description: Test BaseResource.prop() from HMC
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: prop
+      parameters:
+        name: type  # a property that is not in the setup object ...
+    zhmcclient_result:
+      return: standard
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+            type: standard  # ... but that is returned from the HMC
+
+  - name: test_resource_prop_hmc_invalid_success
+    description: Test BaseResource.prop() from HMC for invalid property
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: prop
+      parameters:
+        name: invalid  # a property that is not in the setup object ...
+        default: foo  # ... but has a default
+    zhmcclient_result:
+      return: foo
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: User1
+            description: User 1
+
+  - name: test_resource_get_properties_pulled_noprops_one_success
+    description: Test BaseResource.get_properties_pulled() for a resource that does not support the properties query parameter with one property as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_pulled
+      parameters:
+        names: type
+    zhmcclient_result:
+      return: standard
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+            type: standard
+
+  - name: test_resource_get_properties_pulled_noprops_list_success
+    description: Test BaseResource.get_properties_pulled() for a resource that does not support the properties query parameter with a list of properties as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_pulled
+      parameters:
+        names:
+          - description
+          - type
+    zhmcclient_result:
+      return:
+        - User 1
+        - standard
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+            type: standard
+
+  - name: test_resource_get_properties_pulled_noprops_one_invalid_success
+    description: Test BaseResource.get_properties_pulled() for a resource that does not support the properties query parameter with one invalid property as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_pulled
+      parameters:
+        names: invalid  # underlying get_properties_local() has defaults=None
+    zhmcclient_result:
+      return: null  # default None
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+
+  - name: test_resource_get_properties_pulled_noprops_list_invalid_success
+    description: Test BaseResource.get_properties_pulled() for a resource that does not support the properties query parameter with a list of invalid properties
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_pulled
+      parameters:
+        names:
+          - invalid  # underlying get_properties_local() has defaults=None
+          - invalid2  # underlying get_properties_local() has defaults=None
+    zhmcclient_result:
+      return:
+        - null  # default None
+        - null  # default None
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1
+
+  - name: test_resource_get_properties_pulled_props_one_success
+    description: Test BaseResource.get_properties_pulled() for a resource that supports the properties query parameter with one property as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_properties_pulled
+      parameters:
+        names: description
+    zhmcclient_result:
+      return: Console 1
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=description
+        http_response:
+          status: 200
+          body:
+            description: Console 1
+
+  - name: test_resource_get_properties_pulled_props_list_success
+    description: Test BaseResource.get_properties_pulled() for a resource that supports the properties query parameter with a list of properties as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_properties_pulled
+      parameters:
+        names:
+          - description
+          - hmc_version
+    zhmcclient_result:
+      return:
+        - Console 1
+        - "2.17"
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=description,hmc_version
+        http_response:
+          status: 200
+          body:
+            description: Console 1
+            hmc_version: "2.17"
+
+  - name: test_resource_get_properties_pulled_props_one_invalid_success
+    description: Test BaseResource.get_properties_pulled() for a resource that supports the properties query parameter with one invalid property as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_properties_pulled
+      parameters:
+        names: invalid  # underlying get_properties_local() has defaults=None
+    zhmcclient_result:
+      return: null  # default None
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=invalid
+        http_response:
+          status: 400
+          body:
+            request-method: GET
+            request-uri: /api/console?properties=invalid
+            request-body: {}
+            http-status: 400
+            reason: 14
+            message: 'Invalid property'
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          status: 200
+          body:
+            class: console
+            object-uri: /api/console
+            object-id: console
+            name: Console1
+            description: Console 1
+
+  - name: test_resource_get_properties_pulled_props_list_invalid_success
+    description: Test BaseResource.get_properties_pulled() for a resource that supports the properties query parameter with a list of invalid properties
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_properties_pulled
+      parameters:
+        names:
+          - invalid  # underlying get_properties_local() has defaults=None
+          - invalid2  # underlying get_properties_local() has defaults=None
+    zhmcclient_result:
+      return:
+        - null  # default None
+        - null  # default None
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console?properties=invalid,invalid2
+        http_response:
+          status: 400
+          body:
+            request-method: GET
+            request-uri: /api/console?properties=invalid,invalid2
+            request-body: {}
+            http-status: 400
+            reason: 14
+            message: 'Invalid property'
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          status: 200
+          body:
+            class: console
+            object-uri: /api/console
+            object-id: console
+            name: Console1
+            description: Console 1
+
+  - name: test_resource_get_properties_local_one_success
+    description: Test BaseResource.get_properties_local() with one property as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_local
+      parameters:
+        names: description
+    zhmcclient_result:
+      return: User 1
+
+  - name: test_resource_get_properties_local_list_success
+    description: Test BaseResource.get_properties_local() with a list of properties as a string
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_local
+      parameters:
+        names:
+          - description
+          - name
+    zhmcclient_result:
+      return:
+        - User 1
+        - User1
+
+  - name: test_resource_get_properties_local_one_invalid_specdefault_success
+    description: Test BaseResource.get_properties_local() with one invalid property as a string with specified default
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_local
+      parameters:
+        names: invalid
+        defaults: foo
+    zhmcclient_result:
+      return: foo
+
+  - name: test_resource_get_properties_local_one_invalid_unspecdefault_success
+    description: Test BaseResource.get_properties_local() with one invalid property as a string with unspecified default
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_local
+      parameters:
+        names: invalid
+    zhmcclient_result:
+      return: null
+
+  - name: test_resource_get_properties_local_list_invalid_specdefault_success
+    description: Test BaseResource.get_properties_local() with a list of invalid properties with specified defaults
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_local
+      parameters:
+        names:
+          - invalid
+          - invalid2
+        defaults:
+          - foo
+          - bar
+    zhmcclient_result:
+      return:
+        - foo
+        - bar
+
+  - name: test_resource_get_properties_local_list_invalid_unspecdefault_success
+    description: Test BaseResource.get_properties_local() with a list of invalid properties with unspecified defaults
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: get_properties_local
+      parameters:
+        names:
+          - invalid
+          - invalid2
+    zhmcclient_result:
+      return:
+        - null
+        - null
+
+  - name: test_resource_update_properties_local_success
+    description: Test BaseResource.update_properties_local()
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: update_properties_local
+      parameters:
+        properties:
+          description: foo
+          invalid: bar
+    zhmcclient_result:
+      return: null
+      # We cannot verify the updates
+
+  - name: test_resource_cease_existence_local_success
+    description: Test BaseResource.cease_existence_local()
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: cease_existence_local
+    zhmcclient_result:
+      return: null
+      # We cannot verify the change
+
+  - name: test_resource_auto_update_enabled_success
+    description: Test BaseResource.auto_update_enabled()
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: auto_update_enabled
+    zhmcclient_result:
+      return: false
+
+# A testcase for enable_auto_update() cannot be defined because it enables notifications
+
+  - name: test_resource_disable_auto_update_success
+    description: Test BaseResource.disable_auto_update()
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: disable_auto_update
+    zhmcclient_result:
+      return: null
+
+  - name: test_resource_dump_success
+    description: Test BaseResource.dump()
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: dump
+    zhmcclient_result:
+      return:
+        properties:
+          parent: /api/console
+          class: user
+          object-uri: /api/users/user1
+          object-id: user1
+          name: user1
+          description: User 1
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/users/user1
+        http_response:
+          status: 200
+          body:
+            parent: /api/console
+            class: user
+            object-uri: /api/users/user1
+            object-id: user1
+            name: user1
+            description: User 1

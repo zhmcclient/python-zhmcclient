@@ -1,118 +1,159 @@
-# Function tests for zhmcclient.User
+# Function tests for zhmcclient.User.
+#
+# This test file covers only the methods and properties that are defined in
+# zhmcclient.User, but not any of the methods and properties inherited from
+# zhmcclient.BaseResource.
 
-- name: test_user_name
-  description: Test User.name from local object
-  zhmcclient_call:
-    target:
-      manager_attribute: users
-      uri: /api/users/oid-user1
-      name: user1
-      parent:
-        manager_attribute: consoles
-        uri: /api/console
-        name: Console
-    property: name
-  zhmcclient_result:
-    return: user1
+setup:
+  resources:
+    - uri: /api/console
+      name: Console1
+      parent_uri: null
+      parent_attribute: consoles
+      properties:
+        description: Console 1
+    - uri: /api/users/user1
+      name: User1
+      parent_uri: /api/console
+      parent_attribute: users
+      properties:
+        description: User 1
 
-- name: test_user_get_property_local
-  description: Test User.get_property(object-uri) from local object
-  zhmcclient_call:
-    target:
-      manager_attribute: users
-      uri: /api/users/oid-user1
-      name: user1
-      parent:
-        manager_attribute: consoles
-        uri: /api/console
-        name: Console
-    method: get_property
-    parameters:
-      name: object-uri
-  zhmcclient_result:
-    return: /api/users/oid-user1
+testcases:
 
-- name: test_user_get_property_hmc
-  description: Test User.get_property(hmc_version) from HMC
-  zhmcclient_call:
-    target:
-      manager_attribute: users
-      uri: /api/users/oid-user1
-      name: user1
-      parent:
-        manager_attribute: consoles
-        uri: /api/console
-        name: Console
-    method: get_property
-    parameters:
-      name: hmc_version
-  zhmcclient_result:
-    return: "2.17"
-  hmc_interactions:
-    - http_request:
-        method: GET
-        uri: /api/users/oid-user1
-      http_response:
-        status: 200
-        body:
-          parent: "/api/console"
-          class: "user"
-          object-uri: "/api/users/oid-user1"
-          object-id: "oid-user1"
-          name: "user1"
-          hmc_version: "2.17"
+  - name: test_user_delete_success
+    description: Test User.delete() with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: delete
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: DELETE
+          uri: /api/users/user1
+        http_response:
+          status: 204
 
-- name: test_user_get_invalid_property_hmc
-  description: Test User.get_property(invalid) from HMC
-  zhmcclient_call:
-    target:
-      manager_attribute: users
-      uri: /api/users/oid-user1
-      name: user1
-      parent:
-        manager_attribute: consoles
-        uri: /api/console
-        name: Console
-    method: get_property
-    parameters:
-      name: invalid
-  zhmcclient_result:
-    exception:
-      class: KeyError
-  hmc_interactions:
-    - http_request:
-        method: GET
-        uri: /api/users/oid-user1
-      http_response:
-        status: 200
-        body:
-          parent: "/api/console"
-          class: "user"
-          object-uri: "/api/users/oid-user1"
-          object-id: "oid-user1"
-          name: "user1"
-          hmc_version: "2.17"
+  - name: test_user_delete_error_busy
+    description: Test User.delete() with error 409,1 (busy)
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: delete
+      # Note: User.delete() does not support busy_retries
+    zhmcclient_result:
+      exception:
+        class: HTTPError
+        attributes:
+          http_status: 409
+          reason: 1
+          request_method: DELETE
+          request_uri: /api/users/user1
+          request_body: {}
+          message: 'Busy, try later'
+    hmc_interactions:
+      - http_request:
+          method: DELETE
+          uri: /api/users/user1
+        http_response:
+          status: 409
+          body:
+            request-method: DELETE
+            request-uri: /api/users/user1
+            request-body: {}
+            http-status: 409
+            reason: 1
+            message: 'Busy, try later'
 
-- name: test_user_get_property_connection_error
-  description: Test User.get_property(name) with connection error
-  zhmcclient_call:
-    target:
-      manager_attribute: users
-      uri: /api/users/oid-user1
-      name: user1
-      parent:
-        manager_attribute: consoles
-        uri: /api/console
-        name: Console
-    method: get_property
-    parameters:
-      name: user1
-  zhmcclient_result:
-    exception:
-      class: ConnectionError
-  hmc_interactions:
-    - http_request:
-        method: GET
-        uri: /api/users/oid-user1
-      http_response:
-        callback: raise_requests_connection_error
+  - name: test_user_update_properties_success
+    description: Test User.update_properties() with success
+    setup:
+      testfile_setup: true
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: update_properties
+      parameters:
+        properties:
+          description: foo
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: POST
+          uri: /api/users/user1
+          body:
+            description: foo
+        http_response:
+          status: 204
+
+  - name: test_user_add_user_role_success
+    description: Test User.add_user_role() with success
+    setup:
+      testfile_setup: true
+      resources:
+        - uri: /api/user-roles/role1
+          name: Role1
+          parent_uri: /api/console
+          parent_attribute: user_roles
+          properties:
+            description: Role 1
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: add_user_role
+      parameters:
+        user_role:
+          _resource:
+            uri: /api/user-roles/role1
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: POST
+          uri: /api/users/user1/operations/add-user-role
+          body:
+            user-role-uri: /api/user-roles/role1
+        http_response:
+          status: 204
+
+  - name: test_user_remove_user_role_success
+    description: Test User.remove_user_role() with success
+    setup:
+      testfile_setup: true
+      resources:
+        - uri: /api/user-roles/role1
+          name: Role1
+          parent_uri: /api/console
+          parent_attribute: user_roles
+          properties:
+            description: Role 1
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/users/user1
+      method: remove_user_role
+      parameters:
+        user_role:
+          _resource:
+            uri: /api/user-roles/role1
+    zhmcclient_result:
+      return: null
+    hmc_interactions:
+      - http_request:
+          method: POST
+          uri: /api/users/user1/operations/remove-user-role
+          body:
+            user-role-uri: /api/user-roles/role1
+        http_response:
+          status: 204
