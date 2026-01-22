@@ -51,7 +51,7 @@ definitions:
         description: >-
           The canonical URI of the resource.
         type: string
-        format: uri
+        format: uri-reference
   manager_reference:
     description: >-
       Reference to a zhmcclient manager object identified by the
@@ -67,7 +67,7 @@ definitions:
         description: >-
           The canonical URI of the parent resource.
         type: string
-        format: uri
+        format: uri-reference
       attribute:
         description: >-
           The name of the manager attribute on the parent zhmcclient
@@ -132,7 +132,7 @@ definitions:
               description: >-
                 The canonical URI of the resource.
               type: string
-              format: uri
+              format: uri-reference
             name:
               description: >-
                 The name of the resource.
@@ -356,7 +356,7 @@ properties:
                       being validated in the test.
                       If omitted, the request URI is not validated in the test.
                     type: string
-                    format: uri
+                    format: uri-reference
                   headers:
                     description: >-
                       The HTTP header fields in the request that should be validated

@@ -51,6 +51,7 @@ import json
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
+import warnings
 
 from immutabledict import immutabledict
 import yaml
@@ -124,8 +125,32 @@ class YamlFile(pytest.File):
                     f"Cannot load test file {filepath}: {exc}")
 
             schema, schema_file = get_test_schema(self.parent.config)
+
+            # Note: format="uri-reference" allows both the relative URIs that
+            #       are used by the HMC as canonical URIs, and absolute URIs.
+            #       There is no format value that requires only the relative
+            #       URIs.
+            # Note: The jsonschema package documents that the rfc3987 or
+            #       rfc3986-validator packages are needed to check the format
+            #       "uri-reference". Normally, jsonschema falls back to
+            #       using the built-in urllib.parse module if neither of these
+            #       packages is installed, but not on Windows on some Python
+            #       versions (e.g. 3.14). We use rfc3986-validator because
+            #       rfc3987 has GPL license.
             try:
-                jsonschema.validate(testfile_content, schema)
+                format_checker = jsonschema.FormatChecker(["uri-reference"])
+            except KeyError:
+                checkers = list(jsonschema.FormatChecker.checkers.keys())
+                warnings.warn(
+                    "No format checker for 'uri-reference' installed - "
+                    "format will not be checked. "
+                    f"Available format checkers: {checkers}", UserWarning)
+                format_checker = None
+
+            validator = jsonschema.Draft202012Validator(
+                schema, format_checker=format_checker)
+            try:
+                validator.validate(testfile_content)
             except jsonschema.exceptions.SchemaError as exc:
                 elem_path = get_json_path(exc.absolute_path)
                 schema_path = get_json_path(exc.absolute_schema_path)
