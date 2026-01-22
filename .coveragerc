@@ -5,18 +5,26 @@
 
 [run]
 
+# Directories to include in the coverage.
+source_dirs =
+    zhmcclient/
+    zhmcclient_mock/
+
+# Files and directories to exclude in the coverage.
+# For coveralls.io, tests/ also needs to be excluded even though it is not
+# in source_dirs.
+omit =
+    zhmcclient/_vendor/*
+    tests/*
+
 # Controls whether branch coverage is measured, vs. just statement coverage.
-# TODO: Once statement coverage gets better, enable branch coverage.
-branch = False
+# This only affects locally created coverage. coveralls.io ignores this
+# and has its own setting for branch coverage.
+branch = True
 
 # If True, stores relative file paths in data file (needed for Github Actions).
 # Using this parameter requires coverage>=5.0
 relative_files = True
-
-# The following files are omitted in the coverage.
-omit =
-    zhmcclient/_vendor/*
-    tests/*
 
 # Enable to see which for which source files coverage is traced.
 # debug = trace
@@ -26,6 +34,10 @@ omit =
 # Controls whether lines without coverage are shown in the report.
 show_missing = True
 
+# Number of digits after the decimal point for coverage percentages.
+precision = 2
+
 [html]
 
+# Output directory for the HTML report
 directory = htmlcov
