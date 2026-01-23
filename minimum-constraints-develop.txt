@@ -33,7 +33,7 @@ pytz==2019.1
 requests-mock==1.6.0
 requests-toolbelt==0.8.0
 tzdata==2023.4; sys_platform == 'win32'
-# rfc3986-validator==0.1.1
+rfc3986-validator==0.1.1
 
 # Unit test (indirect dependencies):
 # decorator: covered in direct deps for installation
