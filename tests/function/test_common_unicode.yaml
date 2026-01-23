@@ -1,0 +1,144 @@
+# Function tests for Unicode support
+
+# Note: This file contains unescaped UTF-8 characters and must be stored as
+# UTF-8 encoded. Make sure your editor supports and preserves the UTF-8
+# characters.
+
+# Note: It is not easily possible to specify invalid Unicode characters in
+# an editable YAML file:
+# - Having invalid UTF-8 byte sequences directly in the file is not a good idea
+#   because the files need to be editable and so the editor must support and
+#   preserve the UTF-8 byte sequences in the file. Adding such a test would
+#   be feasible when the test file gets generated, but that has not been done.
+# - Using escape sequences in YAML does not easily allow to construct invalid
+#   Unicode characters:
+#   - "\xC2" looks like an incomplete 2-byte UTF-8 byte sequence, but is really
+#     interpreted as Unicode character U+00C2 and is fully supported.
+#   - "\uC2" is rejected by PyYAML when loading the test file as an invalid way
+#     to specify an escaped Unicode character (it should be "\u00C2"). That
+#     causes a pytest collection error because the test file cannot be loaded.
+#   - "\uD800" is an incomplete (lone) surrogate sequence and is tolerated by
+#     PyYAML and json, even though it is invalid according to the Unicode
+#     standard. It would be rejected by ruamel.yaml. There is a testcase for
+#     that in this test file.
+#   - Specifying binary Bytes that are invalid UTF-8 sequences (using
+#     !!binary) is valid in YAML and loading the test file succeeds, but it gets
+#     rejected with an invalid type (binary vs. string) when validating the
+#     test file against its JSON schema.
+
+testcases:
+
+  - name: valid_escaped_local_property_value
+    description: Test valid escaped Unicode character in locally present property value
+    setup:
+      resources:
+        - uri: /api/console
+          name: "Ren\u00e9"  # YAML escape sequence for U+00E9 (e accent degu)
+          parent_uri: null
+          parent_attribute: consoles
+          properties:
+            description: Console 1
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: name
+    zhmcclient_result:
+      return: "Ren\u00E9"  # YAML escape sequence for U+00E9 (e accent degu)
+
+  - name: valid_escaped_hmc_property_value
+    description: Test valid escaped Unicode character in property value obtained from HMC
+    setup:
+      resources:
+        - uri: /api/console
+          name: Console1
+          parent_uri: null
+          parent_attribute: consoles
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      return: "\u00E9"  # YAML escape sequence for U+00E9 (e accent degu)
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          status: 200
+          body:
+            parent: null
+            class: "console"
+            object-uri: "/api/console"
+            object-id: "console"
+            name: "Console"
+            hmc_version: "\u00E9"  # YAML escape sequence for U+00E9 (e accent degu)
+
+  - name: valid_utf8_hmc_property_value
+    description: Test valid UTF-8 Unicode character in property value obtained from HMC
+    setup:
+      resources:
+        - uri: /api/console
+          name: Console1
+          parent_uri: null
+          parent_attribute: consoles
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      return: "é"  # Direct UTF-8 character for U+00E9 (e accent degu)
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          status: 200
+          body:
+            parent: null
+            class: "console"
+            object-uri: "/api/console"
+            object-id: "console"
+            name: "Console"
+            hmc_version: "é"  # Direct UTF-8 character for U+00E9 (e accent degu)
+
+  - name: incomplete_surrogate_hmc_property_value
+    description: Test incomplete Unicode surrogate sequence in property value obtained from HMC
+    # Note: This testcase depends on using PyYAML, which tolerates incomplete
+    # Unicode surrogate sequences (ruamel.yaml does not).
+    setup:
+      resources:
+        - uri: /api/console
+          name: Console1
+          parent_uri: null
+          parent_attribute: consoles
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      return: "\uD800"  # Incomplete (lone) Unicode surrogate sequence
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          status: 200
+          body:
+            parent: null
+            class: "console"
+            object-uri: "/api/console"
+            object-id: "console"
+            name: "Console"
+            hmc_version: "\uD800"  # Incomplete (lone) Unicode surrogate sequence

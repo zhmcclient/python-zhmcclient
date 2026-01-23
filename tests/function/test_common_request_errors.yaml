@@ -1,0 +1,112 @@
+# Function tests for request errors
+
+setup:
+  resources:
+    - uri: /api/console
+      name: Console1
+      parent_uri: null
+      parent_attribute: consoles
+      properties:
+        description: Console 1
+
+testcases:
+
+  - name: connection_error
+    description: Test raising ConnectionError
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      exception:
+        class: ConnectionError
+        message_pattern: ConnectionError
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          callback: raise_requests_connection_error
+
+  - name: read_timeout
+    description: Test raising ReadTimeout
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      exception:
+        class: ReadTimeout
+        message_pattern: ReadTimeout
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          callback: raise_requests_read_timeout
+
+  - name: retry_error
+    description: Test raising RetryError
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      exception:
+        class: RetriesExceeded
+        message_pattern: RetryError
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          callback: raise_requests_retry_error
+
+  - name: http_error
+    description: Test raising HTTPError
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      exception:
+        class: ConnectionError
+        message_pattern: HTTPError
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          callback: raise_requests_http_error
+
+  - name: ssl_error
+    description: Test raising SSLError
+    zhmcclient_call:
+      target:
+        _resource:
+          uri: /api/console
+      method: get_property
+      parameters:
+        name: hmc_version
+    zhmcclient_result:
+      exception:
+        class: ConnectionError
+        message_pattern: SSLError
+    hmc_interactions:
+      - http_request:
+          method: GET
+          uri: /api/console
+        http_response:
+          callback: raise_requests_ssl_error
